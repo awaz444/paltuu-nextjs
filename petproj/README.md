@@ -33,22 +33,60 @@ This project is a web-based platform developed using Next.js, React.js, Node.js,
 ## **Project Structure**
 ```
 .
-├── public                  # Static files (images, icons, etc.)
-├── src
-│   ├── components          # Reusable UI components
-│   ├── pages               # Next.js pages
-│   ├── api                 # API routes
-│   ├── styles              # Global and component-specific styles
-│   ├── utils               # Utility functions
-│   ├── hooks               # Custom React hooks
-│   ├── lib                 # Library functions and configurations
-│   ├── models              # Database models
-│   └── middleware          # Middleware functions
-├── .env                    # Environment variables
-├── next.config.js          # Next.js configuration
-├── package.json            # Dependencies and scripts
-├── README.md               # Project documentation
-└── tsconfig.json           # TypeScript configuration
+├── public                     # Static files (images, icons, etc.)
+│   ├── favicon.ico            # Website favicon
+│   └── logo.png               # Example logo image
+├── app                        # Application directory for Next.js
+│   ├── api                    # API routes for server-side logic (Node.js)
+│   │   ├── auth.js            # Example route for authentication
+│   │   ├── pets.js            # Example route for pet-related actions
+│   │   └── vets.js            # Example route for vet-related actions
+│   ├── components             # Reusable UI components
+│   │   ├── Header             # Header component
+│   │   │   ├── Header.js      # Header component logic
+│   │   │   └── Header.module.css # Header component styles
+│   │   ├── PetCard            # Component to display pet information
+│   │   │   ├── PetCard.js     # PetCard component logic
+│   │   │   └── PetCard.module.css # PetCard component styles
+│   │   └── Footer             # Footer component
+│   │       ├── Footer.js      # Footer component logic
+│   │       └── Footer.module.css # Footer component styles
+│   ├── hooks                  # Custom React hooks
+│   │   └── useAuth.js         # Example custom hook for authentication
+│   ├── layout.js              # Layout component for the app
+│   ├── middlewares            # Middleware functions
+│   │   ├── authMiddleware.js  # Middleware for authentication checks
+│   │   └── errorMiddleware.js # Middleware for handling errors
+│   ├── page.js                # Main page component
+│   ├── page.module.css        # CSS module for the main page
+│   ├── globals.css            # Global CSS styles
+│   ├── services               # Service layer for business logic
+│   │   ├── authService.js     # Service handling authentication logic
+│   │   ├── petService.js      # Service handling pet-related business logic
+│   │   └── vetService.js      # Service handling vet-related business logic
+│   ├── store                  # Redux store setup
+│   │   ├── index.js           # Configures and exports the Redux store
+│   │   └── slices             # Redux slices
+│   │       ├── authSlice.js   # Slice for authentication state
+│   │       ├── petSlice.js    # Slice for pet-related state
+│   │       └── vetSlice.js    # Slice for vet-related state
+│   └── utils                  # Utility functions and helpers
+│       ├── formatDate.js      # Example utility for formatting dates
+│       └── apiHelper.js       # Helper functions for API requests
+├── db                         # Database connection and migrations (PostgreSQL)
+│   ├── index.js               # Database connection setup
+│   ├── models                 # Database models
+│   │   ├── User.js            # User model
+│   │   ├── Pet.js             # Pet model
+│   │   └── Vet.js             # Vet model
+│   └── migrations             # Database migration files
+│       └── 001_create_tables.sql # Example migration file for creating tables
+├── .env                       # Environment variables
+├── next.config.js             # Next.js configuration
+├── package.json               # Dependencies and scripts
+├── README.md                  # Project documentation
+└── jsconfig.json              # JavaScript configuration (for editor settings, if needed)
+
 ```
 
 ## **Installation**

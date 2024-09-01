@@ -64,4 +64,4 @@ Vets have specialized access and features designed for professionals offering ve
 ### **LLM Guidance**
 - The LLM will assist all users in navigating the platform, answering queries, and providing guidance on using the features effectively.
 
-This structure should cover the primary functionalities needed for each user type while allowing for scalability and additional features as your project evolves.
+This structure should cover the primary functionalities needed for each user type while allowing for scalability and additional features as your project evolves. mmm

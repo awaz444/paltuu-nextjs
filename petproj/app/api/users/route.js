@@ -24,3 +24,24 @@ export async function POST(req) {
         await client.end();
     }
 }
+
+export async function GET(req) {
+    const client = createClient();
+
+    try {
+        await client.connect(); 
+        const result = await client.query('SELECT * FROM users');
+        return new Response(JSON.stringify(result.rows), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    } catch (err) {
+        console.error(err);
+        return new Response(JSON.stringify({ error: 'Internal Server Error', message: err.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    } finally {
+        await client.end(); 
+    }
+}

@@ -1,0 +1,50 @@
+delete 
+
+{
+    "pet_id": 1
+}
+
+
+put
+
+{
+    "pet_id": 1,
+    "owner_id": 1,
+    "pet_name": "Buddy",
+    "pet_type": 1,  // Assuming this is a valid category ID
+    "pet_breed": "Golden Retriever",
+    "city_id": 1,   // Assuming this is a valid city ID
+    "area": "Downtown",
+    "age": 3,
+    "description": "Friendly and playful dog, great with kids.",
+    "adoption_status": "available",
+    "adoption_price": 100.00,
+    "min_age_of_children": 5,
+    "can_live_with_dogs": true,
+    "can_live_with_cats": false,
+    "must_have_someone_home": true,
+    "energy_level": 4,
+    "cuddliness_level": 2,
+    "health_issues": "No known health issues."
+}
+
+post
+
+{
+    "owner_id": 1,  // Replace with a valid user ID
+    "pet_name": "Buddy",
+    "pet_type": 1,  // Replace with a valid category ID
+    "pet_breed": "Golden Retriever",
+    "city_id": 1,   // Replace with a valid city ID
+    "area": "Downtown",
+    "age": 3,
+    "description": "Friendly and playful dog, great with kids.",
+    "adoption_status": "available",
+    "min_age_of_children": 5,
+    "can_live_with_dogs": true,
+    "can_live_with_cats": false,
+    "must_have_someone_home": true,
+    "energy_level": 4,
+    "cuddliness_level": 2,
+    "health_issues": "No known health issues."
+}

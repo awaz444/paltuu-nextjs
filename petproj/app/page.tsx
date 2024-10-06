@@ -1,8 +1,46 @@
+'use client'
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 export default function Home() {
+  const [isConnected, setIsConnected] = useState<boolean | null>(null); // true, false, or null for loading
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const checkHealth = async () => {
+      try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        
+        if (response.ok) {
+          setIsConnected(true);
+        } else {
+          setIsConnected(false);
+        }
+      } catch (error) {
+        console.error('Error fetching health status:', error);
+        setIsConnected(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkHealth();
+  }, []);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      {/* Connection Status Indicator */}
+      <div className="fixed top-0 left-0 right-0 flex justify-center bg-white p-4 border-b">
+        {loading ? (
+          <span>Checking database connection...</span>
+        ) : isConnected ? (
+          <span className="text-green-500">Database Connected!</span>
+        ) : (
+          <span className="text-red-500">Database Not Connected!</span>
+        )}
+      </div>
+
       <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
         <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
           Get started by editing&nbsp;

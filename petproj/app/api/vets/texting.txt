@@ -1,0 +1,25 @@
+post
+
+{
+    "user_id": 3,                    
+    "clinic_name": "Vet Care Clinic",
+    "location": "123 Vet Street, Cityville",
+    "minimum_fee": 75,
+    "contact_details": "123-456-7890"
+}
+
+put
+
+{
+    "vet_id": 1,  // Replace with the vet's ID
+    "clinic_name": "Advanced Vet Care",
+    "location": "123 Updated Street, Cityville",
+    "minimum_fee": 85,
+    "contact_details": "123-456-7890"
+}
+
+delete
+
+{
+    "vet_id": 1  // Replace with the vet's ID
+}

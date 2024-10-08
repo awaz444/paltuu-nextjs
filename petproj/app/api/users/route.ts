@@ -1,4 +1,4 @@
-// pages/api/users/route.ts
+// app/api/users/route.ts
 import { createClient } from '../../../db/index'; 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             headers: { 'Content-Type': 'application/json' },
         });
     } catch (err) {
-        console.error(err);
+        console.error('Error creating user:', err);
         return NextResponse.json(
             { error: 'Internal Server Error', message: (err as Error).message },
             {
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             headers: { 'Content-Type': 'application/json' },
         });
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching users:', err);
         return NextResponse.json(
             { error: 'Internal Server Error', message: (err as Error).message },
             {
@@ -80,7 +80,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
             headers: { 'Content-Type': 'application/json' },
         });
     } catch (err) {
-        console.error(err);
+        console.error('Error updating user:', err);
         return NextResponse.json(
             { error: 'Internal Server Error', message: (err as Error).message },
             {
@@ -95,11 +95,11 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
 
 // DELETE method to delete a user by ID
 export async function DELETE(req: NextRequest): Promise<NextResponse> {
-    const { user_id } = await req.json(); // Assuming you're sending the user_id in the body of the DELETE request
+    const { user_id } = await req.json();
     const client = createClient();
 
     try {
-        await client.connect(); // Connect to the database
+        await client.connect(); 
         const result = await client.query('DELETE FROM users WHERE user_id = $1 RETURNING *', [user_id]);
 
         if (result.rows.length === 0) {
@@ -114,7 +114,7 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
             headers: { 'Content-Type': 'application/json' },
         });
     } catch (err) {
-        console.error(err);
+        console.error('Error deleting user:', err);
         return NextResponse.json(
             { error: 'Internal Server Error', message: (err as Error).message },
             {
@@ -123,6 +123,6 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
             }
         );
     } finally {
-        await client.end(); // Always close the connection
+        await client.end(); 
     }
 }

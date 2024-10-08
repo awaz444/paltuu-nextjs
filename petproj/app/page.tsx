@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState } from "react";
-import Image from "next/image";
 
 export default function Home() {
   const [isConnected, setIsConnected] = useState<boolean | null>(null); // true, false, or null for loading

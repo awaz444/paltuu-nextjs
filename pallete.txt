@@ -19,3 +19,15 @@ light: #e7d9ff
 tertiary: #cfb3ff
 
 bg: #ffffff
+
+user:
+
+primary: #02187b
+
+dark: #012656
+
+light: #c0dcff
+
+tertiary: #82b8ff
+
+bg: #ffffff

@@ -1,0 +1,49 @@
+/* components/Navbar.module.css */
+.navbar {
+    background-color: #ffa6c8; 
+    padding: 3rem;
+    height: 10rem;
+    border-bottom-left-radius: 2rem !important;
+    border-bottom-right-radius: 2rem !important;
+  }
+  
+  .logo {
+    flex: 1;
+  }
+  
+  .spacer {
+    flex: 2; /* Empty space in the middle */
+  }
+  
+  .navLinks {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-right:1.5rem ;
+  }
+  
+  .navLinks a {
+    color: #ffffff; /* Background (white) */
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  
+  .navLinks a:hover {
+    color: #ffd2e3; /* Light */
+  }
+  
+  .loginBtn {
+    background-color: #ffffff; /* White */
+    color: #A03048; /* Primary */
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+  
+  .loginBtn:hover {
+    background-color: #ffd2e3; /* Light */
+    color: #70223f; /* Dark */
+  }
+  

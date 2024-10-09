@@ -1,3 +1,5 @@
+user:
+
 primary: #A03048
 
 dark: #70223f
@@ -20,7 +22,7 @@ tertiary: #cfb3ff
 
 bg: #ffffff
 
-user:
+admin:
 
 primary: #02187b
 

@@ -15,6 +15,12 @@ const Navbar = () => {
           />
         </div>
         <div className={`${styles.navLinks} flex items-center gap-5`}>
+        <Link href="/browse-pets">
+            <span className="hover:text-[#ffd2e3] cursor-pointer">Browse Pets</span>
+          </Link>
+        <Link href="/foster-pets">
+            <span className="hover:text-[#ffd2e3] cursor-pointer">Foster Pets</span>
+          </Link>
           <Link href="/pet-care">
             <span className="hover:text-[#ffd2e3] cursor-pointer">Pet Care</span>
           </Link>

@@ -3,24 +3,66 @@
 @tailwind utilities;
 
 :root {
+  /* Default colors for normal users */
+  --primary-color: #A03048;
+  --dark-color: #70223f;
+  --light-color: #ffd2e3;
+  --tertiary-color: #ffa6c8;
+  --background-color: #ffffff;
   --foreground-rgb: 0, 0, 0;
-  --background-color: 160, 48, 72; /* RGB for #A03048 */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-color: 160, 48, 72; /* RGB for #A03048 */
-  }
+/* User-specific themes */
+:root.user-theme {
+  --primary-color: #A03048;
+  --dark-color: #70223f;
+  --light-color: #ffd2e3;
+  --tertiary-color: #ffa6c8;
+  --background-color: #ffffff;
 }
 
+:root.vet-theme {
+  --primary-color: #6a398c;
+  --dark-color: #3d2862;
+  --light-color: #e7d9ff;
+  --tertiary-color: #cfb3ff;
+  --background-color: #ffffff;
+}
+
+:root.admin-theme {
+  --primary-color: #02187b;
+  --dark-color: #012656;
+  --light-color: #c0dcff;
+  --tertiary-color: #82b8ff;
+  --background-color: #ffffff;
+}
+
+/* Apply the theme colors */
 body {
   color: rgb(var(--foreground-rgb));
-  background-color: rgb(var(--background-color));
+  background-color: var(--background-color);
 }
 
+/* Utility classes */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Example color utility */
+  .bg-primary {
+    background-color: var(--primary-color);
+  }
+  .text-primary {
+    color: var(--primary-color);
+  }
+  .bg-dark {
+    background-color: var(--dark-color);
+  }
+  .bg-light {
+    background-color: var(--light-color);
+  }
+  .bg-tertiary {
+    background-color: var(--tertiary-color);
   }
 }

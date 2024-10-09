@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useState } from "react";
-import Image from "next/image"; // Import Next.js Image component
 import Navbar from "@/components/navbar";
 
 export default function Home() {
@@ -31,29 +30,18 @@ export default function Home() {
 
   return (
     <>
-        <Navbar />
+      <Navbar />
       <main className="flex min-h-screen flex-col items-center p-24" style={{ backgroundColor: 'rgb(var(--background-color))' }}>
 
         {/* Connection Status Indicator */}
-        <div className="mt-4 flex justify-center p-4">
+        <div className="mt-4 flex justify-center p-4" style={{ color: 'rgb(var(--background-color))' }}>
           {loading ? (
             <span>Checking database connection...</span>
           ) : isConnected ? (
-            <span className="text-white">Database Connected!</span>
+            <span >Database Connected!</span>
           ) : (
-            <span className="text-red-500">Database Not Connected!</span>
+            <span >Database Not Connected!</span>
           )}
-        </div>
-
-        {/* SVG - Paltu Logo */}
-        <div className="mt-16">
-          <Image
-            src="/paltu_logo.svg"
-            alt="Paltu Logo"
-            width={300}
-            height={300}
-            priority
-          />
         </div>
 
         <div className="mt-32">

@@ -9,6 +9,8 @@
   
   .logo {
     flex: 1;
+    position: relative;
+    top: -10px;
   }
   
   .spacer {

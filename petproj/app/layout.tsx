@@ -11,7 +11,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-    title: "paltuu.pk",
+    title: "Paltuu",
     description: "Pakistan's First Pet Adoption Platform",
 };
 
@@ -23,7 +23,6 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={montserrat.className}>
-                {/* Wrap the children with ClientProvider */}
                 <ClientProvider>{children}</ClientProvider>
             </body>
         </html>

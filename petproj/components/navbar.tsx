@@ -35,7 +35,7 @@ const Navbar = () => {
                     </Link>
                     <Link href="/llm">
                         <span className="hover:text-[#ffd2e3] cursor-pointer">
-                            LLM
+                            Paltuu AI
                         </span>
                     </Link>
                     <Link href="/about-us">

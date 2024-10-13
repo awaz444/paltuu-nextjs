@@ -1,4 +1,6 @@
 // components/Navbar.tsx
+'use client';
+
 import Link from 'next/link';
 import styles from './navbar.module.css'; // Import your CSS module
 
@@ -10,8 +12,7 @@ const Navbar = () => {
           <img 
             src="/paltu_logo.svg" 
             alt="Logo" 
-            width={200}   // Set desired width
-            height={200}  // Set desired height
+            width={250}   // Set desired width
           />
         </div>
         <div className={`${styles.navLinks} flex items-center gap-5`}>

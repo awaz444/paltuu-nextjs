@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,6 +12,7 @@
   --tertiary-color: #ffa6c8;
   --background-color: #ffffff;
   --foreground-rgb: 0, 0, 0;
+  --font-family: 'Montserrat', sans-serif; /* Use Montserrat globally */
 }
 
 /* User-specific themes */
@@ -39,6 +42,7 @@
 
 /* Apply the theme colors */
 body {
+  font-family: var(--font-family); 
   color: rgb(var(--foreground-rgb));
   background-color: var(--background-color);
 }

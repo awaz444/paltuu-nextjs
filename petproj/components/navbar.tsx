@@ -1,8 +1,7 @@
-// components/Navbar.tsx
 "use client";
 
 import Link from "next/link";
-import styles from "./navbar.module.css"; // Import your CSS module
+import styles from "./navbar.module.css"; 
 
 const Navbar = () => {
     return (
@@ -13,7 +12,7 @@ const Navbar = () => {
                         <img
                             src="/paltu_logo.svg"
                             alt="Logo"
-                            width={250} // Set desired width
+                            width={250} 
                         />
                     </div>
                 </Link>

@@ -1,6 +1,7 @@
 'use client'; // Ensure this is at the top of your file
 import { useState } from 'react';
 import Navbar from '@/components/navbar';
+import '../globals.css'
 
 export default function ChatBot() {
   const [userInput, setUserInput] = useState('');
@@ -50,7 +51,6 @@ export default function ChatBot() {
     <>
       <Navbar />
       <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
-        <h1 className="text-3xl font-bold mb-8">Chat with Paltuu AI</h1>
         
         {/* Chat window */}
         <div className="w-full max-w-2xl bg-white rounded-lg shadow-md p-6 mb-8">
@@ -60,9 +60,9 @@ export default function ChatBot() {
             ) : (
               chatLog.map((chat, index) => (
                 <div key={index} className="mb-4">
-                  <p className="font-bold text-blue-600">You:</p>
+                  <p className="font-bold text-dark">You:</p>
                   <p className="mb-2">{chat.user}</p>
-                  <p className="font-bold text-green-600">Paltuu AI:</p>
+                  <p className="font-bold text-primary">Paltuu AI:</p>
                   <p>{chat.ai || '...'}</p>
                 </div>
               ))
@@ -81,7 +81,7 @@ export default function ChatBot() {
             />
             <button
               type="submit"
-              className={`px-6 py-2 bg-blue-500 text-white rounded-lg ${loading ? 'bg-gray-400' : 'hover:bg-blue-600'}`}
+              className={`px-6 py-2 bg-primary text-white rounded-lg ${loading ? 'bg-gray-400' : 'hover:bg-blue-600'}`}
               disabled={loading}
             >
               {loading ? 'Thinking...' : 'Send'}

@@ -30,7 +30,7 @@ export default function PetCare() {
               <div key={vet.vet_id} className="border rounded-lg shadow p-4 bg-white max-w-xs">
                 <h2 className="text-xl font-bold">{vet.clinic_name}</h2>
                 <p className="text-gray-500">Location: {vet.location}</p>
-                <p className="text-gray-500">Minimum Fee: ${vet.minimum_fee}</p>
+                <p className="text-gray-500">Minimum Fee: PKR {vet.minimum_fee}</p>
                 <p className="text-gray-500">Contact: {vet.contact_details}</p>
                 <p className="text-gray-500">Bio: {vet.bio}</p>
                 <p className={`text-sm ${vet.profile_verified ? 'text-green-500' : 'text-red-500'}`}>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import styles from "./navbar.module.css"; 
+import styles from "./navbar.module.css";
 
 const Navbar = () => {
     return (
@@ -9,13 +9,10 @@ const Navbar = () => {
             <div className="flex items-center justify-between">
                 <Link href="/">
                     <div className={styles.logo}>
-                        <img
-                            src="/paltu_logo.svg"
-                            alt="Logo"
-                            width={250} 
-                        />
+                        <img src="/paltu_logo.svg" alt="Logo" width={250} />
                     </div>
                 </Link>
+
                 <div className={`${styles.navLinks} flex items-center gap-5`}>
                     <Link href="/browse-pets">
                         <span className="hover:text-[#ffd2e3] cursor-pointer">
@@ -27,6 +24,11 @@ const Navbar = () => {
                             Foster Pets
                         </span>
                     </Link>
+                    <Link href="/create-listing">
+                        <span className="hover:text-[#ffd2e3] cursor-pointer">
+                            Create Listing
+                        </span>
+                    </Link>
                     <Link href="/pet-care">
                         <span className="hover:text-[#ffd2e3] cursor-pointer">
                             Pet Care
@@ -35,11 +37,6 @@ const Navbar = () => {
                     <Link href="/llm">
                         <span className="hover:text-[#ffd2e3] cursor-pointer">
                             Paltuu AI
-                        </span>
-                    </Link>
-                    <Link href="/about-us">
-                        <span className="hover:text-[#ffd2e3] cursor-pointer">
-                            About Us
                         </span>
                     </Link>
                     <Link href="/login">

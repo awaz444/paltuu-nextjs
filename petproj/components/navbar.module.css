@@ -5,6 +5,7 @@
     height: 10rem;
     border-bottom-left-radius: 2rem !important;
     border-bottom-right-radius: 2rem !important;
+    font-size: 10px;
   }
   
   .logo {
@@ -31,10 +32,6 @@
     font-weight: 500;
   }
   
-  .navLinks a:hover {
-    color: #ffd2e3; /* Light */
-  }
-  
   .loginBtn {
     background-color: #ffffff; /* White */
     color: #A03048; /* Primary */
@@ -45,7 +42,8 @@
   }
   
   .loginBtn:hover {
-    background-color: #ffd2e3; /* Light */
-    color: #70223f; /* Dark */
+    background-color: #ffffff; /* Light */
+    color: #A03048; /* Dark */
+    transform: scale(1.05);
   }
   

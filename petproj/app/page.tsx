@@ -45,7 +45,7 @@ export default function Home() {
         </div>
 
         <div className="mt-32">
-          By Talha Idrees
+          By Talha Idrees, Sohail Ahmed and Zain
         </div>
 
         <div className="mt-2">

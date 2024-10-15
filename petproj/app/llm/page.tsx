@@ -1,7 +1,8 @@
 'use client'; // Ensure this is at the top of your file
 import { useState } from 'react';
 import Navbar from '@/components/navbar';
-import '../globals.css'
+import '../globals.css';
+import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown for markdown rendering
 
 export default function ChatBot() {
   const [userInput, setUserInput] = useState('');
@@ -12,7 +13,6 @@ export default function ChatBot() {
     e.preventDefault();
     if (!userInput.trim()) return;
 
-    // Add the user's message to the chat log
     const newChatLog = [...chatLog, { user: userInput, ai: '' }];
     setChatLog(newChatLog);
     setLoading(true);
@@ -51,7 +51,6 @@ export default function ChatBot() {
     <>
       <Navbar />
       <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
-        
         {/* Chat window */}
         <div className="w-full max-w-2xl bg-white rounded-lg shadow-md p-6 mb-8">
           <div className="h-96 overflow-y-auto border-b border-gray-200 mb-4 p-4">
@@ -63,7 +62,8 @@ export default function ChatBot() {
                   <p className="font-bold text-dark">You:</p>
                   <p className="mb-2">{chat.user}</p>
                   <p className="font-bold text-primary">Paltuu AI:</p>
-                  <p>{chat.ai || '...'}</p>
+                  {/* Render markdown for the AI's response */}
+                  <ReactMarkdown>{chat.ai || '...'}</ReactMarkdown>
                 </div>
               ))
             )}
@@ -81,7 +81,7 @@ export default function ChatBot() {
             />
             <button
               type="submit"
-              className={`px-6 py-2 bg-primary text-white rounded-lg ${loading ? 'bg-gray-400' : 'hover:bg-blue-600'}`}
+              className={`px-6 py-2 bg-primary text-white rounded-lg ${loading ? 'bg-gray-400' : 'hover:bg-dark'}`}
               disabled={loading}
             >
               {loading ? 'Thinking...' : 'Send'}

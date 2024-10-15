@@ -1,10 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 import petReducer from './slices/petSlice'; // Adjust this path if necessary
+import vetReducer from './slices/vetSlice'; // Import the vet slice
 
 // Configure the Redux store
 export const store = configureStore({
   reducer: {
-    pets: petReducer, // Add other slices here if needed
+    pets: petReducer, // Pet reducer
+    vets: vetReducer, // Vet reducer added here
   },
 });
 

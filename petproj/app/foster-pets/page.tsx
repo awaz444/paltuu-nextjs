@@ -1,7 +1,7 @@
 'use client'; // Ensure this is at the top of your file
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchPets } from '../store/slices/petSlice'; // Adjust import as needed
+import { fetchPets } from '../store/slices/petSlice'; 
 import Navbar from '@/components/navbar';
 import { RootState, AppDispatch } from '../store/store'; 
 

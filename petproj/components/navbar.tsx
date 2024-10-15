@@ -24,11 +24,6 @@ const Navbar = () => {
                             Foster Pets
                         </span>
                     </Link>
-                    <Link href="/create-listing">
-                        <span className="hover:text-[#ffd2e3] cursor-pointer">
-                            Create Listing
-                        </span>
-                    </Link>
                     <Link href="/pet-care">
                         <span className="hover:text-[#ffd2e3] cursor-pointer">
                             Pet Care

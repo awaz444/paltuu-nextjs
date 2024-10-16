@@ -77,7 +77,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                     className="border rounded w-full p-2"
                     onChange={(e) => setIsAdopt(e.target.value === "adopt")}>
                     <option value="adopt">Adopt</option>
-                    <option value="foster">Foster</option>
+                    <option value="foster">Buy</option>
                 </select>
             </div>
 

@@ -42,12 +42,12 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
     return (
         <div className="bg-gray-100 pt-6">
             <div
-                className="bg-white px-8 py-2"
+                className="bg-white px-8 py-2 w-700"
                 style={{ margin: "0px 20px", borderRadius: "2rem" }}>
-                <div className="flex flex-wrap gap-4 mb-4 mt-6 items-center">
+                <div className="flex flex-wrap gap-4 mb-4 mt-4 items-center">
                     {/* Species dropdown */}
                     <div className="flex-1 min-w-[150px]">
-                        <label>Species</label>
+                        <label className="text-xs">Species</label>
                         <select
                             className="w-full p-3 border rounded-xl"
                             value={selectedSpecies}
@@ -67,7 +67,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
 
                     {/* Breed input field */}
                     <div className="flex-1 min-w-[150px]">
-                        <label>Breed</label>
+                        <label className="text-xs">Breed</label>
                         <input
                             type="text"
                             className="w-full p-3 border rounded-xl"
@@ -79,7 +79,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
 
                     {/* Cities dropdown */}
                     <div className="flex-1 min-w-[150px]">
-                        <label>City</label>
+                        <label className="text-xs">City</label>
                         <select
                             className="w-full p-3 border rounded-xl"
                             value={selectedCity}
@@ -96,12 +96,12 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
                     {/* Buttons */}
                     <div className="flex gap-4 mt-4">
                         <button
-                            className="border-2 border-primary text-primary bg-white p-3 rounded-xl"
+                            className="border-2 border-primary text-primary bg-white p-3 rounded-2xl"
                             onClick={handleReset}>
                             Reset
                         </button>
                         <button
-                            className="text-white p-3 rounded-xl w-40"
+                            className="text-white p-3 rounded-2xl w-40"
                             style={{ backgroundColor: "#A03048" }}
                             onClick={handleSearch}>
                             Search

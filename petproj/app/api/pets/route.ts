@@ -23,7 +23,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         sex,
         listing_type,
         vaccinated,
-        neutered
+        neutered,
+        adoption_price, // Added adoption_price
     } = await req.json();
     
     const client = createClient();
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     try {
         await client.connect(); 
         const result = await client.query(
-            'INSERT INTO pets (owner_id, pet_name, pet_type, pet_breed, city_id, area, age, description, adoption_status, min_age_of_children, can_live_with_dogs, can_live_with_cats, must_have_someone_home, energy_level, cuddliness_level, health_issues, sex, listing_type, vaccinated, neutered, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, CURRENT_TIMESTAMP) RETURNING *',
+            'INSERT INTO pets (owner_id, pet_name, pet_type, pet_breed, city_id, area, age, description, adoption_status, min_age_of_children, can_live_with_dogs, can_live_with_cats, must_have_someone_home, energy_level, cuddliness_level, health_issues, sex, listing_type, vaccinated, neutered, adoption_price, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, CURRENT_TIMESTAMP) RETURNING *',
             [
                 owner_id,
                 pet_name,
@@ -52,7 +53,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 sex,
                 listing_type,
                 vaccinated,
-                neutered
+                neutered,
+                adoption_price // Include adoption_price in the query
             ]
         );
 
@@ -122,7 +124,8 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         sex,
         listing_type,
         vaccinated,
-        neutered
+        neutered,
+        adoption_price, // Added adoption_price
     } = await req.json();
     
     const client = createClient();
@@ -130,7 +133,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
     try {
         await client.connect(); 
         const result = await client.query(
-            'UPDATE pets SET owner_id = $1, pet_name = $2, pet_type = $3, pet_breed = $4, city_id = $5, area = $6, age = $7, description = $8, adoption_status = $9, min_age_of_children = $10, can_live_with_dogs = $11, can_live_with_cats = $12, must_have_someone_home = $13, energy_level = $14, cuddliness_level = $15, health_issues = $16, sex = $17, listing_type = $18, vaccinated = $19, neutered = $20 WHERE pet_id = $21 RETURNING *',
+            'UPDATE pets SET owner_id = $1, pet_name = $2, pet_type = $3, pet_breed = $4, city_id = $5, area = $6, age = $7, description = $8, adoption_status = $9, min_age_of_children = $10, can_live_with_dogs = $11, can_live_with_cats = $12, must_have_someone_home = $13, energy_level = $14, cuddliness_level = $15, health_issues = $16, sex = $17, listing_type = $18, vaccinated = $19, neutered = $20, adoption_price = $21 WHERE pet_id = $22 RETURNING *',
             [
                 owner_id,
                 pet_name,
@@ -152,6 +155,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
                 listing_type,
                 vaccinated,
                 neutered,
+                adoption_price, // Include adoption_price in the update query
                 pet_id
             ]
         );

@@ -1,19 +1,21 @@
-// components/VerticalSearchBar.tsx
-import React from 'react';
+import React, { useState } from 'react';
 
 const VerticalSearchBar: React.FC = () => {
+  const [isAdopt, setIsAdopt] = useState(false);
+
   return (
     <div className="bg-white shadow-md p-4 rounded">
       <h2 className="text-lg font-bold mb-4">Search Filters</h2>
 
-      {/* Size Filter */}
+      {/* Adopt/Buy Filter */}
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Size</label>
-        <select className="border rounded w-full p-2">
-          <option value="">Select Size</option>
-          <option value="small">Small</option>
-          <option value="medium">Medium</option>
-          <option value="large">Large</option>
+        <label className="block text-sm font-medium mb-1">Adopt/Buy</label>
+        <select 
+          className="border rounded w-full p-2"
+          onChange={(e) => setIsAdopt(e.target.value === 'adopt')}
+        >
+          <option value="adopt">Adopt</option>
+          <option value="buy">Buy</option>
         </select>
       </div>
 
@@ -31,35 +33,66 @@ const VerticalSearchBar: React.FC = () => {
       <div className="mb-4">
         <label className="block text-sm font-medium mb-1">Age Range</label>
         <div className="flex space-x-2">
-          <input type="number" placeholder="yrs" className="border rounded w-1/3 p-2" />
-          <span className="self-center">to</span>
-          <input type="number" placeholder="yrs" className="border rounded w-1/3 p-2" />
+          <input type="number" placeholder="Min yrs" className="border rounded w-1/2 p-2" />
+          <input type="number" placeholder="Max yrs" className="border rounded w-1/2 p-2" />
         </div>
       </div>
 
-      {/* Age of Youngest Child Filter */}
+      {/* Price Filter (disabled if Adopt) */}
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Age of Youngest Child in Home</label>
-        <input type="number" placeholder="yrs" className="border rounded w-full p-2" />
+        <label className="block text-sm font-medium mb-1">Price</label>
+        <div className="flex space-x-2">
+          <input 
+            type="number" 
+            placeholder="Min $" 
+            className="border rounded w-1/2 p-2"
+            disabled={isAdopt}
+          />
+          <input 
+            type="number" 
+            placeholder="Max $" 
+            className="border rounded w-1/2 p-2"
+            disabled={isAdopt}
+          />
+        </div>
       </div>
 
       {/* Location Filter */}
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Location</label>
-        <input type="text" placeholder="Location" className="border rounded w-full p-2" />
-        <div className="mt-2">
-          <input type="checkbox" className="mr-2" />
-          <label className="text-sm">Use Current Location</label>
+        <label className="block text-sm font-medium mb-1">Area</label>
+        <input type="text" placeholder="Enter area" className="border rounded w-full p-2" />
+      </div>
+
+      {/* Age of Youngest Child Filter */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-1">Min Age of Children in Home</label>
+        <input type="number" placeholder="Min age" className="border rounded w-full p-2" />
+      </div>
+
+      {/* Checkboxes for Other Filters */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-1">Additional Preferences</label>
+        <div className="space-y-2">
+          <div>
+            <input type="checkbox" className="mr-2" />
+            <label>Can live with cats</label>
+          </div>
+          <div>
+            <input type="checkbox" className="mr-2" />
+            <label>Vaccinated</label>
+          </div>
+          <div>
+            <input type="checkbox" className="mr-2" />
+            <label>Neutered</label>
+          </div>
+          <div>
+            <input type="checkbox" className="mr-2" />
+            <label>Can live with dogs</label>
+          </div>
         </div>
       </div>
 
-      {/* Distance Filter */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Distance (miles)</label>
-        <input type="number" className="border rounded w-full p-2" />
-      </div>
-
-      <button className="text-white rounded p-2 w-full mb-2 " style={{backgroundColor:'#A03048'}}>Reset Search</button>
+      <button className="text-white rounded p-2 w-full mb-2" style={{backgroundColor:'#A03048'}}>Reset Search</button>
     </div>
   );
 };

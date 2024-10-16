@@ -25,8 +25,9 @@ export default function RootLayout({
         <html lang="en">
             <body className={montserrat.className}>
                 <ClientProvider>{children}</ClientProvider>
+        <Footer/>
+
             </body>
-            <Footer/>
         </html>
     );
 }

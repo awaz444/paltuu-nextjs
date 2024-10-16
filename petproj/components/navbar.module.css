@@ -12,6 +12,7 @@
     flex: 1;
     position: relative;
     top: -10px;
+    transform: scale(0.8);
   }
   
   .spacer {

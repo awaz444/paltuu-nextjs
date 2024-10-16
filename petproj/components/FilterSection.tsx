@@ -3,7 +3,7 @@ import styles from '@/styles/FilterSection.module.css';
 const FilterSection = () => {
   return (
     <div className={`bg-white shadow-xl p-6`} style={{ margin: '20px', borderRadius: '2rem' }}>
-      <div className="flex flex-wrap gap-4 mb-4 items-center"> {/* Added items-center to align vertically */}
+      <div className="flex flex-wrap gap-4 mb-4 mt-6 items-center"> {/* Added items-center to align vertically */}
         {/* Filter for species, breed, and color */}
         <div className="flex-1 min-w-[150px]"> {/* Set a minimum width for better alignment */}
           <label>Species</label>

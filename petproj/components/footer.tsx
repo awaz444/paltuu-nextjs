@@ -18,11 +18,11 @@ const Footer = () => {
         </div>
         <div className="mb-4">
           <p>Follow us on Instagram</p>
-          <a href="https://instagram.com/yourpage" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-            @Paltuu
+          <a href="https://instagram.com/paltuu.pk" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+            @paltuu.pk
           </a>
         </div>
-        <p className="text-sm">&copy; {currentYear} Your Company Name. All rights reserved.</p>
+        <p className="text-sm">&copy; {currentYear} Paltuu. All rights reserved.</p>
       </div>
     </footer>
   );

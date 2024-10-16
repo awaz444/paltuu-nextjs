@@ -1,20 +1,15 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../app/store/store'; // Correct path to RootState
 import { Pet } from '../app/store/slices/petSlice'; // Correct path to Pet
 
-const PetGrid = () => {
-  const pets = useSelector((state: RootState) => state.pets.pets) as Pet[];
+interface PetGridProps {
+  pets: Pet[]; // Define a prop type for the pets array
+}
 
+const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
       {pets.map((pet) => (
-        <div key={pet.pet_id} className="bg-white p-4 rounded-lg shadow-md">
-          {/* <img 
-            src={pet.image || '/default-image.jpg'} 
-            alt={pet.pet_name} 
-            className="w-full h-40 object-cover rounded-t-lg" 
-          /> */}
+        <div key={pet.pet_id} className="bg-white p-4 rounded-3xl shadow-md">
           <div className="p-2">
             <h3 className="font-bold text-xl">{pet.pet_name}</h3>
             <p>Breed: {pet.pet_breed}</p>

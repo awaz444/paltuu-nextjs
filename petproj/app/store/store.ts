@@ -1,16 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit';
 import petReducer from './slices/petSlice';
-import cityReducer from './slices/citySlice';
-import petCategoryReducer from './slices/petCategorySlice';
-import qualificationReducer from './slices/qualificationSlice';
-import favoriteThingsReducer from './slices/favoriteThingsSlice';
+import citiesReducer from './slices/citiesSlice';
+import petCategoriesReducer from './slices/petCategoriesSlice';
+import qualificationsReducer from './slices/qualificationsSlice';
+import favoriteThingsReducer from './slices/petFavoriteThingsSlice';
+import vetSlice from './slices/vetSlice';
 
 export const store = configureStore({
   reducer: {
     pets: petReducer,
-    cities: cityReducer,
-    petCategories: petCategoryReducer,
-    qualifications: qualificationReducer,
+    vets: vetSlice,
+    cities: citiesReducer,
+    categories: petCategoriesReducer,
+    qualifications: qualificationsReducer,
     favoriteThings: favoriteThingsReducer,
   },
 });

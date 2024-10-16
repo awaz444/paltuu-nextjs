@@ -1,15 +1,18 @@
 'use client'; // Ensure this is at the top of your file
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchPets } from '../store/slices/petSlice'; // Adjust import as needed
+import { fetchPets } from '../store/slices/petSlice'; 
 import Navbar from '@/components/navbar';
+import VerticalSearchBar from '../../components/VerticalSearchBar'; // Adjusted import path
+import FilterSection from '../../components/FilterSection'; // Adjusted import path
+import PetGrid from '../../components/petGrid'; // Adjusted import path
 import { RootState, AppDispatch } from '../store/store'; 
 
 export default function BrowsePets() {
   const dispatch = useDispatch<AppDispatch>();
 
-  // Access pets, loading, and error from Redux state
-  const { pets, loading, error } = useSelector((state: RootState) => state.pets);
+  // Access loading and error from Redux state
+  const { loading, error } = useSelector((state: RootState) => state.pets);
 
   useEffect(() => {
     dispatch(fetchPets());
@@ -21,6 +24,7 @@ export default function BrowsePets() {
   return (
     <>
       <Navbar />
+<<<<<<< Updated upstream
       <main className="flex min-h-screen flex-col items-center p-24" style={{ backgroundColor: 'rgb(var(--background-color))' }}>
         {/* Pets Listing */}
         <h1 className="text-2xl font-bold mt-0">Pets Available for Adoption</h1>
@@ -45,6 +49,32 @@ export default function BrowsePets() {
         ) : (
           <p>No pets available for adoption at this time.</p>
         )}
+=======
+      <FilterSection />
+      <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
+        <h1 className="text-2xl font-bold mt-10">Pets Available for Adoption</h1>
+
+        {/* Top Filter Section */}
+
+        <div className="flex w-full mt-4">
+          {/* Vertical Search Bar Section */}
+          <div className="w-1/4 mr-4">
+            <VerticalSearchBar />
+          </div>
+
+          {/* Pets Grid Section */}
+          <div className="w-3/4">
+            {/* Show loading, error, or pets grid */}
+            {loading ? (
+              <p>Loading pets...</p>
+            ) : error ? (
+              <p>Error: {error}</p>
+            ) : (
+              <PetGrid /> 
+            )}
+          </div>
+        </div>
+>>>>>>> Stashed changes
       </main>
     </>
   );

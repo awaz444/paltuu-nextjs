@@ -1,35 +1,48 @@
-user:
+'use client'; // Ensure this is at the top of your file
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchPets } from '../store/slices/petSlice'; // Adjust import as needed
+import Navbar from '@/components/navbar';
+import { RootState, AppDispatch } from '../store/store'; 
 
-primary: #A03048
+export default function BrowsePets() {
+  const dispatch = useDispatch<AppDispatch>();
 
-dark: #70223f
+  // Access pets, loading, and error from Redux state
+  const { pets, loading, error } = useSelector((state: RootState) => state.pets);
 
-light: #ffd2e3
+  useEffect(() => {
+    dispatch(fetchPets());
+  }, [dispatch]);
 
-tertiary: #ffa6c8
+  return (
+    <>
+      <Navbar />
+      <main className="flex min-h-screen flex-col items-center p-24" style={{ backgroundColor: 'rgb(var(--background-color))' }}>
+        {/* Pets Listing */}
+        <h1 className="text-2xl font-bold mt-10">Pets Available for Adoption</h1>
 
-bg: #ffffff 
-
-vet:
-
-primary: #6a398c
-
-dark: #3d2862
-
-light: #e7d9ff
-
-tertiary: #cfb3ff
-
-bg: #ffffff
-
-admin:
-
-primary: #02187b
-
-dark: #012656
-
-light: #c0dcff
-
-tertiary: #82b8ff
-
-bg: #ffffff
+        {loading ? (
+          <p>Loading pets...</p>
+        ) : error ? (
+          <p>Error: {error}</p>
+        ) : pets.length > 0 ? (
+          <ul className="mt-4 w-full">
+            {pets.map((pet) => (
+              <li key={pet.pet_id} className="border p-4 mb-2 rounded shadow">
+                <h2 className="text-xl">{pet.pet_name}</h2>
+                <p>Breed: {pet.pet_breed}</p>
+                <p>Age: {pet.age} years</p>
+                <p>Description: {pet.description}</p>
+                <p>Adoption Status: {pet.adoption_status}</p>
+                <p>Adoption Price: {pet.adoption_price}</p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No pets available for adoption at this time.</p>
+        )}
+      </main>
+    </>
+  );
+}

@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store'; // Ensure this path is correct
 
 // Define your Pet interface
-interface Pet {
+export interface Pet {
   pet_id: number;
   owner_id: number;
   pet_name: string;

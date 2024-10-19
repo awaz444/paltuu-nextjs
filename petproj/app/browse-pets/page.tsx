@@ -5,7 +5,7 @@ import { fetchPets } from '../store/slices/petSlice';
 import Navbar from '@/components/navbar';
 import VerticalSearchBar from '../../components/VerticalSearchBar'; 
 import FilterSection from '../../components/FilterSection'; 
-import PetGrid from '../../components/petGrid'; 
+import PetGrid from '../../components/PetGrid'; 
 import { RootState, AppDispatch } from '../store/store'; 
 
 import './styles.css'

@@ -57,7 +57,6 @@ const FosterVerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
 
     return (
         <div className="bg-white shadow-sm p-6 rounded-3xl">
-            <h2 className="text-lg font-bold mb-4">Search Filters</h2>
 
             {/* Sex Filter */}
             <div className="mb-4">

@@ -10,9 +10,6 @@ export default function AboutUs() {
             <main className="flex flex-col items-center p-8 bg-gray-100">
                 {/* About the Website Section */}
                 <section className="w-full max-w-5xl text-center mb-16">
-                    <h1 className="text-4xl font-bold mb-6">
-                        About Our Website
-                    </h1>
                     <p className="text-lg">
                         Welcome to Paltuu, your one-stop platform for pet
                         adoption and fostering. Our mission is to make it easier
@@ -56,7 +53,6 @@ export default function AboutUs() {
                                     target="_blank"
                                     rel="noopener noreferrer">
                                     <i className="bi bi-github"></i>
-
                                 </a>
                             </div>
                         </div>
@@ -90,8 +86,7 @@ export default function AboutUs() {
                                     href="https://github.com/dev2"
                                     target="_blank"
                                     rel="noopener noreferrer">
-                                                                        <i className="bi bi-github"></i>
-
+                                    <i className="bi bi-github"></i>
                                 </a>
                             </div>
                         </div>

@@ -14,8 +14,8 @@ export default function AboutUs() {
                         Welcome to Paltuu, your one-stop platform for pet
                         adoption and fostering. Our mission is to make it easier
                         for pets to find loving homes and ensure they are well
-                        taken care of. Whether you’re looking to adopt or
-                        foster, we’re here to help you every step of the way.
+                        taken care of. Whether you&apos;re looking to adopt or
+                        foster, we&apos;re here to help you every step of the way.
                     </p>
                 </section>
 
@@ -39,7 +39,7 @@ export default function AboutUs() {
                                 API because of its ability to quickly spread
                                 data. He listens to CAS because his ex liked
                                 CAS. Listens to Future and other trap music when
-                                he is not sad. Madrid Fan.
+                                he&apos;s not sad. Madrid Fan.
                             </p>
                             <div className="flex gap-4">
                                 <a
@@ -69,9 +69,9 @@ export default function AboutUs() {
                             <h3 className="text-xl font-bold mb-2">Dev 2</h3>
                             <p className="text-center mb-4">
                                 Dev 2 is a frontend developer with a passion for
-                                scraping. They will do every css task for u. Was
+                                scraping. They will do every css task for you. Was
                                 friends with Mahatma Gandhi, Socrates and many
-                                other historic personailties. He hosted the Last
+                                other historic personalities. He hosted the Last
                                 Supper for Jesus. Listens to NPC hip-hop and has
                                 great bollywood taste. Madrid Fan.
                             </p>
@@ -105,7 +105,7 @@ export default function AboutUs() {
                                 Dev 3 is a front-end developer with expertise in
                                 designing. He will most likely marry a cousin of
                                 his. He always gets BFC with Dev 1. He knows the
-                                lyrics to every song and Dev 2 always can't
+                                lyrics to every song and Dev 2 always can&apos;t
                                 believe it. Listens to Ghazals, Carti and Indie
                                 music at the same time. Barca Liverpool Fan.
                             </p>

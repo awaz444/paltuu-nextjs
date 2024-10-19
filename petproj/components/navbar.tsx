@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import styles from "./navbar.module.css";
+import Image from "next/image";
 
 const Navbar = () => {
     return (
@@ -9,7 +10,12 @@ const Navbar = () => {
             <div className="flex items-center justify-between">
                 <Link href="/">
                     <div className={styles.logo}>
-                        <img src="/paltu_logo.svg" alt="Logo" width={250} />
+                        <Image
+                            src="/paltu_logo.svg"
+                            alt="Logo"
+                            width={250}
+                            height={100}
+                        />
                     </div>
                 </Link>
 

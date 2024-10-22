@@ -7,13 +7,13 @@ export interface Pet {
   owner_id: number;
   pet_name: string;
   pet_type: number;
-  pet_breed: string;
+  pet_breed: string | null;
   city_id: number;
   area: string;
   age: number;
   description: string;
   adoption_status: string;
-  adoption_price: string;
+  price: string;
   min_age_of_children: number;
   can_live_with_dogs: boolean;
   can_live_with_cats: boolean;

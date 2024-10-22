@@ -1,18 +1,49 @@
 'use client'; 
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchPets } from '../store/slices/petSlice'; 
 import Navbar from '@/components/navbar';
 import VerticalSearchBar from '../../components/VerticalSearchBar'; 
 import FilterSection from '../../components/FilterSection'; 
 import PetGrid from "../../components/petGrid";
-import { RootState, AppDispatch } from '../store/store'; 
 
-import './styles.css'
+import './styles.css';
+
+// Define the Pet type
+interface Pet {
+  pet_id: number;
+  owner_id: number;
+  pet_name: string;
+  pet_type: number;
+  pet_breed: string | null;
+  city_id: number;
+  area: string;
+  age: number;
+  description: string;
+  adoption_status: string;
+  price: string;
+  min_age_of_children: number;
+  can_live_with_dogs: boolean;
+  can_live_with_cats: boolean;
+  must_have_someone_home: boolean;
+  energy_level: number;
+  cuddliness_level: number;
+  health_issues: string;
+  created_at: string;
+  sex: string | null;
+  listing_type: string;
+  vaccinated: boolean | null;
+  neutered: boolean | null;
+  payment_frequency: string | null;
+  city: string;
+  profile_image_url: string | null;
+  image_id: number | null;
+  image_url: string | null;
+}
 
 export default function BrowsePets() {
-  const dispatch = useDispatch<AppDispatch>();
-  const { pets, loading, error } = useSelector((state: RootState) => state.pets);
+  // State for pets, loading, and error
+  const [pets, setPets] = useState<Pet[]>([]); // Use Pet[] type for pets
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // State for filter inputs
   const [filters, setFilters] = useState({
@@ -34,14 +65,25 @@ export default function BrowsePets() {
     breed: '',
   });
 
+  // Fetch pets from the /api/browse-pets-objects
   useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        setLoading(true); // Set loading state
+        const response = await fetch('/api/browse-pets-objects');
+        if (!response.ok) throw new Error('Failed to fetch pets');
+        
+        const data = await response.json();
+        setPets(data);
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoading(false); // Stop loading once the API call is done
+      }
+    };
 
-
-    dispatch(fetchPets());
-
-
-    
-  }, [dispatch]);
+    fetchPets();
+  }, []);
 
   const handleReset = () => {
     // Reset filters to their initial state
@@ -74,14 +116,14 @@ export default function BrowsePets() {
     const matchesType = filters.isAdopt ? pet.listing_type === 'adoption' : pet.listing_type === 'foster';
 
     // Determine if the pet is for buying based on the price
-    const isPetBuy = Number(pet.adoption_price) > 0; // Pet is for buying if price > 0
+    const isPetBuy = Number(pet.price) > 0; // Pet is for buying if price > 0
     const matchesBuy = filters.isBuy ? isPetBuy : !isPetBuy; // matches based on isBuy filter
 
     const matchesSex = filters.selectedSex ? pet.sex === filters.selectedSex : true;
     const matchesMinAge = filters.minAge ? pet.age >= Number(filters.minAge) : true;
     const matchesMaxAge = filters.maxAge ? pet.age <= Number(filters.maxAge) : true;
-    const matchesMinPrice = filters.minPrice ? Number(pet.adoption_price) >= Number(filters.minPrice) : true;
-    const matchesMaxPrice = filters.maxPrice ? Number(pet.adoption_price) <= Number(filters.maxPrice) : true;
+    const matchesMinPrice = filters.minPrice ? Number(pet.price) >= Number(filters.minPrice) : true;
+    const matchesMaxPrice = filters.maxPrice ? Number(pet.price) <= Number(filters.maxPrice) : true;
     const matchesArea = filters.area ? pet.area.includes(filters.area) : true;
     const matchesMinChildAge = filters.minChildAge ? pet.min_age_of_children >= Number(filters.minChildAge) : true;
     const matchesDogs = filters.canLiveWithDogs ? pet.can_live_with_dogs : true;
@@ -90,7 +132,7 @@ export default function BrowsePets() {
     const matchesNeutered = filters.neutered ? pet.neutered : true;
     const matchesCity = filters.selectedCity ? pet.city_id === Number(filters.selectedCity) : true;
     const matchesSpecies = filters.selectedSpecies ? pet.pet_type === Number(filters.selectedSpecies) : true;
-    const matchesBreed = filters.breed ? pet.pet_breed.toLowerCase().includes(filters.breed.toLowerCase()) : true;
+    const matchesBreed = filters.breed ? pet.pet_breed?.toLowerCase().includes(filters.breed.toLowerCase()) : true;
 
     return (
       matchesType &&
@@ -116,29 +158,28 @@ export default function BrowsePets() {
     <>
       <Navbar />
       <div className="fullBody">
-      <FilterSection onSearch={(filters) => setFilters((prev) => ({ ...prev, ...filters }))} />
-      <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
-        <div className="flex w-full">
-          <div className="w-1/4 mr-4">
-            <VerticalSearchBar
-              onSearch={setFilters} // Pass filters up to parent
-              onReset={handleReset} // Pass reset function
-              onSearchAction={handleSearch} // Pass search function
-            />
+        <FilterSection onSearch={(filters) => setFilters((prev) => ({ ...prev, ...filters }))} />
+        <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
+          <div className="flex w-full">
+            <div className="w-1/4 mr-4">
+              <VerticalSearchBar
+                onSearch={setFilters} // Pass filters up to parent
+                onReset={handleReset} // Pass reset function
+                onSearchAction={handleSearch} // Pass search function
+              />
+            </div>
+            <div className="w-3/4">
+              {loading ? (
+                <p>Loading pets...</p>
+              ) : error ? (
+                <p>Error: {error}</p>
+              ) : (
+                <PetGrid pets={filteredPets} />
+              )}
+            </div>
           </div>
-          <div className="w-3/4">
-            {loading ? (
-              <p>Loading pets...</p>
-            ) : error ? (
-              <p>Error: {error}</p>
-            ) : (
-              <PetGrid pets={filteredPets} />
-            )}
-          </div>
-        </div>
-      </main>
+        </main>
       </div>
-      
     </>
   );
 }

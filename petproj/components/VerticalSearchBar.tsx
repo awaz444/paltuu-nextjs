@@ -69,18 +69,6 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
     return (
         <div className="bg-white shadow-sm p-6 rounded-3xl">
 
-            {/* Buy/Adopt Filter */}
-            <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Adopt/Buy</label>
-                <select
-                    className="border rounded w-full p-2"
-                    onChange={(e) => setIsBuy(e.target.value === "buy")}
-                >
-                    <option value="free">Adopt</option>
-                    <option value="buy">Buy</option>
-                </select>
-            </div>
-
             {/* Additional filters (Sex, Age, Price, etc.) */}
             {/* Sex Filter */}
             <div className="mb-4">

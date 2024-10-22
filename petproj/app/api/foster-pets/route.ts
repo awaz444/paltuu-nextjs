@@ -8,18 +8,18 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         await client.connect();
 
         const query = `
-        SELECT 
-            pets.*,                      
-            cities.city_name AS city,     
-            users.user_id,               
-            users.profile_image_url,     
-            pet_images.image_id,          
-            pet_images.image_url        
-        FROM pets
-        JOIN users ON pets.owner_id = users.user_id
-        JOIN cities ON pets.city_id = cities.city_id
-        LEFT JOIN pet_images ON pets.pet_id = pet_images.pet_id AND pet_images."order" = 1
-        WHERE pets.listing_type = 'foster'; 
+            SELECT 
+                pets.*,                      
+                cities.city_name AS city,     
+                users.user_id,               
+                users.profile_image_url,     
+                pet_images.image_id,          
+                pet_images.image_url        
+            FROM pets
+            JOIN users ON pets.owner_id = users.user_id
+            JOIN cities ON pets.city_id = cities.city_id
+            LEFT JOIN pet_images ON pets.pet_id = pet_images.pet_id AND pet_images."order" = 1
+            WHERE pets.listing_type = 'foster'; 
         `;
 
         const result = await client.query(query);

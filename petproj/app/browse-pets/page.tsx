@@ -1,53 +1,22 @@
 'use client'; 
 import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux'; 
+import { RootState, AppDispatch } from '../store/store'; // Import your store types
+import { fetchAdoptionPets } from '../store/slices/adoptionPetsSlice'; // Import the slice action
 import Navbar from '@/components/navbar';
 import VerticalSearchBar from '../../components/VerticalSearchBar'; 
 import FilterSection from '../../components/FilterSection'; 
 import PetGrid from "../../components/petGrid";
-
 import './styles.css';
 
-// Define the Pet type
-interface Pet {
-  pet_id: number;
-  owner_id: number;
-  pet_name: string;
-  pet_type: number;
-  pet_breed: string | null;
-  city_id: number;
-  area: string;
-  age: number;
-  description: string;
-  adoption_status: string;
-  price: string;
-  min_age_of_children: number;
-  can_live_with_dogs: boolean;
-  can_live_with_cats: boolean;
-  must_have_someone_home: boolean;
-  energy_level: number;
-  cuddliness_level: number;
-  health_issues: string;
-  created_at: string;
-  sex: string | null;
-  listing_type: string;
-  vaccinated: boolean | null;
-  neutered: boolean | null;
-  payment_frequency: string | null;
-  city: string;
-  profile_image_url: string | null;
-  image_id: number | null;
-  image_url: string | null;
-}
-
 export default function BrowsePets() {
-  // State for pets, loading, and error
-  const [pets, setPets] = useState<Pet[]>([]); // Use Pet[] type for pets
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // Redux Dispatch and Selector
+  const dispatch = useDispatch<AppDispatch>();
+  const { pets, loading, error } = useSelector((state: RootState) => state.adoptionPets); // Fetch pets from state
 
   // State for filter inputs
   const [filters, setFilters] = useState({
-    isBuy: false, // Added isBuy to state
+    isBuy: false,
     selectedSex: '',
     minAge: '',
     maxAge: '',
@@ -64,29 +33,14 @@ export default function BrowsePets() {
     breed: '',
   });
 
-  // Fetch pets from the /api/browse-pets-objects
+  // Fetch pets from the Redux store
   useEffect(() => {
-    const fetchPets = async () => {
-      try {
-        setLoading(true); // Set loading state
-        const response = await fetch('/api/browse-pets-objects');
-        if (!response.ok) throw new Error('Failed to fetch pets');
-        
-        const data = await response.json();
-        setPets(data);
-      } catch (err) {
-        console.log(err);
-      } finally {
-        setLoading(false); // Stop loading once the API call is done
-      }
-    };
-
-    fetchPets();
-  }, []);
+    dispatch(fetchAdoptionPets()); // Dispatch the action to fetch pets
+  }, [dispatch]);
 
   const handleReset = () => {
     setFilters({
-      isBuy: false, // Reset isBuy
+      isBuy: false,
       selectedSex: '',
       minAge: '',
       maxAge: '',
@@ -112,8 +66,8 @@ export default function BrowsePets() {
   const filteredPets = pets.filter((pet) => {
 
     // Determine if the pet is for buying based on the price
-    const isPetBuy = Number(pet.price) > 0; // Pet is for buying if price > 0
-    const matchesBuy = filters.isBuy ? isPetBuy : !isPetBuy; // matches based on isBuy filter
+    const isPetBuy = Number(pet.price) > 0;
+    const matchesBuy = filters.isBuy ? isPetBuy : !isPetBuy;
 
     const matchesSex = filters.selectedSex ? pet.sex === filters.selectedSex : true;
     const matchesMinAge = filters.minAge ? pet.age >= Number(filters.minAge) : true;
@@ -131,7 +85,7 @@ export default function BrowsePets() {
     const matchesBreed = filters.breed ? pet.pet_breed?.toLowerCase().includes(filters.breed.toLowerCase()) : true;
 
     return (
-      matchesBuy && // Include the buy filter
+      matchesBuy &&
       matchesSex &&
       matchesMinAge &&
       matchesMaxAge &&

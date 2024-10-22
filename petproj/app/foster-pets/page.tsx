@@ -1,50 +1,21 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "../store/store"; // Adjust the import path
+import { fetchFosterPets } from "../store/slices/fosterPetsSlice"; // Import the action
 import Navbar from "@/components/navbar";
 import FosterVerticalSearchBar from "../../components/FosterVerticalSearchBar";
 import FilterSection from "../../components/FilterSection";
 import PetGrid from "../../components/petGrid";
 
-interface Pet {
-    pet_id: number;
-    owner_id: number;
-    pet_name: string;
-    pet_type: number;
-    pet_breed: string | null;
-    city_id: number;
-    area: string;
-    age: number;
-    description: string;
-    adoption_status: string;
-    price: string;
-    min_age_of_children: number;
-    can_live_with_dogs: boolean;
-    can_live_with_cats: boolean;
-    must_have_someone_home: boolean;
-    energy_level: number;
-    cuddliness_level: number;
-    health_issues: string;
-    created_at: string;
-    sex: string | null;
-    listing_type: string;
-    vaccinated: boolean | null;
-    neutered: boolean | null;
-    payment_frequency: string | null;
-    city: string;
-    profile_image_url: string | null;
-    image_id: number | null;
-    image_url: string | null;
-}
-
 export default function FosterPets() {
-    // State for pets, loading, and error
-    const [pets, setPets] = useState<Pet[]>([]); // Use Pet[] type for pets
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    // Redux Dispatch and Selector
+    const dispatch = useDispatch<AppDispatch>();
+    const { pets, loading, error } = useSelector((state: RootState) => state.fosterPets); // Get foster pets from Redux store
 
     // State for filter inputs
     const [filters, setFilters] = useState({
-        isBuy: false, // Added isBuy to state
+        isBuy: false,
         selectedSex: "",
         minAge: "",
         maxAge: "",
@@ -61,31 +32,14 @@ export default function FosterPets() {
         breed: "",
     });
 
-    // Fetch pets from the /api/browse-pets-objects
+    // Fetch foster pets from the Redux store
     useEffect(() => {
-        const fetchPets = async () => {
-            try {
-                setLoading(true); // Set loading state
-                const response = await fetch("/api/foster-pets-objects");
-                if (!response.ok) throw new Error("Failed to fetch pets");
-
-                const data = await response.json();
-                console.log(data);
-                setPets(data);
-            } catch (err) {
-                console.log(err);
-            } finally {
-                setLoading(false); // Stop loading once the API call is done
-            }
-        };
-
-        fetchPets();
-    }, []);
+        dispatch(fetchFosterPets()); // Dispatch action to fetch foster pets
+    }, [dispatch]);
 
     const handleReset = () => {
-        // Reset filters to their initial state
         setFilters({
-            isBuy: false, // Reset isBuy
+            isBuy: false,
             selectedSex: "",
             minAge: "",
             maxAge: "",
@@ -109,49 +63,22 @@ export default function FosterPets() {
 
     // Filter pets based on the current filters
     const filteredPets = pets.filter((pet) => {
-
-
-        const matchesSex = filters.selectedSex
-            ? pet.sex === filters.selectedSex
-            : true;
-        const matchesMinAge = filters.minAge
-            ? pet.age >= Number(filters.minAge)
-            : true;
-        const matchesMaxAge = filters.maxAge
-            ? pet.age <= Number(filters.maxAge)
-            : true;
-        const matchesMinPrice = filters.minPrice
-            ? Number(pet.price) >= Number(filters.minPrice)
-            : true;
-        const matchesMaxPrice = filters.maxPrice
-            ? Number(pet.price) <= Number(filters.maxPrice)
-            : true;
-        const matchesArea = filters.area
-            ? pet.area.includes(filters.area)
-            : true;
-        const matchesMinChildAge = filters.minChildAge
-            ? pet.min_age_of_children >= Number(filters.minChildAge)
-            : true;
-        const matchesDogs = filters.canLiveWithDogs
-            ? pet.can_live_with_dogs
-            : true;
-        const matchesCats = filters.canLiveWithCats
-            ? pet.can_live_with_cats
-            : true;
+        const matchesSex = filters.selectedSex ? pet.sex === filters.selectedSex : true;
+        const matchesMinAge = filters.minAge ? pet.age >= Number(filters.minAge) : true;
+        const matchesMaxAge = filters.maxAge ? pet.age <= Number(filters.maxAge) : true;
+        const matchesMinPrice = filters.minPrice ? Number(pet.price) >= Number(filters.minPrice) : true;
+        const matchesMaxPrice = filters.maxPrice ? Number(pet.price) <= Number(filters.maxPrice) : true;
+        const matchesArea = filters.area ? pet.area.includes(filters.area) : true;
+        const matchesMinChildAge = filters.minChildAge ? pet.min_age_of_children >= Number(filters.minChildAge) : true;
+        const matchesDogs = filters.canLiveWithDogs ? pet.can_live_with_dogs : true;
+        const matchesCats = filters.canLiveWithCats ? pet.can_live_with_cats : true;
         const matchesVaccinated = filters.vaccinated ? pet.vaccinated : true;
         const matchesNeutered = filters.neutered ? pet.neutered : true;
-        const matchesCity = filters.selectedCity
-            ? pet.city_id === Number(filters.selectedCity)
-            : true;
-        const matchesSpecies = filters.selectedSpecies
-            ? pet.pet_type === Number(filters.selectedSpecies)
-            : true;
-        const matchesBreed = filters.breed
-            ? pet.pet_breed?.toLowerCase().includes(filters.breed.toLowerCase())
-            : true;
+        const matchesCity = filters.selectedCity ? pet.city_id === Number(filters.selectedCity) : true;
+        const matchesSpecies = filters.selectedSpecies ? pet.pet_type === Number(filters.selectedSpecies) : true;
+        const matchesBreed = filters.breed ? pet.pet_breed?.toLowerCase().includes(filters.breed.toLowerCase()) : true;
 
         return (
-
             matchesSex &&
             matchesMinAge &&
             matchesMaxAge &&
@@ -171,13 +98,10 @@ export default function FosterPets() {
 
     return (
         <>
-            {console.log(filteredPets)}
             <Navbar />
             <div className="fullBody">
                 <FilterSection
-                    onSearch={(filters) =>
-                        setFilters((prev) => ({ ...prev, ...filters }))
-                    }
+                    onSearch={(filters) => setFilters((prev) => ({ ...prev, ...filters }))}
                 />
                 <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
                     <div className="flex w-full">

@@ -2,7 +2,6 @@ import React, { useState } from "react";
 
 interface VerticalSearchBarProps {
     onSearch: (filters: {
-        isAdopt: boolean; // Always true for this page
         isBuy: boolean; // True if buying (price > 0), false for adoption
         selectedSex: string;
         minAge: string;
@@ -46,7 +45,6 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
 
     const handleSearch = () => {
         onSearch({
-            isAdopt: true, // Always true for foster pets
             isBuy, // Include isBuy filter
             selectedSex,
             minAge,

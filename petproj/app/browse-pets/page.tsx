@@ -47,7 +47,6 @@ export default function BrowsePets() {
 
   // State for filter inputs
   const [filters, setFilters] = useState({
-    isAdopt: true,
     isBuy: false, // Added isBuy to state
     selectedSex: '',
     minAge: '',
@@ -86,9 +85,7 @@ export default function BrowsePets() {
   }, []);
 
   const handleReset = () => {
-    // Reset filters to their initial state
     setFilters({
-      isAdopt: true,
       isBuy: false, // Reset isBuy
       selectedSex: '',
       minAge: '',
@@ -113,7 +110,6 @@ export default function BrowsePets() {
 
   // Filter pets based on the current filters
   const filteredPets = pets.filter((pet) => {
-    const matchesType = filters.isAdopt ? pet.listing_type === 'adoption' : pet.listing_type === 'foster';
 
     // Determine if the pet is for buying based on the price
     const isPetBuy = Number(pet.price) > 0; // Pet is for buying if price > 0
@@ -135,7 +131,6 @@ export default function BrowsePets() {
     const matchesBreed = filters.breed ? pet.pet_breed?.toLowerCase().includes(filters.breed.toLowerCase()) : true;
 
     return (
-      matchesType &&
       matchesBuy && // Include the buy filter
       matchesSex &&
       matchesMinAge &&

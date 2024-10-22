@@ -5,7 +5,6 @@ import FosterVerticalSearchBar from "../../components/FosterVerticalSearchBar";
 import FilterSection from "../../components/FilterSection";
 import PetGrid from "../../components/petGrid";
 
-// Define the Pet type
 interface Pet {
     pet_id: number;
     owner_id: number;
@@ -37,7 +36,7 @@ interface Pet {
     image_url: string | null;
 }
 
-export default function BrowsePets() {
+export default function FosterPets() {
     // State for pets, loading, and error
     const [pets, setPets] = useState<Pet[]>([]); // Use Pet[] type for pets
     const [loading, setLoading] = useState(true);
@@ -45,7 +44,6 @@ export default function BrowsePets() {
 
     // State for filter inputs
     const [filters, setFilters] = useState({
-        isAdopt: false,
         isBuy: false, // Added isBuy to state
         selectedSex: "",
         minAge: "",
@@ -68,10 +66,11 @@ export default function BrowsePets() {
         const fetchPets = async () => {
             try {
                 setLoading(true); // Set loading state
-                const response = await fetch("/api/browse-pets-objects");
+                const response = await fetch("/api/foster-pets-objects");
                 if (!response.ok) throw new Error("Failed to fetch pets");
 
                 const data = await response.json();
+                console.log(data);
                 setPets(data);
             } catch (err) {
                 console.log(err);
@@ -86,7 +85,6 @@ export default function BrowsePets() {
     const handleReset = () => {
         // Reset filters to their initial state
         setFilters({
-            isAdopt: false,
             isBuy: false, // Reset isBuy
             selectedSex: "",
             minAge: "",
@@ -111,13 +109,7 @@ export default function BrowsePets() {
 
     // Filter pets based on the current filters
     const filteredPets = pets.filter((pet) => {
-        const matchesType = filters.isAdopt
-            ? pet.listing_type === "adoption"
-            : pet.listing_type === "foster";
 
-        // Determine if the pet is for buying based on the price
-        const isPetBuy = Number(pet.price) > 0; // Pet is for buying if price > 0
-        const matchesBuy = filters.isBuy ? isPetBuy : !isPetBuy; // matches based on isBuy filter
 
         const matchesSex = filters.selectedSex
             ? pet.sex === filters.selectedSex
@@ -159,8 +151,7 @@ export default function BrowsePets() {
             : true;
 
         return (
-            matchesType &&
-            matchesBuy && // Include the buy filter
+
             matchesSex &&
             matchesMinAge &&
             matchesMaxAge &&
@@ -180,6 +171,7 @@ export default function BrowsePets() {
 
     return (
         <>
+            {console.log(filteredPets)}
             <Navbar />
             <div className="fullBody">
                 <FilterSection
@@ -201,6 +193,7 @@ export default function BrowsePets() {
                                 onSearchAction={handleSearch} // Pass search function
                             />
                         </div>
+
                         <div className="w-3/4">
                             {loading ? (
                                 <p>Loading pets...</p>

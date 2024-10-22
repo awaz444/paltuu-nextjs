@@ -50,7 +50,6 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
           />
           <div className="p-4">
             <h3 className="font-bold text-2xl mb-1">{pet.pet_name}</h3>
-            <p className="text-gray-600 text-lg mb-1">{pet.pet_breed}</p>
             <p className="text-gray-600 mb-1">Age: {pet.age} years</p>
             <p className="text-gray-600 mb-1">
               {pet.city} - {pet.area}

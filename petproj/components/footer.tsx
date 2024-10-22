@@ -24,9 +24,7 @@ const Footer = () => {
           </a>
         </div>
         <div className="mb-4">
-          <a href="/about-us" className="text-white underline text-md">
-            About Us
-          </a>
+        { /* for about us */}
         </div>
         <p className="text-sm">&copy; {currentYear} Paltuu. All rights reserved.</p>
       </div>

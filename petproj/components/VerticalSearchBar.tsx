@@ -2,7 +2,6 @@ import React, { useState } from "react";
 
 interface VerticalSearchBarProps {
     onSearch: (filters: {
-        isBuy: boolean; // True if buying (price > 0), false for adoption
         selectedSex: string;
         minAge: string;
         maxAge: string;
@@ -27,7 +26,6 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
     onReset,
     onSearchAction,
 }) => {
-    const [isBuy, setIsBuy] = useState(false); // True if buying (price > 0)
     const [selectedSex, setSelectedSex] = useState("");
     const [minAge, setMinAge] = useState("");
     const [maxAge, setMaxAge] = useState("");
@@ -45,7 +43,6 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
 
     const handleSearch = () => {
         onSearch({
-            isBuy, // Include isBuy filter
             selectedSex,
             minAge,
             maxAge,
@@ -113,7 +110,6 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         className="border rounded w-1/2 p-2"
                         value={minPrice}
                         onChange={(e) => setMinPrice(e.target.value)}
-                        disabled={!isBuy} // Disable if not buying
                     />
                     <input
                         type="number"
@@ -121,7 +117,6 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         className="border rounded w-1/2 p-2"
                         value={maxPrice}
                         onChange={(e) => setMaxPrice(e.target.value)}
-                        disabled={!isBuy} // Disable if not buying
                     />
                 </div>
             </div>

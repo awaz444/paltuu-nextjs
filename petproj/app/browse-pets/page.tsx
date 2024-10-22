@@ -16,7 +16,6 @@ export default function BrowsePets() {
 
   // State for filter inputs
   const [filters, setFilters] = useState({
-    isBuy: false,
     selectedSex: '',
     minAge: '',
     maxAge: '',
@@ -40,7 +39,6 @@ export default function BrowsePets() {
 
   const handleReset = () => {
     setFilters({
-      isBuy: false,
       selectedSex: '',
       minAge: '',
       maxAge: '',
@@ -65,10 +63,6 @@ export default function BrowsePets() {
   // Filter pets based on the current filters
   const filteredPets = pets.filter((pet) => {
 
-    // Determine if the pet is for buying based on the price
-    const isPetBuy = Number(pet.price) > 0;
-    const matchesBuy = filters.isBuy ? isPetBuy : !isPetBuy;
-
     const matchesSex = filters.selectedSex ? pet.sex === filters.selectedSex : true;
     const matchesMinAge = filters.minAge ? pet.age >= Number(filters.minAge) : true;
     const matchesMaxAge = filters.maxAge ? pet.age <= Number(filters.maxAge) : true;
@@ -85,7 +79,6 @@ export default function BrowsePets() {
     const matchesBreed = filters.breed ? pet.pet_breed?.toLowerCase().includes(filters.breed.toLowerCase()) : true;
 
     return (
-      matchesBuy &&
       matchesSex &&
       matchesMinAge &&
       matchesMaxAge &&

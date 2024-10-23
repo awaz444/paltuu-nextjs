@@ -90,6 +90,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         value={minAge}
                         onChange={(e) => setMinAge(e.target.value)}
                     />
+                    <p className="mt-2">to</p>
                     <input
                         type="number"
                         placeholder="Max yrs"
@@ -111,6 +112,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         value={minPrice}
                         onChange={(e) => setMinPrice(e.target.value)}
                     />
+                    <p className="mt-2">to</p>
                     <input
                         type="number"
                         placeholder="Max PKR"

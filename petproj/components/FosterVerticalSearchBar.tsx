@@ -85,6 +85,7 @@ const FosterVerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         value={minAge}
                         onChange={(e) => setMinAge(e.target.value)}
                     />
+                    <p className="mt-2">to</p>
                     <input
                         type="number"
                         placeholder="Max yrs"

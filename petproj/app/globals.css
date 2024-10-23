@@ -3,6 +3,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@tailwind apply;
 
 :root {
   /* Default colors for normal users */
@@ -45,6 +46,10 @@ body {
   font-family: var(--font-family); 
   color: rgb(var(--foreground-rgb));
   background-color: var(--background-color);
+}
+
+html, body {
+  background-color: #f7fafc; /* This is Tailwind's gray-100 */
 }
 
 /* Utility classes */

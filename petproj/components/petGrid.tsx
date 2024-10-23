@@ -65,7 +65,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                     <img
                         src={pet.image_url || "/placeholder.jpg"} // Fallback image if pet.image_url is null
                         alt={pet.pet_name}
-                        className="w-full h-48 object-cover rounded-t-2xl"
+                        className="w-full h-48 object-cover rounded-2xl"
                     />
                     <div className="p-4">
                         <h3 className="font-bold text-2xl mb-1">

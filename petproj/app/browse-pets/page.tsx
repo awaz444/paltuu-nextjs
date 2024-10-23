@@ -106,35 +106,43 @@ export default function BrowsePets() {
         { label: 'Buy', key: 'buy' },
     ];
 
-    return (
-        <>
-            <Navbar />
-            <div className="fullBody">
-                <FilterSection onSearch={(filters) => setFilters((prev) => ({ ...prev, ...filters }))} />
-                <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
-                    <div className="flex w-full">
-                        <div className="w-1/4 mr-4">
-                            <VerticalSearchBar
-                                onSearch={setFilters}
-                                onReset={handleReset}
-                                onSearchAction={handleSearch}
-                            />
-                        </div>
-                        <div className="w-3/4">
-                            <div className="tab-switch-container">
-                                {tabData.map((tab) => (
-                                    <div
-                                        key={tab.key}
-                                        className={`tab ${activeTab === tab.key ? 'active' : ''}`}
-                                        onClick={() => handleTabToggle(tab.key as 'adopt' | 'buy')}
-                                        role="button"
-                                        tabIndex={0}
-                                        onKeyUp={(e) => e.key === 'Enter' && handleTabToggle(tab.key as 'adopt' | 'buy')}
-                                    >
-                                        {tab.label}
-                                    </div>
-                                ))}
-                            </div>
+  return (
+    <>
+      <Navbar />
+      <div className="fullBody">
+        <FilterSection onSearch={(filters) => setFilters((prev) => ({ ...prev, ...filters }))} />
+        <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
+          <div className="flex w-full">
+            <div className="w-1/4 mr-4">
+              <VerticalSearchBar
+                onSearch={setFilters}
+                onReset={handleReset}
+                onSearchAction={handleSearch}
+              />
+            </div>
+            <div className="w-3/4">
+              {/* Tab Switch for Adopt and Buy */}
+              <div className="tab-switch-container">
+        {/* Sliding background for active tab */}
+        <div
+          className="tab-switch-slider"
+          style={{
+            transform: activeTab === 'adopt' ? 'translateX(0)' : 'translateX(100%)', // Sliding effect
+          }}
+        />
+        <div
+          className={`tab ${activeTab === 'adopt' ? 'active' : ''}`}
+          onClick={() => handleTabToggle('adopt')}
+        >
+          Adopt
+        </div>
+        <div
+          className={`tab ${activeTab === 'buy' ? 'active' : ''}`}
+          onClick={() => handleTabToggle('buy')}
+        >
+          Buy
+        </div>
+      </div>
 
                             {loading ? (
                                 <p>Loading pets...</p>

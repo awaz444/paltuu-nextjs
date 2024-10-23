@@ -150,40 +150,48 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                 <label className="block text-sm font-medium mb-1">Additional Preferences</label>
                 <div className="space-y-2">
                     <div>
-                        <input
-                            type="checkbox"
-                            className="mr-2"
-                            checked={canLiveWithDogs}
-                            onChange={() => setCanLiveWithDogs(!canLiveWithDogs)}
-                        />
-                        <label>Can live with dogs</label>
+                        <label style={{cursor:'pointer'}}>
+                            <input
+                                type="checkbox" style={{ cursor: 'pointer' }}
+                                className="mr-2"
+                                checked={canLiveWithDogs}
+                                onChange={() => setCanLiveWithDogs(!canLiveWithDogs)}
+                            />
+                        Can live with dogs
+                        </label>
                     </div>
                     <div>
+                    <label style={{cursor:'pointer'}}>
                         <input
-                            type="checkbox"
+                            type="checkbox" style={{cursor:'pointer'}}
                             className="mr-2"
                             checked={canLiveWithCats}
                             onChange={() => setCanLiveWithCats(!canLiveWithCats)}
                         />
-                        <label>Can live with cats</label>
+                        Can live with cats
+                        </label>
                     </div>
                     <div>
+                        <label style={{cursor:'pointer'}}>
                         <input
-                            type="checkbox"
+                            type="checkbox" style={{cursor:'pointer'}}
                             className="mr-2"
                             checked={vaccinated}
                             onChange={() => setVaccinated(!vaccinated)}
                         />
-                        <label>Vaccinated</label>
+                        Vaccinated
+                        </label>
                     </div>
                     <div>
+                        <label style={{cursor:'pointer'}}>
                         <input
-                            type="checkbox"
+                            type="checkbox" style={{cursor:'pointer'}}
                             className="mr-2"
                             checked={neutered}
                             onChange={() => setNeutered(!neutered)}
                         />
-                        <label>Neutered</label>
+                        Neutered
+                        </label>
                     </div>
                 </div>
             </div>

@@ -3,29 +3,45 @@
     display: flex;
     width: 100%;
     margin: 16px 0;
-    background-color: #e0e0e0; /* Light grey background for inactive tabs */
-    /*padding: 5px;*/
+    background-color: #ffffff; /* Inactive tab background */
     border-radius: 25px; /* Fully rounded container */
+    position: relative;
+    padding: 0; /* Remove inner padding */
+    overflow: hidden; /* Ensure no overflow from the sliding effect */
   }
   
   /* Style for each tab */
   .tab {
     flex: 1;
-    padding: 10px 20px;
+    padding: 10px 0; /* Remove horizontal padding to avoid gaps */
     text-align: center;
-    background-color: transparent; /* Default transparent background */
     cursor: pointer;
-    border-radius: 25px; /* Rounded tab corners */
     font-size: 16px;
     font-weight: 500;
     color: #555; /* Default text color */
-    transition: transform 0.4s cubic-bezier(0.74, 0.9, 0.64, 1.1), background-color 0.4s cubic-bezier(0.27, 0.99, 0.25, 1); /* Smooth transition for background and text color */
+    position: relative;
+    z-index: 1; /* Keep text above the slider */
+    transition: color 0.4s ease; /* Smooth text color transition */
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
+  /* Sliding background for the active tab */
+  .tab-switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%; /* Covers one tab */
+    height: 100%; /* Full height of the container */
+    background-color: #A03048; /* Active background color */
+    border-radius: 25px; /* Fully rounded corners */
+    transition: transform 0.4s ease; /* Smooth sliding movement */
+    z-index: 0;
+  }
+  
+  /* Active state for the tab */
   .tab.active {
-    background-color: #A03048; /* Active tab background color (green) */
-    color: white; /* Text color for active tab */
-    border-radius: 25px; /* Ensure borders are fully covered */
-    font-weight: 600;
+    color: white; /* Change text color for active tab */
   }
   

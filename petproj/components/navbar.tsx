@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import styles from "./navbar.module.css";
+import "./navbar.css";
 import Image from "next/image";
 import { useState,useEffect } from "react";
 
@@ -22,15 +22,15 @@ const Navbar = () => {
     }, []); // Empty dependency array to run once on mount
   
     return (
-      <nav className={`${styles.navbar}`}>
+      <nav className="navbar">
         <div className="flex items-center justify-between">
           <Link href="/">
-            <div className={styles.logo}>
+            <div className="logo">
               <Image src="/paltu_logo.svg" alt="Logo" width={250} height={100} />
             </div>
           </Link>
   
-          <div className={`${styles.navLinks} flex items-center gap-5`}>
+          <div className="navLinks flex items-center gap-5">
             {links.map((link) => (
               <Link key={link.href} href={`/${link.href}`}>
                 <span
@@ -46,7 +46,7 @@ const Navbar = () => {
 
           <Link href="/login">
             <button
-              className={`${styles.loginBtn} hover:bg-[#ffd2e3] hover:text-[#70223f]`}
+              className="loginBtn hover:bg-[#ffd2e3] hover:text-[#70223f]"
             >
               Login
             </button>

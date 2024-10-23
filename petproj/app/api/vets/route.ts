@@ -67,13 +67,33 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         const result = await client.query(
             `SELECT 
                 vets.*,                        
-                users.name,                    -- Vet's name
-                users.profile_image_url,        -- Vet's profile picture
+                users.name,                             -- Vet's name
+                users.profile_image_url,                -- Vet's profile picture
                 cities.city_id,
-                city_name                  -- Vet's city ID
+                cities.city_name,                       -- Vet's city
+                COALESCE(
+                    json_agg(DISTINCT jsonb_build_object(
+                        'qualification_name', qualifications.qualification_name,
+                        'year_acquired', vet_qualifications.year_acquired,
+                        'note', vet_qualifications.note
+                    )) FILTER (WHERE qualifications.qualification_name IS NOT NULL), '[]'
+                ) AS qualifications,                   -- Array of qualifications
+            
+                COALESCE(
+                    json_agg(DISTINCT jsonb_build_object(
+                        'category_id', pet_category.category_id,
+                        'category_name', pet_category.category_name
+                    )) FILTER (WHERE pet_category.category_name IS NOT NULL), '[]'
+                ) AS specializations                   -- Array of pet specializations
             FROM vets
-            JOIN users ON vets.user_id = users.user_id  -- Join to get user's info
-            JOIN cities ON users.city_id = cities.city_id`
+            JOIN users ON vets.user_id = users.user_id                -- Join to get user's info
+            JOIN cities ON users.city_id = cities.city_id             -- Join to get city info
+            LEFT JOIN vet_qualifications ON vets.vet_id = vet_qualifications.vet_id  -- Join to get vet's qualifications
+            LEFT JOIN qualifications ON vet_qualifications.qualification_id = qualifications.qualification_id  -- Get qualification details
+            LEFT JOIN vet_specializations ON vets.vet_id = vet_specializations.vet_id  -- Join to get vet's specializations
+            LEFT JOIN pet_category ON vet_specializations.category_id = pet_category.category_id  -- Get specialization category details
+            GROUP BY vets.vet_id, users.name, users.profile_image_url, cities.city_id, cities.city_name;
+        `
         );
 
         return NextResponse.json(result.rows, {

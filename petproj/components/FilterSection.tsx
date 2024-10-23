@@ -43,7 +43,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
         <div className="bg-gray-100 pt-6">
             <div
                 className="bg-white px-8 py-2 w-700"
-                style={{ margin: "0px 20px", borderRadius: "2rem" }}>
+                style={{ margin: "0px 32px", borderRadius: "2rem" }}>
                 <div className="flex flex-wrap gap-4 mb-4 mt-4 items-center">
                     {/* Species dropdown */}
                     <div className="flex-1 min-w-[150px]">

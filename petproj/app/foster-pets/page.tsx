@@ -99,7 +99,7 @@ export default function FosterPets() {
     return (
         <>
             <Navbar />
-            <div className="fullBody">
+            <div className="fullBody" style={{maxWidth: '90%', margin: '0 auto'}}>
                 <FilterSection
                     onSearch={(filters) => setFilters((prev) => ({ ...prev, ...filters }))}
                 />

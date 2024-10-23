@@ -109,7 +109,7 @@ export default function BrowsePets() {
   return (
     <>
       <Navbar />
-      <div className="fullBody">
+      <div className="fullBody" style={{maxWidth: '90%', margin: '0 auto'}}>
         <FilterSection onSearch={(filters) => setFilters((prev) => ({ ...prev, ...filters }))} />
         <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
           <div className="flex w-full">

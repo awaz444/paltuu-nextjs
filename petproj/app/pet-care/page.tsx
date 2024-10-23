@@ -74,7 +74,7 @@ export default function PetCare() {
   return (
     <>
       <Navbar />
-      <div className="fullBody">
+      <div className="fullBody" style={{maxWidth: '90%', margin: '0 auto'}}>
         <VetFilterSection
           onSearch={(newFilters) => {
             console.log("Updating filters:", newFilters);

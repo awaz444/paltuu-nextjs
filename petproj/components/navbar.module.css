@@ -1,4 +1,8 @@
 /* components/Navbar.module.css */
+.body {
+  background-color: #9699ff; 
+}
+
 .navbar {
     background-color: #A03048; 
     padding: 2rem 3rem;

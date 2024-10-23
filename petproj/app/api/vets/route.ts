@@ -3,9 +3,9 @@ import { createClient } from "../../../db/index";
 import { NextRequest, NextResponse } from "next/server";
 
 // POST method to make an existing user a vet
+// POST method to make an existing user a vet
 export async function POST(req: NextRequest): Promise<NextResponse> {
-    const { user_id, clinic_name, location, minimum_fee, contact_details } =
-        await req.json(); // Take in vet-specific data
+    const { user_id, clinic_name, location, minimum_fee, contact_details, bio } = await req.json(); // Updated with 'bio'
     const client = createClient();
 
     try {
@@ -27,10 +27,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             );
         }
 
-        // Insert into the vets table
+        // Insert into the vets table with the new fields
         const vetResult = await client.query(
-            "INSERT INTO vets (user_id, clinic_name, location, minimum_fee, contact_details, created_at) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP) RETURNING *",
-            [user_id, clinic_name, location, minimum_fee, contact_details]
+            `INSERT INTO vets 
+                (user_id, clinic_name, location, minimum_fee, contact_details, bio, profile_verified, created_at) 
+            VALUES 
+                ($1, $2, $3, $4, $5, $6, false, CURRENT_TIMESTAMP) 
+            RETURNING *`,
+            [user_id, clinic_name, location, minimum_fee, contact_details, bio]
         );
 
         // Optionally, update the user’s role to 'vet' in the users table if needed
@@ -56,6 +60,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         await client.end(); // Always close the connection
     }
 }
+
 
 // GET method to fetch all vets
 export async function GET(req: NextRequest): Promise<NextResponse> {
@@ -116,17 +121,19 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 }
 
 // PUT method to update a vet by ID
+// PUT method to update a vet by ID
 export async function PUT(req: NextRequest): Promise<NextResponse> {
-    const { vet_id, clinic_name, location, minimum_fee, contact_details } =
-        await req.json();
+    const { vet_id, clinic_name, location, minimum_fee, contact_details, bio, profile_verified } = await req.json(); // Updated with 'bio' and 'profile_verified'
     const client = createClient();
 
     try {
         await client.connect(); // Connect to the database
 
         const result = await client.query(
-            "UPDATE vets SET clinic_name = $1, location = $2, minimum_fee = $3, contact_details = $4 WHERE vet_id = $5 RETURNING *",
-            [clinic_name, location, minimum_fee, contact_details, vet_id]
+            `UPDATE vets 
+             SET clinic_name = $1, location = $2, minimum_fee = $3, contact_details = $4, bio = $5, profile_verified = $6 
+             WHERE vet_id = $7 RETURNING *`,
+            [clinic_name, location, minimum_fee, contact_details, bio, profile_verified, vet_id]
         );
 
         if (result.rows.length === 0) {

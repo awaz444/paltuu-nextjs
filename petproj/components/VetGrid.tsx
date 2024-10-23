@@ -20,30 +20,29 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
               className="w-20 h-20 object-cover rounded-full mr-4" // Circular image
             />
             <div className="flex flex-col flex-grow">
-              <h3 className="font-bold text-xl mb-1">{vet.name}</h3>
-              <p className="text-gray-600 mb-1">{vet.clinic_name}</p>
+              <h3 className="font-bold text-xl mb">{vet.name}</h3>
+              <p className="text-gray-600 text-lg mb-1">{vet.clinic_name}</p>
+              <p className="text-gray-600 mb-1">{vet.city_name}</p>
+              <p className="text-gray-600 mb-1">{vet.location}</p>
 
               {/* List qualifications if available */}
               {vet.qualifications.length > 0 && (
-                <div className="mt-2">
-                  <h4 className="font-semibold">Qualifications:</h4>
-                  <ul className="list-disc ml-5">
+                <div className="mt-0">
+                  <div className="list-disc ml-1">
                     {vet.qualifications.map((qual, index) => (
-                      <li key={index} className="text-gray-600">
-                        {qual.qualification_name} ({qual.year_acquired})
-                      </li>
+                      <p key={index} className="text-gray-600">
+                      - {qual.qualification_name} ({qual.year_acquired})
+                      </p>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               )}
 
-              <p className="text-gray-600 mb-1">City: {vet.city_name}</p>
-              <p className="text-gray-600 mb-1">Area: {vet.location}</p>
               <p className="text-gray-600 mb-1">
-                Minimum Fee: PKR {vet.minimum_fee}
+                Fee Starting From: PKR {vet.minimum_fee}
               </p>
               <p className={`text-${vet.profile_verified ? 'green' : 'red'}-600 font-semibold`}>
-                {vet.profile_verified ? "Profile Verified" : "Profile Not Verified"}
+                {vet.profile_verified ? "Profile Verified" : ""}
               </p>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Vet } from '../app/types/vet'; 
+import { Vet } from '../app/types/vet';
 
 interface VetGridProps {
   vets: Vet[];
@@ -41,9 +41,10 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
               <p className="text-gray-600 mb-1">
                 Fee Starting From: PKR {vet.minimum_fee}
               </p>
-              <p className={`text-${vet.profile_verified ? 'green' : 'red'}-600 font-semibold`}>
-                {vet.profile_verified ? "Profile Verified" : ""}
+              <p className={`text-${vet.profile_verified ? 'green-600' : 'red-600'} font-semibold`}>
+                {vet.profile_verified ? "Profile Verified" : "Not Verified"}
               </p>
+
             </div>
           </div>
         </div>

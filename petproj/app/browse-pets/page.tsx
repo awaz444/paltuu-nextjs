@@ -95,6 +95,16 @@ export default function BrowsePets() {
       matchesBreed
     );
   });
+  // Inside your main component
+  const [activeTab, setActiveTab] = useState<'adopt' | 'buy'>('adopt');
+
+  const handleTabToggle = (tab: 'adopt' | 'buy') => {
+    setActiveTab(tab);
+  };
+  const tabData = [
+    { label: 'Adopt', key: 'adopt' },
+    { label: 'Buy', key: 'buy' },
+  ];
 
   return (
     <>
@@ -105,12 +115,28 @@ export default function BrowsePets() {
           <div className="flex w-full">
             <div className="w-1/4 mr-4">
               <VerticalSearchBar
-                onSearch={setFilters} // Pass filters up to parent
-                onReset={handleReset} // Pass reset function
-                onSearchAction={handleSearch} // Pass search function
+                onSearch={setFilters}
+                onReset={handleReset}
+                onSearchAction={handleSearch}
               />
             </div>
             <div className="w-3/4">
+              {/* Tab Switch for Adopt and Buy */}
+              <div className="tab-switch-container">
+                {tabData.map((tab) => (
+                  <div
+                    key={tab.key}
+                    className={`tab ${activeTab === tab.key ? 'active' : ''}`}
+                    onClick={() => handleTabToggle(tab.key as 'adopt' | 'buy')}
+                    role="button"
+                    tabIndex={0}
+                    onKeyUp={(e) => e.key === 'Enter' && handleTabToggle(tab.key as 'adopt' | 'buy')}
+                  >
+                    {tab.label}
+                  </div>
+                ))}
+              </div>
+
               {loading ? (
                 <p>Loading pets...</p>
               ) : error ? (
@@ -124,4 +150,4 @@ export default function BrowsePets() {
       </div>
     </>
   );
-}
+};

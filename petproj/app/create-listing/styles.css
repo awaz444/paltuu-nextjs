@@ -1,0 +1,26 @@
+input[type="range"] {
+    -webkit-appearance: none; /* Override default styling */
+    width: 100%;
+    height: 6px;
+    border-radius: 5px;
+    background: #ddd; /* Background color */
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px; /* Thumb width */
+    height: 20px; /* Thumb height */
+    border-radius: 50%;
+    background: #A03048; /* Thumb color */
+    cursor: pointer; /* Cursor style */
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #A03048;
+    cursor: pointer;
+}

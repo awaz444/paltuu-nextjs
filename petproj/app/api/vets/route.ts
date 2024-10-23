@@ -73,6 +73,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                 cities.city_name,                       -- Vet's city
                 COALESCE(
                     json_agg(DISTINCT jsonb_build_object(
+                        'qualification_id', qualifications.qualification_id,
                         'qualification_name', qualifications.qualification_name,
                         'year_acquired', vet_qualifications.year_acquired,
                         'note', vet_qualifications.note

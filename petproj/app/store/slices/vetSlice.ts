@@ -1,18 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../store';
-
-// Vet interface
-interface Vet {
-  vet_id: number;
-  user_id: number;
-  clinic_name: string;
-  location: string;
-  minimum_fee: number;
-  contact_details: string;
-  profile_verified: boolean;
-  bio: string;
-  created_at: string;
-}
+import { Vet } from '../../types/vet'; 
 
 // Vet state interface
 interface VetState {
@@ -31,9 +19,11 @@ const initialState: VetState = {
 // Async thunk to fetch vets
 export const fetchVets = createAsyncThunk('vets/fetchVets', async () => {
   const response = await fetch('/api/vets'); // Adjust API endpoint
+
   if (!response.ok) {
     throw new Error('Failed to fetch vets');
   }
+
   const data: Vet[] = await response.json();
   return data;
 });
@@ -43,7 +33,7 @@ const vetSlice = createSlice({
   name: 'vets',
   initialState,
   reducers: {
-    // You can add more reducers here if needed
+    // Add, update, and delete actions
     addVet: (state, action: PayloadAction<Vet>) => {
       state.vets.push(action.payload);
     },

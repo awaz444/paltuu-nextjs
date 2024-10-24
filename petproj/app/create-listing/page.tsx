@@ -7,6 +7,7 @@ import { fetchPetCategories } from "../store/slices/petCategoriesSlice"; // Fetc
 import { postPet } from "../store/slices/petSlice"; // Import postPet thunk
 
 import Navbar from "@/components/navbar";
+import "./styles.css";
 
 export default function CreatePetListing() {
     const dispatch = useDispatch<AppDispatch>();
@@ -179,7 +180,26 @@ export default function CreatePetListing() {
                         />
                     </div>
 
-                    {/* Age */}
+                    {/* Age (Years) */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Age (Years)
+                        </label>
+                        <input
+                            type="text" // Change to text for free input
+                            className="mt-1 p-3 w-full border rounded-lg"
+                            placeholder="Enter age" // Ensure 0 is not in the placeholder
+                            value={age || ''} // Prevent "0" from showing in the input field
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                // Convert to number; default to 0 if empty or undefined
+                                const numberValue = value ? Number(value) : 0;
+                                setAge(numberValue);
+                            }}
+                        />
+                    </div>
+
+                    {/* Age
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">
                             Age (Years)
@@ -191,7 +211,7 @@ export default function CreatePetListing() {
                             value={age}
                             onChange={(e) => setAge(Number(e.target.value))}
                         />
-                    </div>
+                    </div> */}
 
                     {/* Description */}
                     <div className="mb-4">
@@ -239,7 +259,7 @@ export default function CreatePetListing() {
                         </div>
                     )}
 
-                    {/* Minimum Age of Children */}
+                    {/* Minimum Age of Children
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">
                             Minimum Age of Children
@@ -249,62 +269,104 @@ export default function CreatePetListing() {
                             className="mt-1 p-3 w-full border rounded-lg"
                             placeholder="Enter minimum age"
                             value={minAgeOfChildren}
-                            onChange={(e) =>
-                                setMinAgeOfChildren(Number(e.target.value))
-                            }
+                            onChange={(e) => setMinAgeOfChildren(Number(e.target.value))} // Use the raw value instead of converting to Number
+                        />
+                    </div> */}
+
+                    {/* Minimum Age of Children*/}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Minimum Age of Children
+                        </label>
+                        <input
+                            type="text" // Keep input type as text
+                            className="mt-1 p-3 w-full border rounded-lg"
+                            placeholder="Enter minimum age"
+                            value={minAgeOfChildren || ''}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                const numberValue = value ? Number(value) : 0;
+                                setMinAgeOfChildren(numberValue);
+                            }}
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 cursor-pointer">
-                            <input type="checkbox" className="mr-2" />
+                        <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+                            <input type="checkbox"
+                                checked={canLiveWithDogs}
+                                onChange={(e) => setCanLiveWithDogs(e.target.checked)}
+                                className="mr-2" />
                             Can live with dogs
                         </label>
                     </div>
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 cursor-pointer">
-                            <input type="checkbox" className="mr-2" />
+                        <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={canLiveWithCats}
+                                onChange={(e) => setCanLiveWithCats(e.target.checked)}
+                                className="mr-2"
+                            />
                             Can live with cats
                         </label>
                     </div>
+
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 cursor-pointer">
-                            <input type="checkbox" className="mr-2" />
-                            Must have someone home
+                        <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+                            <input type="checkbox"
+                                checked={mustHaveSomeoneHome}
+                                onChange={(e) => setMustHaveSomeoneHome(e.target.checked)}
+                                className="mr-2" />Must have someone home
                         </label>
                     </div>
 
-                    {/* Energy Level */}
+                    {/* Energy Level Slider */}
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Energy Level
-                        </label>
-                        <input
-                            type="number"
-                            className="mt-1 p-3 w-full border rounded-lg"
-                            placeholder="Enter energy level (1-5)"
-                            value={energyLevel}
-                            onChange={(e) =>
-                                setEnergyLevel(Number(e.target.value))
-                            }
-                        />
+                        <label className="block text-sm font-medium text-gray-700">Energy Level</label>
+                        <div className="relative">
+                            <input
+                                type="range"
+                                min="1"
+                                max="5"
+                                className="mt-2 w-full"
+                                defaultValue="3"
+                                value={energyLevel} // Controlled value from state
+                                onChange={(e) => setEnergyLevel(Number(e.target.value))}
+                                style={{
+                                    background: `linear-gradient(to right, #A03048 0%, #A03048 ${(energyLevel - 1) * 25}%, #D1D5DB ${(energyLevel - 1) * 25}%, #D1D5DB 100%)`, // Color bar up to the thumb
+                                }}
+                            />
+                            <div className="w-full flex justify-between -top-2">
+                                <span className="text-sm text-gray-500">Low</span>
+                                <span className="text-sm text-gray-500">High</span>
+                            </div>
+                        </div>
                     </div>
+
 
                     {/* Cuddliness Level */}
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Cuddliness Level
-                        </label>
-                        <input
-                            type="number"
-                            className="mt-1 p-3 w-full border rounded-lg"
-                            placeholder="Enter cuddliness level (1-5)"
-                            value={cuddlinessLevel}
-                            onChange={(e) =>
-                                setCuddlinessLevel(Number(e.target.value))
-                            }
-                        />
+                        <label className="block text-sm font-medium text-gray-700">Cuddliness Level</label>
+                        <div className="relative">
+                            <input
+                                type="range"
+                                min="1"
+                                max="5"
+                                className="mt-2 w-full h-2 rounded-lg bg-gray-300 appearance-none"
+                                value={cuddlinessLevel} // Controlled value from state
+                                onChange={(e) => setCuddlinessLevel(Number(e.target.value))}
+                                style={{
+                                    background: `linear-gradient(to right, #A03048 0%, #A03048 ${(cuddlinessLevel - 1) * 25}%, #D1D5DB ${(cuddlinessLevel - 1) * 25}%, #D1D5DB 100%)`, // Color bar up to the thumb
+                                }}
+                            />
+                            <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
+                                <span>Low</span>
+                                <span>High</span>
+                            </div>
+                        </div>
                     </div>
+
 
                     {/* Health Issues */}
                     <div className="mb-4">
@@ -336,21 +398,21 @@ export default function CreatePetListing() {
 
                     {/* Vaccinated */}
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                        <input
-                            type="checkbox"
-                            checked={vaccinated}
-                            onChange={(e) => setVaccinated(e.target.checked)}
-                            className="mr-2"
-                        />
+                        <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={vaccinated}
+                                onChange={(e) => setVaccinated(e.target.checked)}
+                                className="mr-2"
+                            />
                             Vaccinated
                         </label>
-                        
+
                     </div>
 
                     {/* Neutered */}
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
                             <input
                                 type="checkbox"
                                 checked={neutered}

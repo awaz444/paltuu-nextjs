@@ -7,8 +7,6 @@ import { fetchPetCategories } from "../store/slices/petCategoriesSlice"; // Fetc
 
 import Navbar from "@/components/navbar";
 
-import "./styles.css";
-
 export default function CreatePetListing() {
 
     const dispatch = useDispatch<AppDispatch>();

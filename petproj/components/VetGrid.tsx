@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { Vet } from '../app/types/vet';
 import { Card, Badge } from "antd";

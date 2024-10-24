@@ -1,5 +1,17 @@
+"use client";
+
 import React from "react";
 import { Vet } from '../app/types/vet';
+import { Card, Badge } from "antd";
+
+interface Vet {
+  vet_id: number;
+  name: string;
+  clinic_name: string;
+  location: string;
+  minimum_fee: number;
+  profile_verified: boolean; // Ensure this field exists in your vet data
+}
 
 interface VetGridProps {
   vets: Vet[];
@@ -12,6 +24,11 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
         <div
         key={vet.vet_id}
         className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden flex flex-col h-full hover:border-2 hover:border-[#A03048] hover:scale-105 transition-all duration-300">
+          <Badge.Ribbon
+                key={vet.vet_id}
+                text={vet.profile_verified ? "Verified" : "Non Verified"}
+                color={vet.profile_verified ? "green" : "red"}
+              />
           <div className="flex items-center">
             <img
               src={vet.profile_image_url || "/placeholder.jpg"} // Fallback image if profile_image_url is null
@@ -39,9 +56,6 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
 
               <p className="text-gray-600 mb-1">
                 Fee Starting From: PKR {vet.minimum_fee}
-              </p>
-              <p className={`${vet.profile_verified ? 'text-green-600' : 'text-red-600'} font-semibold`}>
-                {vet.profile_verified ? "Profile Verified" : "Not Verified"}
               </p>
             </div>
           </div>

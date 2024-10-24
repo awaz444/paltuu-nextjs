@@ -13,7 +13,7 @@ input[type="range"]::-webkit-slider-thumb {
     width: 20px; /* Thumb width */
     height: 20px; /* Thumb height */
     border-radius: 50%;
-    background: #A03048; /* Thumb color */
+    background: #A03048 !important; /* Thumb color */
     cursor: pointer; /* Cursor style */
 }
 

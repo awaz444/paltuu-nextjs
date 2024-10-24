@@ -1,6 +1,4 @@
-// components/Footer.tsx
-'use client'; // Marking this as a client component
-
+'use client';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 

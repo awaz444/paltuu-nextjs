@@ -2,7 +2,7 @@ import React from "react";
 import { Vet } from '../app/types/vet';
 import { Card, Badge } from "antd";
 
-interface Vet {
+interface VetData {
   vet_id: number;
   name: string;
   clinic_name: string;
@@ -12,7 +12,7 @@ interface Vet {
 }
 
 interface VetGridProps {
-  vets: Vet[];
+  vets: VetData[];
 }
 
 const VetGrid: React.FC<VetGridProps> = ({ vets }) => {

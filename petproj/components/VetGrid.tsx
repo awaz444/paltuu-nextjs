@@ -10,9 +10,8 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
       {vets.map((vet) => (
         <div
-          key={vet.vet_id}
-          className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden flex flex-col h-full"
-        >
+        key={vet.vet_id}
+        className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden flex flex-col h-full hover:border-2 hover:border-[#A03048] hover:scale-105 transition-all duration-300">
           <div className="flex items-center">
             <img
               src={vet.profile_image_url || "/placeholder.jpg"} // Fallback image if profile_image_url is null
@@ -41,10 +40,9 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
               <p className="text-gray-600 mb-1">
                 Fee Starting From: PKR {vet.minimum_fee}
               </p>
-              <p className={`text-${vet.profile_verified ? 'green-600' : 'red-600'} font-semibold`}>
+              <p className={`${vet.profile_verified ? 'text-green-600' : 'text-red-600'} font-semibold`}>
                 {vet.profile_verified ? "Profile Verified" : "Not Verified"}
               </p>
-
             </div>
           </div>
         </div>

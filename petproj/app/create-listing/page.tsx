@@ -7,7 +7,23 @@ import { fetchPetCategories } from "../store/slices/petCategoriesSlice"; // Fetc
 import { postPet } from "../store/slices/petSlice"; // Import postPet thunk
 
 import Navbar from "@/components/navbar";
+<<<<<<< Updated upstream
 import "./styles.css";
+=======
+import { PlusOutlined } from "@ant-design/icons";
+import { Image, Upload } from "antd";
+import type { GetProp, UploadFile, UploadProps } from "antd";
+
+type FileType = Parameters<GetProp<UploadProps, "beforeUpload">>[0];
+
+const getBase64 = (file: FileType): Promise<string> =>
+    new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+    });
+>>>>>>> Stashed changes
 
 export default function CreatePetListing() {
     const dispatch = useDispatch<AppDispatch>();
@@ -35,6 +51,9 @@ export default function CreatePetListing() {
     const [vaccinated, setVaccinated] = useState(false);
     const [neutered, setNeutered] = useState(false);
     const [paymentFrequency, setPaymentFrequency] = useState("");
+    const [fileList, setFileList] = useState<UploadFile[]>([]); // State for uploaded files
+    const [previewOpen, setPreviewOpen] = useState(false);
+    const [previewImage, setPreviewImage] = useState("");
 
     useEffect(() => {
         dispatch(fetchCities());
@@ -67,15 +86,33 @@ export default function CreatePetListing() {
             listing_type: listingType || "adoption",
             vaccinated,
             neutered,
-            ...(listingType === "foster" && {
-                payment_frequency: paymentFrequency || null,
-            }),
+            images: fileList.map((file) => file.originFileObj), // Attach the uploaded images
+            payment_frequency: paymentFrequency || null,
         };
 
         console.log(newPet);
         // Dispatch postPet action
         dispatch(postPet(newPet));
     };
+
+    const handlePreview = async (file: UploadFile) => {
+        if (!file.url && !file.preview) {
+            file.preview = await getBase64(file.originFileObj as FileType);
+        }
+
+        setPreviewImage(file.url || (file.preview as string));
+        setPreviewOpen(true);
+    };
+
+    const handleChange: UploadProps["onChange"] = ({ fileList: newFileList }) =>
+        setFileList(newFileList);
+
+    const uploadButton = (
+        <button style={{ border: 0, background: "none" }} type="button">
+            <PlusOutlined />
+            <div style={{ marginTop: 8 }}>Upload</div>
+        </button>
+    );
 
     return (
         <>
@@ -292,32 +329,65 @@ export default function CreatePetListing() {
                     </div>
 
                     <div className="mb-4">
+<<<<<<< Updated upstream
                         <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
                             <input type="checkbox"
                                 checked={canLiveWithDogs}
                                 onChange={(e) => setCanLiveWithDogs(e.target.checked)}
                                 className="mr-2" />
+=======
+                        <label className="block text-sm font-medium text-gray-700 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="mr-2"
+                                onChange={(e) =>
+                                    setCanLiveWithDogs(e.target.checked)
+                                }
+                            />
+>>>>>>> Stashed changes
                             Can live with dogs
                         </label>
                     </div>
                     <div className="mb-4">
+<<<<<<< Updated upstream
                         <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
                             <input
                                 type="checkbox"
                                 checked={canLiveWithCats}
                                 onChange={(e) => setCanLiveWithCats(e.target.checked)}
                                 className="mr-2"
+=======
+                        <label className="block text-sm font-medium text-gray-700 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="mr-2"
+                                onChange={(e) =>
+                                    setCanLiveWithCats(e.target.checked)
+                                }
+>>>>>>> Stashed changes
                             />
                             Can live with cats
                         </label>
                     </div>
 
                     <div className="mb-4">
+<<<<<<< Updated upstream
                         <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
                             <input type="checkbox"
                                 checked={mustHaveSomeoneHome}
                                 onChange={(e) => setMustHaveSomeoneHome(e.target.checked)}
                                 className="mr-2" />Must have someone home
+=======
+                        <label className="block text-sm font-medium text-gray-700 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="mr-2"
+                                onChange={(e) =>
+                                    setMustHaveSomeoneHome(e.target.checked)
+                                }
+                            />
+                            Must have someone home
+>>>>>>> Stashed changes
                         </label>
                     </div>
 
@@ -398,16 +468,29 @@ export default function CreatePetListing() {
 
                     {/* Vaccinated */}
                     <div className="mb-4">
+<<<<<<< Updated upstream
                         <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
                             <input
                                 type="checkbox"
                                 checked={vaccinated}
                                 onChange={(e) => setVaccinated(e.target.checked)}
+=======
+                        <label className="block text-sm font-medium text-gray-700">
+                            <input
+                                type="checkbox"
+                                checked={vaccinated}
+                                onChange={(e) =>
+                                    setVaccinated(e.target.checked)
+                                }
+>>>>>>> Stashed changes
                                 className="mr-2"
                             />
                             Vaccinated
                         </label>
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
                     </div>
 
                     {/* Neutered */}
@@ -421,6 +504,35 @@ export default function CreatePetListing() {
                             />
                             Neutered
                         </label>
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                            Upload Images (Max 5)
+                        </label>
+                        <Upload
+                            action=""
+                            listType="picture-card"
+                            fileList={fileList}
+                            onPreview={handlePreview}
+                            onChange={handleChange}
+                            maxCount={5} // Limit to 5 images
+                        >
+                            {fileList.length >= 5 ? null : uploadButton}
+                        </Upload>
+                        {previewImage && (
+                            <Image
+                                wrapperStyle={{ display: "none" }}
+                                preview={{
+                                    visible: previewOpen,
+                                    onVisibleChange: (visible) =>
+                                        setPreviewOpen(visible),
+                                    afterOpenChange: (visible) =>
+                                        !visible && setPreviewImage(""),
+                                }}
+                                src={previewImage}
+                            />
+                        )}
                     </div>
 
                     <button

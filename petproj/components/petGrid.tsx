@@ -80,7 +80,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                         {/* Conditionally render the price if it's greater than zero */}
                         {Number(pet.price) > 0 && (
                             <p className="text-red-600 font-semibold">
-                                Price: PKR {pet.price}
+                                PKR {pet.price} - {pet.payment_frequency}
                             </p>
                         )}
                     </div>

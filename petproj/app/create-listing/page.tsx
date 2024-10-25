@@ -287,9 +287,10 @@ export default function CreatePetListing() {
                                 onChange={(e) =>
                                     setPaymentFrequency(e.target.value)
                                 }>
-                                <option value="daily">Daily</option>
-                                <option value="weekly">Weekly</option>
-                                <option value="monthly">Monthly</option>
+                                <option value="day">Daily</option>
+                                <option value="week">Weekly</option>
+                                <option value="month">Monthly</option>
+                                <option value="year">Yearly</option>
                             </select>
                         </div>
                     )}
@@ -373,8 +374,8 @@ export default function CreatePetListing() {
                                 }}
                             />
                             <div className="w-full flex justify-between -top-2">
-                                <span className="text-sm text-gray-500">Low</span>
-                                <span className="text-sm text-gray-500">High</span>
+                                <span className="text-sm text-gray-500">Chilled</span>
+                                <span className="text-sm text-gray-500">Hyper</span>
                             </div>
                         </div>
                     </div>
@@ -396,8 +397,8 @@ export default function CreatePetListing() {
                                 }}
                             />
                             <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
-                                <span>Low</span>
-                                <span>High</span>
+                                <span>Cuddler</span>
+                                <span>Independent</span>
                             </div>
                         </div>
                     </div>

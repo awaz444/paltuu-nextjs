@@ -7,9 +7,8 @@ import { fetchPetCategories } from "../store/slices/petCategoriesSlice"; // Fetc
 import { postPet } from "../store/slices/petSlice"; // Import postPet thunk
 
 import Navbar from "@/components/navbar";
-<<<<<<< Updated upstream
 import "./styles.css";
-=======
+
 import { PlusOutlined } from "@ant-design/icons";
 import { Image, Upload } from "antd";
 import type { GetProp, UploadFile, UploadProps } from "antd";
@@ -23,7 +22,6 @@ const getBase64 = (file: FileType): Promise<string> =>
         reader.onload = () => resolve(reader.result as string);
         reader.onerror = (error) => reject(error);
     });
->>>>>>> Stashed changes
 
 export default function CreatePetListing() {
     const dispatch = useDispatch<AppDispatch>();
@@ -329,65 +327,32 @@ export default function CreatePetListing() {
                     </div>
 
                     <div className="mb-4">
-<<<<<<< Updated upstream
                         <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
                             <input type="checkbox"
                                 checked={canLiveWithDogs}
                                 onChange={(e) => setCanLiveWithDogs(e.target.checked)}
                                 className="mr-2" />
-=======
-                        <label className="block text-sm font-medium text-gray-700 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                className="mr-2"
-                                onChange={(e) =>
-                                    setCanLiveWithDogs(e.target.checked)
-                                }
-                            />
->>>>>>> Stashed changes
                             Can live with dogs
                         </label>
                     </div>
                     <div className="mb-4">
-<<<<<<< Updated upstream
                         <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
                             <input
                                 type="checkbox"
                                 checked={canLiveWithCats}
                                 onChange={(e) => setCanLiveWithCats(e.target.checked)}
                                 className="mr-2"
-=======
-                        <label className="block text-sm font-medium text-gray-700 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                className="mr-2"
-                                onChange={(e) =>
-                                    setCanLiveWithCats(e.target.checked)
-                                }
->>>>>>> Stashed changes
                             />
                             Can live with cats
                         </label>
                     </div>
 
                     <div className="mb-4">
-<<<<<<< Updated upstream
                         <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
                             <input type="checkbox"
                                 checked={mustHaveSomeoneHome}
                                 onChange={(e) => setMustHaveSomeoneHome(e.target.checked)}
                                 className="mr-2" />Must have someone home
-=======
-                        <label className="block text-sm font-medium text-gray-700 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                className="mr-2"
-                                onChange={(e) =>
-                                    setMustHaveSomeoneHome(e.target.checked)
-                                }
-                            />
-                            Must have someone home
->>>>>>> Stashed changes
                         </label>
                     </div>
 
@@ -468,13 +433,6 @@ export default function CreatePetListing() {
 
                     {/* Vaccinated */}
                     <div className="mb-4">
-<<<<<<< Updated upstream
-                        <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={vaccinated}
-                                onChange={(e) => setVaccinated(e.target.checked)}
-=======
                         <label className="block text-sm font-medium text-gray-700">
                             <input
                                 type="checkbox"
@@ -482,15 +440,10 @@ export default function CreatePetListing() {
                                 onChange={(e) =>
                                     setVaccinated(e.target.checked)
                                 }
->>>>>>> Stashed changes
                                 className="mr-2"
                             />
                             Vaccinated
                         </label>
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
                     </div>
 
                     {/* Neutered */}

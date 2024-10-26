@@ -18,7 +18,7 @@ import { User } from "../types/user";
     "role": "regular user"  // Options: 'admin', 'regular user', 'vet'
 }*/ }
 const createUser = () => {
-    const dispatch = useDispatch();
+    const dispatch = useDispatch<AppDispatch>();
     const { cities } = useSelector((state: RootState) => state.cities); // Fetch cities if needed
 
     // State for form fields
@@ -40,16 +40,16 @@ const createUser = () => {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
     
-        const newUser: User = {
-            username: username, // Assuming these are state variables
-            name: name,
-            DOB: DOB,
-            city_id: Number(cityId), // Ensure this is the correct type
-            email: email,
-            password: password,
-            phone_number: phone_number, // This needs to match the User interface
-            role: role,
-        };
+        const newUser: Omit<User, 'user_id'> = {
+            username,
+            name,
+            DOB,
+            city_id: cityId,
+            email,
+            password,
+            phone_number,
+            role,
+        }; 
     
         console.log(newUser);
         // Dispatch postUser action
@@ -118,7 +118,7 @@ const createUser = () => {
             <label className="block mb-2">Phone Number</label>
             <input
                 type="tel"
-                value={phoneNumber}
+                value={phone_number}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 className="border p-2 rounded w-full mb-4"
                 required

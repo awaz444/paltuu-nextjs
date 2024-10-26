@@ -28,7 +28,7 @@ export const fetchUsers = createAsyncThunk('users/fetchUsers', async () => {
     return data;
 });
 
-export const postUser = createAsyncThunk(
+export const postUser = createAsyncThunk<User, Omit<User, 'user_id'>>(
     'users/postUser',
     async (userData: User) => {
         const response = await fetch('/api/users', {

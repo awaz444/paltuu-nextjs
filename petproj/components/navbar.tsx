@@ -44,7 +44,7 @@ const Navbar = () => {
               </Link>
             ))}
 
-          <Link href="/login">
+          <Link href="/create-user">
             <button
               className="loginBtn hover:bg-[#ffd2e3] hover:text-[#70223f] transition-all duration-300"
             >

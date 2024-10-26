@@ -7,7 +7,7 @@ import { postUser } from "../store/slices/userSlice";
 import { User } from "../types/user";
 import Navbar from "@/components/navbar";
 
-const createUser = () => {
+const CreateUser = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { cities } = useSelector((state: RootState) => state.cities); // Fetch cities if needed
 
@@ -144,4 +144,4 @@ const createUser = () => {
     );
 };
 
-export default createUser;
+export default CreateUser;

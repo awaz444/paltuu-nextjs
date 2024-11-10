@@ -30,7 +30,6 @@ export default function Home() {
 
   return (
     <>
-      <Navbar />
       <main className="flex min-h-screen flex-col items-center p-24" style={{ backgroundColor: 'rgb(var(--background-color))' }}>
 
         {/* Connection Status Indicator */}

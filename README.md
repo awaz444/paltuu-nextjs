@@ -3,7 +3,7 @@
 # **Pet Adoption Platform for Pakistan**
 
 ## **Overview**
-This project is a web-based platform developed using Next.js, React.js, Node.js, and PostgreSQL/SQLite3, designed to facilitate pet adoption, fostering, and sponsorship within Pakistan. The platform also offers features such as a community forum, a pet lost and found section, and a verified vet directory. Additionally, it integrates an intelligent assistant powered by Gemini LLM to guide users throughout the website.
+This project is a web-based platform developed using Next.js, React.js, Node.js, and PostgreSQL, designed to facilitate pet adoption, fostering, and sponsorship within Pakistan. The platform also offers features such as a community forum, a pet lost and found section, and a verified vet directory. Additionally, it integrates an intelligent assistant powered by Gemini LLM to guide users throughout the website.
 
 ## **Table of Contents**
 - [Features](#features)

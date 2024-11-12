@@ -27,8 +27,9 @@ This project is a web-based platform developed using Next.js, React.js, Node.js,
 ## **Technology Stack**
 - **Frontend**: Next.js, React.js, Material UI/Ant Design/Minimals
 - **Backend**: Node.js, Express.js
-- **Database**: PostgreSQL/SQLite3
+- **Database**: PostgreSQL
 - **LLM Integration**: Gemini for LLMs
+- **Authentication**: NextAuth / OAuth
 
 ## **Project Structure**
 ```

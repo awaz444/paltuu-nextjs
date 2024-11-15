@@ -274,7 +274,6 @@ export default function CreatePetListing() {
                             <input
                                 type="checkbox"
                                 checked={vaccinated}
-                                required
                                 onChange={(e) =>
                                     setVaccinated(e.target.checked)
                                 }
@@ -290,7 +289,6 @@ export default function CreatePetListing() {
                             <input
                                 type="checkbox"
                                 checked={neutered}
-                                required
                                 onChange={(e) => setNeutered(e.target.checked)}
                                 className="mr-2"
                             />

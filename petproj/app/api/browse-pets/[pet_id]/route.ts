@@ -58,7 +58,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         JOIN users ON pets.owner_id = users.user_id
         JOIN cities ON pets.city_id = cities.city_id
         LEFT JOIN pet_images ON pets.pet_id = pet_images.pet_id
-        WHERE pets.listing_type = 'adoption' AND pets.pet_id = $1
+        WHERE pets.pet_id = $1
         ORDER BY pet_images."order" ASC;
         `;
 

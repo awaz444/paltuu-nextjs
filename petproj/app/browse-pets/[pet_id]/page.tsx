@@ -22,21 +22,25 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
                 }
                 const petData = await res.json();
                 setPet(petData);
-
+    
                 // Populate carousel images
-                const images = [petData.profile_image_url, ...petData.additional_images]
-                    .filter((image: string) => Boolean(image))
+                const images = [
+                    petData.profile_image_url, 
+                    ...petData.additional_images.map((image: { image_url: string }) => image.image_url)
+                ]
+                    .filter((image: string) => Boolean(image)) // Ensure no null/undefined values
                     .slice(0, 5); // Limit to 5 images for the carousel
                 setCarouselImages(images);
             } catch (err) {
                 console.error(err);
             }
         };
-
+    
         if (pet_id) {
             fetchPetDetails();
         }
     }, [pet_id]);
+    
 
     if (!pet) {
         return <div>Loading...</div>;
@@ -45,7 +49,7 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
     return (
         <>
         <Navbar/>
-        <div className="pet-details">
+        <div className="pet-details min-h-screen bg-white-400">
             <h1 className="text-center font-bold text-4xl">{pet.pet_name}</h1>
             <div className="pet-carousel mb-8">
                 <Carousel autoplay>

@@ -39,6 +39,9 @@ interface PetGridProps {
 }
 
 const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
+
+    console.log(pets);
+    
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {/* Create new listing card */}
@@ -57,12 +60,10 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                 </svg>
                 Create new listing
             </Link>
-
             {pets.map((pet) => (
                 <div
                     key={pet.pet_id}
                     className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-[#A03048] hover:scale-102 transition-all duration-300">
-
                     <div className="relative">
                         <img
                             src={pet.image_url || "/placeholder.jpg"} // Fallback image if pet.image_url is null
@@ -71,8 +72,10 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                         />
                         {/* Overlay badge for "Ready for adoption" or price at the bottom-right */}
                         {Number(pet.price) > 0 && (
-                            <div className="absolute bottom-2 right-2 bg-pink-400 text-white text-sm font-semibold px-3 py-1 rounded-full">
-                            PKR {pet.price}
+                            <div className="absolute bottom-2 right-2 bg-primary text-white text-sm font-semibold px-3 py-1 rounded-full">
+                                PKR {pet.price}
+                                {pet.payment_frequency &&
+                                    ` / ${pet.payment_frequency}`}
                             </div>
                         )}
                     </div>
@@ -90,7 +93,6 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                     </div>
                 </div>
             ))}
-
         </div>
     );
 };

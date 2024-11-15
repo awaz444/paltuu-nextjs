@@ -1,5 +1,6 @@
 import React from "react";
 import { Vet } from '../app/types/vet'; 
+import Link from "next/link"; // Import Link from next/link
 
 interface VetGridProps {
   vets: Vet[];
@@ -9,9 +10,13 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
       {vets.map((vet) => (
+        <Link
+        key={vet.vet_id}
+        href={`/pet-care/${vet.vet_id}`} // Link to the pet detail page
+        passHref>
         <div
           key={vet.vet_id}
-          className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden flex flex-col h-full"
+          className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-[#A03048] hover:scale-102 transition-all duration-300"
         >
           <div className="flex items-center">
             <img
@@ -49,6 +54,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
             </div>
           </div>
         </div>
+        </Link>
       ))}
     </div>
   );

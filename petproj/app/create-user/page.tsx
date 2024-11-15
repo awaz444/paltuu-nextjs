@@ -18,9 +18,8 @@ const CreateUser = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [phone_number, setPhoneNumber] = useState("");
-    const [role, setRole] = useState<"admin" | "regular user" | "vet">(
-        "regular user"
-    );
+    const [role, setRole] = useState<"regular user" | "vet">("regular user");
+
 
     useEffect(() => {
         dispatch(fetchCities()); // Fetch cities when component mounts
@@ -51,7 +50,7 @@ const CreateUser = () => {
             <Navbar />
             <form
                 onSubmit={handleSubmit}
-                className="max-w-md mx-auto p-4 my-7 bg-white shadow-md rounded rounded-xl">
+                className="max-w-md mx-auto p-4 my-7 bg-white shadow-md rounded-xl">
                 <label className="block mb-2">Username</label>
                 <input
                     type="text"
@@ -120,19 +119,15 @@ const CreateUser = () => {
                     required
                 />
 
-                <label className="block mb-2">Role</label>
-                <select
-                    value={role}
-                    onChange={(e) =>
-                        setRole(
-                            e.target.value as "admin" | "regular user" | "vet"
-                        )
-                    }
-                    className="border p-2 rounded w-full mb-4">
-                    <option value="regular user">Regular User</option>
-                    <option value="admin">Admin</option>
-                    <option value="vet">Vet</option>
-                </select>
+                <label className="block mb-2"></label>
+                <div className="flex justify-end">
+                    <button
+                        onClick={() => setRole((prevRole) => (prevRole === "regular user" ? "vet" : "regular user"))}
+                        className="border p-2 rounded bg-blue-500 text-white hover:bg-blue-600"
+                    >
+                        {role === "vet" ? "I am not a vet" : "I am a vet"}
+                    </button>
+                </div>
 
                 <button
                     type="submit"

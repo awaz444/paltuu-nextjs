@@ -129,7 +129,9 @@ export default function CreatePetListing() {
                         <select
                             className="mt-1 p-3 w-full border rounded-lg"
                             value={listingType}
+                            required
                             onChange={(e) => setListingType(e.target.value)}>
+                        
                             <option value="adoption">Adoption</option>
                             <option value="foster">Foster</option>
                         </select>
@@ -142,6 +144,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="text"
+                            required
                             className="mt-1 p-3 w-full border rounded-lg"
                             placeholder="Enter pet name"
                             value={petName}
@@ -157,6 +160,7 @@ export default function CreatePetListing() {
                         <select
                             className="mt-1 p-3 w-full border rounded-lg"
                             value={petType}
+                            required
                             onChange={(e) => setPetType(e.target.value)}>
                             <option value="">Select pet type</option>
                             {categories.map((category) => (
@@ -191,6 +195,7 @@ export default function CreatePetListing() {
                         <select
                             className="mt-1 p-3 w-full border rounded-lg"
                             value={cityId}
+                            required
                             onChange={(e) => setCityId(e.target.value)}>
                             <option value="">Select City</option>
                             {cities.map((city) => (
@@ -222,6 +227,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="text" // Change to text for free input
+                            required
                             className="mt-1 p-3 w-full border rounded-lg"
                             placeholder="Enter age" // Ensure 0 is not in the placeholder
                             value={age || ''} // Prevent "0" from showing in the input field
@@ -426,6 +432,7 @@ export default function CreatePetListing() {
                         <select
                             className="mt-1 p-3 w-full border rounded-lg"
                             value={sex}
+                            required
                             onChange={(e) => setSex(e.target.value)}>
                             <option value="male">Male</option>
                             <option value="female">Female</option>

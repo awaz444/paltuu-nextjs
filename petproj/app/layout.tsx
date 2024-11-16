@@ -14,6 +14,9 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
     title: "Paltuu",
     description: "Pakistan's First Pet Adoption Platform",
+    icons: {
+        icon: 'paltuuFavicon.png'
+    }
 };
 
 export default function RootLayout({

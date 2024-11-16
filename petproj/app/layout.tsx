@@ -14,9 +14,6 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
     title: "Paltuu",
     description: "Pakistan's First Pet Adoption Platform",
-    icons: {
-        icon: 'paltuuFavicon.png'
-    }
 };
 
 export default function RootLayout({
@@ -26,6 +23,24 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
+            <head>
+                {/* Default favicon */}
+                <link rel="icon" href="/favicon-light.png" id="favicon" />
+                {/* Script to dynamically change favicon */}
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `
+                            function updateFavicon() {
+                                const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                                const favicon = document.getElementById('favicon');
+                                favicon.href = isDarkMode ? '/favicon-dark.png' : '/favicon-light.png';
+                            }
+                            updateFavicon();
+                            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateFavicon);
+                        `,
+                    }}
+                />
+            </head>
             <body className={montserrat.className}>
                 <ClientProvider>{children}</ClientProvider>
                 <Footer />

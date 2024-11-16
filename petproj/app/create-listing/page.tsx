@@ -29,7 +29,7 @@ export default function CreatePetListing() {
     const { categories } = useSelector((state: RootState) => state.categories);
 
     // State for form fields
-    const [listingType, setListingType] = useState("");
+    const [listingType, setListingType] = useState<'adoption' | 'foster'>('adoption');
     const [petName, setPetName] = useState("");
     const [petType, setPetType] = useState("");
     const [breed, setBreed] = useState("");
@@ -112,6 +112,12 @@ export default function CreatePetListing() {
         </button>
     );
 
+
+
+    const handleTabToggle = (type: 'adoption' | 'foster') => {
+        setListingType(type);
+    };
+
     return (
         <>
             <Navbar />
@@ -123,18 +129,32 @@ export default function CreatePetListing() {
                     onSubmit={handleSubmit}>
                     {/* Listing Type */}
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Listing Type
-                        </label>
-                        <select
-                            className="mt-1 p-3 w-full border rounded-lg"
-                            value={listingType}
-                            required
-                            onChange={(e) => setListingType(e.target.value)}>
-                            <option value="adoption">Adoption</option>
-                            <option value="foster">Foster</option>
-                        </select>
-                    </div>
+            <label className="block text-sm font-medium text-gray-700">
+                Listing Type
+            </label>
+            <div className="w-3/4 tab-switch-container mt-1">
+                {/* Sliding background for active tab */}
+                <div
+                    className="tab-switch-slider"
+                    style={{
+                        transform: listingType === 'adoption' ? 'translateX(0)' : 'translateX(100%)',
+                    }}
+                />
+                {/* Tabs */}
+                <div
+                    className={`tab ${listingType === 'adoption' ? 'active' : ''}`}
+                    onClick={() => handleTabToggle('adoption')}
+                >
+                    Adopt
+                </div>
+                <div
+                    className={`tab ${listingType === 'foster' ? 'active' : ''}`}
+                    onClick={() => handleTabToggle('foster')}
+                >
+                    Foster
+                </div>
+            </div>
+        </div>
 
                     {/* Pet Name */}
                     <div className="mb-4">

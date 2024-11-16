@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import './style.css';
+import { signIn } from "next-auth/react";
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -53,6 +54,14 @@ const Login = () => {
                             className="text-white w-full py-2 rounded mt-4"
                         >
                             Log In
+                        </button>
+                        <button
+                            onClick={() => signIn("google")}
+                            style={{ backgroundColor: "#A03048" }}
+                            type="submit"
+                            className="text-white w-full py-2 rounded mt-4"
+                            >
+                            Login with Google
                         </button>
                         <button
                             style={{ borderColor: "#A03048" }}

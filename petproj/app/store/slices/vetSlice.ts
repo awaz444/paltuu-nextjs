@@ -28,6 +28,43 @@ export const fetchVets = createAsyncThunk('vets/fetchVets', async () => {
   return data;
 });
 
+// Async thunk to post vet details
+export const postVet = createAsyncThunk(
+  "vets/postVet",
+  async (
+    vetData: {
+      user_id: number;
+      clinic_name: string;
+      location: string;
+      minimum_fee: number;
+      contact_details: string;
+      bio: string;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await fetch("/api/vets", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(vetData),
+      });
+
+      if (!response.ok) {
+        const errorDetails = await response.text();  // Log the error details
+        console.error("Error response:", errorDetails);
+        throw new Error("Failed to create vet entry");
+      }
+
+      return await response.json();
+    } catch (err: any) {
+      return rejectWithValue(err.message || "Something went wrong");
+    }
+  }
+);
+
+
 // Create the vet slice
 const vetSlice = createSlice({
   name: 'vets',
@@ -60,6 +97,19 @@ const vetSlice = createSlice({
       .addCase(fetchVets.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch vets';
+      })
+
+      .addCase(postVet.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(postVet.fulfilled, (state, action) => {
+          state.loading = false;
+          state.vets = action.payload;
+      })
+      .addCase(postVet.rejected, (state, action) => {
+          state.loading = false;
+          state.error = action.payload as string;
       });
   },
 });

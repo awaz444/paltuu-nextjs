@@ -3,19 +3,29 @@ import { createClient } from "../../../db/index";
 import { NextRequest, NextResponse } from "next/server";
 
 // POST method to make an existing user a vet
-// POST method to make an existing user a vet
 export async function POST(req: NextRequest): Promise<NextResponse> {
     const { user_id, clinic_name, location, minimum_fee, contact_details, bio } = await req.json(); // Updated with 'bio'
     const client = createClient();
-
+    console.log("Received user_id:", user_id);  // Log the received user_id
     try {
         await client.connect(); // Connect to the database
 
-        // Ensure that the user exists
+        if (!user_id) {
+            console.error("Missing user_id in the request body");
+            return NextResponse.json(
+                { error: "user_id is required" },
+                { status: 400 }
+            );
+        }
+        
+
+        // Debugging: Log user_id and query result
+        console.log("Received user_id:", user_id);
         const userCheck = await client.query(
             "SELECT * FROM users WHERE user_id = $1",
             [user_id]
         );
+        console.log("User query result:", userCheck.rows);
 
         if (userCheck.rows.length === 0) {
             return NextResponse.json(

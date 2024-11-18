@@ -6,10 +6,12 @@ import { fetchCities } from "../store/slices/citiesSlice"; // Fetch cities from 
 import { postUser } from "../store/slices/userSlice";
 import { User } from "../types/user";
 import Navbar from "@/components/navbar";
+import { useRouter } from "next/navigation";
 
 const CreateUser = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { cities } = useSelector((state: RootState) => state.cities); // Fetch cities if needed
+    const router = useRouter(); 
 
     const [username, setUsername] = useState("");
     const [name, setName] = useState("");
@@ -26,7 +28,7 @@ const CreateUser = () => {
     }, [dispatch]);
 
     // Handle form submission
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         const newUser: Omit<User, "user_id"> = {
@@ -40,9 +42,22 @@ const CreateUser = () => {
             role,
         };
 
-        console.log(newUser);
-        // Dispatch postUser action
-        dispatch(postUser(newUser));
+        try {
+            // Dispatch the postUser action and cast the result to access the payload
+            const result = await dispatch(postUser(newUser)) as { payload: User };
+
+            // Check the user's role and navigate accordingly
+            if (result.payload.role === "vet") {
+                // Navigate to the vet registration page with the user_id as a query parameter
+                router.push(`/vet-register?user_id=${result.payload.user_id}`);
+            } else {
+                // Navigate to the dashboard if the user is not a vet
+                router.push("/dashboard");
+            }
+        } catch (error) {
+            console.error("Error creating user:", error);
+            // Handle error (e.g., show an error message to the user)
+        }
     };
 
     return (
@@ -119,15 +134,15 @@ const CreateUser = () => {
                     required
                 />
 
-                <label className="block mb-2"></label>
-                <div className="flex justify-end">
-                    <button
-                        onClick={() => setRole((prevRole) => (prevRole === "regular user" ? "vet" : "regular user"))}
-                        className="border p-2 rounded bg-blue-500 text-white hover:bg-blue-600"
-                    >
-                        {role === "vet" ? "I am not a vet" : "I am a vet"}
-                    </button>
-                </div>
+                <label className="mb-2 flex items-center">
+                    <input
+                        type="checkbox"
+                        checked={role === "vet"}
+                        onChange={() => setRole((prevRole) => (prevRole === "regular user" ? "vet" : "regular user"))}
+                        className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>I am a vet</span>
+                </label>
 
                 <button
                     type="submit"

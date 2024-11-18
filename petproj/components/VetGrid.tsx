@@ -1,6 +1,8 @@
 import React from "react";
-import { Vet } from '../app/types/vet'; 
+import { Vet } from '../app/types/vet';
 import Link from "next/link"; // Import Link from next/link
+import 'bootstrap-icons/font/bootstrap-icons.css';
+
 
 interface VetGridProps {
   vets: Vet[];
@@ -8,55 +10,68 @@ interface VetGridProps {
 
 const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 gap-8">
       {vets.map((vet) => (
-        <Link
-        key={vet.vet_id}
-        href={`/pet-care/${vet.vet_id}`} // Link to the pet detail page
-        passHref>
         <div
           key={vet.vet_id}
-          className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-[#A03048] hover:scale-102 transition-all duration-300"
+          className="relative bg-white p-4 rounded-2xl shadow-sm border border-gray-200 hover:border-[#A03048] "
         >
-          <div className="flex items-center">
+          {/* Starting Fee in Top Right Corner */}
+          <div className="absolute top-4 right-4 bg-white text-sm text-primary font-bold py-1 px-3 rounded-lg">
+            Starting Fee: PKR {vet.minimum_fee}
+          </div>
+
+          <div className="flex">
+            {/* Profile Image */}
             <img
-              src={vet.profile_image_url || "/placeholder.jpg"} // Fallback image if profile_image_url is null
+              src={vet.profile_image_url || "/placeholder.jpg"}
               alt={vet.name}
-              className="w-20 h-20 object-cover rounded-full mr-4" // Circular image
+              className="w-28 h-26 object-cover rounded-full mr-4"
             />
-            <div className="flex flex-col flex-grow">
-              <h3 className="font-bold text-xl mb">{vet.name}</h3>
-              <p className="text-gray-600 text-lg mb-1">{vet.clinic_name}</p>
-              <p className="text-gray-600 mb-1">{vet.city_name}</p>
-              <p className="text-gray-600 mb-1">{vet.location}</p>
 
-              {/* List qualifications if available */}
+            {/* Vet Details */}
+            <div className="flex-grow">
+              {/* Name as Link */}
+              <div className="flex items-center">
+                <Link href={`/pet-care/${vet.vet_id}`} className="font-bold text-xl text-primary hover:underline">
+                  {vet.name}
+                </Link>
+                {vet.profile_verified && (
+                  <i className="bi bi-patch-check-fill text-[#cc8800] ml-2" />
+                )}
+              </div>
+{/*ffd000 */}
+
+              {/* Clinic, City, and Location */}
+              <p className="text-gray-600">{vet.clinic_name}</p>
+              <p className="text-gray-500">{vet.city_name}</p>
+              <p className="text-gray-500">{vet.location}</p>
+
+              {/* Qualifications Inline Format */}
               {vet.qualifications.length > 0 && (
-
-                <div className="mt-0">
-                  <div className="list-disc ml-1">
-                    {vet.qualifications.map((qual, index) => (
-                 
-                      <p key={index} className="text-gray-600">
-                      - {qual.qualification_name} ({qual.year_acquired})
-                      </p>
-                    ))}
-                  </div>
-                </div>
+                <p className="text-gray-600 mb-1">
+                  {vet.qualifications.map((qual, index) => (
+                    <span key={index}>
+                      {qual.qualification_name} ({qual.year_acquired})
+                      {index < vet.qualifications.length - 1 && " | "}
+                    </span>
+                  ))}
+                </p>
               )}
+            </div>
 
-              <p className="text-gray-600 mb-1">
-                Fee Starting From: PKR {vet.minimum_fee}
-              </p>
-              <p className={`text-${vet.profile_verified ? 'green' : 'red'}-600 font-semibold`}>
-                {vet.profile_verified ? "Profile Verified" : "Profile Not Verified"}
-              </p>
+            {/* Contact Number */}
+            <div className="flex flex-col justify-end items-end ml-4">
+              <Link href={`tel:${vet.contact_details}`} className="bg-primary text-white px-4 py-2 rounded-xl font-semibold hover:bg-primary">
+                Book Appointment
+              </Link>
             </div>
           </div>
         </div>
-        </Link>
       ))}
     </div>
+
+
   );
 };
 

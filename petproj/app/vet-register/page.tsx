@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../store/store';
 import { postVet } from '../store/slices/vetSlice';
-import { useRouter } from 'next/router';
+import { useRouter ,useSearchParams} from 'next/navigation';
 
 interface VetRegisterProps {
   user_id: number; // The ID of the user associated with this vet
@@ -13,8 +13,9 @@ const VetRegister = () => {
   const dispatch = useDispatch<AppDispatch>();
   
   const router = useRouter();
-  const { user_id } = router.query;  // Extract user_id from URL
-  const userId =  parseInt(user_id as string, 10) 
+  const searchParams = useSearchParams();
+  const user_id = searchParams.get('user_id'); // Get user_id from URL query parameters
+  const userId = user_id ? parseInt(user_id, 10) : null;
 
   console.log("Received user_id:", userId);
 
@@ -30,24 +31,30 @@ const VetRegister = () => {
     e.preventDefault();
 
     // Define the vet data to send to the backend
-    const vetData = {
-      user_id:userId,
-      clinic_name: clinicName,
-      location,
-      minimum_fee: minimumFee,
-      contact_details: contactDetails,
-      bio,
-    };
- console.log("Sending vet data:", vetData);
-    // Dispatch the postVet action to store vet details
-    dispatch(postVet(vetData))
-      .unwrap()
-      .then((response) => {
-        console.log('Vet registered successfully:', response);
-      })
-      .catch((error) => {
-        console.error('Error registering vet:', error);
-      });
+    if (userId !== null) {
+      const vetData = {
+        user_id: userId,
+        clinic_name: clinicName,
+        location,
+        minimum_fee: minimumFee,
+        contact_details: contactDetails,
+        bio,
+      };
+      
+      console.log("Sending vet data:", vetData);
+  
+      // Dispatch the postVet action to store vet details
+      dispatch(postVet(vetData))
+        .unwrap()
+        .then((response) => {
+          console.log('Vet registered successfully:', response);
+        })
+        .catch((error) => {
+          console.error('Error registering vet:', error);
+        });
+    } else {
+      console.error("User ID is missing. Cannot submit vet registration.");
+    }
   };
 
   return (

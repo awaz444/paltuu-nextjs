@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
-import { Carousel, Spin, Card, Tag, Divider  } from "antd";
+import { Carousel, Spin, Card, Tag, Divider, Button } from "antd";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "@/components/navbar";
 
@@ -123,6 +123,20 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
                         <p>
                             <strong>Must have someone home:</strong> {pet.must_have_someone_home ? "Yes" : "No"}
                         </p>
+                    </div>
+
+                    {/* Add the button for "Adopt Now!" or "Foster Now!" */}
+                    <div className="flex justify-center mt-6">
+                        {pet.listing_type && (
+                            <Button
+                                type="primary"
+                                size="large"
+                                className="px-8 py-2 bg-primary rounded rounded-3   xl"
+                                onClick={() => alert(`${pet.listing_type === "Adoption" ? "Adopt" : "Foster"} Now!`)}
+                            >
+                                {pet.listing_type === "adoption" ? "Adopt Now!" : "Foster Now!"}
+                            </Button>
+                        )}
                     </div>
                 </Card>
             </div>

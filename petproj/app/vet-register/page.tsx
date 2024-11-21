@@ -1,7 +1,7 @@
 "use client";
 import React, { Suspense, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState, AppDispatch } from "../app/store/store";
+import { RootState, AppDispatch } from "../store/store";
 import { postVet } from "../store/slices/vetSlice";
 import { useRouter, useSearchParams } from "next/navigation";
 

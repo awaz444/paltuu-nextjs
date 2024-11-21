@@ -1,9 +1,21 @@
 'use client';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+
 
 const Footer = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+
+  const hideFooterRoutes = ["/login", "/register"];
+  const pathName=usePathname();
+  const isHideFooter = hideFooterRoutes.includes(pathName);
+  
+  if(isHideFooter)
+  {
+    return null;
+  }
+  
 
   useEffect(() => {
     setCurrentYear(new Date().getFullYear());

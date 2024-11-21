@@ -4,51 +4,121 @@
 }
 
 .navbar {
-    background-color: #A03048; 
-    padding: 2rem 3rem;
-    height: 8rem;
-    border-bottom-left-radius: 1.5rem !important;
-    border-bottom-right-radius: 1.5rem !important;
-  }
-  
+  background-color: #A03048; 
+  padding: 2rem 3rem;
+  height: 8rem;
+  border-bottom-left-radius: 1.5rem !important;
+  border-bottom-right-radius: 1.5rem !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Logo positioning */
+/* .logo {
+  flex: 1;
+  position: relative;
+  top: -5px;
+  transform: scale(0.9);
+  text-align: center; /* Center logo for small screens */
+
+
+/* Adjust logo position for larger screens */
+/* @media (min-width: 768px) {
   .logo {
-    flex: 1;
     position: relative;
-    top: -5px;
-    left:-45px;
-    transform: scale(0.9);
-  }
+    text-align: left;
+    left: -45px; /* Original position */
   
-  .spacer {
-    flex: 2; /* Empty space in the middle */
-  }
-  
+.spacer {
+  flex: 2; /* Empty space in the middle */
+}
+
+.w-8 {
+  width: 32px; /* Matches the size of the hamburger icon */
+}
+
+/* Navigation links (desktop only) */
+.navLinks {
+  display: none; /* Hide links on small screens */
+  align-items: center;
+  gap: 20px;
+  padding-right: 1.5rem;
+  justify-content: flex-end; /* Align links to the right */
+}
+
+/* Show links for larger screens */
+@media (min-width: 768px) {
   .navLinks {
     display: flex;
-    align-items: center;
-    gap: 20px;
-    padding-right:1.5rem ;
+    
   }
-  
-  .navLinks a {
-    color: #ffffff; /* Background (white) */
-    text-decoration: none;
-    font-size: 16px;
-    font-weight: 500;
+}
+
+.navLinks a {
+  color: #ffffff; /* Background (white) */
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.loginBtn {
+  background-color: #ffffff; /* White */
+  color: #A03048; /* Primary */
+  border: none;
+  border-radius: 60px;
+  padding: 7px 20px;
+  cursor: pointer;
+}
+
+.loginBtn:hover {
+  background-color: #ffffff; /* Light */
+  color: #A03048; /* Dark */
+  transform: scale(1.05);
+}
+
+/* Hamburger menu */
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.hamburger-line {
+  width: 25px;
+  height: 3px;
+  background-color: white;
+  border-radius: 2px;
+}
+
+/* Mobile menu */
+.mobile-menu {
+  z-index: 1000;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.close-button {
+  color: white;
+  cursor: pointer;
+}
+
+/* Center logo and adjust navbar on small screens */
+@media (max-width: 767px) {
+  .navbar {
+    justify-content: center;
+    position: relative;
   }
-  
-  .loginBtn {
-    background-color: #ffffff; /* White */
-    color: #A03048; /* Primary */
-    border: none;
-    border-radius: 60px;
-    padding: 7px 20px;
-    cursor: pointer;
+
+  .w-8 {
+    position: absolute;
+    right: 1.5rem; /* Move spacer to the right for balance */
   }
-  
-  .loginBtn:hover {
-    background-color: #ffffff; /* Light */
-    color: #A03048; /* Dark */
-    transform: scale(1.05);
+
+  .logo {
+    text-align: center;
+    left: 0; /* Override left positioning */
   }
-  
+}

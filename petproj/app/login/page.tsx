@@ -15,11 +15,11 @@ const Login = () => {
 
     return (
         <>
-            <div className="flex min-h-screen bg-white">
-                <div style={{ backgroundColor: "#A03048" }} className="w-1/2  flex flex-col justify-center items-center p-10">
+            <div className="flex min-h-screen bg-[#f7fafc]">
+                <div style={{ backgroundColor: "#A03048" }} className="w-[45%]  flex flex-col justify-center items-center p-10">
                 <img src="/paltu_logo.svg" alt="paltu" />
                 </div>
-                <div className="w-1/2 flex flex-col justify-center items-left p-10">
+                <div className="w-1/2 flex flex-col justify-center items-left ml-16 p-10">
                     <h2 className="text-3xl font-semibold ">Welcome</h2>
                     <p className="text-gray-500 mt-2">Log in to your account</p>
                     <form
@@ -33,7 +33,7 @@ const Login = () => {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="mt-1 block w-full border p-2 rounded"
+                                className="mt-1 block w-full border-2 p-2 rounded-xl"
                                 required
                             />
                         </label>
@@ -44,14 +44,14 @@ const Login = () => {
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="mt-1 block w-full border p-2 rounded"
+                                className="mt-1 block w-full border-2 p-2 rounded-xl"
                                 required
                             />
                         </label>
                         <button
                             style={{ backgroundColor: "#A03048" }}
                             type="submit"
-                            className="text-white w-full py-2 rounded mt-4"
+                            className="text-white w-full py-2 rounded-xl mt-4"
                         >
                             Log In
                         </button>
@@ -59,16 +59,16 @@ const Login = () => {
                             onClick={() => signIn("google")}
                             style={{ backgroundColor: "#A03048" }}
                             type="submit"
-                            className="text-white w-full py-2 rounded mt-4"
+                            className="text-white w-full py-2 rounded-xl mt-4"
                             >
                             Login with Google
                         </button>
                         <button
                             style={{ borderColor: "#A03048" }}
                             type="button"
-                            className="border w-full py-2 rounded mt-2"
+                            className="border-2 w-full py-2 rounded-xl mt-2"
                         >
-                            Forgot Password?
+                            Forgot Password
                         </button>
                         {/* <button
                             type="button"

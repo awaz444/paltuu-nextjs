@@ -12,6 +12,8 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
   return (
     <div className="grid grid-cols-1 gap-8">
       {vets.map((vet) => (
+        <Link href={`/pet-care/${vet.vet_id}`} >
+        
         <div
           key={vet.vet_id}
           className="relative bg-white p-4 rounded-2xl shadow-sm border border-gray-200 hover:border-[#A03048] "
@@ -33,9 +35,9 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
             <div className="flex-grow">
               {/* Name as Link */}
               <div className="flex items-center">
-                <Link href={`/pet-care/${vet.vet_id}`} className="font-bold text-xl text-primary hover:underline">
+                <div className="font-bold text-xl text-primary">
                   {vet.name}
-                </Link>
+                </div>
                 {vet.profile_verified && (
                   <i className="bi bi-patch-check-fill text-[#cc8800] ml-2" />
                 )}
@@ -62,12 +64,13 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
 
             {/* Contact Number */}
             <div className="flex flex-col justify-end items-end ml-4">
-              <Link href={`tel:${vet.contact_details}`} className="bg-primary text-white px-4 py-2 rounded-xl font-semibold hover:bg-primary">
+              <Link href={`tel:${vet.contact_details}`} className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-[#A03048] hover:bg-[#ffffff] hover:text-primary">
                 Book Appointment
               </Link>
             </div>
           </div>
         </div>
+        </Link>
       ))}
     </div>
 

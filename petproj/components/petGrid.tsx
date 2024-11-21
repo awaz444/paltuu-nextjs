@@ -61,41 +61,41 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
             </Link>
             {pets.map((pet) => (
                 <Link
+                key={pet.pet_id}
+                href={`/${pet.listing_type === "adoption" ? "browse-pets" : "foster-pets"}/${pet.pet_id}`} // Dynamically set the link based on listing_type
+                passHref
+            >
+                <div
                     key={pet.pet_id}
-                    href={`/browse-pets/${pet.pet_id}`} // Link to the pet detail page
-                    passHref>
-                    <div
-                        key={pet.pet_id}
-                        className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-[#A03048] hover:scale-102 transition-all duration-300">
-                        <div className="relative">
-                            <img
-                                src={pet.image_url || "/placeholder.jpg"} // Fallback image if pet.image_url is null
-                                alt={pet.pet_name}
-                                className="w-full h-48 object-cover rounded-2xl"
-                            />
-                            {/* Overlay badge for "Ready for adoption" or price at the bottom-right */}
-                            {Number(pet.price) > 0 && (
-                                <div className="absolute bottom-2 right-2 bg-primary text-white text-sm font-semibold px-3 py-1 rounded-full">
-                                    PKR {pet.price}
-                                    {pet.payment_frequency &&
-                                        ` / ${pet.payment_frequency}`}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="p-4">
-                            <h3 className="font-bold text-2xl mb-1">
-                                {pet.pet_name}
-                            </h3>
-                            <p className="text-gray-600 mb-1">
-                                {pet.age} {pet.age > 1 ? "years" : "year"} old
-                            </p>
-                            <p className="text-gray-600 mb-1">
-                                {pet.city} - {pet.area}
-                            </p>
-                        </div>
+                    className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-[#A03048] hover:scale-102 transition-all duration-300"
+                >
+                    <div className="relative">
+                        <img
+                            src={pet.image_url || "/placeholder.jpg"} // Fallback image if pet.image_url is null
+                            alt={pet.pet_name}
+                            className="w-full h-48 object-cover rounded-2xl"
+                        />
+                        {/* Overlay badge for "Ready for adoption" or price at the bottom-right */}
+                        {Number(pet.price) > 0 && (
+                            <div className="absolute bottom-2 right-2 bg-primary text-white text-sm font-semibold px-3 py-1 rounded-full">
+                                PKR {pet.price}
+                                {pet.payment_frequency && ` / ${pet.payment_frequency}`}
+                            </div>
+                        )}
                     </div>
-                </Link>
+            
+                    <div className="p-4">
+                        <h3 className="font-bold text-2xl mb-1">{pet.pet_name}</h3>
+                        <p className="text-gray-600 mb-1">
+                            {pet.age} {pet.age > 1 ? "years" : "year"} old
+                        </p>
+                        <p className="text-gray-600 mb-1">
+                            {pet.city} - {pet.area}
+                        </p>
+                    </div>
+                </div>
+            </Link>
+            
             ))}
         </div>
     );

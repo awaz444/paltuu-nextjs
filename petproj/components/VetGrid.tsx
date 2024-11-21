@@ -12,7 +12,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
   return (
     <div className="grid grid-cols-1 gap-8">
       {vets.map((vet) => (
-        <Link href={`/pet-care/${vet.vet_id}`} >
+        <Link key={vet.vet_id} href={`/pet-care/${vet.vet_id}`}>
         
         <div
           key={vet.vet_id}

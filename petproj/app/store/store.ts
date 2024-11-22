@@ -9,6 +9,7 @@ import fosterPetsReducer from './slices/fosterPetsSlice';
 import adoptionPetsReducer from './slices/adoptionPetsSlice';
 import userSlice from './slices/userSlice';
 import vetQualificationsSlice from '../store/slices/vetQualificationsSlice';
+import vetSpecializationSlice from '../store/slices/vetSpecializationSlice';
 
 
 export const store = configureStore({
@@ -23,6 +24,7 @@ export const store = configureStore({
     favoriteThings: favoriteThingsReducer,
     user: userSlice,
     vetQualifications: vetQualificationsSlice,
+    vetSpecialization: vetSpecializationSlice,
   },
 });
 

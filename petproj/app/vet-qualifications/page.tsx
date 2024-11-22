@@ -56,7 +56,7 @@ const VetQualifications = () => {
   };
 
   const handleRedirect = () => {
-    router.push(`/add-category?vet_id=${vetId}`);
+    router.push(`/vet-specialization?vet_id=${vetId}`);
   };
 
   const handleCheckboxChange = (qualificationId: number) => {

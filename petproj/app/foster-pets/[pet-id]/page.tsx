@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState, useEffect } from "react";
 import { Carousel, Spin, Card, Tag, Divider, Button } from "antd";
 import { PetWithImages } from "../../types/petWithImages";
@@ -16,41 +15,49 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
     const [loading, setLoading] = useState(true);
 
     const [isAdoptionModalVisible, setAdoptionModalVisible] = useState(false);
-    const [isFosterModalVisible, setFosterModalVisible] = useState(false); // Future foster form modal state
+    const [isFosterModalVisible, setFosterModalVisible] = useState(false); // Foster modal state
 
     useEffect(() => {
-        const fetchPetDetails = async () => {
-            try {
-                const res = await fetch(`/api/browse-pets/${pet_id}`);
-                if (!res.ok) {
-                    throw new Error("Pet not found");
-                }
-                const petData = await res.json();
-                setPet(petData);
-
-                // Populate carousel images
-                const images = [
-                    petData.profile_image_url,
-                    ...petData.additional_images.map((image: { image_url: string }) => image.image_url),
-                ]
-                    .filter((image: string) => Boolean(image)) // Ensure no null/undefined values
-                    .slice(0, 5); // Limit to 5 images for the carousel
-                setCarouselImages(images);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
+    const fetchPetDetails = async () => {
+        try {
+            console.log(`Fetching details for pet ID: ${pet_id}`);
+            const res = await fetch(`/api/browse-pets/${pet_id}`);
+            if (!res.ok) {
+                throw new Error("Pet not found");
             }
-        };
+            const petData = await res.json();
+            console.log("Pet data fetched:", petData);
 
-        if (pet_id) {
-            fetchPetDetails();
+            setPet(petData);
+
+            const images = [
+                petData.profile_image_url,
+                ...petData.additional_images.map((image: { image_url: string }) => image.image_url),
+            ]
+                .filter((image: string) => Boolean(image)) // Ensure no null/undefined values
+                .slice(0, 5);
+            setCarouselImages(images);
+        } catch (err) {
+            console.error("Error fetching pet details:", err);
+        } finally {
+            setLoading(false);
         }
-    }, [pet_id]);
+    };
+
+    if (pet_id) {
+        fetchPetDetails();
+    }
+}, [pet_id]);
+
 
     const handleAdoptionSubmit = (formData: any) => {
         console.log("Adoption Form Submitted: ", formData);
         setAdoptionModalVisible(false);
+    };
+
+    const handleFosterSubmit = (formData: any) => {
+        console.log("Foster Form Submitted: ", formData);
+        setFosterModalVisible(false);
     };
 
     if (loading) {
@@ -165,8 +172,16 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
                 />
             )}
 
-            {/* Placeholder for Foster Form Modal */}
-            {/* Add a FosterFormModal component when implemented */}
+            {/* Foster Form Modal */}
+            {pet.listing_type === "foster" && (
+                <AdoptionFormModal
+                    petId={pet.pet_id}
+                    userId={"user_id_placeholder"} // Replace with actual user ID
+                    visible={isFosterModalVisible}
+                    onClose={() => setFosterModalVisible(false)}
+                    onSubmit={handleFosterSubmit}
+                />
+            )}
         </>
     );
 };

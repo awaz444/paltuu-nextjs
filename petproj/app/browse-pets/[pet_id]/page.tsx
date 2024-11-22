@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Carousel, Spin, Card, Tag, Divider, Button } from "antd";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "@/components/navbar";
-import AdoptionFormModal from "@/components/AdoptionFormModal"; 
+// import FosterFormModal from "@/components/FosterFormModal";
 
 interface PetDetailsProps {
     pet_id: string;
@@ -15,8 +15,7 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
     const [carouselImages, setCarouselImages] = useState<string[]>([]); // State for images
     const [loading, setLoading] = useState(true);
 
-    const [isAdoptionModalVisible, setAdoptionModalVisible] = useState(false);
-    const [isFosterModalVisible, setFosterModalVisible] = useState(false); // Future foster form modal state
+    const [isFosterModalVisible, setFosterModalVisible] = useState(false); // Foster modal state
 
     useEffect(() => {
         const fetchPetDetails = async () => {
@@ -48,9 +47,9 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
         }
     }, [pet_id]);
 
-    const handleAdoptionSubmit = (formData: any) => {
-        console.log("Adoption Form Submitted: ", formData);
-        setAdoptionModalVisible(false);
+    const handleFosterSubmit = (formData: any) => {
+        console.log("Foster Form Submitted: ", formData);
+        setFosterModalVisible(false);
     };
 
     if (loading) {
@@ -102,10 +101,10 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
                             <strong>Description:</strong> {pet.description || "No description provided."}
                         </p>
                         <p>
-                            <strong>Adoption Status:</strong> <Tag color={pet.adoption_status === "Available" ? "green" : "red"}>{pet.adoption_status}</Tag>
+                            <strong>Status:</strong> <Tag color={pet.adoption_status === "Available" ? "green" : "red"}>{pet.adoption_status}</Tag>
                         </p>
                         <p>
-                            <strong>Price:</strong> {pet.price ? `PKR ${pet.price}` : "Not listed"}
+                            <strong>Foster Price:</strong> {pet.price ? `PKR ${pet.price}` : "Not listed"}
                         </p>
 
                         <Divider />
@@ -134,39 +133,28 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
                         </p>
                     </div>
 
-                    {/* Add the button for "Adopt Now!" or "Foster Now!" */}
+                    {/* Add the button for "Foster Now!" */}
                     <div className="flex justify-center mt-6">
-                        {pet.listing_type && (
-                            <Button
-                                type="primary"
-                                size="large"
-                                className="px-8 py-2 bg-primary rounded-xl"
-                                onClick={() => {
-                                    pet.listing_type === "adoption"
-                                        ? setAdoptionModalVisible(true)
-                                        : setFosterModalVisible(true);
-                                }}
-                            >
-                                {pet.listing_type === "adoption" ? "Adopt Now!" : "Foster Now!"}
-                            </Button>
-                        )}
+                        <Button
+                            type="primary"
+                            size="large"
+                            className="px-8 py-2 bg-primary rounded-xl"
+                            onClick={() => setFosterModalVisible(true)}
+                        >
+                            Foster Now!
+                        </Button>
                     </div>
                 </Card>
             </div>
 
-            {/* Adoption Form Modal */}
-            {pet.listing_type === "adoption" && (
-                <AdoptionFormModal
-                    petId={pet.pet_id}
-                    userId={"user_id_placeholder"} // Replace with actual user ID
-                    visible={isAdoptionModalVisible}
-                    onClose={() => setAdoptionModalVisible(false)}
-                    onSubmit={handleAdoptionSubmit}
-                />
-            )}
-
-            {/* Placeholder for Foster Form Modal */}
-            {/* Add a FosterFormModal component when implemented */}
+            {/* Foster Form Modal */}
+            {/* <FosterFormModal
+                petId={pet.pet_id}
+                userId={"user_id_placeholder"} // Replace with actual user ID
+                visible={isFosterModalVisible}
+                onClose={() => setFosterModalVisible(false)}
+                onSubmit={handleFosterSubmit}
+            /> */}
         </>
     );
 };

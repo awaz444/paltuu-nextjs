@@ -8,6 +8,8 @@ import vetSlice from './slices/vetSlice';
 import fosterPetsReducer from './slices/fosterPetsSlice';
 import adoptionPetsReducer from './slices/adoptionPetsSlice';
 import userSlice from './slices/userSlice';
+import vetQualificationsSlice from '../store/slices/vetQualificationsSlice';
+
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +22,7 @@ export const store = configureStore({
     qualifications: qualificationsReducer,
     favoriteThings: favoriteThingsReducer,
     user: userSlice,
+    vetQualifications: vetQualificationsSlice,
   },
 });
 

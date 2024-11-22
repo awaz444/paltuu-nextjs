@@ -42,14 +42,17 @@ const VetRegisterForm = () => {
             console.log("Sending vet data:", vetData);
 
             dispatch(postVet(vetData))
-                .unwrap()
-                .then((response) => {
-                    console.log("Vet registered successfully:", response);
-                })
-                .catch((error) => {
-                    console.error("Error registering vet:", error);
-                });
-        } else {
+            .unwrap()
+            .then((response) => {
+                console.log("Vet registered successfully:", response);
+
+                // Redirect to the vet qualifications page with the vet_id
+                router.push(`/vet-qualifications?vet_id=${response.vet_id}`);
+            })
+            .catch((error) => {
+                console.error("Error registering vet:", error);
+            });
+    } else {
             console.error(
                 "User ID is missing. Cannot submit vet registration."
             );

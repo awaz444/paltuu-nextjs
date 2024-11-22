@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest): Promise<NextResponse> {
     const { user_id, clinic_name, location, minimum_fee, contact_details, bio } = await req.json(); // Updated with 'bio'
     const client = createClient();
-    console.log("Received user_id:", user_id);  // Log the received user_id
+
     try {
         await client.connect(); // Connect to the database
 

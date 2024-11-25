@@ -1,9 +1,9 @@
 // PetCare Component
 "use client";
 import { useEffect, useState } from "react";
-import Navbar from "@/components/Navbar";
+import Navbar from "../../components/navbar";
 import VetFilterSection from "../../components/VetFilterSection";
-import VetGrid from "@/components/VetGrid";
+import VetGrid from "../../components/VetGrid";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../store/store";
 import { fetchVets } from "../store/slices/vetSlice";

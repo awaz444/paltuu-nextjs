@@ -1,13 +1,19 @@
-import { createClient } from '../../../../db/index'; 
+import { createClient } from '../../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
-    const petId = params.id;
+interface Context {
+    params: {
+        id: string;
+    };
+}
+
+export async function GET(req: NextRequest, context: Context): Promise<NextResponse> {
+    const petId = context.params.id; // Correctly extract `id`
     const client = createClient();
 
     try {
         await client.connect();
-        
+
         const result = await client.query('SELECT * FROM pets WHERE pet_id = $1', [petId]);
 
         if (result.rows.length === 0) {
@@ -31,6 +37,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             }
         );
     } finally {
-        await client.end();
+        await client.end(); // Ensure the database connection is closed
     }
 }

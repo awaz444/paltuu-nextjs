@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // For navigation
+import { useRouter, useParams } from "next/navigation"; // For navigation and params
 import { Spin, Card, List, Divider } from "antd";
 import Navbar from "@/components/Navbar";
 
@@ -49,11 +49,8 @@ interface VetDetails {
     qualifications: Qualification[];
 }
 
-export default function VetDetailsPage({
-    params,
-}: {
-    params: { "vet-id": string };
-}) {
+export default function VetDetailsPage() {
+    const params = useParams(); // Use the new useParams hook to handle params
     const [vetDetails, setVetDetails] = useState<VetDetails | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
@@ -61,7 +58,9 @@ export default function VetDetailsPage({
     useEffect(() => {
         const fetchVetDetails = async () => {
             try {
-                const response = await fetch(`/api/vets/${params["vet-id"]}`);
+                // Accessing the vet-id from params
+                const vetId = params["vet-id"];
+                const response = await fetch(`/api/vets/${vetId}`);
                 if (!response.ok) {
                     throw new Error("Failed to fetch vet details");
                 }
@@ -101,8 +100,12 @@ export default function VetDetailsPage({
             }
         };
 
-        fetchVetDetails();
-    }, [params, router]);
+        if (params["vet-id"]) {
+            fetchVetDetails();
+        } else {
+            router.push("/404");
+        }
+    }, [params, router]); // Make sure to include params as a dependency
 
     if (loading) {
         return (
@@ -120,36 +123,26 @@ export default function VetDetailsPage({
 
     return (
         <>
-            <Navbar></Navbar>
+            <Navbar />
             <div className="container mx-auto p-6">
                 <Card>
                     <div className="flex items-center space-x-4">
                         <img
-                            src={
-                                vetDetails.profile_image_url ||
-                                "/placeholder.jpg"
-                            }
+                            src={vetDetails.profile_image_url || "/placeholder.jpg"}
                             alt={vetDetails.vet_name}
                             className="w-24 h-24 rounded-full object-cover"
                         />
                         <div>
-                            <h1 className="text-2xl font-bold">
-                                {vetDetails.vet_name}
-                            </h1>
-                            <p className="text-gray-600">
-                                {vetDetails.clinic_name}
+                            <h1 className="text-2xl font-bold">{vetDetails.vet_name}</h1>
+                            <p className="text-gray-600">{vetDetails.clinic_name}</p>
+                            <p>
+                                <strong>Location:</strong> {vetDetails.location} ({vetDetails.city})
                             </p>
                             <p>
-                                <strong>Location:</strong> {vetDetails.location}{" "}
-                                ({vetDetails.city})
+                                <strong>Minimum Fee:</strong> PKR {vetDetails.minimum_fee}
                             </p>
                             <p>
-                                <strong>Minimum Fee:</strong> PKR{" "}
-                                {vetDetails.minimum_fee}
-                            </p>
-                            <p>
-                                <strong>Contact:</strong>{" "}
-                                {vetDetails.contact_details}
+                                <strong>Contact:</strong> {vetDetails.contact_details}
                             </p>
                         </div>
                     </div>
@@ -173,8 +166,7 @@ export default function VetDetailsPage({
                         dataSource={vetDetails.qualifications}
                         renderItem={(qual) => (
                             <List.Item>
-                                <strong>{qual.qualification_name}</strong> -{" "}
-                                {qual.year_acquired} ({qual.qualification_note})
+                                <strong>{qual.qualification_name}</strong> - {qual.year_acquired} ({qual.qualification_note})
                             </List.Item>
                         )}
                     />
@@ -185,8 +177,7 @@ export default function VetDetailsPage({
                         dataSource={vetDetails.availability}
                         renderItem={(avail) => (
                             <List.Item>
-                                {avail.day_of_week}: {avail.start_time} -{" "}
-                                {avail.end_time}
+                                {avail.day_of_week}: {avail.start_time} - {avail.end_time}
                             </List.Item>
                         )}
                     />
@@ -199,16 +190,9 @@ export default function VetDetailsPage({
                             renderItem={(review) => (
                                 <List.Item>
                                     <div>
-                                        <strong>
-                                            {review.review_maker_name}
-                                        </strong>{" "}
-                                        ({review.rating} ★)
+                                        <strong>{review.review_maker_name}</strong> ({review.rating} ★)
                                         <p>{review.review_content}</p>
-                                        <p className="text-gray-500">
-                                            {new Date(
-                                                review.review_date
-                                            ).toDateString()}
-                                        </p>
+                                        <p className="text-gray-500">{new Date(review.review_date).toDateString()}</p>
                                     </div>
                                 </List.Item>
                             )}

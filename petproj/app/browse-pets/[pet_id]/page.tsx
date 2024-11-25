@@ -5,15 +5,14 @@ import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
 
-interface PetDetailsProps {
-    pet_id: string;
-}
+// Define tParams type for routing
+type tParams = Promise<{ pet_id: string }>;
 
-const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
-    const [pet, setPet] = useState<PetWithImages | null>(null); // State to hold pet data
-    const [carouselImages, setCarouselImages] = useState<string[]>([]); // State for images
+const PetDetailsPage: React.FC<{ pet_id: string }> = ({ pet_id }) => {
+    const [pet, setPet] = useState<PetWithImages | null>(null);
+    const [carouselImages, setCarouselImages] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isModalVisible, setIsModalVisible] = useState(false); // State to toggle modal
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
     const userId = "12345"; // Replace with the actual logged-in user ID
 
@@ -21,19 +20,17 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
         const fetchPetDetails = async () => {
             try {
                 const res = await fetch(`/api/browse-pets/${pet_id}`);
-                if (!res.ok) {
-                    throw new Error("Pet not found");
-                }
+                if (!res.ok) throw new Error("Pet not found");
+
                 const petData = await res.json();
                 setPet(petData);
 
-                // Populate carousel images
                 const images = [
                     petData.profile_image_url,
                     ...petData.additional_images.map((image: { image_url: string }) => image.image_url),
                 ]
-                    .filter((image: string) => Boolean(image)) // Ensure no null/undefined values
-                    .slice(0, 5); // Limit to 5 images for the carousel
+                    .filter(Boolean)
+                    .slice(0, 5);
                 setCarouselImages(images);
             } catch (err) {
                 console.error(err);
@@ -42,22 +39,13 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
             }
         };
 
-        if (pet_id) {
-            fetchPetDetails();
-        }
+        if (pet_id) fetchPetDetails();
     }, [pet_id]);
 
-    const handleAdoptClick = () => {
-        setIsModalVisible(true); // Show the modal
-    };
-
-    const handleModalClose = () => {
-        setIsModalVisible(false); // Hide the modal
-    };
-
+    const handleAdoptClick = () => setIsModalVisible(true);
+    const handleModalClose = () => setIsModalVisible(false);
     const handleFormSubmit = (formData: any) => {
         console.log("Adoption form data submitted:", formData);
-        // Here, you can send `formData` to your backend or perform other operations
     };
 
     if (loading) {
@@ -96,56 +84,29 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
 
                     <div className="pet-info space-y-4">
                         <h2 className="text-xl font-semibold border-b pb-2">Details</h2>
-                        <p>
-                            <strong>Breed:</strong> {pet.pet_breed}
-                        </p>
-                        <p>
-                            <strong>Age:</strong> {pet.age} {pet.age > 1 ? "years" : "year"}
-                        </p>
-                        <p>
-                            <strong>Location:</strong> {pet.city} - {pet.area}
-                        </p>
-                        <p>
-                            <strong>Description:</strong> {pet.description || "No description provided."}
-                        </p>
+                        <p><strong>Breed:</strong> {pet.pet_breed}</p>
+                        <p><strong>Age:</strong> {pet.age} {pet.age > 1 ? "years" : "year"}</p>
+                        <p><strong>Location:</strong> {pet.city} - {pet.area}</p>
+                        <p><strong>Description:</strong> {pet.description || "No description provided."}</p>
                         <strong>Status:</strong> <Tag color={pet.adoption_status === "Available" ? "green" : "red"}>{pet.adoption_status}</Tag>
-                        <p>
-                            <strong>Foster Price:</strong> {pet.price ? `PKR ${pet.price}` : "Not listed"}
-                        </p>
-
+                        <p><strong>Foster Price:</strong> {pet.price ? `PKR ${pet.price}` : "Not listed"}</p>
                         <Divider />
-
                         <h2 className="text-xl font-semibold border-b pb-2">Additional Info</h2>
-                        <p>
-                            <strong>Vaccinated:</strong> {pet.vaccinated ? "Yes" : "No"}
-                        </p>
-                        <p>
-                            <strong>Neutered:</strong> {pet.neutered ? "Yes" : "No"}
-                        </p>
-                        <p>
-                            <strong>Energy Level:</strong> {pet.energy_level || "N/A"}
-                        </p>
-                        <p>
-                            <strong>Cuddliness Level:</strong> {pet.cuddliness_level || "N/A"}
-                        </p>
-                        <p>
-                            <strong>Can live with dogs:</strong> {pet.can_live_with_dogs ? "Yes" : "No"}
-                        </p>
-                        <p>
-                            <strong>Can live with cats:</strong> {pet.can_live_with_cats ? "Yes" : "No"}
-                        </p>
-                        <p>
-                            <strong>Must have someone home:</strong> {pet.must_have_someone_home ? "Yes" : "No"}
-                        </p>
+                        <p><strong>Vaccinated:</strong> {pet.vaccinated ? "Yes" : "No"}</p>
+                        <p><strong>Neutered:</strong> {pet.neutered ? "Yes" : "No"}</p>
+                        <p><strong>Energy Level:</strong> {pet.energy_level || "N/A"}</p>
+                        <p><strong>Cuddliness Level:</strong> {pet.cuddliness_level || "N/A"}</p>
+                        <p><strong>Can live with dogs:</strong> {pet.can_live_with_dogs ? "Yes" : "No"}</p>
+                        <p><strong>Can live with cats:</strong> {pet.can_live_with_cats ? "Yes" : "No"}</p>
+                        <p><strong>Must have someone home:</strong> {pet.must_have_someone_home ? "Yes" : "No"}</p>
                     </div>
 
-                    {/* Adopt Now Button */}
                     <div className="text-center mt-6">
                         <Button
                             type="primary"
                             size="large"
                             onClick={handleAdoptClick}
-                            disabled={pet.adoption_status !== "Available"} // Disable button if pet is not available
+                            disabled={pet.adoption_status !== "Available"}
                             className="bg-primary"
                         >
                             Adopt Now!
@@ -154,7 +115,6 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
                 </Card>
             </div>
 
-            {/* Adoption Form Modal */}
             <AdoptionFormModal
                 petId={parseInt(pet_id)}
                 userId={userId}
@@ -166,8 +126,8 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
     );
 };
 
-// Correctly use the params (remove the async function)
-export default function Page({ params }: { params: { pet_id: string } }) {
-    const { pet_id } = params;
+// Page component with tParams
+export default async function Page({ params }: { params: tParams }) {
+    const { pet_id } = await params;
     return <PetDetailsPage pet_id={pet_id} />;
 }

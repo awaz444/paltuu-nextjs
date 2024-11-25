@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation"; // For navigation and params
 import { Spin, Card, List, Divider } from "antd";
 import Navbar from "../../../components/navbar";
+import Image from "next/image";
 
 interface Specialization {
     category_id: string;
@@ -127,7 +128,7 @@ export default function VetDetailsPage() {
             <div className="container mx-auto p-6">
                 <Card>
                     <div className="flex items-center space-x-4">
-                        <img
+                        <Image
                             src={vetDetails.profile_image_url || "/placeholder.jpg"}
                             alt={vetDetails.vet_name}
                             className="w-24 h-24 rounded-full object-cover"

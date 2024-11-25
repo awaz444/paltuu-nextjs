@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import { Carousel, Spin, Card, Tag, Divider, Button } from "antd";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
@@ -145,7 +145,7 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
                             type="primary"
                             size="large"
                             onClick={handleAdoptClick}
-                            disabled={pet.adoption_status !== "available"} // Disable button if pet is not available
+                            disabled={pet.adoption_status !== "Available"} // Disable button if pet is not available
                             className="bg-primary"
                         >
                             Adopt Now!
@@ -166,11 +166,8 @@ const PetDetailsPage: React.FC<PetDetailsProps> = ({ pet_id }) => {
     );
 };
 
-// Async Page function using the dynamic route parameter
-type tParams = Promise<{ pet_id: string }>;
-
-export default async function Page(props: { params: Promise<tParams> }) {
-    const params = use(props.params);
-    const { pet_id } = await params; // Resolve the asynchronous params
-    return <PetDetailsPage pet_id={pet_id} />; // Pass pet_id to PetDetailsPage
+// Correctly use the params (remove the async function)
+export default function Page({ params }: { params: { pet_id: string } }) {
+    const { pet_id } = params;
+    return <PetDetailsPage pet_id={pet_id} />;
 }

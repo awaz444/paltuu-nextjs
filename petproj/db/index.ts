@@ -13,9 +13,17 @@ if (!connectionString) {
 
 console.log("DB string: ", connectionString);
 
-// Function to create a new database client
 export function createClient(): Client {
     return new Client({
         connectionString,
     });
 }
+
+export const db: Client = createClient();
+
+db.connect()
+    .then(() => console.log("Connected to the database successfully"))
+    .catch((err) => {
+        console.error("Error connecting to the database:", err);
+        throw err;
+    });

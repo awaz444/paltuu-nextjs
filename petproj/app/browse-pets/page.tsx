@@ -6,7 +6,7 @@ import { fetchAdoptionPets } from '../store/slices/adoptionPetsSlice';
 import Navbar from '@/components/Navbar';
 import VerticalSearchBar from '../../components/VerticalSearchBar';
 import FilterSection from '../../components/FilterSection';
-import PetGrid from "../../components/PetGrid";
+import PetGrid from "@/components/PetGrid";
 import './styles.css';
 
 export default function BrowsePets() {

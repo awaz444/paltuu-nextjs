@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation"; // For navigation and params
 import { Spin, Card, List, Divider } from "antd";
-import Navbar from "../../../components/Navbar"
+import Navbar from "../../../components/navbar";
 import Image from "next/image";
 
 interface Specialization {

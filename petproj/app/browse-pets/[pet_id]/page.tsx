@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Carousel, Spin, Card, Tag, Divider, Button } from "antd";
 import { PetWithImages } from "../../types/petWithImages";
-import Navbar from "../../../components/Navbar";
+import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
 
 // Define tParams type for routing

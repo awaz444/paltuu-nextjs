@@ -5,7 +5,7 @@ import { RootState, AppDispatch } from "../store/store"; // Import store types
 import { fetchCities } from "../store/slices/citiesSlice"; // Fetch cities from store
 import { postUser } from "../store/slices/userSlice";
 import { User } from "../types/user";
-import Navbar from "../../components/Navbar";
+import Navbar from "../../components/navbar";
 import { useRouter } from "next/navigation";
 
 const CreateUser = () => {

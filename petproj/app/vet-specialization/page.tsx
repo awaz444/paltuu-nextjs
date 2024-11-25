@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
+
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store/store"; // Adjust the imports based on your store structure
@@ -67,7 +68,10 @@ const VetSpecializationsForm: React.FC = () => {
       </h2>
       {categories.length > 0 ? (
         categories.map((category) => (
-          <div key={category.category_id} className="mb-4 p-4 border border-gray-300 rounded-lg">
+          <div
+            key={category.category_id}
+            className="mb-4 p-4 border border-gray-300 rounded-lg"
+          >
             <label className="flex items-center">
               <input
                 type="checkbox"
@@ -94,4 +98,18 @@ const VetSpecializationsForm: React.FC = () => {
   );
 };
 
-export default VetSpecializationsForm;
+const LoadingFallback = () => (
+  <div className="flex justify-center items-center min-h-screen">
+    <p className="text-lg text-gray-500">Loading specializations...</p>
+  </div>
+);
+
+const VetSpecializationsPage: React.FC = () => {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <VetSpecializationsForm />
+    </Suspense>
+  );
+};
+
+export default VetSpecializationsPage;

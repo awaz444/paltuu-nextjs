@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from "react";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/tempNavbar";
 import Image from "next/image";
 
 export default function Home() {

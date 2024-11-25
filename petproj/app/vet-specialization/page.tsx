@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store/store"; // Adjust the imports based on your store structure
 import { fetchPetCategories } from "../store/slices/petCategoriesSlice"; // Action to fetch categories
 import { postVetSpecialization } from "../store/slices/vetSpecializationSlice"; // Action to post specialization details
-import Navbar from "../../components/navbar";
+import Navbar from "../../components/Navbar";
 
 const VetSpecializationsForm: React.FC = () => {
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);

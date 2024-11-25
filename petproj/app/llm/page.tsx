@@ -1,6 +1,6 @@
 'use client'; // Ensure this is at the top of your file
 import { useState } from 'react';
-import Navbar from '../../components/navbar';
+import Navbar from '../../components/Navbar';
 import '../globals.css';
 import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown for markdown rendering
 

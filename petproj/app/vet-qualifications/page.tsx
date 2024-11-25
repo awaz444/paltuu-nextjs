@@ -7,7 +7,7 @@ import { AppDispatch } from "../store/store"; // Adjust the import based on your
 import { postVetQualification } from "../store/slices/vetQualificationsSlice"; // Action to post qualification details
 import { RootState } from "../store/store"; // Import RootState to access the Redux state
 import { fetchQualifications } from "../store/slices/qualificationsSlice";
-import Navbar from "../../components/navbar";
+import Navbar from "../../components/Navbar";
 
 const VetQualifications: React.FC = () => {
   const [selectedQualifications, setSelectedQualifications] = useState<number[]>([]);

@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation'; // For navigation
+import { useRouter } from 'next/navigation';
 import { Spin, Card, List, Divider } from 'antd';
 import Navbar from '../../../components/navbar';
+
+
 
 interface VetDetails {
     vet_id: string;
@@ -45,14 +47,14 @@ interface VetDetails {
     }[];
 }
 
-
-
 export default function VetDetailsPage({ params }: { params: { 'vet-id': string } }) {
     const [vetDetails, setVetDetails] = useState<VetDetails | null>(null);
     const [loading, setLoading] = useState(true);
+    const [reviewStats, setReviewStats] = useState<{ averageRating: number; approvedCount: number } | null>(null);
     const router = useRouter();
 
     useEffect(() => {
+        // Fetch vet details
         const fetchVetDetails = async () => {
             try {
                 const response = await fetch(`/api/vets/${params['vet-id']}`);
@@ -60,17 +62,62 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
                     throw new Error('Failed to fetch vet details');
                 }
                 const data = await response.json();
-                setVetDetails(data);
+    
+                // Deduplicate related data
+                const uniqueByKey = <T, K extends keyof T>(array: T[], key: K): T[] => {
+                    const seen = new Set<T[K]>();
+                    return array.filter(item => {
+                        const value = item[key];
+                        if (seen.has(value)) {
+                            return false;
+                        }
+                        seen.add(value);
+                        return true;
+                    });
+                };
+    
+                // Set vet details with deduplicated fields
+                setVetDetails({
+                    ...data,
+                    specializations: uniqueByKey(data.specializations, 'category_id'),
+                    qualifications: uniqueByKey(data.qualifications, 'qualification_id'),
+                    availability: uniqueByKey(data.availability, 'availability_id'),
+                    reviews: uniqueByKey(data.reviews, 'review_id'),
+                });
             } catch (err) {
-                console.error(err);
-                router.push('/404'); // Redirect to a 404 page if the vet is not found
+                console.error('Error fetching vet details:', err);
+                router.push('/404'); // Redirect to 404 page if the vet is not found
             } finally {
                 setLoading(false);
             }
         };
-
+    
+        // Fetch review stats
+        const fetchReviewStats = async () => {
+            try {
+                // Append vet_id as a query parameter
+                const response = await fetch(`/api/vet-reviews-stats?vet_id=${params['vet-id']}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch review stats');
+                }
+                const stats = await response.json();
+        
+                // Update review stats
+                setReviewStats({
+                    averageRating: stats.average_rating,
+                    approvedCount: stats.approved_reviews_count,
+                });
+            } catch (err) {
+                console.error('Error fetching review stats:', err);
+            }
+        };
+        
+    
+        // Call both fetch functions
         fetchVetDetails();
+        fetchReviewStats();
     }, [params, router]);
+    
 
     if (loading) {
         return (
@@ -86,84 +133,94 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
 
     return (
         <>
-        <Navbar></Navbar>
-        <div className="container mx-auto p-6">
-            <Card>
-                <div className="flex items-center space-x-4">
-                    <img
-                        src={vetDetails.profile_image_url || '/placeholder.jpg'}
-                        alt={vetDetails.vet_name}
-                        className="w-24 h-24 rounded-full object-cover"
-                    />
-                    <div>
-                        <h1 className="text-2xl font-bold">{vetDetails.vet_name}</h1>
-                        <p className="text-gray-600">{vetDetails.clinic_name}</p>
-                        <p>
-                            <strong>Location:</strong> {vetDetails.location} ({vetDetails.city})
-                        </p>
-                        <p>
-                            <strong>Minimum Fee:</strong> PKR {vetDetails.minimum_fee}
-                        </p>
-                        <p>
-                            <strong>Contact:</strong> {vetDetails.contact_details}
-                        </p>
+            <Navbar />
+            <div className="container mx-auto p-6">
+                <Card>
+                    <div className="flex items-center space-x-4">
+                        <img
+                            src={vetDetails.profile_image_url || '/placeholder.jpg'}
+                            alt={vetDetails.vet_name}
+                            className="w-24 h-24 rounded-full object-cover"
+                        />
+                        <div>
+                            <h1 className="text-2xl font-bold">{vetDetails.vet_name}</h1>
+                            <p className="text-gray-600">{vetDetails.clinic_name}</p>
+                            <p>
+                                <strong>Location:</strong> {vetDetails.location} ({vetDetails.city})
+                            </p>
+                            <p>
+                                <strong>Minimum Fee:</strong> PKR {vetDetails.minimum_fee}
+                            </p>
+                            <p>
+                                <strong>Contact:</strong> {vetDetails.contact_details}
+                            </p>
+                        </div>
                     </div>
-                </div>
-                <Divider />
+                    <Divider />
 
-                <h2 className="text-lg font-semibold">Biography</h2>
-                <p>{vetDetails.bio}</p>
-                <Divider />
+                    <h2 className="text-lg font-semibold">Biography</h2>
+                    <p>{vetDetails.bio}</p>
+                    <Divider />
 
-                <h2 className="text-lg font-semibold">Specializations</h2>
-                <ul>
-                    {vetDetails.specializations.map(spec => (
-                        <li key={spec.category_id}>{spec.category_name}</li>
-                    ))}
-                </ul>
-                <Divider />
+                    <h2 className="text-lg font-semibold">Specializations</h2>
+                    <ul>
+                        {vetDetails.specializations.map(spec => (
+                            <li key={spec.category_id}>{spec.category_name}</li>
+                        ))}
+                    </ul>
+                    <Divider />
 
-                <h2 className="text-lg font-semibold">Qualifications</h2>
-                <List
-                    dataSource={vetDetails.qualifications}
-                    renderItem={qual => (
-                        <List.Item>
-                            <strong>{qual.qualification_name}</strong> - {qual.year_acquired} ({qual.qualification_note})
-                        </List.Item>
-                    )}
-                />
-                <Divider />
-
-                <h2 className="text-lg font-semibold">Availability</h2>
-                <List
-                    dataSource={vetDetails.availability}
-                    renderItem={avail => (
-                        <List.Item>
-                            {avail.day_of_week}: {avail.start_time} - {avail.end_time}
-                        </List.Item>
-                    )}
-                />
-                <Divider />
-
-                <h2 className="text-lg font-semibold">Reviews</h2>
-                {vetDetails.reviews.length > 0 ? (
+                    <h2 className="text-lg font-semibold">Qualifications</h2>
                     <List
-                        dataSource={vetDetails.reviews}
-                        renderItem={review => (
+                        dataSource={vetDetails.qualifications}
+                        renderItem={qual => (
                             <List.Item>
-                                <div>
-                                    <strong>{review.review_maker_name}</strong> ({review.rating} ★)
-                                    <p>{review.review_content}</p>
-                                    <p className="text-gray-500">{new Date(review.review_date).toDateString()}</p>
-                                </div>
+                                <strong>{qual.qualification_name}</strong> - {qual.year_acquired} ({qual.qualification_note})
                             </List.Item>
                         )}
                     />
-                ) : (
-                    <p>No reviews available.</p>
-                )}
-            </Card>
-        </div>
+                    <Divider />
+
+                    <h2 className="text-lg font-semibold">Availability</h2>
+                    <List
+                        dataSource={vetDetails.availability}
+                        renderItem={avail => (
+                            <List.Item>
+                                {avail.day_of_week}: {avail.start_time} - {avail.end_time}
+                            </List.Item>
+                        )}
+                    />
+                    <Divider />
+
+                    <h2 className="text-lg font-semibold">Reviews</h2>
+                    {reviewStats && (
+                        <div className="mb-4">
+                            <p>
+                                <strong>Average Rating:</strong> {reviewStats.averageRating.toFixed(1)} ★
+                            </p>
+                            <p>
+                                <strong>Approved Reviews:</strong> {reviewStats.approvedCount}
+                            </p>
+                        </div>
+                    )}
+                    {vetDetails.reviews.length > 0 ? (
+                        <List
+                            dataSource={vetDetails.reviews}
+                            renderItem={review => (
+                                <List.Item>
+                                    <div>
+                                        <strong>{review.review_maker_name}</strong> ({review.rating} ★)
+                                        <p>{review.review_content}</p>
+                                        <p className="text-gray-500">{new Date(review.review_date).toDateString()}</p>
+                                    </div>
+                                </List.Item>
+                            )}
+                        />
+                    ) : (
+                        <p>No reviews available.</p>
+                    )}
+                </Card>
+            </div>
         </>
     );
 }

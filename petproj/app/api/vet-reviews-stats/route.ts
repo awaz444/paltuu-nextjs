@@ -30,13 +30,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
         const result = await client.query(query, [vet_id]);
 
-        const { average_rating, approved_reviews_count } = result.rows[0] || {};
+        // Handle the possibility of no rows being returned
+        const row = result.rows[0] || { average_rating: null, approved_reviews_count: 0 };
 
         return NextResponse.json(
             {
                 vet_id,
-                average_rating: parseFloat(average_rating) || 0,
-                approved_reviews_count: approved_reviews_count || 0,
+                average_rating: row.average_rating ? parseFloat(row.average_rating) : 0,
+                approved_reviews_count: row.approved_reviews_count || 0,
             },
             {
                 status: 200,

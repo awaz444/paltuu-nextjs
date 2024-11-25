@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import ClientProvider from "./ClientProvider"; // Import your ClientProvider
 import "./globals.css";
-import Footer from "../components/Footer";
+import Footer from "../components/footer";
 
 const montserrat = Montserrat({
     subsets: ["latin"],

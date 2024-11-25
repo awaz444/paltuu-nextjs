@@ -2,8 +2,8 @@
 import React, { useState, useEffect, use } from "react";
 import { Carousel, Spin, Card, Tag, Divider, Button } from "antd";
 import { PetWithImages } from "../../types/petWithImages";
-import Navbar from "@/components/Navbar";
-import AdoptionFormModal from "@/components/AdoptionFormModal";
+import Navbar from "../../../components/navbar";
+import AdoptionFormModal from "../../../components/AdoptionFormModal";
 
 interface PetDetailsProps {
     pet_id: string;

@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../store/store"; // Adjust the import path
 import { fetchFosterPets } from "../store/slices/fosterPetsSlice"; // Import the action
-import Navbar from "@/components/Navbar";
+import Navbar from "../../components/navbar";
 import FosterVerticalSearchBar from "../../components/FosterVerticalSearchBar";
 import FilterSection from "../../components/FilterSection";
-import PetGrid from "../../components/PetGrid";
+import PetGrid from "../../components/petGrid";
 
 export default function FosterPets() {
     // Redux Dispatch and Selector

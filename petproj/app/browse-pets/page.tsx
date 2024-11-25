@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
 import { fetchAdoptionPets } from '../store/slices/adoptionPetsSlice';
-import Navbar from '@/components/Navbar';
+import Navbar from '../../components/navbar';
 import VerticalSearchBar from '../../components/VerticalSearchBar';
 import FilterSection from '../../components/FilterSection';
-import PetGrid from "@/components/PetGrid";
+import PetGrid from "../../components/petGrid";
 import './styles.css';
 
 export default function BrowsePets() {

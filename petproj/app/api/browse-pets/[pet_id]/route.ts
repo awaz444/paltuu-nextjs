@@ -108,3 +108,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     }
 }
 
+export const fetchPetDetails = async (pet_id: string) => {
+    const response = await fetch(`/api/pets/${pet_id}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch pet details.");
+    }
+    return response.json();
+  };
+  

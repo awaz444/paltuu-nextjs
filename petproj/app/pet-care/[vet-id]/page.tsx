@@ -1,9 +1,8 @@
 'use client';
-
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'; // For navigation
 import { Spin, Card, List, Divider } from 'antd';
-import Navbar from '@/components/navbar';
+import Navbar from '@/components/Navbar';
 
 interface VetDetails {
     vet_id: string;
@@ -25,35 +24,38 @@ interface VetDetails {
         day_of_week: string;
         start_time: string;
         end_time: string;
-    }[];
+    }[];  
     reviews: {
         review_id: string;
         rating: number;
         review_content: string;
         review_date: string;
         review_maker_name: string;
-    }[];
+    }[];  
     specializations: {
         category_id: string;
         category_name: string;
-    }[];
+    }[];  
     qualifications: {
         qualification_id: string;
         year_acquired: string;
         qualification_note: string;
         qualification_name: string;
-    }[];
+    }[];  
 }
 
-export default function VetDetailsPage({ params }: { params: { 'vet-id': string } }) {
+type tParams = Promise<{ 'vet-id': string }>;
+
+export default async function VetDetailsPage({ params }: { params: tParams }) {
     const [vetDetails, setVetDetails] = useState<VetDetails | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const { 'vet-id': vetId } = await params;  // Wait for params to resolve
 
     useEffect(() => {
         const fetchVetDetails = async () => {
             try {
-                const response = await fetch(`/api/vets/${params['vet-id']}`);
+                const response = await fetch(`/api/vets/${vetId}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch vet details');
                 }
@@ -68,7 +70,7 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
         };
 
         fetchVetDetails();
-    }, [params, router]);
+    }, [vetId, router]);
 
     if (loading) {
         return (
@@ -84,7 +86,7 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
 
     return (
         <>
-        <Navbar></Navbar>
+        <Navbar />
         <div className="container mx-auto p-6">
             <Card>
                 <div className="flex items-center space-x-4">

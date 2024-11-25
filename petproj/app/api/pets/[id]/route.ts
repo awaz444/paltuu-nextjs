@@ -1,14 +1,9 @@
 import { createClient } from '../../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
 
-interface Context {
-    params: {
-        id: string;
-    };
-}
-
-export async function GET(req: NextRequest, context: Context): Promise<NextResponse> {
-    const petId = context.params.id; // Correctly extract `id`
+// Use Next.js-provided type for the context parameter
+export async function GET(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
+    const petId = params.id; // Correctly extract `id`
     const client = createClient();
 
     try {

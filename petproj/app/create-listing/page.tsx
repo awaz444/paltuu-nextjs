@@ -6,7 +6,7 @@ import { fetchCities } from "../store/slices/citiesSlice"; // Fetch cities from 
 import { fetchPetCategories } from "../store/slices/petCategoriesSlice"; // Fetch pet categories from store
 import { postPet } from "../store/slices/petSlice"; // Import postPet thunk
 
-import Navbar from "@/components/navbar";
+import Navbar from "../../components/navbar";
 import "./styles.css";
 
 import { PlusOutlined } from "@ant-design/icons";

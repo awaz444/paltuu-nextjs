@@ -1,31 +1,37 @@
-"use client"
-import React, { useEffect, useState } from "react";
+"use client";
+
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "../store/store"; // Adjust the import based on your store structure
 import { postVetQualification } from "../store/slices/vetQualificationsSlice"; // Action to post qualification details
 import { RootState } from "../store/store"; // Import RootState to access the Redux state
 import { fetchQualifications } from "../store/slices/qualificationsSlice";
+import Navbar from "../../components/navbar";
 
-const VetQualifications = () => {
-  const [selectedQualifications, setSelectedQualifications] = useState<number[]>([]); // Array for multiple selections
-  const [qualificationDetails, setQualificationDetails] = useState<{ [key: number]: { yearAcquired: string; note: string } }>({}); // Object to track details per qualification
+const VetQualifications: React.FC = () => {
+  const [selectedQualifications, setSelectedQualifications] = useState<number[]>([]);
+  const [qualificationDetails, setQualificationDetails] = useState<{
+    [key: number]: { yearAcquired: string; note: string };
+  }>({});
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
 
-  const qualifications = useSelector((state: RootState) => state.qualifications.qualifications); // Access qualifications from Redux store
-  
+  const qualifications = useSelector(
+    (state: RootState) => state.qualifications.qualifications
+  );
+
   useEffect(() => {
-    dispatch(fetchQualifications()); // Fetch qualifications when component mounts
+    dispatch(fetchQualifications());
   }, [dispatch]);
 
-  const vetId = searchParams.get("vet_id"); // Fetch vet_id from the URL
+  const vetId = searchParams.get("vet_id");
   if (!vetId) {
     console.error("Vet ID is missing.");
   }
 
-  // Handle multiple qualification submissions
   const handleDone = async () => {
     if (!selectedQualifications.length) {
       alert("Please select at least one qualification.");
@@ -33,7 +39,6 @@ const VetQualifications = () => {
     }
 
     if (vetId !== null) {
-      // Prepare the payload with selected qualifications
       const payload = selectedQualifications.map((qualificationId) => ({
         vet_id: vetId,
         qualification_id: qualificationId,
@@ -42,13 +47,12 @@ const VetQualifications = () => {
       }));
 
       try {
-        // Dispatch the qualifications to the backend
         for (const qual of payload) {
           await dispatch(postVetQualification(qual));
         }
         alert("Qualifications added successfully!");
-        setQualificationDetails({}); // Clear the details after submission
-        setSelectedQualifications([]); // Clear the selections after submission
+        setQualificationDetails({});
+        setSelectedQualifications([]);
       } catch (error) {
         console.error("Error posting qualifications:", error);
       }
@@ -88,7 +92,10 @@ const VetQualifications = () => {
       </h2>
       {qualifications.length > 0 ? (
         qualifications.map((qualification) => (
-          <div key={qualification.qualification_id} className="mb-6 p-4 border border-gray-300 rounded-lg">
+          <div
+            key={qualification.qualification_id}
+            className="mb-6 p-4 border border-gray-300 rounded-lg"
+          >
             <label className="flex items-center mb-2">
               <input
                 type="checkbox"
@@ -108,7 +115,9 @@ const VetQualifications = () => {
                 type="text"
                 id={`year-${qualification.qualification_id}`}
                 value={qualificationDetails[qualification.qualification_id]?.yearAcquired || ""}
-                onChange={(e) => handleYearChange(qualification.qualification_id, e.target.value)}
+                onChange={(e) =>
+                  handleYearChange(qualification.qualification_id, e.target.value)
+                }
                 placeholder="YYYY"
                 className="w-24 p-2 border border-gray-300 rounded"
               />
@@ -120,7 +129,9 @@ const VetQualifications = () => {
               <textarea
                 id={`note-${qualification.qualification_id}`}
                 value={qualificationDetails[qualification.qualification_id]?.note || ""}
-                onChange={(e) => handleNoteChange(qualification.qualification_id, e.target.value)}
+                onChange={(e) =>
+                  handleNoteChange(qualification.qualification_id, e.target.value)
+                }
                 placeholder="Additional details..."
                 className="p-2 border border-gray-300 rounded"
               />
@@ -148,4 +159,18 @@ const VetQualifications = () => {
   );
 };
 
-export default VetQualifications;
+const LoadingFallback = () => (
+  <div className="flex justify-center items-center min-h-screen">
+    <p className="text-lg text-gray-500">Loading qualifications...</p>
+  </div>
+);
+
+const VetQualificationsPage: React.FC = () => {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <VetQualifications />
+    </Suspense>
+  );
+};
+
+export default VetQualificationsPage;

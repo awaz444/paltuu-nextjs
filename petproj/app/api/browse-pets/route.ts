@@ -13,7 +13,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             cities.city_name AS city,     
             users.user_id,               
             users.profile_image_url,     
-            pet_images.image_id,          
+            pet_images.image_id,         
             pet_images.image_url        
         FROM pets
         JOIN users ON pets.owner_id = users.user_id
@@ -30,14 +30,19 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         });
     } catch (err) {
         console.error(err);
+
+        // It's important to return a more specific error response
         return NextResponse.json(
-            { error: "Internal Server Error", message: (err as Error).message },
+            { 
+                error: "Internal Server Error", 
+                message: (err as Error).message || "An unknown error occurred" 
+            },
             {
                 status: 500,
                 headers: { "Content-Type": "application/json" },
             }
         );
     } finally {
-        await client.end(); // Make sure to close the client connection
+        await client.end(); // Ensure the client connection is properly closed
     }
 }

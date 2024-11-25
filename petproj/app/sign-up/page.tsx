@@ -5,13 +5,13 @@ import { RootState, AppDispatch } from "../store/store"; // Import store types
 import { fetchCities } from "../store/slices/citiesSlice"; // Fetch cities from store
 import { postUser } from "../store/slices/userSlice";
 import { User } from "../types/user";
-import Navbar from "@/components/navbar";
+import Navbar from "../../components/navbar";
 import { useRouter } from "next/navigation";
 
 const CreateUser = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { cities } = useSelector((state: RootState) => state.cities); // Fetch cities if needed
-    const router = useRouter(); 
+    const router = useRouter();
 
     const [username, setUsername] = useState("");
     const [name, setName] = useState("");
@@ -52,7 +52,7 @@ const CreateUser = () => {
                 router.push(`/vet-register?user_id=${result.payload.user_id}`);
             } else {
                 // Navigate to the dashboard if the user is not a vet
-                router.push("/dashboard");
+                router.push("/login");
             }
         } catch (error) {
             console.error("Error creating user:", error);

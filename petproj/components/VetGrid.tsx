@@ -64,9 +64,9 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
 
             {/* Contact Number */}
             <div className="flex flex-col justify-end items-end ml-4">
-              <Link href={`tel:${vet.contact_details}`} className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-[#A03048] hover:bg-[#ffffff] hover:text-primary">
+              <div className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-[#A03048] hover:bg-[#ffffff] hover:text-primary">
                 Book Appointment
-              </Link>
+              </div>
             </div>
           </div>
         </div>

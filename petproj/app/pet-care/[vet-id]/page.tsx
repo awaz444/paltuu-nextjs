@@ -5,6 +5,18 @@ import { useRouter } from "next/navigation"; // For navigation
 import { Spin, Card, List, Divider } from "antd";
 import Navbar from "@/components/Navbar";
 
+interface Specialization {
+    category_id: string;
+    category_name: string;
+}
+
+interface Qualification {
+    qualification_id: string;
+    year_acquired: string;
+    qualification_note: string;
+    qualification_name: string;
+}
+
 interface VetDetails {
     vet_id: string;
     user_id: string;
@@ -25,7 +37,7 @@ interface VetDetails {
         day_of_week: string;
         start_time: string;
         end_time: string;
-    }[]; 
+    }[];
     reviews: {
         review_id: string;
         rating: number;
@@ -33,16 +45,8 @@ interface VetDetails {
         review_date: string;
         review_maker_name: string;
     }[];
-    specializations: {
-        category_id: string;
-        category_name: string;
-    }[];
-    qualifications: {
-        qualification_id: string;
-        year_acquired: string;
-        qualification_note: string;
-        qualification_name: string;
-    }[];
+    specializations: Specialization[];
+    qualifications: Qualification[];
 }
 
 export default function VetDetailsPage({
@@ -66,7 +70,7 @@ export default function VetDetailsPage({
                 // Remove duplicates from specializations
                 const uniqueSpecializations = Array.from(
                     new Map(
-                        data.specializations.map((spec) => [
+                        data.specializations.map((spec: Specialization) => [
                             spec.category_id,
                             spec,
                         ])
@@ -76,7 +80,7 @@ export default function VetDetailsPage({
                 // Remove duplicates from qualifications
                 const uniqueQualifications = Array.from(
                     new Map(
-                        data.qualifications.map((qual) => [
+                        data.qualifications.map((qual: Qualification) => [
                             qual.qualification_id,
                             qual,
                         ])

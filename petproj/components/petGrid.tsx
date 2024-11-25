@@ -69,7 +69,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                         className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-[#A03048] hover:scale-102 transition-all duration-300">
                         <div className="relative">
                             <img
-                                src={pet.image_url || "/placeholder.jpg"} // Fallback image if pet.image_url is null
+                                src={pet.image_url || "/dog-placeholder.png"} // Fallback image if pet.image_url is null
                                 alt={pet.pet_name}
                                 className="w-full h-48 object-cover rounded-2xl"
                             />

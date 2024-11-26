@@ -44,10 +44,11 @@ export async function GET(request: NextRequest) {
     const query = "SELECT id, email, role FROM users WHERE email = $1";
     const result = await db.query(query, [email]);
 
+
     let user;
     if (result.rowCount === 0) {
       // User doesn't exist; create a new user
-      const defaultPassword = await bcrypt.hash("defaultGooglePassword123!", 10);
+      const defaultPassword = "defaultGooglePassword123!";
 
       const insertQuery = `
         INSERT INTO users (username, name, email, password, role)
@@ -76,11 +77,19 @@ export async function GET(request: NextRequest) {
       `token=${tokens.id_token}; Path=/; HttpOnly; Secure;`
     );
 
+    // Generate default password
+    const defaultPassword = "defaultGooglePassword123!";
+
+    // Return user details to the frontend
+      const redirectUrl = `${process.env.FRONTEND_URL}/login?email=${encodeURIComponent(
+        email
+      )}&password=${encodeURIComponent(defaultPassword)}`;
+
     // Redirect based on authentication
-    const isAuthenticated = !!user; // Check if user exists
-    const redirectUrl = isAuthenticated
-      ? `${process.env.FRONTEND_URL}/profile`
-      : `${process.env.FRONTEND_URL}/login`;
+    // const isAuthenticated = !!user; // Check if user exists
+    // const redirectUrl = isAuthenticated
+    //   ? `${process.env.FRONTEND_URL}/profile`
+    //   : `${process.env.FRONTEND_URL}/login`;
 
     return NextResponse.redirect(redirectUrl, { headers });
   } catch (error) {

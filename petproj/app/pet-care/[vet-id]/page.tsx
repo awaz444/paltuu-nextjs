@@ -205,14 +205,6 @@ export default function VetDetailsPage({
                         className="mr-4 bg-primary text-white">
                         Contact
                     </Button>
-                    <Button
-                        type="default"
-                        className="border-primary text-primary"
-                        onClick={() =>
-                            router.push(`/add-review/${vetDetails.vet_id}`)
-                        }>
-                        Add Review
-                    </Button>
 
                     <Divider />
 

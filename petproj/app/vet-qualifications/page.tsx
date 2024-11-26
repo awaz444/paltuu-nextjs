@@ -1,38 +1,34 @@
 "use client";
-
 import React, { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch } from "../store/store"; // Adjust the import based on your store structure
-import { postVetQualification } from "../store/slices/vetQualificationsSlice"; // Action to post qualification details
-import { RootState } from "../store/store"; // Import RootState to access the Redux state
-import { fetchQualifications } from "../store/slices/qualificationsSlice";
-import Navbar from "../../components/navbar";
+import { RootState, AppDispatch } from "../store/store";
+import { fetchQualifications } from "../store/slices/qualificationsSlice"; // Adjust import path as needed
+import { postVetQualification } from "../store/slices/vetQualificationsSlice";
+import { useRouter, useSearchParams } from "next/navigation";
 
-const VetQualifications: React.FC = () => {
+const VetQualificationsForm = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const vetId = searchParams.get("vet_id");
+
+  const { qualifications, loading, error } = useSelector(
+    (state: RootState) => state.qualifications
+  );
+
   const [selectedQualifications, setSelectedQualifications] = useState<number[]>([]);
   const [qualificationDetails, setQualificationDetails] = useState<{
     [key: number]: { yearAcquired: string; note: string };
   }>({});
 
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const dispatch = useDispatch<AppDispatch>();
-
-  const qualifications = useSelector(
-    (state: RootState) => state.qualifications.qualifications
-  );
-
   useEffect(() => {
+    // Dispatch fetch action on component mount to load qualifications
     dispatch(fetchQualifications());
   }, [dispatch]);
 
-  const vetId = searchParams.get("vet_id");
-  if (!vetId) {
-    console.error("Vet ID is missing.");
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleDone = async () => {
     if (!selectedQualifications.length) {
       alert("Please select at least one qualification.");
       return;
@@ -50,17 +46,13 @@ const VetQualifications: React.FC = () => {
         for (const qual of payload) {
           await dispatch(postVetQualification(qual));
         }
-        alert("Qualifications added successfully!");
         setQualificationDetails({});
         setSelectedQualifications([]);
+        router.push(`/vet-specialization?vet_id=${vetId}`);
       } catch (error) {
         console.error("Error posting qualifications:", error);
       }
     }
-  };
-
-  const handleRedirect = () => {
-    router.push(`/vet-specialization?vet_id=${vetId}`);
   };
 
   const handleCheckboxChange = (qualificationId: number) => {
@@ -85,92 +77,102 @@ const VetQualifications: React.FC = () => {
     }));
   };
 
+  if (loading) return <div>Loading qualifications...</div>;
+  if (error) return <div>Error: {error}</div>;
+
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
-      <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
-        Add Qualifications
-      </h2>
-      {qualifications.length > 0 ? (
-        qualifications.map((qualification) => (
-          <div
-            key={qualification.qualification_id}
-            className="mb-6 p-4 border border-gray-300 rounded-lg"
+    <div className="min-h-screen flex">
+      <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
+        <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
+      </div>
+
+      <div className="w-1/2 bg-gray-100 flex items-center justify-center px-8 py-12">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-md bg-white shadow-lg rounded-3xl p-6 space-y-4"
+        >
+          <h2 className="text-3xl font-semibold text-center mb-2">
+            Add Qualifications
+          </h2>
+          <p className="text-gray-600 text-center mb-6">
+            Select the qualifications for the vet and provide additional details.
+          </p>
+
+          {/* Qualifications List */}
+          {qualifications.length > 0 ? (
+            qualifications.map((qualification) => (
+              <div
+                key={qualification.qualification_id}
+                className="mb-6 p-4 border border-gray-300 rounded-lg"
+              >
+                <label className="flex items-center mb-2">
+                  <input
+                    type="checkbox"
+                    value={qualification.qualification_id}
+                    checked={selectedQualifications.includes(qualification.qualification_id)}
+                    onChange={() => handleCheckboxChange(qualification.qualification_id)}
+                    className="mr-2"
+                  />
+                  {qualification.qualification_name}
+                </label>
+                <div className="flex items-center mb-2">
+                  <label
+                    htmlFor={`year-${qualification.qualification_id}`}
+                    className="mr-2"
+                  >
+                    Year Acquired:
+                  </label>
+                  <input
+                    type="text"
+                    id={`year-${qualification.qualification_id}`}
+                    value={qualificationDetails[qualification.qualification_id]?.yearAcquired || ""}
+                    onChange={(e) =>
+                      handleYearChange(qualification.qualification_id, e.target.value)
+                    }
+                    placeholder="YYYY"
+                    className="w-24 p-2 border border-gray-300 rounded"
+                  />
+                </div>
+                <div className="flex flex-col mb-2">
+                  <label
+                    htmlFor={`note-${qualification.qualification_id}`}
+                    className="mb-1"
+                  >
+                    Note (optional):
+                  </label>
+                  <textarea
+                    id={`note-${qualification.qualification_id}`}
+                    value={qualificationDetails[qualification.qualification_id]?.note || ""}
+                    onChange={(e) =>
+                      handleNoteChange(qualification.qualification_id, e.target.value)
+                    }
+                    placeholder="Additional details..."
+                    className="p-2 border border-gray-300 rounded"
+                  />
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500 text-center">No qualifications available.</p>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full bg-primary text-white py-2 px-4 rounded-xl hover:bg-primary-dark transition"
           >
-            <label className="flex items-center mb-2">
-              <input
-                type="checkbox"
-                name="qualification"
-                value={qualification.qualification_id}
-                checked={selectedQualifications.includes(qualification.qualification_id)}
-                onChange={() => handleCheckboxChange(qualification.qualification_id)}
-                className="mr-2"
-              />
-              {qualification.qualification_name}
-            </label>
-            <div className="flex items-center mb-2">
-              <label htmlFor={`year-${qualification.qualification_id}`} className="mr-2">
-                Year Acquired:
-              </label>
-              <input
-                type="text"
-                id={`year-${qualification.qualification_id}`}
-                value={qualificationDetails[qualification.qualification_id]?.yearAcquired || ""}
-                onChange={(e) =>
-                  handleYearChange(qualification.qualification_id, e.target.value)
-                }
-                placeholder="YYYY"
-                className="w-24 p-2 border border-gray-300 rounded"
-              />
-            </div>
-            <div className="flex flex-col mb-2">
-              <label htmlFor={`note-${qualification.qualification_id}`} className="mb-1">
-                Note (optional):
-              </label>
-              <textarea
-                id={`note-${qualification.qualification_id}`}
-                value={qualificationDetails[qualification.qualification_id]?.note || ""}
-                onChange={(e) =>
-                  handleNoteChange(qualification.qualification_id, e.target.value)
-                }
-                placeholder="Additional details..."
-                className="p-2 border border-gray-300 rounded"
-              />
-            </div>
-          </div>
-        ))
-      ) : (
-        <p className="text-gray-500 text-center">No qualifications available.</p>
-      )}
-      <button
-        type="button"
-        onClick={handleDone}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        Done
-      </button>
-      <button
-        type="button"
-        onClick={handleRedirect}
-        className="w-full mt-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-300"
-      >
-        Submit & Proceed to Add Category
-      </button>
+            Submit & Proceed to Add Category
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
 
-const LoadingFallback = () => (
-  <div className="flex justify-center items-center min-h-screen">
-    <p className="text-lg text-gray-500">Loading qualifications...</p>
-  </div>
+const VetQualifications = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <VetQualificationsForm />
+  </Suspense>
 );
 
-const VetQualificationsPage: React.FC = () => {
-  return (
-    <Suspense fallback={<LoadingFallback />}>
-      <VetQualifications />
-    </Suspense>
-  );
-};
-
-export default VetQualificationsPage;
+export default VetQualifications;

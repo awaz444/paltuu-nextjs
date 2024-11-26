@@ -3,11 +3,16 @@
 import Link from "next/link";
 import "./navbar.css";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { AuthContext } from "@/context/AuthContext"; // Adjust the import path
 
 const Navbar = () => {
   const [activeLink, setActiveLink] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Use AuthContext instead of next-auth's useSession
+  const authContext = useContext(AuthContext);
+  const { isAuthenticated } = authContext || {}; // Destructure authContext if it's available
 
   const links = [
     { name: "Browse pets", href: "browse-pets" },
@@ -21,8 +26,14 @@ const Navbar = () => {
     setActiveLink(currentPath);
   }, []);
 
+  // Dynamic style based on authentication state
+  const navbarStyle = isAuthenticated
+    ? { backgroundColor: "#6A0DAD" } // Logged-in color
+    : { backgroundColor: "#A03048" };
+    console.log(isAuthenticated);
+
   return (
-    <nav className="navbar">
+    <nav className="navbar" style={navbarStyle}>
       <div className="flex items-center justify-between w-full">
         {/* Hamburger menu for small screens */}
         <div className="block md:hidden">
@@ -62,11 +73,17 @@ const Navbar = () => {
               </span>
             </Link>
           ))}
-          <Link href="/login">
-            <button className="loginBtn hover:bg-[#ffd2e3] hover:text-[#70223f] transition-all duration-300">
-              Login
-            </button>
-          </Link>
+
+          {/* Conditionally render Login or User Info */}
+          {!isAuthenticated ? (
+            <Link href="/login">
+              <button className="loginBtn hover:bg-[#ffd2e3] hover:text-[#70223f] transition-all duration-300">
+                Login
+              </button>
+            </Link>
+          ) : (
+            <span className="text-white">Welcome back!</span> // Example for logged-in user
+          )}
         </div>
       </div>
 
@@ -97,11 +114,15 @@ const Navbar = () => {
 
         {/* Login button at the bottom */}
         <div className="absolute bottom-6 left-6">
-          <Link href="/login">
-            <button className="loginBtn hover:bg-[#ffd2e3] hover:text-[#70223f] transition-all duration-300">
-              Login
-            </button>
-          </Link>
+          {!isAuthenticated ? (
+            <Link href="/login">
+              <button className="loginBtn hover:bg-[#ffd2e3] hover:text-[#70223f] transition-all duration-300">
+                Login
+              </button>
+            </Link>
+          ) : (
+            <span className="text-white">Logged in</span>
+          )}
         </div>
       </div>
     </nav>

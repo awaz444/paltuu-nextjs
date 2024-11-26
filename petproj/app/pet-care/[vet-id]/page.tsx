@@ -239,37 +239,31 @@ export default function VetDetailsPage({
                     {/* Vet Details */}
                     <div className="flex items-center space-x-4">
                         <img
-                            src={
-                                vetDetails.profile_image_url ||
-                                "/placeholder.jpg"
-                            }
+                            src={vetDetails.profile_image_url || "/placeholder.jpg"}
                             alt={vetDetails.vet_name}
                             className="w-24 h-24 rounded-full object-cover"
                         />
-                        <div>
-                            <h1 className="text-2xl font-bold">
-                                {vetDetails.vet_name}
-                            </h1>
-                            <p className="text-gray-600">
-                                {vetDetails.clinic_name}
+                        <div className="flex-1">
+                            <h1 className="text-2xl font-bold">{vetDetails.vet_name}</h1>
+                            <p className="text-gray-600">{vetDetails.clinic_name}</p>
+                            <p>
+                                <strong>Location:</strong> {vetDetails.location} ({vetDetails.city})
                             </p>
                             <p>
-                                <strong>Location:</strong> {vetDetails.location}{" "}
-                                ({vetDetails.city})
+                                <strong>Minimum Fee:</strong> PKR {vetDetails.minimum_fee}
                             </p>
-                            <p>
-                                <strong>Minimum Fee:</strong> PKR{" "}
-                                {vetDetails.minimum_fee}
-                            </p>
-           
-                                
-                            
-                                 <div onClick={() => setIsModalVisible(true)} className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-[#A03048] hover:bg-[#ffffff] hover:text-primary">
-                Book Appointment
-              </div>
-                        
+                        </div>
+                        <div className="ml-auto">
+                            <div
+                                onClick={() => setIsModalVisible(true)}
+                                className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-[#A03048] hover:bg-[#ffffff] hover:text-primary cursor-pointer"
+                            >
+                                Book Appointment
+                            </div>
 
-                          
+
+
+
                             <Modal
                                 title="Contact Information"
                                 visible={isModalVisible}

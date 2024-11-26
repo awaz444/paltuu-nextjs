@@ -1,9 +1,9 @@
-// app/layout.tsx
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import ClientProvider from "./ClientProvider"; // Import your ClientProvider
 import "./globals.css";
 import Footer from "../components/footer";
+import AuthProvider from "@/context/AuthProvider";
 
 const montserrat = Montserrat({
     subsets: ["latin"],
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     description: "Pakistan's First Pet Adoption Platform",
 };
 
-export default function RootLayout({  
+export default function RootLayout({
     children,
 }: {
     children: React.ReactNode;
@@ -42,7 +42,9 @@ export default function RootLayout({
                 />
             </head>
             <body className={montserrat.className}>
-                <ClientProvider>{children}</ClientProvider>
+                <AuthProvider>
+                    <ClientProvider>{children}</ClientProvider>
+                </AuthProvider>
                 <Footer />
             </body>
         </html>

@@ -65,6 +65,7 @@ export default function Login() {
                             Email
                         </label>
                         <input
+                            placeholder="Email"
                             type="email"
                             name="email"
                             value={user.email}
@@ -80,6 +81,7 @@ export default function Login() {
                             Password
                         </label>
                         <input
+                            placeholder="Password"
                             type="password"
                             name="password"
                             value={user.password}

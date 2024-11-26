@@ -58,7 +58,7 @@ const VetSpecializationsForm: React.FC = () => {
         }
         alert("Specializations added successfully!");
         setSelectedCategories([]); // Clear selections after submission
-        router.push(`/vet-schedule?vet_id=${vetId}`); // Navigate to vet profile page (or another page)
+        router.push(`/vet-schedule?vet_id=${vetId}`);
       } catch (error) {
         console.error("Error posting specializations:", error);
       }

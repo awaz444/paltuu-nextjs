@@ -22,7 +22,7 @@ export const authoptions: NextAuthOptions = {
         const { email, password } = credentials;
 
         try {
-          const query = "SELECT id, email, password, role FROM users WHERE email = $1";
+          const query = "SELECT user_id, email, password, role FROM users WHERE email = $1";
           const result: QueryResult = await db.query(query, [email]);
 
           if (result.rowCount === 0) {
@@ -36,7 +36,7 @@ export const authoptions: NextAuthOptions = {
           }
 
           return {
-            id: user.id,
+            id: user.user_id,
             email: user.email,
             role: user.role,
           };
@@ -48,42 +48,52 @@ export const authoptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account, profile }) {
-      if (account?.provider === "google") {
-        const email = profile?.email!;
-        const name = profile?.name || "Google User";
+      async jwt({ token, account, profile }) {
+        // Initialize `id` and `role` with defaults if not set
+        token.user_id = token.id || null; // Use `null` or a default value that aligns with your type definition
+        token.role = token.role || "guest"; // Default role
 
-        const query = "SELECT id, email, role FROM users WHERE email = $1";
-        const result = await db.query(query, [email]);
+        if (account?.provider === "google") {
+          const email = profile?.email!;
+          const name = profile?.name || "Google User";
 
-        if (result.rowCount === 0) {
-          const defaultPassword = await bcrypt.hash("defaultGooglePassword123!", 10);
+          const query = "SELECT id, email, role FROM users WHERE email = $1";
+          try {
+            const result = await db.query(query, [email]);
 
-          const insertQuery = `
-            INSERT INTO users (username, name, email, password, role)
-            VALUES ($1, $2, $3, $4, $5)
-            RETURNING id, email, role
-          `;
-          const insertValues = [
-            email.split("@")[0], // Default username from email
-            name,
-            email,
-            defaultPassword,
-            "regular user",
-          ];
+            if (result.rowCount === 0) {
+              // If user doesn't exist, create one
+              const defaultPassword = await bcrypt.hash("defaultGooglePassword123!", 10);
 
-          const insertResult: QueryResult = await db.query(insertQuery, insertValues);
-          const newUser = insertResult.rows[0];
-          token.id = newUser.id;
-          token.role = newUser.role;
-        } else {
-          const existingUser = result.rows[0];
-          token.id = existingUser.id;
-          token.role = existingUser.role;
+              const insertQuery = `
+                INSERT INTO users (username, name, email, password, role)
+                VALUES ($1, $2, $3, $4, $5)
+                RETURNING id, email, role
+              `;
+              const insertValues = [
+                email.split("@")[0], // Default username from email
+                name,
+                email,
+                defaultPassword,
+                "regular user",
+              ];
+
+              const insertResult: QueryResult = await db.query(insertQuery, insertValues);
+              const newUser = insertResult.rows[0];
+              token.id = newUser.id;
+              token.role = newUser.role;
+            } else {
+              // If user exists, update token with existing user details
+              const existingUser = result.rows[0];
+              token.id = existingUser.id;
+              token.role = existingUser.role;
+            }
+          } catch (error) {
+            console.error("Database query failed:", error);
+          }
         }
-      return token;
-    }
+        return token;
+      }
   },
   secret: process.env.NEXTAUTH_SECRET,
-}
 };

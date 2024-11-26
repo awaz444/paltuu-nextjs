@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const Footer = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const hideFooterRoutes = ["/login", "/register"];
+  const hideFooterRoutes = ["/login", "/sign-up", "/vet-register"];
   const pathName = usePathname();
 
   // Update the year unconditionally

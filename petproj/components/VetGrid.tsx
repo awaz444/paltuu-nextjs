@@ -20,7 +20,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
         >
           {/* Starting Fee in Top Right Corner */}
           <div className="absolute top-4 right-4 bg-white text-sm text-primary font-bold py-1 px-3 rounded-lg">
-            Starting Fee: PKR {vet.minimum_fee}
+            Fee Starting from: PKR {vet.minimum_fee}
           </div>
 
           <div className="flex">

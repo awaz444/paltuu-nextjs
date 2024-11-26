@@ -43,6 +43,7 @@ interface VetDetails {
         rating: number;
         review_content: string;
         review_date: string;
+        review_maker_profile_image_url: string;
         review_maker_name: string;
     }[];
     specializations: {
@@ -261,9 +262,6 @@ export default function VetDetailsPage({
                                 Book Appointment
                             </div>
 
-
-
-
                             <Modal
                                 title="Contact Information"
                                 visible={isModalVisible}
@@ -353,52 +351,68 @@ export default function VetDetailsPage({
                         )}
                     />
                     <Divider />
-
                     {/* Review Section */}
-                    <h2 className="text-lg font-semibold">Reviews</h2>
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 className="text-lg font-semibold">Reviews</h2>
 
-                    {reviewStats && (
-                        <div className="mb-4">
-                            <p>
-                                <strong>Average Rating:</strong>{" "}
-                                {reviewStats.averageRating.toFixed(1)} ★
-                            </p>
-                            <p>
-                                <strong>Approved Reviews:</strong>{" "}
-                                {reviewStats.approvedCount}
-                            </p>
+                            {reviewStats && (
+                                <div>
+                                    <p>
+                                        <strong>Average Rating:</strong> {reviewStats.averageRating.toFixed(1)} ★
+                                    </p>
+                                    <p>
+                                        <strong>Approved Reviews:</strong> {reviewStats.approvedCount}
+                                    </p>
+                                </div>
+                            )}
                         </div>
-                    )}
+
+                        <Button
+                            type="primary"
+                            onClick={handleOpenModal}
+                            className="bg-primary hover:bg-primary"
+                        >
+                            Add Review
+                        </Button>
+                    </div>
+
 
                     {vetDetails.reviews.length > 0 ? (
                         <List
                             dataSource={vetDetails.reviews}
                             renderItem={(review) => (
                                 <List.Item>
-                                    <div>
-                                        <strong>
-                                            {review.review_maker_name}
-                                        </strong>{" "}
-                                        ({review.rating} ★)
-                                        <p>{review.review_content}</p>
-                                        <p className="text-gray-500">
-                                            {new Date(
-                                                review.review_date
-                                            ).toDateString()}
-                                        </p>
+                                    <div className="flex items-center space-x-4">
+                                        {review.review_maker_profile_image_url ? (
+                                            <img
+                                                src={review.review_maker_profile_image_url}
+                                                alt={review.review_maker_name}
+                                                className="w-10 h-10 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                                                {review.review_maker_name.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+                                        <div>
+                                            <strong>{review.review_maker_name}</strong>{" "}
+                                            <span>({review.rating} ★)</span>
+                                            <p>{review.review_content}</p>
+                                            <p className="text-gray-500">
+                                                {new Date(review.review_date).toDateString()}
+                                            </p>
+                                        </div>
                                     </div>
                                 </List.Item>
                             )}
                         />
+
                     ) : (
                         <p>No reviews available.</p>
-                    )}
-                    <Button
-                        type="primary"
-                        onClick={handleOpenModal}
-                        className="mb-4 bg-primary hover:bg-primary">
-                        Add Review
-                    </Button>
+                    )
+
+                    }
                 </Card>
             </div>
 

@@ -124,7 +124,7 @@ export default function BrowsePets() {
               {/* Tab Switch for Adopt and Buy */}
               <div className="tab-switch-container">
                 {/* Sliding background for active tab */}
-                <div
+                <div  
                   className="tab-switch-slider"
                   style={{
                     transform: activeTab === 'adopt' ? 'translateX(0)' : 'translateX(100%)', // Sliding effect

@@ -1,0 +1,47 @@
+/* Container for the tab switch */
+.tab-switch-container {
+    display: flex;
+    width: 100%;
+    margin-bottom: 16px;
+    background-color: #ffffff; /* Inactive tab background */
+    border-radius: 25px; /* Fully rounded container */
+    position: relative;
+    padding: 0; /* Remove inner padding */
+    overflow: hidden; /* Ensure no overflow from the sliding effect */
+  }
+  
+  /* Style for each tab */
+  .tab {
+    flex: 1;
+    padding: 10px 0; /* Remove horizontal padding to avoid gaps */
+    text-align: center;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: #555; /* Default text color */
+    position: relative;
+    z-index: 1; /* Keep text above the slider */
+    transition: color 0.4s ease; /* Smooth text color transition */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Sliding background for the active tab */
+  .tab-switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%; /* Covers one tab */
+    height: 100%; /* Full height of the container */
+    background-color: #A03048; /* Active background color */
+    border-radius: 25px; /* Fully rounded corners */
+    transition: transform 0.4s ease; /* Smooth sliding movement */
+    z-index: 0;
+  }
+  
+  /* Active state for the tab */
+  .tab.active {
+    color: white; /* Change text color for active tab */
+  }
+  

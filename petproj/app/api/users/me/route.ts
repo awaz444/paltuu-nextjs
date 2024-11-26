@@ -2,6 +2,8 @@ import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     // Extract user ID from the token

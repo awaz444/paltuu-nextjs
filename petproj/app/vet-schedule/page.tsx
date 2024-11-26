@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, {Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { addVetSchedules } from "../store/slices/vetScheduleSlice"; // Action to post schedules
@@ -185,4 +185,18 @@ const VetScheduleForm = () => {
   );
 };
 
-export default VetScheduleForm;
+const LoadingFallback = () => (
+  <div className="flex justify-center items-center min-h-screen">
+    <p className="text-lg text-gray-500">Loading specializations...</p>
+  </div>
+);
+const VetSchedulePage = () =>{
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <VetScheduleForm />
+    </Suspense>
+  );
+}
+
+
+export default VetSchedulePage;

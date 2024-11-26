@@ -106,7 +106,7 @@ const PetDetailsPage: React.FC<{ pet_id: string }> = ({ pet_id }) => {
                             type="primary"
                             size="large"
                             onClick={handleAdoptClick}
-                            disabled={pet.adoption_status !== "Available"}
+                            disabled={pet.adoption_status !== "available"}
                             className="bg-primary"
                         >
                             Adopt Now!

@@ -1,8 +1,19 @@
-'use client';
+"use client";
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Spin, Card, List, Divider, Button, Modal, message, Form,Input, Rate } from "antd";
+import {
+    Spin,
+    Card,
+    List,
+    Divider,
+    Button,
+    Modal,
+    message,
+    Form,
+    Input,
+    Rate,
+} from "antd";
 import { CopyOutlined, WhatsAppOutlined } from "@ant-design/icons";
 import Navbar from "../../../components/navbar";
 
@@ -46,10 +57,17 @@ interface VetDetails {
     }[];
 }
 
-export default function VetDetailsPage({ params }: { params: { 'vet-id': string } }) {
+export default function VetDetailsPage({
+    params,
+}: {
+    params: { "vet-id": string };
+}) {
     const [vetDetails, setVetDetails] = useState<VetDetails | null>(null);
     const [loading, setLoading] = useState(true);
-    const [reviewStats, setReviewStats] = useState<{ averageRating: number; approvedCount: number } | null>(null);
+    const [reviewStats, setReviewStats] = useState<{
+        averageRating: number;
+        approvedCount: number;
+    } | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [form] = Form.useForm();
     const router = useRouter();
@@ -57,15 +75,18 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
     useEffect(() => {
         const fetchVetDetails = async () => {
             try {
-                const response = await fetch(`/api/vets/${params['vet-id']}`);
+                const response = await fetch(`/api/vets/${params["vet-id"]}`);
                 if (!response.ok) {
-                    throw new Error('Failed to fetch vet details');
+                    throw new Error("Failed to fetch vet details");
                 }
                 const data = await response.json();
 
-                const uniqueByKey = <T, K extends keyof T>(array: T[], key: K): T[] => {
+                const uniqueByKey = <T, K extends keyof T>(
+                    array: T[],
+                    key: K
+                ): T[] => {
                     const seen = new Set<T[K]>();
-                    return array.filter(item => {
+                    return array.filter((item) => {
                         const value = item[key];
                         if (seen.has(value)) {
                             return false;
@@ -77,14 +98,23 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
 
                 setVetDetails({
                     ...data,
-                    specializations: uniqueByKey(data.specializations, 'category_id'),
-                    qualifications: uniqueByKey(data.qualifications, 'qualification_id'),
-                    availability: uniqueByKey(data.availability, 'availability_id'),
-                    reviews: uniqueByKey(data.reviews, 'review_id'),
+                    specializations: uniqueByKey(
+                        data.specializations,
+                        "category_id"
+                    ),
+                    qualifications: uniqueByKey(
+                        data.qualifications,
+                        "qualification_id"
+                    ),
+                    availability: uniqueByKey(
+                        data.availability,
+                        "availability_id"
+                    ),
+                    reviews: uniqueByKey(data.reviews, "review_id"),
                 });
             } catch (err) {
-                console.error('Error fetching vet details:', err);
-                router.push('/404');
+                console.error("Error fetching vet details:", err);
+                router.push("/404");
             } finally {
                 setLoading(false);
             }
@@ -92,9 +122,11 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
 
         const fetchReviewStats = async () => {
             try {
-                const response = await fetch(`/api/vet-reviews-stats?vet_id=${params['vet-id']}`);
+                const response = await fetch(
+                    `/api/vet-reviews-stats?vet_id=${params["vet-id"]}`
+                );
                 if (!response.ok) {
-                    throw new Error('Failed to fetch review stats');
+                    throw new Error("Failed to fetch review stats");
                 }
                 const stats = await response.json();
 
@@ -103,7 +135,7 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
                     approvedCount: stats.approved_reviews_count,
                 });
             } catch (err) {
-                console.error('Error fetching review stats:', err);
+                console.error("Error fetching review stats:", err);
             }
         };
 
@@ -124,21 +156,27 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
     const handleOpenModal = () => setIsModalOpen(true);
     const handleCloseModal = () => setIsModalOpen(false);
 
-    const handleSubmit = async (values: { email: string; rating: number; review_content: string }) => {
+    const handleSubmit = async (values: {
+        email: string;
+        rating: number;
+        review_content: string;
+    }) => {
         const review_date = new Date().toISOString();
-        const vet_id = params['vet-id'];
+        const vet_id = params["vet-id"];
         const approved = false;
 
         try {
-            const userResponse = await fetch(`/api/get-user-id?email=${encodeURIComponent(values.email)}`);
+            const userResponse = await fetch(
+                `/api/get-user-id?email=${encodeURIComponent(values.email)}`
+            );
             if (!userResponse.ok) {
-                throw new Error('Failed to fetch user ID');
+                throw new Error("Failed to fetch user ID");
             }
             const { user_id } = await userResponse.json();
 
             const reviewResponse = await fetch(`/api/vet-reviews-stats`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     vet_id,
                     user_id,
@@ -150,7 +188,7 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
             });
 
             if (!reviewResponse.ok) {
-                throw new Error('Failed to submit review');
+                throw new Error("Failed to submit review");
             }
 
             const newReview = await reviewResponse.json();
@@ -175,7 +213,7 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
 
             handleCloseModal();
         } catch (err) {
-            console.error('Error submitting review:', err);
+            console.error("Error submitting review:", err);
         }
     };
 
@@ -188,7 +226,9 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
     }
 
     if (!vetDetails) {
-        return <div className="text-center mt-10">Vet details not available.</div>;
+        return (
+            <div className="text-center mt-10">Vet details not available.</div>
+        );
     }
 
     return (
@@ -199,64 +239,125 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
                     {/* Vet Details */}
                     <div className="flex items-center space-x-4">
                         <img
-                            src={vetDetails.profile_image_url || '/placeholder.jpg'}
+                            src={
+                                vetDetails.profile_image_url ||
+                                "/placeholder.jpg"
+                            }
                             alt={vetDetails.vet_name}
                             className="w-24 h-24 rounded-full object-cover"
                         />
                         <div>
-                            <h1 className="text-2xl font-bold">{vetDetails.vet_name}</h1>
-                            <p className="text-gray-600">{vetDetails.clinic_name}</p>
-                            <p>
-                                <strong>Location:</strong> {vetDetails.location} ({vetDetails.city})
+                            <h1 className="text-2xl font-bold">
+                                {vetDetails.vet_name}
+                            </h1>
+                            <p className="text-gray-600">
+                                {vetDetails.clinic_name}
                             </p>
                             <p>
-                                <strong>Minimum Fee:</strong> PKR {vetDetails.minimum_fee}
+                                <strong>Location:</strong> {vetDetails.location}{" "}
+                                ({vetDetails.city})
                             </p>
-                            <Button
-                        type="primary"
-                        onClick={() => setIsModalVisible(true)}
-                        className="mr-4 bg-primary text-white">
-                        Contact
-                    </Button>
-                    <Modal
-                    title="Contact Information"
-                    visible={isModalVisible}
-                    onCancel={() => setIsModalVisible(false)}
-                    footer={null}>
-                    <p>
-                        <strong>Phone:</strong> {vetDetails.contact_details}{" "}
-                        <Button
-                            icon={<CopyOutlined />}
-                            className="ml-2"
-                            size="small"
-                            onClick={() =>
-                                handleCopy(vetDetails.contact_details)
-                            }>
-                            Copy
-                        </Button>
-                    </p>
-                    <p>
-                        <strong>Email:</strong> {vetDetails.email}{" "}
-                        <Button
-                            icon={<CopyOutlined />}
-                            className="mt-2 ml-2"
-                            size="small"
-                            onClick={() => handleCopy(vetDetails.email)}>
-                            Copy
-                        </Button>
-                    </p>
-                    <Button
-                        type="primary"
-                        className="bg-primary text-white mt-2"
-                        icon={<WhatsAppOutlined />}
-                        onClick={() =>
-                            handleWhatsApp(vetDetails.contact_details)
-                        }>
-                        WhatsApp
-                    </Button>
-                </Modal>
+                            <p>
+                                <strong>Minimum Fee:</strong> PKR{" "}
+                                {vetDetails.minimum_fee}
+                            </p>
+           
+                                
+                            
+                                 <div onClick={() => setIsModalVisible(true)} className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-[#A03048] hover:bg-[#ffffff] hover:text-primary">
+                Book Appointment
+              </div>
+                        
+
+                          
+                            <Modal
+                                title="Contact Information"
+                                visible={isModalVisible}
+                                onCancel={() => setIsModalVisible(false)}
+                                footer={null}>
+                                <p>
+                                    <strong>Phone:</strong>{" "}
+                                    {vetDetails.contact_details}{" "}
+                                    <Button
+                                        icon={<CopyOutlined />}
+                                        className="ml-2"
+                                        size="small"
+                                        onClick={() =>
+                                            handleCopy(
+                                                vetDetails.contact_details
+                                            )
+                                        }>
+                                        Copy
+                                    </Button>
+                                </p>
+                                <p>
+                                    <strong>Email:</strong> {vetDetails.email}{" "}
+                                    <Button
+                                        icon={<CopyOutlined />}
+                                        className="mt-2 ml-2"
+                                        size="small"
+                                        onClick={() =>
+                                            handleCopy(vetDetails.email)
+                                        }>
+                                        Copy
+                                    </Button>
+                                </p>
+                                <Button
+                                    type="primary"
+                                    className="bg-primary text-white mt-2"
+                                    icon={<WhatsAppOutlined />}
+                                    onClick={() =>
+                                        handleWhatsApp(
+                                            vetDetails.contact_details
+                                        )
+                                    }>
+                                    WhatsApp
+                                </Button>
+                            </Modal>
                         </div>
                     </div>
+                    <Divider />
+
+                    <Divider />
+
+                    {vetDetails.bio && (
+                        <>
+                            <h2 className="text-lg font-semibold">Biography</h2>
+                            <p>{vetDetails.bio}</p>
+                            <Divider />
+                        </>
+                    )}
+
+                    <h2 className="text-lg font-semibold">Specializations</h2>
+                    <ul>
+                        {vetDetails.specializations.map((spec) => (
+                            <li key={spec.category_id}>{spec.category_name}</li>
+                        ))}
+                    </ul>
+                    <Divider />
+
+                    <h2 className="text-lg font-semibold">Qualifications</h2>
+                    <List
+                        dataSource={vetDetails.qualifications}
+                        renderItem={(qual) => (
+                            <List.Item>
+                                <strong>{qual.qualification_name}</strong> -{" "}
+                                {qual.year_acquired} ({qual.qualification_note})
+                            </List.Item>
+                        )}
+                    />
+                    <Divider />
+
+                    <h2 className="text-lg font-semibold">Availability</h2>
+                    <List
+                        dataSource={vetDetails.availability}
+                        renderItem={(avail) => (
+                            <List.Item>
+                                {avail.day_of_week}: {avail.start_time} -{" "}
+                                {avail.end_time}
+                            </List.Item>
+                        )}
+                    />
                     <Divider />
 
                     {/* Review Section */}
@@ -265,10 +366,12 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
                     {reviewStats && (
                         <div className="mb-4">
                             <p>
-                                <strong>Average Rating:</strong> {reviewStats.averageRating.toFixed(1)} ★
+                                <strong>Average Rating:</strong>{" "}
+                                {reviewStats.averageRating.toFixed(1)} ★
                             </p>
                             <p>
-                                <strong>Approved Reviews:</strong> {reviewStats.approvedCount}
+                                <strong>Approved Reviews:</strong>{" "}
+                                {reviewStats.approvedCount}
                             </p>
                         </div>
                     )}
@@ -276,12 +379,19 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
                     {vetDetails.reviews.length > 0 ? (
                         <List
                             dataSource={vetDetails.reviews}
-                            renderItem={review => (
+                            renderItem={(review) => (
                                 <List.Item>
                                     <div>
-                                        <strong>{review.review_maker_name}</strong> ({review.rating} ★)
+                                        <strong>
+                                            {review.review_maker_name}
+                                        </strong>{" "}
+                                        ({review.rating} ★)
                                         <p>{review.review_content}</p>
-                                        <p className="text-gray-500">{new Date(review.review_date).toDateString()}</p>
+                                        <p className="text-gray-500">
+                                            {new Date(
+                                                review.review_date
+                                            ).toDateString()}
+                                        </p>
                                     </div>
                                 </List.Item>
                             )}
@@ -289,7 +399,10 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
                     ) : (
                         <p>No reviews available.</p>
                     )}
-                                        <Button type="primary" onClick={handleOpenModal} className="mb-4 bg-primary hover:bg-primary">
+                    <Button
+                        type="primary"
+                        onClick={handleOpenModal}
+                        className="mb-4 bg-primary hover:bg-primary">
                         Add Review
                     </Button>
                 </Card>
@@ -300,32 +413,43 @@ export default function VetDetailsPage({ params }: { params: { 'vet-id': string 
                 title="Add a Review"
                 open={isModalOpen}
                 onCancel={handleCloseModal}
-                footer={null}
-            >
+                footer={null}>
                 <Form form={form} layout="vertical" onFinish={handleSubmit}>
                     <Form.Item
                         name="email"
                         label="Email"
-                        rules={[{ required: true, message: 'Please enter your email' }]}
-                    >
+                        rules={[
+                            {
+                                required: true,
+                                message: "Please enter your email",
+                            },
+                        ]}>
                         <Input />
                     </Form.Item>
                     <Form.Item
                         name="rating"
                         label="Rating"
-                        rules={[{ required: true, message: 'Please give a rating' }]}
-                    >
+                        rules={[
+                            { required: true, message: "Please give a rating" },
+                        ]}>
                         <Rate />
                     </Form.Item>
                     <Form.Item
                         name="review_content"
                         label="Review"
-                        rules={[{ required: true, message: 'Please write your review' }]}
-                    >
+                        rules={[
+                            {
+                                required: true,
+                                message: "Please write your review",
+                            },
+                        ]}>
                         <Input.TextArea />
                     </Form.Item>
                     <Form.Item>
-                        <Button type="primary" htmlType="submit" className="w-full bg-primary">
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            className="w-full bg-primary">
                             Submit
                         </Button>
                     </Form.Item>

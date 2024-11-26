@@ -5,8 +5,8 @@ import { RootState, AppDispatch } from "../store/store"; // Import store types
 import { fetchCities } from "../store/slices/citiesSlice"; // Fetch cities from store
 import { postUser } from "../store/slices/userSlice";
 import { User } from "../types/user";
-import Navbar from "../../components/navbar";
 import { useRouter } from "next/navigation";
+import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 
 const CreateUser = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -19,17 +19,23 @@ const CreateUser = () => {
     const [cityId, setCityId] = useState<number | null>(null);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [phone_number, setPhoneNumber] = useState("");
     const [role, setRole] = useState<"regular user" | "vet">("regular user");
-
 
     useEffect(() => {
         dispatch(fetchCities()); // Fetch cities when component mounts
     }, [dispatch]);
 
-    // Handle form submission
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (password !== confirmPassword) {
+            alert("Passwords do not match");
+            return;
+        }
 
         const newUser: Omit<User, "user_id"> = {
             username,
@@ -43,114 +49,189 @@ const CreateUser = () => {
         };
 
         try {
-            // Dispatch the postUser action and cast the result to access the payload
-            const result = await dispatch(postUser(newUser)) as { payload: User };
-
-            // Check the user's role and navigate accordingly
+            const result = (await dispatch(postUser(newUser))) as {
+                payload: User;
+            };
             if (result.payload.role === "vet") {
-                // Navigate to the vet registration page with the user_id as a query parameter
                 router.push(`/vet-register?user_id=${result.payload.user_id}`);
             } else {
-                // Navigate to the dashboard if the user is not a vet
                 router.push("/login");
             }
         } catch (error) {
             console.error("Error creating user:", error);
-            // Handle error (e.g., show an error message to the user)
         }
     };
 
     return (
-        <>
-            <Navbar />
-            <form
-                onSubmit={handleSubmit}
-                className="max-w-md mx-auto p-4 my-7 bg-white shadow-md rounded-xl">
-                <label className="block mb-2">Username</label>
-                <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="border p-2 rounded w-full mb-4"
-                    required
-                />
+        <div className="min-h-screen flex">
+            <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
+                <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
+            </div>
 
-                <label className="block mb-2">Name</label>
-                <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="border p-2 rounded w-full mb-4"
-                    required
-                />
+            <div className="w-1/2 bg-gray-100 flex items-center justify-center px-8 py-12">
+                <form
+                    onSubmit={handleSubmit}
+                    className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6 space-y-4">
+                    <h2 className="text-3xl font-semibold text-center mb-2">
+                        Create User
+                    </h2>
+                    <p className="text-gray-600 text-center mb-6">
+                        Fill in the details to create a new account.
+                    </p>
 
-                <label className="block mb-2">Date of Birth</label>
-                <input
-                    type="date"
-                    value={DOB}
-                    onChange={(e) => setDOB(e.target.value)}
-                    className="border p-2 rounded w-full mb-4"
-                    required
-                />
+                    {/* Username */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Username
+                        </label>
+                        <input
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            required
+                        />
+                    </div>
 
-                <label className="block mb-2">City</label>
-                <select
-                    value={cityId || ""}
-                    onChange={(e) => setCityId(Number(e.target.value))}
-                    className="border p-2 rounded w-full mb-4"
-                    required>
-                    <option value="">Select a City</option>
-                    {cities.map((city) => (
-                        <option key={city.city_id} value={city.city_id}>
-                            {city.city_name}
-                        </option>
-                    ))}
-                </select>
+                    
 
-                <label className="block mb-2">Email</label>
-                <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="border p-2 rounded w-full mb-4"
-                    required
-                />
+                    {/* Email */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Email
+                        </label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            required
+                        />
+                    </div>
 
-                <label className="block mb-2">Password</label>
-                <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="border p-2 rounded w-full mb-4"
-                    required
-                />
+                    {/* Password */}
+                    <div className="relative">
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Password
+                        </label>
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            required
+                        />
+                        <span
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-6">
+                            {showPassword ? (
+                                <EyeInvisibleOutlined />
+                            ) : (
+                                <EyeOutlined />
+                            )}
+                        </span>
+                    </div>
 
-                <label className="block mb-2">Phone Number</label>
-                <input
-                    type="tel"
-                    value={phone_number}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="border p-2 rounded w-full mb-4"
-                    required
-                />
+                    {/* Confirm Password */}
+                    <div className="relative">
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Confirm Password
+                        </label>
+                        <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            required
+                        />
+                        <span
+                            onClick={() =>
+                                setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-6">
+                            {showConfirmPassword ? (
+                                <EyeInvisibleOutlined />
+                            ) : (
+                                <EyeOutlined />
+                            )}
+                        </span>
+                    </div>
 
-                <label className="mb-2 flex items-center">
-                    <input
-                        type="checkbox"
-                        checked={role === "vet"}
-                        onChange={() => setRole((prevRole) => (prevRole === "regular user" ? "vet" : "regular user"))}
-                        className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span>I am a vet</span>
-                </label>
+                    {/* Date of Birth */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Date of Birth
+                        </label>
+                        <input
+                            type="date"
+                            value={DOB}
+                            onChange={(e) => setDOB(e.target.value)}
+                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            required
+                        />
+                    </div>
 
-                <button
-                    type="submit"
-                    className="bg-primary text-white p-2 rounded w-full">
-                    Submit
-                </button>
-            </form>
-        </>
+                    {/* City */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            City
+                        </label>
+                        <select
+                            value={cityId || ""}
+                            onChange={(e) => setCityId(Number(e.target.value))}
+                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            required>
+                            <option value="">Select a City</option>
+                            {cities.map((city) => (
+                                <option key={city.city_id} value={city.city_id}>
+                                    {city.city_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Phone Number */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Phone Number
+                        </label>
+                        <input
+                            type="tel"
+                            value={phone_number}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            required
+                        />
+                    </div>
+
+                    {/* Role Checkbox */}
+                    <div className="flex items-center space-x-2">
+                        <input
+                            type="checkbox"
+                            checked={role === "vet"}
+                            onChange={() =>
+                                setRole((prevRole) =>
+                                    prevRole === "regular user"
+                                        ? "vet"
+                                        : "regular user"
+                                )
+                            }
+                            className="h-4 w-4 border-gray-300 text-primary rounded focus:ring-primary focus:outline-none"
+                        />
+                        <label className="text-gray-700 text-sm">
+                            I am a vet
+                        </label>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                        type="submit"
+                        className="w-full bg-primary text-white py-2 px-4 rounded-xl hover:bg-primary-dark transition">
+                        Create Account
+                    </button>
+                </form>
+            </div>
+        </div>
     );
 };
 

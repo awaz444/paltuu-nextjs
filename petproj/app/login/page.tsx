@@ -45,7 +45,7 @@ export default function Login() {
     return (
         <div className="min-h-screen flex flex-col sm:flex-row bg-gray-100">
             {/* Left Side */}
-            <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white">
+            <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
                 <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
             </div>
 
@@ -69,7 +69,7 @@ export default function Login() {
                             name="email"
                             value={user.email}
                             onChange={handleInputChange}
-                            className="w-full border border-gray-300 bg-gray-100 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            className="w-full border border-gray-300  rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                             required
                         />
                     </div>
@@ -84,7 +84,7 @@ export default function Login() {
                             name="password"
                             value={user.password}
                             onChange={handleInputChange}
-                            className="w-full  border border-gray-300 bg-gray-100 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            className="w-full  border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                             required
                         />
                     </div>

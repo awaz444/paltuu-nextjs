@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import { useState, useEffect } from "react";
 import PetGrid from "@/components/petGrid";
@@ -42,7 +42,7 @@ const UserListingsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const user_id = 2; 
+  const user_id = 1; // Hardcoded user ID
 
   useEffect(() => {
     if (user_id) {
@@ -109,7 +109,7 @@ const UserListingsPage = () => {
 
         {/* PetGrid Component */}
         <div className="mt-6 w-full max-w-6xl">
-          <PetGrid pets={filteredListings} />
+          <PetGrid pets={filteredListings} isMyListing={true} />
         </div>
       </div>
     </>

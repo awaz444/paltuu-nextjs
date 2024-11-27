@@ -1,5 +1,5 @@
 import React from "react";
-import Link from "next/link"; // Import Link from next/link
+import Link from "next/link";
 
 import "./petGrid.css";
 
@@ -36,72 +36,97 @@ interface Pet {
 
 interface PetGridProps {
     pets: Pet[];
+    isMyListing?: boolean;
 }
 
-const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
-    console.log(pets);
-
+const PetGrid: React.FC<PetGridProps> = ({ pets, isMyListing = false }) => {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            {/* Create new listing card */}
             <Link
                 href="/create-listing"
-                className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex  flex-col items-center justify-center border-2 border-transparent hover:border-[#A03048] hover:scale-102 transition-all duration-300">
+                className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex flex-col items-center justify-center border-2 border-transparent hover:border-[#A03048] hover:scale-102 transition-all duration-300"
+            >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="16"
                     height="16"
                     fill="currentColor"
                     className="bi bi-plus-circle mb-5 plus-sign"
-                    viewBox="0 0 16 16">
+                    viewBox="0 0 16 16"
+                >
                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
                 </svg>
                 Create new listing
             </Link>
-            {pets.map((pet) => (
-                <Link
-                key={pet.pet_id}
-                href={
-                    pet.listing_type === "adoption"
-                        ? `/browse-pets/${pet.pet_id}`
-                        : `/foster-pets/${pet.pet_id}`
-                }
-                passHref
-            >
-                <div
-                    key={pet.pet_id}
-                    className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-[#A03048] hover:scale-102 transition-all duration-300"
-                >
-                    <div className="relative">
-                        <img
-                            src={pet.image_url || "/dog-placeholder.png"} // Fallback image if pet.image_url is null
-                            alt={pet.pet_name}
-                            className="w-full h-48 object-cover rounded-2xl"
-                        />
-                        {/* Overlay badge for "Ready for adoption" or price at the bottom-right */}
-                        {Number(pet.price) > 0 && (
-                            <div className="absolute bottom-2 right-2 bg-primary text-white text-sm font-semibold px-3 py-1 rounded-full">
-                                PKR {pet.price}
-                                {pet.payment_frequency &&
-                                    ` / ${pet.payment_frequency}`}
-                            </div>
-                        )}
+            {pets.map((pet) => {
+                const CardContent = (
+                    <div
+                        className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-[#A03048] hover:scale-102 transition-all duration-300 relative"
+                    >
+                        <div className="relative">
+                            {isMyListing && (
+                                <div className="absolute top-2 right-2 flex gap-2">
+                                    <button
+                                        className="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition"
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // Prevent card click
+                                            console.log("trash clicked");
+                                        }}
+                                    >
+                                        <img src="/trash.svg" alt="Delete" className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        className="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition"
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // Prevent card click
+                                            console.log("pen clicked");
+                                        }}
+                                    >
+                                        <img src="/pen.svg" alt="Edit" className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )}
+                            <img
+                                src={pet.image_url || "/dog-placeholder.png"}
+                                alt={pet.pet_name}
+                                className="w-full h-48 object-cover rounded-2xl"
+                            />
+                            {Number(pet.price) > 0 && (
+                                <div className="absolute bottom-2 right-2 bg-primary text-white text-sm font-semibold px-3 py-1 rounded-full">
+                                    PKR {pet.price}
+                                    {pet.payment_frequency && ` / ${pet.payment_frequency}`}
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-4">
+                            <h3 className="font-bold text-2xl mb-1">{pet.pet_name}</h3>
+                            <p className="text-gray-600 mb-1">
+                                {pet.age} {pet.age > 1 ? "years" : "year"} old
+                            </p>
+                            <p className="text-gray-600 mb-1">
+                                {pet.city} - {pet.area}
+                            </p>
+                        </div>
                     </div>
-                    <div className="p-4">
-                        <h3 className="font-bold text-2xl mb-1">
-                            {pet.pet_name}
-                        </h3>
-                        <p className="text-gray-600 mb-1">
-                            {pet.age} {pet.age > 1 ? "years" : "year"} old
-                        </p>
-                        <p className="text-gray-600 mb-1">
-                            {pet.city} - {pet.area}
-                        </p>
-                    </div>
-                </div>
-            </Link>
-            ))}
+                );
+
+                return isMyListing ? (
+                    <div key={pet.pet_id}>{CardContent}</div>
+                ) : (
+                    <Link
+                        key={pet.pet_id}
+                        href={
+                            pet.listing_type === "adoption"
+                                ? `/browse-pets/${pet.pet_id}`
+                                : `/foster-pets/${pet.pet_id}`
+                        }
+                        passHref
+                    >
+                        {CardContent}
+                    </Link>
+                );
+            })}
         </div>
     );
 };

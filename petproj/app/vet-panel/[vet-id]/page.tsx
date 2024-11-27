@@ -68,7 +68,9 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
     if (!data) {
         return (
             <div className="flex justify-center items-center h-screen">
-                <p className="text-red-600">Error loading data. Please try again later.</p>
+                <p className="text-red-600">
+                    Error loading data. Please try again later.
+                </p>
             </div>
         );
     }
@@ -87,6 +89,11 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
             <div className="bg-gray-100 min-h-screen px-6 py-8">
                 {/* Personal Info Box */}
                 <div className="bg-white shadow-lg rounded-2xl p-6 mb-6">
+                <button
+                        className="absolute top-4 right-4 w-6 h-6"
+                        title="Edit Personal Info">
+                        <img src="/pen.svg" alt="Edit" />
+                    </button>
                     <h3 className="text-xl font-bold mb-4 text-primary">
                         Personal Information
                     </h3>
@@ -122,14 +129,18 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                                 PKR {personal_info.minimum_fee}
                             </p>
                             <p className="mt-2">
-                                <span className="font-bold">Profile Verified:</span>{" "}
+                                <span className="font-bold">
+                                    Profile Verified:
+                                </span>{" "}
                                 <span
                                     className={`px-2 py-1 rounded ${
                                         personal_info.profile_verified
                                             ? "bg-green-200 text-green-800 border border-green-800"
                                             : "bg-red-200 text-red-800 border border-red-800"
                                     }`}>
-                                    {personal_info.profile_verified ? "Yes" : "No"}
+                                    {personal_info.profile_verified
+                                        ? "Yes"
+                                        : "No"}
                                 </span>
                             </p>
                         </div>
@@ -214,7 +225,9 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                             <ul>
                                 {schedules.map((item, index) => (
                                     <li key={index}>
-                                        <span className="font-bold">{item.day_of_week}:</span>{" "}
+                                        <span className="font-bold">
+                                            {item.day_of_week}:
+                                        </span>{" "}
                                         {item.start_time} - {item.end_time}
                                     </li>
                                 ))}

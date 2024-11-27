@@ -39,15 +39,10 @@ const Navbar = () => {
         admin: "#065758",
     };
 
-    // Ensure userRole is typed as UserRole
     const userRole: UserRole =
         (user?.role as UserRole) ||
         (session?.user?.role as UserRole) ||
         "guest";
-
-    // Console log the role and status for debugging
-    console.log("Navbar Role:", userRole);
-    console.log("Authentication Status:", isAuthenticated ? "Authenticated" : "Not Authenticated");
 
     const navbarStyle = { backgroundColor: navbarBackground[userRole] };
 
@@ -57,6 +52,14 @@ const Navbar = () => {
         user?.name ||
         user?.email ||
         "User";
+
+    // Log the auth context props as soon as they are fetched
+    useEffect(() => {
+        console.log("AuthContext - User:", user);
+        console.log("AuthContext - Role:", userRole);
+        console.log("AuthContext - isAuthenticated:", isAuthenticated);
+        console.log("NextAuth - Session:", session);
+    }, [user, isAuthenticated, session]); // Logs when these values update
 
     // Navigation Links
     const links = [

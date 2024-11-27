@@ -368,13 +368,12 @@ export default function VetDetailsPage({
                             )}
                         </div>
 
-                        <Button
-                            type="primary"
-                            onClick={handleOpenModal}
-                            className="bg-primary hover:bg-primary"
-                        >
-                            Add Review
-                        </Button>
+                        <div
+                                onClick={() => setIsModalOpen(true)}
+                                className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-[#A03048] hover:bg-[#ffffff] hover:text-primary cursor-pointer"
+                            >
+                                Add Review
+                            </div>
                     </div>
 
 
@@ -454,12 +453,11 @@ export default function VetDetailsPage({
                         <Input.TextArea />
                     </Form.Item>
                     <Form.Item>
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            className="w-full bg-primary">
+                        <button
+                            type="submit"
+                            className="w-full bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-[#A03048] hover:bg-[#ffffff] hover:text-primary cursor-pointer">
                             Submit
-                        </Button>
+                        </button>
                     </Form.Item>
                 </Form>
             </Modal>

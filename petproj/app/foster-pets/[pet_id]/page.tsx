@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Carousel, Spin, Card, Tag, Divider, Button } from "antd";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
-import AdoptionFormModal from "../../../components/AdoptionFormModal";
+import FosterFormModal from "@/components/FosterFormModal";
 
 const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     params,
@@ -20,7 +20,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     useEffect(() => {
         const fetchPetDetails = async () => {
             try {
-                const res = await fetch(`/api/browse-pets/${pet_id}`);
+                const res = await fetch(`/api/foster-pets/${pet_id}`);
                 if (!res.ok) throw new Error("Pet not found");
 
                 const petData = await res.json();
@@ -158,13 +158,13 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                         <div
                             onClick={handleAdoptClick}
                             className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-[#A03048] hover:bg-[#ffffff] hover:text-primary cursor-pointer">
-                            Adopt Now!
+                            Foster Now!
                         </div>
                     </div>
                 </Card>
             </div>
 
-            <AdoptionFormModal
+            <FosterFormModal
                 petId={parseInt(pet_id)}
                 userId={userId}
                 visible={isModalVisible}

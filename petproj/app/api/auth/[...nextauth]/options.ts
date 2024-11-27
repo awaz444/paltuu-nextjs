@@ -1,9 +1,9 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
 import { db } from "@/db/index";
 import { QueryResult } from "pg";
-import GoogleProvider from "next-auth/providers/google";
 
 export const authoptions: NextAuthOptions = {
   providers: [
@@ -32,7 +32,7 @@ export const authoptions: NextAuthOptions = {
           const user = result.rows[0];
           const isPasswordValid = await bcrypt.compare(password, user.password);
           if (!isPasswordValid) {
-            return null;
+            return null; // Invalid password
           }
 
           return {
@@ -48,52 +48,66 @@ export const authoptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-      async jwt({ token, account, profile }) {
-        // Initialize `id` and `role` with defaults if not set
-        token.user_id = token.id || null; // Use `null` or a default value that aligns with your type definition
-        token.role = token.role || "guest"; // Default role
+    async jwt({ token, account, profile }) {
+      if (account?.provider === "google") {
+        const email = profile?.email!;
+        const name = profile?.name || "Google User";
 
-        if (account?.provider === "google") {
-          const email = profile?.email!;
-          const name = profile?.name || "Google User";
-
+        try {
           const query = "SELECT id, email, role FROM users WHERE email = $1";
-          try {
-            const result = await db.query(query, [email]);
+          const result = await db.query(query, [email]);
 
-            if (result.rowCount === 0) {
-              // If user doesn't exist, create one
-              const defaultPassword = await bcrypt.hash("defaultGooglePassword123!", 10);
+          if (result.rowCount === 0) {
+            // User doesn't exist, create a new user
+            const defaultPassword = await bcrypt.hash("defaultGooglePassword123!", 10);
 
-              const insertQuery = `
-                INSERT INTO users (username, name, email, password, role)
-                VALUES ($1, $2, $3, $4, $5)
-                RETURNING id, email, role
-              `;
-              const insertValues = [
-                email.split("@")[0], // Default username from email
-                name,
-                email,
-                defaultPassword,
-                "regular user",
-              ];
+            const insertQuery = `
+              INSERT INTO users (username, name, email, password, role)
+              VALUES ($1, $2, $3, $4, $5)
+              RETURNING id, email, role
+            `;
+            const insertValues = [
+              email.split("@")[0],
+              name,
+              email,
+              defaultPassword,
+              "regular user",
+            ];
 
-              const insertResult: QueryResult = await db.query(insertQuery, insertValues);
-              const newUser = insertResult.rows[0];
-              token.id = newUser.id;
-              token.role = newUser.role;
-            } else {
-              // If user exists, update token with existing user details
-              const existingUser = result.rows[0];
-              token.id = existingUser.id;
-              token.role = existingUser.role;
-            }
-          } catch (error) {
-            console.error("Database query failed:", error);
+            const insertResult: QueryResult = await db.query(insertQuery, insertValues);
+            const newUser = insertResult.rows[0];
+            token.id = newUser.id;
+            token.role = newUser.role;
+          } else {
+            // User exists, return their details
+            const existingUser = result.rows[0];
+            token.id = existingUser.id;
+            token.role = existingUser.role;
           }
+        } catch (error) {
+          console.error("Database query failed during Google login:", error);
         }
-        return token;
       }
+
+      token.user_id = token.id || token.user_id || null;
+      token.role = token.role || "guest"; // Default role
+      return token;
+    },
+    async session({ session, token }) {
+      console.log("Session callback triggered");
+      console.log("Token received in session callback:", token);
+      session.user = {
+        ...session.user,
+        id: String(token.id || token.user_id || ""),
+        role: token.role || "guest",
+      };
+      return session;
+    },
+  },
+  pages: {
+    signIn: "/login",
+    error: "/error",
+    newUser: "/browse-pets",
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

@@ -3,10 +3,18 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 
+interface User {
+  id?: string;
+  name?: string;
+  email: string;
+  role: "regular user" | "vet" | "admin" | null; // Added role
+  method: "google" | "api" | null;
+}
+
 interface AuthContextProps {
   isAuthenticated: boolean;
-  user: { id?: string; name?: string; email: string; method: "google" | "api" | null } | null;
-  login: (user: { name: string; email: string }) => void;
+  user: User | null;
+  login: (user: { name: string; email: string; role: User["role"] }) => void;
   logout: () => void;
 }
 
@@ -15,7 +23,7 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { data: session, status } = useSession(); // Handles Google login
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<{ id?: string; name?: string; email: string; method: "google" | "api" | null } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     if (status === "authenticated" && session) {
@@ -24,6 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         id: session.user?.id || undefined,
         name: session.user?.name || undefined,
         email: session.user?.email || "",
+        role: (session.user?.role as "regular user" | "vet" | "admin") || "regular user",
         method: "google",
       });
       setIsAuthenticated(true);
@@ -40,10 +49,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [status, session]);
 
-  const login = (user: { name: string; email: string }) => {
+  const login = (user: { name: string; email: string; role: User["role"] }) => {
     setUser({ ...user, method: "api" });
     setIsAuthenticated(true);
-    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("user", JSON.stringify(user)); // Save role in localStorage
   };
 
   const logout = async () => {

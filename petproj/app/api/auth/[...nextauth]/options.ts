@@ -22,7 +22,8 @@ export const authoptions: NextAuthOptions = {
         const { email, password } = credentials;
 
         try {
-          const query = "SELECT user_id, email, password, role FROM users WHERE email = $1";
+          const query =
+            "SELECT user_id, email, password, role FROM users WHERE email = $1";
           const result: QueryResult = await db.query(query, [email]);
 
           if (result.rowCount === 0) {
@@ -48,52 +49,20 @@ export const authoptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-      async jwt({ token, account, profile }) {
-        // Initialize `id` and `role` with defaults if not set
-        token.user_id = token.id || null; // Use `null` or a default value that aligns with your type definition
-        token.role = token.role || "guest"; // Default role
-
-        if (account?.provider === "google") {
-          const email = profile?.email!;
-          const name = profile?.name || "Google User";
-
-          const query = "SELECT id, email, role FROM users WHERE email = $1";
-          try {
-            const result = await db.query(query, [email]);
-
-            if (result.rowCount === 0) {
-              // If user doesn't exist, create one
-              const defaultPassword = await bcrypt.hash("defaultGooglePassword123!", 10);
-
-              const insertQuery = `
-                INSERT INTO users (username, name, email, password, role)
-                VALUES ($1, $2, $3, $4, $5)
-                RETURNING id, email, role
-              `;
-              const insertValues = [
-                email.split("@")[0], // Default username from email
-                name,
-                email,
-                defaultPassword,
-                "regular user",
-              ];
-
-              const insertResult: QueryResult = await db.query(insertQuery, insertValues);
-              const newUser = insertResult.rows[0];
-              token.id = newUser.id;
-              token.role = newUser.role;
-            } else {
-              // If user exists, update token with existing user details
-              const existingUser = result.rows[0];
-              token.id = existingUser.id;
-              token.role = existingUser.role;
-            }
-          } catch (error) {
-            console.error("Database query failed:", error);
-          }
-        }
-        return token;
-      }
+    async jwt({ token, account, profile }) {
+      // Handle JWT token customization here (no changes needed)
+      return token;
+    },
+    async session({ session, token }) {
+      // Append additional data to the session
+      session.user.id = token.id;
+      session.user.role = token.role;
+      return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Always redirect to /browse-pets after login
+      return "/browse-pets";
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

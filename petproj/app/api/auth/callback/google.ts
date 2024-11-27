@@ -81,9 +81,8 @@ export async function GET(request: NextRequest) {
     const defaultPassword = "defaultGooglePassword123!";
 
     // Return user details to the frontend
-      const redirectUrl = `${process.env.FRONTEND_URL}/login?email=${encodeURIComponent(
-        email
-      )}&password=${encodeURIComponent(defaultPassword)}`;
+    const redirectUrl = `${process.env.FRONTEND_URL}/browse-pets`;
+    
 
     // Redirect based on authentication
     // const isAuthenticated = !!user; // Check if user exists

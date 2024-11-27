@@ -88,8 +88,8 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
             <Navbar />
             <div className="bg-gray-100 min-h-screen px-6 py-8">
                 {/* Personal Info Box */}
-                <div className="bg-white shadow-lg rounded-2xl p-6 mb-6">
-                <button
+                <div className="bg-white shadow-lg rounded-lg p-6 mb-6 relative border border-gray-200 hover:border-[#A03048]">
+                    <button
                         className="absolute top-4 right-4 w-6 h-6"
                         title="Edit Personal Info">
                         <img src="/pen.svg" alt="Edit" />
@@ -150,7 +150,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                 {/* 2x2 Grid for Smaller Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Qualifications */}
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative">
+                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-[#A03048]">
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
                             title="Edit Qualifications">
@@ -171,7 +171,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                     </div>
 
                     {/* Specializations */}
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative">
+                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-[#A03048] border border-gray-200 hover:border-[#A03048]">
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
                             title="Edit Specializations">
@@ -192,7 +192,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                     </div>
 
                     {/* Reviews Summary */}
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-[#A03048]">
+                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-[#A03048] border border-gray-200 hover:border-[#A03048] border border-gray-200 hover:border-[#A03048]">
                         <div
                             className="absolute top-4 right-4 w-6 h-6"
                             title="View Reviews">
@@ -212,7 +212,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                     </div>
 
                     {/* Schedule */}
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative">
+                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-[#A03048] border border-gray-200 hover:border-[#A03048]">
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
                             title="Edit Schedule">

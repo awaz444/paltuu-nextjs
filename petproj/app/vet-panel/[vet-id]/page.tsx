@@ -1,9 +1,7 @@
-'use client';
-import React, { useEffect, useState } from "react";
-import { Card, Col, Row, Typography, List, Tag, Avatar, Spin, message } from "antd";
-import type { VetPanelData } from "../../types/vetPanelData";
+"use client";
 
-const { Title, Text } = Typography;
+import React, { useEffect, useState } from "react";
+import Navbar from "@/components/navbar";
 
 interface VetPanelPageProps {
     params: {
@@ -11,8 +9,29 @@ interface VetPanelPageProps {
     };
 }
 
+interface VetPanelData {
+    personal_info: {
+        profile_image_url: string;
+        vet_name: string;
+        clinic_name: string;
+        location: string;
+        city: string;
+        contact_details: string;
+        email: string;
+        minimum_fee: number;
+        profile_verified: boolean;
+    };
+    reviews_summary: {
+        average_rating: number;
+        total_reviews: number;
+    };
+    qualifications: string[];
+    specializations: string[];
+    schedules: { day_of_week: string; start_time: string; end_time: string }[];
+}
+
 const VetPanel = ({ params }: VetPanelPageProps) => {
-    const { vetId } = params; // Get vetId from the dynamic route
+    const { vetId } = params;
     const [data, setData] = useState<VetPanelData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
@@ -20,16 +39,16 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
         const fetchVetData = async () => {
             setLoading(true);
             try {
-                const res = await fetch(`/api/vet-panel/${vetId}`);
+                const res = await fetch(`/api/vet-panel/1`);
                 if (!res.ok) {
-                    throw new Error(`Failed to fetch vet data. Status: ${res.status}`);
+                    throw new Error(
+                        `Failed to fetch vet data. Status: ${res.status}`
+                    );
                 }
                 const responseData: VetPanelData = await res.json();
                 setData(responseData);
             } catch (error) {
                 console.error("Error fetching vet panel data:", error);
-                message.error("Error loading vet data. Please try again later.");
-                setData(null);
             } finally {
                 setLoading(false);
             }
@@ -40,111 +59,173 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
 
     if (loading) {
         return (
-            <div style={{ textAlign: "center", marginTop: "50px" }}>
-                <Spin size="large" />
+            <div className="flex justify-center items-center h-screen">
+                <div className="loader"></div>
             </div>
         );
     }
 
     if (!data) {
         return (
-            <div style={{ textAlign: "center", marginTop: "50px" }}>
-                <Text type="danger">Error loading data. Please try again later.</Text>
+            <div className="flex justify-center items-center h-screen">
+                <p className="text-red-600">Error loading data. Please try again later.</p>
             </div>
         );
     }
 
-    const { personal_info, reviews_summary, qualifications, specializations, schedules } = data;
+    const {
+        personal_info,
+        reviews_summary,
+        qualifications,
+        specializations,
+        schedules,
+    } = data;
 
     return (
-        <div style={{ padding: "20px" }}>
-            {/* Personal Info Box */}
-            <Card
-                style={{ marginBottom: "20px" }}
-                bordered
-                title={<Title level={3}>Personal Information</Title>}
-            >
-                <Row gutter={[16, 16]}>
-                    <Col xs={24} sm={6}>
-                        <Avatar
-                            size={100}
+        <>
+            <Navbar />
+            <div className="bg-gray-100 min-h-screen px-6 py-8">
+                {/* Personal Info Box */}
+                <div className="bg-white shadow-lg rounded-2xl p-6 mb-6">
+                    <h3 className="text-xl font-bold mb-4 text-primary">
+                        Personal Information
+                    </h3>
+                    <div className="flex gap-4">
+                        <img
+                            className="w-24 h-24 rounded-full shadow-md"
                             src={personal_info.profile_image_url}
                             alt={personal_info.vet_name}
                         />
-                    </Col>
-                    <Col xs={24} sm={18}>
-                        <Text strong>Vet Name:</Text> {personal_info.vet_name} <br />
-                        <Text strong>Clinic Name:</Text> {personal_info.clinic_name} <br />
-                        <Text strong>Location:</Text> {personal_info.location}, {personal_info.city} <br />
-                        <Text strong>Contact:</Text> {personal_info.contact_details} <br />
-                        <Text strong>Email:</Text> {personal_info.email} <br />
-                        <Text strong>Minimum Fee:</Text> ${personal_info.minimum_fee} <br />
-                        <Text strong>Profile Verified:</Text>{" "}
-                        <Tag color={personal_info.profile_verified ? "green" : "red"}>
-                            {personal_info.profile_verified ? "Yes" : "No"}
-                        </Tag>
-                    </Col>
-                </Row>
-            </Card>
+                        <div>
+                            <p>
+                                <span className="font-bold">Vet Name:</span>{" "}
+                                {personal_info.vet_name}
+                            </p>
+                            <p className="mt-2">
+                                <span className="font-bold">Clinic Name:</span>{" "}
+                                {personal_info.clinic_name}
+                            </p>
+                            <p className="mt-2">
+                                <span className="font-bold">Location:</span>{" "}
+                                {personal_info.location}, {personal_info.city}
+                            </p>
+                            <p className="mt-2">
+                                <span className="font-bold">Contact:</span>{" "}
+                                {personal_info.contact_details}
+                            </p>
+                            <p className="mt-2">
+                                <span className="font-bold">Email:</span>{" "}
+                                {personal_info.email}
+                            </p>
+                            <p className="mt-2">
+                                <span className="font-bold">Minimum Fee:</span>{" "}
+                                PKR {personal_info.minimum_fee}
+                            </p>
+                            <p className="mt-2">
+                                <span className="font-bold">Profile Verified:</span>{" "}
+                                <span
+                                    className={`px-2 py-1 rounded ${
+                                        personal_info.profile_verified
+                                            ? "bg-green-200 text-green-800 border border-green-800"
+                                            : "bg-red-200 text-red-800 border border-red-800"
+                                    }`}>
+                                    {personal_info.profile_verified ? "Yes" : "No"}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-            {/* 2x2 Grid for Smaller Cards */}
-            <Row gutter={[16, 16]}>
-                {/* Qualifications */}
-                <Col xs={24} md={12}>
-                    <Card title="Qualifications" bordered>
+                {/* 2x2 Grid for Smaller Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Qualifications */}
+                    <div className="bg-white shadow-lg rounded-lg p-6 relative">
+                        <button
+                            className="absolute top-4 right-4 w-6 h-6"
+                            title="Edit Qualifications">
+                            <img src="/pen.svg" alt="Edit" />
+                        </button>
+                        <h4 className="text-lg font-bold text-primary mb-4">
+                            Qualifications
+                        </h4>
                         {qualifications.length > 0 ? (
-                            <List
-                                dataSource={qualifications}
-                                renderItem={(item) => <List.Item>{item}</List.Item>}
-                            />
+                            <ul className="list-disc list-inside">
+                                {qualifications.map((item, index) => (
+                                    <li key={index}>{item}</li>
+                                ))}
+                            </ul>
                         ) : (
-                            <Text>No qualifications listed.</Text>
+                            <p>No qualifications listed.</p>
                         )}
-                    </Card>
-                </Col>
+                    </div>
 
-                {/* Specializations */}
-                <Col xs={24} md={12}>
-                    <Card title="Specializations" bordered>
+                    {/* Specializations */}
+                    <div className="bg-white shadow-lg rounded-lg p-6 relative">
+                        <button
+                            className="absolute top-4 right-4 w-6 h-6"
+                            title="Edit Specializations">
+                            <img src="/pen.svg" alt="Edit" />
+                        </button>
+                        <h4 className="text-lg font-bold text-primary mb-4">
+                            Specializations
+                        </h4>
                         {specializations.length > 0 ? (
-                            <List
-                                dataSource={specializations}
-                                renderItem={(item) => <List.Item>{item}</List.Item>}
-                            />
+                            <ul className="list-disc list-inside">
+                                {specializations.map((item, index) => (
+                                    <li key={index}>{item}</li>
+                                ))}
+                            </ul>
                         ) : (
-                            <Text>No specializations listed.</Text>
+                            <p>No specializations listed.</p>
                         )}
-                    </Card>
-                </Col>
+                    </div>
 
-                {/* Reviews Summary */}
-                <Col xs={24} md={12}>
-                    <Card title="Reviews Summary" bordered>
-                        <Text strong>Average Rating:</Text> {reviews_summary.average_rating} / 5 <br />
-                        <Text strong>Total Reviews:</Text> {reviews_summary.total_reviews}
-                    </Card>
-                </Col>
+                    {/* Reviews Summary */}
+                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-[#A03048]">
+                        <div
+                            className="absolute top-4 right-4 w-6 h-6"
+                            title="View Reviews">
+                            <img src="/arrow-right.svg" alt="Details" />
+                        </div>
+                        <h4 className="text-lg font-bold text-primary mb-4">
+                            Reviews Summary
+                        </h4>
+                        <p>
+                            <span className="font-bold">Average Rating:</span>{" "}
+                            {reviews_summary.average_rating} / 5
+                        </p>
+                        <p>
+                            <span className="font-bold">Total Reviews:</span>{" "}
+                            {reviews_summary.total_reviews}
+                        </p>
+                    </div>
 
-                {/* Schedule */}
-                <Col xs={24} md={12}>
-                    <Card title="Schedule" bordered>
+                    {/* Schedule */}
+                    <div className="bg-white shadow-lg rounded-lg p-6 relative">
+                        <button
+                            className="absolute top-4 right-4 w-6 h-6"
+                            title="Edit Schedule">
+                            <img src="/pen.svg" alt="Edit" />
+                        </button>
+                        <h4 className="text-lg font-bold text-primary mb-4">
+                            Schedule
+                        </h4>
                         {schedules.length > 0 ? (
-                            <List
-                                dataSource={schedules}
-                                renderItem={(item) => (
-                                    <List.Item>
-                                        <Text strong>{item.day_of_week}:</Text>{" "}
+                            <ul>
+                                {schedules.map((item, index) => (
+                                    <li key={index}>
+                                        <span className="font-bold">{item.day_of_week}:</span>{" "}
                                         {item.start_time} - {item.end_time}
-                                    </List.Item>
-                                )}
-                            />
+                                    </li>
+                                ))}
+                            </ul>
                         ) : (
-                            <Text>No schedule available.</Text>
+                            <p>No schedule available.</p>
                         )}
-                    </Card>
-                </Col>
-            </Row>
-        </div>
+                    </div>
+                </div>
+            </div>
+        </>
     );
 };
 

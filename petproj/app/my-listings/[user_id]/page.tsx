@@ -42,7 +42,7 @@ const UserListingsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const user_id = 1; // Hardcoded user ID
+  const user_id = 2; 
 
   useEffect(() => {
     if (user_id) {

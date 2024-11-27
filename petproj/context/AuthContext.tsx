@@ -1,45 +1,72 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { useSession } from 'next-auth/react';
+"use client";
+
+import React, { createContext, useState, useEffect, ReactNode } from "react";
+import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 
 interface AuthContextProps {
   isAuthenticated: boolean;
-  user: { id: string; email: string; role: string } | null;
+  user: { id?: string; name?: string; email: string; method: "google" | "api" | null } | null;
+  login: (user: { name: string; email: string }) => void;
+  logout: () => void;
 }
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
+const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-export const AuthContext = createContext<AuthContextProps | undefined>(undefined);
-
-export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const { data: session, status } = useSession();
-  const [authState, setAuthState] = useState<AuthContextProps>({
-    isAuthenticated: false,
-    user: null,
-  });
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const { data: session, status } = useSession(); // Handles Google login
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<{ id?: string; name?: string; email: string; method: "google" | "api" | null } | null>(null);
 
   useEffect(() => {
-    if (status === 'authenticated' && session) {
-      setAuthState({
-        isAuthenticated: true,
-        user: {
-          id: session.user?.id || '', // Ensure user data exists
-          email: session.user?.email || '', // Ensure email exists
-          role: session.user?.role || '', // Ensure role exists
-        },
+    if (status === "authenticated" && session) {
+      // User logged in via Google
+      setUser({
+        id: session.user?.id || undefined,
+        name: session.user?.name || undefined,
+        email: session.user?.email || "",
+        method: "google",
       });
-    } else {
-      setAuthState({
-        isAuthenticated: false,
-        user: null,
-      });
+      setIsAuthenticated(true);
+    } else if (status === "unauthenticated") {
+      // Check for API-based login in localStorage
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser({ ...JSON.parse(storedUser), method: "api" });
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
     }
   }, [status, session]);
 
+  const login = (user: { name: string; email: string }) => {
+    setUser({ ...user, method: "api" });
+    setIsAuthenticated(true);
+    localStorage.setItem("user", JSON.stringify(user));
+  };
+
+  const logout = async () => {
+    if (user?.method === "google") {
+      await nextAuthSignOut({ callbackUrl: "/login" });
+    } else {
+      setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem("user");
+    }
+  };
+
   return (
-    <AuthContext.Provider value={authState}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = React.useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };

@@ -22,11 +22,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(authUrl);
     }
 
-    // Exchange the authorization code for tokens
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
-    // Retrieve user information
     const userInfoResponse = await oauth2Client.request({
       url: "https://www.googleapis.com/oauth2/v2/userinfo",
     });
@@ -40,15 +38,12 @@ export async function GET(request: NextRequest) {
 
     const { email, name } = userInfo;
 
-    // Check if the user exists in the database
     const query = "SELECT id, email, role FROM users WHERE email = $1";
     const result = await db.query(query, [email]);
 
-
     let user;
     if (result.rowCount === 0) {
-      // User doesn't exist; create a new user
-      const defaultPassword = "defaultGooglePassword123!";
+      const defaultPassword = await bcrypt.hash("defaultGooglePassword123!", 10);
 
       const insertQuery = `
         INSERT INTO users (username, name, email, password, role)
@@ -56,7 +51,7 @@ export async function GET(request: NextRequest) {
         RETURNING id, email, role
       `;
       const insertValues = [
-        email.split("@")[0], // Default username
+        email.split("@")[0],
         name || "Google User",
         email,
         defaultPassword,
@@ -65,30 +60,17 @@ export async function GET(request: NextRequest) {
 
       const insertResult = await db.query(insertQuery, insertValues);
       user = insertResult.rows[0];
-    }
-    else {
+    } else {
       user = result.rows[0];
     }
 
-    // Set a session token for the user
     const headers = new Headers();
     headers.append(
       "Set-Cookie",
       `token=${tokens.id_token}; Path=/; HttpOnly; Secure;`
     );
 
-    // Generate default password
-    const defaultPassword = "defaultGooglePassword123!";
-
-    // Return user details to the frontend
     const redirectUrl = `${process.env.FRONTEND_URL}/browse-pets`;
-    
-
-    // Redirect based on authentication
-    // const isAuthenticated = !!user; // Check if user exists
-    // const redirectUrl = isAuthenticated
-    //   ? `${process.env.FRONTEND_URL}/profile`
-    //   : `${process.env.FRONTEND_URL}/login`;
 
     return NextResponse.redirect(redirectUrl, { headers });
   } catch (error) {

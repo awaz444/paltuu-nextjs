@@ -11,9 +11,6 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
 
   // If user is authenticated and trying to access a public path, redirect to profile
-  if (isPublicPath && token) {
-    return NextResponse.redirect(new URL('/profile', request.nextUrl));
-  }
 
   // If user is not authenticated and trying to access a protected path, redirect to login
   if (!isPublicPath && !token) {

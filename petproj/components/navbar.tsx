@@ -3,16 +3,33 @@
 import Link from "next/link";
 import "./navbar.css";
 import Image from "next/image";
-import { useState, useEffect, useContext } from "react";
-import { AuthContext } from "@/context/AuthContext"; // Adjust the import path
+import { useState, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { useAuth } from "@/context/AuthContext"; 
+import { useRouter } from "next/navigation";
+// Custom Auth Context for API login
 
 const Navbar = () => {
   const [activeLink, setActiveLink] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Use AuthContext instead of next-auth's useSession
-  const authContext = useContext(AuthContext);
-  const { isAuthenticated } = authContext || {}; // Destructure authContext if it's available
+  // Use next-auth's useSession hook for Google login
+  const { data: session, status } = useSession();
+
+  // Use custom AuthContext for API-based login
+  const { isAuthenticated, user, logout: apiLogout } = useAuth();
+
+  const router = useRouter(); // Router for navigation
+
+
+  const handleLogout = async () => {
+    if (user?.method === "google") {
+      await signOut({ callbackUrl: "/login" }); // Logout Google user
+    } else {
+      apiLogout();
+      router.push('/login') // Logout API-based user
+    }
+  };
 
   const links = [
     { name: "Browse pets", href: "browse-pets" },
@@ -27,10 +44,17 @@ const Navbar = () => {
   }, []);
 
   // Dynamic style based on authentication state
-  const navbarStyle = isAuthenticated
-    ? { backgroundColor: "#6A0DAD" } // Logged-in color
-    : { backgroundColor: "#A03048" };
-    console.log(isAuthenticated);
+  const navbarStyle =
+    isAuthenticated || status === "authenticated"
+      ? { backgroundColor: "#6A0DAD" } // Logged-in color
+      : { backgroundColor: "#A03048" };
+
+  const displayName =
+    session?.user?.name ||
+    session?.user?.email ||
+    user?.name ||
+    user?.email ||
+    "User";
 
   return (
     <nav className="navbar" style={navbarStyle}>
@@ -75,14 +99,25 @@ const Navbar = () => {
           ))}
 
           {/* Conditionally render Login or User Info */}
-          {!isAuthenticated ? (
+          {!isAuthenticated && status !== "authenticated" ? (
             <Link href="/login">
               <button className="loginBtn hover:bg-[#ffd2e3] hover:text-[#70223f] transition-all duration-300">
                 Login
               </button>
             </Link>
           ) : (
-            <span className="text-white">Welcome back!</span> // Example for logged-in user
+            <div className="flex items-center gap-3">
+              {/* User Name or Email */}
+              <span className="text-white font-medium">Welcome, {displayName}</span>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="logoutBtn bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded"
+              >
+                Logout
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -112,16 +147,26 @@ const Navbar = () => {
           ))}
         </div>
 
-        {/* Login button at the bottom */}
+        {/* Login button or Logout/User Info */}
         <div className="absolute bottom-6 left-6">
-          {!isAuthenticated ? (
+          {!isAuthenticated && status !== "authenticated" ? (
             <Link href="/login">
               <button className="loginBtn hover:bg-[#ffd2e3] hover:text-[#70223f] transition-all duration-300">
                 Login
               </button>
             </Link>
           ) : (
-            <span className="text-white">Logged in</span>
+            <div>
+              <span className="text-white font-medium">
+                Logged in as: {displayName}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="mt-2 bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded"
+              >
+                Logout
+              </button>
+            </div>
           )}
         </div>
       </div>

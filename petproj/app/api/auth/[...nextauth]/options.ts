@@ -1,9 +1,9 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
 import { db } from "@/db/index";
 import { QueryResult } from "pg";
-import GoogleProvider from "next-auth/providers/google";
 
 export const authoptions: NextAuthOptions = {
   providers: [
@@ -22,8 +22,7 @@ export const authoptions: NextAuthOptions = {
         const { email, password } = credentials;
 
         try {
-          const query =
-            "SELECT user_id, email, password, role FROM users WHERE email = $1";
+          const query = "SELECT user_id, email, password, role FROM users WHERE email = $1";
           const result: QueryResult = await db.query(query, [email]);
 
           if (result.rowCount === 0) {
@@ -33,7 +32,7 @@ export const authoptions: NextAuthOptions = {
           const user = result.rows[0];
           const isPasswordValid = await bcrypt.compare(password, user.password);
           if (!isPasswordValid) {
-            return null;
+            return null; // Invalid password
           }
 
           return {
@@ -50,19 +49,65 @@ export const authoptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, account, profile }) {
-      // Handle JWT token customization here (no changes needed)
+      if (account?.provider === "google") {
+        const email = profile?.email!;
+        const name = profile?.name || "Google User";
+
+        try {
+          const query = "SELECT id, email, role FROM users WHERE email = $1";
+          const result = await db.query(query, [email]);
+
+          if (result.rowCount === 0) {
+            // User doesn't exist, create a new user
+            const defaultPassword = await bcrypt.hash("defaultGooglePassword123!", 10);
+
+            const insertQuery = `
+              INSERT INTO users (username, name, email, password, role)
+              VALUES ($1, $2, $3, $4, $5)
+              RETURNING id, email, role
+            `;
+            const insertValues = [
+              email.split("@")[0],
+              name,
+              email,
+              defaultPassword,
+              "regular user",
+            ];
+
+            const insertResult: QueryResult = await db.query(insertQuery, insertValues);
+            const newUser = insertResult.rows[0];
+            token.id = newUser.id;
+            token.role = newUser.role;
+          } else {
+            // User exists, return their details
+            const existingUser = result.rows[0];
+            token.id = existingUser.id;
+            token.role = existingUser.role;
+          }
+        } catch (error) {
+          console.error("Database query failed during Google login:", error);
+        }
+      }
+
+      token.user_id = token.id || token.user_id || null;
+      token.role = token.role || "guest"; // Default role
       return token;
     },
     async session({ session, token }) {
-      // Append additional data to the session
-      session.user.id = token.id;
-      session.user.role = token.role;
+      console.log("Session callback triggered");
+      console.log("Token received in session callback:", token);
+      session.user = {
+        ...session.user,
+        id: token.id || token.user_id || null,
+        role: token.role || "guest",
+      };
       return session;
     },
-    async redirect({ url, baseUrl }) {
-      // Always redirect to /browse-pets after login
-      return "/browse-pets";
-    },
+  },
+  pages: {
+    signIn: "/login",
+    error: "/error",
+    newUser: "/browse-pets",
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

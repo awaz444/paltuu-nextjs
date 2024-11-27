@@ -1,46 +1,82 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { useAuth } from "@/context/AuthContext"; // Import AuthContext
 
 export default function Login() {
-    const router = useRouter();
-    const [user, setUser] = useState({
-        email: "",
-        password: "",
-    });
-    const [buttonDisabled, setButtonDisabled] = useState(true);
-    const [loading, setLoading] = useState(false);
+  const { isAuthenticated, login } = useAuth(); // Use AuthContext for API-based login
+  const router = useRouter();
 
-    // Update button state based on user input
-    useEffect(() => {
-        setButtonDisabled(!(user.email && user.password));
-    }, [user]);
+  const [user, setUser] = useState({
+    email: "",
+    password: "",
+  });
+  const [buttonDisabled, setButtonDisabled] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false); // Loading state for Google login
 
-    // Handle user input changes
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setUser((prev) => ({ ...prev, [name]: value }));
-    };
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/browse-pets");
+    }
+  }, [isAuthenticated, router]);
 
-    // Handle login form submission
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault(); // Prevent default form submission
-        try {
-            setLoading(true);
-            const response = await axios.post("/api/users/login", user);
-            console.log("Login success:", response.data);
-            toast.success("Login successful!");
-            router.push("/profile");
-        } catch (error: any) {
-            console.error("Login failed:", error.message);
-            toast.error(error.response?.data?.message || "Login failed!");
-        } finally {
-            setLoading(false);
-        }
-    };
+  // Update button state based on user input
+  useEffect(() => {
+    setButtonDisabled(!(user.email && user.password));
+  }, [user]);
+
+  // Handle user input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setUser((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle API-based login
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const response = await axios.post("/api/users/login", user);
+  
+      if (response.data.success) {
+        const { user } = response.data;
+  
+        // Save user data to local storage
+        localStorage.setItem("user", JSON.stringify(user));
+  
+        // Update context with user data
+        login(user);
+  
+        toast.success("Login successful!");
+        router.push("/browse-pets");
+      }
+    } catch (error: any) {
+      console.error("Login failed:", error.message);
+      toast.error(error.response?.data?.message || "Login failed!");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+
+  // Handle Google login
+  const handleGoogleLogin = async () => {
+    try {
+      setGoogleLoading(true);
+      await signIn("google"); // next-auth handles Google login
+    } catch (error) {
+      console.error("Google login failed:", error);
+      toast.error("Google login failed. Please try again!");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
     return (
         <div className="min-h-screen flex flex-col sm:flex-row bg-gray-100">
@@ -58,7 +94,8 @@ export default function Login() {
 
                 <form
                     onSubmit={handleLogin}
-                    className="mt-8 w-full max-w-md bg-white shadow-lg rounded-2xl p-6">
+                    className="mt-8 w-full max-w-md bg-white shadow-lg rounded-2xl p-6"
+                >
                     {/* Email Input */}
                     <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-medium mb-2">
@@ -97,21 +134,26 @@ export default function Login() {
                         disabled={buttonDisabled || loading}
                         className={`w-full py-2 px-4 rounded-xl text-white bg-primary hover:bg-primary-dark transition ${
                             loading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}>
+                        }`}
+                    >
                         {loading ? "Logging in..." : "Log In"}
                     </button>
 
                     {/* Google Login */}
                     <button
                         type="button"
-                        onClick={() => signIn("google")}
-                        className="mt-4 w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2">
-                        {/* Google Icon */}
+                        onClick={handleGoogleLogin}
+                        disabled={googleLoading}
+                        className={`mt-4 w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${
+                            googleLoading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                    >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 24 24"
                             fill="currentColor"
-                            className="w-5 h-5">
+                            className="w-5 h-5"
+                        >
                             <path
                                 d="M23.76 12.26c0-.79-.07-1.58-.19-2.34H12v4.44h6.66c-.29 1.56-1.15 2.88-2.46 3.76v3.12h3.98c2.32-2.14 3.68-5.29 3.68-8.98z"
                                 fill="#4285F4"
@@ -129,14 +171,15 @@ export default function Login() {
                                 fill="#EA4335"
                             />
                         </svg>
-                        <span>Login with Google</span>
+                        <span>{googleLoading ? "Logging in..." : "Login with Google"}</span>
                     </button>
 
                     {/* Forgot Password */}
                     <div className="mt-4 text-center">
                         <button
                             type="button"
-                            className="text-primary hover:underline focus:outline-none">
+                            className="text-primary hover:underline focus:outline-none"
+                        >
                             Forgot Password?
                         </button>
                     </div>
@@ -148,7 +191,8 @@ export default function Login() {
                             <button
                                 type="button"
                                 className="text-primary font-semibold hover:underline focus:outline-none"
-                                onClick={() => router.push("/sign-up")}>
+                                onClick={() => router.push("/sign-up")}
+                            >
                                 Create an account
                             </button>
                         </p>

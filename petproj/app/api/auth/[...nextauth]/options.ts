@@ -98,7 +98,7 @@ export const authoptions: NextAuthOptions = {
       console.log("Token received in session callback:", token);
       session.user = {
         ...session.user,
-        id: token.id || token.user_id || null,
+        id: String(token.id || token.user_id || ""),
         role: token.role || "guest",
       };
       return session;

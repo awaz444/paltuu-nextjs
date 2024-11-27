@@ -72,40 +72,46 @@ const UserListingsPage = () => {
     (listing) => listing.listing_type === activeTab
   );
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (isLoading) return <div className="text-center text-gray-600">Loading...</div>;
+  if (error) return <div className="text-center text-red-600">Error: {error}</div>;
 
   return (
     <>
-    <Navbar/>
-    <div className="user-listings-page mt-4">
-      {/* Adopt and Foster Tab Switch */}
-      <div className="w-3/4">
-        <div className="tab-switch-container relative">
-          <div
-            className="tab-switch-slider"
-            style={{
-              transform: activeTab === "adoption" ? "translateX(0)" : "translateX(100%)",
-            }}
-          />
-          <div
-            className={`tab ${activeTab === "adoption" ? "active" : ""}`}
-            onClick={() => handleTabToggle("adoption")}
-          >
-            Adopt
-          </div>
-          <div
-            className={`tab ${activeTab === "foster" ? "active" : ""}`}
-            onClick={() => handleTabToggle("foster")}
-          >
-            Foster
+      <Navbar />
+      <div className="mt-8 px-4 flex flex-col items-center">
+        {/* Tab Switch */}
+        <div className="w-full max-w-2xl">
+          <div className="tab-switch-container relative flex justify-between rounded-lg bg-gray-100 p-1">
+            <div
+              className="tab-switch-slider absolute top-0 left-0 h-full w-1/2 bg-blue-500 transition-transform duration-300"
+              style={{
+                transform: activeTab === "adoption" ? "translateX(0)" : "translateX(100%)",
+              }}
+            />
+            <div
+              className={`tab cursor-pointer py-2 text-center font-medium ${
+                activeTab === "adoption" ? "active" : ""
+              }`}
+              onClick={() => handleTabToggle("adoption")}
+            >
+              Adopt
+            </div>
+            <div
+              className={`tab cursor-pointer py-2 text-center font-medium ${
+                activeTab === "foster" ? "active" : ""
+              }`}
+              onClick={() => handleTabToggle("foster")}
+            >
+              Foster
+            </div>
           </div>
         </div>
-      </div>``
 
-      {/* PetGrid Component with filtered listings */}
-      <PetGrid pets={filteredListings} />
-    </div>
+        {/* PetGrid Component */}
+        <div className="mt-6 w-full max-w-6xl">
+          <PetGrid pets={filteredListings} />
+        </div>
+      </div>
     </>
   );
 };

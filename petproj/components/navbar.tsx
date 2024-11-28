@@ -96,9 +96,16 @@ const Navbar = () => {
         const currentPath = window.location.pathname.split("/")[1];
         setActiveLink(currentPath);
     }, []);
+
     const dropdownWidth = `${
-        Math.max(displayName.length, ...dropdownItems.map((item) => item.label.length)) * 10 + 50
+        Math.max(
+            displayName.length,
+            ...dropdownItems.map((item) => item.label.length)
+        ) *
+            10 +
+        50
     }px`;
+
     return (
         <nav className="navbar" style={navbarStyle}>
             <div className="flex items-center justify-between w-full">
@@ -151,9 +158,7 @@ const Navbar = () => {
                     </button>
                     {isDropdownOpen && (
                         <div
-                            className={`dropdown-menu absolute top-full right-0 bg-white shadow-lg z-10 transition-all duration-300 ${
-                                isDropdownOpen ? "rounded-b-2xl" : "rounded-2xl"
-                            }`}
+                            className="dropdown-menu absolute top-full right-0 bg-white shadow-lg z-10 rounded-b-2xl"
                             style={{
                                 width: dropdownWidth, // Ensure dropdown matches button width
                             }}>

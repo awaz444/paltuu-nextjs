@@ -72,9 +72,13 @@
   transition: border-radius 0.1s ease;
 }
 
-.loginBtn:hover {
+.dropdown:hover .loginBtn {
   background-color: #ffffff; /* Light */
   border-radius: 20px 20px 0 0; /* Only round the top corners */
+}
+
+.dropdown-menu {
+  transition: border-radius 0.1s ease;
 }
 
 

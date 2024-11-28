@@ -1,19 +1,35 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Carousel, Spin, Card, Tag, Divider, Button } from "antd";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
+import {
+    Spin,
+    Card,
+    List,
+    Divider,
+    Button,
+    Modal,
+    message,
+    Form,
+    Input,
+    Rate,
+    Carousel,
+    Tag
+} from "antd";
+import { CopyOutlined, WhatsAppOutlined } from "@ant-design/icons";
 
 const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     params,
 }) => {
+
     const { pet_id } = params;
     const [pet, setPet] = useState<PetWithImages | null>(null);
     const [carouselImages, setCarouselImages] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [IsModalOpen, setIsModalOpen] = useState(false);
 
     const userId = "12345"; // Replace with the actual logged-in user ID
 
@@ -45,6 +61,16 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
         if (pet_id) fetchPetDetails();
     }, [pet_id]);
 
+    const handleCopy = (text: string) => {
+        navigator.clipboard.writeText(text);
+        message.success("Copied to clipboard!");
+    };
+
+    const handleWhatsApp = (phone: string) => {
+        const whatsappUrl = `https://wa.me/${phone}`;
+        window.open(whatsappUrl, "_blank");
+    };
+
     const handleAdoptClick = () => setIsModalVisible(true);
     const handleModalClose = () => setIsModalVisible(false);
     const handleFormSubmit = (formData: any) => {
@@ -71,12 +97,54 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
     return (
         <>
+            <Modal
+                title="Contact Information"
+                visible={IsModalOpen}
+                onCancel={() => setIsModalOpen(false)}
+                footer={null}>
+                <p>
+                    <strong>Phone:</strong> {pet.phone_number}{" "}
+                    <Button
+                        icon={<CopyOutlined />}
+                        className="ml-2"
+                        size="small"
+                        onClick={() => handleCopy(pet.phone_number)}>
+                        Copy
+                    </Button>
+                </p>
+                <p>
+                    <strong>Email:</strong> {pet.email}{" "}
+                    <Button
+                        icon={<CopyOutlined />}
+                        className="mt-2 ml-2"
+                        size="small"
+                        onClick={() => handleCopy(pet.email)}>
+                        Copy
+                    </Button>
+                </p>
+                <Button
+                    type="primary"
+                    className="bg-primary text-white mt-2"
+                    icon={<WhatsAppOutlined />}
+                    onClick={() => handleWhatsApp(pet.phone_number)}>
+                    WhatsApp
+                </Button>
+            </Modal>
+
             <Navbar />
             <div className="pet-details min-h-screen bg-gray-50 py-10 px-6">
                 <Card className="shadow-lg rounded-md mx-auto max-w-4xl bg-white">
-                    <h1 className="text-center text-3xl font-bold mb-4">
-                        {pet.pet_name}
-                    </h1>
+                    <div className="flex flex-row justify-between">
+                        <h1 className="text-center text-3xl font-bold mb-4 mt-2">
+                            {pet.pet_name}
+                        </h1>
+                        <div
+                            onClick={() => setIsModalOpen(true)}
+                            className="bg-primary text-white px-7 py-3 mb-3 text-md rounded-xl font-semibold border border-white hover:border-[#A03048] hover:bg-[#ffffff] hover:text-primary cursor-pointer">
+                            Contact Owner
+                        </div>
+                    </div>
+
                     <Carousel autoplay className="mb-8">
                         {carouselImages.map((image, index) => (
                             <div key={index}>

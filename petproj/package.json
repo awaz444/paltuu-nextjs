@@ -19,6 +19,7 @@
     "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
     "bootstrap-icons": "^1.11.3",
+    "cloudinary": "^2.5.1",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "gauge": "^5.0.2",

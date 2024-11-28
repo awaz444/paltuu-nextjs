@@ -45,14 +45,14 @@ const Navbar = () => {
         vet: "#ffffff",
         admin: "#ffffff",
     };
-    
+
     const arrowColor: Record<UserRole, string> = {
         guest: "#ffd2e3",
         "regular user": "#ffd2e3",
         vet: "#e0c3f7",
         admin: "#7fe1d3",
     };
-    
+
     // Calculate dropdown width dynamically
     const dropdownItems = [
         { href: "/profile", label: "My Profile" },
@@ -61,7 +61,9 @@ const Navbar = () => {
         { href: "/notifications", label: "Notifications" },
         { href: "/logout", label: "Logout" },
     ];
-    const dropdownWidth = `${Math.max(...dropdownItems.map((item) => item.label.length)) * 8 + 50}px`;
+    const dropdownWidth = `${
+        Math.max(...dropdownItems.map((item) => item.label.length)) * 8 + 50
+    }px`;
 
     const userRole: UserRole =
         (user?.role as UserRole) ||
@@ -118,7 +120,7 @@ const Navbar = () => {
                     {links.map((link) => (
                         <Link key={link.href} href={`/${link.href}`}>
                             <span
-                                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffd2e3] after:transition-all after:duration-300 hover:after:w-full ${
+                                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${
                                     activeLink === link.href
                                         ? "after:w-full"
                                         : "after:w-0"
@@ -131,58 +133,54 @@ const Navbar = () => {
                     ))}
                 </div>
 
-                {/* Dropdown or Login Button */}
-                <div className="relative">
-                    {!isAuthenticated && status !== "authenticated" ? (
-                        <Link href="/login">
-                            <button className="loginBtn hover:bg-[#ffd2e3] hover:text-[#70223f] transition-all duration-300">
-                                Login
-                            </button>
-                        </Link>
-                    ) : (
+                <div
+                    className="dropdown relative"
+                    onMouseEnter={() => setIsDropdownOpen(true)}
+                    onMouseLeave={() => setIsDropdownOpen(false)}>
+                    <button
+                        className="flex items-center justify-center gap-2 loginBtn hover:bg-[#ffffff] transition-all duration-300"
+                        style={{
+                            minWidth: dropdownWidth, // Set button width dynamically
+                        }}>
+                        {displayName}
+                        <Image
+                            src="/arrow-down.svg"
+                            alt="Dropdown"
+                            width={12}
+                            height={12}
+                        />
+                    </button>
+                    {isDropdownOpen && (
                         <div
-                            className="dropdown relative"
-                            onMouseEnter={() => setIsDropdownOpen(true)}
-                            onMouseLeave={() => setIsDropdownOpen(false)}>
-                            <button className="flex items-center gap-2 loginBtn hover:bg-[#ffd2e3] hover:text-[#70223f] transition-all duration-300">
-                                
-                                {displayName}
-                                <Image
-                                    src="/arrow-down.svg"
-                                    alt="Dropdown"
-                                    width={12}
-                                    height={12}
-                                />
-                            </button>
-                            {isDropdownOpen && (
-                                <div className="dropdown-menu absolute top-full right-0 bg-white shadow-lg rounded w-48 z-10">
-                                    <Link href="/profile">
-                                        <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                            My Profile
-                                        </div>
-                                    </Link>
-                                    <Link href="/my-listings">
-                                        <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                            My Listings
-                                        </div>
-                                    </Link>
-                                    <Link href="/my-applications">
-                                        <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                            My Applications
-                                        </div>
-                                    </Link>
-                                    <Link href="/notifications">
-                                        <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                            Notifications
-                                        </div>
-                                    </Link>
-                                    <div
-                                        onClick={handleLogout}
-                                        className="dropdown-item px-4 py-2 text-red-600 hover:bg-gray-100 cursor-pointer">
-                                        Logout
-                                    </div>
+                            className="dropdown-menu absolute top-full right-0 bg-white shadow-lg rounded rounded-2xl z-10"
+                            style={{
+                                width: dropdownWidth, // Ensure dropdown matches button width
+                            }}>
+                            <Link href="/profile">
+                                <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                    My Profile
                                 </div>
-                            )}
+                            </Link>
+                            <Link href="/my-listings">
+                                <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                    My Listings
+                                </div>
+                            </Link>
+                            <Link href="/my-applications">
+                                <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                    My Applications
+                                </div>
+                            </Link>
+                            <Link href="/notifications">
+                                <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                    Notifications
+                                </div>
+                            </Link>
+                            <div
+                                onClick={handleLogout}
+                                className="dropdown-item px-4 py-2 text-red-600 hover:bg-gray-100 cursor-pointer">
+                                Logout
+                            </div>
                         </div>
                     )}
                 </div>

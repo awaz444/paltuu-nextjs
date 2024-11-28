@@ -64,7 +64,7 @@
 
 .loginBtn {
   background-color: #ffffff; /* White */
-  color: #A03048; /* Primary */
+  color: #000000; /* Primary */
   border: none;
   border-radius: 60px;
   padding: 7px 20px;
@@ -73,8 +73,7 @@
 
 .loginBtn:hover {
   background-color: #ffffff; /* Light */
-  color: #A03048; /* Dark */
-  transform: scale(1.05);
+  /* transform: scale(1.05); */
 }
 
 /* Hamburger menu */

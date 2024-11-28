@@ -61,9 +61,6 @@ const Navbar = () => {
         { href: "/notifications", label: "Notifications" },
         { href: "/logout", label: "Logout" },
     ];
-    const dropdownWidth = `${
-        Math.max(...dropdownItems.map((item) => item.label.length)) * 8 + 50
-    }px`;
 
     const userRole: UserRole =
         (user?.role as UserRole) ||
@@ -99,7 +96,9 @@ const Navbar = () => {
         const currentPath = window.location.pathname.split("/")[1];
         setActiveLink(currentPath);
     }, []);
-
+    const dropdownWidth = `${
+        Math.max(displayName.length, ...dropdownItems.map((item) => item.label.length)) * 10 + 50
+    }px`;
     return (
         <nav className="navbar" style={navbarStyle}>
             <div className="flex items-center justify-between w-full">

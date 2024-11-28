@@ -35,7 +35,7 @@ const Navbar = () => {
     const navbarBackground: Record<UserRole, string> = {
         guest: "#A03048",
         "regular user": "#A03048",
-        vet: "#6A0DAD",
+        vet: "# 480777",
         admin: "#065758",
     };
 
@@ -152,7 +152,7 @@ const Navbar = () => {
                     </button>
                     {isDropdownOpen && (
                         <div
-                            className="dropdown-menu absolute top-full right-0 bg-white shadow-lg rounded rounded-2xl z-10"
+                            className="dropdown-menu absolute top-full right-0 bg-white shadow-lg rounded-2xl z-10"
                             style={{
                                 width: dropdownWidth, // Ensure dropdown matches button width
                             }}>

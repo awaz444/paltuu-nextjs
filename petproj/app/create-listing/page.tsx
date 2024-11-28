@@ -5,6 +5,7 @@ import { RootState, AppDispatch } from "../store/store"; // Import store types
 import { fetchCities } from "../store/slices/citiesSlice"; // Fetch cities from store
 import { fetchPetCategories } from "../store/slices/petCategoriesSlice"; // Fetch pet categories from store
 import { postPet } from "../store/slices/petSlice"; // Import postPet thunk
+import { useRouter } from 'next/router'; // Import useRouter
 
 import Navbar from "../../components/navbar";
 import "./styles.css";
@@ -24,6 +25,7 @@ const getBase64 = (file: FileType): Promise<string> =>
     });
 
 export default function CreatePetListing() {
+    const router = useRouter();
     const dispatch = useDispatch<AppDispatch>();
     const { cities } = useSelector((state: RootState) => state.cities);
     const { categories } = useSelector((state: RootState) => state.categories);
@@ -93,6 +95,7 @@ export default function CreatePetListing() {
         console.log(newPet);
         // Dispatch postPet action
         dispatch(postPet(newPet));
+        router.push('/listing-created');
     };
 
     const handlePreview = async (file: UploadFile) => {

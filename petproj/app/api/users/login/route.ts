@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     console.log(reqBody);
 
     // Check if user exists
-    const query = 'SELECT user_id,username, email, password FROM users WHERE email = $1';
+    const query = 'SELECT user_id,username, email,role, password FROM users WHERE email = $1';
     const { rows } = await db.query(query, [email]);
     const user = rows[0];
 
@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       id: user.user_id,
       username: user.username,
       email: user.email,
+      role:user.role,
     };
 
     // Create token
@@ -53,6 +54,7 @@ export async function POST(request: NextRequest) {
         id: user.user_id,
         name: user.username,
         email: user.email,
+        role: user.role,
       },
     });
     response.cookies.set("token", token, {

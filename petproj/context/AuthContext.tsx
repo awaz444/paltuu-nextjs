@@ -6,7 +6,7 @@ import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 interface AuthContextProps {
   isAuthenticated: boolean;
   user: { id?: string; name?: string; email: string; role?: string; method: "google" | "api" | null } | null;
-  login: (user: { name: string; email: string }) => void;
+  login: (user: { name: string; email: string;role:string }) => void;
   logout: () => void;
 }
 
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [status, session]);
 
-  const login = (user: { name: string; email: string }) => {
+  const login = (user: { name: string; email: string; role: string}) => {
     setUser({ ...user, method: "api" });
     setIsAuthenticated(true);
     localStorage.setItem("user", JSON.stringify(user));

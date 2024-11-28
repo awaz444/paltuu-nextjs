@@ -45,13 +45,14 @@ export default function Login() {
       const response = await axios.post("/api/users/login", user);
   
       if (response.data.success) {
-        const { user } = response.data;
+        const { id, name, email, role } = response.data.user; // Ensure role is included
+        const userDetails = { name, email, role };
   
         // Save user data to local storage
-        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("user", JSON.stringify(userDetails));
   
-        // Update context with user data
-        login(user);
+        // Update AuthContext
+        login(userDetails); // Pass role as well
   
         toast.success("Login successful!");
         router.push("/browse-pets");
@@ -63,6 +64,7 @@ export default function Login() {
       setLoading(false);
     }
   };
+  
   
 
   // Handle Google login

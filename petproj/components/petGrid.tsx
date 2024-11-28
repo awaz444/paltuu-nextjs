@@ -46,10 +46,6 @@ const PetGrid: React.FC<PetGridProps> = ({ pets, isMyListing = false }) => {
     const [showConfirm, setShowConfirm] = useState<{ pet_id: number | null, show: boolean }>({ pet_id: null, show: false });
     const [loading, setLoading] = useState(false);
 
-    const fetchPets = async () => {
-        // Replace with your logic to refetch pets (e.g., dispatch an action or call the API)
-        console.log("Fetching pets...");
-    };
 
     const handleDelete = async (petId: number) => {
         const response = await fetch('/api/pets', {
@@ -67,7 +63,6 @@ const PetGrid: React.FC<PetGridProps> = ({ pets, isMyListing = false }) => {
             console.error('Delete failed:', errorData);
         } else {
             console.log('Delete successful');
-            await fetchPets(); // Refetch pets after successful deletion
         }
     };
 
@@ -79,6 +74,8 @@ const PetGrid: React.FC<PetGridProps> = ({ pets, isMyListing = false }) => {
         setLoading(true); // Start loading while deleting
         await handleDelete(petId);
         setShowConfirm({ pet_id: null, show: false }); // Close the confirmation popup
+
+        window.location.reload();
     };
 
     const cancelDelete = () => {
@@ -179,14 +176,14 @@ const PetGrid: React.FC<PetGridProps> = ({ pets, isMyListing = false }) => {
                         <h3 className="text-lg font-bold mb-4">Are you sure you want to delete this pet?</h3>
                         <div className="flex justify-between">
                             <button
-                                className="bg-primary text-white px-4 py-2 rounded rounded-xl"
+                                className="bg-primary text-white px-4 py-2 rounded-xl"
                                 onClick={() => confirmDelete(showConfirm.pet_id!)}
                                 disabled={loading}
                             >
                                 {loading ? 'Deleting...' : 'Confirm'}
                             </button>
                             <button
-                                className="bg-white text-primary border border-primary px-4 py-2 rounded rounded-xl"
+                                className="bg-white text-primary border border-primary px-4 py-2 rounded-xl"
                                 onClick={cancelDelete}
                             >
                                 Cancel

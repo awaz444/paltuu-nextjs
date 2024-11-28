@@ -79,6 +79,26 @@ export const postPet = createAsyncThunk<Pet, Omit<Pet, 'pet_id'>>(
   }
 );
 
+export const deletePet = createAsyncThunk<number, number>(
+  'pets/deletePet',
+  async (petId, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`/api/pets/${petId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete pet');
+      }
+
+      return petId; // Return the ID of the deleted pet
+    } catch (error) {
+      return rejectWithValue((error as Error).message);
+    }
+  }
+);
+
+
 // Create the slice
 const petSlice = createSlice({
   name: 'pets',
@@ -96,7 +116,7 @@ const petSlice = createSlice({
         state.pets[index] = action.payload;
       }
     },
-    deletePet: (state, action: PayloadAction<number>) => {
+    deletePets: (state, action: PayloadAction<number>) => {
       state.pets = state.pets.filter((pet) => pet.pet_id !== action.payload);
     },
   },
@@ -127,10 +147,22 @@ const petSlice = createSlice({
       .addCase(postPet.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string || 'Failed to post new pet';
+      })
+      .addCase(deletePet.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deletePet.fulfilled, (state, action: PayloadAction<number>) => {
+        state.pets = state.pets.filter((pet) => pet.pet_id !== action.payload);
+        state.loading = false;
+      })
+      .addCase(deletePet.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string || 'Failed to delete pet';
       });
   },
 });
 
 // Export actions and reducer
-export const { setPets, addPet, updatePet, deletePet } = petSlice.actions;
+export const { setPets, addPet, updatePet, deletePets } = petSlice.actions;
 export default petSlice.reducer;

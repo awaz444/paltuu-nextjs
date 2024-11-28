@@ -1,5 +1,7 @@
-import React from "react";
-import Link from "next/link";
+import React, { useState } from "react";
+import { useDispatch } from 'react-redux';
+import Link from 'next/link';
+import { AppDispatch } from "@/app/store/store";
 
 import "./petGrid.css";
 
@@ -40,6 +42,49 @@ interface PetGridProps {
 }
 
 const PetGrid: React.FC<PetGridProps> = ({ pets, isMyListing = false }) => {
+    const dispatch = useDispatch<AppDispatch>();
+    const [showConfirm, setShowConfirm] = useState<{ pet_id: number | null, show: boolean }>({ pet_id: null, show: false });
+    const [loading, setLoading] = useState(false);
+
+    const fetchPets = async () => {
+        // Replace with your logic to refetch pets (e.g., dispatch an action or call the API)
+        console.log("Fetching pets...");
+    };
+
+    const handleDelete = async (petId: number) => {
+        const response = await fetch('/api/pets', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ pet_id: petId }),
+        });
+
+        setLoading(false); // Stop loading
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Delete failed:', errorData);
+        } else {
+            console.log('Delete successful');
+            await fetchPets(); // Refetch pets after successful deletion
+        }
+    };
+
+    const handleConfirmation = (petId: number) => {
+        setShowConfirm({ pet_id: petId, show: true });
+    };
+
+    const confirmDelete = async (petId: number) => {
+        setLoading(true); // Start loading while deleting
+        await handleDelete(petId);
+        setShowConfirm({ pet_id: null, show: false }); // Close the confirmation popup
+    };
+
+    const cancelDelete = () => {
+        setShowConfirm({ pet_id: null, show: false }); // Close the confirmation popup without deletion
+    };
+
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             <Link
@@ -67,20 +112,19 @@ const PetGrid: React.FC<PetGridProps> = ({ pets, isMyListing = false }) => {
                         <div className="relative">
                             {isMyListing && (
                                 <div className="absolute top-2 right-2 flex gap-2">
+                                    {/* Delete Button */}
                                     <button
                                         className="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition"
-                                        onClick={(e) => {
-                                            e.stopPropagation(); // Prevent card click
-                                            console.log("trash clicked");
-                                        }}
+                                        onClick={() => handleConfirmation(pet.pet_id)}
                                     >
                                         <img src="/trash.svg" alt="Delete" className="w-4 h-4" />
                                     </button>
+                                    {/* Edit Button */}
                                     <button
                                         className="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition"
                                         onClick={(e) => {
                                             e.stopPropagation(); // Prevent card click
-                                            console.log("pen clicked");
+                                            console.log('pen clicked');
                                         }}
                                     >
                                         <img src="/pen.svg" alt="Edit" className="w-4 h-4" />
@@ -88,7 +132,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets, isMyListing = false }) => {
                                 </div>
                             )}
                             <img
-                                src={pet.image_url || "/dog-placeholder.png"}
+                                src={pet.image_url || '/dog-placeholder.png'}
                                 alt={pet.pet_name}
                                 className="w-full h-48 object-cover rounded-2xl"
                             />
@@ -102,7 +146,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets, isMyListing = false }) => {
                         <div className="p-4">
                             <h3 className="font-bold text-2xl mb-1">{pet.pet_name}</h3>
                             <p className="text-gray-600 mb-1">
-                                {pet.age} {pet.age > 1 ? "years" : "year"} old
+                                {pet.age} {pet.age > 1 ? 'years' : 'year'} old
                             </p>
                             <p className="text-gray-600 mb-1">
                                 {pet.city} - {pet.area}
@@ -117,7 +161,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets, isMyListing = false }) => {
                     <Link
                         key={pet.pet_id}
                         href={
-                            pet.listing_type === "adoption"
+                            pet.listing_type === 'adoption'
                                 ? `/browse-pets/${pet.pet_id}`
                                 : `/foster-pets/${pet.pet_id}`
                         }
@@ -127,6 +171,30 @@ const PetGrid: React.FC<PetGridProps> = ({ pets, isMyListing = false }) => {
                     </Link>
                 );
             })}
+            
+            {/* Confirmation Popup */}
+            {showConfirm.show && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                        <h3 className="text-lg font-bold mb-4">Are you sure you want to delete this pet?</h3>
+                        <div className="flex justify-between">
+                            <button
+                                className="bg-red-600 text-white px-4 py-2 rounded"
+                                onClick={() => confirmDelete(showConfirm.pet_id!)}
+                                disabled={loading}
+                            >
+                                {loading ? 'Deleting...' : 'Confirm'}
+                            </button>
+                            <button
+                                className="bg-gray-300 text-black px-4 py-2 rounded"
+                                onClick={cancelDelete}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

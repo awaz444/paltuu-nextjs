@@ -175,18 +175,18 @@ const PetGrid: React.FC<PetGridProps> = ({ pets, isMyListing = false }) => {
             {/* Confirmation Popup */}
             {showConfirm.show && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                    <div className="bg-white p-6 rounded-3xl shadow-lg max-w-sm w-full">
                         <h3 className="text-lg font-bold mb-4">Are you sure you want to delete this pet?</h3>
                         <div className="flex justify-between">
                             <button
-                                className="bg-red-600 text-white px-4 py-2 rounded"
+                                className="bg-primary text-white px-4 py-2 rounded rounded-xl"
                                 onClick={() => confirmDelete(showConfirm.pet_id!)}
                                 disabled={loading}
                             >
                                 {loading ? 'Deleting...' : 'Confirm'}
                             </button>
                             <button
-                                className="bg-gray-300 text-black px-4 py-2 rounded"
+                                className="bg-white text-primary border border-primary px-4 py-2 rounded rounded-xl"
                                 onClick={cancelDelete}
                             >
                                 Cancel

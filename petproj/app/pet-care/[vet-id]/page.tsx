@@ -143,6 +143,7 @@ export default function VetDetailsPage({
         fetchVetDetails();
         fetchReviewStats();
     }, [params, router]);
+
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);
         message.success("Copied to clipboard!");

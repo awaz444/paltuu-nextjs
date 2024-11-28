@@ -77,7 +77,7 @@ export const authoptions: NextAuthOptions = {
             const insertResult: QueryResult = await db.query(insertQuery, insertValues);
             const newUser = insertResult.rows[0];
             token.id = newUser.id;
-            token.role = newUser.role;
+            token.role = "regular user";;
           } else {
             // User exists, return their details
             const existingUser = result.rows[0];
@@ -90,7 +90,7 @@ export const authoptions: NextAuthOptions = {
       }
 
       token.user_id = token.id || token.user_id || null;
-      token.role = token.role || "guest"; // Default role
+      token.role = token.role || "guest";
       return token;
     },
     async session({ session, token }) {

@@ -3,7 +3,7 @@ import { createClient } from "../../../../db/index";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
-    const pet_id = req.nextUrl.pathname.split('/').pop();  // Extract pet_id from URL path
+    const pet_id = req.nextUrl.pathname.split('/').pop(); 
 
     if (!pet_id) {
         return NextResponse.json(
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         JOIN users ON pets.owner_id = users.user_id
         JOIN cities ON pets.city_id = cities.city_id
         LEFT JOIN pet_images ON pets.pet_id = pet_images.pet_id
-        WHERE pets.pet_id = $1
+         WHERE pets.pet_id = $1
         ORDER BY pet_images."order" ASC;
         `;
 
@@ -107,3 +107,4 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         await client.end(); // Close the database connection
     }
 }
+

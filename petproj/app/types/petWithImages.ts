@@ -19,6 +19,8 @@ export type PetWithImages = {
     cuddliness_level: number;
     health_issues: string | null;
     created_at: string;
+    email: string;
+    phone_number: string;
     sex: string | null;
     listing_type: string;
     vaccinated: boolean | null;

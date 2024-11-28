@@ -39,6 +39,30 @@ const Navbar = () => {
         admin: "#065758",
     };
 
+    const buttonTextColor: Record<UserRole, string> = {
+        guest: "#ffffff",
+        "regular user": "#ffffff",
+        vet: "#ffffff",
+        admin: "#ffffff",
+    };
+    
+    const arrowColor: Record<UserRole, string> = {
+        guest: "#ffd2e3",
+        "regular user": "#ffd2e3",
+        vet: "#e0c3f7",
+        admin: "#7fe1d3",
+    };
+    
+    // Calculate dropdown width dynamically
+    const dropdownItems = [
+        { href: "/profile", label: "My Profile" },
+        { href: "/my-listings", label: "My Listings" },
+        { href: "/my-applications", label: "My Applications" },
+        { href: "/notifications", label: "Notifications" },
+        { href: "/logout", label: "Logout" },
+    ];
+    const dropdownWidth = `${Math.max(...dropdownItems.map((item) => item.label.length)) * 8 + 50}px`;
+
     const userRole: UserRole =
         (user?.role as UserRole) ||
         (session?.user?.role as UserRole) ||

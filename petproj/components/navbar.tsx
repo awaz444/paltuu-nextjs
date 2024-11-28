@@ -35,7 +35,7 @@ const Navbar = () => {
     const navbarBackground: Record<UserRole, string> = {
         guest: "#A03048",
         "regular user": "#A03048",
-        vet: "# 480777",
+        vet: "#480777",
         admin: "#065758",
     };
 
@@ -138,7 +138,7 @@ const Navbar = () => {
                     onMouseEnter={() => setIsDropdownOpen(true)}
                     onMouseLeave={() => setIsDropdownOpen(false)}>
                     <button
-                        className="flex items-center justify-center gap-2 loginBtn hover:bg-[#ffffff] transition-all duration-300"
+                        className="flex items-center justify-center gap-2 loginBtn"
                         style={{
                             minWidth: dropdownWidth, // Set button width dynamically
                         }}>
@@ -152,7 +152,9 @@ const Navbar = () => {
                     </button>
                     {isDropdownOpen && (
                         <div
-                            className="dropdown-menu absolute top-full right-0 bg-white shadow-lg rounded-2xl z-10"
+                            className={`dropdown-menu absolute top-full right-0 bg-white shadow-lg z-10 transition-all duration-300 ${
+                                isDropdownOpen ? "rounded-b-2xl" : "rounded-2xl"
+                            }`}
                             style={{
                                 width: dropdownWidth, // Ensure dropdown matches button width
                             }}>

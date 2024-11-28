@@ -5,7 +5,7 @@ import { RootState, AppDispatch } from "../store/store"; // Import store types
 import { fetchCities } from "../store/slices/citiesSlice"; // Fetch cities from store
 import { fetchPetCategories } from "../store/slices/petCategoriesSlice"; // Fetch pet categories from store
 import { postPet } from "../store/slices/petSlice"; // Import postPet thunk
-import { useRouter } from 'next/router'; // Import useRouter
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 import Navbar from "../../components/navbar";
 import "./styles.css";

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import PetGrid from "@/components/petGrid";
 import Navbar from "@/components/navbar";
+import { Spin } from "antd"; // Ant Design spinner
 import "./styles.css";
 
 interface Pet {
@@ -72,8 +73,19 @@ const UserListingsPage = () => {
     (listing) => listing.listing_type === activeTab
   );
 
-  if (isLoading) return <div className="text-center text-gray-600">Loading...</div>;
-  if (error) return <div className="text-center text-red-600">Error: {error}</div>;
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <Spin size="large" />
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="flex justify-center items-center min-h-screen text-red-600">
+        Error: {error}
+      </div>
+    );
 
   return (
     <>

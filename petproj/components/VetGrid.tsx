@@ -16,7 +16,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
         
         <div
           key={vet.vet_id}
-          className="relative bg-white p-4 rounded-2xl shadow-sm border border-gray-200 hover:border-[#A03048] "
+          className="relative bg-white p-4 rounded-2xl shadow-sm border border-gray-200 hover:border-primary"
         >
           {/* Starting Fee in Top Right Corner */}
           <div className="absolute top-4 right-4 bg-white text-sm text-primary font-bold py-1 px-3 rounded-lg">

@@ -1,6 +1,8 @@
 import React from "react";
 import Link from "next/link"; // Import Link from next/link
 
+import { useSetPrimaryColor } from '@/app/hooks/useSetPrimaryColor';
+
 import "./petGrid.css";
 
 interface Pet {
@@ -40,6 +42,8 @@ interface PetGridProps {
 
 const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
 
+    useSetPrimaryColor();
+
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {/* Create new listing card */}
@@ -70,7 +74,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
             >
                 <div
                     key={pet.pet_id}
-                    className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-[#A03048] hover:scale-102 transition-all duration-300"
+                    className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300"
                 >
                     <div className="relative">
                         <img

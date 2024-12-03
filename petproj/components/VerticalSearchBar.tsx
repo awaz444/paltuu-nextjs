@@ -206,8 +206,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                     Reset
                 </button>
                 <button
-                    className="text-white p-3 rounded-xl"
-                    style={{ backgroundColor: "#A03048" }}
+                    className="text-white p-3 rounded-xl bg-primary"
                     onClick={handleSearch}>
                     Search
                 </button>

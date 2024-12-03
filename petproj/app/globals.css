@@ -5,19 +5,16 @@
 @tailwind utilities;
 @tailwind apply;
 
+/* Default theme variables */
 :root {
-  /* Default colors for normal users */
-  --primary-color: #A03048;
-  --dark-color: #70223f;
-  --light-color: #ffd2e3;
-  --tertiary-color: #ffa6c8;
-  --background-color: #ffffff;
+  --primary-color: #A03048; /* Default for guest or regular users */
   --foreground-rgb: 0, 0, 0;
   --font-family: 'Montserrat', sans-serif; /* Use Montserrat globally */
 }
 
-/* User-specific themes */
-:root.user-theme {
+/* Role-based themes */
+[data-role="guest"],
+[data-role="regular user"] {
   --primary-color: #A03048;
   --dark-color: #70223f;
   --light-color: #ffd2e3;
@@ -25,25 +22,25 @@
   --background-color: #ffffff;
 }
 
-:root.vet-theme {
-  --primary-color: #6a398c;
-  --dark-color: #3d2862;
-  --light-color: #e7d9ff;
-  --tertiary-color: #cfb3ff;
+[data-role="vet"] {
+  --primary-color: #480777;
+  --dark-color: #2c0551;
+  --light-color: #d8ccff;
+  --tertiary-color: #b299ff;
   --background-color: #ffffff;
 }
 
-:root.admin-theme {
-  --primary-color: #02187b;
-  --dark-color: #012656;
-  --light-color: #c0dcff;
-  --tertiary-color: #82b8ff;
+[data-role="admin"] {
+  --primary-color: #065758;
+  --dark-color: #043b3c;
+  --light-color: #c4f0f1;
+  --tertiary-color: #8cdfe0;
   --background-color: #ffffff;
 }
 
 /* Apply the theme colors */
 body {
-  font-family: var(--font-family); 
+  font-family: var(--font-family);
   color: rgb(var(--foreground-rgb));
   background-color: var(--background-color);
 }
@@ -54,24 +51,16 @@ html, body {
 
 /* Utility classes */
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  /* Example color utility */
   .bg-primary {
     background-color: var(--primary-color);
   }
   .text-primary {
     color: var(--primary-color);
   }
-  .bg-dark {
-    background-color: var(--dark-color);
+  .border-primary {
+    border-color: var(--primary-color);
   }
-  .bg-light {
-    background-color: var(--light-color);
-  }
-  .bg-tertiary {
-    background-color: var(--tertiary-color);
+  .hover\\:border-primary:hover {
+    border-color: var(--primary-color);
   }
 }

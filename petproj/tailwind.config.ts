@@ -9,17 +9,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#A03048",  // Add your custom primary color here
+        primary: "var(--primary-color)", // Use the CSS variable
       },
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-      },
-      // Add this part to extend base styles
-      backgroundColor: {
-        "gray-100": "#f7fafc", // Tailwind's default gray-100
-      },
+    },
+    backgroundColor: {
+      "gray-100": "#f7fafc", // Tailwind's default gray-100
     },
   },
   plugins: [],

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { RootState, AppDispatch } from "../app/store/store"; // Import store types
 import { fetchCities } from "../app/store/slices/citiesSlice"; // Fetch cities from store
 import { fetchPetCategories } from "../app/store/slices/petCategoriesSlice"; // Fetch pet categories from store
-
+import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 interface FilterSectionProps {
     onSearch: (filters: {
         selectedCity: string;
@@ -21,6 +21,8 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
     const [selectedCity, setSelectedCity] = useState("");
     const [selectedSpecies, setSelectedSpecies] = useState("");
     const [breed, setBreed] = useState("");
+
+    useSetPrimaryColor();
 
     // Fetch cities and pet categories on component mount
     useEffect(() => {
@@ -101,8 +103,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
                             Reset
                         </button>
                         <button
-                            className="text-white p-3 rounded-2xl w-40"
-                            style={{ backgroundColor: "#A03048" }}
+                            className="text-white p-3 rounded-2xl w-40 bg-primary"
                             onClick={handleSearch}>
                             Search
                         </button>

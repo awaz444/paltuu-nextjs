@@ -7,8 +7,12 @@ import { AppDispatch, RootState } from "../store/store"; // Adjust the imports b
 import { fetchPetCategories } from "../store/slices/petCategoriesSlice"; // Action to fetch categories
 import { postVetSpecialization } from "../store/slices/vetSpecializationSlice"; // Action to post specialization details
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons"; // If needed for icons
+import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 
 const VetSpecializationsForm: React.FC = () => {
+
+  useSetPrimaryColor();
+  
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const router = useRouter();
   const searchParams = useSearchParams();

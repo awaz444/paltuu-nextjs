@@ -140,7 +140,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                         </h1>
                         <div
                             onClick={() => setIsModalOpen(true)}
-                            className="bg-primary text-white px-7 py-3 mb-3 text-md rounded-xl font-semibold border border-white hover:border-[#A03048] hover:bg-[#ffffff] hover:text-primary cursor-pointer">
+                            className="bg-primary text-white px-7 py-3 mb-3 text-md rounded-xl font-semibold border border-white hover:border-primary hover:bg-[#ffffff] hover:text-primary cursor-pointer">
                             Contact Owner
                         </div>
                     </div>
@@ -225,7 +225,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                     <div className="text-center mt-6">
                         <div
                             onClick={handleAdoptClick}
-                            className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-[#A03048] hover:bg-[#ffffff] hover:text-primary cursor-pointer">
+                            className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-primary hover:bg-[#ffffff] hover:text-primary cursor-pointer">
                             Adopt Now!
                         </div>
                     </div>

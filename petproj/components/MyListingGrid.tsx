@@ -95,7 +95,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                 Create new listing
             </div>
             {pets.map((pet) => (
-                <div key={pet.pet_id} className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-[#A03048] hover:scale-102 transition-all duration-300 relative">
+                <div key={pet.pet_id} className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 relative">
                     <div className="relative">
                         <div className="absolute top-2 right-2 flex gap-2">
                             {/* Delete Button */}

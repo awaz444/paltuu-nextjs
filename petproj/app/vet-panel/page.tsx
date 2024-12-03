@@ -158,7 +158,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
                             title="Edit Qualifications">
-                            <img src="/pen.svg" alt="Edit" />
+                            <img src="/pen.svg" alt="Edit" className="hover:text-primary"/>
                         </button>
                         <h4 className="text-lg font-bold text-primary mb-4">
                             Qualifications
@@ -179,7 +179,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
                             title="Edit Specializations">
-                            <img src="/pen.svg" alt="Edit" />
+                            <img src="/pen.svg" alt="Edit" className="hover:text-primary"/>
                         </button>
                         <h4 className="text-lg font-bold text-primary mb-4">
                             Specializations
@@ -200,7 +200,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                         <div
                             className="absolute top-4 right-4 w-6 h-6"
                             title="View Reviews">
-                            <img src="/arrow-right.svg" alt="Details" />
+                            <img src="/arrow-right.svg" alt="Details" className="hover:text-primary" />
                         </div>
                         <h4 className="text-lg font-bold text-primary mb-4">
                             Reviews Summary

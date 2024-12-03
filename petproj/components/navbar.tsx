@@ -173,7 +173,12 @@ const Navbar = () => {
                                 top: "calc(100% + 0.5rem)", // Positions it slightly below `top-full`
                                 width: dropdownWidth, // Ensure dropdown matches button width
                             }}>
-                            <Link href="/profile">
+                            <Link
+                                href={
+                                    userRole === "vet"
+                                        ? "/vet-panel"
+                                        : "/my-profile"
+                                }>
                                 <div className="dropdown-item px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
                                     My Profile
                                 </div>

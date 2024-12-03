@@ -69,18 +69,17 @@
   border-radius: 60px; /* Default rounded corners */
   padding: 7px 20px;
   cursor: pointer;
-  transition: border-radius 0.1s ease;
+  transition: border-radius;
 }
 
 .dropdown:hover .loginBtn {
   background-color: #ffffff; /* Light */
-  border-radius: 20px 20px 0 0; /* Only round the top corners */
+  border-radius: 20px; /* Only round the top corners */
 }
 
 .dropdown-menu {
-  transition: border-radius 0.1s ease;
+  transition: border-radius;
 }
-
 
 /* Hamburger menu */
 .hamburger {

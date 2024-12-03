@@ -1,7 +1,9 @@
-import React from "react";
-import { Vet } from '../app/types/vet';
-import Link from "next/link"; // Import Link from next/link
-import 'bootstrap-icons/font/bootstrap-icons.css';
+import React, { useState } from "react";
+import { Vet } from "../app/types/vet";
+import Link from "next/link";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import { Modal, Button, message } from "antd";
+import { CopyOutlined, WhatsAppOutlined } from "@ant-design/icons";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 
 interface VetGridProps {
@@ -9,24 +11,36 @@ interface VetGridProps {
 }
 
 const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedVet, setSelectedVet] = useState<Vet | null>(null);
+
+  useSetPrimaryColor();
+
   const handleWhatsApp = (phone: string) => {
-    // Ensure the phone number starts with +92
     let formattedPhone = phone.trim();
-
-    useSetPrimaryColor();
-
-    // Check if the number starts with 0 (e.g., 03001234567) and replace with +92
     if (formattedPhone.startsWith("0")) {
       formattedPhone = "+92" + formattedPhone.slice(1);
     } else if (!formattedPhone.startsWith("+92")) {
-      // If the number doesn't start with +92, assume invalid format
-      alert("Invalid phone number format. Please use a valid Pakistani number.");
+      message.error("Invalid phone number format. Please use a valid Pakistani number.");
       return;
     }
-
-    // Generate WhatsApp URL
     const whatsappUrl = `https://wa.me/${formattedPhone}`;
     window.open(whatsappUrl, "_blank");
+  };
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    message.success("Copied to clipboard!");
+  };
+
+  const openModal = (vet: Vet) => {
+    setSelectedVet(vet);
+    setIsModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+    setSelectedVet(null);
   };
 
   return (
@@ -37,37 +51,26 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
             key={vet.vet_id}
             className="relative bg-white p-4 rounded-2xl shadow-sm border border-gray-200 hover:border-primary"
           >
-            {/* Starting Fee in Top Right Corner */}
             <div className="absolute top-4 right-4 bg-white text-sm text-primary font-bold py-1 px-3 rounded-lg">
               Fee Starting from: PKR {vet.minimum_fee}
             </div>
 
             <div className="flex">
-              {/* Profile Image */}
               <img
                 src={vet.profile_image_url || "/placeholder.jpg"}
                 alt={vet.name}
                 className="w-28 h-26 object-cover rounded-full mr-4"
               />
-
-              {/* Vet Details */}
               <div className="flex-grow">
-                {/* Name as Link */}
                 <div className="flex items-center">
-                  <div className="font-bold text-xl text-primary">
-                    {vet.name}
-                  </div>
+                  <div className="font-bold text-xl text-primary">{vet.name}</div>
                   {vet.profile_verified && (
                     <i className="bi bi-patch-check-fill text-[#cc8800] ml-2" />
                   )}
                 </div>
-
-                {/* Clinic, City, and Location */}
                 <p className="text-gray-600">{vet.clinic_name}</p>
                 <p className="text-gray-500">{vet.city_name}</p>
                 <p className="text-gray-500">{vet.location}</p>
-
-                {/* Qualifications Inline Format */}
                 {vet.qualifications.length > 0 && (
                   <p className="text-gray-600 mb-1">
                     {vet.qualifications.map((qual, index) => (
@@ -79,14 +82,14 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
                   </p>
                 )}
               </div>
-
-              {/* Contact Buttons */}
               <div className="flex flex-col justify-end items-end ml-4">
-                <div className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-primary hover:bg-[#ffffff] hover:text-primary cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault(); // Prevent Link from triggering
-                  handleWhatsApp(vet.contact_details);
-                }}>
+                <div
+                  className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-primary hover:bg-[#ffffff] hover:text-primary cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault(); // Prevent Link from triggering
+                    openModal(vet);
+                  }}
+                >
                   Book Appointment
                 </div>
               </div>
@@ -94,6 +97,47 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
           </div>
         </Link>
       ))}
+      <Modal
+        title="Contact Information"
+        visible={isModalVisible}
+        onCancel={closeModal}
+        footer={null}
+      >
+        {selectedVet && (
+          <div>
+            <p>
+              <strong>Phone:</strong> {selectedVet.contact_details}{" "}
+              <Button
+                icon={<CopyOutlined />}
+                className="ml-2"
+                size="small"
+                onClick={() => handleCopy(selectedVet.contact_details)}
+              >
+                Copy
+              </Button>
+            </p>
+            <p>
+              <strong>Email:</strong> {selectedVet.email}{" "}
+              <Button
+                icon={<CopyOutlined />}
+                className="ml-2"
+                size="small"
+                onClick={() => handleCopy(selectedVet.email)}
+              >
+                Copy
+              </Button>
+            </p>
+            <Button
+              type="primary"
+              className="bg-primary text-white mt-4"
+              icon={<WhatsAppOutlined />}
+              onClick={() => handleWhatsApp(selectedVet.contact_details)}
+            >
+              WhatsApp
+            </Button>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

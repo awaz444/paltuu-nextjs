@@ -25,6 +25,17 @@ input[type="range"]::-moz-range-thumb {
     cursor: pointer;
 }
 
+.input-field {
+  border: 1px solid #d1d5db; /* Default border color */
+  transition: border-color 0.2s ease;
+  outline: none; /* Remove default focus outline */
+}
+
+.input-field:focus {
+  border-color: var(--primary-color); /* Change to primary color on focus */
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3); /* Optional: Add focus ring */
+}
+
 /* Container for the tab switch */
 .tab-switch-container {
     display: flex;

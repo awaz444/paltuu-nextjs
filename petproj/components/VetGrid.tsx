@@ -2,6 +2,7 @@ import React from "react";
 import { Vet } from '../app/types/vet';
 import Link from "next/link"; // Import Link from next/link
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 
 interface VetGridProps {
   vets: Vet[];
@@ -11,6 +12,8 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
   const handleWhatsApp = (phone: string) => {
     // Ensure the phone number starts with +92
     let formattedPhone = phone.trim();
+
+    useSetPrimaryColor();
 
     // Check if the number starts with 0 (e.g., 03001234567) and replace with +92
     if (formattedPhone.startsWith("0")) {

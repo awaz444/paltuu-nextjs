@@ -5,6 +5,7 @@ import { RootState, AppDispatch } from "../app/store/store";
 import { fetchCities } from "../app/store/slices/citiesSlice";
 import { fetchQualifications } from "../app/store/slices/qualificationsSlice";
 import { fetchPetCategories } from "../app/store/slices/petCategoriesSlice";
+import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 
 interface VetFilterSectionProps {
     onSearch: (filters: {
@@ -24,6 +25,8 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
         (state: RootState) => state.qualifications
     );
     const { categories } = useSelector((state: RootState) => state.categories);
+
+    useSetPrimaryColor();
 
     const [selectedCity, setSelectedCity] = useState("");
     const [selectedQualification, setSelectedQualification] = useState("");

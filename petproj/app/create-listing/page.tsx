@@ -175,7 +175,7 @@ export default function CreatePetListing() {
                         <input
                             type="text"
                             required
-                            className="mt-1 p-3 w-full border rounded-2xl"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             placeholder="Enter pet name"
                             value={petName}
                             onChange={(e) => setPetName(e.target.value)}
@@ -188,7 +188,7 @@ export default function CreatePetListing() {
                             Pet Type
                         </label>
                         <select
-                            className="mt-1 p-3 w-full border rounded-2xl"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             value={petType}
                             required
                             onChange={(e) => setPetType(e.target.value)}>
@@ -210,7 +210,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="text"
-                            className="mt-1 p-3 w-full border rounded-2xl"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             placeholder="Enter breed"
                             value={breed}
                             onChange={(e) => setBreed(e.target.value)}
@@ -223,7 +223,7 @@ export default function CreatePetListing() {
                             City
                         </label>
                         <select
-                            className="mt-1 p-3 w-full border rounded-2xl"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             value={cityId}
                             required
                             onChange={(e) => setCityId(e.target.value)}>
@@ -243,7 +243,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="text"
-                            className="mt-1 p-3 w-full border rounded-2xl"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             placeholder="Enter area"
                             value={area}
                             onChange={(e) => setArea(e.target.value)}
@@ -258,7 +258,7 @@ export default function CreatePetListing() {
                         <input
                             type="text" // Change to text for free input
                             required
-                            className="mt-1 p-3 w-full border rounded-2xl"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             placeholder="Enter age" // Ensure 0 is not in the placeholder
                             value={age || ""} // Prevent "0" from showing in the input field
                             onChange={(e) => {
@@ -276,7 +276,7 @@ export default function CreatePetListing() {
                             Sex
                         </label>
                         <select
-                            className="mt-1 p-3 w-full border rounded-2xl"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             value={sex}
                             required
                             onChange={(e) => setSex(e.target.value)}>
@@ -292,7 +292,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="number"
-                            className="mt-1 p-3 w-full border rounded-2xl"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             placeholder="Enter age"
                             value={age}
                             onChange={(e) => setAge(Number(e.target.value))}
@@ -334,7 +334,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="text"
-                            className="mt-1 p-3 w-full border rounded-2xl"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             placeholder="Enter price (if applicable)"
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
@@ -347,7 +347,7 @@ export default function CreatePetListing() {
                                 Payment Frequency
                             </label>
                             <select
-                                className="mt-1 p-3 w-full border rounded-2xl"
+                                className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                                 value={paymentFrequency}
                                 onChange={(e) =>
                                     setPaymentFrequency(e.target.value)
@@ -367,7 +367,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="number"
-                            className="mt-1 p-3 w-full border rounded-2xl"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             placeholder="Enter minimum age"
                             value={minAgeOfChildren}
                             onChange={(e) => setMinAgeOfChildren(Number(e.target.value))} // Use the raw value instead of converting to Number
@@ -380,7 +380,7 @@ export default function CreatePetListing() {
                             Description
                         </label>
                         <textarea
-                            className="mt-1 p-3 w-full border rounded-2xl"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             placeholder="Describe the pet"
                             value={description}
                             onChange={(e) =>
@@ -395,7 +395,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="text" // Keep input type as text
-                            className="mt-1 p-3 w-full border rounded-2xl"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             placeholder="Enter minimum age"
                             value={minAgeOfChildren || ""}
                             onChange={(e) => {
@@ -496,7 +496,7 @@ export default function CreatePetListing() {
                                 type="range"
                                 min="1"
                                 max="5"
-                                className="mt-2 w-full h-2 rounded-2xl bg-gray-300 appearance-none"
+                                className="mt-2 w-full h-2 rounded-2xl input-field input-field input-field input-field bg-gray-300 appearance-none"
                                 value={cuddlinessLevel ?? 3} // Show 3 visually, but don't persist
                                 onChange={(e) =>
                                     setCuddlinessLevel(Number(e.target.value))
@@ -529,7 +529,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="text"
-                            className="mt-1 p-3 w-full border rounded-2xl"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field"
                             placeholder="Enter health issues"
                             value={healthIssues}
                             onChange={(e) => setHealthIssues(e.target.value)}

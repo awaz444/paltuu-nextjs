@@ -150,6 +150,17 @@ export default function VetDetailsPage({
     };
 
     const handleWhatsApp = (phone: string) => {
+        // Ensure the phone number starts with +92
+        let formattedPhone = phone.trim();
+    
+        // Check if the number starts with 0 (e.g., 03001234567) and replace with +92
+        if (formattedPhone.startsWith("0")) {
+            formattedPhone = "+92" + formattedPhone.slice(1);
+        } else if (!formattedPhone.startsWith("+92")) {
+            // If the number doesn't start with +92, assume invalid format
+            message.error("Invalid phone number format. Please use a valid Pakistani number.");
+            return;
+        }
         const whatsappUrl = `https://wa.me/${phone}`;
         window.open(whatsappUrl, "_blank");
     };

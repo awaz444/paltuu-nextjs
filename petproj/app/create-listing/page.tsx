@@ -15,6 +15,7 @@ import "./styles.css";
 import { PlusOutlined } from "@ant-design/icons";
 import { Image, Upload } from "antd";
 import type { GetProp, UploadFile, UploadProps } from "antd";
+import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 
 type FileType = Parameters<GetProp<UploadProps, "beforeUpload">>[0];
 
@@ -27,6 +28,9 @@ const getBase64 = (file: FileType): Promise<string> =>
     });
 
 export default function CreatePetListing() {
+
+    useSetPrimaryColor();
+
     const router = useRouter();
     const dispatch = useDispatch<AppDispatch>();
     const { cities } = useSelector((state: RootState) => state.cities);
@@ -130,14 +134,14 @@ export default function CreatePetListing() {
                 className="fullBody"
                 style={{ maxWidth: "90%", margin: "0 auto" }}>
                 <form
-                    className="bg-white p-6 rounded-xl shadow-md w-full max-w-lg mx-auto my-8"
+                    className="bg-white p-6 rounded-3xl shadow-md w-full max-w-lg mx-auto my-8"
                     onSubmit={handleSubmit}>
                     {/* Listing Type */}
                     <div className="mb-4">
                         <div className="w-3/4 tab-switch-container mt-1">
                             {/* Sliding background for active tab */}
                             <div
-                                className="tab-switch-slider"
+                                className="tab-switch-slider bg-primary"
                                 style={{
                                     transform:
                                         listingType === "adoption"
@@ -171,7 +175,7 @@ export default function CreatePetListing() {
                         <input
                             type="text"
                             required
-                            className="mt-1 p-3 w-full border rounded-lg"
+                            className="mt-1 p-3 w-full border rounded-2xl"
                             placeholder="Enter pet name"
                             value={petName}
                             onChange={(e) => setPetName(e.target.value)}
@@ -184,7 +188,7 @@ export default function CreatePetListing() {
                             Pet Type
                         </label>
                         <select
-                            className="mt-1 p-3 w-full border rounded-lg"
+                            className="mt-1 p-3 w-full border rounded-2xl"
                             value={petType}
                             required
                             onChange={(e) => setPetType(e.target.value)}>
@@ -206,7 +210,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="text"
-                            className="mt-1 p-3 w-full border rounded-lg"
+                            className="mt-1 p-3 w-full border rounded-2xl"
                             placeholder="Enter breed"
                             value={breed}
                             onChange={(e) => setBreed(e.target.value)}
@@ -219,7 +223,7 @@ export default function CreatePetListing() {
                             City
                         </label>
                         <select
-                            className="mt-1 p-3 w-full border rounded-lg"
+                            className="mt-1 p-3 w-full border rounded-2xl"
                             value={cityId}
                             required
                             onChange={(e) => setCityId(e.target.value)}>
@@ -239,7 +243,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="text"
-                            className="mt-1 p-3 w-full border rounded-lg"
+                            className="mt-1 p-3 w-full border rounded-2xl"
                             placeholder="Enter area"
                             value={area}
                             onChange={(e) => setArea(e.target.value)}
@@ -254,7 +258,7 @@ export default function CreatePetListing() {
                         <input
                             type="text" // Change to text for free input
                             required
-                            className="mt-1 p-3 w-full border rounded-lg"
+                            className="mt-1 p-3 w-full border rounded-2xl"
                             placeholder="Enter age" // Ensure 0 is not in the placeholder
                             value={age || ""} // Prevent "0" from showing in the input field
                             onChange={(e) => {
@@ -272,7 +276,7 @@ export default function CreatePetListing() {
                             Sex
                         </label>
                         <select
-                            className="mt-1 p-3 w-full border rounded-lg"
+                            className="mt-1 p-3 w-full border rounded-2xl"
                             value={sex}
                             required
                             onChange={(e) => setSex(e.target.value)}>
@@ -288,7 +292,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="number"
-                            className="mt-1 p-3 w-full border rounded-lg"
+                            className="mt-1 p-3 w-full border rounded-2xl"
                             placeholder="Enter age"
                             value={age}
                             onChange={(e) => setAge(Number(e.target.value))}
@@ -330,7 +334,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="text"
-                            className="mt-1 p-3 w-full border rounded-lg"
+                            className="mt-1 p-3 w-full border rounded-2xl"
                             placeholder="Enter price (if applicable)"
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
@@ -343,7 +347,7 @@ export default function CreatePetListing() {
                                 Payment Frequency
                             </label>
                             <select
-                                className="mt-1 p-3 w-full border rounded-lg"
+                                className="mt-1 p-3 w-full border rounded-2xl"
                                 value={paymentFrequency}
                                 onChange={(e) =>
                                     setPaymentFrequency(e.target.value)
@@ -363,7 +367,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="number"
-                            className="mt-1 p-3 w-full border rounded-lg"
+                            className="mt-1 p-3 w-full border rounded-2xl"
                             placeholder="Enter minimum age"
                             value={minAgeOfChildren}
                             onChange={(e) => setMinAgeOfChildren(Number(e.target.value))} // Use the raw value instead of converting to Number
@@ -376,7 +380,7 @@ export default function CreatePetListing() {
                             Description
                         </label>
                         <textarea
-                            className="mt-1 p-3 w-full border rounded-lg"
+                            className="mt-1 p-3 w-full border rounded-2xl"
                             placeholder="Describe the pet"
                             value={description}
                             onChange={(e) =>
@@ -391,7 +395,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="text" // Keep input type as text
-                            className="mt-1 p-3 w-full border rounded-lg"
+                            className="mt-1 p-3 w-full border rounded-2xl"
                             placeholder="Enter minimum age"
                             value={minAgeOfChildren || ""}
                             onChange={(e) => {
@@ -463,7 +467,7 @@ export default function CreatePetListing() {
                                 }}
                                 style={{
                                     background: energyLevel
-                                        ? `linear-gradient(to right, #A03048 0%, #A03048 ${
+                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
                                               (energyLevel - 1) * 25
                                           }%, #D1D5DB ${
                                               (energyLevel - 1) * 25
@@ -492,7 +496,7 @@ export default function CreatePetListing() {
                                 type="range"
                                 min="1"
                                 max="5"
-                                className="mt-2 w-full h-2 rounded-lg bg-gray-300 appearance-none"
+                                className="mt-2 w-full h-2 rounded-2xl bg-gray-300 appearance-none"
                                 value={cuddlinessLevel ?? 3} // Show 3 visually, but don't persist
                                 onChange={(e) =>
                                     setCuddlinessLevel(Number(e.target.value))
@@ -503,7 +507,7 @@ export default function CreatePetListing() {
                                 }}
                                 style={{
                                     background: cuddlinessLevel
-                                        ? `linear-gradient(to right, #A03048 0%, #A03048 ${
+                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
                                               (cuddlinessLevel - 1) * 25
                                           }%, #D1D5DB ${
                                               (cuddlinessLevel - 1) * 25
@@ -525,7 +529,7 @@ export default function CreatePetListing() {
                         </label>
                         <input
                             type="text"
-                            className="mt-1 p-3 w-full border rounded-lg"
+                            className="mt-1 p-3 w-full border rounded-2xl"
                             placeholder="Enter health issues"
                             value={healthIssues}
                             onChange={(e) => setHealthIssues(e.target.value)}
@@ -563,7 +567,7 @@ export default function CreatePetListing() {
 
                     <button
                         type="submit"
-                        className="mt-4 p-3 bg-primary text-white rounded-lg w-full">
+                        className="mt-4 p-3 bg-primary text-white rounded-3xl w-full">
                         Create Listing
                     </button>
                 </form>

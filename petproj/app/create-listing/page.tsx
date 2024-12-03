@@ -5,7 +5,9 @@ import { RootState, AppDispatch } from "../store/store"; // Import store types
 import { fetchCities } from "../store/slices/citiesSlice"; // Fetch cities from store
 import { fetchPetCategories } from "../store/slices/petCategoriesSlice"; // Fetch pet categories from store
 import { postPet } from "../store/slices/petSlice"; // Import postPet thunk
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from "next/navigation"; // Import useRouter
+
+import { uploadImagesToCloudinary } from "@/utils/uploadImages";
 
 import Navbar from "../../components/navbar";
 import "./styles.css";
@@ -95,7 +97,7 @@ export default function CreatePetListing() {
         console.log(newPet);
         // Dispatch postPet action
         dispatch(postPet(newPet));
-        router.push('/listing-created');
+        router.push("/listing-created");
     };
 
     const handlePreview = async (file: UploadFile) => {
@@ -530,6 +532,7 @@ export default function CreatePetListing() {
                         />
                     </div>
 
+                    {/* Upload Images */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-3">
                             Upload Images (Max 5)
@@ -540,8 +543,7 @@ export default function CreatePetListing() {
                             fileList={fileList}
                             onPreview={handlePreview}
                             onChange={handleChange}
-                            maxCount={5} // Limit to 5 images
-                        >
+                            maxCount={5}>
                             {fileList.length >= 5 ? null : uploadButton}
                         </Upload>
                         {previewImage && (

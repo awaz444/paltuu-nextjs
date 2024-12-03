@@ -16,7 +16,7 @@ const ListingCreated = () => {
                     </p>
                     <div className="flex justify-center gap-4">
                         <button
-                            onClick={() => window.location.href = "/my-listings/1"}
+                            onClick={() => window.location.href = "/my-listings"}
                             className="px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary transition-all duration-300"
                         >
                             View My Listings

@@ -17,6 +17,7 @@ export interface Qualification {
     clinic_name: string;
     location: string;
     minimum_fee: number;
+    email: string;
     contact_details: string;
     profile_verified: boolean;
     bio: string | null;

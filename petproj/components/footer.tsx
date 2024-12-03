@@ -8,6 +8,7 @@ const Footer = () => {
   const hideFooterRoutes = ["/login", "/sign-up", "/vet-register", "/vet-qualifications", "/vet-specialization" , "/vet-schedule"];
   const pathName = usePathname();
 
+  
   // Update the year unconditionally
   useEffect(() => {
     setCurrentYear(new Date().getFullYear());

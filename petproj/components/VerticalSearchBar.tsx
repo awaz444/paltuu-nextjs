@@ -1,3 +1,4 @@
+import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import React, { useState } from "react";
 
 interface VerticalSearchBarProps {
@@ -26,6 +27,9 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
     onReset,
     onSearchAction,
 }) => {
+
+    useSetPrimaryColor();
+
     const [selectedSex, setSelectedSex] = useState("");
     const [minAge, setMinAge] = useState("");
     const [maxAge, setMaxAge] = useState("");

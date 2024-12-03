@@ -6,6 +6,7 @@ import Navbar from "@/components/navbar";
 import { Spin } from "antd"; // Ant Design spinner
 import MyListingGrid from "@/components/MyListingGrid";
 import "./styles.css";
+import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 
 const UserListingsPage = () => {
   const [listings, setListings] = useState<Pet[]>([]);
@@ -14,6 +15,8 @@ const UserListingsPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const user_id = 1; // Hardcoded user ID
+
+  useSetPrimaryColor();
 
   useEffect(() => {
     if (user_id) {
@@ -65,7 +68,7 @@ const UserListingsPage = () => {
         <div className="w-full max-w-2xl">
           <div className="tab-switch-container relative flex justify-between rounded-lg bg-gray-100 p-1">
             <div
-              className="tab-switch-slider absolute top-0 left-0 h-full w-1/2 bg-blue-500 transition-transform duration-300"
+              className="tab-switch-slider absolute top-0 left-0 h-full w-1/2 bg-blue-500 transition-transform duration-300 bg-primary"
               style={{
                 transform: activeTab === "adoption" ? "translateX(0)" : "translateX(100%)",
               }}

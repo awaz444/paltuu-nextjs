@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
+import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 
 interface VetPanelPageProps {
     params: {
@@ -31,6 +32,9 @@ interface VetPanelData {
 }
 
 const VetPanel = ({ params }: VetPanelPageProps) => {
+
+    useSetPrimaryColor();
+    
     const { vetId } = params;
     const [data, setData] = useState<VetPanelData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);

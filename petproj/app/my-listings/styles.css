@@ -34,7 +34,6 @@
     left: 0;
     width: 50%; /* Covers one tab */
     height: 100%; /* Full height of the container */
-    background-color: #A03048; /* Active background color */
     border-radius: 25px; /* Fully rounded corners */
     transition: transform 0.4s ease; /* Smooth sliding movement */
     z-index: 0;

@@ -9,6 +9,7 @@
 :root {
   --primary-color: #A03048; /* Default for guest or regular users */
   --foreground-rgb: 0, 0, 0;
+  --background-color: #ffffff;
   --font-family: 'Montserrat', sans-serif; /* Use Montserrat globally */
 }
 

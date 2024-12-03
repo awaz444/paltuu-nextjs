@@ -108,13 +108,12 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
             {/* Search and Reset Buttons */}
             <div className="flex gap-4 mt-4">
                 <button
-                    className="border-2 border-[#A03048] text-[#A03048] bg-white p-3 rounded-2xl"
+                    className="border-2 border-primary text-primary bg-white p-3 rounded-2xl"
                     onClick={handleReset}>
                     Reset
                 </button>
                 <button
-                    className="text-white p-3 rounded-2xl w-40"
-                    style={{ backgroundColor: "#A03048" }}
+                    className="text-white p-3 rounded-2xl w-40 bg-primary"
                     onClick={handleSearch}>
                     Search
                 </button>

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import Link from "next/link";
+import Image from "next/image";
 
 interface VetPanelPageProps {
     params: {
@@ -131,10 +132,11 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                 </div>
 
                 {/* 2x2 Grid for Smaller Cards */}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Pets */}
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
-                        <Link href="/admin-pet">
+                    <Link href="/admin-pet">
+                        <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
                             <button
                                 className="absolute top-4 right-4 w-6 h-6"
                                 title="Edit Pets">
@@ -144,15 +146,16 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                                     className="hover:text-primary"
                                 />
                             </button>
-                        </Link>
 
-                        <h4 className="text-lg font-bold text-primary mb-4">
-                            Go to Pets
-                        </h4>
-                        {/* Content for Pets */}
-                    </div>
+                            <h4 className="text-lg font-bold text-primary mb-4">
+                                Go to Pets
+                            </h4>
+                            {/* Content for Pets */}
+                        </div>
+                    </Link>
 
                     {/* Vets */}
+                    <Link href="/admin-pet-approval">
                     <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
@@ -168,22 +171,22 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                         </h4>
                         {/* Content for Vets */}
                     </div>
+                    </Link>
 
                     {/* Users */}
-                    <Link href='/admin-user'>
+                    <Link href="/admin-user">
                         <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
-                            <button
-                                className="absolute top-4 right-4 w-6 h-6"
-                                title="Edit Users">
+                            <div className="absolute top-4 right-4 w-6 h-6">
                                 <img
                                     src="/arrow-right.svg"
                                     alt="Details"
-                                    className="hover:text-primary"
+                                    className="hover:text-primary text-primary"
                                 />
-                            </button>
-                            <h4 className="text-lg font-bold text-primary mb-4">
-                                Go to Users
-                            </h4>
+                            </div>
+                                <h4 className="text-lg font-bold text-primary mb-4">
+                                    Go to Users
+                                </h4>
+
                             {/* Content for Users */}
                         </div>
                     </Link>

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
+import { useAuth } from "@/context/AuthContext";
 
 interface VetPanelPageProps {
     params: {
@@ -31,19 +32,21 @@ interface VetPanelData {
     schedules: { day_of_week: string; start_time: string; end_time: string }[];
 }
 
-const VetPanel = ({ params }: VetPanelPageProps) => {
-
+const VetPanel = () => {
     useSetPrimaryColor();
-    
-    const { vetId } = params;
+    const { user } = useAuth(); // Get the authenticated user's details
+    console.log(user);
+    const vetId = user?.id; // Assuming `id` is the unique identifier for the vet
     const [data, setData] = useState<VetPanelData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
         const fetchVetData = async () => {
+            if (!vetId) return; // Ensure vetId is available
             setLoading(true);
             try {
-                const res = await fetch(`/api/vet-panel/1`);
+                const res = await fetch(`/api/vet-panel/${vetId}`);
+                console.log(res);
                 if (!res.ok) {
                     throw new Error(
                         `Failed to fetch vet data. Status: ${res.status}`
@@ -60,6 +63,16 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
 
         fetchVetData();
     }, [vetId]);
+
+    if (!vetId) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <p className="text-red-600">
+                    User ID is missing. Please log in again.
+                </p>
+            </div>
+        );
+    }
 
     if (loading) {
         return (

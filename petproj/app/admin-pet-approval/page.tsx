@@ -22,6 +22,9 @@ type Pet = {
 };
 
 const AdminPetApproval: React.FC = () => {
+
+  useSetPrimaryColor();
+
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(false);
   useSetPrimaryColor();
@@ -125,13 +128,13 @@ const AdminPetApproval: React.FC = () => {
         <Space>
           {!record.approved ? (
             <Button
-              className="bg-green-500 text-white"
+              className="bg-primary text-white rounded-2xl"
               onClick={() => handleApprove(record.pet_id)}
             >
               Approve
             </Button>
           ) : (
-            <span className="text-green-500">Approved</span>
+            <span className="bg-primary">Approved</span>
           )}
         </Space>
       ),

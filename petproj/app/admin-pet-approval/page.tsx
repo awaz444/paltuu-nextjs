@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Space, message, Popconfirm } from 'antd';
+import { Table, Button, Space, message } from 'antd';
 import Navbar from '@/components/navbar';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
 
@@ -9,26 +9,15 @@ type Pet = {
   pet_id: number;
   owner_id: number;
   pet_name: string | null;
-  pet_type: number | null;
+  pet_type: string | null;
   pet_breed: string | null;
   city_id: number | null;
+  city: string; // Assuming this comes from the API
   area: string;
   age: number | null;
   description: string | null;
-  adoption_status: string;
-  price: number | null;
-  min_age_of_children: number | null;
-  can_live_with_dogs: boolean;
-  can_live_with_cats: boolean;
-  must_have_someone_home: boolean;
-  energy_level: number;
-  cuddliness_level: number;
-  health_issues: string | null;
   sex: string;
-  listing_type: string;
   vaccinated: boolean;
-  neutered: boolean;
-  payment_frequency?: string | null;
   approved: boolean;
 };
 
@@ -40,7 +29,7 @@ const AdminPetApproval: React.FC = () => {
   useEffect(() => {
     const fetchPets = async () => {
       try {
-        const response = await fetch('/api/pets');
+        const response = await fetch('/api/listing-approvals');
         if (!response.ok) {
           throw new Error('Failed to fetch pets');
         }
@@ -58,22 +47,24 @@ const AdminPetApproval: React.FC = () => {
   const handleApprove = async (petId: number) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/pets/approve', {
+      const response = await fetch('/api/listing-approvals', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ pet_id: petId, approved: true }),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         message.error(`Approval failed: ${errorData.message || 'Unknown error'}`);
       } else {
         message.success('Pet approved successfully.');
-        setPets((prevPets) => prevPets.map((pet) =>
-          pet.pet_id === petId ? { ...pet, approved: true } : pet
-        ));
+        setPets((prevPets) =>
+          prevPets.map((pet) =>
+            pet.pet_id === petId ? { ...pet, approved: true } : pet
+          )
+        );
       }
     } catch (error) {
       message.error('Error approving pet.');
@@ -81,6 +72,7 @@ const AdminPetApproval: React.FC = () => {
       setLoading(false);
     }
   };
+  
 
   const columns = [
     {
@@ -93,6 +85,38 @@ const AdminPetApproval: React.FC = () => {
       dataIndex: 'pet_name',
       key: 'pet_name',
       render: (name: string | null) => (name ? name : 'N/A'),
+    },
+    {
+      title: 'Type',
+      dataIndex: 'pet_type',
+      key: 'pet_type',
+    },
+    {
+      title: 'Breed',
+      dataIndex: 'pet_breed',
+      key: 'pet_breed',
+    },
+    {
+      title: 'Age (years)',
+      dataIndex: 'age',
+      key: 'age',
+      render: (age: number | null) => (age !== null ? age : 'Unknown'),
+    },
+    {
+      title: 'Sex',
+      dataIndex: 'sex',
+      key: 'sex',
+    },
+    {
+      title: 'City',
+      dataIndex: 'city_id',
+      key: 'city_id',
+    },
+    {
+      title: 'Vaccinated',
+      dataIndex: 'vaccinated',
+      key: 'vaccinated',
+      render: (vaccinated: boolean) => (vaccinated ? 'Yes' : 'No'),
     },
     {
       title: 'Actions',

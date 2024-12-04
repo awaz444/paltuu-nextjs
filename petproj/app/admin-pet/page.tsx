@@ -39,6 +39,7 @@ const AdminPetInteraction: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [editingPet, setEditingPet] = useState<Pet | null>(null);
   const [showConfirm, setShowConfirm] = useState<{ pet_id: number | null; show: boolean }>({ pet_id: null, show: false });
+  
   useSetPrimaryColor();
 
   useEffect(() => {
@@ -151,7 +152,7 @@ const AdminPetInteraction: React.FC = () => {
       render: (_: any, record: Pet) => (
         <Space>
           <Button
-            className="bg-blue-500 text-white"
+            className="bg-primary text-white mr-2 rounded-2xl"
             onClick={() => setEditingPet(record)}
           >
             Edit
@@ -163,7 +164,7 @@ const AdminPetInteraction: React.FC = () => {
             okText="Yes"
             cancelText="No"
           >
-            <Button className="bg-red-500 text-white">Delete</Button>
+            <Button className="bg-red-500 text-white rounded-2xl">Delete</Button>
           </Popconfirm>
         </Space>
       ),
@@ -174,13 +175,13 @@ const AdminPetInteraction: React.FC = () => {
     <>
       <Navbar />
       <div className="p-4">
-        <h1 className="text-xl font-bold mb-4">Admin Pet Interaction</h1>
+        <h1 className="text-xl font-bold mb-4 ml-4">Admin Pet Interaction</h1>
         <Table
           columns={columns}
           dataSource={pets}
           rowKey="pet_id"
           loading={loading}
-          className="bg-white shadow"
+          className="bg-white shadow mx-4"
         />
         <Modal
           title="Edit Pet Listing"

@@ -177,10 +177,20 @@ const Navbar = () => {
                                 href={
                                     userRole === "vet"
                                         ? "/vet-panel"
-                                        : "/my-profile"
+                                        : userRole === "regular user"
+                                        ? "/my-profile"
+                                        : userRole === "admin"
+                                        ? "/admin-panel"
+                                        : "/"
                                 }>
                                 <div className="dropdown-item px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
-                                    My Profile
+                                    {userRole === "vet"
+                                        ? "Vet Panel"
+                                        : userRole === "regular user"
+                                        ? "My Profile"
+                                        : userRole === "admin"
+                                        ? "Admin Panel"
+                                        : "Home"}
                                 </div>
                             </Link>
                             <Link href="/my-listings">

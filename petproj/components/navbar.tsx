@@ -158,15 +158,20 @@ const Navbar = () => {
                         style={{
                             minWidth: dropdownWidth, // Set button width dynamically
                         }}>
-                        {displayName}
-                        <Image
-                            src="/arrow-down.svg"
-                            alt="Dropdown"
-                            width={12}
-                            height={12}
-                        />
+                        {isAuthenticated || session
+                            ? displayName // Display the user's name or email
+                            : "Login"}{" "}
+                        {/* Show "Login" if no user is logged in */}
+                        {(isAuthenticated || session) && (
+                            <Image
+                                src="/arrow-down.svg"
+                                alt="Dropdown"
+                                width={12}
+                                height={12}
+                            />
+                        )}
                     </button>
-                    {isDropdownOpen && (
+                    {(isAuthenticated || session) && isDropdownOpen && (
                         <div
                             className="dropdown-menu absolute right-0 bg-white shadow-lg z-10 rounded-2xl py-1"
                             style={{

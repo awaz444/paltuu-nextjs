@@ -35,6 +35,8 @@ interface VetPanelData {
 const VetPanel = ({ params }: VetPanelPageProps) => {
     useSetPrimaryColor();
 
+    useSetPrimaryColor();
+
     const { vetId } = params;
     const [data, setData] = useState<VetPanelData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -162,7 +164,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                             />
                         </button>
                         <h4 className="text-lg font-bold text-primary mb-4">
-                            Go to Vets
+                            Go to Listing Approvals
                         </h4>
                         {/* Content for Vets */}
                     </div>

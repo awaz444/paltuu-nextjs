@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
-import { useAuth } from "@/context/AuthContext";
 
 interface VetPanelPageProps {
     params: {
@@ -32,21 +31,19 @@ interface VetPanelData {
     schedules: { day_of_week: string; start_time: string; end_time: string }[];
 }
 
-const VetPanel = () => {
+const VetPanel = ({ params }: VetPanelPageProps) => {
+
     useSetPrimaryColor();
-    const { user } = useAuth(); // Get the authenticated user's details
-    console.log(user);
-    const vetId = user?.id; // Assuming `id` is the unique identifier for the vet
+    
+    const { vetId } = params;
     const [data, setData] = useState<VetPanelData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
         const fetchVetData = async () => {
-            if (!vetId) return; // Ensure vetId is available
             setLoading(true);
             try {
-                const res = await fetch(`/api/vet-panel/${vetId}`);
-                console.log(res);
+                const res = await fetch(`/api/vet-panel/1`);
                 if (!res.ok) {
                     throw new Error(
                         `Failed to fetch vet data. Status: ${res.status}`
@@ -63,16 +60,6 @@ const VetPanel = () => {
 
         fetchVetData();
     }, [vetId]);
-
-    if (!vetId) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <p className="text-red-600">
-                    User ID is missing. Please log in again.
-                </p>
-            </div>
-        );
-    }
 
     if (loading) {
         return (
@@ -117,7 +104,7 @@ const VetPanel = () => {
                     <div className="flex gap-4">
                         <img
                             className="w-24 h-24 rounded-full shadow-md"
-                            src={personal_info.profile_image_url}
+                            src={personal_info.profile_image_url || './placeholder.jpg'}
                             alt={personal_info.vet_name}
                         />
                         <div>

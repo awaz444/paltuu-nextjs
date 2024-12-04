@@ -102,23 +102,17 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                         Personal Information
                     </h3>
                     <div className="flex gap-4">
+                        
                         <img
                             className="w-24 h-24 rounded-full shadow-md"
-                            src={personal_info.profile_image_url}
+                            src={personal_info.profile_image_url || './placeholder.jpg'
+                            }
                             alt={personal_info.vet_name}
                         />
                         <div>
                             <p>
-                                <span className="font-bold">Vet Name:</span>{" "}
+                                <span className="font-bold">Name:</span>{" "}
                                 {personal_info.vet_name}
-                            </p>
-                            <p className="mt-2">
-                                <span className="font-bold">Clinic Name:</span>{" "}
-                                {personal_info.clinic_name}
-                            </p>
-                            <p className="mt-2">
-                                <span className="font-bold">Location:</span>{" "}
-                                {personal_info.location}, {personal_info.city}
                             </p>
                             <p className="mt-2">
                                 <span className="font-bold">Contact:</span>{" "}
@@ -128,25 +122,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                                 <span className="font-bold">Email:</span>{" "}
                                 {personal_info.email}
                             </p>
-                            <p className="mt-2">
-                                <span className="font-bold">Minimum Fee:</span>{" "}
-                                PKR {personal_info.minimum_fee}
-                            </p>
-                            <p className="mt-2">
-                                <span className="font-bold">
-                                    Profile Verified:
-                                </span>{" "}
-                                <span
-                                    className={`px-2 py-1 rounded ${
-                                        personal_info.profile_verified
-                                            ? "bg-green-200 text-green-800 border border-green-800"
-                                            : "bg-red-200 text-red-800 border border-red-800"
-                                    }`}>
-                                    {personal_info.profile_verified
-                                        ? "Yes"
-                                        : "No"}
-                                </span>
-                            </p>
+                        
                         </div>
                     </div>
                 </div>

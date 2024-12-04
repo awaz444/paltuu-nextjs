@@ -100,7 +100,9 @@ export default function CreatePetListing() {
 
         console.log(newPet);
         // Dispatch postPet action
+        console.log('Posting Pet...')
         dispatch(postPet(newPet));
+        console.log('Pet Posted....');
         router.push("/listing-created");
     };
 

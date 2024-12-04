@@ -107,7 +107,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                     <div className="flex gap-4">
                         <img
                             className="w-24 h-24 rounded-full shadow-md"
-                            src={personal_info.profile_image_url}
+                            src={personal_info.profile_image_url || './placeholder.jpg'}
                             alt={personal_info.vet_name}
                         />
                         <div>

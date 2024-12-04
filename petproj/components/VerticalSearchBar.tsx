@@ -73,7 +73,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
             <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Sex</label>
                 <select
-                    className="border rounded w-full p-2"
+                    className="border rounded-xl w-full p-3"
                     value={selectedSex}
                     onChange={(e) => setSelectedSex(e.target.value)}
                 >
@@ -90,7 +90,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                     <input
                         type="number"
                         placeholder="Min yrs"
-                        className="border rounded w-1/2 p-2"
+                        className="border rounded-xl w-1/2 p-2"
                         value={minAge}
                         onChange={(e) => setMinAge(e.target.value)}
                     />
@@ -98,7 +98,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                     <input
                         type="number"
                         placeholder="Max yrs"
-                        className="border rounded w-1/2 p-2"
+                        className="border rounded-xl-xl w-1/2 p-2"
                         value={maxAge}
                         onChange={(e) => setMaxAge(e.target.value)}
                     />
@@ -112,7 +112,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                     <input
                         type="number"
                         placeholder="Min PKR"
-                        className="border rounded w-1/2 p-2"
+                        className="border rounded-xl w-1/2 p-2"
                         value={minPrice}
                         onChange={(e) => setMinPrice(e.target.value)}
                     />
@@ -120,7 +120,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                     <input
                         type="number"
                         placeholder="Max PKR"
-                        className="border rounded w-1/2 p-2"
+                        className="border rounded-xl w-1/2 p-2"
                         value={maxPrice}
                         onChange={(e) => setMaxPrice(e.target.value)}
                     />
@@ -133,7 +133,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                 <input
                     type="text"
                     placeholder="Enter area"
-                    className="border rounded w-full p-2"
+                    className="border rounded-xl w-full p-2"
                     value={area}
                     onChange={(e) => setArea(e.target.value)}
                 />
@@ -145,7 +145,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                 <input
                     type="number"
                     placeholder="Min age"
-                    className="border rounded w-full p-2"
+                    className="border rounded-xl w-full p-2"
                     value={minChildAge}
                     onChange={(e) => setMinChildAge(e.target.value)}
                 />

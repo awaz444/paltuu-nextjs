@@ -175,7 +175,7 @@ const AdminPetInteraction: React.FC = () => {
             okText="Yes"
             cancelText="No"
           >
-            <Button className="bg-gray-500 text-white">Delete</Button>
+            <Button className="bg-red-500 text-white">Delete</Button>
           </Popconfirm>
         </Space>
       ),

@@ -153,24 +153,32 @@ const Navbar = () => {
                     className="dropdown relative"
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}>
-                    <button
-                        className="flex items-center justify-center gap-2 loginBtn"
-                        style={{
-                            minWidth: dropdownWidth, // Set button width dynamically
-                        }}>
-                        {isAuthenticated || session
-                            ? displayName // Display the user's name or email
-                            : "Login"}{" "}
-                        {/* Show "Login" if no user is logged in */}
-                        {(isAuthenticated || session) && (
+                    {isAuthenticated || session ? (
+                        <button
+                            className="flex items-center justify-center gap-2 loginBtn"
+                            style={{
+                                minWidth: dropdownWidth, // Set button width dynamically
+                            }}>
+                            {displayName} {/* Show the user's name */}
                             <Image
                                 src="/arrow-down.svg"
                                 alt="Dropdown"
                                 width={12}
                                 height={12}
                             />
-                        )}
-                    </button>
+                        </button>
+                    ) : (
+                        <Link href="/login">
+                            <button
+                                className="flex items-center justify-center gap-2 loginBtn"
+                                style={{
+                                    minWidth: dropdownWidth, // Set button width dynamically
+                                }}>
+                                Login{" "}
+                                {/* Show "Login" and navigate to /login */}
+                            </button>
+                        </Link>
+                    )}
                     {(isAuthenticated || session) && isDropdownOpen && (
                         <div
                             className="dropdown-menu absolute right-0 bg-white shadow-lg z-10 rounded-2xl py-1"

@@ -4,8 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { Table, Button, Space, message, Popconfirm, Form, Select, Modal, Input } from 'antd';
 import Navbar from '@/components/navbar';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
-
-
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../store/store';
+import { fetchCities } from '../store/slices/citiesSlice';
 
 type Pet = {
   pet_id: number;
@@ -40,6 +41,9 @@ const AdminPetInteraction: React.FC = () => {
   const [editingPet, setEditingPet] = useState<Pet | null>(null);
   const [showConfirm, setShowConfirm] = useState<{ pet_id: number | null; show: boolean }>({ pet_id: null, show: false });
   
+  const dispatch = useDispatch<AppDispatch>();
+  const { cities } = useSelector((state: RootState) => state.cities); // Get cities from the store
+
   useSetPrimaryColor();
 
   useEffect(() => {
@@ -56,6 +60,7 @@ const AdminPetInteraction: React.FC = () => {
       }
     };
 
+    dispatch(fetchCities());
     fetchPets();
   }, []);
 
@@ -145,6 +150,43 @@ const AdminPetInteraction: React.FC = () => {
       dataIndex: 'pet_name',
       key: 'pet_name',
       render: (name: string | null) => (name ? name : 'N/A'),
+    },
+    {
+      title: 'Type',
+      dataIndex: 'pet_type',
+      key: 'pet_type',
+    },
+    {
+      title: 'Breed',
+      dataIndex: 'pet_breed',
+      key: 'pet_breed',
+    },
+    {
+      title: 'Age (years)',
+      dataIndex: 'age',
+      key: 'age',
+      render: (age: number | null) => (age !== null ? age : 'Unknown'),
+    },
+    {
+      title: 'Sex',
+      dataIndex: 'sex',
+      key: 'sex',
+    },
+    {
+      title: 'City',
+      dataIndex: 'city_id',
+      key: 'city_id',
+      render: (cityId: number) => {
+        const cityName = cities.find(city => city.city_id === cityId)?.city_name || 'Unknown';
+        return cityName;
+      },
+    },
+    
+    {
+      title: 'Vaccinated',
+      dataIndex: 'vaccinated',
+      key: 'vaccinated',
+      render: (vaccinated: boolean) => (vaccinated ? 'Yes' : 'No'),
     },
     {
       title: 'Actions',

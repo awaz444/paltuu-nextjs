@@ -4,6 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { Table, Button, Space, message } from 'antd';
 import Navbar from '@/components/navbar';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
+import { useSelector, useDispatch } from 'react-redux';
+import { AppDispatch, RootState } from '../store/store';
+import { fetchCities } from '../store/slices/citiesSlice';
 
 type Pet = {
   pet_id: number;
@@ -25,6 +28,9 @@ const AdminPetApproval: React.FC = () => {
 
   useSetPrimaryColor();
 
+  const dispatch = useDispatch<AppDispatch>();
+
+  const { cities } = useSelector((state: RootState) => state.cities); // Get cities from the store
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(false);
   useSetPrimaryColor();
@@ -43,6 +49,8 @@ const AdminPetApproval: React.FC = () => {
       }
     };
 
+
+    dispatch(fetchCities());
     fetchPets();
   }, []);
 
@@ -114,7 +122,12 @@ const AdminPetApproval: React.FC = () => {
       title: 'City',
       dataIndex: 'city_id',
       key: 'city_id',
+      render: (cityId: number) => {
+        const cityName = cities.find(city => city.city_id === cityId)?.city_name || 'Unknown';
+        return cityName;
+      },
     },
+    
     {
       title: 'Vaccinated',
       dataIndex: 'vaccinated',

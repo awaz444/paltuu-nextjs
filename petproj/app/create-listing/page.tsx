@@ -338,6 +338,7 @@ export default function CreatePetListing() {
                             type="text"
                             className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             placeholder="Enter price (if applicable)"
+                            required={listingType==='foster'}
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
                         />

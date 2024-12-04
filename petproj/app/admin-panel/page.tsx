@@ -170,21 +170,23 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                     </div>
 
                     {/* Users */}
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
-                        <button
-                            className="absolute top-4 right-4 w-6 h-6"
-                            title="Edit Users">
-                            <img
-                                src="/arrow-right.svg"
-                                alt="Details"
-                                className="hover:text-primary"
-                            />
-                        </button>
-                        <h4 className="text-lg font-bold text-primary mb-4">
-                            Go to Users
-                        </h4>
-                        {/* Content for Users */}
-                    </div>
+                    <Link href='/admin-user'>
+                        <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
+                            <button
+                                className="absolute top-4 right-4 w-6 h-6"
+                                title="Edit Users">
+                                <img
+                                    src="/arrow-right.svg"
+                                    alt="Details"
+                                    className="hover:text-primary"
+                                />
+                            </button>
+                            <h4 className="text-lg font-bold text-primary mb-4">
+                                Go to Users
+                            </h4>
+                            {/* Content for Users */}
+                        </div>
+                    </Link>
 
                     {/* Verification Applications */}
                     <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">

@@ -86,7 +86,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     try {
         await client.connect();
 
-        const result = await client.query('SELECT * FROM foster_applications ORDER BY created_at DESC');
+        const result = await client.query(`SELECT * FROM foster_applications WHERE status='pending' ORDER BY created_at DESC`);
 
         return NextResponse.json(result.rows, {
             status: 200,

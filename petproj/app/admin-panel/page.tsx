@@ -155,6 +155,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                     </Link>
 
                     {/* Vets */}
+                    <Link href="/admin-pet-approval">
                     <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
@@ -170,6 +171,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                         </h4>
                         {/* Content for Vets */}
                     </div>
+                    </Link>
 
                     {/* Users */}
                     <Link href="/admin-user">

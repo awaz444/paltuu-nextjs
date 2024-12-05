@@ -20,7 +20,7 @@ const UserListingsPage = () => {
 
   useEffect(() => {
     if (user_id) {
-      fetch(/api/my-listings/${user_id})
+      fetch(`/api/my-listings/${user_id}`)
         .then((res) => {
           if (!res.ok) {
             throw new Error("Failed to fetch listings");
@@ -74,17 +74,17 @@ const UserListingsPage = () => {
               }}
             />
             <div
-              className={tab cursor-pointer py-2 text-center font-medium ${
+              className={`tab cursor-pointer py-2 text-center font-medium ${
                 activeTab === "adoption" ? "active" : ""
-              }}
+              }`}
               onClick={() => handleTabToggle("adoption")}
             >
               Adopt
             </div>
             <div
-              className={tab cursor-pointer py-2 text-center font-medium ${
+              className={`tab cursor-pointer py-2 text-center font-medium ${
                 activeTab === "foster" ? "active" : ""
-              }}
+              }`}
               onClick={() => handleTabToggle("foster")}
             >
               Foster

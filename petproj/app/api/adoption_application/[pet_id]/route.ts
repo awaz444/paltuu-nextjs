@@ -30,7 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: { pet_id: stri
             );
         }
 
-        return NextResponse.json(result.rows[0], {
+        return NextResponse.json(result.rows, {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
         });

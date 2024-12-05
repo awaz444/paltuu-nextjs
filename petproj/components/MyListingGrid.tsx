@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Modal, Input, Select, Checkbox, Button } from "antd";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/app/store/store";
+import { useRouter } from "next/navigation";
 import "./petGrid.css";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 
@@ -50,6 +51,13 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
     const [editingPet, setEditingPet] = useState<Pet | null>(null);
     const [successMessage, setSuccessMessage] = useState(false);
     useSetPrimaryColor();
+
+    const router = useRouter(); // Initialize router for navigation
+
+    const handleViewApplications = (petId: number) => {
+        // Navigate to the adoption-applicants page with pet_id as a query parameter
+        router.push(`/adoption-applicants?pet_id=${petId}`);
+    };
 
     const handleDelete = async (petId: number) => {
         const response = await fetch('/api/pets', {
@@ -175,6 +183,12 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                             {pet.city} - {pet.area}
                         </p>
                     </div>
+                    <button
+                            className="bg-primary text-white px-4 py-2 rounded-xl mt-4"
+                            onClick={() => handleViewApplications(pet.pet_id)}
+                        >
+                            View Applications
+                    </button>
                 </div>
             ))}
 
@@ -201,9 +215,8 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                     </div>
                 </div>
             )}
-
-            {/* Edit Form Popup */}
-            {editingPet && (
+{/* Edit Form Popup */}
+{editingPet && (
                 <Modal
                     title="Edit Pet Listing"
                     visible={!!editingPet}
@@ -516,8 +529,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                         Neutered
                     </Checkbox>
                 </Modal>
-            )}
-
+)}
 
         </div>
     );

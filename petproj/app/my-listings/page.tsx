@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react";
-import {Pet} from "@/components/MyListingGrid";
+import { Pet } from "@/components/MyListingGrid";
 import Navbar from "@/components/navbar";
 import { Spin } from "antd"; // Ant Design spinner
 import MyListingGrid from "@/components/MyListingGrid";
@@ -18,23 +18,30 @@ const UserListingsPage = () => {
 
   useSetPrimaryColor();
 
+  // Function to refresh listings from the API
+  const refreshListings = () => {
+    setIsLoading(true); // Set loading to true before fetching
+    fetch(`/api/my-listings/${user_id}`)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to fetch listings");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setListings(data.listings);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setIsLoading(false);
+      });
+  };
+
+  // Fetch listings on component mount and when user_id changes
   useEffect(() => {
     if (user_id) {
-      fetch(`/api/my-listings/${user_id}`)
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error("Failed to fetch listings");
-          }
-          return res.json();
-        })
-        .then((data) => {
-          setListings(data.listings);
-          setIsLoading(false);
-        })
-        .catch((err) => {
-          setError(err.message);
-          setIsLoading(false);
-        });
+      refreshListings();
     }
   }, [user_id]);
 
@@ -45,6 +52,42 @@ const UserListingsPage = () => {
   const filteredListings = listings.filter(
     (listing) => listing.listing_type === activeTab
   );
+
+  // Handle delete action
+  const handleDelete = (petId: string) => {
+    fetch(`/api/pets/${petId}`, { method: 'DELETE' })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to delete pet");
+        }
+        // Refresh listings after successful deletion
+        refreshListings();
+      })
+      .catch((err) => {
+        setError(err.message);
+      });
+  };
+
+  // Handle update action (e.g., status update)
+  const handleUpdate = (petId: string, status: string) => {
+    fetch(`/api/pets/${petId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to update pet");
+        }
+        // Refresh listings after successful update
+        refreshListings();
+      })
+      .catch((err) => {
+        setError(err.message);
+      });
+  };
 
   if (isLoading)
     return (
@@ -94,7 +137,11 @@ const UserListingsPage = () => {
 
         {/* PetGrid Component */}
         <div className="mt-6 w-full max-w-6xl">
-          <MyListingGrid pets={filteredListings} />
+          <MyListingGrid
+            pets={filteredListings}
+            onDelete={handleDelete}
+            onUpdate={handleUpdate}
+          />
         </div>
       </div>
     </>

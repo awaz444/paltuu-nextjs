@@ -4,6 +4,7 @@ import ClientProvider from "./ClientProvider";
 import "./globals.css";
 import Footer from "@/components/footer";
 import AppClientWrapper from "@/context/AppClientWrapper";
+import { Analytics } from "@vercel/analytics/react"
 
 const montserrat = Montserrat({
     subsets: ["latin"],

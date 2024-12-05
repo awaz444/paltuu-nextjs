@@ -38,36 +38,60 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
     const { vetId } = params;
     const [data, setData] = useState<VetPanelData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchVetData = async () => {
             setLoading(true);
+    
             try {
-                const res = await fetch(`/api/vet-panel/1`);
+                // Get the user from localStorage
+                const userString = localStorage.getItem("user");
+                if (!userString) {
+                    throw new Error("User data not found in local storage");
+                }
+    
+                const user = JSON.parse(userString);
+                const userId = user?.id;
+                if (!userId) {
+                    throw new Error("User ID is missing from the user object");
+                }
+    
+                // Fetch vet_id using the API
+                const vetResponse = await fetch(`/api/get-vet-id?user_id=${userId}`);
+                if (!vetResponse.ok) {
+                    throw new Error(
+                        `Failed to fetch vet ID. Status: ${vetResponse.status}`
+                    );
+                }
+    
+                const { vet_id } = await vetResponse.json();
+                console.log(vet_id)
+                // Fetch vet panel data using the vet_id
+                const res = await fetch(`/api/vet-panel/${vet_id}`);
                 if (!res.ok) {
                     throw new Error(
                         `Failed to fetch vet data. Status: ${res.status}`
                     );
                 }
+    
                 const responseData: VetPanelData = await res.json();
                 setData(responseData);
             } catch (error) {
-                console.error("Error fetching vet panel data:", error);
+                // Type guard to handle `unknown` errors
+                if (error instanceof Error) {
+                    setError(error.message);
+                } else {
+                    setError("An unknown error occurred");
+                }
             } finally {
                 setLoading(false);
             }
         };
-
+    
         fetchVetData();
-    }, [vetId]);
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <div className="loader"></div>
-            </div>
-        );
-    }
+    }, []);
+    
 
     if (!data) {
         return (

@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (status === "authenticated" && session) {
       // User logged in via Google, set user_id and other details
       setUser({
-        user_id: session.user?.user_id || undefined, // Ensure user_id is available
+        id: session.user?.user_id || undefined, // Ensure user_id is available
         name: session.user?.name || undefined,
         email: session.user?.email || "",
         role: session.user?.role || "guest",

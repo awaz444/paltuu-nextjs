@@ -47,20 +47,27 @@ const AdoptionApplicants = () => {
         fetchApplications();
     }, [petId]);
 
-    const handleApprove = async (adoptionId: number) => {
+    const handleApprove = async (fosterId: number) => {
         try {
-            const response = await fetch(`/api/reject-adoption-application/${adoptionId}`, {
+            // Call the API to approve the foster application
+            const response = await fetch(`/api/accept-adoption-application/${fosterId}`, {
                 method: 'POST',
             });
+    
             if (response.ok) {
-                setApplications((prev) =>
-                    prev ? prev.filter((app) => app.adoption_id !== adoptionId) : null
+                // Handle successful approval
+                // Assuming you have a list of applications, you can update the list or remove the approved application.
+                setApplications((prev) => 
+                    prev ? prev.filter((app) => app.adoption_id !== fosterId) : []
                 );
+                console.log(`Foster application with ID ${fosterId} has been approved.`);
             } else {
-                console.error('Failed to approve application:', response.statusText);
+                // Handle API error
+                const errorData = await response.json();
+                console.error('Failed to approve foster application:', errorData.error || response.statusText);
             }
         } catch (error) {
-            console.error('Error approving application:', error);
+            console.error('Error approving foster application:', error);
         }
     };
 

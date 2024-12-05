@@ -64,7 +64,7 @@ export const authoptions: NextAuthOptions = {
             const insertQuery = `
               INSERT INTO users (username, name, email, password, role)
               VALUES ($1, $2, $3, $4, $5)
-              RETURNING id, email, role
+              RETURNING user_id, email, role
             `;
             const insertValues = [
               email.split("@")[0],
@@ -89,7 +89,7 @@ export const authoptions: NextAuthOptions = {
         }
       }
 
-      token.user_id = token.id || token.user_id || null;
+      token.user_id = token.user_id || null;
       token.role = token.role || "guest";
       return token;
     },

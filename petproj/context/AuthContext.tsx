@@ -6,7 +6,7 @@ import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 interface AuthContextProps {
   isAuthenticated: boolean;
   user: { user_id?: string; name?: string; email: string; role?: string; method: "google" | "api" | null } | null;
-  login: (user: { name: string; email: string;role:string }) => void;
+  login: (user: { user_id: string; name: string; email: string; role: string }) => void;
   logout: () => void;
 }
 
@@ -15,35 +15,30 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { data: session, status } = useSession(); // Handles Google login
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<{ user_id?: string; name?: string; email: string;role?: string; method: "google" | "api" | null } | null>(null);
+  const [user, setUser] = useState<{ user_id?: string; name?: string; email: string; role?: string; method: "google" | "api" | null } | null>(null);
 
   useEffect(() => {
     if (status === "authenticated" && session) {
-      // User logged in via Google
+      // User logged in via Google, set user_id and other details
       setUser({
-        user_id: session.user?.user_id || undefined,
+        user_id: session.user?.user_id || undefined, // Ensure user_id is available
         name: session.user?.name || undefined,
         email: session.user?.email || "",
         role: session.user?.role || "guest",
-        method: "google",
+        method: "google", // Assuming it's Google login here
       });
       setIsAuthenticated(true);
-    } else if (status === "unauthenticated") {
-      // Check for API-based login in localStorage
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        setUser({ ...JSON.parse(storedUser), method: "api" });
-        setIsAuthenticated(true);
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-      }
+    } else {
+      setUser(null);
+      setIsAuthenticated(false); // Reset if no authenticated session
     }
   }, [status, session]);
 
-  const login = (user: { name: string; email: string; role: string}) => {
+  const login = (user: { user_id: string; name: string; email: string; role: string }) => {
+    // Explicitly pass user_id along with other data
     setUser({ ...user, method: "api" });
     setIsAuthenticated(true);
+    // Store user data in localStorage for API login
     localStorage.setItem("user", JSON.stringify(user));
   };
 
@@ -53,10 +48,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setUser(null);
       setIsAuthenticated(false);
-      localStorage.removeItem("user");
+      localStorage.removeItem("user"); // Clear localStorage on logout
     }
   };
-
+  console.log("AuthContext - User:", user);
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       {children}

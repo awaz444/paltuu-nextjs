@@ -9,7 +9,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
-
 export async function POST(request: NextRequest) {
   const client = createClient(); // Initialize your custom client (e.g., pg or ORM)
 
@@ -33,7 +32,6 @@ export async function POST(request: NextRequest) {
 
     const urls = await Promise.all(uploadPromises);
 
-    // Assuming you have a pet_id to associate images with
     const pet_id = data.get('pet_id'); // Get pet_id from the request
 
     // Insert URLs into the database

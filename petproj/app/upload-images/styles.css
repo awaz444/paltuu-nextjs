@@ -1,0 +1,83 @@
+input[type="range"] {
+    -webkit-appearance: none; /* Override default styling */
+    width: 100%;
+    height: 6px;
+    border-radius: 5px;
+    background: #ddd; /* Background color */
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px; /* Thumb width */
+    height: 20px; /* Thumb height */
+    border-radius: 50%;
+    background: var(--primary-color) !important; /* Thumb color */
+    cursor: pointer; /* Cursor style */
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-color) !important;
+    cursor: pointer;
+}
+
+.input-field {
+  border: 1px solid #d1d5db; /* Default border color */
+  transition: border-color 0.2s ease;
+  outline: none; /* Remove default focus outline */
+}
+
+.input-field:focus {
+  border-color: var(--primary-color); /* Change to primary color on focus */
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3); /* Optional: Add focus ring */
+}
+
+/* Container for the tab switch */
+.tab-switch-container {
+    display: flex;
+    width: 100%;
+    margin-bottom: 16px;
+    background-color: #ffffff; /* Inactive tab background */
+    border-radius: 25px; /* Fully rounded container */
+    position: relative;
+    padding: 0; /* Remove inner padding */
+    overflow: hidden; /* Ensure no overflow from the sliding effect */
+  }
+
+  /* Style for each tab */
+  .tab {
+    flex: 1;
+    padding: 10px 0; /* Remove horizontal padding to avoid gaps */
+    text-align: center;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: #555; /* Default text color */
+    position: relative;
+    z-index: 1; /* Keep text above the slider */
+    transition: color 0.4s ease; /* Smooth text color transition */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Sliding background for the active tab */
+  .tab-switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%; /* Covers one tab */
+    height: 100%; /* Full height of the container */
+    border-radius: 25px; /* Fully rounded corners */
+    transition: transform 0.4s ease; /* Smooth sliding movement */
+    z-index: 0;
+  }
+
+  /* Active state for the tab */
+  .tab.active {
+    color: white; /* Change text color for active tab */
+  }

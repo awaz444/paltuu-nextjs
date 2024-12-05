@@ -6,7 +6,7 @@ export async function POST(
     { params }: { params: { adoption_id: string } }
 ): Promise<NextResponse> {
     const client = createClient();
-    const { adoption_id } = params;
+    const { adoption_id } = params; 
 
     if (!adoption_id) {
         return NextResponse.json(

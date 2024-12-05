@@ -34,14 +34,17 @@ export async function POST(request: NextRequest) {
 
     const pet_id = data.get('pet_id'); // Get pet_id from the request
 
+    console.log('Pet ID:', pet_id,'Image ID:', files.length);
+    console.log('Uploaded URLs:', urls);
+
     // Insert URLs into the database
     for (let i = 0; i < urls.length; i++) {
       const url = urls[i];
       const order = i + 1; // Set the order of the images
 
       const query = `
-        INSERT INTO pet_images (pet_id, image_url, created_at, order)
-        VALUES ($1, $2, NOW(), $3)
+        INSERT INTO pet_images (image_id, pet_id, image_url, created_at, order)
+        VALUES ($1, $2, $3, NOW(), $3)
       `;
       await client.query(query, [pet_id, url, order]);
     }
@@ -51,6 +54,6 @@ export async function POST(request: NextRequest) {
     console.error('Cloudinary upload error:', error);
     return NextResponse.json({ error: 'Failed to upload images' }, { status: 500 });
   } finally {
-    client.end(); // Close the database connection after the operation
+    await client.end(); // Close the database connection after the operation
   }
 }

@@ -23,8 +23,8 @@ export async function POST(
 
         // Step 1: Change the status of the specific foster application to 'accepted'
         const updateFosterQuery = `
-            UPDATE foster_application
-            SET status = 'accepted'
+            UPDATE foster_applications
+            SET status = 'approved'
             WHERE foster_id = $1
             RETURNING pet_id;
         `;
@@ -39,14 +39,14 @@ export async function POST(
         // Step 2: Change the pet's status to 'fostered'
         const updatePetQuery = `
             UPDATE pets
-            SET status = 'fostered'
+            SET adoption_status = 'fostered'
             WHERE pet_id = $1;
         `;
         await client.query(updatePetQuery, [pet_id]);
 
         // Step 3: Reject all other foster applications for the same pet_id
         const rejectOtherApplicationsQuery = `
-            UPDATE foster_application
+            UPDATE foster_applications
             SET status = 'rejected'
             WHERE pet_id = $1 AND foster_id != $2;
         `;

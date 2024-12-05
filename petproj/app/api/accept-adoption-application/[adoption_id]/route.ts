@@ -23,8 +23,8 @@ export async function POST(
 
         // Step 1: Change the status of the specific adoption application to 'accepted'
         const updateAdoptionQuery = `
-            UPDATE adoption_application
-            SET status = 'accepted'
+            UPDATE adoption_applications
+            SET status = 'approved'
             WHERE adoption_id = $1
             RETURNING pet_id;
         `;
@@ -39,14 +39,14 @@ export async function POST(
         // Step 2: Change the pet's status to 'adopted'
         const updatePetQuery = `
             UPDATE pets
-            SET status = 'adopted'
+            SET adoption_status = 'adopted'
             WHERE pet_id = $1;
         `;
         await client.query(updatePetQuery, [pet_id]);
 
         // Step 3: Reject all other adoption applications for the same pet_id
         const rejectOtherApplicationsQuery = `
-            UPDATE adoption_application
+            UPDATE adoption_applications
             SET status = 'rejected'
             WHERE pet_id = $1 AND adoption_id != $2;
         `;

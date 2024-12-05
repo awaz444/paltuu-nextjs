@@ -207,7 +207,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                     </div>
 
                     {/* Reviews Summary */}
-                    <Link href='/reviews-summary'>
+                    <Link href='/vet-reviews-summary'>
                         <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary border border-gray-200 hover:border-primary border border-gray-200 hover:border-primary">
                             <div
                                 className="absolute top-4 right-4 w-6 h-6"

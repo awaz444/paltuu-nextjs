@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
 
@@ -28,7 +28,7 @@ interface FosterApplication {
     agree_to_terms: boolean;
 }
 
-const FosterApplicants = () => {
+const FosterApplications = () => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const petId = searchParams.get('pet_id');
@@ -186,5 +186,19 @@ const FosterApplicants = () => {
         </div>
     );
 };
+
+const LoadingFallback = () => (
+    <div className="flex justify-center items-center min-h-screen">
+      <p className="text-lg text-gray-500">Loading specializations...</p>
+    </div>
+  );
+const FosterApplicants = () =>{
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <FosterApplications />
+      </Suspense>
+    );
+  }
+
 
 export default FosterApplicants;

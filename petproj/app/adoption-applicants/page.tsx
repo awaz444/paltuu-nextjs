@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 interface Application {
@@ -22,7 +22,7 @@ interface Application {
     agree_to_terms: boolean;
 }
 
-const AdoptionApplicants = () => {
+const AdoptionApplications = () => {
     const searchParams = useSearchParams();
     const petId = searchParams.get('pet_id');
     const [applications, setApplications] = useState<Application[] | null>(null);
@@ -177,5 +177,18 @@ const AdoptionApplicants = () => {
         </div>
     );
 };
+
+const LoadingFallback = () => (
+    <div className="flex justify-center items-center min-h-screen">
+      <p className="text-lg text-gray-500">Loading specializations...</p>
+    </div>
+  );
+const AdoptionApplicants = () =>{
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <AdoptionApplications />
+      </Suspense>
+    );
+  }
 
 export default AdoptionApplicants;

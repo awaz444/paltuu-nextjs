@@ -6,7 +6,7 @@ import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 interface AuthContextProps {
   isAuthenticated: boolean;
   user: { id?: string; name?: string; email: string; role?: string; method: "google" | "api" | null } | null;
-  login: (user: { name: string; email: string;role:string }) => void;
+  login: (user: { id: string; name: string; email: string; role: string }) => void;
   logout: () => void;
 }
 
@@ -15,7 +15,7 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { data: session, status } = useSession(); // Handles Google login
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<{ id?: string; name?: string; email: string;role?: string; method: "google" | "api" | null } | null>(null);
+  const [user, setUser] = useState<{ id?: string; name?: string; email: string; role?: string; method: "google" | "api" | null } | null>(null);
 
   useEffect(() => {
     if (status === "authenticated" && session) {
@@ -41,11 +41,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [status, session]);
 
-  const login = (user: { name: string; email: string; role: string}) => {
-    setUser({ ...user, method: "api" });
+  const login = (user: { id: string; name: string; email: string; role: string }) => {
+    const userWithMethod: { id: string; name: string; email: string; role: string; method: "api" } = {
+      ...user,
+      method: "api", // Explicitly typed as "api"
+    };
+    setUser(userWithMethod);
     setIsAuthenticated(true);
-    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("user", JSON.stringify(userWithMethod));
   };
+  
 
   const logout = async () => {
     if (user?.method === "google") {

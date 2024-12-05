@@ -46,7 +46,7 @@ export default function Login() {
   
       if (response.data.success) {
         const { id, name, email, role } = response.data.user; // Ensure role is included
-        const userDetails = { name, email, role };
+        const userDetails = { id,name, email, role };
   
         // Save user data to local storage
         localStorage.setItem("user", JSON.stringify(userDetails));

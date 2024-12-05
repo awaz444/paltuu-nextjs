@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { createClient } from '../../../db/index'; // Import your custom database client
 import { NextRequest, NextResponse } from 'next/server';
+import { v4 as uuidv4 } from 'uuid';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -39,14 +40,15 @@ export async function POST(request: NextRequest) {
 
     // Insert URLs into the database
     for (let i = 0; i < urls.length; i++) {
-      const url = urls[i];
+      const image_url = urls[i];
       const order = i + 1; // Set the order of the images
+      const image_id = uuidv4();
 
       const query = `
         INSERT INTO pet_images (image_id, pet_id, image_url, created_at, order)
-        VALUES ($1, $2, $3, NOW(), $3)
+        VALUES ($1, $2, $3, NOW(), $4)
       `;
-      await client.query(query, [pet_id, url, order]);
+      await client.query(query, [image_id,pet_id, image_url, order]);
     }
 
     return NextResponse.json({ urls }); // Return all uploaded image URLs

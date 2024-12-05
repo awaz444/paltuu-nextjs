@@ -73,7 +73,7 @@ export default function CreatePetListing() {
         e.preventDefault();
 
         const newPet = {
-            owner_id: 1, // Replace with the actual owner ID if available
+            owner_id: 2, // Replace with the actual owner ID if available
             pet_name: petName || null,
             pet_type: petType ? Number(petType) : null,
             pet_breed: breed || null,

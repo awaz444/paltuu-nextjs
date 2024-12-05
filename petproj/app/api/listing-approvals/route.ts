@@ -7,7 +7,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     try {
         await client.connect(); 
-        const result = await client.query(`SELECT * FROM pets WHERE approved = 'false'`);
+        const result = await client.query(`SELECT * FROM pets WHERE approved = 'false' ORDER BY created_at DESC`);
         return NextResponse.json(result.rows, {
             status: 200,
             headers: { 'Content-Type': 'application/json' },

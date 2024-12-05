@@ -45,6 +45,8 @@ export default function CreatePetListing() {
     const [vaccinated, setVaccinated] = useState(false);
     const [neutered, setNeutered] = useState(false);
     const [paymentFrequency, setPaymentFrequency] = useState("");
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
         dispatch(fetchCities());
@@ -54,9 +56,24 @@ export default function CreatePetListing() {
     // Handle form submission
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        // Retrieve the user object from local storage
+        const userString = localStorage.getItem("user");
+        if (!userString) {
+          setError("User data not found in local storage");
+          setLoading(false);
+          return;
+        }
 
+        // Parse the user object to extract the user ID
+        const user = JSON.parse(userString);
+        const user_id = user?.id;
+        if (!user_id) {
+          setError("User ID is missing from the user object");
+          setLoading(false);
+          return;
+        }
         const newPet = {
-            owner_id: 2, // Replace with the actual owner ID if available
+            owner_id: user_id,
             pet_name: petName || null,
             pet_type: petType ? Number(petType) : null,
             pet_breed: breed || null,

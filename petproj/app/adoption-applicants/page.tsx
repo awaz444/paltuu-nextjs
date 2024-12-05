@@ -49,7 +49,7 @@ const AdoptionApplicants = () => {
 
     const handleApprove = async (adoptionId: number) => {
         try {
-            const response = await fetch(`/api/reject-adoption-application/${petId}`, {
+            const response = await fetch(`/api/reject-adoption-application/${adoptionId}`, {
                 method: 'POST',
             });
             if (response.ok) {
@@ -66,7 +66,8 @@ const AdoptionApplicants = () => {
 
     const handleReject = async (adoptionId: number) => {
         try {
-            const response = await fetch(`/api/adoption_application/${adoptionId}/reject`, {
+            console.log(adoptionId);
+            const response = await fetch(`/api/reject-adoption-application/${adoptionId}`, {
                 method: 'POST',
             });
             if (response.ok) {

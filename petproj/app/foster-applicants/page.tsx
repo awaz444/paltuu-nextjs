@@ -65,7 +65,21 @@ const FosterApplicants = () => {
     };
 
     const handleReject = async (fosterId: number) => {
-        // Handle reject logic here
+        try {
+            console.log(fosterId);
+            const response = await fetch(`/api/reject-foster-application/${fosterId}`, {
+                method: 'POST',
+            });
+            if (response.ok) {
+                setApplications((prev) =>
+                    prev ? prev.filter((app) => app.foster_id !== fosterId) : null
+                );
+            } else {
+                console.error('Failed to reject application:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error rejecting application:', error);
+        }
     };
 
     const handleExpand = (fosterId: number) => {
@@ -78,7 +92,7 @@ const FosterApplicants = () => {
 
     return (
         <div className="max-w-4xl mx-auto p-4">
-            <h1 className="text-2xl font-bold">Foster Applications for  for Pet: {applications && applications[0]?.pet_name}</h1>
+            <h1 className="text-2xl font-bold">Foster Applications for Pet ID: {petId}</h1>
             {loading ? (
                 <p className="mt-4">Loading applications...</p>
             ) : applications && applications.length > 0 ? (

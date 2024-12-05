@@ -10,9 +10,20 @@ import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import axios from "axios";
 import { useSearchParams } from 'next/navigation';
 
-type FileType = Parameters<typeof UploadProps["beforeUpload"]>[0];
+// type FileType = Parameters<typeof UploadProps["beforeUpload"]>[0];
+const beforeUpload = (file: File) => {
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      message.error("You can only upload image files!");
+    }
+    const isSmallEnough = file.size / 1024 / 1024 < 5; // 5MB max size
+    if (!isSmallEnough) {
+      message.error("Image must be smaller than 5MB!");
+    }
+    return isImage && isSmallEnough;
+  };
 
-const getBase64 = (file: FileType): Promise<string> =>
+const getBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -56,7 +67,7 @@ export default function CreatePetListing() {
       formData.append("pet_id", String(petId)); // Use petId from URL query
 
       // Send images to the backend API for uploading
-      const response = await axios.post("/api/upload-images", formData, {
+      const response = await axios.post("/api/upload-image", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -82,7 +93,7 @@ export default function CreatePetListing() {
 
   const handlePreview = async (file: UploadFile) => {
     if (!file.url && !file.preview) {
-      file.preview = await getBase64(file.originFileObj as FileType);
+      file.preview = await getBase64(file.originFileObj as File);
     }
 
     setPreviewImage(file.url || (file.preview as string));

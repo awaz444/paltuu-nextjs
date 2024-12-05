@@ -17,7 +17,6 @@ export async function GET(req: NextRequest, { params }: { params: { pet_id: stri
     try {
         await client.connect();
 
-        // Query to get the adoption application by pet_id
         const result = await client.query(
             `
             SELECT aa.*, p.pet_name
@@ -54,3 +53,4 @@ export async function GET(req: NextRequest, { params }: { params: { pet_id: stri
         await client.end();
     }
 }
+

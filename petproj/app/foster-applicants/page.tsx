@@ -7,6 +7,7 @@ import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
 interface FosterApplication {
     foster_id: number;
     user_id: number;
+    pet_name:string;
     pet_id: number;
     fosterer_name: string;
     fosterer_address: string;
@@ -77,7 +78,7 @@ const FosterApplicants = () => {
 
     return (
         <div className="max-w-4xl mx-auto p-4">
-            <h1 className="text-2xl font-bold">Foster Applications for Pet ID: {petId}</h1>
+            <h1 className="text-2xl font-bold">Foster Applications for  for Pet: {applications && applications[0]?.pet_name}</h1>
             {loading ? (
                 <p className="mt-4">Loading applications...</p>
             ) : applications && applications.length > 0 ? (

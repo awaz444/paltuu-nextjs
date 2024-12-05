@@ -57,7 +57,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
     const handleViewApplications = (petId: number, listing_type: string) => {
         if (listing_type === 'adoption')
         router.push(`/adoption-applicants?pet_id=${petId}`);
-        else(listing_type === 'foster')
+        else if(listing_type === 'foster')
         router.push(`/foster-applicants?pet_id=${petId}`);
     };
 

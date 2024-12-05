@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 interface Application {
     adoption_id: number;
     user_id: number;
+    pet_name: string;
     pet_id: number;
     adopter_name: string;
     adopter_address: string;
@@ -87,7 +88,7 @@ const AdoptionApplicants = () => {
     return (
         <div className="max-w-5xl mx-auto p-6 bg-white shadow-lg rounded-lg">
             <h1 className="text-3xl font-bold text-gray-800 mb-6">
-                Applications for Pet ID: {petId}
+                Applications for Pet: {applications && applications[0]?.pet_name}
             </h1>
             {applications ? (
                 applications.length > 0 ? (
@@ -142,16 +143,16 @@ const AdoptionApplicants = () => {
                                     <span className="font-medium">Agreed to Terms:</span>{' '}
                                     {app.agree_to_terms ? 'Yes' : 'No'}
                                 </p>
-                                <div className="mt-4 flex space-x-4">
+                                <div className="mt-4 flex justify-between space-x-4">
                                     <button
                                         onClick={() => handleApprove(app.adoption_id)}
-                                        className="px-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition"
+                                        className="px-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-all"
                                     >
                                         Approve
                                     </button>
                                     <button
                                         onClick={() => handleReject(app.adoption_id)}
-                                        className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition"
+                                        className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-all"
                                     >
                                         Reject
                                     </button>

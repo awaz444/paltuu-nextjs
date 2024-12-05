@@ -30,8 +30,25 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     const [loading, setLoading] = useState(true);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [IsModalOpen, setIsModalOpen] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const userId = "1"; // Replace with the actual logged-in user ID
+    // Replace with the actual logged-in user ID
+    const userString = localStorage.getItem("user");
+    if (!userString) {
+      setError("User data not found in local storage");
+      setLoading(false);
+      return;
+    }
+
+    // Parse the user object to extract the user ID
+    const user = JSON.parse(userString);
+    const user_id = user?.id;
+    console.log("user_id: ",user_id);
+    if (!user_id) {
+      setError("User ID is missing from the user object");
+      setLoading(false);
+      return;
+    }
 
     useEffect(() => {
         const fetchPetDetails = async () => {
@@ -234,7 +251,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
             <AdoptionFormModal
                 petId={parseInt(pet_id)}
-                userId={userId}
+                userId={user_id}
                 visible={isModalVisible}
                 onClose={handleModalClose}
                 onSubmit={handleFormSubmit}

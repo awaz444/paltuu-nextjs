@@ -36,8 +36,7 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
 
             // Combine additional fields
             const formData = {
-                adoption_id: Date.now(), // Generate a unique ID for now
-                user_id: 1,
+                user_id: userId,
                 pet_id: petId,
                 ...values,
             };

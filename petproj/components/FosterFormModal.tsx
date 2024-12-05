@@ -21,8 +21,7 @@ const FosterFormModal: React.FC<FosterFormProps> = ({ petId, userId, visible, on
 
             // Prepare the form data
             const formData = {
-                foster_id: Date.now(), // Simulate unique ID
-                user_id: 1,
+                user_id: userId,
                 pet_id: petId,
                 ...values,
             };

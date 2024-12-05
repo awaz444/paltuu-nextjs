@@ -20,6 +20,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         JOIN cities ON pets.city_id = cities.city_id
         LEFT JOIN pet_images ON pets.pet_id = pet_images.pet_id AND pet_images."order" = 1
         WHERE pets.listing_type = 'adoption' 
+          AND pets.adoption_status = 'available'
           AND pets.approved = true
         ORDER BY pets.created_at DESC
         `;

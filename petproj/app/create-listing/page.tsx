@@ -7,25 +7,11 @@ import { fetchPetCategories } from "../store/slices/petCategoriesSlice"; // Fetc
 import { postPet } from "../store/slices/petSlice"; // Import postPet thunk
 import { useRouter } from "next/navigation"; // Import useRouter
 
-import { uploadImagesToCloudinary } from "@/utils/uploadImages";
-
 import Navbar from "../../components/navbar";
 import "./styles.css";
 
-import { PlusOutlined } from "@ant-design/icons";
-import { Image, Upload } from "antd";
 import type { GetProp, UploadFile, UploadProps } from "antd";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
-
-type FileType = Parameters<GetProp<UploadProps, "beforeUpload">>[0];
-
-const getBase64 = (file: FileType): Promise<string> =>
-    new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (error) => reject(error);
-    });
 
 export default function CreatePetListing() {
 
@@ -59,9 +45,6 @@ export default function CreatePetListing() {
     const [vaccinated, setVaccinated] = useState(false);
     const [neutered, setNeutered] = useState(false);
     const [paymentFrequency, setPaymentFrequency] = useState("");
-    const [fileList, setFileList] = useState<UploadFile[]>([]); // State for uploaded files
-    const [previewOpen, setPreviewOpen] = useState(false);
-    const [previewImage, setPreviewImage] = useState("");
 
     useEffect(() => {
         dispatch(fetchCities());
@@ -94,36 +77,29 @@ export default function CreatePetListing() {
             listing_type: listingType || "adoption",
             vaccinated,
             neutered,
-            images: fileList.map((file) => file.originFileObj), // Attach the uploaded images
             payment_frequency: paymentFrequency || null,
         };
 
         console.log(newPet);
         // Dispatch postPet action
         console.log('Posting Pet...')
-        dispatch(postPet(newPet));
-        console.log('Pet Posted....');
-        router.push("/listing-created");
+        dispatch(postPet(newPet))
+        .unwrap()
+        .then((result) => {
+            console.log("Pet Posted:", result);
+
+            // Extract the pet ID from the result and navigate to upload-images page
+            const petId = result?.pet_id; // Assuming the API response includes a unique pet ID
+            if (petId) {
+                router.push(`/upload-images?petId=${petId}`);
+            } else {
+                console.error("Failed to get pet ID from response");
+            }
+        })
+        .catch((error) => {
+            console.error("Error posting pet:", error);
+        });
     };
-
-    const handlePreview = async (file: UploadFile) => {
-        if (!file.url && !file.preview) {
-            file.preview = await getBase64(file.originFileObj as FileType);
-        }
-
-        setPreviewImage(file.url || (file.preview as string));
-        setPreviewOpen(true);
-    };
-
-    const handleChange: UploadProps["onChange"] = ({ fileList: newFileList }) =>
-        setFileList(newFileList);
-
-    const uploadButton = (
-        <button style={{ border: 0, background: "none" }} type="button">
-            <PlusOutlined />
-            <div style={{ marginTop: 8 }}>Upload</div>
-        </button>
-    );
 
     const handleTabToggle = (type: "adoption" | "foster") => {
         setListingType(type);
@@ -539,39 +515,10 @@ export default function CreatePetListing() {
                         />
                     </div>
 
-                    {/* Upload Images */}
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                            Upload Images (Max 5)
-                        </label>
-                        <Upload
-                            action=""
-                            listType="picture-card"
-                            fileList={fileList}
-                            onPreview={handlePreview}
-                            onChange={handleChange}
-                            maxCount={5}>
-                            {fileList.length >= 5 ? null : uploadButton}
-                        </Upload>
-                        {previewImage && (
-                            <Image
-                                wrapperStyle={{ display: "none" }}
-                                preview={{
-                                    visible: previewOpen,
-                                    onVisibleChange: (visible) =>
-                                        setPreviewOpen(visible),
-                                    afterOpenChange: (visible) =>
-                                        !visible && setPreviewImage(""),
-                                }}
-                                src={previewImage}
-                            />
-                        )}
-                    </div>
-
                     <button
                         type="submit"
                         className="mt-4 p-3 bg-primary text-white rounded-3xl w-full">
-                        Create Listing
+                        Proceed to Upload Images
                     </button>
                 </form>
             </div>

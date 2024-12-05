@@ -1,13 +1,12 @@
 'use client'
 
 import { useState, useEffect } from "react";
-import { Pet } from "@/components/MyListingGrid";
+import {Pet} from "@/components/MyListingGrid";
 import Navbar from "@/components/navbar";
 import { Spin } from "antd"; // Ant Design spinner
 import MyListingGrid from "@/components/MyListingGrid";
 import "./styles.css";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
-import { useAuth } from "@/context/AuthContext"; // Assuming useAuth is defined here
 
 const UserListingsPage = () => {
   const [listings, setListings] = useState<Pet[]>([]);
@@ -15,13 +14,13 @@ const UserListingsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { isAuthenticated, user, logout: apiLogout } = useAuth(); // Get user data from useAuth()
+  const user_id = 1; // Hardcoded user ID
 
   useSetPrimaryColor();
 
   useEffect(() => {
-    if (isAuthenticated && user?.user_id) {
-      fetch(`/api/my-listings/${user.user_id}`)
+    if (user_id) {
+      fetch(/api/my-listings/${user_id})
         .then((res) => {
           if (!res.ok) {
             throw new Error("Failed to fetch listings");
@@ -36,11 +35,8 @@ const UserListingsPage = () => {
           setError(err.message);
           setIsLoading(false);
         });
-    } else if (!isAuthenticated) {
-      setError("User is not authenticated");
-      setIsLoading(false);
     }
-  }, [isAuthenticated, user]);
+  }, [user_id]);
 
   const handleTabToggle = (tab: string) => {
     setActiveTab(tab);
@@ -78,17 +74,17 @@ const UserListingsPage = () => {
               }}
             />
             <div
-              className={`tab cursor-pointer py-2 text-center font-medium ${
+              className={tab cursor-pointer py-2 text-center font-medium ${
                 activeTab === "adoption" ? "active" : ""
-              }`}
+              }}
               onClick={() => handleTabToggle("adoption")}
             >
               Adopt
             </div>
             <div
-              className={`tab cursor-pointer py-2 text-center font-medium ${
+              className={tab cursor-pointer py-2 text-center font-medium ${
                 activeTab === "foster" ? "active" : ""
-              }`}
+              }}
               onClick={() => handleTabToggle("foster")}
             >
               Foster

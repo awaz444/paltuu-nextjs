@@ -9,6 +9,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
+
 export async function POST(request: NextRequest) {
   const client = createClient(); // Initialize your custom client (e.g., pg or ORM)
 

@@ -18,16 +18,26 @@ export async function GET(
     try {
         await client.connect();
 
-        // Query to get all foster applications for the user
+        // Query to get all foster applications for the user with detailed pet info
         const fosterQuery = `
             SELECT 
                 'foster' AS application_type,
-                foster_id AS application_id,
-                pet_id,
-                status,
-                created_at
-            FROM foster_applications
-            WHERE user_id = $1;
+                fa.foster_id AS application_id,
+                fa.pet_id,
+                fa.status,
+                fa.created_at,
+                p.pet_name,
+                p.pet_breed,
+                c.city_name,
+                p.area,
+                p.age,
+                p.adoption_status,
+                pi.image_url
+            FROM foster_applications AS fa
+            JOIN pets AS p ON fa.pet_id = p.pet_id
+            JOIN cities AS c ON p.city_id = c.city_id
+            LEFT JOIN pet_images AS pi ON p.pet_id = pi.pet_id AND pi.order = 1
+            WHERE fa.user_id = $1;
         `;
         const fosterApplications = await client.query(fosterQuery, [user_id]);
 
@@ -35,14 +45,26 @@ export async function GET(
         const adoptionQuery = `
             SELECT 
                 'adoption' AS application_type,
-                adoption_id AS application_id,
-                pet_id,
-                status,
-                created_at
-            FROM adoption_applications
-            WHERE user_id = $1;
+                aa.adoption_id AS application_id,
+                aa.pet_id,
+                aa.status,
+                aa.created_at,
+                p.pet_name,
+                p.pet_breed,
+                c.city_name,
+                p.area,
+                p.age,
+                p.adoption_status,
+                pi.image_url
+            FROM adoption_applications AS aa
+            JOIN pets AS p ON aa.pet_id = p.pet_id
+            JOIN cities AS c ON p.city_id = c.city_id
+            LEFT JOIN pet_images AS pi ON p.pet_id = pi.pet_id AND pi.order = 1
+            WHERE aa.user_id = $1;
         `;
-        const adoptionApplications = await client.query(adoptionQuery, [user_id]);
+        const adoptionApplications = await client.query(adoptionQuery, [
+            user_id,
+        ]);
 
         // Combine both application results
         const combinedApplications = [
@@ -57,7 +79,10 @@ export async function GET(
     } catch (error) {
         console.error("Database Error:", error);
         return NextResponse.json(
-            { error: "Internal Server Error", message: (error as Error).message },
+            {
+                error: "Internal Server Error",
+                message: (error as Error).message,
+            },
             { status: 500, headers: { "Content-Type": "application/json" } }
         );
     } finally {

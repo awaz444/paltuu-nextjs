@@ -43,17 +43,17 @@ export default function Login() {
     try {
       setLoading(true);
       const response = await axios.post("/api/users/login", user);
-  
+
       if (response.data.success) {
         const { id, name, email, role } = response.data.user; // Ensure role is included
         const userDetails = { id,name, email, role };
-  
+
         // Save user data to local storage
         localStorage.setItem("user", JSON.stringify(userDetails));
-  
+
         // Update AuthContext
         login(userDetails); // Pass role as well
-  
+
         toast.success("Login successful!");
         router.push("/browse-pets");
       }
@@ -64,8 +64,8 @@ export default function Login() {
       setLoading(false);
     }
   };
-  
-  
+
+
 
   // Handle Google login
   const handleGoogleLogin = async () => {
@@ -180,7 +180,8 @@ export default function Login() {
                     <div className="mt-4 text-center">
                         <button
                             type="button"
-                            className="text-primary hover:underline focus:outline-none">
+                            className="text-primary hover:underline focus:outline-none"
+                            onClick={() => router.push("/forgot-password")}>
                             Forgot Password?
                         </button>
                     </div>

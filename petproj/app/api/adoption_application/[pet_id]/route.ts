@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, { params }: { params: { pet_id: stri
 
         // Query to get the adoption application by pet_id
         const result = await client.query(
-            `SELECT * FROM adoption_applications WHERE pet_id = $1 AND status='pending' ORDER BY created_at DESC LIMIT 1`,
+            `SELECT * FROM adoption_applications WHERE pet_id = $1 AND status='pending' ORDER BY created_at DESC`,
             [pet_id]
         );
 

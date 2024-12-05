@@ -15,7 +15,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     const [loading, setLoading] = useState(true);
     const [isModalVisible, setIsModalVisible] = useState(false);
 
-    const userId = "12345"; // Replace with the actual logged-in user ID
+    const userId = "1"; // Replace with the actual logged-in user ID
 
     useEffect(() => {
         const fetchPetDetails = async () => {

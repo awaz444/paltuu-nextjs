@@ -2,6 +2,7 @@ import { createClient } from '../../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
 
 // GET: Fetch a single adoption application by pet_id
+// GET: Fetch all foster applications by pet_id
 export async function GET(req: NextRequest, { params }: { params: { pet_id: string } }): Promise<NextResponse> {
     const { pet_id } = params;  // Get pet_id from the dynamic route parameter
 
@@ -17,9 +18,9 @@ export async function GET(req: NextRequest, { params }: { params: { pet_id: stri
     try {
         await client.connect();
 
-        // Query to get the adoption application by pet_id
+        // Query to get all foster applications by pet_id
         const result = await client.query(
-            `SELECT * FROM foster_applications WHERE pet_id = $1 AND status='pending' ORDER BY created_at DESC LIMIT 1`,
+            `SELECT * FROM foster_applications WHERE pet_id = $1 AND status='pending' ORDER BY created_at DESC`,
             [pet_id]
         );
 
@@ -30,7 +31,8 @@ export async function GET(req: NextRequest, { params }: { params: { pet_id: stri
             );
         }
 
-        return NextResponse.json(result.rows[0], {
+        // Return all rows as an array
+        return NextResponse.json(result.rows, {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
         });

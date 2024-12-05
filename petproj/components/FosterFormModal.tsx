@@ -19,22 +19,35 @@ const FosterFormModal: React.FC<FosterFormProps> = ({ petId, userId, visible, on
             const values = await form.validateFields();
             setLoading(true);
 
+            // Prepare the form data
             const formData = {
-                foster_id: Date.now(), // Generate a unique ID
-                user_id: userId,
+                foster_id: Date.now(), // Simulate unique ID
+                user_id: 1,
                 pet_id: petId,
-                created_at: new Date().toISOString(),
-                status: "Pending",
                 ...values,
             };
 
-            // Simulate API call or pass data to the parent component
-            onSubmit(formData);
-            message.success("Foster form submitted successfully!");
-            form.resetFields();
-            onClose();
+            // Call the API to save the application
+            const response = await fetch('/api/foster_application', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                message.success('Foster form submitted successfully!');
+                onSubmit(result); // Notify parent component
+                form.resetFields();
+                onClose();
+            } else {
+                const error = await response.json();
+                message.error(error.message || 'Failed to submit form');
+            }
         } catch (err) {
-            message.error("Please complete all required fields!");
+            message.error('Please complete all required fields!');
         } finally {
             setLoading(false);
         }

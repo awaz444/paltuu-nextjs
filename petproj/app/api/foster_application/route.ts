@@ -1,4 +1,4 @@
-import { createClient } from '../../../db/index';
+    import { createClient } from '../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
 
 // POST: Create a new foster application

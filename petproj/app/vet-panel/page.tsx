@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
+import Link from "next/link";
 
 interface VetPanelPageProps {
     params: {
@@ -32,9 +33,8 @@ interface VetPanelData {
 }
 
 const VetPanel = ({ params }: VetPanelPageProps) => {
-
     useSetPrimaryColor();
-    
+
     const { vetId } = params;
     const [data, setData] = useState<VetPanelData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -104,7 +104,10 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                     <div className="flex gap-4">
                         <img
                             className="w-24 h-24 rounded-full shadow-md"
-                            src={personal_info.profile_image_url || './placeholder.jpg'}
+                            src={
+                                personal_info.profile_image_url ||
+                                "./placeholder.jpg"
+                            }
                             alt={personal_info.vet_name}
                         />
                         <div>
@@ -158,7 +161,11 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
                             title="Edit Qualifications">
-                            <img src="/pen.svg" alt="Edit" className="hover:text-primary"/>
+                            <img
+                                src="/pen.svg"
+                                alt="Edit"
+                                className="hover:text-primary"
+                            />
                         </button>
                         <h4 className="text-lg font-bold text-primary mb-4">
                             Qualifications
@@ -179,7 +186,11 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
                             title="Edit Specializations">
-                            <img src="/pen.svg" alt="Edit" className="hover:text-primary"/>
+                            <img
+                                src="/pen.svg"
+                                alt="Edit"
+                                className="hover:text-primary"
+                            />
                         </button>
                         <h4 className="text-lg font-bold text-primary mb-4">
                             Specializations
@@ -196,24 +207,34 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                     </div>
 
                     {/* Reviews Summary */}
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary border border-gray-200 hover:border-primary border border-gray-200 hover:border-primary">
-                        <div
-                            className="absolute top-4 right-4 w-6 h-6"
-                            title="View Reviews">
-                            <img src="/arrow-right.svg" alt="Details" className="hover:text-primary" />
+                    <Link href='/reviews-summary'>
+                        <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary border border-gray-200 hover:border-primary border border-gray-200 hover:border-primary">
+                            <div
+                                className="absolute top-4 right-4 w-6 h-6"
+                                title="View Reviews">
+                                <img
+                                    src="/arrow-right.svg"  
+                                    alt="Details"
+                                    className="hover:text-primary"
+                                />
+                            </div>
+                            <h4 className="text-lg font-bold text-primary mb-4">
+                                Reviews Summary
+                            </h4>
+                            <p>
+                                <span className="font-bold">
+                                    Average Rating:
+                                </span>{" "}
+                                {reviews_summary.average_rating} / 5
+                            </p>
+                            <p>
+                                <span className="font-bold">
+                                    Total Reviews:
+                                </span>{" "}
+                                {reviews_summary.total_reviews}
+                            </p>
                         </div>
-                        <h4 className="text-lg font-bold text-primary mb-4">
-                            Reviews Summary
-                        </h4>
-                        <p>
-                            <span className="font-bold">Average Rating:</span>{" "}
-                            {reviews_summary.average_rating} / 5
-                        </p>
-                        <p>
-                            <span className="font-bold">Total Reviews:</span>{" "}
-                            {reviews_summary.total_reviews}
-                        </p>
-                    </div>
+                    </Link>
 
                     {/* Schedule */}
                     <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary border border-gray-200 hover:border-primary">

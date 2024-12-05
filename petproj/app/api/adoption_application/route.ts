@@ -38,7 +38,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 pet_id,
                 adopter_name,
                 adopter_address,
-                status || 'Pending',
+                status || 'pending',
                 age_of_youngest_child,
                 other_pets_details,
                 other_pets_neutered,

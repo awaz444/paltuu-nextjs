@@ -37,20 +37,31 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
             // Combine additional fields
             const formData = {
                 adoption_id: Date.now(), // Generate a unique ID for now
-                user_id: userId,
+                user_id: 1,
                 pet_id: petId,
-                created_at: new Date().toISOString(),
-                status: "Pending",
                 ...values,
             };
+            // Call the API to save the application
+            const response = await fetch('/api/adoption_application', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
 
-            // Simulate API call or pass data to the parent component
-            onSubmit(formData);
-            message.success("Adoption form submitted successfully!");
-            form.resetFields();
-            onClose();
+            if (response.ok) {
+                const result = await response.json();
+                message.success('adoption form submitted successfully!');
+                onSubmit(result); // Notify parent component
+                form.resetFields();
+                onClose();
+            } else {
+                const error = await response.json();
+                message.error(error.message || 'Failed to submit form');
+            }
         } catch (err) {
-            message.error("Please complete all required fields!");
+            message.error('Please complete all required fields!');
         } finally {
             setLoading(false);
         }

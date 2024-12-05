@@ -1,7 +1,7 @@
-import { v2 as cloudinary } from 'cloudinary';
-import { createClient } from '../../../db/index'; // Import your custom database client
-import { NextRequest, NextResponse } from 'next/server';
-import { v4 as uuidv4 } from 'uuid';
+import { v2 as cloudinary } from "cloudinary";
+import { createClient } from "../../../db/index"; // Import your custom database client
+import { NextRequest, NextResponse } from "next/server";
+import { v4 as uuidv4 } from "uuid";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -15,16 +15,40 @@ export async function POST(request: NextRequest) {
 
   try {
     const data = await request.formData();
-    const files = data.getAll('files') as File[]; // Get all files from the request
+    const files = data.getAll("files") as File[]; // Get all files from the request
 
+    if (!files || files.length === 0) {
+      return NextResponse.json(
+        { error: "No files were provided" },
+        { status: 400 }
+      );
+    }
+
+    const pet_id = data.get("pet_id"); // Get pet_id from the request
+
+    if (!pet_id) {
+      return NextResponse.json(
+        { error: "Pet ID is missing from the request" },
+        { status: 400 }
+      );
+    }
+
+    console.log("Pet ID:", pet_id);
+
+    // Upload files to Cloudinary
     const uploadPromises = files.map(async (file) => {
       const buffer = Buffer.from(await file.arrayBuffer());
       return new Promise<string>((resolve, reject) => {
         const upload = cloudinary.uploader.upload_stream(
-          { resource_type: 'image' },
+          { resource_type: "image" },
           (error, result) => {
-            if (error) reject(error);
-            else resolve(result!.secure_url); // Ensure `secure_url` exists
+            if (error) {
+              console.error("Cloudinary upload error:", error);
+              reject(error);
+            } else {
+              console.log("Uploaded URL:", result!.secure_url);
+              resolve(result!.secure_url); // Ensure `secure_url` exists
+            }
           }
         );
         upload.end(buffer);
@@ -32,11 +56,10 @@ export async function POST(request: NextRequest) {
     });
 
     const urls = await Promise.all(uploadPromises);
+    console.log("Uploaded URLs:", urls);
 
-    const pet_id = data.get('pet_id'); // Get pet_id from the request
-
-    console.log('Pet ID:', pet_id,'Image ID:', files.length);
-    console.log('Uploaded URLs:', urls);
+    await client.connect();
+    console.log("Database connected");
 
     // Insert URLs into the database
     for (let i = 0; i < urls.length; i++) {
@@ -44,18 +67,39 @@ export async function POST(request: NextRequest) {
       const order = i + 1; // Set the order of the images
       const image_id = uuidv4();
 
-      const query = `
-        INSERT INTO pet_images (image_id, pet_id, image_url, created_at, order)
-        VALUES ($1, $2, $3, NOW(), $4)
-      `;
-      await client.query(query, [image_id,pet_id, image_url, order]);
+      console.log(`Inserting image ${i + 1} into the database`);
+      try {
+        const query = `
+          INSERT INTO pet_images (pet_id, image_url, "order")
+          VALUES ($1, $2, $3)
+        `;
+        const queryParams = [pet_id, image_url, order];
+
+        console.log("Query Parameters:", queryParams);
+        await client.query(query, queryParams);
+        console.log(`Image ${i + 1} inserted successfully`);
+      } catch (error) {
+        console.error(`Error inserting image ${i + 1}:`, error);
+        throw error; // Rethrow to break the process if needed
+      }
     }
 
-    return NextResponse.json({ urls }); // Return all uploaded image URLs
+    return NextResponse.json(
+      { message: "Images uploaded and stored successfully", urls },
+      { status: 200 }
+    );
   } catch (error) {
-    console.error('Cloudinary upload error:', error);
-    return NextResponse.json({ error: 'Failed to upload images' }, { status: 500 });
+    console.error("Error:", error);
+    return NextResponse.json(
+      { error: "Failed to upload images", details: (error as Error).message },
+      { status: 500 }
+    );
   } finally {
-    await client.end(); // Close the database connection after the operation
+    try {
+      await client.end(); // Close the database connection after the operation
+      console.log("Database connection closed");
+    } catch (error) {
+      console.error("Error closing database connection:", error);
+    }
   }
 }

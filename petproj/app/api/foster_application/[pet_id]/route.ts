@@ -20,9 +20,16 @@ export async function GET(req: NextRequest, { params }: { params: { pet_id: stri
 
         // Query to get all foster applications by pet_id
         const result = await client.query(
-            `SELECT * FROM foster_applications WHERE pet_id = $1 AND status='pending' ORDER BY created_at DESC`,
+            `
+            SELECT fa.*, p.pet_name
+            FROM foster_applications fa
+            JOIN pets p ON fa.pet_id = p.pet_id
+            WHERE fa.pet_id = $1 AND fa.status = 'pending'
+            ORDER BY fa.created_at DESC
+            `,
             [pet_id]
         );
+        
 
         if (result.rows.length === 0) {
             return NextResponse.json(

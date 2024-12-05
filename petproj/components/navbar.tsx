@@ -12,6 +12,16 @@ const Navbar = () => {
     const [activeLink, setActiveLink] = useState("");
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    let hideTimeout: ReturnType<typeof setTimeout>;
+
+    const handleMouseEnter = () => {
+        clearTimeout(hideTimeout); // Cancel the hide timeout
+        setIsDropdownOpen(true);
+    };
+
+    const handleMouseLeave = () => {
+        hideTimeout = setTimeout(() => setIsDropdownOpen(false), 200);
+    };
 
     // Use next-auth's useSession hook for Google login
     const { data: session, status } = useSession();
@@ -141,30 +151,59 @@ const Navbar = () => {
 
                 <div
                     className="dropdown relative"
-                    onMouseEnter={() => setIsDropdownOpen(true)}
-                    onMouseLeave={() => setIsDropdownOpen(false)}>
-                    <button
-                        className="flex items-center justify-center gap-2 loginBtn"
-                        style={{
-                            minWidth: dropdownWidth, // Set button width dynamically
-                        }}>
-                        {displayName}
-                        <Image
-                            src="/arrow-down.svg"
-                            alt="Dropdown"
-                            width={12}
-                            height={12}
-                        />
-                    </button>
-                    {isDropdownOpen && (
-                        <div
-                            className="dropdown-menu absolute top-full right-0 bg-white shadow-lg z-10 rounded-b-2xl"
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}>
+                    {isAuthenticated || session ? (
+                        <button
+                            className="flex items-center justify-center gap-2 loginBtn"
                             style={{
+                                minWidth: dropdownWidth, // Set button width dynamically
+                            }}>
+                            {displayName} {/* Show the user's name */}
+                            <Image
+                                src="/arrow-down.svg"
+                                alt="Dropdown"
+                                width={12}
+                                height={12}
+                            />
+                        </button>
+                    ) : (
+                        <Link href="/login">
+                            <button
+                                className="flex items-center justify-center gap-2 loginBtn"
+                                style={{
+                                    minWidth: dropdownWidth, // Set button width dynamically
+                                }}>
+                                Login{" "}
+                                {/* Show "Login" and navigate to /login */}
+                            </button>
+                        </Link>
+                    )}
+                    {(isAuthenticated || session) && isDropdownOpen && (
+                        <div
+                            className="dropdown-menu absolute right-0 bg-white shadow-lg z-10 rounded-2xl py-1"
+                            style={{
+                                top: "calc(100% + 0.5rem)", // Positions it slightly below `top-full`
                                 width: dropdownWidth, // Ensure dropdown matches button width
                             }}>
-                            <Link href="/profile">
-                                <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                    My Profile
+                            <Link
+                                href={
+                                    userRole === "vet"
+                                        ? "/vet-panel"
+                                        : userRole === "regular user"
+                                        ? "/my-profile"
+                                        : userRole === "admin"
+                                        ? "/admin-panel"
+                                        : "/"
+                                }>
+                                <div className="dropdown-item px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
+                                    {userRole === "vet"
+                                        ? "Vet Panel"
+                                        : userRole === "regular user"
+                                        ? "My Profile"
+                                        : userRole === "admin"
+                                        ? "Admin Panel"
+                                        : "Home"}
                                 </div>
                             </Link>
                             <Link href="/my-listings">
@@ -184,7 +223,7 @@ const Navbar = () => {
                             </Link>
                             <div
                                 onClick={handleLogout}
-                                className="dropdown-item px-4 py-2 text-red-600 hover:bg-gray-100 cursor-pointer">
+                                className="dropdown-item px-4 py-2 text-red-600 hover:bg-gray-100 hover:rounded-b-2xl cursor-pointer">
                                 Logout
                             </div>
                         </div>

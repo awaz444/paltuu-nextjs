@@ -73,7 +73,7 @@ export default function CreatePetListing() {
         e.preventDefault();
 
         const newPet = {
-            owner_id: 1, // Replace with the actual owner ID if available
+            owner_id: 2, // Replace with the actual owner ID if available
             pet_name: petName || null,
             pet_type: petType ? Number(petType) : null,
             pet_breed: breed || null,
@@ -100,7 +100,9 @@ export default function CreatePetListing() {
 
         console.log(newPet);
         // Dispatch postPet action
+        console.log('Posting Pet...')
         dispatch(postPet(newPet));
+        console.log('Pet Posted....');
         router.push("/listing-created");
     };
 
@@ -336,6 +338,7 @@ export default function CreatePetListing() {
                             type="text"
                             className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             placeholder="Enter price (if applicable)"
+                            required={listingType==='foster'}
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
                         />

@@ -8,34 +8,34 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext"; // Import AuthContext
 
 export default function Login() {
-  const { isAuthenticated, login } = useAuth(); // Use AuthContext for API-based login
-  const router = useRouter();
+    const { isAuthenticated, login } = useAuth(); // Use AuthContext for API-based login
+    const router = useRouter();
 
-  const [user, setUser] = useState({
-    email: "",
-    password: "",
-  });
-  const [buttonDisabled, setButtonDisabled] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false); // Loading state for Google login
+    const [user, setUser] = useState({
+        email: "",
+        password: "",
+    });
+    const [buttonDisabled, setButtonDisabled] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false); // Loading state for Google login
 
-  // Redirect to dashboard if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/browse-pets");
-    }
-  }, [isAuthenticated, router]);
+    // Redirect to dashboard if already authenticated
+    useEffect(() => {
+        if (isAuthenticated) {
+            router.push("/browse-pets");
+        }
+    }, [isAuthenticated, router]);
 
-  // Update button state based on user input
-  useEffect(() => {
-    setButtonDisabled(!(user.email && user.password));
-  }, [user]);
+    // Update button state based on user input
+    useEffect(() => {
+        setButtonDisabled(!(user.email && user.password));
+    }, [user]);
 
-  // Handle user input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setUser((prev) => ({ ...prev, [name]: value }));
-  };
+    // Handle user input changes
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setUser((prev) => ({ ...prev, [name]: value }));
+    };
 
   // Handle API-based login
   const handleLogin = async (e: React.FormEvent) => {
@@ -96,8 +96,7 @@ export default function Login() {
 
                 <form
                     onSubmit={handleLogin}
-                    className="mt-8 w-full max-w-md bg-white shadow-lg rounded-2xl p-6"
-                >
+                    className="mt-8 w-full max-w-md bg-white shadow-lg rounded-2xl p-6">
                     {/* Email Input */}
                     <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-medium mb-2">
@@ -136,8 +135,7 @@ export default function Login() {
                         disabled={buttonDisabled || loading}
                         className={`w-full py-2 px-4 rounded-xl text-white bg-primary hover:bg-primary-dark transition ${
                             loading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                    >
+                        }`}>
                         {loading ? "Logging in..." : "Log In"}
                     </button>
 
@@ -148,14 +146,12 @@ export default function Login() {
                         disabled={googleLoading}
                         className={`mt-4 w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${
                             googleLoading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                    >
+                        }`}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 24 24"
                             fill="currentColor"
-                            className="w-5 h-5"
-                        >
+                            className="w-5 h-5">
                             <path
                                 d="M23.76 12.26c0-.79-.07-1.58-.19-2.34H12v4.44h6.66c-.29 1.56-1.15 2.88-2.46 3.76v3.12h3.98c2.32-2.14 3.68-5.29 3.68-8.98z"
                                 fill="#4285F4"
@@ -173,15 +169,18 @@ export default function Login() {
                                 fill="#EA4335"
                             />
                         </svg>
-                        <span>{googleLoading ? "Logging in..." : "Login with Google"}</span>
+                        <span>
+                            {googleLoading
+                                ? "Logging in..."
+                                : "Login with Google"}
+                        </span>
                     </button>
 
                     {/* Forgot Password */}
                     <div className="mt-4 text-center">
                         <button
                             type="button"
-                            className="text-primary hover:underline focus:outline-none"
-                        >
+                            className="text-primary hover:underline focus:outline-none">
                             Forgot Password?
                         </button>
                     </div>
@@ -193,8 +192,7 @@ export default function Login() {
                             <button
                                 type="button"
                                 className="text-primary font-semibold hover:underline focus:outline-none"
-                                onClick={() => router.push("/sign-up")}
-                            >
+                                onClick={() => router.push("/sign-up")}>
                                 Create an account
                             </button>
                         </p>

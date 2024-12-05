@@ -1,7 +1,13 @@
 import React, { useState } from "react";
-import { useDispatch } from 'react-redux';
+import { Modal, Input, Select, Checkbox, Button } from "antd";
+import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/app/store/store";
+import { useRouter } from "next/navigation";
 import "./petGrid.css";
+import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
+
+
+const { TextArea } = Input;
 
 export interface Pet {
     pet_id: number;
@@ -42,6 +48,16 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
     const dispatch = useDispatch<AppDispatch>();
     const [showConfirm, setShowConfirm] = useState<{ pet_id: number | null, show: boolean }>({ pet_id: null, show: false });
     const [loading, setLoading] = useState(false);
+    const [editingPet, setEditingPet] = useState<Pet | null>(null);
+    const [successMessage, setSuccessMessage] = useState(false);
+    useSetPrimaryColor();
+
+    const router = useRouter(); // Initialize router for navigation
+
+    const handleViewApplications = (petId: number) => {
+        // Navigate to the adoption-applicants page with pet_id as a query parameter
+        router.push(`/adoption-applicants?pet_id=${petId}`);
+    };
 
     const handleDelete = async (petId: number) => {
         const response = await fetch('/api/pets', {
@@ -76,6 +92,39 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
         setShowConfirm({ pet_id: null, show: false });
     };
 
+
+
+    const handleEdit = (pet: Pet) => {
+        setEditingPet(pet);
+    };
+
+    const handleUpdate = async () => {
+        if (!editingPet) return;
+
+        const response = await fetch("/api/pets", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(editingPet),
+        });
+
+        if (!response.ok) {
+            console.error("Update failed:", await response.json());
+        } else {
+            console.log("Update successful");
+            setSuccessMessage(true); // Show success message
+            setTimeout(() => setSuccessMessage(false), 3000); // Hide after 3 seconds
+        }
+
+        setEditingPet(null);
+    };
+
+    const handleCancel = () => {
+        setEditingPet(null);
+    };
+
+
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             <div
@@ -108,6 +157,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                             {/* Edit Button */}
                             <button
                                 className="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition"
+                                onClick={() => handleEdit(pet)}
                             >
                                 <img src="/pen.svg" alt="Edit" className="w-4 h-4" />
                             </button>
@@ -133,6 +183,12 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                             {pet.city} - {pet.area}
                         </p>
                     </div>
+                    <button
+                            className="bg-primary text-white px-4 py-2 rounded-xl mt-4"
+                            onClick={() => handleViewApplications(pet.pet_id)}
+                        >
+                            View Applications
+                    </button>
                 </div>
             ))}
 
@@ -159,6 +215,322 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                     </div>
                 </div>
             )}
+{/* Edit Form Popup */}
+{editingPet && (
+                <Modal
+                    title="Edit Pet Listing"
+                    visible={!!editingPet}
+                    onCancel={handleCancel}
+                    onOk={handleUpdate}
+                    okText="Update"
+                    cancelText="Cancel"
+                >
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Pet Name</label>
+                        <Input
+                            placeholder="Pet Name"
+                            value={editingPet.pet_name}
+                            onChange={(e) =>
+                                setEditingPet({ ...editingPet, pet_name: e.target.value })
+                            }
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Pet Type</label>
+                        <Select
+                            className="w-full"
+                            value={editingPet.pet_type}
+                            onChange={(value) =>
+                                setEditingPet({ ...editingPet, pet_type: value })
+                            }
+                        >
+                            <Select.Option value={1}>Dog</Select.Option>
+                            <Select.Option value={2}>Cat</Select.Option>
+                            <Select.Option value={3}>Bird</Select.Option>
+                        </Select>
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Pet Breed</label>
+                        <Input
+                            placeholder="Pet Breed"
+                            value={editingPet.pet_breed || ""}
+                            onChange={(e) =>
+                                setEditingPet({ ...editingPet, pet_breed: e.target.value })
+                            }
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Age</label>
+                        <Input
+                            placeholder="Age"
+                            type="number"
+                            value={editingPet.age}
+                            onChange={(e) =>
+                                setEditingPet({ ...editingPet, age: Number(e.target.value) })
+                            }
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Description</label>
+                        <TextArea
+                            placeholder="Description"
+                            rows={4}
+                            value={editingPet.description}
+                            onChange={(e) =>
+                                setEditingPet({ ...editingPet, description: e.target.value })
+                            }
+                        />
+                    </div>
+
+                    <div className="flex justify-between mb-4">
+                        <button
+                            className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet.listing_type === "adoption"
+                                ? "bg-primary text-white"
+                                : "bg-gray-100"
+                                }`}
+                            onClick={() =>
+                                setEditingPet({ ...editingPet, listing_type: "adoption" })
+                            }
+                        >
+                            Adoption
+                        </button>
+                        <button
+                            className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet.listing_type === "foster"
+                                ? "bg-primary text-white"
+                                : "bg-gray-100"
+                                }`}
+                            onClick={() =>
+                                setEditingPet({ ...editingPet, listing_type: "foster" })
+                            }
+                        >
+                            Foster
+                        </button>
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Price</label>
+                        <Input
+                            placeholder="Price"
+                            type="number"
+                            value={editingPet.price}
+                            onChange={(e) =>
+                                setEditingPet({ ...editingPet, price: e.target.value })
+                            }
+                        // disabled={editingPet.listing_type === "adoption"}
+                        />
+                    </div>
+
+                    {/* Payment Frequency Dropdown */}
+                    {editingPet.listing_type === "foster" && (
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700">
+                                Payment Frequency
+                            </label>
+                            <select
+                                className="mt-1 p-3 w-full border rounded-2xl"
+                                value={editingPet.payment_frequency || ""}
+                                onChange={(e) =>
+                                    setEditingPet({
+                                        ...editingPet,
+                                        payment_frequency: e.target.value,
+                                    })
+                                }
+                                required
+                            >
+                                <option value="" disabled>
+                                    Select Frequency
+                                </option>
+                                <option value="day">Daily</option>
+                                <option value="week">Weekly</option>
+                                <option value="month">Monthly</option>
+                                <option value="year">Yearly</option>
+                            </select>
+                        </div>
+                    )}
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Minimum Age of Children</label>
+                        <Input
+                            placeholder="Minimum Age of Children"
+                            type="number"
+                            value={editingPet.min_age_of_children}
+                            onChange={(e) =>
+                                setEditingPet({
+                                    ...editingPet,
+                                    min_age_of_children: Number(e.target.value),
+                                })
+                            }
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Can live with dogs</label>
+                        <Checkbox
+                            checked={editingPet.can_live_with_dogs}
+                            onChange={(e) =>
+                                setEditingPet({
+                                    ...editingPet,
+                                    can_live_with_dogs: e.target.checked,
+                                })
+                            }
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Can live with cats</label>
+                        <Checkbox
+                            checked={editingPet.can_live_with_cats}
+                            onChange={(e) =>
+                                setEditingPet({
+                                    ...editingPet,
+                                    can_live_with_cats: e.target.checked,
+                                })
+                            }
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Must have someone home</label>
+                        <Checkbox
+                            checked={editingPet.must_have_someone_home}
+                            onChange={(e) =>
+                                setEditingPet({
+                                    ...editingPet,
+                                    must_have_someone_home: e.target.checked,
+                                })
+                            }
+                        />
+                    </div>
+
+                    {/* Energy Level Slider */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Energy Level</label>
+                        <div className="relative">
+                            <input
+                                type="range"
+                                min="1"
+                                max="5"
+                                className="mt-2 w-full"
+                                value={editingPet.energy_level ?? 3}
+                                onChange={(e) =>
+                                    setEditingPet({
+                                        ...editingPet,
+                                        energy_level: Number(e.target.value),
+                                    })
+                                }
+                                onMouseDown={() => {
+                                    if (editingPet.energy_level === null) setEditingPet({
+                                        ...editingPet,
+                                        energy_level: 3,
+                                    });
+                                }}
+                                style={{
+                                    background: editingPet.energy_level
+                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${(editingPet.energy_level - 1) * 25
+                                        }%, #D1D5DB ${(editingPet.energy_level - 1) * 25
+                                        }%, #D1D5DB 100%)`
+                                        : "#D1D5DB important!", // Default background when unselected
+                                }}
+                            />
+                            <div className="w-full flex justify-between -top-2">
+                                <span className="text-sm text-gray-500">Chilled</span>
+                                <span className="text-sm text-gray-500">Hyper</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Cuddliness Level Slider */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Cuddliness Level</label>
+                        <div className="relative">
+                            <input
+                                type="range"
+                                min="1"
+                                max="5"
+                                className="mt-2 w-full h-2 rounded-2xl"
+                                value={editingPet.cuddliness_level ?? 3}
+                                onChange={(e) =>
+                                    setEditingPet({
+                                        ...editingPet,
+                                        cuddliness_level: Number(e.target.value),
+                                    })
+                                }
+                                onMouseDown={() => {
+                                    if (editingPet.cuddliness_level === null) setEditingPet({
+                                        ...editingPet,
+                                        cuddliness_level: 3,
+                                    });
+                                }}
+                                style={{
+                                    background: editingPet.cuddliness_level
+                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${(editingPet.cuddliness_level - 1) * 25
+                                        }%, #D1D5DB ${(editingPet.cuddliness_level - 1) * 25}%, #D1D5DB 100%)`
+                                        : "#D1D5DB",
+                                }}
+                            />
+                            <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
+                                <span>Cuddler</span>
+                                <span>Independent</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Health Issues</label>
+                        <TextArea
+                            placeholder="Health Issues"
+                            rows={2}
+                            value={editingPet.health_issues}
+                            onChange={(e) =>
+                                setEditingPet({ ...editingPet, health_issues: e.target.value })
+                            }
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Sex</label>
+                        <Select
+                            className="w-full"
+                            value={editingPet.sex}
+                            onChange={(value) =>
+                                setEditingPet({ ...editingPet, sex: value })
+                            }
+                        >
+                            <Select.Option value="male">Male</Select.Option>
+                            <Select.Option value="female">Female</Select.Option>
+                        </Select>
+                    </div>
+                    <Checkbox
+                        className="mb-4"
+                        checked={editingPet.vaccinated || false}
+                        onChange={(e) =>
+                            setEditingPet({
+                                ...editingPet,
+                                vaccinated: e.target.checked,
+                            })
+                        }
+                    >
+                        Vaccinated
+                    </Checkbox>
+                    <Checkbox
+                        className="mb-4"
+                        checked={editingPet.neutered || false}
+                        onChange={(e) =>
+                            setEditingPet({
+                                ...editingPet,
+                                neutered: e.target.checked,
+                            })
+                        }
+                    >
+                        Neutered
+                    </Checkbox>
+                </Modal>
+)}
+
         </div>
     );
 };

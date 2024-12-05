@@ -269,7 +269,7 @@ export default function VetDetailsPage({
                         <div className="ml-auto">
                             <div
                                 onClick={() => setIsModalVisible(true)}
-                                className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-primaryover:bg-[#ffffff] hover:text-primary cursor-pointer"
+                                className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-primary hover:bg-[#ffffff] hover:text-primary cursor-pointer"
                             >
                                 Book Appointment
                             </div>

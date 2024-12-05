@@ -54,7 +54,7 @@ export const authoptions: NextAuthOptions = {
         const name = profile?.name || "Google User";
 
         try {
-          const query = "SELECT id, email, role FROM users WHERE email = $1";
+          const query = "SELECT user_id, email, role FROM users WHERE email = $1";
           const result = await db.query(query, [email]);
 
           if (result.rowCount === 0) {
@@ -64,7 +64,7 @@ export const authoptions: NextAuthOptions = {
             const insertQuery = `
               INSERT INTO users (username, name, email, password, role)
               VALUES ($1, $2, $3, $4, $5)
-              RETURNING id, email, role
+              RETURNING user_id, email, role
             `;
             const insertValues = [
               email.split("@")[0],
@@ -76,12 +76,12 @@ export const authoptions: NextAuthOptions = {
 
             const insertResult: QueryResult = await db.query(insertQuery, insertValues);
             const newUser = insertResult.rows[0];
-            token.id = newUser.id;
+            token.user_id = newUser.id;
             token.role = "regular user";;
           } else {
             // User exists, return their details
             const existingUser = result.rows[0];
-            token.id = existingUser.id;
+            token.user_id = existingUser.id;
             token.role = existingUser.role;
           }
         } catch (error) {
@@ -89,16 +89,14 @@ export const authoptions: NextAuthOptions = {
         }
       }
 
-      token.user_id = token.id || token.user_id || null;
+      token.user_id = token.user_id || null;
       token.role = token.role || "guest";
       return token;
     },
     async session({ session, token }) {
-      console.log("Session callback triggered");
-      console.log("Token received in session callback:", token);
       session.user = {
         ...session.user,
-        id: String(token.id || token.user_id || ""),
+        user_id: String(token.user_id || ""), // Explicitly add user_id
         role: token.role || "guest",
       };
       return session;

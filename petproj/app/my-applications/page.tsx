@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 
@@ -40,7 +40,9 @@ export default function MyApplicationsPage() {
                     return;
                 }
 
-                const response = await fetch(`/api/get-my-applications/${user_id}`);
+                const response = await fetch(
+                    `/api/get-my-applications/${user_id}`
+                );
                 if (!response.ok) {
                     const { error } = await response.json();
                     setError(error || "Failed to fetch applications");
@@ -61,34 +63,39 @@ export default function MyApplicationsPage() {
         fetchApplications();
     }, []);
 
-    const handleDeleteApplication = async (applicationId: string) => {
+    const handleDeleteApplication = async (applicationId: string, applicationType: string) => {
         const confirmDelete = window.confirm(
             "Are you sure you want to delete this application? This action cannot be undone."
         );
         if (!confirmDelete) return;
-
+    
+        // Determine the correct ID based on application type
+        const idToDelete = applicationType === "foster" ? `foster_${applicationId}` : `adoption_${applicationId}`;
+    
         try {
-            const response = await fetch(`/api/delete-application/${applicationId}`, {
+            if (applicationType === 'foster') {}
+            const response = await fetch(`/api/delete-application/${idToDelete}`, {
                 method: "DELETE",
             });
-
+    
             if (!response.ok) {
                 const { error } = await response.json();
                 alert(error || "Failed to delete application");
                 return;
             }
-
+    
             // Remove the deleted application from the state
             setApplications((prevApplications) =>
                 prevApplications.filter((app) => app.application_id !== applicationId)
             );
-
+    
             alert("Application deleted successfully.");
         } catch (err) {
             console.error("Error deleting application:", err);
             alert("An unexpected error occurred while deleting the application.");
         }
     };
+    
 
     if (loading) {
         return (
@@ -124,8 +131,7 @@ export default function MyApplicationsPage() {
                         {applications.map((app) => (
                             <div
                                 key={app.application_id}
-                                className="bg-white border border-gray-200 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200"
-                            >
+                                className="bg-white border border-gray-200 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
                                 <img
                                     src={app.image_url || "/placeholder.jpg"}
                                     alt={app.pet_name}
@@ -162,19 +168,24 @@ export default function MyApplicationsPage() {
                                                 : app.status === "approved"
                                                 ? "bg-green-100 text-green-700"
                                                 : "bg-red-100 text-red-700"
-                                        }`}
-                                    >
+                                        }`}>
                                         {app.status}
                                     </span>
                                 </p>
                                 <p className="text-gray-600">
                                     <strong>Created At:</strong>{" "}
-                                    {new Date(app.created_at).toLocaleDateString()}
+                                    {new Date(
+                                        app.created_at
+                                    ).toLocaleDateString()}
                                 </p>
                                 <button
                                     className="mt-4 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition-colors"
-                                    onClick={() => handleDeleteApplication(app.application_id)}
-                                >
+                                    onClick={() =>
+                                        handleDeleteApplication(
+                                            app.application_id,
+                                            app.application_type
+                                        )   
+                                    }>
                                     Delete Application
                                 </button>
                             </div>

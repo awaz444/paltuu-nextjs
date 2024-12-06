@@ -40,6 +40,8 @@ const MyProfile = () => {
             return;
         }
 
+        setUserId(userId);
+
         const fetchUserProfile = async () => {
             setLoading(true);
             try {
@@ -68,8 +70,14 @@ const MyProfile = () => {
             });
         }
     };
+    console.log(userId);
 
     const handleSaveChanges = async () => {
+        if (!userId) {
+            console.error("No user ID available");
+            return;
+        }
+
         try {
             const res = await fetch(`/api/my-profile/${userId}`, {
                 method: "PATCH",

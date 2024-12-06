@@ -122,8 +122,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
                 email = $2,
                 city_id = $3,
                 dob = $4,
-                phone_number = $5,
-                updated_at = CURRENT_TIMESTAMP
+                phone_number = $5
             WHERE user_id = $6
             RETURNING
                 user_id,

@@ -6,23 +6,27 @@ export async function POST(request: Request) {
     const client = createClient();
 
     try {
+        // Connect to the database first
+        await client.connect();
+        console.log("Connected to database");
+
         const { email } = await request.json();
-        console.log(email);
+        console.log("Email:", email);
+
         // Check if the email exists
-        // const userQuery = "SELECT user_id FROM users WHERE email = $1";
-        // console.log('hiii')
-        // const userResult = await client.query(userQuery, [email]);
-        // console.log('User result:', userResult);
+        const userQuery = "SELECT user_id FROM users WHERE email = $1";
+        console.log("Executing query...");
+        const userResult = await client.query(userQuery, [email]);
 
-        // if (userResult.rows.length === 0) {
-        //     return new Response(
-        //         JSON.stringify({ error: "Email not registered." }),
-        //         { status: 404 }
-        //     );
-        // }
+        if (userResult.rows.length === 0) {
+            return new Response(
+                JSON.stringify({ error: "Email not registered." }),
+                { status: 404 }
+            );
+        }
 
-        // console.log('user found');
-        const userId = 89;
+        console.log("User found");
+        const userId = userResult.rows[0].user_id; // Fetching the actual userId from the database
 
         // Generate JWT for password reset
         const resetToken = jwt.sign(
@@ -43,7 +47,7 @@ export async function POST(request: Request) {
 
         const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
         await transporter.sendMail({
-            from: 'petpostgres@gmail.com',
+            from: "petpostgres@gmail.com",
             to: email,
             subject: "Reset Password",
             html: `<p>You requested a password reset. Click the link below to reset your password:</p>
@@ -62,6 +66,6 @@ export async function POST(request: Request) {
             { status: 500 }
         );
     } finally {
-        client.end();
+        await client.end();
     }
 }

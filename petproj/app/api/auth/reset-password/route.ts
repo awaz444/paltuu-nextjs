@@ -1,12 +1,16 @@
-import { NextApiRequest, NextApiResponse } from "next";
-// import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { createClient } from "../../../../db";
+// import bcrypt from "bcryptjs"; // Uncomment and use bcrypt
 
 export async function POST(request: Request) {
-    const client = createClient(); // Initialize database client
+    const client = createClient();
+
     try {
-        const { token, newPassword } = await request.json(); // Expect token and new password from the request body
+        // Connect to the database first
+        await client.connect();
+        console.log("Connected to database");
+
+        const { token, newPassword } = await request.json();
 
         if (!token || !newPassword) {
             return new Response(
@@ -16,22 +20,26 @@ export async function POST(request: Request) {
         }
 
         // Verify the reset token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { email: string, userId: number };
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+            email: string;
+            userId: number;
+        };
         const { email, userId } = decoded;
 
         // Check if the user exists in the database
-        // const userQuery = "SELECT user_id FROM users WHERE email = $1";
-        // const userResult = await client.query(userQuery, [email]);
+        const userQuery = "SELECT user_id FROM users WHERE email = $1";
+        const userResult = await client.query(userQuery, [email]);
 
-        // if (userResult.rows.length === 0) {
-        //     return new Response(
-        //         JSON.stringify({ error: "User not found." }),
-        //         { status: 404 }
-        //     );
-        // }
+        if (userResult.rows.length === 0) {
+            return new Response(
+                JSON.stringify({ error: "User not found." }),
+                { status: 404 }
+            );
+        }
 
         // Check if the user ID matches the decoded user ID
-        if (89 !== userId) {
+        const dbUserId = userResult.rows[0].user_id;
+        if (dbUserId !== userId) {
             return new Response(
                 JSON.stringify({ error: "Invalid token." }),
                 { status: 400 }
@@ -39,7 +47,7 @@ export async function POST(request: Request) {
         }
 
         // Hash the new password before saving it
-        const hashedPassword = newPassword;
+        const hashedPassword = await newPassword;
 
         // Update the user's password in the database
         const updateQuery = "UPDATE users SET password = $1 WHERE user_id = $2";
@@ -56,6 +64,6 @@ export async function POST(request: Request) {
             { status: 500 }
         );
     } finally {
-        client.end(); // Close the database connection
+        await client.end();
     }
 }

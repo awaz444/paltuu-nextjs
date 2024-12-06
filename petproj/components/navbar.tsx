@@ -7,12 +7,15 @@ import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import "bootstrap-icons/font/bootstrap-icons.css";
+
 
 const Navbar = () => {
     const [activeLink, setActiveLink] = useState("");
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     let hideTimeout: ReturnType<typeof setTimeout>;
+    const [isVerified, setIsVerified] = useState<boolean | null>(null);
 
     const handleMouseEnter = () => {
         clearTimeout(hideTimeout); // Cancel the hide timeout
@@ -102,19 +105,38 @@ const Navbar = () => {
         { name: "Paltuu AI", href: "llm" },
     ];
 
+
+    useEffect(() => {
+        const fetchVerificationStatus = async () => {
+            if (userRole === "vet" && user?.id) {
+                console.log(user.id);
+                try {
+                    const response = await fetch(`/api/is-verified-by-user-id/${user.id}`);
+                    const data = await response.json();
+                    console.log("gagea", data);
+                    setIsVerified(data.profile_verified); // assuming the response contains an 'isVerified' boolean
+                    console.log("Verified", data.profile_verified)
+                } catch (error) {
+                    console.error("Failed to fetch verification status:", error);
+                }
+            }
+        };
+
+        fetchVerificationStatus();
+    }, [userRole, user?.id]);
+
     useEffect(() => {
         const currentPath = window.location.pathname.split("/")[1];
         setActiveLink(currentPath);
     }, []);
 
-    const dropdownWidth = `${
-        Math.max(
-            displayName.length,
-            ...dropdownItems.map((item) => item.label.length)
-        ) *
-            10 +
+    const dropdownWidth = `${Math.max(
+        displayName.length,
+        ...dropdownItems.map((item) => item.label.length)
+    ) *
+        10 +
         50
-    }px`;
+        }px`;
 
     return (
         <nav className="navbar" style={navbarStyle}>
@@ -122,12 +144,7 @@ const Navbar = () => {
                 {/* Logo */}
                 <div className="logo">
                     <Link href="/">
-                        <Image
-                            src="/paltu_logo.svg"
-                            alt="Logo"
-                            width={200}
-                            height={80}
-                        />
+                        <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
                     </Link>
                 </div>
 
@@ -136,11 +153,10 @@ const Navbar = () => {
                     {links.map((link) => (
                         <Link key={link.href} href={`/${link.href}`}>
                             <span
-                                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${
-                                    activeLink === link.href
-                                        ? "after:w-full"
-                                        : "after:w-0"
-                                }`}
+                                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${activeLink === link.href
+                                    ? "after:w-full"
+                                    : "after:w-0"
+                                    }`}
                                 style={{ cursor: "pointer" }}
                                 onClick={() => setActiveLink(link.href)}>
                                 {link.name}
@@ -149,23 +165,17 @@ const Navbar = () => {
                     ))}
                 </div>
 
-                <div
-                    className="dropdown relative"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}>
+                <div className="dropdown relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
                     {isAuthenticated || session ? (
                         <button
                             className="flex items-center justify-center gap-2 loginBtn"
                             style={{
                                 minWidth: dropdownWidth, // Set button width dynamically
-                            }}>
-                            {displayName} {/* Show the user's name */}
-                            <Image
-                                src="/arrow-down.svg"
-                                alt="Dropdown"
-                                width={12}
-                                height={12}
-                            />
+                            }}
+                        >
+                            {displayName}
+                            {isVerified && <i className="bi bi-patch-check-fill text-[#cc8800] mr-2" />}
+                            <Image src="/arrow-down.svg" alt="Dropdown" width={12} height={12} />
                         </button>
                     ) : (
                         <Link href="/login">
@@ -174,8 +184,7 @@ const Navbar = () => {
                                 style={{
                                     minWidth: dropdownWidth, // Set button width dynamically
                                 }}>
-                                Login{" "}
-                                {/* Show "Login" and navigate to /login */}
+                                Login
                             </button>
                         </Link>
                     )}
@@ -191,19 +200,19 @@ const Navbar = () => {
                                     userRole === "vet"
                                         ? "/vet-panel"
                                         : userRole === "regular user"
-                                        ? "/my-profile"
-                                        : userRole === "admin"
-                                        ? "/admin-panel"
-                                        : "/"
+                                            ? "/my-profile"
+                                            : userRole === "admin"
+                                                ? "/admin-panel"
+                                                : "/"
                                 }>
                                 <div className="dropdown-item px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
                                     {userRole === "vet"
                                         ? "Vet Panel"
                                         : userRole === "regular user"
-                                        ? "My Profile"
-                                        : userRole === "admin"
-                                        ? "Admin Panel"
-                                        : "Home"}
+                                            ? "My Profile"
+                                            : userRole === "admin"
+                                                ? "Admin Panel"
+                                                : "Home"}
                                 </div>
                             </Link>
                             <Link href="/my-listings">
@@ -221,6 +230,16 @@ const Navbar = () => {
                                     Notifications
                                 </div>
                             </Link>
+
+                            {/* Add Become Verified / Verified option */}
+                            {userRole === "vet" && !isVerified && (
+                                <Link href="/vet-get-verified-1">
+                                    <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold italic">
+                                        Get Verified
+                                    </div>
+                                </Link>
+                            )}
+
                             <div
                                 onClick={handleLogout}
                                 className="dropdown-item px-4 py-2 text-red-600 hover:bg-gray-100 hover:rounded-b-2xl cursor-pointer">

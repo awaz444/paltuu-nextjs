@@ -14,21 +14,30 @@ const UserListingsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [user_id, setUserId] = useState<string | null>(null);
 
-  const userString = localStorage.getItem("user");
-                if (!userString) {
+  // const userString = localStorage.getItem("user");
+  //               if (!userString) {
+  //                   setError("User data not found in local storage");
+  //                   setLoading(false);
+  //                   return;
+  //               }
+  const userString = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+
+                useEffect(() => {
+                  if (userString) {
+                    const user = JSON.parse(userString);
+                    const userId = user?.id;
+                    if (userId) {
+                      setUserId(userId);
+                    } else {
+                      setError("User ID is missing from the user object");
+                    }
+                  } else {
                     setError("User data not found in local storage");
-                    setLoading(false);
-                    return;
-                }
-
-                const user = JSON.parse(userString);
-                const user_id = user?.id;
-                if (!user_id) {
-                    setError("User ID is missing from the user object");
-                    setLoading(false);
-                    return;
-                }
+                  }
+                  setLoading(false);
+                }, [userString]);
 
   useSetPrimaryColor();
 

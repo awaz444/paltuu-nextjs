@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation"; // Import useRouter
 import Navbar from "../../components/navbar";
 import "./styles.css";
@@ -31,7 +31,7 @@ const getBase64 = (file: File): Promise<string> =>
     reader.onerror = (error) => reject(error);
   });
 
-export default function CreatePetListing() {
+function CreatePetList() {
   useSetPrimaryColor();
 
   const router = useRouter();
@@ -157,3 +157,19 @@ export default function CreatePetListing() {
     </>
   );
 }
+
+const LoadingFallback = () => (
+  <div className="flex justify-center items-center min-h-screen">
+    <p className="text-lg text-gray-500">Loading create pet listing...</p>
+  </div>
+);
+
+const CreatePetListing : React.FC = () => {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <CreatePetList />
+    </Suspense>
+  );
+};
+
+export default CreatePetListing;

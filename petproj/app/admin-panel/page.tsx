@@ -6,63 +6,67 @@ import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import Link from "next/link";
 import Image from "next/image";
 
-interface VetPanelPageProps {
-    params: {
-        vetId: string;
-    };
+interface UserProfileData {
+    user_id: string;
+    name: string;
+    dob: string;
+    email: string;
+    profile_image_url: string;
+    city: string;
+    created_at: string;
 }
 
-interface VetPanelData {
-    personal_info: {
-        profile_image_url: string;
-        vet_name: string;
-        clinic_name: string;
-        location: string;
-        city: string;
-        contact_details: string;
-        email: string;
-        minimum_fee: number;
-        profile_verified: boolean;
-    };
-    reviews_summary: {
-        average_rating: number;
-        total_reviews: number;
-    };
-    qualifications: string[];
-    specializations: string[];
-    schedules: { day_of_week: string; start_time: string; end_time: string }[];
-}
-
-const VetPanel = ({ params }: VetPanelPageProps) => {
+const AdminPanel = () => {
     useSetPrimaryColor();
 
     useSetPrimaryColor();
 
-    const { vetId } = params;
-    const [data, setData] = useState<VetPanelData | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [data, setData] = useState<UserProfileData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        const fetchVetData = async () => {
+        // Get user_id from local storage
+const storedUser = localStorage.getItem("user");
+if (!storedUser) {
+    console.error("No user data found in local storage.");
+    setLoading(false);
+    return;
+}
+
+const parsedUser = JSON.parse(storedUser);
+const userId = parsedUser?.id;
+if (!userId) {
+    console.error("User ID is missing in the stored user data.");
+    setLoading(false);
+    return;
+}
+
+console.log(`Fetched user ID: ${userId}`);
+
+        // Fetch user profile
+        const fetchUserProfile = async () => {
             setLoading(true);
             try {
-                const res = await fetch(`/api/vet-panel/1`);
+                const res = await fetch(`/api/my-profile/${userId}`);
                 if (!res.ok) {
                     throw new Error(
-                        `Failed to fetch vet data. Status: ${res.status}`
+                        `Failed to fetch user data. Status: ${res.status}`
                     );
                 }
-                const responseData: VetPanelData = await res.json();
+                const responseData: UserProfileData = await res.json();
+                console.log(responseData)
                 setData(responseData);
             } catch (error) {
-                console.error("Error fetching vet panel data:", error);
+                console.error("Error fetching user profile data:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchVetData();
-    }, [vetId]);
+        fetchUserProfile();
+    }, []);
+
 
     if (loading) {
         return (
@@ -82,13 +86,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
         );
     }
 
-    const {
-        personal_info,
-        reviews_summary,
-        qualifications,
-        specializations,
-        schedules,
-    } = data;
+    const { name, dob, email, profile_image_url, city, created_at } = data;
 
     return (
         <>
@@ -102,34 +100,36 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                         <img src="/pen.svg" alt="Edit" />
                     </button>
                     <h3 className="text-xl font-bold mb-4 text-primary">
-                        Admin Information
+                        Personal Information
                     </h3>
                     <div className="flex gap-4">
                         <img
                             className="w-24 h-24 rounded-full shadow-md"
-                            src={personal_info.profile_image_url || './placeholder.jpg'}
-                            alt={personal_info.vet_name}
+                            src={profile_image_url || "/placeholder.jpg"}
+                            alt={name}
                         />
                         <div>
                             <p>
-                                <span className="font-bold">Name:</span>{" "}
-                                {personal_info.vet_name}
+                                <span className="font-bold">Name:</span> {name}
                             </p>
                             <p className="mt-2">
-                                <span className="font-bold">Location:</span>{" "}
-                                {personal_info.location}, {personal_info.city}
+                                <span className="font-bold">Email:</span> {email}
                             </p>
                             <p className="mt-2">
-                                <span className="font-bold">Contact:</span>{" "}
-                                {personal_info.contact_details}
+                                <span className="font-bold">City:</span> {city}
                             </p>
                             <p className="mt-2">
-                                <span className="font-bold">Email:</span>{" "}
-                                {personal_info.email}
+                                <span className="font-bold">Date of Birth:</span>{" "}
+                                {dob}
+                            </p>
+                            <p className="mt-2">
+                                <span className="font-bold">Joined:</span>{" "}
+                                {new Date(created_at).toLocaleDateString()}
                             </p>
                         </div>
                     </div>
                 </div>
+            
 
                 {/* 2x2 Grid for Smaller Cards */}
 
@@ -213,4 +213,4 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
     );
 };
 
-export default VetPanel;
+export default AdminPanel;

@@ -23,32 +23,42 @@ const MyProfile = () => {
 
     useEffect(() => {
         // Get user_id from local storage
-        const storedUserId = localStorage.getItem("user_id");
-        if (!storedUserId) {
-            console.error("No user_id found in local storage.");
+        const storedUser = localStorage.getItem("user");
+        if (!storedUser) {
+            console.error("No user data found in local storage.");
             setLoading(false);
             return;
         }
-        setUserId(storedUserId);
-
-        // Fetch user profile
-        const fetchUserProfile = async () => {
-            setLoading(true);
-            try {
-                const res = await fetch(`/api/my-profile/${storedUserId}`);
-                if (!res.ok) {
-                    throw new Error(
-                        `Failed to fetch user data. Status: ${res.status}`
-                    );
-                }
-                const responseData: UserProfileData = await res.json();
-                setData(responseData);
-            } catch (error) {
-                console.error("Error fetching user profile data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        
+        const parsedUser = JSON.parse(storedUser);
+        const userId = parsedUser?.id;
+        if (!userId) {
+            console.error("User ID is missing in the stored user data.");
+            setLoading(false);
+            return;
+        }
+        
+        console.log(`Fetched user ID: ${userId}`);
+        
+                // Fetch user profile
+                const fetchUserProfile = async () => {
+                    setLoading(true);
+                    try {
+                        const res = await fetch(`/api/my-profile/${userId}`);
+                        if (!res.ok) {
+                            throw new Error(
+                                `Failed to fetch user data. Status: ${res.status}`
+                            );
+                        }
+                        const responseData: UserProfileData = await res.json();
+                        console.log(responseData)
+                        setData(responseData);
+                    } catch (error) {
+                        console.error("Error fetching user profile data:", error);
+                    } finally {
+                        setLoading(false);
+                    }
+                };
 
         fetchUserProfile();
     }, []);

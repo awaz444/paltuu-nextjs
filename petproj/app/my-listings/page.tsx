@@ -14,27 +14,43 @@ const UserListingsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [userId, setUserId] = useState<number | null>(null); // To store the user ID
 
-  const userString = localStorage.getItem("user");
-                if (!userString) {
-                    setError("User data not found in local storage");
-                    setLoading(false);
-                    return;
-                }
+  useEffect(() => {
+    // Check for window object (client-side) and localStorage availability
+    if (typeof window !== "undefined") {
+      const userString = localStorage.getItem("user");
+      if (!userString) {
+        setError("User data not found in local storage");
+        setLoading(false);
+        return;
+      }
 
-                const user = JSON.parse(userString);
-                const user_id = user?.id;
-                if (!user_id) {
-                    setError("User ID is missing from the user object");
-                    setLoading(false);
-                    return;
-                }
+      const user = JSON.parse(userString);
+      const user_id = user?.id;
+      if (!user_id) {
+        setError("User ID is missing from the user object");
+        setLoading(false);
+        return;
+      }
 
+      // Convert user_id to a number
+      const numericUserId = Number(user_id);
+      if (isNaN(numericUserId)) {
+        setError("User ID is not a valid number");
+        setLoading(false);
+        return;
+      }
+
+      setUserId(numericUserId); // Store the user ID in state
+      setLoading(false);
+    }
+  }, []);
   useSetPrimaryColor();
 
   useEffect(() => {
-    if (user_id) {
-      fetch(`/api/my-listings/${user_id}`)
+    if (userId) {
+      fetch(`/api/my-listings/${userId}`)
         .then((res) => {
           if (!res.ok) {
             throw new Error("Failed to fetch listings");
@@ -50,7 +66,7 @@ const UserListingsPage = () => {
           setIsLoading(false);
         });
     }
-  }, [user_id]);
+  }, [userId]);
 
   const handleTabToggle = (tab: string) => {
     setActiveTab(tab);

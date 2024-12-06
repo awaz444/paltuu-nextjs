@@ -19,24 +19,86 @@ type Review = {
 const ReviewsSummary = () => {
     const [approvedReviews, setApprovedReviews] = useState<Review[]>([]);
     const [pendingReviews, setPendingReviews] = useState<Review[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
-
-    const vet_id = "1"; // Replace with dynamic vet ID when needed
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const [vetId, setVetId] = useState<number | null>(null);
 
     useSetPrimaryColor();
+
+    useEffect(() => {
+        const fetchVetIdAndReviews = async () => {
+            setLoading(true);
+            try {
+                // Fetch userId from localStorage
+                const userString = localStorage.getItem("user");
+                if (!userString) {
+                    throw new Error("User data not found in local storage");
+                }
+
+                const user = JSON.parse(userString);
+                const userId = user?.id;
+                if (!userId) {
+                    throw new Error("User ID is missing from the user object");
+                }
+
+                // Fetch vetId using the userId
+                const vetResponse = await fetch(`/api/get-vet-id?user_id=${userId}`);
+                if (!vetResponse.ok) {
+                    throw new Error(
+                        `Failed to fetch vet ID. Status: ${vetResponse.status}`
+                    );
+                }
+
+                const { vet_id } = await vetResponse.json();
+                if (!vet_id) {
+                    throw new Error("Vet ID not found for the user");
+                }
+                console.log(vet_id);
+                setVetId(vet_id);
+
+                // Fetch approved and pending reviews
+                const approvedResponse = await fetch(
+                    `/api/vet-reviews/approved-reviews/${vet_id}`
+                );
+                if (!approvedResponse.ok) {
+                    throw new Error("Failed to fetch approved reviews");
+                }
+                const approvedData = await approvedResponse.json();
+                setApprovedReviews(approvedData);
+
+                const pendingResponse = await fetch(
+                    `/api/vet-reviews/pending-reviews/${vet_id}`
+                );
+                if (!pendingResponse.ok) {
+                    throw new Error("Failed to fetch pending reviews");
+                }
+                const pendingData = await pendingResponse.json();
+                setPendingReviews(pendingData);
+            } catch (error: unknown) {
+                if (error instanceof Error) {
+                    setError(error.message);
+                    message.error(error.message);
+                } else {
+                    setError("An unknown error occurred");
+                    message.error("An unknown error occurred");
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchVetIdAndReviews();
+    }, []);
 
     const acceptReview = async (review_id: number) => {
         try {
             const response = await fetch(
                 `/api/vet-approve-review/${review_id}`,
-                {
-                    method: "POST",
-                }
+                { method: "POST" }
             );
 
             if (response.ok) {
                 message.success("Review approved successfully!");
-                // Optionally, refresh the pending and approved reviews
                 setPendingReviews((prev) =>
                     prev.filter((review) => review.review_id !== review_id)
                 );
@@ -63,14 +125,11 @@ const ReviewsSummary = () => {
         try {
             const response = await fetch(
                 `/api/vet-reject-review/${review_id}`,
-                {
-                    method: "DELETE",
-                }
+                { method: "DELETE" }
             );
 
             if (response.ok) {
                 message.success("Review rejected and deleted successfully!");
-                // Remove the rejected review from the pending reviews list
                 setPendingReviews((prev) =>
                     prev.filter((review) => review.review_id !== review_id)
                 );
@@ -87,41 +146,6 @@ const ReviewsSummary = () => {
         }
     };
 
-    useEffect(() => {
-        const fetchReviews = async () => {
-            setLoading(true);
-            try {
-                const approvedResponse = await fetch(
-                    `/api/vet-reviews/approved-reviews/${vet_id}`
-                );
-                if (!approvedResponse.ok) {
-                    throw new Error("Failed to fetch approved reviews");
-                }
-                const approvedData = await approvedResponse.json();
-                setApprovedReviews(approvedData);
-
-                const pendingResponse = await fetch(
-                    `/api/vet-reviews/pending-reviews/${vet_id}`
-                );
-                if (!pendingResponse.ok) {
-                    throw new Error("Failed to fetch pending reviews");
-                }
-                const pendingData = await pendingResponse.json();
-                setPendingReviews(pendingData);
-            } catch (error: unknown) {
-                if (error instanceof Error) {
-                    message.error("Failed to fetch reviews: " + error.message);
-                } else {
-                    message.error("An unknown error occurred");
-                }
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchReviews();
-    }, [vet_id]);
-
     const renderStars = (rating: number) =>
         Array(rating)
             .fill(null)
@@ -131,7 +155,8 @@ const ReviewsSummary = () => {
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
                     fill="currentColor"
-                    className="w-5 h-5 text-[#cc8800] inline-block">
+                    className="w-5 h-5 text-[#cc8800] inline-block"
+                >
                     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
                 </svg>
             ));
@@ -139,7 +164,8 @@ const ReviewsSummary = () => {
     const renderReviewCard = (review: Review, isPending: boolean = false) => (
         <div
             key={review.review_id}
-            className="flex items-start relative bg-white p-6 mb-6 rounded-2xl shadow-sm border border-gray-200 hover:border-primary w-4/5 max-w-3xl">
+            className="flex items-start relative bg-white p-6 mb-6 rounded-2xl shadow-sm border border-gray-200 hover:border-primary w-4/5 max-w-3xl"
+        >
             <img
                 src={review.user_image_url || "/placeholder.jpg"}
                 alt={review.user_name}
@@ -150,9 +176,7 @@ const ReviewsSummary = () => {
                     <div>
                         <span className="font-bold text-lg text-primary mr-2">
                             {review.user_name} -{" "}
-                            <span className="stars">
-                                {renderStars(review.rating)}
-                            </span>
+                            <span className="stars">{renderStars(review.rating)}</span>
                         </span>
                     </div>
                     {isPending && (
@@ -160,24 +184,28 @@ const ReviewsSummary = () => {
                             <button
                                 onClick={() => acceptReview(review.review_id)}
                                 className="hover:opacity-75"
-                                aria-label="Accept Review">
+                                aria-label="Accept Review"
+                            >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 24 24"
                                     fill="currentColor"
-                                    className="w-6 h-6 text-primary">
+                                    className="w-6 h-6 text-primary"
+                                >
                                     <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 22 6 20.6 4.6z" />
                                 </svg>
                             </button>
                             <button
                                 onClick={() => rejectReview(review.review_id)}
                                 className="hover:opacity-75"
-                                aria-label="Reject Review">
+                                aria-label="Reject Review"
+                            >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 24 24"
                                     fill="currentColor"
-                                    className="w-6 h-6 text-primary">
+                                    className="w-6 h-6 text-primary"
+                                >
                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13l-1.41 1.41L12 13.41 8.41 16.41 7 15l3.59-3.59L7 8.41 8.41 7l3.59 3.59L15.59 7 17 8.41l-3.59 3.59L17 15z" />
                                 </svg>
                             </button>
@@ -244,4 +272,3 @@ const ReviewsSummary = () => {
 };
 
 export default ReviewsSummary;
-  

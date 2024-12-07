@@ -13,48 +13,74 @@ interface AuthContextProps {
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { data: session, status } = useSession(); // Handles Google login
+  const { data: session, status } = useSession();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<{ id?: string; name?: string; email: string; role?: string; method: "google" | "api" | null } | null>(null);
 
   useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser({ ...parsedUser, method: "api" });
+      setIsAuthenticated(true);
+    }
+
     if (status === "authenticated" && session) {
-      // User logged in via Google, set user_id and other details
       setUser({
-        id: session.user?.user_id || undefined, // Ensure user_id is available
+        id: session.user?.user_id || undefined,
         name: session.user?.name || undefined,
         email: session.user?.email || "",
         role: session.user?.role || "guest",
-        method: "google", // Assuming it's Google login here
+        method: "google",
       });
       setIsAuthenticated(true);
-    } else {
-      setUser(null);
-      setIsAuthenticated(false); // Reset if no authenticated session
     }
   }, [status, session]);
 
-  const login = (user: { id: string; name: string; email: string; role: string }) => {
-    const userWithMethod: { id: string; name: string; email: string; role: string; method: "api" } = {
-      ...user,
-      method: "api", // Explicitly typed as "api"
+  const login = (userData: { id: string; name: string; email: string; role: string }) => {
+    const userWithMethod = {
+      ...userData,
+      method: "api" as const,
     };
     setUser(userWithMethod);
     setIsAuthenticated(true);
     localStorage.setItem("user", JSON.stringify(userWithMethod));
   };
-  
 
   const logout = async () => {
-    if (user?.method === "google") {
-      await nextAuthSignOut({ callbackUrl: "/login" });
-    } else {
+    try {
+      await fetch('/api/users/logout', {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      if (user?.method === "google") {
+        await nextAuthSignOut({
+          callbackUrl: "/login",
+          redirect: false
+        });
+      }
+
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("next-auth.session-token");
+      localStorage.removeItem("next-auth.csrf-token");
+      localStorage.removeItem("next-auth.callback-url");
+
       setUser(null);
       setIsAuthenticated(false);
-      localStorage.removeItem("user"); // Clear localStorage on logout
+
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Logout error:', error);
+      localStorage.clear();
+      setUser(null);
+      setIsAuthenticated(false);
+      window.location.href = '/login';
     }
   };
-  console.log("AuthContext - User:", user);
+
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       {children}

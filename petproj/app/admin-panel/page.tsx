@@ -129,7 +129,7 @@ console.log(`Fetched user ID: ${userId}`);
                         </div>
                     </div>
                 </div>
-            
+
 
                 {/* 2x2 Grid for Smaller Cards */}
 
@@ -192,6 +192,7 @@ console.log(`Fetched user ID: ${userId}`);
                     </Link>
 
                     {/* Verification Applications */}
+                    <Link href="/admin-approve-vets">
                     <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
@@ -207,6 +208,7 @@ console.log(`Fetched user ID: ${userId}`);
                         </h4>
                         {/* Content for Verification Applications */}
                     </div>
+                    </Link>
                 </div>
             </div>
         </>

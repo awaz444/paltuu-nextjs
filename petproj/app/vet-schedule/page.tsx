@@ -13,9 +13,6 @@ const VetScheduleForm = () => {
   const dispatch = useDispatch<AppDispatch>();
   const searchParams = useSearchParams();
   const vetId = searchParams.get("vet_id");
-  const [userId, setUserId] = useState(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
 
   if (!vetId) {
     console.error("Vet ID is missing.");
@@ -29,34 +26,10 @@ const VetScheduleForm = () => {
     return null;
   }
 
-  useEffect(() => {
-    if (!vetIdNumber) return;
-
-    const fetchUserId = async () => {
-        setLoading(true);
-        try {
-            const response = await fetch(`/api/get-user-id?vetId=${vetIdNumber}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            const data = await response.json();
-            setUserId(data.user_id);
-            console.log("user fetched", userId )
-        } catch (err) {
-            console.error("Error fetching user ID:", err);
-            setError("Failed to fetch user ID");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    fetchUserId();
-}, [vetIdNumber]);
-
-
+  
   const [schedules, setSchedules] = useState([
     { day: "", startTime: "", endTime: "" },
-  ]); // Initial state with one schedule entry
+  ]);
 
   const handleDayChange = (index: number, value: string) => {
     const newSchedules = [...schedules];

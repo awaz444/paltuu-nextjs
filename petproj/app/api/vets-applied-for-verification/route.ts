@@ -48,8 +48,7 @@ export async function GET(_: NextRequest) {
     WHERE 
         vets.profile_verified = FALSE
     ORDER BY 
-        vets.vet_id, vet_qualifications.qualification_id;
-`;
+        vets.vet_id, vet_qualifications.qualification_id;`;
 
         const result = await client.query(query);
 

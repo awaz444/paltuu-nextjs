@@ -28,6 +28,7 @@ const VerificationInfo = () => {
         throw new Error("Failed to fetch qualifications");
       }
       const data = await response.json();
+      console.log("Fetched Qualifications:", data); // Log the qualifications
       setQualifications(data.qualifications);
     } catch (err: any) {
       setError(err.message);
@@ -45,6 +46,7 @@ const VerificationInfo = () => {
 
     const user = JSON.parse(userString);
     const userId = user?.id;
+    console.log("User ID from localStorage:", userId); // Log user ID from localStorage
     if (!userId) {
       setError("Invalid user data");
       setLoading(false);
@@ -57,6 +59,7 @@ const VerificationInfo = () => {
   const beforeUpload = (file: File) => {
     const isImage = file.type.startsWith("image/");
     const isSmallEnough = file.size / 1024 / 1024 < 5;
+    console.log("Before Upload Check:", { isImage, isSmallEnough }); // Log upload checks
     if (!isImage) {
       message.error("You can only upload image files!");
       return false;
@@ -80,6 +83,7 @@ const VerificationInfo = () => {
     (qualificationId: number) =>
     ({ fileList }: any) => {
       setFileLists((prev) => ({ ...prev, [qualificationId]: fileList }));
+      console.log("File list updated for qualification:", qualificationId, fileList); // Log updated file list
     };
 
   const getBase64 = (file: File): Promise<string> =>
@@ -105,8 +109,9 @@ const VerificationInfo = () => {
 
     const user = JSON.parse(userString);
     const vetId = user?.id;
+    console.log("User id:", vetId, "qualification_id:", qualificationId, "fileList:", fileList); // Log submission data
 
-    const formData = new FormData();
+    const formData = new FormData(); 
     fileList.forEach((file) => {
       if (file.originFileObj) {
         formData.append("files", file.originFileObj);
@@ -124,7 +129,7 @@ const VerificationInfo = () => {
       if (response.ok) {
         const data = await response.json();
         message.success("Certificate uploaded successfully!");
-        console.log("Uploaded URLs:", data.urls);
+        console.log("Uploaded URLs:", data.urls); // Log uploaded URLs
         setSubmittedQualifications((prev) => ({
           ...prev,
           [qualificationId]: true,
@@ -132,10 +137,11 @@ const VerificationInfo = () => {
       } else {
         const error = await response.json();
         message.error(error.message || "Failed to upload certificates.");
+        console.error("Upload failed:", error); // Log upload failure
       }
     } catch (error) {
       message.error("An error occurred while uploading certificates.");
-      console.error(error);
+      console.error("Error during upload:", error); // Log error during upload
     }
   };
 

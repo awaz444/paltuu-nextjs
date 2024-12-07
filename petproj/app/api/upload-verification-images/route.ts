@@ -70,8 +70,14 @@ export async function POST(request: NextRequest) {
       console.log(`Inserting image ${i + 1} into the database`);
       try {
         const query = `
+          WITH vet_data AS (
+            SELECT vet_id 
+            FROM vets 
+            WHERE user_id = $1
+          )
+          -- Insert into vet_verification_application using the fetched vet_id
           INSERT INTO vet_verification_application (vet_id, qualification_id, image_url)
-          VALUES ($1, $2, $3)
+          VALUES ((SELECT vet_id FROM vet_data), $2, $3);
         `;
         const queryParams = [vet_id, qualification_id, image_url];
 

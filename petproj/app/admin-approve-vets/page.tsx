@@ -50,9 +50,37 @@ const VetVerificationPage = () => {
     }, []); // Empty dependency array means this runs once when the component mounts
 
     // Button functions
-    const handleAccept = (vetId: number) => {
-        console.log(`Accepted vet with ID: ${vetId}`);
-        // Add logic to handle acceptance (e.g., make API call)
+    const handleAccept = async (vetId: number) => {
+        try {
+            const response = await fetch("/api/admin-verify-vet", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ vet_id: vetId }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to verify vet profile");
+            }
+
+            const data = await response.json();
+            console.log(data.message);
+
+            // Update the vet list to reflect the changes
+            setVets((prevVets) =>
+                prevVets.map((vet) =>
+                    vet.vet_id === vetId
+                        ? { ...vet, profile_verified: true }
+                        : vet
+                )
+            );
+        } catch (error) {
+            console.error(
+                error instanceof Error ? error.message : "An unexpected error occurred"
+            );
+            alert("Failed to approve vet verification.");
+        }
     };
 
     const handleReject = (vetId: number) => {

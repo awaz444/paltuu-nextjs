@@ -10,6 +10,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         location,
         minimum_fee,
         contact_details,
+        clinic_email,
+        clinic_whatsapp,
         bio,
     } = await req.json(); // Updated with 'bio'
     const client = createClient();
@@ -46,11 +48,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         // Insert into the vets table with the new fields
         const vetResult = await client.query(
             `INSERT INTO vets 
-                (user_id, clinic_name, location, minimum_fee, contact_details, bio, profile_verified, created_at) 
+                (user_id, clinic_name, location, minimum_fee, contact_details, clinic_email, clinic_whatsapp, bio, profile_verified, created_at) 
             VALUES 
-                ($1, $2, $3, $4, $5, $6, false, CURRENT_TIMESTAMP) 
+                ($1, $2, $3, $4, $5, $6, $7, $8, false, CURRENT_TIMESTAMP) 
             RETURNING *`,
-            [user_id, clinic_name, location, minimum_fee, contact_details, bio]
+            [user_id, clinic_name, location, minimum_fee, contact_details, clinic_email, clinic_whatsapp, bio]
         );
 
         // Optionally, update the user’s role to 'vet' in the users table if needed
@@ -143,7 +145,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     }
 }
 
-// PUT method to update a vet by ID
 // PUT method to update a vet by ID
 export async function PUT(req: NextRequest): Promise<NextResponse> {
     const {

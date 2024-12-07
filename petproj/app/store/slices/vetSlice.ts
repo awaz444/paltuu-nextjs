@@ -38,6 +38,8 @@ export const postVet = createAsyncThunk(
       location: string;
       minimum_fee: number;
       contact_details: string;
+      clinic_email: string,
+      clinic_whatsapp: string,
       bio: string;
     },
     { rejectWithValue }

@@ -73,29 +73,13 @@ const CreateUser = () => {
                     onSubmit={handleSubmit}
                     className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6 space-y-4">
                     <h2 className="text-3xl font-semibold text-center mb-2">
-                        Create User
+                        Sign Up
                     </h2>
                     <p className="text-gray-600 text-center mb-6">
                         Fill in the details to create a new account.
                     </p>
 
-                    {/* Username */}
-                    <div>
-                        <label className="block text-gray-700 text-sm font-medium mb-1">
-                            Username
-                        </label>
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                            required
-                        />
-                    </div>
-
-                    
-
-                    {/* Email */}
+                   {/* Email */}
                     <div>
                         <label className="block text-gray-700 text-sm font-medium mb-1">
                             Email
@@ -188,20 +172,6 @@ const CreateUser = () => {
                                 </option>
                             ))}
                         </select>
-                    </div>
-
-                    {/* Phone Number */}
-                    <div>
-                        <label className="block text-gray-700 text-sm font-medium mb-1">
-                            Phone Number
-                        </label>
-                        <input
-                            type="tel"
-                            value={phone_number}
-                            onChange={(e) => setPhoneNumber(e.target.value)}
-                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                            required
-                        />
                     </div>
 
                     {/* Role Checkbox */}

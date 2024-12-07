@@ -189,7 +189,7 @@ const FosterApplications = () => {
 
 const LoadingFallback = () => (
     <div className="flex justify-center items-center min-h-screen">
-      <p className="text-lg text-gray-500">Loading specializations...</p>
+      <p className="text-lg text-gray-500">Loading FosterApplicants...</p>
     </div>
   );
 const FosterApplicants = () =>{

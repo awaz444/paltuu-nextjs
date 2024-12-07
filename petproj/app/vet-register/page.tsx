@@ -22,6 +22,10 @@ const VetRegisterForm = () => {
     const [location, setLocation] = useState<string>("");
     const [minimumFee, setMinimumFee] = useState<number>(0);
     const [contactDetails, setContactDetails] = useState<string>("");
+    const [clinicEmail, setClinicEmail] = useState<string>("");
+    const [clinicWhatsapp, setClinicWhatsapp] = useState<string>("");
+    //const [clinicPhoneNumber, setclinicPhoneNumber] = useState<string>("");
+
     const [bio, setBio] = useState<string>("");
     const [showPassword, setShowPassword] = useState(false);
 
@@ -35,6 +39,9 @@ const VetRegisterForm = () => {
                 location,
                 minimum_fee: minimumFee,
                 contact_details: contactDetails,
+                clinic_email: clinicEmail,
+                clinic_whatsapp: clinicWhatsapp,
+
                 bio,
             };
 
@@ -108,7 +115,35 @@ const VetRegisterForm = () => {
                         />
                     </div>
 
-                    {/* Contact Details */}
+                    {/*Clinic Email*/}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Clinic Email
+                        </label>
+                        <input
+                            type="email"
+                            value={clinicEmail}
+                            onChange={(e) => setClinicEmail(e.target.value)}
+                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            required
+                        />
+                    </div>
+                    {/*Clinic WhatsApp*/}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Clinic WhatsApp
+                        </label>
+                        <input
+                            type="text"
+                            value={clinicWhatsapp}
+                            onChange={(e) => setClinicWhatsapp(e.target.value)}
+                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            required
+                        />
+                    </div>
+                
+
+                    {/* Contact Details
                     <div>
                         <label className="block text-gray-700 text-sm font-medium mb-1">
                             Contact Details
@@ -120,7 +155,7 @@ const VetRegisterForm = () => {
                             className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                             required
                         />
-                    </div>
+                    </div> */}
 
                     {/* Bio */}
                     <div>

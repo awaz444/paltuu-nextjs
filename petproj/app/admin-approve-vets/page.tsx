@@ -83,9 +83,31 @@ const VetVerificationPage = () => {
         }
     };
 
-    const handleReject = (vetId: number) => {
-        console.log(`Rejected vet with ID: ${vetId}`);
-        // Add logic to handle rejection (e.g., make API call)
+        const handleReject = async (vetId: number) => {
+            try {
+                const response = await fetch("/api/admin-reject-vet", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ vet_id: vetId }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || "Failed to reject vet application");
+                }
+
+                const data = await response.json();
+                console.log(`Rejected vet with ID: ${vetId}`);
+                console.log("Response:", data.message);
+
+                // Optional: Update state or UI to reflect the rejection
+                alert(`Vet application for ID ${vetId} has been rejected successfully.`);
+            } catch (error) {
+                console.error("Error rejecting vet application:", error);
+                alert(`Failed to reject vet application for ID ${vetId}.`);
+            }
     };
 
     if (loading) {

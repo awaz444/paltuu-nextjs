@@ -6,6 +6,10 @@ import { db } from "@/db/index";
 import { QueryResult } from "pg";
 
 export const authoptions: NextAuthOptions = {
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -74,32 +78,31 @@ export const authoptions: NextAuthOptions = {
               "regular user",
             ];
 
-            const insertResult: QueryResult = await db.query(insertQuery, insertValues);
+            const insertResult = await db.query(insertQuery, insertValues);
             const newUser = insertResult.rows[0];
-            token.user_id = newUser.id;
-            token.role = "regular user";;
+            token.user_id = newUser.user_id;
+            token.role = "regular user";
           } else {
             // User exists, return their details
             const existingUser = result.rows[0];
-            token.user_id = existingUser.id;
+            token.user_id = existingUser.user_id;
             token.role = existingUser.role;
           }
         } catch (error) {
           console.error("Database query failed during Google login:", error);
         }
       }
-
-      token.user_id = token.user_id || null;
-      token.role = token.role || "guest";
       return token;
     },
     async session({ session, token }) {
-      session.user = {
-        ...session.user,
-        user_id: String(token.user_id || ""), // Explicitly add user_id
-        role: token.role || "guest",
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          user_id: token.user_id,
+          role: token.role,
+        },
       };
-      return session;
     },
   },
   pages: {

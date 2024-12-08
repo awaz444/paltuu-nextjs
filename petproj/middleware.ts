@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Define public paths that don't require authentication
-  const isPublicPath = ['/login', '/signup', '/browse-pets','/foster-pets','/llm'].includes(pathname);
+  const isPublicPath = ['/login', '/sign-up', '/browse-pets','/foster-pets','/pet-care','/llm','/forgot-password','/reset-password'].includes(pathname);
 
   // Special handling for logout
   if (pathname === '/api/users/logout') {
@@ -41,11 +41,9 @@ export async function middleware(request: NextRequest) {
 // Update matcher to include all protected routes
 export const config = {
   matcher: [
-    '/',
-    '/login',
-    '/signup',
-    '/browse-pets',
     '/api/users/logout',
-    //aawaiz diddy add all protected routes like this
+    '/profile',
+    '/my-listings',
+    '/my-applications'
   ]
 };

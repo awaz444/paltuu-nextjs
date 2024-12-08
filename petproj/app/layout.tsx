@@ -5,6 +5,7 @@ import "./globals.css";
 import Footer from "@/components/footer";
 import AppClientWrapper from "@/context/AppClientWrapper";
 import { Analytics } from "@vercel/analytics/react"
+import { Toaster } from 'react-hot-toast';
 
 const montserrat = Montserrat({
     subsets: ["latin"],
@@ -35,6 +36,7 @@ export default function RootLayout({
                     {/* ClientProvider wraps client-side Redux */}
                 </AppClientWrapper>
                 <Footer />
+                <Toaster />
             </body>
         </html>
     );

@@ -38,7 +38,10 @@ function ResetPasswordContent() {
         e.preventDefault();
 
         if (!token) {
-            toast.error("Invalid or missing token.");
+            toast.error("Invalid or missing reset token.", {
+                duration: 4000,
+                position: "top-center",
+            });
             return;
         }
 
@@ -50,14 +53,30 @@ function ResetPasswordContent() {
             });
 
             if (response.data.success) {
-                toast.success("Password reset successful! Redirecting to login...");
-                router.push("/login");
+                toast.success("Password reset successful!", {
+                    duration: 3000,
+                    position: "top-center",
+                });
+
+                // Show a second toast after a brief delay
+                setTimeout(() => {
+                    toast.success("Redirecting to login...", {
+                        duration: 2000,
+                        position: "top-center",
+                    });
+                }, 1500);
+
+                // Redirect after showing toasts
+                setTimeout(() => {
+                    router.push("/login");
+                }, 3500);
             }
         } catch (error: any) {
-            console.error("Reset Password failed:", error.message);
-            toast.error(
-                error.response?.data?.message || "Error resetting password."
-            );
+            const errorMessage = error.response?.data?.error || "Error resetting password.";
+            toast.error(errorMessage, {
+                duration: 4000,
+                position: "top-center",
+            });
         } finally {
             setLoading(false);
         }

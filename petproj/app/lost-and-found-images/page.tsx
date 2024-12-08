@@ -168,7 +168,7 @@ function CreatePetList() {
             type="submit"
             className="mt-4 p-3 bg-primary text-white rounded-3xl w-full"
           >
-            Upload Images
+            Upload Image
           </button>
         </form>
       </div>

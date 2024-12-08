@@ -38,7 +38,7 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             <Link
-                href="/create-listing"
+                href="/lost-and-found-create-listing"
                 className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex  flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"

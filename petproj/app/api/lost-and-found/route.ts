@@ -8,17 +8,21 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         await client.connect();
 
         const query = `
-        SELECT 
-            lost_and_found_posts.*, 
-            cities.city_name AS city,
-            categories.category_name AS category,
-            users.contact_info AS user_contact_info
-        FROM lost_and_found_posts
-        JOIN cities ON lost_and_found_posts.city_id = cities.city_id
-        JOIN categories ON lost_and_found_posts.category_id = categories.category_id
-        JOIN users ON lost_and_found_posts.user_id = users.user_id
-        ORDER BY lost_and_found_posts.post_date DESC;
+            SELECT 
+                lost_and_found_posts.*, 
+                cities.city_name AS city,
+                pet_category.category_name AS category,
+                users.phone_number AS user_phone_number,
+                lost_and_found_post_images.image_url AS image
+            FROM lost_and_found_posts
+            JOIN cities ON lost_and_found_posts.city_id = cities.city_id
+            JOIN pet_category ON lost_and_found_posts.category_id = pet_category.category_id
+            JOIN users ON lost_and_found_posts.user_id = users.user_id
+            LEFT JOIN lost_and_found_post_images ON lost_and_found_posts.post_id = lost_and_found_post_images.post_id
+            WHERE lost_and_found_posts.status != 'resolved'
+            ORDER BY lost_and_found_posts.post_date DESC;
         `;
+    
 
         const result = await client.query(query);
 
@@ -54,7 +58,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             pet_description,
             city_id,
             location,
-            contact_info,
+            phone_number,
             post_date,
             status,
             category_id,
@@ -66,7 +70,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             !pet_description ||
             !city_id ||
             !location ||
-            !contact_info ||
+            !phone_number ||
             !post_date ||
             !status ||
             !category_id
@@ -82,7 +86,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const query = `
         INSERT INTO lost_and_found_posts (
             user_id, post_type, pet_description, city_id, location, 
-            contact_info, post_date, status, category_id
+            phone_number, post_date, status, category_id
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING *;
@@ -93,7 +97,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             pet_description,
             city_id,
             location,
-            contact_info,
+            phone_number,
             post_date,
             status,
             category_id,

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import Navbar from "../../components/navbar";
-import LostAndFoundFilter from "../../components/Lost&FoundFilter"; 
+import LostAndFoundFilter from "../../components/Lost&FoundFilter";
 import LostAndFoundGrid from "../../components/LostAndFoundGrid"; // Use LostAndFoundGrid instead of PetGrid
 import axios from "axios"; // Import axios for API calls
 import "./styles.css";
@@ -42,13 +42,34 @@ export default function LostFound() {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get("/api/get-all-lost-and-found-posts"); // Update the URL for the correct API endpoint
-            setPets(response.data);
+            const response = await axios.get("/api/lost-and-found");
+            console.log('API Response:', response); // Debug API response
+
+            // Map the response data to match the interface
+            const mappedPets = response.data.map((pet: any) => ({
+                post_id: pet.post_id,
+                user_id: pet.user_id,
+                post_type: pet.post_type,
+                pet_description: pet.pet_description,
+                city_id: pet.city_id,
+                location: pet.location,
+                contact_info: pet.contact_info,
+                post_date: pet.post_date,
+                status: pet.status,
+                category_id: pet.category_id,
+                image_url: pet.image || null,
+                city: pet.city, // City name directly from response
+                category_name: pet.category, // Category name directly from response
+            }));
+
+            setPets(mappedPets); // Update state with mapped data
+
         } catch (error: any) {
             setError(
                 error.response?.data?.message || 
                 "Failed to fetch lost and found posts. Please try again later."
             );
+            console.error('API Error:', error); // Debug API error
         } finally {
             setLoading(false);
         }
@@ -70,7 +91,7 @@ export default function LostFound() {
 
     // **Search based on filters**
     const handleSearch = () => {
-        console.log("Searching with filters:", filters);
+        console.log("Searching with filters:", filters); // Debug filter state
     };
 
     // **Filter pets based on city, location, category, and status**
@@ -82,13 +103,13 @@ export default function LostFound() {
             ? pet.location?.toLowerCase().includes(filters.location.toLowerCase())
             : true;
         const matchesCategory = filters.selectedCategory
-            ? pet.category_id === Number(filters.selectedCategory) 
+            ? pet.category_id === Number(filters.selectedCategory)
             : true;
 
         const matchesStatus =
             activeTab === "lost"
-                ? pet.status === "lost"
-                : pet.status === "found";
+                ? pet.post_type === "lost"
+                : pet.post_type === "found";
 
         return matchesCity && matchesLocation && matchesCategory && matchesStatus;
     });
@@ -102,8 +123,11 @@ export default function LostFound() {
         <>
             <Navbar />
             <div className="fullBody" style={{ maxWidth: "90%", margin: "0 auto" }}>
-                <LostAndFoundFilter 
-                    onSearch={(filters) => setFilters((prev) => ({ ...prev, ...filters }))}
+                <LostAndFoundFilter
+                    onSearch={(filters) => {
+                        console.log('Filters updated:', filters); // Debug filter updates
+                        setFilters((prev) => ({ ...prev, ...filters }));
+                    }}
                 />
                 <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
                     <div className="w-full">
@@ -112,8 +136,8 @@ export default function LostFound() {
                             <div
                                 className="tab-switch-slider bg-primary"
                                 style={{
-                                    transform: activeTab === "lost" 
-                                        ? "translateX(0)" 
+                                    transform: activeTab === "lost"
+                                        ? "translateX(0)"
                                         : "translateX(100%)",
                                 }}
                             />
@@ -136,7 +160,9 @@ export default function LostFound() {
                         ) : error ? (
                             <p className="text-red-500">{error}</p>
                         ) : (
-                            <LostAndFoundGrid pets={filteredPets} />
+                            <>
+                                <LostAndFoundGrid pets={filteredPets} />
+                            </>
                         )}
                     </div>
                 </main>

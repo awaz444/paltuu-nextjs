@@ -102,6 +102,7 @@ const Navbar = () => {
         { name: "Browse pets", href: "browse-pets" },
         { name: "Foster Pets", href: "foster-pets" },
         { name: "Pet Care", href: "pet-care" },
+        { name: "Lost & Found", href: "lost-and-found" },
         { name: "Paltuu AI", href: "llm" },
     ];
 

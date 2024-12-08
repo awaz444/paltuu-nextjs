@@ -97,7 +97,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             location,
             contact_info,  
             category_id,
-            date_lost
+            date_lost   
         ];
 
         const result = await client.query(query, values);

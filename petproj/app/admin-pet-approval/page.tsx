@@ -66,9 +66,32 @@ const AdminPetApproval: React.FC = () => {
             body: JSON.stringify({ pet_id: petId, approved: true }),
         });
 
-        const data = await response.json();
-
+        // First check if the response is ok
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Response not ok:', response.status, errorText);
+
+            let errorMessage = 'Failed to approve pet';
+            try {
+                const errorData = JSON.parse(errorText);
+                errorMessage = errorData.message || errorMessage;
+            } catch (e) {
+                console.error('Error parsing error response:', e);
+            }
+
+            throw new Error(errorMessage);
+        }
+
+        // Try to parse the successful response
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            console.error('Error parsing success response:', e);
+            throw new Error('Invalid response from server');
+        }
+
+        if (!data.success) {
             throw new Error(data.message || 'Failed to approve pet');
         }
 

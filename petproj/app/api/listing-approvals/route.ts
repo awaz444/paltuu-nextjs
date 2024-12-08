@@ -52,7 +52,11 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         // Validate input
         if (!pet_id || typeof approved !== 'boolean') {
             return NextResponse.json(
-                { error: 'Invalid request body', message: 'pet_id and approved are required.' },
+                {
+                    success: false,
+                    error: 'Invalid request body',
+                    message: 'pet_id and approved are required.'
+                },
                 { status: 400 }
             );
         }
@@ -83,7 +87,11 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         if (result.rowCount === 0) {
             await client.query('ROLLBACK');
             return NextResponse.json(
-                { error: 'Not Found', message: 'Pet not found.' },
+                {
+                    success: false,
+                    error: 'Not Found',
+                    message: 'Pet not found.'
+                },
                 { status: 404 }
             );
         }
@@ -94,10 +102,16 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
 
         return NextResponse.json(
             {
+                success: true,
                 message: 'Pet approved successfully.',
                 pet: result.rows[0]
             },
-            { status: 200 }
+            {
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
         );
     } catch (err) {
         console.error("PUT Error:", err);
@@ -109,8 +123,17 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         }
 
         return NextResponse.json(
-            { error: 'Internal Server Error', message: (err as Error).message },
-            { status: 500 }
+            {
+                success: false,
+                error: 'Internal Server Error',
+                message: (err as Error).message
+            },
+            {
+                status: 500,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
         );
     } finally {
         try {

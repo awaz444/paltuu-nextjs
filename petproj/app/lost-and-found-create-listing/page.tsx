@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import "./styles.css";
 import Navbar from "@/components/navbar";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
+import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 
 const LostFoundListingPage = () => {
     const [categoryId, setCategoryId] = useState<number | string>(""); // Updated to categoryId
@@ -16,7 +17,7 @@ const LostFoundListingPage = () => {
     const [userId, setUserId] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
-
+    useSetPrimaryColor();
     const router = useRouter();
     // **Retrieve user ID from localStorage**
     useEffect(() => {

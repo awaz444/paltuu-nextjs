@@ -35,7 +35,7 @@ function CreatePetList() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const petId = searchParams.get("petId");
+  const petId = searchParams.get("petId"); // Get petId from the query params
 
   const [fileList, setFileList] = useState<UploadFile[]>([]); // State for uploaded files
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -69,7 +69,7 @@ function CreatePetList() {
       formData.append("category", category); // Add category (Lost or Found)
 
       // Send images to the backend API for uploading
-      const response = await axios.post("/api/upload-image", formData, {
+      const response = await axios.post("/api/upload-lost-found-image", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -120,8 +120,6 @@ function CreatePetList() {
           className="bg-white p-6 rounded-3xl shadow-md w-full max-w-lg mx-auto my-8"
           onSubmit={handleSubmit}
         >
-          
-
           {/* Upload Images */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-3">

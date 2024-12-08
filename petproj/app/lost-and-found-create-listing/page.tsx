@@ -104,7 +104,7 @@ const LostFoundListingPage = () => {
                 // Assuming the response contains a post_id
                 const postId = data?.post_id;
                 if (postId) {
-                    router.push(`/lost-and-found-images?postId=${postId}`);
+                    router.push(`/lost-and-found-images?post_id=${postId}`);
                 } else {
                     setError("Failed to get post ID from response.");
                 }

@@ -1,6 +1,6 @@
 "use client";
 import { useState, Suspense } from "react";
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
 import { PlusOutlined } from "@ant-design/icons";
 import { Image, Upload, message } from "antd";
@@ -35,20 +35,18 @@ function CreatePetList() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const petId = searchParams.get("petId"); // Get petId from the query params
+  const postId = searchParams.get("post_id"); // Get post_id from the query params
 
   const [fileList, setFileList] = useState<UploadFile[]>([]); // State for uploaded files
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
 
-  const [category, setCategory] = useState<'lost' | 'found'>('lost'); // State to toggle between Lost and Found
-
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!petId) {
-      message.error("Pet ID is missing.");
+    if (!postId) {
+      message.error("Post ID is missing.");
       return;
     }
 
@@ -58,37 +56,39 @@ function CreatePetList() {
     }
 
     try {
-      // Prepare FormData for API call
+      // **Upload Image to Cloudinary**
       const formData = new FormData();
-      fileList.forEach((file) => {
-        if (file.originFileObj) {
-          formData.append("files", file.originFileObj);
-        }
+      if (fileList[0]?.originFileObj) {
+        formData.append("file", fileList[0].originFileObj);
+        formData.append("upload_preset", "your_upload_preset"); // Change this to your Cloudinary upload preset
+      }
+
+      const cloudinaryResponse = await axios.post(
+        "https://api.cloudinary.com/v1_1/your_cloud_name/image/upload",
+        formData
+      );
+
+      const imageUrl = cloudinaryResponse.data.secure_url; // Get image URL from Cloudinary response
+
+      if (!imageUrl) {
+        message.error("Failed to upload image to Cloudinary.");
+        return;
+      }
+
+      // **Send the image URL and post_id to the backend**
+      const response = await axios.post("/api/upload-lost-found-image", {
+        post_id: postId,
+        image_url: imageUrl, // The image URL from Cloudinary
       });
-      formData.append("pet_id", String(petId)); // Use petId from URL query
-      formData.append("category", category); // Add category (Lost or Found)
 
-      // Send images to the backend API for uploading
-      const response = await axios.post("/api/upload-lost-found-image", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if (response.data.urls) {
-        // Once images are uploaded, update the pet's images in the database
-        const petData = {
-          petId,
-          images: response.data.urls, // Use the URLs returned from Cloudinary
-        };
-
-        console.log("Images Uploaded and Pet Updated...");
+      if (response.status === 200) {
+        message.success("Image uploaded and linked successfully.");
         router.push("/listing-created"); // Redirect after successful upload
       } else {
-        message.error("Failed to upload images.");
+        message.error("Failed to link image to the post.");
       }
     } catch (error) {
-      message.error("Error occurred while uploading images.");
+      message.error("Error occurred while uploading image.");
       console.error(error);
     }
   };
@@ -126,12 +126,12 @@ function CreatePetList() {
               Upload Image
             </label>
             <Upload
-              action=""
               listType="picture-card"
               fileList={fileList}
               onPreview={handlePreview}
               onChange={handleChange}
               maxCount={1}
+              beforeUpload={beforeUpload}
             >
               {fileList.length >= 1 ? null : uploadButton}
             </Upload>
@@ -147,19 +147,6 @@ function CreatePetList() {
               />
             )}
           </div>
-
-          {/* Additional Fields */}
-          {category === 'found' && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Date Found
-              </label>
-              <input
-                type="date"
-                className="mt-1 p-3 w-full border rounded-2xl"
-              />
-            </div>
-          )}
 
           {/* Submit Button */}
           <button

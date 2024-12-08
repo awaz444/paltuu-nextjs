@@ -13,6 +13,9 @@ const VetScheduleForm = () => {
   const dispatch = useDispatch<AppDispatch>();
   const searchParams = useSearchParams();
   const vetId = searchParams.get("vet_id");
+  const [userId, setUserId] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   if (!vetId) {
     console.error("Vet ID is missing.");
@@ -26,10 +29,34 @@ const VetScheduleForm = () => {
     return null;
   }
 
-  
+  useEffect(() => {
+    if (!vetIdNumber) return;
+
+    const fetchUserId = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(`/api/get-user-id?vetId=${vetIdNumber}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            setUserId(data.user_id);
+            console.log("user fetched", userId )
+        } catch (err) {
+            console.error("Error fetching user ID:", err);
+            setError("Failed to fetch user ID");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchUserId();
+}, [vetIdNumber]);
+
+
   const [schedules, setSchedules] = useState([
     { day: "", startTime: "", endTime: "" },
-  ]);
+  ]); // Initial state with one schedule entry
 
   const handleDayChange = (index: number, value: string) => {
     const newSchedules = [...schedules];
@@ -76,42 +103,62 @@ const VetScheduleForm = () => {
       return;
     }
 
-    const schedulesWithVetId: VetSchedule[] = validSchedules
+    const schedulesWithVetId = validSchedules
       .map((schedule) => {
         const startTime = formatTime(schedule.startTime);
         const endTime = formatTime(schedule.endTime);
 
         if (!startTime || !endTime) {
           console.error("Invalid time format detected.");
-          return null; // Mark invalid entries as null
+          return null;
         }
 
         return {
           vet_id: vetIdNumber,
-          day_of_week: schedule.day,
-          start_time: startTime,
-          end_time: endTime,
+          qualification_id: 1, // Example qualification_id (You might want to make this dynamic)
+          year_acquired: new Date().getFullYear().toString(),
+          note: `Available on ${schedule.day} from ${schedule.startTime} to ${schedule.endTime}`,
         };
       })
-      .filter((schedule): schedule is VetSchedule => schedule !== null); // Narrow the type to VetSchedule[]
+      .filter(Boolean); // Remove null entries
 
     if (schedulesWithVetId.length === 0) {
       alert("No valid schedules to submit.");
       return;
     }
 
+    setLoading(true);
     try {
-      await dispatch(addVetSchedules(schedulesWithVetId));
-      console.log(schedulesWithVetId);
+      for (const schedule of schedulesWithVetId) {
+        const response = await fetch("/api/vet-qualification", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(schedule),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Error posting schedule:", errorData);
+          setError(errorData.message || "Failed to add schedule.");
+          return;
+        }
+
+        const result = await response.json();
+        console.log("Schedule added successfully:", result);
+      }
+
       alert("Schedules added successfully!");
       setSchedules([{ day: "", startTime: "", endTime: "" }]);
       router.push("/login");
     } catch (error) {
       console.error("Error adding schedules:", error);
       alert("Failed to add schedules.");
+    } finally {
+      setLoading(false);
     }
   };
-
 
   return (
     <div className="min-h-screen flex">

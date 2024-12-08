@@ -58,32 +58,33 @@ const AdminPetApproval: React.FC = () => {
   const handleApprove = async (petId: number) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/listing-approvals', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ pet_id: petId, approved: true }),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        message.error(`Approval failed: ${errorData.message || 'Unknown error'}`);
-      } else {
-        message.success('Pet approved successfully.');
-        setPets((prevPets) =>
-          prevPets.map((pet) =>
-            pet.pet_id === petId ? { ...pet, approved: true } : pet
-          )
-        );
-      }
+        const response = await fetch('/api/listing-approvals', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ pet_id: petId, approved: true }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to approve pet');
+        }
+
+        message.success('Pet listing approved successfully');
+
+        // Remove the approved pet from the list
+        setPets((prevPets) => prevPets.filter(pet => pet.pet_id !== petId));
+
     } catch (error) {
-      message.error('Error approving pet.');
+        console.error('Approval error:', error);
+        message.error(error instanceof Error ? error.message : 'Failed to approve pet listing');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
-  
+
 
   const columns = [
     {
@@ -127,7 +128,7 @@ const AdminPetApproval: React.FC = () => {
         return cityName;
       },
     },
-    
+
     {
       title: 'Vaccinated',
       dataIndex: 'vaccinated',

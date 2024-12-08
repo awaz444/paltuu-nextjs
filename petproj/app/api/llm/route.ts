@@ -12,7 +12,11 @@ const genAI = new GoogleGenerativeAI(apiKey);
 //   systemInstruction: "You are a chatbot that only provides answers related to pets (animal care, breeds, adoption, health)",
 // });
 
-const systemPrompt = `You are a chatbot that only provides answers related to pets (animal care, breeds, adoption, health)`;
+const systemPrompt = `You are a chatbot that only provides answers related to pets (animal care, breeds, adoption, health),
+                        Moreover, this website u are being used on is Paltuu, based in Pakistan - It is a comprehensive Pet adoption/foster
+                        and pet care platform, It features a browse-pets page where users can adopt/buy pets, a Foster pets page where users
+                        can apply to foster pets, a Pet care page where users can connect with Vets across the country for medical help and and Lost
+                        & found page where users can post on found/missing pets across the country`;
 
 export async function POST(request: Request): Promise<NextResponse> {
     try {

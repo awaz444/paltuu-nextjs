@@ -115,7 +115,7 @@ function CreatePetList() {
   return (
     <>
       <Navbar />
-      <div className="fullBody" style={{ maxWidth: "90%", margin: "0 auto" }}>
+      <div className="fullBody min-h-screen" style={{ maxWidth: "90%", margin: "0 auto" }}>
         <form
           className="bg-white p-6 rounded-3xl shadow-md w-full max-w-lg mx-auto my-8"
           onSubmit={handleSubmit}

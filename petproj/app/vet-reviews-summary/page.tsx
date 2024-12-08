@@ -223,7 +223,7 @@ const ReviewsSummary = () => {
     return (
         <div>
             <Navbar />
-            <div className="flex flex-col items-center mt-5 mx-3">
+            <div className="flex flex-col min-h-screen items-center mt-5 mx-3">
                 <h2 className="text-2xl font-bold mb-4 text-primary">Reviews Summary</h2>
                 {loading ? (
                     <div className="flex justify-center items-center h-40">

@@ -149,7 +149,7 @@ const NotificationsPage = () => {
   return (
     <>
       <Navbar />
-      <div className="container mx-auto p-4 mb-60">
+      <div className="container min-h-screen mx-auto p-4 mb-60">
         <h1 className="text-2xl font-bold mb-4">Notifications</h1>
         {loading ? (
           <p>Loading...</p>
@@ -161,15 +161,27 @@ const NotificationsPage = () => {
           <ul>
             {notifications.map((notification) => (
               <li
-                key={notification.notification_id}
-                className={`mb-4 p-2 border border-gray-300 rounded cursor-pointer ${
-                  notification.is_read === false ? 'text-primary font-bold' : 'text-gray-500'
-                }`}
-                onClick={() => handleNotificationClick(notification)}
-              >
-                <p>{notification.notification_content}</p>
-                <span className="text-sm text-gray-500">{notification.date_sent}</span>
-              </li>
+              key={notification.notification_id}
+              className={`mb-4 p-2 px-4 max-w-1/2 border border-gray-300 rounded-xl cursor-pointer ${
+                  notification.is_read === false
+                      ? "text-primary font-bold"
+                      : "text-primary"
+              }`}
+              onClick={() =>
+                  handleNotificationClick(notification)
+              }>
+              <p>
+                  {notification.is_read === false && (
+                      <span className="text-primary mr-2">
+                          •
+                      </span>
+                  )}
+                  {notification.notification_content}
+              </p>
+              <span className="text-sm text-gray-500">
+                  {notification.date_sent}
+              </span>
+          </li>
             ))}
           </ul>
         )}

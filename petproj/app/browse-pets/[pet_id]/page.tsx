@@ -150,7 +150,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
             <Navbar />
             <div className="pet-details min-h-screen bg-gray-50 py-10 px-6">
-                <Card className="shadow-lg rounded-md mx-auto max-w-4xl bg-white">
+                <Card className="shadow-lg rounded-xl mx-auto max-w-4xl bg-white">
                     <div className="flex flex-row justify-between">
                         <h1 className="text-center text-3xl font-bold mb-4 mt-2">
                             {pet.pet_name}

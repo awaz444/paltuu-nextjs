@@ -144,7 +144,7 @@ const Navbar = () => {
             <div className="flex items-center justify-between w-full">
                 {/* Logo */}
                 <div className="logo">
-                    <Link href="/">
+                    <Link href="/browse-pets">
                         <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
                     </Link>
                 </div>

@@ -93,7 +93,7 @@ const UserListingsPage = () => {
   return (
     <>
       <Navbar />
-      <div className="mt-8 px-4 flex flex-col items-center">
+      <div className="mt-8 px-4 flex flex-col items-center mb-6">
         {/* Tab Switch */}
         <div className="w-full max-w-2xl">
           <div className="tab-switch-container relative flex justify-between rounded-lg bg-gray-100 p-1">
@@ -123,7 +123,7 @@ const UserListingsPage = () => {
         </div>
 
         {/* PetGrid Component */}
-        <div className="mt-6 w-full max-w-6xl">
+        <div className="mt-6 w-full max-w-6xl mb-3">
           <MyListingGrid pets={filteredListings} />
         </div>
       </div>

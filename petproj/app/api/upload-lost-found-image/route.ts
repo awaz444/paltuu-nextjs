@@ -1,7 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import { createClient } from "../../../db/index"; // Import your custom database client
 import { NextRequest, NextResponse } from "next/server";
-import { v4 as uuidv4 } from "uuid";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -11,7 +10,7 @@ cloudinary.config({
 });
 
 export async function POST(request: NextRequest) {
-  const client = createClient(); // Initialize your custom database client (e.g., `pg` or ORM)
+  const client = createClient(); // Initialize your custom database client
 
   try {
     const data = await request.formData();
@@ -63,14 +62,13 @@ export async function POST(request: NextRequest) {
       upload.end(buffer);
     });
 
-    // Insert the image into the database
-    const image_id = uuidv4();
+    // Insert the image into the database (let the database handle image_id generation)
     const query = `
-      INSERT INTO lost_and_found_post_images (image_id, post_id, image_url, created_at)
-      VALUES ($1, $2, $3, NOW())
+      INSERT INTO lost_and_found_post_images (post_id, image_url, created_at)
+      VALUES ($1, $2, NOW())
       RETURNING *;
     `;
-    const queryParams = [image_id, post_id, image_url];
+    const queryParams = [post_id, image_url];
     const result = await client.query(query, queryParams);
 
     return NextResponse.json(
@@ -85,7 +83,7 @@ export async function POST(request: NextRequest) {
     );
   } finally {
     try {
-      await client.end(); // Close the database connection
+      await client.end();
     } catch (error) {
       console.error("Error closing database connection:", error);
     }

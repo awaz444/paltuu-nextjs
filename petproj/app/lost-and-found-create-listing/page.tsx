@@ -5,6 +5,7 @@ import "./styles.css";
 import Navbar from "@/components/navbar";
 import { useRouter } from "next/navigation";
 import { routeModule } from "next/dist/build/templates/app-page";
+import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 
 const LostFoundListingPage = () => {
     const [petName, setPetName] = useState("");
@@ -17,6 +18,8 @@ const LostFoundListingPage = () => {
     const [contactInfo, setContactInfo] = useState("");
     const [activeTab, setActiveTab] = useState<"lost" | "found">("lost");
     const router= useRouter();
+    useSetPrimaryColor();
+
     // **City Options**
     const cities = [
         { id: 1, name: "Karachi" },
@@ -75,7 +78,7 @@ const LostFoundListingPage = () => {
                 console.error("Error:", error);
             });
 
-            router.push('/upload-lost-and-found-image');
+            router.push('/upload-lost-found-image');
 
     };
 

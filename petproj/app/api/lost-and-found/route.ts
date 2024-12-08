@@ -59,8 +59,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             city_id,
             location,
             contact_info,
-            post_date,
-            status,
             category_id,
             date_lost,
         } = body;
@@ -72,8 +70,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             !city_id ||
             !location ||
             !contact_info ||
-            !post_date ||
-            !status ||
             !category_id ||
             !date_lost
         ) {
@@ -88,9 +84,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const query = `
         INSERT INTO lost_and_found_posts (
             user_id, post_type, pet_description, city_id, location, 
-            contact_info, post_date, status, category_id, date_lost
+            contact_info, category_id, date_lost
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING *;
         `;
         const values = [
@@ -99,9 +95,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             pet_description,
             city_id,
             location,
-            contact_info,
-            post_date,
-            status,
+            contact_info,  
             category_id,
             date_lost
         ];

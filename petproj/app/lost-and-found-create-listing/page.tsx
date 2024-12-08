@@ -3,6 +3,8 @@
 import { useState } from "react";
 import "./styles.css";
 import Navbar from "@/components/navbar";
+import { useRouter } from "next/navigation";
+import { routeModule } from "next/dist/build/templates/app-page";
 
 const LostFoundListingPage = () => {
     const [petName, setPetName] = useState("");
@@ -14,7 +16,7 @@ const LostFoundListingPage = () => {
     const [dateLost, setDateLost] = useState("");
     const [contactInfo, setContactInfo] = useState("");
     const [activeTab, setActiveTab] = useState<"lost" | "found">("lost");
-
+    const router= useRouter();
     // **City Options**
     const cities = [
         { id: 1, name: "Karachi" },
@@ -72,6 +74,9 @@ const LostFoundListingPage = () => {
             .catch((error) => {
                 console.error("Error:", error);
             });
+
+            router.push('/upload-lost-and-found-image');
+
     };
 
     // **Reset form fields**

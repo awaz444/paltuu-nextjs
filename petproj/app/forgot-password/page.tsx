@@ -39,11 +39,27 @@ export default function ForgotPassword() {
             const response = await axios.post("/api/auth/forgot-password", { email });
 
             if (response.data.success) {
-                toast.success("Password reset email sent! Check your inbox.");
+                toast.success(
+                    "Password reset email sent! Please check your inbox and spam folder.",
+                    {
+                        duration: 5000,
+                        position: "top-center",
+                    }
+                );
+                // Optional: Add a delay before showing additional message
+                setTimeout(() => {
+                    toast.success("You can close this page now.", {
+                        duration: 3000,
+                        position: "top-center",
+                    });
+                }, 2000);
             }
         } catch (error: any) {
-            console.error("Forgot Password failed:", error.message);
-            toast.error(error.response?.data?.message || "Error sending reset email.");
+            const errorMessage = error.response?.data?.error || "Error sending reset email.";
+            toast.error(errorMessage, {
+                duration: 4000,
+                position: "top-center",
+            });
         } finally {
             setLoading(false);
         }

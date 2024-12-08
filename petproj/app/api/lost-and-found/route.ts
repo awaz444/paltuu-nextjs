@@ -58,10 +58,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             pet_description,
             city_id,
             location,
-            phone_number,
+            contact_info,
             post_date,
             status,
             category_id,
+            date_lost,
         } = body;
 
         if (
@@ -70,10 +71,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             !pet_description ||
             !city_id ||
             !location ||
-            !phone_number ||
+            !contact_info ||
             !post_date ||
             !status ||
-            !category_id
+            !category_id ||
+            !date_lost
         ) {
             return NextResponse.json(
                 { error: "Missing required fields" },
@@ -86,9 +88,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const query = `
         INSERT INTO lost_and_found_posts (
             user_id, post_type, pet_description, city_id, location, 
-            phone_number, post_date, status, category_id
+            contact_info, post_date, status, category_id, date_lost
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING *;
         `;
         const values = [
@@ -97,10 +99,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             pet_description,
             city_id,
             location,
-            phone_number,
+            contact_info,
             post_date,
             status,
             category_id,
+            date_lost
         ];
 
         const result = await client.query(query, values);

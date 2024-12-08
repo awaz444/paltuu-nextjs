@@ -60,7 +60,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             location,
             contact_info,
             category_id,
-            date_lost,
+            date_lost = null ,
         } = body;
 
         if (
@@ -70,8 +70,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             !city_id ||
             !location ||
             !contact_info ||
-            !category_id ||
-            !date_lost
+            !category_id 
         ) {
             return NextResponse.json(
                 { error: "Missing required fields" },

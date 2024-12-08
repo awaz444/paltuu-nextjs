@@ -5,9 +5,18 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
 
+// Define Notification interface
+interface Notification {
+  notification_id: string; // Unique identifier for the notification
+  notification_content: string; // The content/message of the notification
+  date_sent: string; // The date the notification was sent
+  is_read: boolean; // Whether the notification has been read
+  notification_type: string; // Type of notification (e.g., 'new_listing')
+}
+
 const NotificationsPage = () => {
   const [userId, setUserId] = useState<string | null>(null);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -50,10 +59,9 @@ const NotificationsPage = () => {
     try {
       const response = await fetch(`/api/get-notifications-by-id/${userId}`);
       if (response.ok) {
-        const data = await response.json();
-        console.log(data);
+        const data: Notification[] = await response.json(); // Type the response
+        console.log('Fetched Notifications:', data);
         setNotifications(data);
-
       } else {
         setError('Failed to fetch notifications');
       }
@@ -66,57 +74,77 @@ const NotificationsPage = () => {
   };
 
   // Function to handle notification click
-  const handleNotificationClick = async (notification: any) => {
+  const handleNotificationClick = async (notification: Notification) => {
     try {
-      if (!notification.id) {
-        console.error('Notification ID is missing');
+      
+      if (!notification.notification_id) {
+        console.error('Notification ID is missing:', notification);
         return;
       }
-  
+
       // Check if the notification is already read
       if (!notification.is_read) {
         // Optimistic UI update: Set the notification as read locally
         setNotifications((prevNotifications) =>
           prevNotifications.map((notif) =>
-            notif.id === notification.id ? { ...notif, is_read: true } : notif
+            notif.notification_id === notification.notification_id
+              ? { ...notif, is_read: true }
+              : notif
           )
         );
-  
+
         // Mark the notification as read via the API
-        const response = await fetch(`/api/mark-notification-read/${notification.id}`, {
+        const response = await fetch(`/api/mark-notification-read/${notification.notification_id}`, {
           method: 'PUT',
         });
-  
+
         if (!response.ok) {
           console.error('Failed to mark notification as read:', await response.text());
           // Revert UI update in case of error
           setNotifications((prevNotifications) =>
             prevNotifications.map((notif) =>
-              notif.id === notification.id ? { ...notif, is_read: false } : notif
+              notif.notification_id === notification.notification_id
+                ? { ...notif, is_read: false }
+                : notif
             )
           );
           throw new Error('Failed to mark notification as read');
         }
-  
-        console.log(`Notification ${notification.id} marked as read.`);
+
+        console.log(`Notification ${notification.notification_id} marked as read.`);
       }
-  
+
       // Redirect based on the notification type
       switch (notification.notification_type) {
         case 'new_listing':
           router.push('/admin-pet-approval');
           break;
-        // Add additional notification types and routes here
+      
+        case 'application_type':
+          if (userId) {
+            router.push(`/my-listings`);
+          } else {
+            console.error('User ID is missing for application_type notification.');
+          }
+          break;
+      
+        case 'review_type':
+          router.push('/vet-reviews-summary');
+          break;
+      
+        case 'verification_type':
+          router.push('/admin-approve-vets');
+          break;
+      
         default:
           console.warn(`Unknown notification type: ${notification.notification_type}`);
           break;
       }
+      
     } catch (err) {
       console.error('Error handling notification click:', err);
     }
   };
-  
-  
 
   return (
     <>
@@ -132,17 +160,15 @@ const NotificationsPage = () => {
         ) : (
           <ul>
             {notifications.map((notification) => (
-              
               <li
-                key={notification.id}
+                key={notification.notification_id}
                 className={`mb-4 p-2 border border-gray-300 rounded cursor-pointer ${
                   notification.is_read === false ? 'text-primary font-bold' : 'text-gray-500'
                 }`}
-                onClick={() => handleNotificationClick(notification)} 
+                onClick={() => handleNotificationClick(notification)}
               >
                 <p>{notification.notification_content}</p>
                 <span className="text-sm text-gray-500">{notification.date_sent}</span>
-                
               </li>
             ))}
           </ul>

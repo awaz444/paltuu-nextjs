@@ -39,6 +39,7 @@ export interface Pet {
     profile_image_url: string | null;
     image_id: number | null;
     image_url: string | null;
+    approved: boolean | null;
 }
 
 interface PetGridProps {
@@ -57,9 +58,9 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
 
     const handleViewApplications = (petId: number, listing_type: string) => {
         if (listing_type === 'adoption')
-        router.push(`/adoption-applicants?pet_id=${petId}`);
-        else if(listing_type === 'foster')
-        router.push(`/foster-applicants?pet_id=${petId}`);
+            router.push(`/adoption-applicants?pet_id=${petId}`);
+        else if (listing_type === 'foster')
+            router.push(`/foster-applicants?pet_id=${petId}`);
     };
 
     const handleDelete = async (petId: number) => {
@@ -146,6 +147,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                 Create new listing
             </Link>
             {pets.map((pet) => (
+
                 <div key={pet.pet_id} className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 relative">
                     <div className="relative">
                         <div className="absolute top-2 right-2 flex gap-2">
@@ -164,6 +166,16 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                                 <img src="/pen.svg" alt="Edit" className="w-4 h-4" />
                             </button>
                         </div>
+                        {/* Adoption Status */}
+                        <div className="absolute top-2 left-2 flex gap-2">
+                            <div
+                                className={`${pet.approved ? 'bg-green-300' : 'bg-orange-300'
+                                    } text-white text-sm font-semibold px-3 py-1 rounded-full`}
+                            >
+                                {pet.approved ? 'Approved' : 'Pending'}
+                            </div>
+
+                        </div>
                         <img
                             src={pet.image_url || '/dog-placeholder.png'}
                             alt={pet.pet_name}
@@ -176,6 +188,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                             </div>
                         )}
                     </div>
+                    {/* Pet Details */}
                     <div className="p-4">
                         <h3 className="font-bold text-2xl mb-1">{pet.pet_name}</h3>
                         <p className="text-gray-600 mb-1">
@@ -186,13 +199,14 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                         </p>
                     </div>
                     <button
-                            className="bg-primary text-white px-4 py-2 rounded-xl mt-4"
-                            onClick={() => handleViewApplications(pet.pet_id,pet.listing_type)}
-                        >
-                            View Applications
+                        className="bg-primary text-white px-4 py-2 rounded-xl mt-4"
+                        onClick={() => handleViewApplications(pet.pet_id, pet.listing_type)}
+                    >
+                        View Applications
                     </button>
                 </div>
             ))}
+
 
             {/* Confirmation Popup */}
             {showConfirm.show && (
@@ -217,8 +231,8 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                     </div>
                 </div>
             )}
-{/* Edit Form Popup */}
-{editingPet && (
+            {/* Edit Form Popup */}
+            {editingPet && (
                 <Modal
                     title="Edit Pet Listing"
                     visible={!!editingPet}
@@ -531,7 +545,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                         Neutered
                     </Checkbox>
                 </Modal>
-)}
+            )}
 
         </div>
     );

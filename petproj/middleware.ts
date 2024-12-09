@@ -44,6 +44,7 @@ export const config = {
     '/api/users/logout',
     '/profile',
     '/my-listings',
-    '/my-applications'
+    '/my-applications',
+    '/create-listing'
   ]
 };

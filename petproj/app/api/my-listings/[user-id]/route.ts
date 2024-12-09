@@ -19,36 +19,39 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         await client.connect();
 
         const query = `
-            SELECT 
-                p.pet_id,
-                p.owner_id,
-                p.pet_name,
-                p.pet_type,
-                p.pet_breed,
-                c.city_name AS city,
-                p.area,
-                p.age,
-                p.description,
-                p.adoption_status,
-                p.price,
-                p.min_age_of_children,
-                p.can_live_with_dogs,
-                p.can_live_with_cats,
-                p.must_have_someone_home,
-                p.energy_level,
-                p.cuddliness_level,
-                p.health_issues,
-                p.created_at,
-                p.sex,
-                p.listing_type,
-                p.vaccinated,
-                p.neutered,
-                p.payment_frequency,
-                p.approved
-            FROM pets p
-            LEFT JOIN cities c ON p.city_id = c.city_id
-            WHERE p.owner_id = $1;
-        `;
+    SELECT 
+        p.pet_id,
+        p.owner_id,
+        p.pet_name,
+        p.pet_type,
+        p.pet_breed,
+        c.city_name AS city,
+        p.area,
+        p.age,
+        p.description,
+        p.adoption_status,
+        p.price,
+        p.min_age_of_children,
+        p.can_live_with_dogs,
+        p.can_live_with_cats,
+        p.must_have_someone_home,
+        p.energy_level,
+        p.cuddliness_level,
+        p.health_issues,
+        p.created_at,
+        p.sex,
+        p.listing_type,
+        p.vaccinated,
+        p.neutered,
+        p.payment_frequency,
+        p.approved,
+        pi.image_url AS primary_image_url -- Get the image URL for order = 1
+    FROM pets p
+    LEFT JOIN cities c ON p.city_id = c.city_id
+    LEFT JOIN pet_images pi ON p.pet_id = pi.pet_id AND pi."order" = 1 -- Join with image only where order = 1
+    WHERE p.owner_id = $1;
+`;
+
 
         const result = await client.query(query, [user_id]);
 
@@ -88,6 +91,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             neutered: row.neutered,
             payment_frequency: row.payment_frequency,
             approved: row.approved,
+            image_url: row.primary_image_url,
         }));
 
         return NextResponse.json(

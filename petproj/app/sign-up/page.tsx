@@ -1,8 +1,8 @@
 "use client";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import { RootState, AppDispatch } from "../store/store"; // Import store types
-import { fetchCities } from "../store/slices/citiesSlice"; // Fetch cities from store
+import { RootState, AppDispatch } from "../store/store"; 
+import { fetchCities } from "../store/slices/citiesSlice"; 
 import { postUser } from "../store/slices/userSlice";
 import { User } from "../types/user";
 import { useRouter } from "next/navigation";
@@ -10,11 +10,11 @@ import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 
 const CreateUser = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const { cities } = useSelector((state: RootState) => state.cities); // Fetch cities if needed
+    const { cities } = useSelector((state: RootState) => state.cities); 
     const router = useRouter();
 
     const [username, setUsername] = useState("");
-    const [name, setName] = useState("");
+    const [name, setName] = useState(""); // Full Name State
     const [DOB, setDOB] = useState("");
     const [cityId, setCityId] = useState<number | null>(null);
     const [email, setEmail] = useState("");
@@ -26,7 +26,7 @@ const CreateUser = () => {
     const [role, setRole] = useState<"regular user" | "vet">("regular user");
 
     useEffect(() => {
-        dispatch(fetchCities()); // Fetch cities when component mounts
+        dispatch(fetchCities()); 
     }, [dispatch]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -49,9 +49,7 @@ const CreateUser = () => {
         };
 
         try {
-            const result = (await dispatch(postUser(newUser))) as {
-                payload: User;
-            };
+            const result = (await dispatch(postUser(newUser))) as { payload: User };
             if (result.payload.role === "vet") {
                 router.push(`/vet-register?user_id=${result.payload.user_id}`);
             } else {
@@ -79,7 +77,22 @@ const CreateUser = () => {
                         Fill in the details to create a new account.
                     </p>
 
-                   {/* Email */}
+                    {/* Full Name */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Full Name
+                        </label>
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            placeholder="Enter your full name"
+                            required
+                        />
+                    </div>
+
+                    {/* Email */}
                     <div>
                         <label className="block text-gray-700 text-sm font-medium mb-1">
                             Email
@@ -129,9 +142,7 @@ const CreateUser = () => {
                             required
                         />
                         <span
-                            onClick={() =>
-                                setShowConfirmPassword(!showConfirmPassword)
-                            }
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-6">
                             {showConfirmPassword ? (
                                 <EyeInvisibleOutlined />
@@ -179,13 +190,7 @@ const CreateUser = () => {
                         <input
                             type="checkbox"
                             checked={role === "vet"}
-                            onChange={() =>
-                                setRole((prevRole) =>
-                                    prevRole === "regular user"
-                                        ? "vet"
-                                        : "regular user"
-                                )
-                            }
+                            onChange={() => setRole((prevRole) => prevRole === "regular user" ? "vet" : "regular user")}
                             className="h-4 w-4 border-gray-300 text-primary rounded focus:ring-primary focus:outline-none"
                         />
                         <label className="text-gray-700 text-sm">

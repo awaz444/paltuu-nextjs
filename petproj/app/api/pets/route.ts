@@ -1,5 +1,5 @@
-import { createClient } from '../../../db/index'; 
-import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from "../../../db/index";
+import { NextRequest, NextResponse } from "next/server";
 
 // POST method to create a new pet
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -24,14 +24,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         listing_type,
         vaccinated,
         neutered,
-        price, 
-        payment_frequency
+        price,
+        payment_frequency,
     } = await req.json();
-    
+
     const client = createClient();
 
     try {
-        await client.connect(); 
+        await client.connect();
 
         // Insert new pet listing
         const result = await client.query(
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 vaccinated,
                 neutered,
                 price,
-                payment_frequency
+                payment_frequency,
             ]
         );
 
@@ -73,22 +73,33 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             `SELECT user_id FROM users WHERE role = 'admin'`
         );
 
-        const adminUserIds = adminResult.rows.map(row => row.user_id);
+        const adminUserIds = adminResult.rows.map((row) => row.user_id);
 
+        // **Insert notifications for all admin users**
         // **Insert notifications for all admin users**
         if (adminUserIds.length > 0) {
             const notificationContent = `A new pet listing ${pet_name} has been added. Please approve or reject it.`;
 
+            // Dynamically generate the placeholders for each row
             const notificationQuery = `
-                INSERT INTO notifications (user_id, content, notification_type, is_read, created_at)
-                VALUES ${adminUserIds.map((_, i) => `($${i * 5 + 1}, $${i * 5 + 2}, $${i * 5 + 3}, $${i * 5 + 4}, CURRENT_TIMESTAMP)`).join(', ')}
-            `;
+        INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+        VALUES ${adminUserIds
+            .map(
+                (_, i) =>
+                    `($${i * 5 + 1}, $${i * 5 + 2}, $${i * 5 + 3}, $${
+                        i * 5 + 4
+                    }, $${i * 5 + 5})`
+            )
+            .join(", ")}
+    `;
 
-            const notificationValues = adminUserIds.flatMap(user_id => [
-                user_id, 
-                notificationContent, 
-                'listing_type', 
-                false
+            // Create the array of parameter values for each admin
+            const notificationValues = adminUserIds.flatMap((user_id) => [
+                user_id,
+                notificationContent,
+                "listing_type",
+                false,
+                new Date(), // Use JS Date object to ensure type consistency
             ]);
 
             await client.query(notificationQuery, notificationValues);
@@ -96,15 +107,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         return NextResponse.json(newPet, {
             status: 201,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { "Content-Type": "application/json" },
         });
     } catch (err) {
         console.error(err);
         return NextResponse.json(
-            { error: 'Internal Server Error', message: (err as Error).message },
+            { error: "Internal Server Error", message: (err as Error).message },
             {
                 status: 500,
-                headers: { 'Content-Type': 'application/json' },
+                headers: { "Content-Type": "application/json" },
             }
         );
     } finally {
@@ -117,23 +128,23 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
 
     try {
-        await client.connect(); 
-        const result = await client.query('SELECT * FROM pets'); 
+        await client.connect();
+        const result = await client.query("SELECT * FROM pets");
         return NextResponse.json(result.rows, {
             status: 200,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { "Content-Type": "application/json" },
         });
     } catch (err) {
         console.error(err);
         return NextResponse.json(
-            { error: 'Internal Server Error', message: (err as Error).message },
+            { error: "Internal Server Error", message: (err as Error).message },
             {
                 status: 500,
-                headers: { 'Content-Type': 'application/json' },
+                headers: { "Content-Type": "application/json" },
             }
         );
     } finally {
-        await client.end(); 
+        await client.end();
     }
 }
 
@@ -161,14 +172,14 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         listing_type,
         vaccinated,
         neutered,
-        price, 
-        payment_frequency
+        price,
+        payment_frequency,
     } = await req.json();
-    
+
     const client = createClient();
 
     try {
-        await client.connect(); 
+        await client.connect();
         const result = await client.query(
             `UPDATE pets SET owner_id = $1, pet_name = $2, pet_type = $3, pet_breed = $4, city_id = $5, area = $6, 
             age = $7, description = $8, adoption_status = $9, min_age_of_children = $10, can_live_with_dogs = $11, 
@@ -197,33 +208,36 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
                 vaccinated,
                 neutered,
                 price,
-                payment_frequency, 
-                pet_id
+                payment_frequency,
+                pet_id,
             ]
         );
 
         if (result.rows.length === 0) {
-            return NextResponse.json({ error: 'Pet not found' }, {
-                status: 404,
-                headers: { 'Content-Type': 'application/json' },
-            });
+            return NextResponse.json(
+                { error: "Pet not found" },
+                {
+                    status: 404,
+                    headers: { "Content-Type": "application/json" },
+                }
+            );
         }
 
         return NextResponse.json(result.rows[0], {
             status: 200,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { "Content-Type": "application/json" },
         });
     } catch (err) {
         console.error(err);
         return NextResponse.json(
-            { error: 'Internal Server Error', message: (err as Error).message },
+            { error: "Internal Server Error", message: (err as Error).message },
             {
                 status: 500,
-                headers: { 'Content-Type': 'application/json' },
+                headers: { "Content-Type": "application/json" },
             }
         );
     } finally {
-        await client.end(); 
+        await client.end();
     }
 }
 
@@ -233,27 +247,36 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
 
     try {
-        await client.connect(); 
-        const result = await client.query('DELETE FROM pets WHERE pet_id = $1 RETURNING *', [pet_id]);
+        await client.connect();
+        const result = await client.query(
+            "DELETE FROM pets WHERE pet_id = $1 RETURNING *",
+            [pet_id]
+        );
 
         if (result.rows.length === 0) {
-            return NextResponse.json({ error: 'Pet not found' }, {
-                status: 404,
-                headers: { 'Content-Type': 'application/json' },
-            });
+            return NextResponse.json(
+                { error: "Pet not found" },
+                {
+                    status: 404,
+                    headers: { "Content-Type": "application/json" },
+                }
+            );
         }
 
-        return NextResponse.json({ message: 'Pet deleted successfully' }, {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-        });
+        return NextResponse.json(
+            { message: "Pet deleted successfully" },
+            {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+            }
+        );
     } catch (err) {
         console.error(err);
         return NextResponse.json(
-            { error: 'Internal Server Error', message: (err as Error).message },
+            { error: "Internal Server Error", message: (err as Error).message },
             {
                 status: 500,
-                headers: { 'Content-Type': 'application/json' },
+                headers: { "Content-Type": "application/json" },
             }
         );
     } finally {

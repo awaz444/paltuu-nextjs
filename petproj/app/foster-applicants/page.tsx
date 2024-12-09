@@ -3,6 +3,7 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
+import Navbar from '@/components/navbar';
 
 interface FosterApplication {
     foster_id: number;
@@ -112,78 +113,134 @@ const FosterApplications = () => {
     }
 
     return (
-        <div className="max-w-4xl mx-auto p-4">
-            <h1 className="text-2xl font-bold">Foster Applications for Pet ID: {petId}</h1>
-            {loading ? (
-                <p className="mt-4">Loading applications...</p>
-            ) : applications && applications.length > 0 ? (
-                <ul className="mt-4 space-y-6">
-                    {applications.map((app) => (
-                        <li
-                            key={app.foster_id}
-                            className="border p-4 rounded-lg shadow-md bg-white cursor-pointer"
-                            onClick={() => handleExpand(app.foster_id)}
+        <>
+        <Navbar></Navbar>
+        <div className="max-w-5xl min-h-screen mx-auto p-6">
+
+    {loading ? (
+        <p className="text-lg text-gray-600 text-center mt-4">Loading applications...</p>
+    ) : applications && applications.length > 0 ? (
+        <ul className="space-y-6">
+            {applications.map((app) => (
+                <li
+                    key={app.foster_id}
+                    className={`p-6 bg-white border-2 ${
+                        expandedApplication === app.foster_id ? "border-blue-400" : "border-gray-300"
+                    } rounded-xl shadow-md cursor-pointer transition-all duration-300 hover:shadow-lg`}
+                    onClick={() => handleExpand(app.foster_id)}
+                >
+                    {/* Application Header */}
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-800">{app.fosterer_name}</h2>
+                            <p className="text-sm text-gray-600">
+                                <strong>Address:</strong> {app.fosterer_address}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                <strong>Foster Dates:</strong>{" "}
+                                {app.foster_start_date
+                                    ? new Date(app.foster_start_date).toLocaleDateString()
+                                    : "Not provided"}{" "}
+                                -{" "}
+                                {app.foster_end_date
+                                    ? new Date(app.foster_end_date).toLocaleDateString()
+                                    : "Not provided"}
+                            </p>
+                        </div>
+                        <span
+                            className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                                app.status === "approved"
+                                    ? "bg-green-100 text-green-800"
+                                    : app.status === "rejected"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-yellow-100 text-yellow-800"
+                            }`}
                         >
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <h2 className="font-bold text-lg">{app.fosterer_name}</h2>
-                                    <p>
-                                        <strong>Address:</strong> {app.fosterer_address}
-                                    </p>
-                                    <p>
-                                        <strong>Foster Dates:</strong> {app.foster_start_date
-                                            ? new Date(app.foster_start_date).toLocaleDateString()
-                                            : 'Not provided'}{' '}
-                                        -{' '}
-                                        {app.foster_end_date
-                                            ? new Date(app.foster_end_date).toLocaleDateString()
-                                            : 'Not provided'}
-                                    </p>
-                                </div>
-                                <div className="flex space-x-4">
-                                    <button
-                                        className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleApprove(app.foster_id);
-                                        }}
-                                        disabled={app.status === 'approved'}
-                                    >
-                                        Approve
-                                    </button>
-                                    <button
-                                        className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleReject(app.foster_id);
-                                        }}
-                                        disabled={app.status === 'rejected'}
-                                    >
-                                        Reject
-                                    </button>
-                                </div>
-                            </div>
-                            {expandedApplication === app.foster_id && (
-                                <div className="mt-4 space-y-2">
-                                    <p><strong>Fostering Experience:</strong> {app.fostering_experience}</p>
-                                    <p><strong>Age of Youngest Child:</strong> {app.age_of_youngest_child || 'Not provided'}</p>
-                                    <p><strong>Other Pets Details:</strong> {app.other_pets_details}</p>
-                                    <p><strong>Other Pets Neutered:</strong> {app.other_pets_neutered ? 'Yes' : 'No'}</p>
-                                    <p><strong>Has Secure Outdoor Area:</strong> {app.has_secure_outdoor_area ? 'Yes' : 'No'}</p>
-                                    <p><strong>Pet Sleep Location:</strong> {app.pet_sleep_location}</p>
-                                    <p><strong>Pet Left Alone:</strong> {app.pet_left_alone}</p>
-                                    <p><strong>Time at Home:</strong> {app.time_at_home}</p>
-                                    <p><strong>Reason for Fostering:</strong> {app.reason_for_fostering}</p>
-                                    <p><strong>Additional Details:</strong> {app.additional_details}</p>
-                                </div>
-                            )}
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <p className="mt-4">No applications found for this pet.</p>
-            )}
-        </div>
+                            {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                        </span>
+                    </div>
+
+                    {/* Accordion Content */}
+                    {expandedApplication === app.foster_id && (
+                        <div className="mt-4 space-y-2 border-t border-gray-200 pt-4 text-gray-700">
+                            <p>
+                                <strong>Fostering Experience:</strong> {app.fostering_experience || "Not provided"}
+                            </p>
+                            <p>
+                                <strong>Age of Youngest Child:</strong>{" "}
+                                {app.age_of_youngest_child || "Not provided"}
+                            </p>
+                            <p>
+                                <strong>Other Pets Details:</strong> {app.other_pets_details || "Not provided"}
+                            </p>
+                            <p>
+                                <strong>Other Pets Neutered:</strong>{" "}
+                                {app.other_pets_neutered ? "Yes" : "No"}
+                            </p>
+                            <p>
+                                <strong>Has Secure Outdoor Area:</strong>{" "}
+                                {app.has_secure_outdoor_area ? "Yes" : "No"}
+                            </p>
+                            <p>
+                                <strong>Pet Sleep Location:</strong> {app.pet_sleep_location || "Not provided"}
+                            </p>
+                            <p>
+                                <strong>Pet Left Alone:</strong> {app.pet_left_alone || "Not provided"}
+                            </p>
+                            <p>
+                                <strong>Time at Home:</strong> {app.time_at_home || "Not provided"}
+                            </p>
+                            <p>
+                                <strong>Reason for Fostering:</strong> {app.reason_for_fostering || "Not provided"}
+                            </p>
+                            <p>
+                                <strong>Additional Details:</strong> {app.additional_details || "Not provided"}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="mt-6 flex justify-end space-x-4">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleApprove(app.foster_id);
+                            }}
+                            className={`px-6 py-2 font-medium text-sm rounded-lg ${
+                                app.status === "approved"
+                                        ? "bg-white text-primary bordder border-primary"
+                                        : "bg-primary text-white"
+                            } transition-all`}
+                            disabled={app.status === "approved"}
+                        >
+                            Approve
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleReject(app.foster_id);
+                            }}
+                            className={`px-6 py-2 font-medium text-sm rounded-lg ${
+                                app.status === "rejected"
+                                        ? "bg-primary text-white cursor-not-allowed"
+                                        : "bg-white text-primary border border-primary"
+                            } transition-all`}
+                            disabled={app.status === "rejected"}
+                        >
+                            Reject
+                        </button>
+                    </div>
+                </li>
+            ))}
+        </ul>
+    ) : (
+        <p className="text-lg text-gray-600 text-center mt-4">
+            No applications found for this pet.
+        </p>
+    )}
+</div>
+
+        </>
     );
 };
 

@@ -131,7 +131,7 @@ export default function MyApplicationsPage() {
                         {applications.map((app) => (
                             <div
                                 key={app.application_id}
-                                className="bg-white border border-gray-200 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
+                                className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
                                 <img
                                     src={app.image_url || "/placeholder.jpg"}
                                     alt={app.pet_name}
@@ -179,7 +179,7 @@ export default function MyApplicationsPage() {
                                     ).toLocaleDateString()}
                                 </p>
                                 <button
-                                    className="mt-4 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition-colors"
+                                    className="mt-4 rounded-3xl bg-primary text-white py-2 px-4 hover:bg-red-600 transition-colors"
                                     onClick={() =>
                                         handleDeleteApplication(
                                             app.application_id,

@@ -169,7 +169,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                         {/* Adoption Status */}
                         <div className="absolute top-2 left-2 flex gap-2">
                             <div
-                                className={`${pet.approved ? 'bg-green-300' : 'bg-orange-300'
+                                className={`${pet.approved ? 'bg-green-600' : 'bg-orange-500'
                                     } text-white text-sm font-semibold px-3 py-1 rounded-full`}
                             >
                                 {pet.approved ? 'Approved' : 'Pending'}

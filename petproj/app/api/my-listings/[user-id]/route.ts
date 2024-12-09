@@ -43,7 +43,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                 p.listing_type,
                 p.vaccinated,
                 p.neutered,
-                p.payment_frequency
+                p.payment_frequency,
                 p.approved
             FROM pets p
             LEFT JOIN cities c ON p.city_id = c.city_id

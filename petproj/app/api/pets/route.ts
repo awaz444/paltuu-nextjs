@@ -25,13 +25,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         vaccinated,
         neutered,
         price, 
-        payment_frequency // Add payment_frequency here
+        payment_frequency
     } = await req.json();
     
     const client = createClient();
 
     try {
         await client.connect(); 
+
+        // Insert new pet listing
         const result = await client.query(
             `INSERT INTO pets (owner_id, pet_name, pet_type, pet_breed, city_id, area, age, description, adoption_status, 
             min_age_of_children, can_live_with_dogs, can_live_with_cats, must_have_someone_home, energy_level, 
@@ -60,11 +62,39 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 vaccinated,
                 neutered,
                 price,
-                payment_frequency // Add payment_frequency here
+                payment_frequency
             ]
         );
 
-        return NextResponse.json(result.rows[0], {
+        const newPet = result.rows[0];
+
+        // **Fetch all admin user IDs**
+        const adminResult = await client.query(
+            `SELECT user_id FROM users WHERE role = 'admin'`
+        );
+
+        const adminUserIds = adminResult.rows.map(row => row.user_id);
+
+        // **Insert notifications for all admin users**
+        if (adminUserIds.length > 0) {
+            const notificationContent = `A new pet listing ${pet_name} has been added. Please approve or reject it.`;
+
+            const notificationQuery = `
+                INSERT INTO notifications (user_id, content, notification_type, is_read, created_at)
+                VALUES ${adminUserIds.map((_, i) => `($${i * 5 + 1}, $${i * 5 + 2}, $${i * 5 + 3}, $${i * 5 + 4}, CURRENT_TIMESTAMP)`).join(', ')}
+            `;
+
+            const notificationValues = adminUserIds.flatMap(user_id => [
+                user_id, 
+                notificationContent, 
+                'listing_type', 
+                false
+            ]);
+
+            await client.query(notificationQuery, notificationValues);
+        }
+
+        return NextResponse.json(newPet, {
             status: 201,
             headers: { 'Content-Type': 'application/json' },
         });
@@ -132,7 +162,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         vaccinated,
         neutered,
         price, 
-        payment_frequency // Add payment_frequency here
+        payment_frequency
     } = await req.json();
     
     const client = createClient();
@@ -167,7 +197,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
                 vaccinated,
                 neutered,
                 price,
-                payment_frequency, // Add payment_frequency here
+                payment_frequency, 
                 pet_id
             ]
         );

@@ -45,6 +45,5 @@ export const config = {
     '/profile',
     '/my-listings',
     '/my-applications',
-    '/create-listing'
   ]
 };

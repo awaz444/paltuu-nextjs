@@ -42,21 +42,24 @@ const FosterApplications = () => {
         if (!petId) return;
 
         const fetchApplications = async () => {
-            setLoading(true);
             try {
-                const response = await fetch(`/api/foster_application/${petId}`);
+                const response = await fetch(`/api/adoption_application/${petId}`);
                 if (response.ok) {
                     const data = await response.json();
-                     setApplications(data);
+                    setApplications(Array.isArray(data) ? data : [data]);
+                } else if (response.status === 404) {
+                    console.error('No applications found for the given pet ID.');
+                    setApplications([]); // Set applications to an empty array for 404
                 } else {
                     console.error('Failed to fetch applications:', response.statusText);
+                    setApplications(null); // Optionally handle other errors
                 }
             } catch (error) {
                 console.error('Error fetching applications:', error);
-            } finally {
-                setLoading(false);
+                setApplications(null); // Handle network or unexpected errors
             }
         };
+        
 
         fetchApplications();
     }, [petId]);

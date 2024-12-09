@@ -39,13 +39,19 @@ const AdoptionApplications = () => {
                 if (response.ok) {
                     const data = await response.json();
                     setApplications(Array.isArray(data) ? data : [data]);
+                } else if (response.status === 404) {
+                    console.error('No applications found for the given pet ID.');
+                    setApplications([]); // Set applications to an empty array for 404
                 } else {
                     console.error('Failed to fetch applications:', response.statusText);
+                    setApplications(null); // Optionally handle other errors
                 }
             } catch (error) {
                 console.error('Error fetching applications:', error);
+                setApplications(null); // Handle network or unexpected errors
             }
         };
+        
 
         fetchApplications();
     }, [petId]);

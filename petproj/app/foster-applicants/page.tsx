@@ -125,7 +125,7 @@ const FosterApplications = () => {
                 <li
                     key={app.foster_id}
                     className={`p-6 bg-white border-2 ${
-                        expandedApplication === app.foster_id ? "border-blue-400" : "border-gray-300"
+                        expandedApplication === app.foster_id ? "border-primary" : "border-primary"
                     } rounded-xl shadow-md cursor-pointer transition-all duration-300 hover:shadow-lg`}
                     onClick={() => handleExpand(app.foster_id)}
                 >

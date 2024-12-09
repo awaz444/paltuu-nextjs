@@ -1,8 +1,8 @@
 "use client";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import { RootState, AppDispatch } from "../store/store"; 
-import { fetchCities } from "../store/slices/citiesSlice"; 
+import { RootState, AppDispatch } from "../store/store";
+import { fetchCities } from "../store/slices/citiesSlice";
 import { postUser } from "../store/slices/userSlice";
 import { User } from "../types/user";
 import { useRouter } from "next/navigation";
@@ -10,7 +10,7 @@ import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 
 const CreateUser = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const { cities } = useSelector((state: RootState) => state.cities); 
+    const { cities } = useSelector((state: RootState) => state.cities);
     const router = useRouter();
 
     const [username, setUsername] = useState("");
@@ -26,7 +26,7 @@ const CreateUser = () => {
     const [role, setRole] = useState<"regular user" | "vet">("regular user");
 
     useEffect(() => {
-        dispatch(fetchCities()); 
+        dispatch(fetchCities());
     }, [dispatch]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -101,6 +101,20 @@ const CreateUser = () => {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            required
+                        />
+                    </div>
+
+                    {/*Phone Number*/}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Phone Number
+                        </label>
+                        <input
+                            type="text"
+                            value={phone_number}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
                             className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                             required
                         />

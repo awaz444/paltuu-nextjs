@@ -44,6 +44,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                 p.vaccinated,
                 p.neutered,
                 p.payment_frequency
+                p.approved
             FROM pets p
             LEFT JOIN cities c ON p.city_id = c.city_id
             WHERE p.owner_id = $1;
@@ -86,6 +87,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             vaccinated: row.vaccinated,
             neutered: row.neutered,
             payment_frequency: row.payment_frequency,
+            approved: row.approved,
         }));
 
         return NextResponse.json(

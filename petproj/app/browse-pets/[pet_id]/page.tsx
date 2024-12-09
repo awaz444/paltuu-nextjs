@@ -19,6 +19,7 @@ import {
     Tag
 } from "antd";
 import { CopyOutlined, WhatsAppOutlined } from "@ant-design/icons";
+import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 
 const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     params,
@@ -31,6 +32,8 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [IsModalOpen, setIsModalOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    useSetPrimaryColor();
 
     // Replace with the actual logged-in user ID
     const userString = localStorage.getItem("user");

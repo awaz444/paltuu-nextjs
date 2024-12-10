@@ -121,7 +121,7 @@ function CreatePetList() {
           {/* Upload Images */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              Upload Images (Max 5)
+              Upload Images (Maximum 5)
             </label>
             <Upload
               action=""

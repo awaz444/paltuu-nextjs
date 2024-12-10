@@ -49,7 +49,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     FROM pets p
     LEFT JOIN cities c ON p.city_id = c.city_id
     LEFT JOIN pet_images pi ON p.pet_id = pi.pet_id AND pi."order" = 1 -- Join with image only where order = 1
-    WHERE p.owner_id = $1;
+    WHERE p.owner_id = $1
+    ORDER BY p.created_at DESC;
 `;
 
 

@@ -98,7 +98,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                     <input
                         type="number"
                         placeholder="Max yrs"
-                        className="border rounded-xl-xl w-1/2 p-2"
+                        className="border rounded-xl w-1/2 p-2"
                         value={maxAge}
                         onChange={(e) => setMaxAge(e.target.value)}
                     />

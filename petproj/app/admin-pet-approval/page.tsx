@@ -4,9 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { Table, Button, Space, message } from 'antd';
 import Navbar from '@/components/navbar';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
-import { useSelector, useDispatch } from 'react-redux';
-import { AppDispatch, RootState } from '../store/store';
-import { fetchCities } from '../store/slices/citiesSlice';
 
 type Pet = {
   pet_id: number;
@@ -24,16 +21,17 @@ type Pet = {
   approved: boolean;
 };
 
+type City = {
+  city_id: number;
+  city_name: string;
+};
+
 const AdminPetApproval: React.FC = () => {
-
   useSetPrimaryColor();
 
-  const dispatch = useDispatch<AppDispatch>();
-
-  const { cities } = useSelector((state: RootState) => state.cities); // Get cities from the store
   const [pets, setPets] = useState<Pet[]>([]);
+  const [cities, setCities] = useState<City[]>([]); // Replacing Redux state with local state
   const [loading, setLoading] = useState(false);
-  useSetPrimaryColor();
 
   useEffect(() => {
     const fetchPets = async () => {
@@ -45,12 +43,24 @@ const AdminPetApproval: React.FC = () => {
         const data: Pet[] = await response.json();
         setPets(data);
       } catch (error) {
-        console.error(error);
+        console.error('Error fetching pets:', error);
       }
     };
 
+    const fetchCities = async () => {
+      try {
+        const response = await fetch('/api/cities');
+        if (!response.ok) {
+          throw new Error('Failed to fetch cities');
+        }
+        const data: City[] = await response.json();
+        setCities(data);
+      } catch (error) {
+        console.error('Error fetching cities:', error);
+      }
+    };
 
-    dispatch(fetchCities());
+    fetchCities();
     fetchPets();
   }, []);
 
@@ -58,56 +68,42 @@ const AdminPetApproval: React.FC = () => {
   const handleApprove = async (petId: number) => {
     setLoading(true);
     try {
-        const response = await fetch('/api/listing-approvals', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ pet_id: petId, approved: true }),
-        });
+      const response = await fetch('/api/listing-approvals', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ pet_id: petId, approved: true }),
+      });
 
-        // First check if the response is ok
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Response not ok:', response.status, errorText);
-
-            let errorMessage = 'Failed to approve pet';
-            try {
-                const errorData = JSON.parse(errorText);
-                errorMessage = errorData.message || errorMessage;
-            } catch (e) {
-                console.error('Error parsing error response:', e);
-            }
-
-            throw new Error(errorMessage);
-        }
-
-        // Try to parse the successful response
-        let data;
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = 'Failed to approve pet';
         try {
-            data = await response.json();
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorMessage;
         } catch (e) {
-            console.error('Error parsing success response:', e);
-            throw new Error('Invalid response from server');
+          console.error('Error parsing error response:', e);
         }
+        throw new Error(errorMessage);
+      }
 
-        if (!data.success) {
-            throw new Error(data.message || 'Failed to approve pet');
-        }
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to approve pet');
+      }
 
-        message.success('Pet listing approved successfully');
+      message.success('Pet listing approved successfully');
 
-        // Remove the approved pet from the list
-        setPets((prevPets) => prevPets.filter(pet => pet.pet_id !== petId));
-
+      // Remove the approved pet from the list
+      setPets((prevPets) => prevPets.filter((pet) => pet.pet_id !== petId));
     } catch (error) {
-        console.error('Approval error:', error);
-        message.error(error instanceof Error ? error.message : 'Failed to approve pet listing');
+      console.error('Approval error:', error);
+      message.error(error instanceof Error ? error.message : 'Failed to approve pet listing');
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
-
 
   const columns = [
     {
@@ -147,11 +143,10 @@ const AdminPetApproval: React.FC = () => {
       dataIndex: 'city_id',
       key: 'city_id',
       render: (cityId: number) => {
-        const cityName = cities.find(city => city.city_id === cityId)?.city_name || 'Unknown';
+        const cityName = cities.find((city) => city.city_id === cityId)?.city_name || 'Unknown';
         return cityName;
       },
     },
-
     {
       title: 'Vaccinated',
       dataIndex: 'vaccinated',

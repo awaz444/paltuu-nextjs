@@ -4,8 +4,8 @@ import ClientProvider from "./ClientProvider";
 import "./globals.css";
 import Footer from "@/components/footer";
 import AppClientWrapper from "@/context/AppClientWrapper";
-import { Analytics } from "@vercel/analytics/react"
-import { Toaster } from 'react-hot-toast';
+import { Analytics } from "@vercel/analytics/react";
+import { Toaster } from "react-hot-toast";
 
 const montserrat = Montserrat({
     subsets: ["latin"],
@@ -32,7 +32,10 @@ export default function RootLayout({
                 <AppClientWrapper>
                     {" "}
                     {/* Navbar is a Client Component */}
-                    <ClientProvider>{children}</ClientProvider>{" "}
+                    <ClientProvider>
+                        {children}s
+                        <Analytics />
+                    </ClientProvider>{" "}
                     {/* ClientProvider wraps client-side Redux */}
                 </AppClientWrapper>
                 <Footer />

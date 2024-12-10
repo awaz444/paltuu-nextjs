@@ -33,7 +33,7 @@ export default function RootLayout({
                     {" "}
                     {/* Navbar is a Client Component */}
                     <ClientProvider>
-                        {children}s
+                        {children}
                         <Analytics />
                     </ClientProvider>{" "}
                     {/* ClientProvider wraps client-side Redux */}

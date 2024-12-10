@@ -16,7 +16,7 @@ import {
     Input,
     Rate,
     Carousel,
-    Tag
+    Tag,
 } from "antd";
 import { CopyOutlined, WhatsAppOutlined } from "@ant-design/icons";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
@@ -24,7 +24,6 @@ import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     params,
 }) => {
-
     const { pet_id } = params;
     const [pet, setPet] = useState<PetWithImages | null>(null);
     const [carouselImages, setCarouselImages] = useState<string[]>([]);
@@ -38,19 +37,19 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     // Replace with the actual logged-in user ID
     const userString = localStorage.getItem("user");
     if (!userString) {
-      setError("User data not found in local storage");
-      setLoading(false);
-      return;
+        setError("User data not found in local storage");
+        setLoading(false);
+        return;
     }
 
     // Parse the user object to extract the user ID
     const user = JSON.parse(userString);
     const user_id = user?.id;
-    console.log("user_id: ",user_id);
+    console.log("user_id: ", user_id);
     if (!user_id) {
-      setError("User ID is missing from the user object");
-      setLoading(false);
-      return;
+        setError("User ID is missing from the user object");
+        setLoading(false);
+        return;
     }
 
     useEffect(() => {
@@ -166,11 +165,13 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                     </div>
 
                     <Carousel autoplay className="mb-8">
-                        {carouselImages.map((image, index) => (
-                            <div key={index}>
+                        {carouselImages.map((image) => (
+                            <div key={image}>
+                                {" "}
+                                {/* Use the image URL as the unique key */}
                                 <img
                                     src={image || "/placeholder.jpg"}
-                                    alt={`${pet.pet_name}-image-${index}`}
+                                    alt={`${pet.pet_name}-image`}
                                     className="w-full h-80 object-cover rounded-md"
                                 />
                             </div>

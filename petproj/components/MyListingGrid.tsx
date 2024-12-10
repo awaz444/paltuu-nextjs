@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import "./petGrid.css";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import Link from "next/link";
+import { UseDispatch } from "react-redux";
+import { fetchAdoptionPets } from "@/app/store/slices/adoptionPetsSlice";
+import { fetchFosterPets } from "@/app/store/slices/fosterPetsSlice";
 
 
 const { TextArea } = Input;
@@ -64,6 +67,8 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
     };
 
     const handleDelete = async (petId: number) => {
+        dispatch(fetchAdoptionPets());
+        dispatch(fetchFosterPets());
         const response = await fetch('/api/pets', {
             method: 'DELETE',
             headers: {
@@ -103,7 +108,11 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
     };
 
     const handleUpdate = async () => {
+        
         if (!editingPet) return;
+
+        dispatch(fetchAdoptionPets());
+        dispatch(fetchFosterPets());
 
         const response = await fetch("/api/pets", {
             method: "PUT",

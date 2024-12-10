@@ -4,6 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { Table, Button, Space, message } from 'antd';
 import Navbar from '@/components/navbar';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
+import { fetchAdoptionPets } from '../store/slices/adoptionPetsSlice';
+import { UseDispatch, useDispatch } from 'react-redux';
+import { fetchFosterPets } from '../store/slices/fosterPetsSlice';
+import { AppDispatch } from '../store/store';
 
 type Pet = {
   pet_id: number;
@@ -64,8 +68,12 @@ const AdminPetApproval: React.FC = () => {
     fetchPets();
   }, []);
 
+  const dispatch = useDispatch<AppDispatch>();
+
   // Approve pet
   const handleApprove = async (petId: number) => {
+    dispatch(fetchAdoptionPets());
+    dispatch(fetchFosterPets());
     setLoading(true);
     try {
       const response = await fetch('/api/listing-approvals', {

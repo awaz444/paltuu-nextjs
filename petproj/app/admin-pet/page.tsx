@@ -7,6 +7,8 @@ import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store/store';
 import { fetchCities } from '../store/slices/citiesSlice';
+import { fetchFosterPets } from '../store/slices/fosterPetsSlice';
+import { fetchAdoptionPets } from '../store/slices/adoptionPetsSlice';
 
 type Pet = {
   pet_id: number;
@@ -67,6 +69,10 @@ const AdminPetInteraction: React.FC = () => {
   // Delete pet
   const handleDelete = async (petId: number) => {
     setLoading(true);
+
+    dispatch(fetchAdoptionPets());
+    dispatch(fetchFosterPets());
+    
     try {
       const response = await fetch('/api/pets', {
         method: 'DELETE',

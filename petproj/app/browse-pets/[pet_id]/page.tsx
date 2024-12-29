@@ -20,6 +20,7 @@ import {
 } from "antd";
 import { CopyOutlined, WhatsAppOutlined } from "@ant-design/icons";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
+import { MoonLoader } from "react-spinners";
 
 const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     params,
@@ -96,10 +97,21 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
         console.log("Adoption form data submitted:", formData);
     };
 
+    const [primaryColor, setPrimaryColor] = useState("#000000"); // Default fallback color
+
+    useEffect(() => {
+        // Get the computed style of the `--primary-color` CSS variable
+        const rootStyles = getComputedStyle(document.documentElement);
+        const color = rootStyles.getPropertyValue("--primary-color").trim();
+        if (color) {
+            setPrimaryColor(color);
+        }
+    }, []);
+
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen">
-                <Spin size="large" />
+                <MoonLoader size={30} color={primaryColor}/>
             </div>
         );
     }

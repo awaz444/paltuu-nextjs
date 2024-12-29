@@ -7,6 +7,7 @@ import Navbar from "../../components/navbar";
 import FosterVerticalSearchBar from "../../components/FosterVerticalSearchBar";
 import FilterSection from "../../components/FilterSection";
 import PetGrid from "../../components/petGrid";
+import { MoonLoader } from "react-spinners";
 
 export default function FosterPets() {
     // Redux Dispatch and Selector
@@ -56,6 +57,17 @@ export default function FosterPets() {
             breed: "",
         });
     };
+
+    const [primaryColor, setPrimaryColor] = useState("#000000"); // Default fallback color
+
+    useEffect(() => {
+        // Get the computed style of the `--primary-color` CSS variable
+        const rootStyles = getComputedStyle(document.documentElement);
+        const color = rootStyles.getPropertyValue("--primary-color").trim();
+        if (color) {
+            setPrimaryColor(color);
+        }
+    }, []);
 
     const handleSearch = () => {
         console.log("Searching with filters:", filters);
@@ -120,7 +132,7 @@ export default function FosterPets() {
 
                         <div className="w-3/4">
                             {loading ? (
-                                <p>Loading pets...</p>
+                                <MoonLoader className="mt-5 mx-auto relative top-5" size={30} color={primaryColor} />
                             ) : error ? (
                                 <p>Error: {error}</p>
                             ) : (

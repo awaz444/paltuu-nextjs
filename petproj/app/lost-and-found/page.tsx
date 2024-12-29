@@ -5,6 +5,7 @@ import Navbar from "../../components/navbar";
 import LostAndFoundFilter from "../../components/Lost&FoundFilter";
 import LostAndFoundGrid from "../../components/LostAndFoundGrid"; // Use LostAndFoundGrid instead of PetGrid
 import axios from "axios"; // Import axios for API calls
+import {MoonLoader} from "react-spinners";
 import "./styles.css";
 
 interface LostAndFoundPet {
@@ -94,6 +95,17 @@ export default function LostFound() {
         console.log("Searching with filters:", filters); // Debug filter state
     };
 
+    const [primaryColor, setPrimaryColor] = useState("#000000"); // Default fallback color
+
+    useEffect(() => {
+        // Get the computed style of the `--primary-color` CSS variable
+        const rootStyles = getComputedStyle(document.documentElement);
+        const color = rootStyles.getPropertyValue("--primary-color").trim();
+        if (color) {
+            setPrimaryColor(color);
+        }
+    }, []);
+
     // **Filter pets based on city, location, category, and status**
     const filteredPets = pets.filter((pet) => {
         const matchesCity = filters.selectedCity
@@ -156,7 +168,11 @@ export default function LostFound() {
                         </div>
 
                         {loading ? (
-                            <p>Loading pets...</p>
+                            <MoonLoader
+                            className="mt-5 mx-auto relative top-5"
+                            size={30}
+                            color={primaryColor}
+                        />
                         ) : error ? (
                             <p className="text-red-500">{error}</p>
                         ) : (

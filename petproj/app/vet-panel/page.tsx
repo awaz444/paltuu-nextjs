@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import Link from "next/link";
+import { MoonLoader } from "react-spinners";
 
 interface VetPanelPageProps {
     params: {
@@ -91,7 +92,25 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
     
         fetchVetData();
     }, []);
-    
+
+    const [primaryColor, setPrimaryColor] = useState("#000000"); // Default fallback color
+
+    useEffect(() => {
+        // Get the computed style of the `--primary-color` CSS variable
+        const rootStyles = getComputedStyle(document.documentElement);
+        const color = rootStyles.getPropertyValue("--primary-color").trim();
+        if (color) {
+            setPrimaryColor(color);
+        }
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <MoonLoader size={30} color={primaryColor} />
+            </div>
+        );
+    }
 
     if (!data) {
         return (

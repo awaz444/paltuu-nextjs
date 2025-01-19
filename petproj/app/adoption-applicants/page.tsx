@@ -25,11 +25,13 @@ interface Application {
 
 const AdoptionApplications = () => {
     const searchParams = useSearchParams();
-    const petId = searchParams.get('pet_id');
-    const [applications, setApplications] = useState<Application[] | null>(null);
-    const [expandedApplication, setExpandedApplication] = useState<number | null>(null);
-    const [isAdopted, setIsAdopted] = useState(false);
-
+    const petId = searchParams.get("pet_id");
+    const [applications, setApplications] = useState<Application[] | null>(
+        null
+    );
+    const [expandedApplication, setExpandedApplication] = useState<
+        number | null
+    >(null);
 
     useEffect(() => {
         if (!petId) return;
@@ -41,35 +43,24 @@ const AdoptionApplications = () => {
                 );
                 if (response.ok) {
                     const data = await response.json();
-                    const applications = Array.isArray(data) ? data : [data];
-                    setApplications(applications);
-        
-                    // Check if all applications are processed, and the pet is adopted
-                    const allProcessed = applications.every(
-                        (app) => app.status === "Approved" || app.status === "Rejected"
-                    );
-                    const hasApproved = applications.some((app) => app.status === "Approved");
-        
-                    if (allProcessed && hasApproved) {
-                        setIsAdopted(true);
-                    } else {
-                        setIsAdopted(false);
-                    }
+                    setApplications(Array.isArray(data) ? data : [data]);
                 } else if (response.status === 404) {
-                    console.error('No applications found for the given pet ID.');
-                    setApplications([]);
+                    console.error(
+                        "No applications found for the given pet ID."
+                    );
+                    setApplications([]); // Set applications to an empty array for 404
                 } else {
-                    console.error('Failed to fetch applications:', response.statusText);
-                    setApplications(null);
+                    console.error(
+                        "Failed to fetch applications:",
+                        response.statusText
+                    );
+                    setApplications(null); // Optionally handle other errors
                 }
             } catch (error) {
-                console.error('Error fetching applications:', error);
-                setApplications(null);
+                console.error("Error fetching applications:", error);
+                setApplications(null); // Handle network or unexpected errors
             }
         };
-        
-        
-        
 
         fetchApplications();
     }, [petId]);
@@ -146,38 +137,74 @@ const AdoptionApplications = () => {
     return (
         <>
             <Navbar></Navbar>
-            <div className="max-w-5xl min-h-screen mx-auto p-6 bg-gray-50 rounded-3xl shadow-lg">
-    {isAdopted ? (
-        <div className="text-center p-6 bg-green-100 text-green-800 rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold">This pet has been adopted!</h2>
-            <p className="mt-2 text-lg">Thank you for supporting pet adoption.</p>
-        </div>
-    ) : applications ? (
-        applications.length > 0 ? (
-            <ul className="space-y-6">
-                {applications.map((app) => (
-                    <li
-                        key={app.adoption_id}
-                        className={`p-6 bg-gradient-to-r from-white to-gray-100 border-2 ${
-                            expandedApplication === app.adoption_id ? "border-primary" : "border-primary"
-                        } rounded-xl shadow-md cursor-pointer transition-all duration-300 hover:shadow-lg`}
-                        onClick={() => handleExpand(app.adoption_id)}
-                    >
-                        {/* Application Header */}
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-gray-800">Adopter: {app.adopter_name}</h2>
-                            <span
-                                className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                                    app.status === "Approved"
-                                        ? "bg-green-100 text-green-800"
-                                        : app.status === "Pending"
-                                        ? "bg-yellow-100 text-yellow-800"
-                                        : "bg-red-100 text-red-800"
-                                }`}
-                            >
-                                {app.status}
-                            </span>
-                        </div>
+            <div className="max-w-5xl min-h-screen mx-auto p-6">
+                {applications ? (
+                    applications.length > 0 ? (
+                        <ul className="space-y-6">
+                            {applications.map((app) => (
+                                <li
+                                    key={app.adoption_id}
+                                    className={`p-6 bg-gradient-to-r from-white to-gray-100 border-2 ${
+                                        expandedApplication === app.adoption_id
+                                            ? "border-primary"
+                                            : "border-primary"
+                                    } rounded-xl shadow-md cursor-pointer transition-all duration-300 hover:shadow-lg`}
+                                    onClick={() =>
+                                        handleExpand(app.adoption_id)
+                                    }>
+                                    {/* Application Header */}
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex flex-row gap-3">
+                                            <h2 className="text-xl font-bold text-gray-800">
+                                                {app.adopter_name}
+                                            </h2>
+                                            <span
+                                                className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                                                    app.status === "Approved"
+                                                        ? "bg-green-100 text-green-800"
+                                                        : app.status ===
+                                                          "Pending"
+                                                        ? "bg-yellow-100 text-yellow-800"
+                                                        : "bg-red-100 text-red-800"
+                                                }`}>
+                                                {app.status}
+                                            </span>
+                                        </div>
+
+                                        {/* Arrow Icon */}
+                                        {expandedApplication ===
+                                        app.adoption_id ? (
+                                            <svg
+                                                fill="currentColor"
+                                                height="800px"
+                                                width="800px"
+                                                version="1.1"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 330 330"
+                                                className="w-6 h-6 transition-transform duration-300 transform text-primary">
+                                                <path
+                                                    d="M325.606,229.393l-150.004-150C172.79,76.58,168.974,75,164.996,75c-3.979,0-7.794,1.581-10.607,4.394
+                l-149.996,150c-5.858,5.858-5.858,15.355,0,21.213c5.857,5.857,15.355,5.858,21.213,0l139.39-139.393l139.397,139.393
+                C307.322,253.536,311.161,255,315,255c3.839,0,7.678-1.464,10.607-4.394C331.464,244.748,331.464,235.251,325.606,229.393z"
+                                                />
+                                            </svg>
+                                        ) : (
+                                            <svg
+                                                fill="currentColor"
+                                                height="800px"
+                                                width="800px"
+                                                version="1.1"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 330 330"
+                                                className="w-6 h-6 transition-transform duration-300 transform text-primary">
+                                                <path
+                                                    d="M325.607,79.393c-5.857-5.857-15.355-5.858-21.213,0.001l-139.39,139.393L25.607,79.393
+                c-5.857-5.857-15.355-5.858-21.213,0.001c-5.858,5.858-5.858,15.355,0,21.213l150.004,150c2.813,2.813,6.628,4.393,10.606,4.393
+                s7.794-1.581,10.606-4.394l149.996-150C331.465,94.749,331.465,85.251,325.607,79.393z"
+                                                />
+                                            </svg>
+                                        )}
+                                    </div>
 
                                     {/* Accordion Content */}
                                     {expandedApplication ===

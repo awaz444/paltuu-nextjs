@@ -5,7 +5,7 @@ import Navbar from "../../components/navbar";
 import LostAndFoundFilter from "../../components/Lost&FoundFilter";
 import LostAndFoundGrid from "../../components/LostAndFoundGrid"; // Use LostAndFoundGrid instead of PetGrid
 import axios from "axios"; // Import axios for API calls
-import {MoonLoader} from "react-spinners";
+import { MoonLoader } from "react-spinners";
 import "./styles.css";
 
 interface LostAndFoundPet {
@@ -20,8 +20,9 @@ interface LostAndFoundPet {
     status: string;
     category_id: number;
     image_url: string | null;
-    city: string; 
-    category_name: string; 
+    city: string;
+    category_name: string;
+    date: string | null; // This is the new date field for sorting
 }
 
 export default function LostFound() {
@@ -33,7 +34,7 @@ export default function LostFound() {
     const [filters, setFilters] = useState({
         selectedCity: "",
         location: "",
-        selectedCategory: "", 
+        selectedCategory: "",
     });
 
     const [activeTab, setActiveTab] = useState<"lost" | "found">("lost");
@@ -61,13 +62,14 @@ export default function LostFound() {
                 image_url: pet.image || null,
                 city: pet.city, // City name directly from response
                 category_name: pet.category, // Category name directly from response
+                date: pet.date || null, // Adding the date field for sorting
             }));
 
             setPets(mappedPets); // Update state with mapped data
 
         } catch (error: any) {
             setError(
-                error.response?.data?.message || 
+                error.response?.data?.message ||
                 "Failed to fetch lost and found posts. Please try again later."
             );
             console.error('API Error:', error); // Debug API error
@@ -86,7 +88,7 @@ export default function LostFound() {
         setFilters({
             selectedCity: "",
             location: "",
-            selectedCategory: "", 
+            selectedCategory: "",
         });
     };
 
@@ -124,6 +126,14 @@ export default function LostFound() {
                 : pet.post_type === "found";
 
         return matchesCity && matchesLocation && matchesCategory && matchesStatus;
+    });
+
+    // **Sort pets by date, handle null values (found pets)**
+    const sortedPets = filteredPets.sort((a, b) => {
+        const dateA = new Date(a.date || 0); // If date is null, treat it as 0 (oldest)
+        const dateB = new Date(b.date || 0); // If date is null, treat it as 0 (oldest)
+
+        return dateB.getTime() - dateA.getTime(); // Sort in descending order
     });
 
     // **Toggle active tab (Lost / Found)**
@@ -169,15 +179,15 @@ export default function LostFound() {
 
                         {loading ? (
                             <MoonLoader
-                            className="mt-5 mx-auto relative top-5"
-                            size={30}
-                            color={primaryColor}
-                        />
+                                className="mt-5 mx-auto relative top-5"
+                                size={30}
+                                color={primaryColor}
+                            />
                         ) : error ? (
                             <p className="text-red-500">{error}</p>
                         ) : (
                             <>
-                                <LostAndFoundGrid pets={filteredPets} />
+                                <LostAndFoundGrid pets={sortedPets} />
                             </>
                         )}
                     </div>

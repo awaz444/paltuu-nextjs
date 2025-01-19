@@ -41,7 +41,7 @@ input[type="range"]::-moz-range-thumb {
     display: flex;
     width: 100%;
     margin-bottom: 16px;
-    background-color: #ffffff; /* Inactive tab background */
+    background-color: #f7fafc; /* Inactive tab background */
     border-radius: 25px; /* Fully rounded container */
     position: relative;
     padding: 0; /* Remove inner padding */

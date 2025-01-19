@@ -7,6 +7,7 @@ import { Spin } from "antd"; // Ant Design spinner
 import MyListingGrid from "@/components/MyListingGrid";
 import "./styles.css";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
+import { MoonLoader } from "react-spinners";
 
 const UserListingsPage = () => {
   const [listings, setListings] = useState<Pet[]>([]);
@@ -76,10 +77,21 @@ const UserListingsPage = () => {
     (listing) => listing.listing_type === activeTab
   );
 
+  const [primaryColor, setPrimaryColor] = useState("#000000"); // Default fallback color
+
+    useEffect(() => {
+        // Get the computed style of the `--primary-color` CSS variable
+        const rootStyles = getComputedStyle(document.documentElement);
+        const color = rootStyles.getPropertyValue("--primary-color").trim();
+        if (color) {
+            setPrimaryColor(color);
+        }
+    }, []);
+
   if (isLoading)
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <Spin size="large" />
+      <div className="flex justify-center items-center min-h-screen">
+                <MoonLoader size={30} color={primaryColor} />
       </div>
     );
 

@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/navbar";
+import { MoonLoader } from "react-spinners";
 
 interface Application {
     adoption_id: number;
@@ -133,6 +134,17 @@ const AdoptionApplications = () => {
             </div>
         );
     }
+
+    const [primaryColor, setPrimaryColor] = useState("#000000"); // Default fallback color
+
+    useEffect(() => {
+        // Get the computed style of the `--primary-color` CSS variable
+        const rootStyles = getComputedStyle(document.documentElement);
+        const color = rootStyles.getPropertyValue("--primary-color").trim();
+        if (color) {
+            setPrimaryColor(color);
+        }
+    }, []);
 
     return (
         <>
@@ -293,7 +305,7 @@ const AdoptionApplications = () => {
                                                 e.stopPropagation();
                                                 handleApprove(app.adoption_id);
                                             }}
-                                            className={`px-6 py-2 font-medium text-sm rounded-lg ${
+                                            className={`px-6 py-2 font-medium text-sm rounded-3xl ${
                                                 app.status === "Approved"
                                                     ? "bg-white text-primary bordder border-primary"
                                                     : "bg-primary text-white"
@@ -308,7 +320,7 @@ const AdoptionApplications = () => {
                                                 e.stopPropagation();
                                                 handleReject(app.adoption_id);
                                             }}
-                                            className={`px-6 py-2 font-medium text-sm rounded-lg ${
+                                            className={`px-6 py-2 font-medium text-sm rounded-3xl ${
                                                 app.status === "Rejected"
                                                     ? "bg-primary text-white cursor-not-allowed"
                                                     : "bg-white text-primary border border-primary"
@@ -328,9 +340,9 @@ const AdoptionApplications = () => {
                         </p>
                     )
                 ) : (
-                    <p className="text-gray-700 text-center text-lg">
-                        Loading applications...
-                    </p>
+                    <div className="flex justify-center items-center min-h-screen">
+                        <MoonLoader size={30} color={primaryColor} />
+                    </div>
                 )}
             </div>
         </>

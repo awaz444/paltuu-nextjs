@@ -83,7 +83,10 @@ const FosterVerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         placeholder="Min yrs"
                         className="border rounded-xl w-1/2 p-2"
                         value={minAge}
-                        onChange={(e) => setMinAge(e.target.value)}
+                        onChange={(e) => {
+                            const value = Math.max(0, Number(e.target.value)); // Prevent negative values
+                            setMinAge(value.toString());
+                        }}
                     />
                     <p className="mt-2">to</p>
                     <input
@@ -91,7 +94,10 @@ const FosterVerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         placeholder="Max yrs"
                         className="border rounded-xl w-1/2 p-2"
                         value={maxAge}
-                        onChange={(e) => setMaxAge(e.target.value)}
+                        onChange={(e) => {
+                            const value = Math.max(0, Number(e.target.value)); // Prevent negative values
+                            setMaxAge(value.toString());
+                        }}
                     />
                 </div>
             </div>

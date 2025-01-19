@@ -92,7 +92,10 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         placeholder="Min yrs"
                         className="border rounded-xl w-1/2 p-2"
                         value={minAge}
-                        onChange={(e) => setMinAge(e.target.value)}
+                        onChange={(e) => {
+                            const value = Math.max(0, Number(e.target.value)); // Prevent negative values
+                            setMinAge(value.toString());
+                        }}
                     />
                     <p className="mt-2">to</p>
                     <input
@@ -100,7 +103,10 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         placeholder="Max yrs"
                         className="border rounded-xl w-1/2 p-2"
                         value={maxAge}
-                        onChange={(e) => setMaxAge(e.target.value)}
+                        onChange={(e) => {
+                            const value = Math.max(0, Number(e.target.value)); // Prevent negative values
+                            setMaxAge(value.toString());
+                        }}
                     />
                 </div>
             </div>
@@ -114,7 +120,10 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         placeholder="Min PKR"
                         className="border rounded-xl w-1/2 p-2"
                         value={minPrice}
-                        onChange={(e) => setMinPrice(e.target.value)}
+                        onChange={(e) => {
+                            const value = Math.max(0, Number(e.target.value)); // Prevent negative values
+                            setMinPrice(value.toString());
+                        }}
                     />
                     <p className="mt-2">to</p>
                     <input
@@ -122,10 +131,14 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         placeholder="Max PKR"
                         className="border rounded-xl w-1/2 p-2"
                         value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value)}
+                        onChange={(e) => {
+                            const value = Math.max(0, Number(e.target.value)); // Prevent negative values
+                            setMaxPrice(value.toString());
+                        }}
                     />
                 </div>
             </div>
+
 
             {/* Location Filter */}
             <div className="mb-4">
@@ -147,7 +160,10 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                     placeholder="Min age"
                     className="border rounded-xl w-full p-2"
                     value={minChildAge}
-                    onChange={(e) => setMinChildAge(e.target.value)}
+                    onChange={(e) => {
+                        const value = Math.max(0, Math.min(17, Number(e.target.value))); // Clamp value between 0 and 17
+                        setMinChildAge(value.toString()); // Ensure the state is stored as a string
+                    }}
                 />
             </div>
 
@@ -156,47 +172,47 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                 <label className="block text-sm font-medium mb-1">Additional Preferences</label>
                 <div className="space-y-2">
                     <div>
-                        <label style={{cursor:'pointer'}}>
+                        <label style={{ cursor: 'pointer' }}>
                             <input
                                 type="checkbox" style={{ cursor: 'pointer' }}
                                 className="mr-2"
                                 checked={canLiveWithDogs}
                                 onChange={() => setCanLiveWithDogs(!canLiveWithDogs)}
                             />
-                        Can live with dogs
+                            Can live with dogs
                         </label>
                     </div>
                     <div>
-                    <label style={{cursor:'pointer'}}>
-                        <input
-                            type="checkbox" style={{cursor:'pointer'}}
-                            className="mr-2"
-                            checked={canLiveWithCats}
-                            onChange={() => setCanLiveWithCats(!canLiveWithCats)}
-                        />
-                        Can live with cats
+                        <label style={{ cursor: 'pointer' }}>
+                            <input
+                                type="checkbox" style={{ cursor: 'pointer' }}
+                                className="mr-2"
+                                checked={canLiveWithCats}
+                                onChange={() => setCanLiveWithCats(!canLiveWithCats)}
+                            />
+                            Can live with cats
                         </label>
                     </div>
                     <div>
-                        <label style={{cursor:'pointer'}}>
-                        <input
-                            type="checkbox" style={{cursor:'pointer'}}
-                            className="mr-2"
-                            checked={vaccinated}
-                            onChange={() => setVaccinated(!vaccinated)}
-                        />
-                        Vaccinated
+                        <label style={{ cursor: 'pointer' }}>
+                            <input
+                                type="checkbox" style={{ cursor: 'pointer' }}
+                                className="mr-2"
+                                checked={vaccinated}
+                                onChange={() => setVaccinated(!vaccinated)}
+                            />
+                            Vaccinated
                         </label>
                     </div>
                     <div>
-                        <label style={{cursor:'pointer'}}>
-                        <input
-                            type="checkbox" style={{cursor:'pointer'}}
-                            className="mr-2"
-                            checked={neutered}
-                            onChange={() => setNeutered(!neutered)}
-                        />
-                        Neutered
+                        <label style={{ cursor: 'pointer' }}>
+                            <input
+                                type="checkbox" style={{ cursor: 'pointer' }}
+                                className="mr-2"
+                                checked={neutered}
+                                onChange={() => setNeutered(!neutered)}
+                            />
+                            Neutered
                         </label>
                     </div>
                 </div>

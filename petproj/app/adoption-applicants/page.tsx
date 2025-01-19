@@ -28,6 +28,7 @@ const AdoptionApplications = () => {
     const petId = searchParams.get('pet_id');
     const [applications, setApplications] = useState<Application[] | null>(null);
     const [expandedApplication, setExpandedApplication] = useState<number | null>(null);
+    const [isAdopted, setIsAdopted] = useState(false);
 
 
     useEffect(() => {
@@ -38,19 +39,34 @@ const AdoptionApplications = () => {
                 const response = await fetch(`/api/adoption_application/${petId}`);
                 if (response.ok) {
                     const data = await response.json();
-                    setApplications(Array.isArray(data) ? data : [data]);
+                    const applications = Array.isArray(data) ? data : [data];
+                    setApplications(applications);
+        
+                    // Check if all applications are processed, and the pet is adopted
+                    const allProcessed = applications.every(
+                        (app) => app.status === "Approved" || app.status === "Rejected"
+                    );
+                    const hasApproved = applications.some((app) => app.status === "Approved");
+        
+                    if (allProcessed && hasApproved) {
+                        setIsAdopted(true);
+                    } else {
+                        setIsAdopted(false);
+                    }
                 } else if (response.status === 404) {
                     console.error('No applications found for the given pet ID.');
-                    setApplications([]); // Set applications to an empty array for 404
+                    setApplications([]);
                 } else {
                     console.error('Failed to fetch applications:', response.statusText);
-                    setApplications(null); // Optionally handle other errors
+                    setApplications(null);
                 }
             } catch (error) {
                 console.error('Error fetching applications:', error);
-                setApplications(null); // Handle network or unexpected errors
+                setApplications(null);
             }
         };
+        
+        
         
 
         fetchApplications();
@@ -110,7 +126,12 @@ const AdoptionApplications = () => {
         <>
             <Navbar></Navbar>
             <div className="max-w-5xl min-h-screen mx-auto p-6 bg-gray-50 rounded-3xl shadow-lg">
-    {applications ? (
+    {isAdopted ? (
+        <div className="text-center p-6 bg-green-100 text-green-800 rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold">This pet has been adopted!</h2>
+            <p className="mt-2 text-lg">Thank you for supporting pet adoption.</p>
+        </div>
+    ) : applications ? (
         applications.length > 0 ? (
             <ul className="space-y-6">
                 {applications.map((app) => (

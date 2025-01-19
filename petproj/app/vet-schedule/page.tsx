@@ -124,6 +124,7 @@ const VetScheduleForm = () => {
 
     if (schedulesWithVetId.length === 0) {
       alert("No valid schedules to submit.");
+      console.log("No schedules to submit");
       return;
     }
 

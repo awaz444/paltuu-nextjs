@@ -58,12 +58,21 @@ const FosterFormModal: React.FC<FosterFormProps> = ({ petId, userId, visible, on
             visible={visible}
             onCancel={onClose}
             footer={[
-                <Button key="cancel" onClick={onClose}>
+                <button
+                    key="cancel"
+                    onClick={onClose}
+                    className="bg-white text-primary px-4 py-1 text-md rounded-xl font-semibold border border-primary cursor-pointer"
+                >
                     Cancel
-                </Button>,
-                <Button key="submit" type="primary" loading={loading} onClick={handleFormSubmit}>
-                    Submit
-                </Button>,
+                </button>,
+                <button
+                    key="submit"
+                    onClick={handleFormSubmit}
+                    className="bg-primary border border-primary text-white px-4 py-1 text-md rounded-xl font-semibold border-white hover:bg-white hover:text-primary hover:border-primary transition-all ml-4"
+                    disabled={loading}
+                >
+                    {loading ? 'Submitting...' : 'Submit'}
+                </button>,
             ]}
         >
             <Form form={form} layout="vertical">
@@ -109,9 +118,20 @@ const FosterFormModal: React.FC<FosterFormProps> = ({ petId, userId, visible, on
                 <Form.Item
                     label="Age of Youngest Child"
                     name="age_of_youngest_child"
+                    rules={[
+                        {
+                            validator: (_, value) => {
+                                if (value === null || value === undefined || /^[0-9]+$/.test(value)) {
+                                    return Promise.resolve();
+                                }
+                                return Promise.reject(new Error('Please enter a valid integer'));
+                            },
+                        },
+                    ]}
                 >
-                    <Input placeholder="Enter age or 'N/A' if no children" />
+                    <Input placeholder="Enter age of youngest child" />
                 </Form.Item>
+
 
                 <Form.Item
                     label="Other Pets Details"

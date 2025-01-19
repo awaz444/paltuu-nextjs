@@ -211,7 +211,7 @@ const FosterApplications = () => {
                             }}
                             className={`px-6 py-2 font-medium text-sm rounded-lg ${
                                 app.status === "approved"
-                                        ? "bg-white text-primary bordder border-primary"
+                                        ? "bg-white text-primary border border-primary"
                                         : "bg-primary text-white"
                             } transition-all`}
                             disabled={app.status === "approved"}

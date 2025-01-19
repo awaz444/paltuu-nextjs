@@ -72,19 +72,23 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
             visible={visible}
             onCancel={onClose}
             footer={[
-                <Button key="cancel" onClick={onClose}
-                className="bg-white text-primary px-7 py-3 mb-3 text-md rounded-xl font-semibold border border-primary  cursor-pointer">
+                <button
+                    key="cancel"
+                    onClick={onClose}
+                    className="bg-white text-primary px-4 py-1 mb-3 text-md rounded-xl font-semibold border border-primary cursor-pointer"
+                >
                     Cancel
-                </Button>,
-                <Button
+                </button>,
+                <button
                     key="submit"
-                    type="primary"
-                    loading={loading}
                     onClick={handleFormSubmit}
-                className="bg-primary text-white px-7 py-3 mb-3 text-md rounded-xl font-semibold border border-white ">
-                    Submit
-                </Button>,
+                    className="bg-primary border border-primary text-white px-4 py-1 mb-3 text-md rounded-xl font-semibold border-white hover:bg-white hover:text-primary hover:border-primary transition-all ml-4"
+                    disabled={loading}
+                >
+                    {loading ? 'Submitting...' : 'Submit'}
+                </button>,
             ]}>
+
             <Form form={form} layout="vertical">
                 <Form.Item
                     label="Adopter Name"
@@ -109,9 +113,23 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
 
                 <Form.Item
                     label="Age of Youngest Child"
-                    name="age_of_youngest_child">
-                    <Input placeholder="Enter age or 'N/A' if no children" />
+                    name="age_of_youngest_child"
+                    rules={[
+                        {
+                            validator: (_, value) => {
+                                if (value === null || value === undefined || /^[0-9]+$/.test(value)) {
+                                    return Promise.resolve();
+                                }
+                                return Promise.reject(new Error('Please enter a valid integer'));
+                            },
+                        },
+                    ]}
+                >
+                    <Input placeholder="Enter age of youngest child" />
                 </Form.Item>
+
+
+
 
                 <Form.Item label="Other Pets Details" name="other_pets_details">
                     <Input.TextArea
@@ -162,8 +180,8 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
                                 value
                                     ? Promise.resolve()
                                     : Promise.reject(
-                                          "You must agree to terms!"
-                                      ),
+                                        "You must agree to terms!"
+                                    ),
                         },
                     ]}>
                     <Checkbox>I agree to the terms and conditions</Checkbox>

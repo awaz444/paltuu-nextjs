@@ -103,11 +103,6 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
                     title={selectedPet.category_name}
                     visible={isModalVisible}
                     onCancel={handleModalClose}
-                    footer={[
-                        <button className="bg-primary rounded-2xl text-white px-4 py-2" key="close" onClick={handleModalClose}>
-                            Close
-                        </button>,
-                    ]}
                 >
                     <img
                         src={selectedPet.image_url || "./dog-placeholder.png"}

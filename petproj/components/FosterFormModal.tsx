@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from "react";
 import { Modal, Form, Input, Checkbox, DatePicker, Button, message } from "antd";
+import dayjs, { Dayjs } from "dayjs";
 
 interface FosterFormProps {
     petId: number;
@@ -51,6 +52,17 @@ const FosterFormModal: React.FC<FosterFormProps> = ({ petId, userId, visible, on
             setLoading(false);
         }
     };
+    const [startDate, setStartDate] = useState<Dayjs | null>(null);
+
+    // Disable dates before the current system date for the start date picker
+    const disabledStartDate = (current: Dayjs): boolean => {
+        return current && current < dayjs().startOf("day");
+    };
+
+    // Disable dates before the selected start date for the end date picker
+    const disabledEndDate = (current: Dayjs): boolean => {
+        return current && startDate ? current.isBefore(startDate.startOf("day")) : false;
+    };
 
     return (
         <Modal
@@ -97,15 +109,23 @@ const FosterFormModal: React.FC<FosterFormProps> = ({ petId, userId, visible, on
                     name="foster_start_date"
                     rules={[{ required: true, message: "Please select a start date!" }]}
                 >
-                    <DatePicker style={{ width: "100%" }} />
+                    <DatePicker
+                        style={{ width: "100%" }}
+                        disabledDate={disabledStartDate}
+                        onChange={(date) => setStartDate(date)} // Save selected start date
+                    />
                 </Form.Item>
 
+                {/* Foster End Date */}
                 <Form.Item
                     label="Foster End Date"
                     name="foster_end_date"
                     rules={[{ required: true, message: "Please select an end date!" }]}
                 >
-                    <DatePicker style={{ width: "100%" }} />
+                    <DatePicker
+                        style={{ width: "100%" }}
+                        disabledDate={disabledEndDate}
+                    />
                 </Form.Item>
 
                 <Form.Item

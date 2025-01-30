@@ -11,7 +11,7 @@ const LostFoundListingPage = () => {
     const [cityId, setCityId] = useState("");
     const [location, setLocation] = useState("");
     const [description, setDescription] = useState(""); // **Pet Description field**
-    const [dateLost, setDateLost] = useState("");
+    const [date, setDate] = useState("");
     const [contactInfo, setContactInfo] = useState("");
     const [activeTab, setActiveTab] = useState<"lost" | "found">("lost");
     const [userId, setUserId] = useState<number | null>(null);
@@ -79,7 +79,7 @@ const LostFoundListingPage = () => {
             city_id: parseInt(cityId), // Convert to integer
             location: location,
             pet_description: description || null, // **Include pet description** (optional field)
-            date_lost: activeTab === "lost" ? dateLost : null, // Only include date_lost if "Lost" is active
+            date: activeTab === "lost" ? date : null, // Only include date_lost if "Lost" is active
             contact_info: contactInfo,
             post_type: activeTab, // This will be either "lost" or "found"
             user_id: userId, // **User ID is added here**
@@ -126,7 +126,7 @@ const LostFoundListingPage = () => {
         setCityId("");
         setLocation("");
         setDescription(""); // Reset pet description
-        setDateLost("");
+        setDate("");
         setContactInfo("");
     };
 
@@ -147,7 +147,8 @@ const LostFoundListingPage = () => {
                     onSubmit={handleSubmit}
                 >
                     {error && <p className="text-red-500 mb-4">{error}</p>}
-
+    
+                    {/* Tab Switch */}
                     <div className="tab-switch-container mb-6">
                         <div
                             className="tab-switch-slider bg-primary"
@@ -168,14 +169,14 @@ const LostFoundListingPage = () => {
                             Found
                         </div>
                     </div>
-
+    
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">Pet Category</label>
                         <select
                             className="mt-1 p-3 w-full border rounded-2xl"
                             value={categoryId}
                             required
-                            onChange={(e) => setCategoryId(e.target.value)} // Set as string initially
+                            onChange={(e) => setCategoryId(e.target.value)}
                         >
                             <option value="">Select pet category</option>
                             {petCategories.map((category) => (
@@ -185,7 +186,7 @@ const LostFoundListingPage = () => {
                             ))}
                         </select>
                     </div>
-
+    
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">City</label>
                         <select
@@ -202,7 +203,7 @@ const LostFoundListingPage = () => {
                             ))}
                         </select>
                     </div>
-
+    
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">Location</label>
                         <input
@@ -213,7 +214,7 @@ const LostFoundListingPage = () => {
                             onChange={(e) => setLocation(e.target.value)}
                         />
                     </div>
-
+    
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">Pet Description</label>
                         <textarea
@@ -224,19 +225,33 @@ const LostFoundListingPage = () => {
                             rows={4}
                         />
                     </div>
-
+    
+                    {/* Show "Date Lost" if Lost tab is active */}
                     {activeTab === "lost" && (
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700">Date Lost</label>
                             <input
                                 type="date"
                                 className="mt-1 p-3 w-full border rounded-2xl"
-                                value={dateLost}
-                                onChange={(e) => setDateLost(e.target.value)}
+                                value={date}
+                                onChange={(e) => setDate(e.target.value)}
                             />
                         </div>
                     )}
-
+    
+                    {/* Show "Date Found" if Found tab is active */}
+                    {activeTab === "found" && (
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700">Date Found</label>
+                            <input
+                                type="date"
+                                className="mt-1 p-3 w-full border rounded-2xl"
+                                value={date}
+                                onChange={(e) => setDate(e.target.value)}
+                            />
+                        </div>
+                    )}
+    
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">Contact Info</label>
                         <input
@@ -248,7 +263,7 @@ const LostFoundListingPage = () => {
                             onChange={(e) => setContactInfo(e.target.value)}
                         />
                     </div>
-
+    
                     <button
                         type="submit"
                         className="mt-4 p-3 bg-primary text-white rounded-3xl w-full"
@@ -259,7 +274,7 @@ const LostFoundListingPage = () => {
                 </form>
             </div>
         </>
-    );
+    );    
 };
 
 export default LostFoundListingPage;

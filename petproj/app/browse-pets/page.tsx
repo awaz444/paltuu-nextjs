@@ -125,14 +125,27 @@ export default function BrowsePets() {
                             <VerticalSearchBar onSearch={setFilters} onReset={handleReset} onSearchAction={handleSearch} />
                         </div>
                         <div className="w-3/4">
-                            <div className="tab-switch-container">
-                                <div className="tab" onClick={() => handleTabToggle("adopt")}>
+                        <div className="tab-switch-container relative">
+                                <div
+                                    className="tab-switch-slider absolute w-1/2 h-full transition-transform duration-300 rounded-lg bg-primary"
+                                    style={{
+                                        transform: activeTab === "adopt" ? "translateX(0)" : "translateX(100%)",
+                                    }}
+                                />
+                                <div
+                                    className={`tab ${activeTab === "adopt" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("adopt")}
+                                >
                                     Adopt
                                 </div>
-                                <div className="tab" onClick={() => handleTabToggle("buy")}>
+                                <div
+                                    className={`tab ${activeTab === "buy" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("buy")}
+                                >
                                     Buy
                                 </div>
                             </div>
+
 
                             {loading ? (
                                 <MoonLoader className="mt-5 mx-auto relative top-5" size={30} color="#000" />

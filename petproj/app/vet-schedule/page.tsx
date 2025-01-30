@@ -2,6 +2,7 @@
 import React, { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
+import { FaTrash } from "react-icons/fa";
 import { addVetSchedules } from "../store/slices/vetScheduleSlice"; // Action to post schedules
 import { AppDispatch } from "../store/store";
 import { VetSchedule } from "../store/slices/vetScheduleSlice";
@@ -161,13 +162,19 @@ const VetScheduleForm = () => {
     }
   };
 
+  const handleDeleteSchedule = (index: number) => {
+    const newSchedules = schedules.filter((_, i) => i !== index); // Remove the schedule at the given index
+    setSchedules(newSchedules);
+  };
+
   return (
     <div className="min-h-screen flex">
       {/* Left Side with Logo and Background */}
       <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
         <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
       </div>
-      
+
+      {/* Right Side with the Form */}
       <div className="w-1/2 bg-gray-100 flex items-center justify-center px-8 py-12">
         <div className="w-full max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
           <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
@@ -175,10 +182,25 @@ const VetScheduleForm = () => {
           </h2>
           <form onSubmit={handleSubmit}>
             {schedules.map((schedule, index) => (
-              <div key={index} className="mb-6 p-4 border border-gray-300 rounded-lg">
+              <div
+                key={index}
+                className="mb-6 p-4 border border-gray-300 rounded-lg relative"
+              >
+                <div className="absolute top-2 right-2">
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteSchedule(index)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <FaTrash size={20} />
+                  </button>
+                </div>
                 <div className="flex mb-4">
                   <div className="w-1/3">
-                    <label htmlFor={`day-${index}`} className="block mb-2 text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor={`day-${index}`}
+                      className="block mb-2 text-sm font-medium text-gray-700"
+                    >
                       Day of the Week
                     </label>
                     <select
@@ -198,41 +220,49 @@ const VetScheduleForm = () => {
                     </select>
                   </div>
                   <div className="w-1/3 ml-4">
-                    <label htmlFor={`start-time-${index}`} className="block mb-2 text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor={`start-time-${index}`}
+                      className="block mb-2 text-sm font-medium text-gray-700"
+                    >
                       Start Time
                     </label>
                     <input
                       type="time"
                       id={`start-time-${index}`}
                       value={schedule.startTime}
-                      onChange={(e) => handleStartTimeChange(index, e.target.value)}
+                      onChange={(e) =>
+                        handleStartTimeChange(index, e.target.value)
+                      }
                       className="w-full p-2 border border-gray-300 rounded"
                     />
                   </div>
                   <div className="w-1/3 ml-4">
-                    <label htmlFor={`end-time-${index}`} className="block mb-2 text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor={`end-time-${index}`}
+                      className="block mb-2 text-sm font-medium text-gray-700"
+                    >
                       End Time
                     </label>
                     <input
                       type="time"
                       id={`end-time-${index}`}
                       value={schedule.endTime}
-                      onChange={(e) => handleEndTimeChange(index, e.target.value)}
+                      onChange={(e) =>
+                        handleEndTimeChange(index, e.target.value)
+                      }
                       className="w-full p-2 border border-gray-300 rounded"
                     />
                   </div>
                 </div>
-                {index === schedules.length - 1 && (
-                  <button
-                    type="button"
-                    onClick={handleAddMore}
-                    className="w-full mt-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-300"
-                  >
-                    Add More
-                  </button>
-                )}
               </div>
             ))}
+            <button
+              type="button"
+              onClick={handleAddMore}
+              className="w-full mt-4 py-2 bg-white text-primary border border-primary font-semibold rounded-lg "
+            >
+              Add More
+            </button>
             <button
               type="submit"
               className="w-full mt-6 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary transition duration-300"
@@ -243,10 +273,8 @@ const VetScheduleForm = () => {
         </div>
       </div>
     </div>
-
   );
 };
-
 const LoadingFallback = () => (
   <div className="flex justify-center items-center min-h-screen">
     <p className="text-lg text-gray-500">Loading schedule...</p>

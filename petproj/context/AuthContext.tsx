@@ -26,15 +26,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAuthenticated(true);
     }
 
-    if (status === "authenticated" && session) {
+    if (status === "authenticated" && session?.user) {
       setUser({
-        id: session.user?.user_id || undefined,
-        name: session.user?.name || undefined,
-        email: session.user?.email || "",
-        role: session.user?.role || "guest",
+        id: session.user.user_id || undefined,
+        name: session.user.name || undefined,
+        email: session.user.email || "",
+        role: session.user.role || "guest",
         method: "google",
-      });
+    });
+
+      // setUser(googleUser);
       setIsAuthenticated(true);
+      localStorage.setItem("user", JSON.stringify(user));
     }
   }, [status, session]);
 

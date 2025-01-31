@@ -1,8 +1,7 @@
-"use client";
 import React, { useState } from "react";
 import Link from "next/link";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
-import { Modal, Button } from "antd";
+import { Modal } from "antd";
 import "./petGrid.css";
 
 interface LostAndFoundPet {
@@ -101,14 +100,17 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
             {selectedPet && (
                 <Modal
                     title={selectedPet.category_name}
-                    visible={isModalVisible}
+                    open={isModalVisible}
                     onCancel={handleModalClose}
+                    footer={null}  // No footer buttons
                 >
-                    <img
-                        src={selectedPet.image_url || "./dog-placeholder.png"}
-                        alt={selectedPet.pet_description || "Lost or Found Pet"}
-                        className="w-full h-48 object-cover rounded-2xl mb-4"
-                    />
+                    <div className="relative w-full my-2    ">
+                        <img
+                            src={selectedPet.image_url || "./dog-placeholder.png"}
+                            alt={selectedPet.pet_description || "Lost or Found Pet"}
+                            className="w-full h-full object-cover rounded-2xl"
+                        />
+                    </div>
                     <p>
                         <strong>Description:</strong> {selectedPet.pet_description}
                     </p>

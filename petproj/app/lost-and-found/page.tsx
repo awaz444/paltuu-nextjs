@@ -151,7 +151,7 @@ export default function LostFound() {
                         setFilters((prev) => ({ ...prev, ...filters }));
                     }}
                 />
-                <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
+                <main className="flex min-h-screen flex-col items-center p-8">
                     <div className="w-full">
                         {/* **Tab Switch for Lost and Found** */}
                         <div className="tab-switch-container">

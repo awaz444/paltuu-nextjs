@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import { createClient } from "../../../db/index"; // Import your custom database client
+import { createClient } from "../../../db/index";
 import { NextRequest, NextResponse } from "next/server";
 
 // Configure Cloudinary
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     const query = `
       INSERT INTO lost_and_found_post_images (post_id, image_url, created_at)
-      VALUES ($2, $3, NOW())
+      VALUES ($1, $2, NOW())
       RETURNING *;
     `;
     const queryParams = [post_id, image_url];

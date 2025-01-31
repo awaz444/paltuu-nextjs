@@ -56,36 +56,25 @@ function CreatePetList() {
     }
 
     try {
-      // **Upload Image to Cloudinary**
+      // Create FormData and append file and post_id
       const formData = new FormData();
       if (fileList[0]?.originFileObj) {
         formData.append("file", fileList[0].originFileObj);
-        formData.append("upload_preset", "your_upload_preset"); // Change this to your Cloudinary upload preset
+        formData.append("post_id", postId);
       }
 
-      const cloudinaryResponse = await axios.post(
-        "https://api.cloudinary.com/v1_1/your_cloud_name/image/upload",
-        formData
-      );
-
-      const imageUrl = cloudinaryResponse.data.secure_url; // Get image URL from Cloudinary response
-
-      if (!imageUrl) {
-        message.error("Failed to upload image to Cloudinary.");
-        return;
-      }
-
-      // **Send the image URL and post_id to the backend**
-      const response = await axios.post("/api/upload-lost-found-image", {
-        post_id: postId,
-        image_url: imageUrl, // The image URL from Cloudinary
+      // Send directly to our API route
+      const response = await axios.post("/api/upload-lost-found-image", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
-      if (response.status === 200) {
-        message.success("Image uploaded and linked successfully.");
+      if (response.status === 201) {
+        message.success("Image uploaded successfully.");
         router.push("/listing-created"); // Redirect after successful upload
       } else {
-        message.error("Failed to link image to the post.");
+        message.error("Failed to upload image.");
       }
     } catch (error) {
       message.error("Error occurred while uploading image.");

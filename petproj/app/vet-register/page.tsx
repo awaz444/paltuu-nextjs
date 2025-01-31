@@ -82,6 +82,7 @@ const VetRegisterForm = () => {
                             type="text"
                             value={clinicName}
                             onChange={(e) => setClinicName(e.target.value)}
+                            placeholder="The name of your clinic"
                             className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                             required
                         />
@@ -96,6 +97,7 @@ const VetRegisterForm = () => {
                             type="text"
                             value={location}
                             onChange={(e) => setLocation(e.target.value)}
+                            placeholder="Where it is located. Exclude City"
                             className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                             required
                         />
@@ -107,10 +109,10 @@ const VetRegisterForm = () => {
                             Minimum Fee
                         </label>
                         <input
-                            type="number"
-                            value={minimumFee}
+                            type="text"
                             onChange={(e) => setMinimumFee(Number(e.target.value))}
                             className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            placeholder="Min. Consultancy Fee in PKR (Visible to Users)"
                             required
                         />
                     </div>
@@ -124,6 +126,7 @@ const VetRegisterForm = () => {
                             type="email"
                             value={clinicEmail}
                             onChange={(e) => setClinicEmail(e.target.value)}
+                            placeholder="contact@myvetclinic.com"
                             className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                             required
                         />
@@ -133,13 +136,24 @@ const VetRegisterForm = () => {
                         <label className="block text-gray-700 text-sm font-medium mb-1">
                             Clinic WhatsApp
                         </label>
-                        <input
-                            type="text"
-                            value={clinicWhatsapp}
-                            onChange={(e) => setClinicWhatsapp(e.target.value)}
-                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                            required
-                        />
+                        <div className="flex space-x-2">
+                            {/* Disabled input for country code */}
+                            <input
+                                type="text"
+                                value="+92"
+                                className="w-12 border border-gray-300 pl-2 rounded-xl py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                                disabled
+                            />
+                            {/* Input for remaining phone number */}
+                            <input
+                                type="text"
+                                value={clinicWhatsapp}
+                                onChange={(e) => setClinicWhatsapp(e.target.value)}
+                                placeholder="3338888666"
+                                className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                                required
+                            />
+                        </div>
                     </div>
                 
 
@@ -160,13 +174,14 @@ const VetRegisterForm = () => {
                     {/* Bio */}
                     <div>
                         <label className="block text-gray-700 text-sm font-medium mb-1">
-                            Bio (optional)
+                            About Yourself
                         </label>
                         <textarea
                             value={bio}
                             onChange={(e) => setBio(e.target.value)}
                             className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                             rows={4}
+                            placeholder="Write a short bio about yourself"
                         />
                     </div>
 

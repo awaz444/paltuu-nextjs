@@ -1,7 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState, AppDispatch } from "../store/store"; // Adjust the import path
 import { fetchFosterPets } from "../store/slices/fosterPetsSlice"; // Import the action
 import Navbar from "../../components/navbar";
 import FosterVerticalSearchBar from "../../components/FosterVerticalSearchBar";
@@ -9,10 +7,41 @@ import FilterSection from "../../components/FilterSection";
 import PetGrid from "../../components/petGrid";
 import { MoonLoader } from "react-spinners";
 
+// Define the structure of the pet object
+interface Pet {
+    pet_id: number;
+    owner_id: number;
+    pet_name: string;
+    pet_type: number;
+    pet_breed: string | null;
+    city_id: number;
+    area: string;
+    age: number;
+    description: string;
+    adoption_status: string;
+    price: string;
+    min_age_of_children: number;
+    can_live_with_dogs: boolean;
+    can_live_with_cats: boolean;
+    must_have_someone_home: boolean;
+    energy_level: number;
+    cuddliness_level: number;
+    health_issues: string;
+    created_at: string;
+    sex: string | null;
+    listing_type: string;
+    vaccinated: boolean | null;
+    neutered: boolean | null;
+    payment_frequency: string | null;
+    city: string;
+    user_id: number;
+    profile_image_url: string | null;
+    image_id: number | null;
+    image_url: string | null;
+}
+
 export default function FosterPets() {
     // Redux Dispatch and Selector
-    const dispatch = useDispatch<AppDispatch>();
-    const { pets, loading, error } = useSelector((state: RootState) => state.fosterPets); // Get foster pets from Redux store
 
     // State for filter inputs
     const [filters, setFilters] = useState({
@@ -32,11 +61,6 @@ export default function FosterPets() {
         selectedSpecies: "",
         breed: "",
     });
-
-    // Fetch foster pets from the Redux store
-    useEffect(() => {
-        dispatch(fetchFosterPets()); // Dispatch action to fetch foster pets
-    }, [dispatch]);
 
     const handleReset = () => {
         setFilters({
@@ -58,10 +82,30 @@ export default function FosterPets() {
         });
     };
 
+    // Define the pets state with the Pet[] type
+    const [pets, setPets] = useState<Pet[]>([]); // Explicitly typed as Pet[]
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchPets = async () => {
+            try {
+                const response = await fetch("/api/foster-pets");
+                if (!response.ok) throw new Error("Failed to fetch pets");
+                const data = await response.json();
+                setPets(data);
+            } catch (err: any) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPets();
+    }, []);
+
     const [primaryColor, setPrimaryColor] = useState("#000000"); // Default fallback color
 
     useEffect(() => {
-        // Get the computed style of the `--primary-color` CSS variable
         const rootStyles = getComputedStyle(document.documentElement);
         const color = rootStyles.getPropertyValue("--primary-color").trim();
         if (color) {
@@ -71,6 +115,7 @@ export default function FosterPets() {
 
     const handleSearch = () => {
         console.log("Searching with filters:", filters);
+        // You can add additional search functionality here (e.g., fetch new data based on filters)
     };
 
     // Filter pets based on the current filters
@@ -111,7 +156,7 @@ export default function FosterPets() {
     return (
         <>
             <Navbar />
-            <div className="fullBody" style={{maxWidth: '90%', margin: '0 auto'}}>
+            <div className="fullBody" style={{ maxWidth: '90%', margin: '0 auto' }}>
                 <FilterSection
                     onSearch={(filters) => setFilters((prev) => ({ ...prev, ...filters }))}
                 />
@@ -122,7 +167,7 @@ export default function FosterPets() {
                                 onSearch={(newFilters) =>
                                     setFilters((prevFilters) => ({
                                         ...prevFilters,
-                                        ...newFilters, // Spread the new filters, updating only the specified ones
+                                        ...newFilters,
                                     }))
                                 }
                                 onReset={handleReset} // Pass reset function

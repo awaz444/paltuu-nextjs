@@ -114,6 +114,17 @@ export default function BrowsePets() {
         setActiveTab(tab);
     };
 
+    const [primaryColor, setPrimaryColor] = useState("#000000"); // Default fallback color
+
+    useEffect(() => {
+        // Get the computed style of the `--primary-color` CSS variable
+        const rootStyles = getComputedStyle(document.documentElement);
+        const color = rootStyles.getPropertyValue("--primary-color").trim();
+        if (color) {
+            setPrimaryColor(color);
+        }
+    }, []);
+
     return (
         <>
             <Navbar />
@@ -148,7 +159,7 @@ export default function BrowsePets() {
 
 
                             {loading ? (
-                                <MoonLoader className="mt-5 mx-auto relative top-5" size={30} color="#000" />
+                                <MoonLoader className="mt-5 mx-auto relative top-5" size={30} color={primaryColor} />
                             ) : error ? (
                                 <p>Error: {error}</p>
                             ) : (

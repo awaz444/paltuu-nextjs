@@ -59,18 +59,18 @@ export default function CreatePetListing() {
         // Retrieve the user object from local storage
         const userString = localStorage.getItem("user");
         if (!userString) {
-          setError("User data not found in local storage");
-          setLoading(false);
-          return;
+            setError("User data not found in local storage");
+            setLoading(false);
+            return;
         }
 
         // Parse the user object to extract the user ID
         const user = JSON.parse(userString);
         const user_id = user?.id;
         if (!user_id) {
-          setError("User ID is missing from the user object");
-          setLoading(false);
-          return;
+            setError("User ID is missing from the user object");
+            setLoading(false);
+            return;
         }
         const newPet = {
             owner_id: user_id,
@@ -101,21 +101,21 @@ export default function CreatePetListing() {
         // Dispatch postPet action
         console.log('Posting Pet...')
         dispatch(postPet(newPet))
-        .unwrap()
-        .then((result) => {
-            console.log("Pet Posted:", result);
+            .unwrap()
+            .then((result) => {
+                console.log("Pet Posted:", result);
 
-            // Extract the pet ID from the result and navigate to upload-images page
-            const petId = result?.pet_id; // Assuming the API response includes a unique pet ID
-            if (petId) {
-                router.push(`/upload-images?petId=${petId}`);
-            } else {
-                console.error("Failed to get pet ID from response");
-            }
-        })
-        .catch((error) => {
-            console.error("Error posting pet:", error);
-        });
+                // Extract the pet ID from the result and navigate to upload-images page
+                const petId = result?.pet_id; // Assuming the API response includes a unique pet ID
+                if (petId) {
+                    router.push(`/upload-images?petId=${petId}`);
+                } else {
+                    console.error("Failed to get pet ID from response");
+                }
+            })
+            .catch((error) => {
+                console.error("Error posting pet:", error);
+            });
     };
 
     const handleTabToggle = (type: "adoption" | "foster") => {
@@ -146,16 +146,14 @@ export default function CreatePetListing() {
                             />
                             {/* Tabs */}
                             <div
-                                className={`tab ${
-                                    listingType === "adoption" ? "active" : ""
-                                }`}
+                                className={`tab ${listingType === "adoption" ? "active" : ""
+                                    }`}
                                 onClick={() => handleTabToggle("adoption")}>
                                 Adopt
                             </div>
                             <div
-                                className={`tab ${
-                                    listingType === "foster" ? "active" : ""
-                                }`}
+                                className={`tab ${listingType === "foster" ? "active" : ""
+                                    }`}
                                 onClick={() => handleTabToggle("foster")}>
                                 Foster
                             </div>
@@ -331,7 +329,7 @@ export default function CreatePetListing() {
                             type="text"
                             className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
                             placeholder="Enter price (if applicable)"
-                            required={listingType==='foster'}
+                            required={listingType === 'foster'}
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
                         />
@@ -444,6 +442,7 @@ export default function CreatePetListing() {
                     </div>
 
                     {/* Energy Level Slider */}
+                    {/* Energy Level */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">
                             Energy Level
@@ -453,31 +452,22 @@ export default function CreatePetListing() {
                                 type="range"
                                 min="1"
                                 max="5"
-                                className="mt-2 w-full"
-                                value={energyLevel ?? 3} // Show 3 as a visual placeholder but don't set it as state
-                                onChange={(e) =>
-                                    setEnergyLevel(Number(e.target.value))
-                                }
+                                className="mt-2 w-full appearance-none h-2 rounded-lg bg-gray-300"
+                                value={energyLevel ?? 3}
+                                onChange={(e) => setEnergyLevel(Number(e.target.value))}
                                 onMouseDown={() => {
-                                    if (energyLevel === null) setEnergyLevel(3); // Set to 3 when user interacts
+                                    if (energyLevel === null) setEnergyLevel(3);
                                 }}
                                 style={{
                                     background: energyLevel
-                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
-                                              (energyLevel - 1) * 25
-                                          }%, #D1D5DB ${
-                                              (energyLevel - 1) * 25
-                                          }%, #D1D5DB 100%)`
-                                        : "#D1D5DB", // Default background when unselected
+                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${(energyLevel - 1) * 25
+                                        }%, #D1D5DB ${(energyLevel - 1) * 25}%, #D1D5DB 100%)`
+                                        : "#D1D5DB",
                                 }}
                             />
-                            <div className="w-full flex justify-between -top-2">
-                                <span className="text-sm text-gray-500">
-                                    Chilled
-                                </span>
-                                <span className="text-sm text-gray-500">
-                                    Hyper
-                                </span>
+                            <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
+                                <span>Chilled</span>
+                                <span>Hyper</span>
                             </div>
                         </div>
                     </div>
@@ -492,31 +482,26 @@ export default function CreatePetListing() {
                                 type="range"
                                 min="1"
                                 max="5"
-                                className="mt-2 w-full h-2 rounded-2xl input-field input-field input-field input-field bg-gray-300 appearance-none"
-                                value={cuddlinessLevel ?? 3} // Show 3 visually, but don't persist
-                                onChange={(e) =>
-                                    setCuddlinessLevel(Number(e.target.value))
-                                }
+                                className="mt-2 w-full appearance-none h-2 rounded-lg bg-gray-300"
+                                value={cuddlinessLevel ?? 3}
+                                onChange={(e) => setCuddlinessLevel(Number(e.target.value))}
                                 onMouseDown={() => {
-                                    if (cuddlinessLevel === null)
-                                        setCuddlinessLevel(3); // Set to 3 when user interacts
+                                    if (cuddlinessLevel === null) setCuddlinessLevel(3);
                                 }}
                                 style={{
                                     background: cuddlinessLevel
-                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
-                                              (cuddlinessLevel - 1) * 25
-                                          }%, #D1D5DB ${
-                                              (cuddlinessLevel - 1) * 25
-                                          }%, #D1D5DB 100%)`
-                                        : "#D1D5DB", // Default background
+                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${(cuddlinessLevel - 1) * 25
+                                        }%, #D1D5DB ${(cuddlinessLevel - 1) * 25}%, #D1D5DB 100%)`
+                                        : "#D1D5DB",
                                 }}
                             />
                             <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
-                                <span>Cuddler</span>
                                 <span>Independent</span>
+                                <span>Cuddler</span>
                             </div>
                         </div>
                     </div>
+
 
                     {/* Health Issues */}
                     <div className="mb-4">

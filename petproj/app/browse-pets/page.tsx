@@ -114,7 +114,7 @@ export default function BrowsePets() {
         setActiveTab(tab);
     };
 
-    const [primaryColor, setPrimaryColor] = useState("#000000"); // Default fallback color
+    const [primaryColor, setPrimaryColor] = useState("#A00000");
 
     useEffect(() => {
         // Get the computed style of the `--primary-color` CSS variable

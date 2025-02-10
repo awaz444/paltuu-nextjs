@@ -1,0 +1,47 @@
+/* Default styles for larger screens */
+.filter-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+}
+
+.more-filters {
+    display: none;
+}
+
+/* Responsive styles for small screens */
+@media (max-width: 768px) {
+    .filter-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .species-filter {
+        width: 100%;
+    }
+
+    .search-more-container {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        gap: 0.5rem;
+        padding: 0 1rem;
+    }
+
+    .search-more-container button {
+        flex: 1;
+        padding: 12px;
+        text-align: center;
+        border-radius: 2xl; /* More rounded corners */
+        margin: 0.5rem 0; /* Vertical spacing */          
+    }
+
+    .more-filters {
+        display: none;
+    }
+
+    .more-filters.open {
+        display: block;
+    }
+}

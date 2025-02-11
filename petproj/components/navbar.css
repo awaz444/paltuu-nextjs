@@ -12,6 +12,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative; /* Ensure child elements are positioned relative to this */
 }
 
 /* Logo positioning */
@@ -81,14 +82,17 @@
   transition: border-radius;
 }
 
-/* Hamburger menu */
+  /* Hamburger Menu */
 .hamburger {
-  display: flex;
+  display: none; /* Hidden by default */
   flex-direction: column;
   gap: 5px;
   background: none;
   border: none;
   cursor: pointer;
+  z-index: 1001;
+  position: absolute;
+  left: 1.5rem; /* Position on the left */
 }
 
 .hamburger-line {
@@ -98,31 +102,109 @@
   border-radius: 2px;
 }
 
-/* Mobile menu */
+/* Mobile Menu */
 .mobile-menu {
+  display: none; /* Hidden by default */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
   z-index: 1000;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 2rem;
+  overflow-y: auto;
 }
 
-.close-button {
+.mobile-menu.open {
+  display: flex; /* Show when open */
+}
+
+/* Navigation Links (Mobile) */
+.navLinks-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: center;
+}
+
+.mobile-link {
   color: white;
+  font-size: 18px;
+  text-decoration: none;
+}
+
+.mobile-link.active {
+  font-weight: bold;
+}
+
+/* Dropdown (Mobile) */
+.dropdown-mobile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.loginBtn-mobile {
+  background-color: transparent;
+  color: white;
+  border: 2px solid white;
+  padding: 10px 20px;
+  border-radius: 30px;
   cursor: pointer;
 }
 
-/* Center logo and adjust navbar on small screens */
+.dropdown-menu-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.dropdown-item-mobile {
+  color: white;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* Close Button */
+.close-button {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+/* .logo {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000; /* Ensure logo is above other elements */
+
+
+/* Responsive Styles */
 @media (max-width: 767px) {
-  .navbar {
-    justify-content: center;
-    position: relative;
+  .hamburger {
+    display: flex; /* Show hamburger on small screens */
   }
 
-  .w-8 {
-    position: absolute;
-    right: 1.5rem; /* Move spacer to the right for balance */
+  .navLinks,
+  .dropdown {
+    display: none; /* Hide desktop links and dropdown on small screens */
   }
-
   .logo {
-    text-align: center;
-    left: 0; /* Override left positioning */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000; /* Ensure logo is above other elements */
   }
 }

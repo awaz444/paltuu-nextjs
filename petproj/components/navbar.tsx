@@ -141,6 +141,82 @@ const Navbar = () => {
 
     return (
         <nav className="navbar" style={navbarStyle}>
+            {/* Hamburger Menu Button (Mobile Only) */}
+<button
+  className="hamburger md:hidden"
+  onClick={() => setIsMenuOpen(!isMenuOpen)}
+>
+  <div className="hamburger-line" />
+  <div className="hamburger-line" />
+  <div className="hamburger-line" />
+</button>
+
+{/* Mobile Menu */}
+<div
+  className={`mobile-menu ${isMenuOpen ? "open" : ""} md:hidden`}
+  style={{ backgroundColor: navbarBackground[userRole] }}
+>
+  {/* Close Button */}
+  <button
+    className="close-button"
+    onClick={() => setIsMenuOpen(false)}
+  >
+    &times;
+  </button>
+
+  {/* Navigation Links */}
+  <div className="navLinks-mobile">
+    {links.map((link) => (
+      <Link key={link.href} href={`/${link.href}`}>
+        <span
+          className={`mobile-link ${activeLink === link.href ? "active" : ""}`}
+          onClick={() => {
+            setActiveLink(link.href);
+            setIsMenuOpen(false);
+          }}
+        >
+          {link.name}
+        </span>
+      </Link>
+    ))}
+  </div>
+
+  {/* Dropdown (Mobile) */}
+  <div className="dropdown-mobile">
+    {isAuthenticated || session ? (
+      <button
+        className="loginBtn-mobile"
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+      >
+        {displayName}
+        {isVerified && (
+          <i className="bi bi-patch-check-fill text-[#cc8800] mr-2" />
+        )}
+        <Image src="/arrow-down.svg" alt="Dropdown" width={12} height={12} />
+      </button>
+    ) : (
+      <Link href="/login">
+        <button className="loginBtn-mobile">Login</button>
+      </Link>
+    )}
+
+    {/* Dropdown Menu (Mobile) */}
+    {isDropdownOpen && (
+      <div className="dropdown-menu-mobile">
+        {dropdownItems.map((item) => (
+          <Link key={item.href} href={item.href}>
+            <div
+              className="dropdown-item-mobile"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              {item.label}
+            </div>
+          </Link>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
             <div className="flex items-center justify-between w-full">
                 {/* Logo */}
                 <div className="logo">

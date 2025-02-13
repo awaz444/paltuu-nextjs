@@ -44,3 +44,8 @@
     color: white; /* Change text color for active tab */
   }
   
+  @media (max-width: 1024px) { /* Hides on tablets and smaller screens */
+    .vertical-search-bar {
+        display: none;
+    }
+}

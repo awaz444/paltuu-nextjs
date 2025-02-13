@@ -132,11 +132,12 @@ export default function BrowsePets() {
                 <FilterSection onSearch={(filters) => setFilters((prev) => ({ ...prev, ...filters }))} />
                 <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
                     <div className="flex w-full">
-                        <div className="w-1/4 mr-4">
+                        <div className="w-1/4 mr-4 vertical-search-bar">
                             <VerticalSearchBar onSearch={setFilters} onReset={handleReset} onSearchAction={handleSearch} />
                         </div>
+
                         <div className="w-3/4">
-                        <div className="tab-switch-container relative">
+                            <div className="tab-switch-container relative">
                                 <div
                                     className="tab-switch-slider absolute w-1/2 h-full transition-transform duration-300 rounded-lg bg-primary"
                                     style={{

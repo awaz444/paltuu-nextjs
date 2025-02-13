@@ -6,6 +6,7 @@ import FosterVerticalSearchBar from "../../components/FosterVerticalSearchBar";
 import FilterSection from "../../components/FilterSection";
 import PetGrid from "../../components/petGrid";
 import { MoonLoader } from "react-spinners";
+import './styles.css';
 
 // Define the structure of the pet object
 interface Pet {
@@ -162,7 +163,7 @@ export default function FosterPets() {
                 />
                 <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
                     <div className="flex w-full">
-                        <div className="w-1/4 mr-4">
+                        <div className="w-1/4 mr-4 vertical-search-bar">
                             <FosterVerticalSearchBar
                                 onSearch={(newFilters) =>
                                     setFilters((prevFilters) => ({

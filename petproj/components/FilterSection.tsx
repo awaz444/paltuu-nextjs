@@ -22,7 +22,6 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
     const [selectedCity, setSelectedCity] = useState("");
     const [selectedSpecies, setSelectedSpecies] = useState("");
     const [breed, setBreed] = useState("");
-    const [showMoreFilters, setShowMoreFilters] = useState(false);
 
     useSetPrimaryColor();
 
@@ -44,10 +43,9 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
 
     return (
         <div className="bg-gray-100 pt-6">
-            <div className="bg-white px-8 py-2 w-700" style={{ margin: "0px 32px", borderRadius: "2rem" }}>
-                {/* Large screen layout (Original) */}
+            <div className="bg-white px-8 py-2 w-700 mx-8 rounded-2xl">
+                {/* PC Layout */}
                 <div className="hidden md:flex flex-wrap gap-4 mb-4 mt-4 items-center">
-                    {/* Species dropdown */}
                     <div className="flex-1 min-w-[150px]">
                         <label className="text-xs">Species</label>
                         <select
@@ -64,7 +62,6 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
                         </select>
                     </div>
 
-                    {/* Breed input field */}
                     <div className="flex-1 min-w-[150px]">
                         <label className="text-xs">Breed</label>
                         <input
@@ -76,7 +73,6 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
                         />
                     </div>
 
-                    {/* Cities dropdown */}
                     <div className="flex-1 min-w-[150px]">
                         <label className="text-xs">City</label>
                         <select
@@ -93,7 +89,6 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
                         </select>
                     </div>
 
-                    {/* Buttons */}
                     <div className="flex gap-4 mt-4">
                         <button className="border-2 border-primary text-primary bg-white p-3 rounded-2xl" onClick={handleReset}>
                             Reset
@@ -104,10 +99,9 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
                     </div>
                 </div>
 
-                {/* Small screen layout */}
+                {/* Tablet & Mobile Layout */}
                 <div className="md:hidden flex flex-col gap-4">
-                    {/* Species dropdown */}
-                    <div className="species-filter">
+                    <div>
                         <label className="text-xs">Species</label>
                         <select
                             className="w-full p-3 border rounded-xl"
@@ -123,63 +117,41 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
                         </select>
                     </div>
 
-{/* Search & More Filters buttons */}
-<div className="search-more-container flex justify-between w-full px-4 gap-4">
-    <button className="text-white p-3 rounded-xl bg-primary flex-1 whitespace-nowrap" onClick={handleSearch}>
-        Search
-    </button>
-    <button
-        className="border-2 border-primary text-primary bg-white p-3 rounded-xl flex-1 whitespace-nowrap text-sm"
-        onClick={() => setShowMoreFilters(!showMoreFilters)}
-    >
-        More Filters
-    </button>
-</div>
+                    <div>
+                        <label className="text-xs">Breed</label>
+                        <input
+                            type="text"
+                            className="w-full p-3 border rounded-xl"
+                            value={breed}
+                            onChange={(e) => setBreed(e.target.value)}
+                            placeholder="Enter Breed"
+                        />
+                    </div>
 
+                    <div>
+                        <label className="text-xs">City</label>
+                        <select
+                            className="w-full p-3 border rounded-xl"
+                            value={selectedCity}
+                            onChange={(e) => setSelectedCity(e.target.value)}
+                        >
+                            <option value="">Select City</option>
+                            {cities.map((city) => (
+                                <option key={city.city_id} value={city.city_id}>
+                                    {city.city_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-                    {/* More Filters Section */}
-                    {showMoreFilters && (
-                        <div className="more-filters open flex flex-col gap-4 mt-4">
-                            {/* Breed input field */}
-                            <div>
-                                <label className="text-xs">Breed</label>
-                                <input
-                                    type="text"
-                                    className="w-full p-3 border rounded-xl"
-                                    value={breed}
-                                    onChange={(e) => setBreed(e.target.value)}
-                                    placeholder="Enter Breed"
-                                />
-                            </div>
-
-                            {/* Cities dropdown */}
-                            <div>
-                                <label className="text-xs">City</label>
-                                <select
-                                    className="w-full p-3 border rounded-xl"
-                                    value={selectedCity}
-                                    onChange={(e) => setSelectedCity(e.target.value)}
-                                >
-                                    <option value="">Select City</option>
-                                    {cities.map((city) => (
-                                        <option key={city.city_id} value={city.city_id}>
-                                            {city.city_name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Buttons */}
-                            <div className="flex gap-4 mt-4">
-                                <button className="border-2 border-primary text-primary bg-white p-3 rounded-2xl" onClick={handleReset}>
-                                    Reset
-                                </button>
-                                <button className="text-white p-3 rounded-2xl w-40 bg-primary" onClick={handleSearch}>
-                                    Search
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    <div className="flex flex-col gap-4 w-full">
+                        <button className="border-2 border-primary text-primary bg-white p-3 rounded-2xl w-full" onClick={handleReset}>
+                            Reset
+                        </button>
+                        <button className="text-white p-3 rounded-2xl w-full bg-primary" onClick={handleSearch}>
+                            Search
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

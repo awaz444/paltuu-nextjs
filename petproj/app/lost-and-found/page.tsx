@@ -144,7 +144,7 @@ export default function LostFound() {
     return (
         <>
             <Navbar />
-            <div className="fullBody" style={{ maxWidth: "90%", margin: "0 auto" }}>
+            <div className="fullBody w-3/5" style={{ maxWidth: "90%", margin: "0 auto" }}>
                 <LostAndFoundFilter
                     onSearch={(filters) => {
                         console.log('Filters updated:', filters); // Debug filter updates

@@ -86,3 +86,6 @@ input[type="range"]::-moz-range-thumb {
     color: white; /* Change text color for active tab */
   }
   
+  .create-listing-btn {
+    min-height: 200px;
+  }

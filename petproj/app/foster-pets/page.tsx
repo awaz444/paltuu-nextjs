@@ -176,7 +176,7 @@ export default function FosterPets() {
                             />
                         </div>
 
-                        <div className="w-3/4">
+                        <div className="w-full">
                             {loading ? (
                                 <MoonLoader className="mt-5 mx-auto relative top-5" size={30} color={primaryColor} />
                             ) : error ? (

@@ -136,7 +136,7 @@ export default function BrowsePets() {
                             <VerticalSearchBar onSearch={setFilters} onReset={handleReset} onSearchAction={handleSearch} />
                         </div>
 
-                        <div className="w-3/4">
+                        <div className="w-full">
                             <div className="tab-switch-container relative">
                                 <div
                                     className="tab-switch-slider absolute w-1/2 h-full transition-transform duration-300 rounded-lg bg-primary"

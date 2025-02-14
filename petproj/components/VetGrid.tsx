@@ -44,29 +44,21 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {vets.map((vet) => (
         <Link key={vet.vet_id} href={`/pet-care/${vet.vet_id}`}>
-          <div
-            key={vet.vet_id}
-            className="relative bg-white p-4 rounded-2xl shadow-sm border border-gray-200 hover:border-primary"
-          >
-            <div className="absolute top-4 right-4 bg-white text-sm text-primary font-bold py-1 px-3 rounded-lg">
-              Fee Starting from: PKR {vet.minimum_fee}
-            </div>
-
-            <div className="flex">
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 hover:border-primary">
+            {/* Image + Details */}
+            <div className="flex flex-col sm:flex-row">
               <img
                 src={vet.profile_image_url || "/placeholder.jpg"}
                 alt={vet.name}
-                className="w-28 h-26 object-cover rounded-full mr-4"
+                className="w-24 h-24 object-cover rounded-full sm:mr-4 mb-4 sm:mb-0"
               />
               <div className="flex-grow">
-                <div className="flex items-center">
+                <div className="flex flex-wrap items-center gap-x-2">
                   <div className="font-bold text-xl text-primary">{vet.name}</div>
-                  {vet.profile_verified && (
-                    <i className="bi bi-patch-check-fill text-[#cc8800] ml-2" />
-                  )}
+                  {vet.profile_verified && <i className="bi bi-patch-check-fill text-[#cc8800]" />}
                 </div>
                 <p className="text-gray-600">{vet.clinic_name}</p>
                 <p className="text-gray-500">{vet.city_name}</p>
@@ -82,57 +74,46 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
                   </p>
                 )}
               </div>
-              <div className="flex flex-col justify-end items-end ml-4">
-                <div
-                  className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-primary hover:bg-[#ffffff] hover:text-primary cursor-pointer"
-                  onClick={(e) => {
-                    e.preventDefault(); // Prevent Link from triggering
-                    openModal(vet);
-                  }}
-                >
-                  Book Appointment
-                </div>
-              </div>
+            </div>
+
+            {/* Fee Badge - Placed in its own row to avoid overlap */}
+            <div className="mt-2 bg-gray-100 text-sm text-primary font-bold py-1 px-3 rounded-lg w-fit">
+              Fee Starting from: PKR {vet.minimum_fee}
+            </div>
+
+            {/* Book Appointment Button - Right Aligned */}
+            <div className="mt-4">
+              <button
+                className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-primary hover:bg-white hover:text-primary cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  openModal(vet);
+                }}
+              >
+                Book Appointment
+              </button>
             </div>
           </div>
         </Link>
       ))}
-      <Modal
-        title="Contact Information"
-        visible={isModalVisible}
-        onCancel={closeModal}
-        footer={null}
-      >
+
+      {/* Modal for Contact Information */}
+      <Modal title="Contact Information" visible={isModalVisible} onCancel={closeModal} footer={null}>
         {selectedVet && (
           <div>
             <p>
               <strong>Phone:</strong> {selectedVet.contact_details}{" "}
-              <Button
-                icon={<CopyOutlined />}
-                className="ml-2"
-                size="small"
-                onClick={() => handleCopy(selectedVet.contact_details)}
-              >
+              <Button icon={<CopyOutlined />} className="ml-2" size="small" onClick={() => handleCopy(selectedVet.contact_details)}>
                 Copy
               </Button>
             </p>
             <p>
               <strong>Email:</strong> {selectedVet.email}{" "}
-              <Button
-                icon={<CopyOutlined />}
-                className="ml-2"
-                size="small"
-                onClick={() => handleCopy(selectedVet.email)}
-              >
+              <Button icon={<CopyOutlined />} className="ml-2" size="small" onClick={() => handleCopy(selectedVet.email)}>
                 Copy
               </Button>
             </p>
-            <Button
-              type="primary"
-              className="bg-primary text-white mt-4"
-              icon={<WhatsAppOutlined />}
-              onClick={() => handleWhatsApp(selectedVet.contact_details)}
-            >
+            <Button type="primary" className="bg-primary text-white mt-4" icon={<WhatsAppOutlined />} onClick={() => handleWhatsApp(selectedVet.contact_details)}>
               WhatsApp
             </Button>
           </div>

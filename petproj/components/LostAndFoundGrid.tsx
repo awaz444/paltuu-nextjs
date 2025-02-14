@@ -72,7 +72,7 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
             {sortedPets.map((pet) => (
                 <div
                     key={pet.post_id}
-                    className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300"
+                    className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:cursor-pointer hover:scale-102 transition-all duration-300"
                     onClick={() => showModal(pet)}
                 >
                     <div className="relative">

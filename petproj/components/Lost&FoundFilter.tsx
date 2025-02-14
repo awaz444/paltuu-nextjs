@@ -47,15 +47,17 @@ const LostAndFoundFilter: React.FC<LostAndFoundFilterProps> = ({ onSearch }) => 
             <div
                 className="bg-white px-8 py-2 w-700"
                 style={{ margin: "0px 32px", borderRadius: "2rem" }}>
-                <div className="flex flex-wrap gap-4 mb-4 mt-4 items-center">
-                    
-                    {/* Species dropdown */}
+
+
+                {/* PC Layout */}
+                <div className="hidden md:flex flex-wrap gap-4 mb-4 mt-4 items-center">
                     <div className="flex-1 min-w-[150px]">
                         <label className="text-xs">Species</label>
                         <select
                             className="w-full p-3 border rounded-xl"
                             value={selectedSpecies}
-                            onChange={(e) => setSelectedSpecies(e.target.value)}>
+                            onChange={(e) => setSelectedSpecies(e.target.value)}
+                        >
                             <option value="">Select Species</option>
                             {categories.map((category) => (
                                 <option key={category.category_id} value={category.category_id}>
@@ -65,13 +67,16 @@ const LostAndFoundFilter: React.FC<LostAndFoundFilterProps> = ({ onSearch }) => 
                         </select>
                     </div>
 
-                    {/* Cities dropdown */}
+                    {/* Location input field */}
+                    
+
                     <div className="flex-1 min-w-[150px]">
                         <label className="text-xs">City</label>
                         <select
                             className="w-full p-3 border rounded-xl"
                             value={selectedCity}
-                            onChange={(e) => setSelectedCity(e.target.value)}>
+                            onChange={(e) => setSelectedCity(e.target.value)}
+                        >
                             <option value="">Select City</option>
                             {cities.map((city) => (
                                 <option key={city.city_id} value={city.city_id}>
@@ -81,7 +86,6 @@ const LostAndFoundFilter: React.FC<LostAndFoundFilterProps> = ({ onSearch }) => 
                         </select>
                     </div>
 
-                    {/* Location input field */}
                     <div className="flex-1 min-w-[150px]">
                         <label className="text-xs">Location</label>
                         <input
@@ -93,20 +97,75 @@ const LostAndFoundFilter: React.FC<LostAndFoundFilterProps> = ({ onSearch }) => 
                         />
                     </div>
 
-                    {/* Buttons */}
                     <div className="flex gap-4 mt-4">
-                        <button
-                            className="border-2 border-primary text-primary bg-white p-3 rounded-2xl"
-                            onClick={handleReset}>
+                        <button className="border-2 border-primary text-primary bg-white p-3 rounded-2xl" onClick={handleReset}>
                             Reset
                         </button>
-                        <button
-                            className="text-white p-3 rounded-2xl w-40 bg-primary"
-                            onClick={handleSearch}>
+                        <button className="text-white p-3 rounded-2xl w-40 bg-primary" onClick={handleSearch}>
                             Search
                         </button>
                     </div>
                 </div>
+
+                {/* Tablet & Mobile Layout */}
+                <div className="md:hidden flex flex-col gap-4">
+                    <div>
+                        <label className="text-xs">Species</label>
+                        <select
+                            className="w-full p-3 border rounded-xl"
+                            value={selectedSpecies}
+                            onChange={(e) => setSelectedSpecies(e.target.value)}
+                        >
+                            <option value="">Select Species</option>
+                            {categories.map((category) => (
+                                <option key={category.category_id} value={category.category_id}>
+                                    {category.category_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+
+
+                    <div>
+                        <label className="text-xs">City</label>
+                        <select
+                            className="w-full p-3 border rounded-xl"
+                            value={selectedCity}
+                            onChange={(e) => setSelectedCity(e.target.value)}
+                        >
+                            <option value="">Select City</option>
+                            {cities.map((city) => (
+                                <option key={city.city_id} value={city.city_id}>
+                                    {city.city_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="flex-1 min-w-[150px]">
+                        <label className="text-xs">Location</label> 
+                        <input
+                            type="text"
+                            className="w-full p-3 border rounded-xl"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            placeholder="Enter Location"
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-4 w-full">
+                        <button className="border-2 border-primary text-primary bg-white p-3 rounded-2xl w-full" onClick={handleReset}>
+                            Reset
+                        </button>
+                        <button className="text-white p-3 rounded-2xl w-full bg-primary" onClick={handleSearch}>
+                            Search
+                        </button>
+                    </div>
+                </div>
+
+
+
             </div>
         </div>
     );

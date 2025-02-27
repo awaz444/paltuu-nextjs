@@ -1,10 +1,14 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '../../components/navbar';
 import '../globals.css';
 import ReactMarkdown from 'react-markdown';
+import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 
 export default function ChatBot() {
+  
+  useSetPrimaryColor();
+
   const [userInput, setUserInput] = useState('');
   const [chatLog, setChatLog] = useState<{ user: string; ai: string }[]>([]);
   const [loading, setLoading] = useState(false);
@@ -46,13 +50,24 @@ export default function ChatBot() {
     }
   };
 
+  const [primaryColor, setPrimaryColor] = useState("#000000"); // Default fallback color
+
+  useEffect(() => {
+    // Get the computed style of the `--primary-color` CSS variable
+    const rootStyles = getComputedStyle(document.documentElement);
+    const color = rootStyles.getPropertyValue("--primary-color").trim();
+    if (color) {
+      setPrimaryColor(color);
+    }
+  }, []);
+
   return (
     <div className="h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 flex items-center justify-center bg-gray-100 p-4">
         {/* Chat Container (Fixed Height) */}
         <div className="w-full max-w-2xl bg-white rounded-xl shadow-md p-6 h-[80vh] flex flex-col">
-          
+
           {/* Chat History (Scrollable when overflowing) */}
           <div className="flex-grow overflow-y-auto border-b border-gray-200 p-4">
             {chatLog.length === 0 ? (

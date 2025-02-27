@@ -45,7 +45,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
     useSetPrimaryColor();
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {/* Create new listing card */}
             <Link
                 href="/create-listing"
@@ -80,7 +80,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                         <img
                             src={pet.image_url || "/dog-placeholder.png"} // Fallback image if pet.image_url is null
                             alt={pet.pet_name}
-                            className="w-full h-48 object-cover rounded-2xl"
+                            className="w-full aspect-square object-cover rounded-2xl"
                         />
                         {/* Overlay badge for "Ready for adoption" or price at the bottom-right */}
                         {Number(pet.price) > 0 && (

@@ -79,7 +79,7 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
                         <img
                             src={pet.image_url || "./dog-placeholder.png"}
                             alt={pet.pet_description || "Lost or Found Pet"}
-                             className="w-full aspect-square object-cover rounded-2xl"
+                            className="w-full aspect-square object-cover rounded-2xl"
                         />
                     </div>
                     <div className="p-4">

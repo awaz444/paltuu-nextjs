@@ -87,7 +87,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                             <div className="absolute bottom-2 right-2 bg-primary text-white text-sm font-semibold px-3 py-1 rounded-full">
                                 PKR {pet.price}
                                 {pet.payment_frequency &&
-                                    ` / ${pet.payment_frequency}`}
+                                    ` per ${pet.payment_frequency}`}
                             </div>
                         )}
                     </div>

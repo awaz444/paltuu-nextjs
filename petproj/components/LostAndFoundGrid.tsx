@@ -52,7 +52,7 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
     }
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             <Link
                 href="/lost-and-found-create-listing"
                 className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300"
@@ -72,28 +72,28 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
             {sortedPets.map((pet) => (
                 <div
                     key={pet.post_id}
-                    className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:cursor-pointer hover:scale-102 transition-all duration-300"
+                    className="bg-white pr-3 pl-3 pt-3 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:cursor-pointer hover:scale-102 transition-all duration-300"
                     onClick={() => showModal(pet)}
                 >
                     <div className="relative">
                         <img
                             src={pet.image_url || "./dog-placeholder.png"}
                             alt={pet.pet_description || "Lost or Found Pet"}
-                            className="w-full h-48 object-cover rounded-2xl"
+                             className="w-full aspect-square object-cover rounded-2xl"
                         />
                     </div>
                     <div className="p-4">
                         <h3 className="font-bold text-xl mb-2">
                             {pet.category_name}
                         </h3>
-                        <p className="text-gray-600 mb-1">
+                        <p className="text-gray-600">
                             {pet.city} - {pet.location}
                         </p>
-                        {pet.pet_description && (
+                        {/* {pet.pet_description && (
                             <p className="text-gray-600 mb-1 truncate">
                                 {pet.pet_description}
                             </p>
-                        )}
+                        )} */}
                     </div>
                 </div>
             ))}

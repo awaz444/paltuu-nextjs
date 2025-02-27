@@ -1,8 +1,8 @@
-'use client'; // Ensure this is at the top of your file
+'use client';
 import { useState } from 'react';
 import Navbar from '../../components/navbar';
 import '../globals.css';
-import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown for markdown rendering
+import ReactMarkdown from 'react-markdown';
 
 export default function ChatBot() {
   const [userInput, setUserInput] = useState('');
@@ -28,7 +28,6 @@ export default function ChatBot() {
 
       const data = await response.json();
 
-      // Update the chat log with the AI response
       setChatLog((prevLog) => {
         const updatedLog = [...prevLog];
         updatedLog[updatedLog.length - 1].ai = data.data || 'Sorry, something went wrong!';
@@ -48,12 +47,14 @@ export default function ChatBot() {
   };
 
   return (
-    <>
+    <div className="h-screen flex flex-col">
       <Navbar />
-      <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
-        {/* Chat window */}
-        <div className="w-full max-w-2xl bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="h-96 overflow-y-auto border-b border-gray-200 mb-4 p-4">
+      <main className="flex-1 flex items-center justify-center bg-gray-100 p-4">
+        {/* Chat Container (Fixed Height) */}
+        <div className="w-full max-w-2xl bg-white rounded-xl shadow-md p-6 h-[80vh] flex flex-col">
+          
+          {/* Chat History (Scrollable when overflowing) */}
+          <div className="flex-grow overflow-y-auto border-b border-gray-200 p-4">
             {chatLog.length === 0 ? (
               <p className="text-gray-500">Start the conversation with Paltuu AI!</p>
             ) : (
@@ -62,18 +63,17 @@ export default function ChatBot() {
                   <p className="font-bold text-dark">You:</p>
                   <p className="mb-2">{chat.user}</p>
                   <p className="font-bold text-primary">Paltuu AI:</p>
-                  {/* Render markdown for the AI's response */}
                   <ReactMarkdown>{chat.ai || '...'}</ReactMarkdown>
                 </div>
               ))
             )}
           </div>
 
-          {/* Input form */}
-          <form onSubmit={handleSubmit} className="flex items-center">
+          {/* Input Form (Pinned at the bottom) */}
+          <form onSubmit={handleSubmit} className="flex items-center mt-4">
             <input
               type="text"
-              className="flex-grow border border-gray-300 rounded-lg px-4 py-2 mr-4"
+              className="flex-grow border border-gray-300 rounded-xl px-4 py-2 mr-4 outline-none focus:ring-2 focus:ring-primary"
               placeholder="Ask me anything about pets..."
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
@@ -81,7 +81,7 @@ export default function ChatBot() {
             />
             <button
               type="submit"
-              className={`px-6 py-2 bg-primary text-white rounded-lg ${loading ? 'bg-gray-400' : 'hover:bg-dark'}`}
+              className={`px-6 py-2 rounded-xl text-white transition-all ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary hover:bg-dark'}`}
               disabled={loading}
             >
               {loading ? 'Thinking...' : 'Send'}
@@ -89,6 +89,6 @@ export default function ChatBot() {
           </form>
         </div>
       </main>
-    </>
+    </div>
   );
 }

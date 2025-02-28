@@ -45,5 +45,7 @@ export const config = {
     '/profile',
     '/my-listings',
     '/my-applications',
+    '/browse-pets/:path*',
+    '/foster-pets/:path*'
   ]
 };

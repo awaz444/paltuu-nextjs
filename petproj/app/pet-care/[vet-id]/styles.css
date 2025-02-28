@@ -1,0 +1,22 @@
+/* Custom form input focus states */
+.ant-input:hover, .ant-input:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.1) !important;
+  }
+  
+  /* Custom rate component styling */
+  .ant-rate-star-full .ant-rate-star-second {
+    color: var(--primary-color) !important;
+  }
+  
+  /* Custom modal styling */
+  .ant-modal-content {
+    border-radius: 1rem !important;
+    padding: 2rem !important;
+  }
+  
+  /* Custom divider styling */
+  .ant-divider {
+    border-color: #f0f0f0 !important;
+    margin: 2rem 0 !important;
+  }

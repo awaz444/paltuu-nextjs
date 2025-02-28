@@ -84,7 +84,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
             {/* Book Appointment Button - Right Aligned */}
             <div className="mt-4">
               <button
-                className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white hover:border-primary hover:bg-white hover:text-primary cursor-pointer"
+                className="bg-primary text-white px-4 py-2 rounded-xl font-semibold border border-white cursor-pointer transition-all duration-300 hover:scale-105 hover:bg-primary/150"
                 onClick={(e) => {
                   e.preventDefault();
                   openModal(vet);
@@ -93,31 +93,57 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
                 Book Appointment
               </button>
             </div>
+
+
           </div>
         </Link>
       ))}
 
-      {/* Modal for Contact Information */}
-      <Modal title="Contact Information" visible={isModalVisible} onCancel={closeModal} footer={null}>
+      <Modal
+        title="Contact Information"
+        open={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        footer={null}
+        className="rounded-lg"
+      >
         {selectedVet && (
-          <div>
-            <p>
-              <strong>Phone:</strong> {selectedVet.contact_details}{" "}
-              <Button icon={<CopyOutlined />} className="ml-2" size="small" onClick={() => handleCopy(selectedVet.contact_details)}>
-                Copy
-              </Button>
-            </p>
-            <p>
-              <strong>Email:</strong> {selectedVet.email}{" "}
-              <Button icon={<CopyOutlined />} className="ml-2" size="small" onClick={() => handleCopy(selectedVet.email)}>
-                Copy
-              </Button>
-            </p>
-            <Button type="primary" className="bg-primary text-white mt-4" icon={<WhatsAppOutlined />} onClick={() => handleWhatsApp(selectedVet.contact_details)}>
-              WhatsApp
+          <div className="space-y-4">
+            <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+              <div>
+                <p className="font-medium text-gray-700">{selectedVet.contact_details}</p>
+                <p className="text-sm text-gray-500">Phone Number</p>
+              </div>
+              <Button
+                icon={<CopyOutlined className="text-primary" />}
+                size="small"
+                onClick={() => handleCopy(selectedVet.contact_details)}
+                className="border-none shadow-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+              <div>
+                <p className="font-medium text-gray-700">{selectedVet.email}</p>
+                <p className="text-sm text-gray-500">Email Address</p>
+              </div>
+              <Button
+                icon={<CopyOutlined className="text-primary" />}
+                size="small"
+                onClick={() => handleCopy(selectedVet.email)}
+                className="border-none shadow-none"
+              />
+            </div>
+
+            <Button
+              type="primary"
+              block
+              icon={<WhatsAppOutlined />}
+              className="bg-green-500 hover:bg-green-600 text-white h-12 rounded-lg flex items-center justify-center"
+              onClick={() => handleWhatsApp(selectedVet.contact_details)}
+            >
+              Message via WhatsApp
             </Button>
-          </div>
-        )}
+          </div>)}
       </Modal>
     </div>
   );

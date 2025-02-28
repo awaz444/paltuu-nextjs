@@ -45,7 +45,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
 
     return (
         <div className="filter-section bg-gray-100 pt-6">
-            <div className="bg-white px-5 py-5 w-700 rounded-2xl">
+            <div className="bg-white mx-0 md:mx-8 px-5 py-5 w-700 rounded-2xl">
                 {/* PC Layout */}
                 <div className="hidden md:flex flex-wrap gap-4 mb-4 mt-4 items-center">
                     <div className="flex-1 min-w-[150px]">

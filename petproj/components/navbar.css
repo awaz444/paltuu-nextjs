@@ -49,10 +49,9 @@
 }
 
 /* Show links for larger screens */
-@media (min-width: 768px) {
+@media (min-width: 768px){
   .navLinks {
     display: flex;
-    
   }
 }
 
@@ -192,7 +191,7 @@
 
 
 /* Responsive Styles */
-@media (max-width: 767px) {
+@media (max-width: 1044px) {
   .hamburger {
     display: flex; /* Show hamburger on small screens */
   }

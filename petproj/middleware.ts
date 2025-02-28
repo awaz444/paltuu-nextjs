@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
 // Update matcher to include all protected routes
 export const config = {
   matcher: [
-    '/api/users/logout',
+    // '/api/users/logout',
     '/profile',
     '/my-listings',
     '/my-applications',

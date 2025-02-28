@@ -98,3 +98,27 @@ input[type="range"]::-moz-range-thumb {
     color: white; /* Change text color for active tab */
   }
   
+  /* Override button hover states */
+.button-one.ant-btn:not(:disabled):hover {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  opacity: 0.9;
+}
+
+.button-two.ant-btn:not(:disabled):hover {
+  color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  opacity: 0.9;
+}
+
+/* Override modal form fields */
+.ant-input:focus,
+.ant-input-focused {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 20%) !important;
+}
+
+.ant-checkbox-checked .ant-checkbox-inner {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}

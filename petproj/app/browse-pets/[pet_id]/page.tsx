@@ -286,7 +286,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                     type="primary"
                                     block
                                     size="large"
-                                    className="h-14 text-lg bg-primary font-semibold rounded-xl"
+                                    className="button-one h-14 text-lg bg-primary font-semibold rounded-xl hover:bg-primary"
                                     onClick={handleAdoptClick}
                                 >
                                     Apply for Adoption Process
@@ -295,7 +295,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                 <Button
                                     block
                                     size="large"
-                                    className="h-14 text-lg font-semibold rounded-xl border-primary text-primary hover:text-primary/80 hover:border-primary/80"
+                                    className="button-two h-14 text-lg font-semibold rounded-xl border-primary text-primary"
                                     onClick={() => setIsModalOpen(true)}
                                 >
                                     Contact Owner
@@ -370,6 +370,11 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                             </div>
                                         </div>
                                     </div>
+                                </Section>
+                                <Section title="Living Preferences">
+                                    <InfoRow label="Good with Dogs" value={pet.can_live_with_dogs ? "Yes" : "No"} />
+                                    <InfoRow label="Good with Cats" value={pet.can_live_with_cats ? "Yes" : "No"} />
+                                    <InfoRow label="Requires Companion at all times" value={pet.must_have_someone_home ? "Yes" : "No"} />
                                 </Section>
                             </div>
                         </div>

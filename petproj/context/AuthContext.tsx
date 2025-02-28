@@ -53,11 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await fetch('/api/users/logout', {
-        method: 'GET',
-        credentials: 'include'
-      });
-
+      // First handle NextAuth logout if user is logged in with Google
       if (user?.method === "google") {
         await nextAuthSignOut({
           callbackUrl: "/login",
@@ -65,22 +61,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       }
 
+      // Clear local storage
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       localStorage.removeItem("next-auth.session-token");
       localStorage.removeItem("next-auth.csrf-token");
       localStorage.removeItem("next-auth.callback-url");
 
+      // Clear state
       setUser(null);
       setIsAuthenticated(false);
 
-      window.location.href = '/login';
+      // Use window.location.replace instead of fetch for consistent behavior
+      window.location.replace('/api/users/logout');
     } catch (error) {
       console.error('Logout error:', error);
+      // Fallback: clear everything and redirect
       localStorage.clear();
       setUser(null);
       setIsAuthenticated(false);
-      window.location.href = '/login';
+      window.location.replace('/login');
     }
   };
 

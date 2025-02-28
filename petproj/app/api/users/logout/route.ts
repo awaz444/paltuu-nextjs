@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const response = NextResponse.json({
-      message: "Logout successful",
-      success: true,
-    });
+    const response = NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'));
 
     // Clear all authentication-related cookies
     response.cookies.set("token", "", {
@@ -34,6 +31,7 @@ export async function GET() {
 
     return response;
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // If there's an error, redirect to login page anyway
+    return NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'));
   }
 }

@@ -35,11 +35,32 @@ const Navbar = () => {
     const router = useRouter(); // Router for navigation
 
     const handleLogout = async () => {
-        if (user?.method === "google") {
-            await signOut({ callbackUrl: "/login" });
-        } else {
+        try {
+            if (user?.method === "google") {
+                await signOut({ callbackUrl: "/login", redirect: true });
+            } else {
+                // First clear all local storage and state
+                localStorage.removeItem("user");
+                localStorage.removeItem("token");
+                localStorage.removeItem("next-auth.session-token");
+                localStorage.removeItem("next-auth.csrf-token");
+                localStorage.removeItem("next-auth.callback-url");
+
+                // Call the API endpoint using fetch instead of direct navigation
+                const response = await fetch('/api/users/logout');
+                if (response.ok) {
+                    apiLogout(); // Clear context state
+                    router.replace('/login'); // Use router.replace instead of push
+                } else {
+                    throw new Error('Logout failed');
+                }
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Fallback: clear everything and redirect
+            localStorage.clear();
             apiLogout();
-            router.push("/login");
+            router.replace('/login');
         }
     };
 

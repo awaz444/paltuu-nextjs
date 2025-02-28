@@ -215,19 +215,31 @@ const FosterFormModal: React.FC<FosterFormProps> = ({ petId, userId, visible, on
                     name="agree_to_terms"
                     valuePropName="checked"
                     rules={[
-                        { validator: (_, value) => (value ? Promise.resolve() : Promise.reject("You must agree to terms!")) },
+                        {
+                            validator: (_, value) =>
+                                value ? Promise.resolve() : Promise.reject('You must agree to the fostering agreement'),
+                        },
                     ]}
                 >
-                    <Checkbox>
-                        I agree to the terms and conditions, including:
-                        <ul style={{ marginLeft: "20px", marginTop: "10px" }}>
-                            <li>Providing a safe and secure environment for the pet.</li>
-                            <li>Ensuring the pet's basic needs, including food and water, are met.</li>
-                            <li>Not leaving the pet alone for extended periods.</li>
-                            <li>Returning the pet to the shelter when the foster period ends.</li>
-                        </ul>
-                    </Checkbox>
+                    <div className="mt-1 p-4 bg-gray-50 rounded-lg">
+                        <Checkbox>
+                            I agree to the{' '}
+                            <span className="text-primary font-medium">Terms & Conditions</span>
+                        </Checkbox>
+
+                        <div className="mt-3 text-sm text-gray-600">
+                            <p className="mb-2">By submitting this form, I agree to:</p>
+                            <ul className="list-disc pl-4 space-y-2">
+                                <li>Provide a safe and nurturing temporary home for the pet</li>
+                                <li>Ensure the pet receives appropriate care and veterinary attention during the fostering period</li>
+                                <li>Consult with the rescue organization or owner before making any permanent rehoming decisions</li>
+                                <li>Allow periodic follow-up visits from the rescue organization or owner</li>
+                                <li>Maintain the pet's overall health and well-being while in foster care</li>
+                            </ul>
+                        </div>
+                    </div>
                 </Form.Item>
+
             </Form>
         </Modal>
     );

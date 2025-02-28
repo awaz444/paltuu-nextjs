@@ -75,18 +75,18 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
                 <button
                     key="cancel"
                     onClick={onClose}
-                    className="bg-white text-primary px-4 py-1 mb-3 text-md rounded-xl font-semibold border border-primary cursor-pointer"
+                    className="px-5 py-2 text-primary rounded-3xl font-semibold border border-primary bg-white transition-colors duration-200"
                 >
                     Cancel
                 </button>,
                 <button
                     key="submit"
                     onClick={handleFormSubmit}
-                    className="bg-primary border border-primary text-white px-4 py-1 mb-3 text-md rounded-xl font-semibold border-white hover:bg-white hover:text-primary hover:border-primary transition-all ml-4"
+                    className="px-5 py-2 bg-primary text-white rounded-3xl font-semibold border border-primary transition-colors duration-200 ml-4"
                     disabled={loading}
                 >
                     {loading ? 'Submitting...' : 'Submit'}
-                </button>,
+                </button>
             ]}>
 
             <Form form={form} layout="vertical">
@@ -127,9 +127,6 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
                 >
                     <Input placeholder="Enter age of youngest child" />
                 </Form.Item>
-
-
-
 
                 <Form.Item label="Other Pets Details" name="other_pets_details">
                     <Input.TextArea
@@ -181,7 +178,7 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
                         },
                     ]}
                 >
-                    <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <div className="mt-1 p-4 bg-gray-50 rounded-lg">
                         <Checkbox>
                             I agree to the{' '}
                             <span className="text-primary font-medium">Terms and Conditions</span>

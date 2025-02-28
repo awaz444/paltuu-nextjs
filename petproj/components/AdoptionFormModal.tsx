@@ -177,14 +177,27 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
                     rules={[
                         {
                             validator: (_, value) =>
-                                value
-                                    ? Promise.resolve()
-                                    : Promise.reject(
-                                        "You must agree to terms!"
-                                    ),
+                                value ? Promise.resolve() : Promise.reject('You must agree to the terms'),
                         },
-                    ]}>
-                    <Checkbox>I agree to the terms and conditions</Checkbox>
+                    ]}
+                >
+                    <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                        <Checkbox>
+                            I agree to the{' '}
+                            <span className="text-primary font-medium">Terms and Conditions</span>
+                        </Checkbox>
+
+                        <div className="mt-3 text-sm text-gray-600">
+                            <p className="mb-2">By submitting this form, I agree to:</p>
+                            <ul className="list-disc pl-4 space-y-2">
+                                <li>Provide a safe and loving environment for the pet</li>
+                                <li>Cover all necessary veterinary expenses</li>
+                                <li>Never abandon or rehome the pet without consultation</li>
+                                <li>Allow follow-up visits if required</li>
+                                <li>Be responsible for the pet's well-being</li>
+                            </ul>
+                        </div>
+                    </div>
                 </Form.Item>
             </Form>
         </Modal>

@@ -149,6 +149,22 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
                         <h2 className="text-lg font-semibold mb-4">More Filters</h2>
 
                         <div className="mb-4">
+                            <label className="text-xs">Species</label>
+                            <select
+                                className="w-full p-3 border rounded-xl species-filter"
+                                value={selectedSpecies}
+                                onChange={(e) => setSelectedSpecies(e.target.value)}
+                            >
+                                <option value="">Select Species</option>
+                                {categories.map((category) => (
+                                    <option key={category.category_id} value={category.category_id}>
+                                        {category.category_name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="mb-4">
                             <label className="text-xs">Breed</label>
                             <input
                                 type="text"

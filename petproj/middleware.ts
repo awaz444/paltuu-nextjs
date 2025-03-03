@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
   const isPublicPath = ['/login', '/sign-up', '/browse-pets', '/foster-pets', '/pet-care', '/llm', '/forgot-password', '/reset-password'].includes(pathname);
 
   // Check if the path is a listing detail page
-  const isListingPage = pathname.startsWith('/browse-pets/') || pathname.startsWith('/foster-pets/');
+  // const isListingPage = pathname.startsWith('/browse-pets/') || pathname.startsWith('/foster-pets/');
 
   // Special handling for logout
   if (pathname === '/api/users/logout') {
@@ -28,7 +28,7 @@ export async function middleware(request: NextRequest) {
   // User is authenticated if either token exists
   const isAuthenticated = !!token || !!customAuthToken;
 
-  if (!isAuthenticated && (!isPublicPath || isListingPage)) {
+  if (!isAuthenticated && !isPublicPath) {
     const callbackUrl = encodeURIComponent(request.nextUrl.pathname);
     return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, request.url));
   }
@@ -42,7 +42,5 @@ export const config = {
     '/profile',
     '/my-listings',
     '/my-applications',
-    '/browse-pets/:path*',
-    '/foster-pets/:path*'
   ]
 };

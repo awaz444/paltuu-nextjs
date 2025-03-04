@@ -94,73 +94,46 @@ const VetScheduleForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     const validSchedules = schedules.filter(
       (schedule) => schedule.day && schedule.startTime && schedule.endTime
     );
-
+  
     if (validSchedules.length === 0) {
       alert("Please fill out at least one schedule.");
       return;
     }
-
+  
     const schedulesWithVetId = validSchedules
-      .map((schedule) => {
-        const startTime = formatTime(schedule.startTime);
-        const endTime = formatTime(schedule.endTime);
-
-        if (!startTime || !endTime) {
-          console.error("Invalid time format detected.");
-          return null;
-        }
-
-        return {
-          vet_id: vetIdNumber,
-          qualification_id: 1, // Example qualification_id (You might want to make this dynamic)
-          year_acquired: new Date().getFullYear().toString(),
-          note: `Available on ${schedule.day} from ${schedule.startTime} to ${schedule.endTime}`,
-        };
-      })
-      .filter(Boolean); // Remove null entries
-
+    .filter((schedule) => schedule.startTime && schedule.endTime) // Remove invalid ones
+    .map((schedule) => ({
+      vet_id: vetIdNumber,
+      day_of_week: schedule.day,
+      start_time: schedule.startTime as string, // Type assertion to ensure it's string
+      end_time: schedule.endTime as string,
+    }));
+  
     if (schedulesWithVetId.length === 0) {
       alert("No valid schedules to submit.");
-      console.log("No schedules to submit");
       return;
     }
-
+  
     setLoading(true);
     try {
-      for (const schedule of schedulesWithVetId) {
-        const response = await fetch("/api/vet-qualification", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(schedule),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("Error posting schedule:", errorData);
-          setError(errorData.message || "Failed to add schedule.");
-          return;
-        }
-
-        const result = await response.json();
-        console.log("Schedule added successfully:", result);
-      }
-
+      await dispatch(addVetSchedules(schedulesWithVetId)).unwrap();
       alert("Schedules added successfully!");
       setSchedules([{ day: "", startTime: "", endTime: "" }]);
       router.push("/vet-get-verified-1");
     } catch (error) {
       console.error("Error adding schedules:", error);
       alert("Failed to add schedules.");
+      router.push("/vet-get-verified-1");
     } finally {
       setLoading(false);
     }
+
   };
+  
 
   const handleDeleteSchedule = (index: number) => {
     const newSchedules = schedules.filter((_, i) => i !== index); // Remove the schedule at the given index

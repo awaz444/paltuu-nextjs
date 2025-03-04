@@ -6,7 +6,10 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Define public paths that don't require authentication
-  const isPublicPath = ['/login', '/sign-up', '/browse-pets','/foster-pets','/pet-care','/llm','/forgot-password','/reset-password'].includes(pathname);
+  const isPublicPath = ['/login', '/sign-up', '/browse-pets', '/foster-pets', '/pet-care', '/llm', '/forgot-password', '/reset-password'].includes(pathname);
+
+  // Check if the path is a listing detail page
+  // const isListingPage = pathname.startsWith('/browse-pets/') || pathname.startsWith('/foster-pets/');
 
   // Special handling for logout
   if (pathname === '/api/users/logout') {
@@ -25,23 +28,17 @@ export async function middleware(request: NextRequest) {
   // User is authenticated if either token exists
   const isAuthenticated = !!token || !!customAuthToken;
 
-  // Redirect authenticated users away from login/signup
-  // if (isAuthenticated && isPublicPath) {
-  //   return NextResponse.redirect(new URL('/browse-pets', request.url));
-  // }
-
-  // Redirect unauthenticated users to login
   if (!isAuthenticated && !isPublicPath) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    const callbackUrl = encodeURIComponent(request.nextUrl.pathname);
+    return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, request.url));
   }
 
   return NextResponse.next();
 }
 
-// Update matcher to include all protected routes
+// Update matcher to include listing detail pages
 export const config = {
   matcher: [
-    '/api/users/logout',
     '/profile',
     '/my-listings',
     '/my-applications',

@@ -83,9 +83,10 @@ export default function Login() {
     return (
         <div className="min-h-screen flex flex-col sm:flex-row bg-gray-100">
             {/* Left Side */}
-            <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
-                <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
-            </div>
+            <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white 
+        rounded-b-3xl sm:rounded-b-none sm:rounded-r-3xl">
+        <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
+    </div>
 
             {/* Right Side */}
             <div className="sm:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 bg-gray-100">

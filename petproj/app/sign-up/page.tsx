@@ -216,7 +216,7 @@ const CreateUser = () => {
                         <input
                             type="checkbox"
                             checked={role === "vet"}
-                            onChange={() => setRole((prevRole) => prevRole === "regular user" ? "regular user" : "regular user")}
+                            onChange={() => setRole((prevRole) => prevRole === "regular user" ? "vet" : "regular user")}
                             className="h-4 w-4 border-gray-300 text-primary rounded focus:ring-primary focus:outline-none"
                         />
                         <label className="text-gray-700 text-sm">

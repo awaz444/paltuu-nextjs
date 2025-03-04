@@ -20,7 +20,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         await client.connect();
 
         // Update the profile_verified field to true for the given vet_id
-        const query = "UPDATE vets SET profile_verified = true WHERE vet_id = $1 RETURNING *;";
+        const query = "UPDATE vets SET approved = true WHERE vet_id = $1 RETURNING *;";
         const values = [vetId];
         const result = await client.query(query, values);
 

@@ -18,44 +18,44 @@ const VerificationInfo = () => {
     };
 
     return (
-        <>
-            <Navbar></Navbar>
+        <div className="min-h-screen flex">
+            {/* Left Side with Logo and Background */}
+            <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
+                <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
+            </div>
 
-            <div className="verification-info-container min-h-screen">
-                <div className="mt-4">
-                    <h1>Important: Verification Process</h1>
+            {/* Right Side with the Form */}
+            <div className="w-1/2 bg-gray-100 flex items-center justify-center px-8 py-12">
+                <div className="w-full max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
+
+                    <h1 className="bold">Important: Document Upload</h1>
+                    <br />
                     <p>
-                        Dear Vet, you are about to start your verification
-                        process. Please make sure that you have entered your
-                        qualifications correctly in the system. This is an
-                        important step to ensure we have the most accurate
-                        information for your profile.
+                        Dear Vet, you are about to be asked to upload your documents. Please ensure that you have entered your qualifications correctly in the system. This step is crucial to maintain accurate information for your profile.
                     </p>
+                    <br />
                     <p>
-                        As part of the verification process, we will be asking
-                        for document proof of the qualifications you claim to
-                        have. Please ensure that you have the necessary
-                        documents available and ready to upload.
+                        As part of this step, we will request document proof for the qualifications you have listed. Please make sure you have the necessary documents ready to upload.
                     </p>
+                    <br />
                     <p>
-                        If you do not have proof of the qualifications you
-                        listed, please make sure to update your information
-                        before proceeding. Incomplete or incorrect qualification
-                        details may result in a delay or failure to complete
-                        your verification.
+                        If you do not have proof for the qualifications you’ve provided, we recommend updating your information before proceeding. Incomplete or incorrect details may result in delays or issues in completing this step.
                     </p>
+                    <br />
+
                     <button
                         onClick={handleStartVerification}
                         className="bg-primary text-white rounded-3xl px-4 py-2 flex items-center gap-2">
-                        <span>Start Verification Process</span>
+                        <span>Proceed to Upload Documents</span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-right text-white" viewBox="0 0 16 16">
-  <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
-</svg>
+                            <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8" />
+                        </svg>
                     </button>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
 export default VerificationInfo;
+

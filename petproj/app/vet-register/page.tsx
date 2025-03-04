@@ -41,7 +41,6 @@ const VetRegisterForm = () => {
                 contact_details: contactDetails,
                 clinic_email: clinicEmail,
                 clinic_whatsapp: clinicWhatsapp,
-
                 bio,
             };
 

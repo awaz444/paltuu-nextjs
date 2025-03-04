@@ -81,10 +81,10 @@ const VerificationInfo = () => {
 
   const handleChange =
     (qualificationId: number) =>
-    ({ fileList }: any) => {
-      setFileLists((prev) => ({ ...prev, [qualificationId]: fileList }));
-      console.log("File list updated for qualification:", qualificationId, fileList); // Log updated file list
-    };
+      ({ fileList }: any) => {
+        setFileLists((prev) => ({ ...prev, [qualificationId]: fileList }));
+        console.log("File list updated for qualification:", qualificationId, fileList); // Log updated file list
+      };
 
   const getBase64 = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -111,7 +111,7 @@ const VerificationInfo = () => {
     const vetId = user?.id;
     console.log("User id:", vetId, "qualification_id:", qualificationId, "fileList:", fileList); // Log submission data
 
-    const formData = new FormData(); 
+    const formData = new FormData();
     fileList.forEach((file) => {
       if (file.originFileObj) {
         formData.append("files", file.originFileObj);
@@ -151,121 +151,132 @@ const VerificationInfo = () => {
 
   return (
     <>
-      <Navbar />
-      <div className="verification-info-container min-h-screen p-6">
-        <h1 className="text-3xl font-semibold text-gray-800 mb-6">
-          Verification Information
-        </h1>
+      <div className="min-h-screen flex">
+        {/* Left Side with Logo and Background */}
+        <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
+          <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
+        </div>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-full">
-            <p className="text-lg text-gray-700">Loading qualifications...</p>
-          </div>
-        ) : error ? (
-          <div className="flex justify-center items-center h-full">
-            <p className="text-lg text-red-600">Error: {error}</p>
-          </div>
-        ) : (
-          <div>
-            <p className="text-lg text-gray-700 mb-4">
-              Please verify your qualifications by uploading relevant
-              certificates.
-            </p>
-            <div className="qualifications-list mb-6">
-              {qualifications.length === 0 ? (
-                <p className="text-lg text-gray-600">
-                  No qualifications found.
-                </p>
+        {/* Right Side with the Form */}
+        <div className="w-1/2 bg-gray-100 flex items-center justify-center px-8 py-12">
+          <div className="w-full max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
+
+              <h1 className="text-3xl font-semibold text-gray-800 mb-6">
+                Verification Information
+              </h1>
+
+              {loading ? (
+                <div className="flex justify-center items-center h-full">
+                  <p className="text-lg text-gray-700">Loading qualifications...</p>
+                </div>
+              ) : error ? (
+                <div className="flex justify-center items-center h-full">
+                  <p className="text-lg text-red-600">Error: {error}</p>
+                </div>
               ) : (
-                <ul className="space-y-4">
-                  {qualifications.map((qualification) => (
-                    <li
-                      key={qualification.qualification_id}
-                      className="p-4 border border-gray-300 rounded-lg shadow-sm bg-gray-50"
-                    >
-                      <strong className="text-xl text-primary">
-                        {qualification.qualification_name}
-                      </strong>
-                      <p className="text-gray-600">
-                        Acquired in: {qualification.year_acquired}
+                <div>
+                  <p className="text-lg text-gray-700 mb-4">
+                    Please verify your qualifications by uploading relevant
+                    certificates.
+                  </p>
+                  <div className="qualifications-list mb-6">
+                    {qualifications.length === 0 ? (
+                      <p className="text-lg text-gray-600">
+                        No qualifications found.
                       </p>
-                      <em className="text-gray-500">
-                        Note: {qualification.note}
-                      </em>
-                      <div className="file-upload-container mt-4">
-                        <Upload
-                          listType="picture-card"
-                          fileList={
-                            fileLists[qualification.qualification_id] || []
-                          }
-                          onPreview={handlePreview}
-                          onChange={handleChange(
-                            qualification.qualification_id
-                          )}
-                          beforeUpload={beforeUpload}
-                          maxCount={1}
-                        >
-                          {fileLists[qualification.qualification_id]?.length ===
-                          1
-                            ? null
-                            : (
-                                <button
-                                  style={{
-                                    border: 0,
-                                    background: "none",
-                                  }}
-                                  type="button"
-                                >
-                                  <PlusOutlined />
-                                  <div style={{ marginTop: 8 }}>Upload</div>
-                                </button>
-                              )}
-                        </Upload>
-                      </div>
-                      {previewImage && (
-                        <Image
-                          wrapperStyle={{ display: "none" }}
-                          preview={{
-                            visible: previewOpen,
-                            onVisibleChange: (visible) =>
-                              setPreviewOpen(visible),
-                          }}
-                          src={previewImage}
-                        />
-                      )}
-                      {!submittedQualifications[qualification.qualification_id] && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleSubmit(
-                              qualification.qualification_id,
-                              fileLists[qualification.qualification_id] || []
-                            )
-                          }
-                          className="mt-4 p-3 bg-primary text-white rounded-xl"
-                        >
-                          Submit Certificate
-                        </button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+                    ) : (
+                      <ul className="space-y-4">
+                        {qualifications.map((qualification) => (
+                          <li
+                            key={qualification.qualification_id}
+                            className="p-4 border border-gray-300 rounded-lg shadow-sm bg-gray-50"
+                          >
+                            <strong className="text-xl text-primary">
+                              {qualification.qualification_name}
+                            </strong>
+                            <p className="text-gray-600">
+                              Acquired in: {qualification.year_acquired}
+                            </p>
+                            <em className="text-gray-500">
+                              Note: {qualification.note}
+                            </em>
+                            <div className="file-upload-container mt-4">
+                              <Upload
+                                listType="picture-card"
+                                fileList={
+                                  fileLists[qualification.qualification_id] || []
+                                }
+                                onPreview={handlePreview}
+                                onChange={handleChange(
+                                  qualification.qualification_id
+                                )}
+                                beforeUpload={beforeUpload}
+                                maxCount={1}
+                              >
+                                {fileLists[qualification.qualification_id]?.length ===
+                                  1
+                                  ? null
+                                  : (
+                                    <button
+                                      style={{
+                                        border: 0,
+                                        background: "none",
+                                      }}
+                                      type="button"
+                                    >
+                                      <PlusOutlined />
+                                      <div style={{ marginTop: 8 }}>Upload</div>
+                                    </button>
+                                  )}
+                              </Upload>
+                            </div>
+                            {previewImage && (
+                              <Image
+                                wrapperStyle={{ display: "none" }}
+                                preview={{
+                                  visible: previewOpen,
+                                  onVisibleChange: (visible) =>
+                                    setPreviewOpen(visible),
+                                }}
+                                src={previewImage}
+                              />
+                            )}
+                            {!submittedQualifications[qualification.qualification_id] && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleSubmit(
+                                    qualification.qualification_id,
+                                    fileLists[qualification.qualification_id] || []
+                                  )
+                                }
+                                className="mt-4 p-3 bg-primary text-white rounded-xl"
+                              >
+                                Submit Certificate
+                              </button>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  {allSubmitted && (
+                    <button
+                      type="button"
+                      onClick={() => router.push("/vet-process-complete")}      
+                      className="mt-6 p-4 bg-primary text-white rounded-3xl w-full"
+                    >
+                      Proceed
+                    </button>
+                  )}
+                </div>
               )}
-            </div>
-            {allSubmitted && (
-              <button
-                type="button"
-                onClick={() => router.push("/vet-panel")}
-                className="mt-6 p-4 bg-primary text-white rounded-3xl w-full"
-              >
-                Proceed
-              </button>
-            )}
           </div>
-        )}
+        </div>
       </div>
     </>
   );
 };
 
 export default VerificationInfo;
+

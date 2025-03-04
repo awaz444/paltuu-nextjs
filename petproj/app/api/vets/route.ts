@@ -87,7 +87,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         await client.connect(); // Connect to the database
 
         const result = await client.query(
-            `SELECT 
+            `
+            SELECT 
             vets.*,                        
             users.name,                             -- Vet's name
             users.email,                            -- Vet's email
@@ -116,6 +117,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         LEFT JOIN qualifications ON vet_qualifications.qualification_id = qualifications.qualification_id  -- Get qualification details
         LEFT JOIN vet_specializations ON vets.vet_id = vet_specializations.vet_id  -- Join to get vet's specializations
         LEFT JOIN pet_category ON vet_specializations.category_id = pet_category.category_id  -- Get specialization category details
+        WHERE vets.approved = true  -- Only get approved vets
         GROUP BY 
             vets.vet_id, 
             users.name, 

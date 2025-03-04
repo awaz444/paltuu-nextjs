@@ -97,6 +97,9 @@ const VetQualificationsForm = () => {
           <p className="text-gray-600 text-center mb-6">
             Select the qualifications for the vet and provide additional details.
           </p>
+          <p className="text-red-600 text-center mb-6">
+            Disclaimer: You will be asked to prove these qualifications later. Please select only the qualifications you can provide proof for.
+          </p>
 
           {/* Qualifications List */}
           {qualifications.length > 0 ? (

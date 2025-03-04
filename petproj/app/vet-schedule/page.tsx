@@ -153,7 +153,7 @@ const VetScheduleForm = () => {
 
       alert("Schedules added successfully!");
       setSchedules([{ day: "", startTime: "", endTime: "" }]);
-      router.push("/login");
+      router.push("/vet-get-verified-1");
     } catch (error) {
       console.error("Error adding schedules:", error);
       alert("Failed to add schedules.");
@@ -267,7 +267,7 @@ const VetScheduleForm = () => {
               type="submit"
               className="w-full mt-6 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary transition duration-300"
             >
-              Submit
+              Proceed to Uploading Documents
             </button>
           </form>
         </div>
@@ -275,6 +275,8 @@ const VetScheduleForm = () => {
     </div>
   );
 };
+
+
 const LoadingFallback = () => (
   <div className="flex justify-center items-center min-h-screen">
     <p className="text-lg text-gray-500">Loading schedule...</p>

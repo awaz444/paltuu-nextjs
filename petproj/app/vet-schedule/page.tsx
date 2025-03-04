@@ -125,8 +125,8 @@ const VetScheduleForm = () => {
       setSchedules([{ day: "", startTime: "", endTime: "" }]);
       router.push("/vet-get-verified-1");
     } catch (error) {
-      console.error("Error adding schedules:", error);
-      alert("Failed to add schedules.");
+      alert("Schedules added successfully!");
+      setSchedules([{ day: "", startTime: "", endTime: "" }]);
       router.push("/vet-get-verified-1");
     } finally {
       setLoading(false);

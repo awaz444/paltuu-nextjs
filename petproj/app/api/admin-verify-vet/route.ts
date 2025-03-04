@@ -20,7 +20,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         await client.connect();
 
         // Update the profile_verified field to true for the given vet_id
-        const query = "UPDATE vets SET approved = true WHERE vet_id = $1 RETURNING *;";
+        const query = `WITH vet_update AS (
+                UPDATE vets 
+                SET approved = true 
+                WHERE vet_id = $1 
+                RETURNING user_id, vet_id
+            )
+            UPDATE users 
+            SET role = 'vet' 
+            FROM vet_update 
+            WHERE users.user_id = vet_update.user_id 
+            RETURNING users.*, vet_update.vet_id;
+            `;
         const values = [vetId];
         const result = await client.query(query, values);
 
@@ -35,15 +46,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const applicationResult = await client.query(applicationUpdateQuery, values);
 
         if (applicationResult.rowCount === 0) {
-        await client.query("ROLLBACK");
-        return NextResponse.json(
-            { error: "No pending verification applications found for the vet" },
-            { status: 404 }
-        );
-    }
+            await client.query("ROLLBACK");
+            return NextResponse.json(
+                { error: "No pending verification applications found for the vet" },
+                { status: 404 }
+            );
+        }
 
-    // Commit transaction
-    await client.query("COMMIT");
+        // Commit transaction
+        await client.query("COMMIT");
 
         return NextResponse.json(
             {

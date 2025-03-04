@@ -25,6 +25,7 @@ interface VetDetails {
     vet_id: string;
     user_id: string;
     clinic_name: string;
+    clinic_whatsapp: string;
     location: string;
     minimum_fee: number;
     contact_details: string;
@@ -34,6 +35,7 @@ interface VetDetails {
     vet_name: string;
     dob: string;
     email: string;
+    clinic_email: string;
     profile_image_url: string;
     city: string;
     availability: {
@@ -87,7 +89,7 @@ export default function VetDetailsPage({
                     throw new Error("Failed to fetch vet details");
                 }
                 const data = await response.json();
-
+                console.log(data);
                 const uniqueByKey = <T, K extends keyof T>(
                     array: T[],
                     key: K
@@ -272,7 +274,7 @@ export default function VetDetailsPage({
                             <img
                                 src={vetDetails.profile_image_url || "/placeholder.jpg"}
                                 alt={vetDetails.vet_name}
-                                className="w-40 h-40 rounded-full object-cover border-4 border-primary/20"
+                                className="w-32 h-32 rounded-full object-cover border-4 border-primary/20"
                             />
                         </div>
 
@@ -288,7 +290,7 @@ export default function VetDetailsPage({
                                     <span>{vetDetails.clinic_name}, {vetDetails.city}</span>
                                 </div>
 
-                                <div className="flex flex-wrap gap-2">
+                                {/* <div className="flex flex-wrap gap-2">
                                     <div className="bg-primary/10 py-1 rounded-xl">
                                         <span className="font-semibold text-primary">Best Suited For: </span>
                                         {vetDetails.specializations.map((spec) => (
@@ -297,7 +299,7 @@ export default function VetDetailsPage({
                                             </Tag>
                                         ))}
                                     </div>
-                                </div>
+                                </div> */}
 
                                 <div className="flex flex-wrap gap-4">
                                     <div className="bg-primary/10 py-1 rounded-xl">
@@ -367,17 +369,36 @@ export default function VetDetailsPage({
 
                             <Section title="Contact">
                                 <div className="space-y-3">
-                                    <ContactInfo
-                                        label="Phone Number"
-                                        value={vetDetails.contact_details}
-                                        onCopy={() => handleCopy(vetDetails.contact_details)}
-                                        onWhatsApp={() => handleWhatsApp(vetDetails.contact_details)}
-                                    />
-                                    <ContactInfo
-                                        label="Email Address"
-                                        value={vetDetails.email}
-                                        onCopy={() => handleCopy(vetDetails.email)}
-                                    />
+                                    {vetDetails.contact_details && (
+                                        <ContactInfo
+                                            label="Personal Number"
+                                            value={vetDetails.contact_details}
+                                            onCopy={() => handleCopy(vetDetails.contact_details)}
+                                            onWhatsApp={() => handleWhatsApp(vetDetails.contact_details)}
+                                        />
+                                    )}
+                                    {vetDetails.email && (
+                                        <ContactInfo
+                                            label="Personal Email"
+                                            value={vetDetails.email}
+                                            onCopy={() => handleCopy(vetDetails.email)}
+                                        />
+                                    )}
+                                    {vetDetails.clinic_whatsapp && (
+                                        <ContactInfo
+                                            label="Clinic Number"
+                                            value={vetDetails.clinic_whatsapp}
+                                            onCopy={() => handleCopy(vetDetails.clinic_whatsapp)}
+                                            onWhatsApp={() => handleWhatsApp(vetDetails.clinic_whatsapp)}
+                                        />
+                                    )}
+                                    {vetDetails.clinic_email && (
+                                        <ContactInfo
+                                            label="Clinic Email"
+                                            value={vetDetails.clinic_email}
+                                            onCopy={() => handleCopy(vetDetails.clinic_email)}
+                                        />
+                                    )}
                                 </div>
                             </Section>
                         </div>

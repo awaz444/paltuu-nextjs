@@ -30,6 +30,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                 v.profile_verified, 
                 v.created_at, 
                 v.bio,
+                v.clinic_whatsapp,
+                v.clinic_email,
 
                 -- User details (vet)
                 u.name AS vet_name, 
@@ -135,6 +137,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             vet_id: vet.vet_id,
             user_id: vet.vet_user_id,
             clinic_name: vet.clinic_name,
+            clinic_whatsapp: vet.clinic_whatsapp,
+            clinic_email: vet.clinic_email,
             location: vet.location,
             minimum_fee: vet.minimum_fee,
             contact_details: vet.contact_details,

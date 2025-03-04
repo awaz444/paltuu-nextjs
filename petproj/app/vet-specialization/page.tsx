@@ -111,7 +111,7 @@ const VetSpecializationsForm: React.FC = () => {
             onClick={handleDone}
             className="w-full bg-primary text-white py-2 px-4 rounded-xl hover:bg-primary-dark transition"
           >
-            Done
+            Proceed to Schedule
           </button>
         </div>
       </div>

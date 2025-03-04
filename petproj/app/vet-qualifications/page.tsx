@@ -161,7 +161,7 @@ const VetQualificationsForm = () => {
             type="submit"
             className="w-full bg-primary text-white py-2 px-4 rounded-xl hover:bg-primary-dark transition"
           >
-            Submit & Proceed to Add Category
+            Submit & Proceed to Add Specializations
           </button>
         </form>
       </div>

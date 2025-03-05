@@ -107,10 +107,10 @@ const LostAndFoundFilter: React.FC<LostAndFoundFilterProps> = ({ onSearch }) => 
                     </div>
 
                     <div className="flex gap-4 w-full">
-                        <button className="border-2 border-primary text-primary bg-white p-3 rounded-2xl flex-1" onClick={handleSearch}>
+                        <button className="text-white p-3 rounded-2xl flex-1 bg-primary" onClick={handleSearch}>
                             Search
                         </button>
-                        <button className="text-white p-3 rounded-2xl flex-1 bg-primary whitespace-nowrap" onClick={() => setIsModalOpen(true)}>
+                        <button className="border-2 border-primary text-primary bg-white p-3 rounded-2xl flex-1 whitespace-nowrap" onClick={() => setIsModalOpen(true)}>
                             More Filters
                         </button>
                     </div>

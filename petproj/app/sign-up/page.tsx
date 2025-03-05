@@ -30,35 +30,39 @@ const CreateUser = () => {
     }, [dispatch]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        if (password !== confirmPassword) {
-            alert("Passwords do not match");
-            return;
-        }
+    if (password !== confirmPassword) {
+        alert("Passwords do not match");
+        return;
+    }
 
-        const newUser: Omit<User, "user_id"> = {
-            username,
-            name,
-            DOB,
-            city_id: cityId,
-            email,
-            password,
-            phone_number,
-            role,
-        };
-
-        try {
-            const result = (await dispatch(postUser(newUser))) as { payload: User };
-            if (result.payload.role === "vet") {
-                router.push(`/vet-register?user_id=${result.payload.user_id}`);
-            } else {
-                router.push("/login");
-            }
-        } catch (error) {
-            console.error("Error creating user:", error);
-        }
+    const newUser: Omit<User, "user_id"> = {
+        username,
+        name,
+        DOB,
+        city_id: cityId,
+        email,
+        password,
+        phone_number,
+        role: 'regular user',
     };
+
+    try {
+        const result = (await dispatch(postUser(newUser))) as { payload: User };
+        console.log(role); 
+        // Redirect based on user's selection (not backend response)
+        if (role === "vet") { 
+            
+            router.push(`/vet-register?user_id=${result.payload.user_id}`);
+        } else {
+            router.push("/login");
+        }
+    } catch (error) {
+        console.error("Error creating user:", error);
+    }
+};
+
 
     return (
         <div className="min-h-screen flex">

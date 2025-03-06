@@ -32,6 +32,7 @@ import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
 import './styles.css'
 
+let user_id: string;
 const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) => {
     const { pet_id } = params;
     const [pet, setPet] = useState<PetWithImages | null>(null);
@@ -43,23 +44,21 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
 
     useSetPrimaryColor();
 
-    // Replace with the actual logged-in user ID
-    // const userString = localStorage.getItem("user");
-    // if (!userString) {
-    //     setError("User data not found in local storage");
-    //     setLoading(false);
-    //     return <div>Error: User data not found</div>;
-    // }
-
-    // // Parse the user object to extract the user ID
-    // const user = JSON.parse(userString);
-    // const user_id = user?.id;
-    // console.log("user_id: ", user_id);
-    // if (!user_id) {
-    //     setError("User ID is missing from the user object");
-    //     setLoading(false);
-    //     return <div>Error: User ID is missing</div>;
-    // }
+    useEffect(() => {
+        const userString = localStorage.getItem("user");
+        if (userString) {
+            try {
+                const user = JSON.parse(userString);
+                if (user?.id) {
+                    user_id=user.id;
+                } else {
+                    console.warn("User ID is missing from stored user data.");
+                }
+            } catch (error) {
+                console.error("Error parsing user data:", error);
+            }
+        }
+    }, []);
 
     useEffect(() => {
         const fetchPetDetails = async () => {
@@ -99,7 +98,17 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
         window.open(whatsappUrl, "_blank");
     };
 
-    const handleAdoptClick = () => setIsModalVisible(true);
+    const handleAdoptClick = () => {
+        const userString = localStorage.getItem("user");
+
+        if (userString) {
+            setIsModalVisible(true);
+        } else {
+            message.warning("You need to log in to apply for adoption.");
+            window.location.href = "/login";
+        }
+    };
+
     const handleModalClose = () => setIsModalVisible(false);
     const handleFormSubmit = (formData: any) => {
         console.log("Adoption form data submitted:", formData);
@@ -382,13 +391,13 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                 </div>
             </div>
 
-            {/* <AdoptionFormModal
+            <AdoptionFormModal
                 petId={parseInt(pet_id)}
-                // userId={user_id}
+                userId={user_id}
                 visible={isModalVisible}
                 onClose={handleModalClose}
                 onSubmit={handleFormSubmit}
-            /> */}
+            />
         </>
     );
 };

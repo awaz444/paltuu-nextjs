@@ -343,13 +343,13 @@ const Navbar = () => {
                             </Link>
 
                             {/* Add Become Verified / Verified option */}
-                            {userRole === "vet" && !isVerified && (
+                            {/* {userRole === "vet" && !isVerified && (
                                 <Link href="/vet-get-verified-1">
                                     <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold italic">
                                         Get Verified
                                     </div>
                                 </Link>
-                            )}
+                            )} */}
 
                             <div
                                 onClick={handleLogout}

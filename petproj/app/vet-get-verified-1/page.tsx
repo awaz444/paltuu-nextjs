@@ -1,31 +1,52 @@
 // pages/verification-info.tsx
 "use client"; // Ensures this component is run on the client side
 
-import React from "react";
-import { useRouter } from "next/navigation"; // Use 'next/navigation' instead of 'next/router' for client-side routing
+import React, { Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation"; // Use 'next/navigation' instead of 'next/router' for client-side routing
 import Navbar from "@/components/navbar";
 import Image from "next/image";
 import "./styles.css";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 
-const VerificationInfo = () => {
+const VerificationInfoContent  = () => {
+
+    const searchParams = useSearchParams();
+    const vetId = searchParams.get("vet_id");
+
+
+    if (!vetId) {
+        console.error("Vet ID is missing.");
+        return null;
+    }
+
+    // Convert vet_id to number
+    const vetIdNumber = Number(vetId);
+    if (isNaN(vetIdNumber)) {
+        console.error("Invalid vet_id");
+        return null;
+    }
+
     useSetPrimaryColor();
     const router = useRouter();
 
     const handleStartVerification = () => {
         // Navigate to the verification page or start the process
-        router.push("/vet-get-verified-2"); // Adjust the route accordingly
+        router.push(`/vet-get-verified-2?vet_id=${vetId}`); // Adjust the route accordingly 
     };
 
     return (
-        <div className="min-h-screen flex">
-            {/* Left Side with Logo and Background */}
-            <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
-                <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
+        <div className="min-h-screen flex flex-col lg:flex-row">
+            {/* Left Section (Logo) - Unchanged */}
+            <div className="lg:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none">
+                <img
+                    src="/paltu_logo.svg"
+                    alt="Paltu Logo"
+                    className="mb-6 w-40 lg:w-48"
+                />
             </div>
 
-            {/* Right Side with the Form */}
-            <div className="w-1/2 bg-gray-100 flex items-center justify-center px-8 py-12">
+            {/* Right Section (Form) - Updated for responsiveness */}
+            <div className="lg:w-1/2 bg-gray-100 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
                 <div className="w-full max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
 
                     <h1 className="bold">Important: Document Upload</h1>
@@ -48,12 +69,20 @@ const VerificationInfo = () => {
                         className="bg-primary text-white rounded-3xl px-4 py-2 flex items-center gap-2">
                         <span>Proceed to Upload Documents</span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-right text-white" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8" />
+                            <path fillRule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8" />
                         </svg>
                     </button>
                 </div>
             </div>
         </div>
+    );
+};
+
+const VerificationInfo = () => {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <VerificationInfoContent />
+        </Suspense>
     );
 };
 

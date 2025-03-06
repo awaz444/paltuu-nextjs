@@ -4,7 +4,29 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../store/store";
 import { postVet } from "../store/slices/vetSlice";
 import { useRouter, useSearchParams } from "next/navigation";
-import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
+import { Upload, message } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import type { UploadFile } from "antd/es/upload/interface";
+
+const beforeUpload = (file: File) => {
+    const isImage = file.type.startsWith("image/");
+    if (!isImage) {
+        message.error("You can only upload image files!");
+    }
+    const isSmallEnough = file.size / 1024 / 1024 < 5; // 5MB max size
+    if (!isSmallEnough) {
+        message.error("Image must be smaller than 5MB!");
+    }
+    return isImage && isSmallEnough;
+};
+
+const getBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+    });
 
 const VetRegisterForm = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -24,10 +46,17 @@ const VetRegisterForm = () => {
     const [contactDetails, setContactDetails] = useState<string>("");
     const [clinicEmail, setClinicEmail] = useState<string>("");
     const [clinicWhatsapp, setClinicWhatsapp] = useState<string>("");
-    //const [clinicPhoneNumber, setclinicPhoneNumber] = useState<string>("");
-
+    const [image, setImage] = useState<UploadFile | null>(null);
     const [bio, setBio] = useState<string>("");
-    const [showPassword, setShowPassword] = useState(false);
+
+    const handleUploadChange = ({ file }: { file: UploadFile }) => {
+        if (file.status === "done") {
+            setImage(file);
+            message.success(`${file.name} uploaded successfully`);
+        } else if (file.status === "error") {
+            message.error(`${file.name} file upload failed.`);
+        }
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -56,16 +85,23 @@ const VetRegisterForm = () => {
     };
 
     return (
-        <div className="min-h-screen flex">
-            <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
-                <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
+        <div className="min-h-screen flex flex-col lg:flex-row">
+            {/* Left Section (Logo) */}
+            <div className="lg:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none">
+                <img
+                    src="/paltu_logo.svg"
+                    alt="Paltu Logo"
+                    className="mb-6 w-40 lg:w-48"
+                />
             </div>
 
-            <div className="w-1/2 bg-gray-100 flex items-center justify-center px-8 py-12">
+            {/* Right Section (Form) */}
+            <div className="lg:w-1/2 bg-gray-100 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
                 <form
                     onSubmit={handleSubmit}
-                    className="w-full max-w-md bg-white shadow-lg rounded-3xl p-6 space-y-4">
-                    <h2 className="text-3xl font-semibold text-center mb-2">
+                    className="w-full max-w-md bg-white shadow-lg rounded-3xl p-6 space-y-4"
+                >
+                    <h2 className="text-2xl lg:text-3xl font-semibold text-center mb-2">
                         Register as a Vet
                     </h2>
                     <p className="text-gray-600 text-center mb-6">
@@ -116,7 +152,7 @@ const VetRegisterForm = () => {
                         />
                     </div>
 
-                    {/*Clinic Email*/}
+                    {/* Clinic Email */}
                     <div>
                         <label className="block text-gray-700 text-sm font-medium mb-1">
                             Clinic Email
@@ -130,7 +166,8 @@ const VetRegisterForm = () => {
                             required
                         />
                     </div>
-                    {/*Clinic WhatsApp*/}
+
+                    {/* Clinic WhatsApp */}
                     <div>
                         <label className="block text-gray-700 text-sm font-medium mb-1">
                             Clinic WhatsApp
@@ -154,21 +191,6 @@ const VetRegisterForm = () => {
                             />
                         </div>
                     </div>
-                
-
-                    {/* Contact Details
-                    <div>
-                        <label className="block text-gray-700 text-sm font-medium mb-1">
-                            Contact Details
-                        </label>
-                        <input
-                            type="text"
-                            value={contactDetails}
-                            onChange={(e) => setContactDetails(e.target.value)}
-                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                            required
-                        />
-                    </div> */}
 
                     {/* Bio */}
                     <div>
@@ -184,10 +206,35 @@ const VetRegisterForm = () => {
                         />
                     </div>
 
+                    {/* Image Upload */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-2">
+                            An Image of yourself or Clinic Logo
+                        </label>
+                        <Upload
+                            listType="picture-card"
+                            maxCount={1}
+                            showUploadList={{ showPreviewIcon: false }}
+                            onChange={handleUploadChange}
+                            action="https://api.cloudinary.com/v1_1/your_cloud_name/image/upload" // Replace with your Cloudinary upload URL
+                            data={{
+                                upload_preset: "your_upload_preset", // Replace with your Cloudinary preset
+                            }}
+                        >
+                            {image ? null : (
+                                <div>
+                                    <PlusOutlined />
+                                    <div style={{ marginTop: 8 }}>Upload</div>
+                                </div>
+                            )}
+                        </Upload>
+                    </div>
+
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        className="w-full bg-primary text-white py-2 px-4 rounded-xl hover:bg-primary-dark transition">
+                        className="w-full bg-primary text-white py-2 px-4 rounded-xl hover:bg-primary-dark transition"
+                    >
                         Submit Vet Registration
                     </button>
                 </form>
@@ -202,4 +249,4 @@ const VetRegister = () => (
     </Suspense>
 );
 
-export default VetRegister;
+export default VetRegister; 

@@ -184,13 +184,7 @@ const VetRegisterForm = () => {
                             <input
                                 type="text"
                                 value={clinicWhatsapp}
-                                onChange={(e) => {
-                                    let inputValue = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
-                                    if (!inputValue.startsWith("+92")) {
-                                        inputValue = "+92" + inputValue; // Ensure it starts with "+92"
-                                    }
-                                    setClinicWhatsapp(inputValue);
-                                }}
+                                onChange={(e) => setClinicWhatsapp(e.target.value)}
                                 placeholder="3338888666"
                                 className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                                 required

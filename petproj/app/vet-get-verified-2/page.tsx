@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import { Upload, message, Image } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 
-const VerificationInfo = () => {
+const VerificationInfoContent  = () => {
   const [qualifications, setQualifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -105,9 +105,9 @@ const VerificationInfo = () => {
 
   const handleChange =
     (qualificationId: number) =>
-    ({ fileList }: any) => {
-      setFileLists((prev) => ({ ...prev, [qualificationId]: fileList }));
-    };
+      ({ fileList }: any) => {
+        setFileLists((prev) => ({ ...prev, [qualificationId]: fileList }));
+      };
 
   const getBase64 = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -165,14 +165,18 @@ const VerificationInfo = () => {
 
   return (
     <>
-      <div className="min-h-screen flex">
-        {/* Left Side with Logo and Background */}
-        <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
-          <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
+      <div className="min-h-screen flex flex-col lg:flex-row">
+        {/* Left Section (Logo) - Unchanged */}
+        <div className="lg:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none">
+          <img
+            src="/paltu_logo.svg"
+            alt="Paltu Logo"
+            className="mb-6 w-40 lg:w-48"
+          />
         </div>
 
-        {/* Right Side with the Form */}
-        <div className="w-1/2 bg-gray-100 flex items-center justify-center px-8 py-12">
+        {/* Right Section (Form) - Updated for responsiveness */}
+        <div className="lg:w-1/2 bg-gray-100 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
           <div className="w-full max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
 
             <h1 className="text-3xl font-semibold text-gray-800 mb-6">
@@ -289,6 +293,14 @@ const VerificationInfo = () => {
         </div>
       </div>
     </>
+  );
+};
+
+const VerificationInfo = () => {
+  return (
+      <Suspense fallback={<div>Loading...</div>}>
+          <VerificationInfoContent />
+      </Suspense>
   );
 };
 

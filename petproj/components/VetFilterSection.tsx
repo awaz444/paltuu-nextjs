@@ -13,6 +13,8 @@ interface VetFilterSectionProps {
         selectedQualification: string;
         selectedCategory: string;
     }) => void;
+    onReset?: () => void; // Add this
+    onSearchAction?: () => void; // Add this
 }
 
 const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
@@ -183,7 +185,7 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
                                         Reset
                                     </button>
                                     <button className="text-white p-3 rounded-2xl w-full bg-primary" onClick={handleSearch}>
-                                        Apply Filters
+                                        Search
                                     </button>
                                 </div>
                             </div>

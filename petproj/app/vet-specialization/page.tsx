@@ -12,7 +12,7 @@ import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 const VetSpecializationsForm: React.FC = () => {
 
   useSetPrimaryColor();
-  
+
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -60,7 +60,6 @@ const VetSpecializationsForm: React.FC = () => {
         for (const specialization of payload) {
           await dispatch(postVetSpecialization(specialization));
         }
-        alert("Specializations added successfully!");
         setSelectedCategories([]); // Clear selections after submission
         router.push(`/vet-schedule?vet_id=${vetId}`);
       } catch (error) {
@@ -70,14 +69,18 @@ const VetSpecializationsForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Side with Logo and Background */}
-      <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
-        <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Left Section (Logo) */}
+      <div className="lg:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none">
+        <img
+          src="/paltu_logo.svg"
+          alt="Paltu Logo"
+          className="mb-6 w-40 lg:w-48"
+        />
       </div>
 
-      {/* Right Side with Form */}
-      <div className="w-1/2 bg-gray-100 flex items-center justify-center px-8 py-12">
+      {/* Right Section (Form) */}
+      <div className="lg:w-1/2 bg-gray-100 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
         <div className="w-full max-w-xl bg-white shadow-lg rounded-3xl p-8 space-y-6">
           <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
             Add Specializations

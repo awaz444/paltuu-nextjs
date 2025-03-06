@@ -81,12 +81,18 @@ const VetQualificationsForm = () => {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="min-h-screen flex">
-      <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
-        <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Left Section (Logo) */}
+      <div className="lg:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none">
+        <img
+          src="/paltu_logo.svg"
+          alt="Paltu Logo"
+          className="mb-6 w-40 lg:w-48"
+        />
       </div>
 
-      <div className="w-1/2 bg-gray-100 flex items-center justify-center px-8 py-12">
+      {/* Right Section (Form) */}
+      <div className="lg:w-1/2 bg-gray-100 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
         <form
           onSubmit={handleSubmit}
           className="w-full max-w-md bg-white shadow-lg rounded-3xl p-6 space-y-4"

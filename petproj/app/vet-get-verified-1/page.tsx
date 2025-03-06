@@ -35,14 +35,9 @@ const VerificationInfoContent  = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col lg:flex-row">
-            {/* Left Section (Logo) - Unchanged */}
-            <div className="lg:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none">
-                <img
-                    src="/paltu_logo.svg"
-                    alt="Paltu Logo"
-                    className="mb-6 w-40 lg:w-48"
-                />
+        <div className="min-h-screen flex">
+            <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
+                <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
             </div>
 
             {/* Right Section (Form) - Updated for responsiveness */}

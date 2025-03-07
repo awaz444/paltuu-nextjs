@@ -2,36 +2,29 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const response = NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'));
+    const response = NextResponse.redirect(new URL("/login", process.env.NEXT_PUBLIC_BASE_URL));
 
-    // Clear all authentication-related cookies
-    response.cookies.set("token", "", {
-      httpOnly: true,
-      expires: new Date(0),
-      path: '/'
-    });
+    // List of authentication-related cookies to clear
+    const authCookies = [
+      "token",
+      "next-auth.session-token",
+      "next-auth.csrf-token",
+      "next-auth.callback-url"
+    ];
 
-    response.cookies.set("next-auth.session-token", "", {
-      httpOnly: true,
-      expires: new Date(0),
-      path: '/'
-    });
-
-    response.cookies.set("next-auth.csrf-token", "", {
-      httpOnly: true,
-      expires: new Date(0),
-      path: '/'
-    });
-
-    response.cookies.set("next-auth.callback-url", "", {
-      httpOnly: true,
-      expires: new Date(0),
-      path: '/'
+    // Clear all authentication cookies
+    authCookies.forEach((cookie) => {
+      response.cookies.set(cookie, "", {
+        httpOnly: true,
+        expires: new Date(0),
+        path: "/",
+        secure: true, // Ensures proper deletion over HTTPS
+        sameSite: "lax", // Helps with cross-site behavior
+      });
     });
 
     return response;
   } catch (error: any) {
-    // If there's an error, redirect to login page anyway
-    return NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'));
+    return NextResponse.redirect(new URL("/login", process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"));
   }
 }

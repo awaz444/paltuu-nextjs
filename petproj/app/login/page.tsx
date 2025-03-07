@@ -37,56 +37,56 @@ export default function Login() {
         setUser((prev) => ({ ...prev, [name]: value }));
     };
 
-  // Handle API-based login
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      const response = await axios.post("/api/users/login", user);
+    // Handle API-based login
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            setLoading(true);
+            const response = await axios.post("/api/users/login", user);
 
-      if (response.data.success) {
-        const { id, name, email, role } = response.data.user; // Ensure role is included
-        const userDetails = { id,name, email, role };
+            if (response.data.success) {
+                const { id, name, email, role } = response.data.user; // Ensure role is included
+                const userDetails = { id, name, email, role };
 
-        // Save user data to local storage
-        localStorage.setItem("user", JSON.stringify(userDetails));
+                // Save user data to local storage
+                localStorage.setItem("user", JSON.stringify(userDetails));
 
-        // Update AuthContext
-        login(userDetails); // Pass role as well
+                // Update AuthContext
+                login(userDetails); // Pass role as well
 
-        toast.success("Login successful!");
-        router.push("/browse-pets");
-      }
-    } catch (error: any) {
-      console.error("Login failed:", error.message);
-      toast.error(error.response?.data?.message || "Login failed!");
-    } finally {
-      setLoading(false);
-    }
-  };
+                toast.success("Login successful!");
+                router.push("/browse-pets");
+            }
+        } catch (error: any) {
+            console.error("Login failed:", error.message);
+            toast.error(error.response?.data?.message || "Login failed!");
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
 
-  // Handle Google login
-  const handleGoogleLogin = async () => {
-    try {
-      setGoogleLoading(true);
-      await signIn("google"); // next-auth handles Google login
-    } catch (error) {
-      console.error("Google login failed:", error);
-      toast.error("Google login failed. Please try again!");
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
+    // Handle Google login
+    const handleGoogleLogin = async () => {
+        try {
+            setGoogleLoading(true);
+            await signIn("google"); // next-auth handles Google login
+        } catch (error) {
+            console.error("Google login failed:", error);
+            toast.error("Google login failed. Please try again!");
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
 
     return (
         <div className="min-h-screen flex flex-col sm:flex-row bg-gray-100">
             {/* Left Side */}
             <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white 
         rounded-b-3xl sm:rounded-b-none sm:rounded-r-3xl">
-        <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
-    </div>
+                <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
+            </div>
 
             {/* Right Side */}
             <div className="sm:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 bg-gray-100">
@@ -134,9 +134,8 @@ export default function Login() {
                     <button
                         type="submit"
                         disabled={buttonDisabled || loading}
-                        className={`w-full py-2 px-4 rounded-xl text-white bg-primary hover:bg-primary-dark transition ${
-                            loading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}>
+                        className={`w-full py-2 px-4 rounded-xl text-white bg-primary hover:bg-primary-dark transition ${loading ? "opacity-50 cursor-not-allowed" : ""
+                            }`}>
                         {loading ? "Logging in..." : "Log In"}
                     </button>
 
@@ -145,9 +144,8 @@ export default function Login() {
                         type="button"
                         onClick={handleGoogleLogin}
                         disabled={googleLoading}
-                        className={`mt-4 w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${
-                            googleLoading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}>
+                        className={`mt-4 w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${googleLoading ? "opacity-50 cursor-not-allowed" : ""
+                            }`}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 24 24"

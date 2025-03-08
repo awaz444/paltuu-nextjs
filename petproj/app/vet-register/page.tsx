@@ -49,12 +49,28 @@ const VetRegisterForm = () => {
     const [image, setImage] = useState<UploadFile | null>(null);
     const [bio, setBio] = useState<string>("");
 
-    const handleUploadChange = ({ file }: { file: UploadFile }) => {
-        if (file.status === "done") {
-            setImage(file);
-            message.success(`${file.name} uploaded successfully`);
-        } else if (file.status === "error") {
-            message.error(`${file.name} file upload failed.`);
+    const handleUploadChange = async ({ file }: { file: UploadFile }) => {
+        if (file.originFileObj) {
+            try {
+                const formData = new FormData();
+                formData.append('file', file.originFileObj);
+
+                const response = await fetch('/api/upload-vet-image', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('Upload failed');
+                }
+
+                const data = await response.json();
+                setImage({ ...file, url: data.image_url });
+                message.success(`${file.name} uploaded successfully`);
+            } catch (error) {
+                message.error(`${file.name} file upload failed.`);
+                console.error('Upload error:', error);
+            }
         }
     };
 
@@ -71,6 +87,7 @@ const VetRegisterForm = () => {
                 clinic_email: clinicEmail,
                 clinic_whatsapp: clinicWhatsapp,
                 bio,
+                image_url: image?.url || null,
             };
 
             dispatch(postVet(vetData))
@@ -211,10 +228,12 @@ const VetRegisterForm = () => {
                             maxCount={1}
                             showUploadList={{ showPreviewIcon: false }}
                             onChange={handleUploadChange}
-                            action="https://api.cloudinary.com/v1_1/your_cloud_name/image/upload" // Replace with your Cloudinary upload URL
-                            data={{
-                                upload_preset: "your_upload_preset", // Replace with your Cloudinary preset
+                            customRequest={({ file, onSuccess }) => {
+                                setTimeout(() => {
+                                    onSuccess?.("ok");
+                                }, 0);
                             }}
+                            beforeUpload={beforeUpload}
                         >
                             {image ? null : (
                                 <div>
@@ -244,4 +263,4 @@ const VetRegister = () => (
     </Suspense>
 );
 
-export default VetRegister; 
+export default VetRegister;

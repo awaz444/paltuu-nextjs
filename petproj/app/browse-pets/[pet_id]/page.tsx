@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
+import LoginModal from "../../../components/LoginModal"; // Create this component from provided login code
 import {
     Spin,
     Card,
@@ -41,6 +42,8 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [IsModalOpen, setIsModalOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [showLoginModal, setShowLoginModal] = useState(false);
 
     useSetPrimaryColor();
 
@@ -49,11 +52,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
         if (userString) {
             try {
                 const user = JSON.parse(userString);
-                if (user?.id) {
-                    user_id=user.id;
-                } else {
-                    console.warn("User ID is missing from stored user data.");
-                }
+                setUserId(user?.id || null);
             } catch (error) {
                 console.error("Error parsing user data:", error);
             }
@@ -88,32 +87,6 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
         if (pet_id) fetchPetDetails();
     }, [pet_id]);
 
-    const handleCopy = (text: string) => {
-        navigator.clipboard.writeText(text);
-        message.success("Copied to clipboard!");
-    };
-
-    const handleWhatsApp = (phone: string) => {
-        const whatsappUrl = `https://wa.me/${phone}`;
-        window.open(whatsappUrl, "_blank");
-    };
-
-    const handleAdoptClick = () => {
-        const userString = localStorage.getItem("user");
-
-        if (userString) {
-            setIsModalVisible(true);
-        } else {
-            message.warning("You need to log in to apply for adoption.");
-            window.location.href = "/login";
-        }
-    };
-
-    const handleModalClose = () => setIsModalVisible(false);
-    const handleFormSubmit = (formData: any) => {
-        console.log("Adoption form data submitted:", formData);
-    };
-
     const [primaryColor, setPrimaryColor] = useState("#000000"); // Default fallback color
 
     useEffect(() => {
@@ -143,8 +116,53 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
         );
     }
 
+    const handleCopy = (text: string) => {
+        navigator.clipboard.writeText(text);
+        message.success("Copied to clipboard!");
+    };
+
+    const handleWhatsApp = (phone: string) => {
+        const whatsappUrl = `https://wa.me/${phone}`;
+        window.open(whatsappUrl, "_blank");
+    };
+
+    const handleAdoptClick = () => {
+        if (pet.adoption_status !== 'available') return;
+
+        if (!userId) {
+            setShowLoginModal(true);
+            return;
+        }
+        setIsModalVisible(true);
+    };
+
+    const handleContactClick = () => {
+        if (pet.adoption_status !== 'available') return;
+        setIsModalOpen(true);
+    };
+
+    const handleLoginSuccess = () => {
+        const userString = localStorage.getItem("user");
+        if (userString) {
+            const user = JSON.parse(userString);
+            setUserId(user.id);
+        }
+        setShowLoginModal(false);
+    };
+
+    const handleModalClose = () => setIsModalVisible(false);
+    const handleFormSubmit = (formData: any) => {
+        console.log("Adoption form data submitted:", formData);
+    };
+
+
     return (
         <>
+            <LoginModal
+                visible={showLoginModal}
+                onClose={() => setShowLoginModal(false)}
+                onSuccess={handleLoginSuccess}
+            />
             <Modal
                 title="Contact Information"
                 visible={IsModalOpen}
@@ -291,23 +309,30 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                     </div>
                                 </div>
 
+                                {/* Modified Buttons */}
                                 <Button
                                     type="primary"
                                     block
                                     size="large"
                                     className="button-one h-14 text-lg bg-primary font-semibold rounded-xl hover:bg-primary"
                                     onClick={handleAdoptClick}
+                                    disabled={pet.adoption_status !== 'available'}
                                 >
-                                    Apply for Adoption Process
+                                    {pet.adoption_status === 'available'
+                                        ? "Apply for Adoption Process"
+                                        : "Already Adopted"}
                                 </Button>
 
                                 <Button
                                     block
                                     size="large"
                                     className="button-two h-14 text-lg font-semibold rounded-xl border-primary text-primary"
-                                    onClick={() => setIsModalOpen(true)}
+                                    onClick={handleContactClick}
+                                    disabled={pet.adoption_status !== 'available'}
                                 >
-                                    Contact Owner
+                                    {pet.adoption_status === 'available'
+                                        ? "Contact Owner"
+                                        : "Not Available"}
                                 </Button>
                             </div>
                         </div>
@@ -393,7 +418,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
 
             <AdoptionFormModal
                 petId={parseInt(pet_id)}
-                userId={user_id}
+                userId={userId || ""}
                 visible={isModalVisible}
                 onClose={handleModalClose}
                 onSubmit={handleFormSubmit}

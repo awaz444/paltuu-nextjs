@@ -66,14 +66,14 @@ export default function PetCare() {
 
         const matchesSpecialization = filters.selectedCategory
             ? vet.specializations.some((spec) => {
-                  const match =
-                      spec.category_id === parseInt(filters.selectedCategory);
-                  console.log(
-                      `  - Specialization: ${spec.category_id} matches:`,
-                      match
-                  );
-                  return match;
-              })
+                const match =
+                    spec.category_id === parseInt(filters.selectedCategory);
+                console.log(
+                    `  - Specialization: ${spec.category_id} matches:`,
+                    match
+                );
+                return match;
+            })
             : true;
         console.log(
             `Vet ${vet.name} matches specialization:`,
@@ -82,15 +82,15 @@ export default function PetCare() {
 
         const matchesQualification = filters.selectedQualification
             ? vet.qualifications.some((qual) => {
-                  const match =
-                      qual.qualification_id ===
-                      parseInt(filters.selectedQualification);
-                  console.log(
-                      `  - Qualification ID: ${qual.qualification_id} matches:`,
-                      match
-                  );
-                  return match;
-              })
+                const match =
+                    qual.qualification_id ===
+                    parseInt(filters.selectedQualification);
+                console.log(
+                    `  - Qualification ID: ${qual.qualification_id} matches:`,
+                    match
+                );
+                return match;
+            })
             : true;
         console.log(
             `Vet ${vet.name} matches qualification:`,
@@ -105,14 +105,6 @@ export default function PetCare() {
     });
 
     console.log("Filtered Vets:", filteredVets); // Log the final filtered vets
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <MoonLoader size={30} color={primaryColor} />
-            </div>
-        );
-    }
 
     return (
         <>
@@ -133,7 +125,13 @@ export default function PetCare() {
                 />
                 <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
                     <div className="w-full">
-                        <VetGrid vets={filteredVets} />
+                        {loading ? (
+                            <MoonLoader className="mt-5 mx-auto relative top-5" size={30} color={primaryColor} />
+                        ) : error ? (
+                            <p>Error: {error}</p>
+                        ) : (
+                            <VetGrid vets={filteredVets} />
+                        )}
                     </div>
                 </main>
             </div>

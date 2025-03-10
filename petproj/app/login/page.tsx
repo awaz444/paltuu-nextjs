@@ -64,9 +64,7 @@ export default function Login() {
             setLoading(false);
         }
     };
-
-
-
+    
     // Handle Google login
     const handleGoogleLogin = async () => {
         try {

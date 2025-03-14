@@ -8,10 +8,10 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import { Button, Input } from "antd";
 
-interface LoginFormProps {
+type LoginFormProps = {
     onSuccess: () => void;
-    onClose: () => void;
-}
+    onClose?: () => void; // Make optional
+};
 
 export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
     const { login } = useAuth();
@@ -79,7 +79,7 @@ export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
 
             <form
                 onSubmit={handleLogin}
-                className="mt-8 w-full max-w-md bg-white shadow-lg rounded-2xl p-6">
+                className="mt-8 w-full max-w-md bg-white shadow-lg rounded-2xl p-6 mx-auto">
                 {/* Email Input */}
                 <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-medium mb-2">

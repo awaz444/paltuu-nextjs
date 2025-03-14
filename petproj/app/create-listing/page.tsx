@@ -12,6 +12,7 @@ import "./styles.css";
 
 import type { GetProp, UploadFile, UploadProps } from "antd";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
+import LoginModal from "@/components/LoginModal"; // Add this import
 
 export default function CreatePetListing() {
 
@@ -48,16 +49,56 @@ export default function CreatePetListing() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [userId, setUserId] = useState<number | null>(null);
+
     useEffect(() => {
         dispatch(fetchCities());
         dispatch(fetchPetCategories());
     }, [dispatch]);
 
+    useEffect(() => {
+        const checkUser = () => {
+            const userString = localStorage.getItem("user");
+            if (!userString) {
+                setShowLoginModal(true);
+                return;
+            }
+
+            try {
+                const user = JSON.parse(userString);
+                const user_id = user?.id;
+                if (!user_id) {
+                    setShowLoginModal(true);
+                    return;
+                }
+                setUserId(user_id);
+            } catch (error) {
+                setShowLoginModal(true);
+            }
+        };
+
+        checkUser();
+    }, []);
+
+    const handleLoginSuccess = () => {
+        setShowLoginModal(false);
+        const userString = localStorage.getItem("user");
+        if (userString) {
+            const user = JSON.parse(userString);
+            setUserId(user?.id);
+        }
+    };
+
     // Handle form submission
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
         // Retrieve the user object from local storage
+
         const userString = localStorage.getItem("user");
+
+
         if (!userString) {
             setError("User data not found in local storage");
             setLoading(false);
@@ -67,11 +108,12 @@ export default function CreatePetListing() {
         // Parse the user object to extract the user ID
         const user = JSON.parse(userString);
         const user_id = user?.id;
-        if (!user_id) {
-            setError("User ID is missing from the user object");
-            setLoading(false);
+
+        if (!userId) {
+            setShowLoginModal(true);
             return;
         }
+
         const newPet = {
             owner_id: user_id,
             pet_name: petName || null,
@@ -124,6 +166,12 @@ export default function CreatePetListing() {
 
     return (
         <>
+            <LoginModal
+                visible={showLoginModal}
+                onSuccess={handleLoginSuccess}
+                onClose={() => setShowLoginModal(false)}
+                mandatory // This makes it non-closable
+            />
             <Navbar />
             <div
                 className="fullBody"

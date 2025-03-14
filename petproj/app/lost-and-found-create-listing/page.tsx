@@ -5,6 +5,7 @@ import "./styles.css";
 import Navbar from "@/components/navbar";
 import { useRouter } from "next/navigation";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
+import LoginModal from "@/components/LoginModal"; // Import your login modal component
 
 const LostFoundListingPage = () => {
     const [categoryId, setCategoryId] = useState<number | string>(""); // Updated to categoryId
@@ -17,27 +18,32 @@ const LostFoundListingPage = () => {
     const [userId, setUserId] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
+    const [showLoginModal, setShowLoginModal] = useState(false);
     useSetPrimaryColor();
     const router = useRouter();
     // **Retrieve user ID from localStorage**
     useEffect(() => {
-        const userString = localStorage.getItem("user");
-        if (!userString) {
-            setError("User data not found in local storage");
-            return;
-        }
-
-        try {
-            const user = JSON.parse(userString);
-            const user_id = user?.id;
-            if (!user_id) {
-                setError("User ID is missing from the user object");
+        const checkUser = () => {
+            const userString = localStorage.getItem("user");
+            if (!userString) {
+                setShowLoginModal(true);
                 return;
             }
-            setUserId(user_id);
-        } catch (error) {
-            setError("Failed to parse user data from local storage");
-        }
+
+            try {
+                const user = JSON.parse(userString);
+                const user_id = user?.id;
+                if (!user_id) {
+                    setShowLoginModal(true);
+                    return;
+                }
+                setUserId(user_id);
+            } catch (error) {
+                setShowLoginModal(true);
+            }
+        };
+
+        checkUser();
     }, []);
 
     // **City Options**
@@ -64,15 +70,15 @@ const LostFoundListingPage = () => {
     // **Handle form submission**
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-    
+
         if (!userId) {
-            setError("User is not logged in. Please log in to submit a listing.");
+            setShowLoginModal(true);
             return;
         }
-    
+
         setLoading(true);
         setError(null);
-    
+
         // Collect the form data
         const formData = {
             category_id: categoryId, // Convert to integer
@@ -84,9 +90,20 @@ const LostFoundListingPage = () => {
             post_type: activeTab, // This will be either "lost" or "found"
             user_id: userId, // **User ID is added here**
         };
-    
+
         console.log('Form Data:', formData); // Debugging log
-    
+
+        const handleLoginSuccess = () => {
+            setShowLoginModal(false);
+            // Re-check user after successful login
+            const userString = localStorage.getItem("user");
+            if (userString) {
+                const user = JSON.parse(userString);
+                setUserId(user?.id);
+            }
+        };
+
+
         try {
             const response = await fetch("/api/lost-and-found", {
                 method: "POST",
@@ -95,12 +112,12 @@ const LostFoundListingPage = () => {
                 },
                 body: JSON.stringify(formData),
             });
-    
+
             const data = await response.json();
-    
+
             if (response.ok) {
                 console.log("Success:", data);
-    
+
                 // Assuming the response contains a post_id
                 const postId = data?.post_id;
                 if (postId) {
@@ -108,7 +125,7 @@ const LostFoundListingPage = () => {
                 } else {
                     setError("Failed to get post ID from response.");
                 }
-    
+
                 resetForm();
             } else {
                 setError(data?.message || "Failed to submit listing");
@@ -119,7 +136,7 @@ const LostFoundListingPage = () => {
             setLoading(false);
         }
     };
-    
+
     // **Reset form fields**
     const resetForm = () => {
         setCategoryId("");
@@ -135,8 +152,24 @@ const LostFoundListingPage = () => {
         setActiveTab(tab);
     };
 
+    const handleLoginSuccess = () => {
+        setShowLoginModal(false);
+        // Re-check user after successful login
+        const userString = localStorage.getItem("user");
+        if (userString) {
+            const user = JSON.parse(userString);
+            setUserId(user?.id);
+        }
+    };
+
     return (
         <>
+            <LoginModal
+  visible={showLoginModal}
+  onSuccess={handleLoginSuccess}
+  onClose={() => setShowLoginModal(false)}
+  mandatory // Add this prop to make it non-closable
+/>
             <Navbar />
             <div
                 className="fullBody"
@@ -147,7 +180,7 @@ const LostFoundListingPage = () => {
                     onSubmit={handleSubmit}
                 >
                     {error && <p className="text-red-500 mb-4">{error}</p>}
-    
+
                     {/* Tab Switch */}
                     <div className="tab-switch-container mb-6">
                         <div
@@ -169,7 +202,7 @@ const LostFoundListingPage = () => {
                             Found
                         </div>
                     </div>
-    
+
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">Pet Category</label>
                         <select
@@ -186,7 +219,7 @@ const LostFoundListingPage = () => {
                             ))}
                         </select>
                     </div>
-    
+
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">City</label>
                         <select
@@ -203,7 +236,7 @@ const LostFoundListingPage = () => {
                             ))}
                         </select>
                     </div>
-    
+
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">Location</label>
                         <input
@@ -214,7 +247,7 @@ const LostFoundListingPage = () => {
                             onChange={(e) => setLocation(e.target.value)}
                         />
                     </div>
-    
+
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">Pet Description</label>
                         <textarea
@@ -225,7 +258,7 @@ const LostFoundListingPage = () => {
                             rows={4}
                         />
                     </div>
-    
+
                     {/* Show "Date Lost" if Lost tab is active */}
                     {activeTab === "lost" && (
                         <div className="mb-4">
@@ -238,7 +271,7 @@ const LostFoundListingPage = () => {
                             />
                         </div>
                     )}
-    
+
                     {/* Show "Date Found" if Found tab is active */}
                     {activeTab === "found" && (
                         <div className="mb-4">
@@ -251,7 +284,7 @@ const LostFoundListingPage = () => {
                             />
                         </div>
                     )}
-    
+
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">Contact Info</label>
                         <input
@@ -263,7 +296,7 @@ const LostFoundListingPage = () => {
                             onChange={(e) => setContactInfo(e.target.value)}
                         />
                     </div>
-    
+
                     <button
                         type="submit"
                         className="mt-4 p-3 bg-primary text-white rounded-3xl w-full"
@@ -274,7 +307,7 @@ const LostFoundListingPage = () => {
                 </form>
             </div>
         </>
-    );    
+    );
 };
 
 export default LostFoundListingPage;

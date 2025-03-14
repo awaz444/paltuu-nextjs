@@ -318,8 +318,10 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                     onClick={handleAdoptClick}
                                     disabled={pet.adoption_status !== 'available'}
                                 >
-                                    {pet.adoption_status === 'available'
-                                        ? "Apply for Adoption Process"
+                                    {pet.adoption_status === 'available' 
+                                        ? userId  
+                                            ? "Apply for Adoption" 
+                                            : "Login to Apply"
                                         : "Already Adopted"}
                                 </Button>
 

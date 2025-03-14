@@ -46,7 +46,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
     useSetPrimaryColor();
 
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-3">
             {/* Create new listing card */}
             <Link
                 href="/create-listing"
@@ -94,7 +94,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                             )}
                         </div>
                         <div className="p-4">
-                            <h3 className="font-bold text-2xl mb-1">
+                            <h3 className="font-bold text-2xl mb-1 truncate max-w-[90%]">
                                 {pet.pet_name}
                             </h3>
                             <p className="text-gray-600 mb-1">

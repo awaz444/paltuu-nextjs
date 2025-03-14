@@ -50,7 +50,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
             {/* Create new listing card */}
             <Link
                 href="/create-listing"
-                className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex  flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300">
+                className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 text-sm sm:text-base">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="16"
@@ -63,6 +63,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                 </svg>
                 Create new listing
             </Link>
+
             {pets.map((pet) => (
                 <Link
                     key={pet.pet_id}
@@ -85,7 +86,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                             />
                             {/* Overlay badge for "Ready for adoption" or price at the bottom-right */}
                             {Number(pet.price) > 0 && (
-                                <div className="absolute bottom-2 right-2 bg-primary text-white text-sm font-semibold px-3 py-1 rounded-full">
+                                <div className="absolute bottom-2 right-2 bg-primary text-white text-[10px] sm:text-xs font-semibold px-2 sm:px-2 py-1 rounded-full">
                                     PKR {pet.price}
                                     {pet.payment_frequency &&
                                         ` / ${pet.payment_frequency}`}
@@ -102,7 +103,6 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                             <div className="flex flex-row gap-2 right">
                                 <EnvironmentOutlined className="text-primary" /><p className="text-gray-600">{pet.city}</p>
                             </div>
-
                         </div>
                     </div>
                 </Link>

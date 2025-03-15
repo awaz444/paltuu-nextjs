@@ -161,7 +161,7 @@ export default function FosterPets() {
                 <FilterSection
                     onSearch={(filters) => setFilters((prev) => ({ ...prev, ...filters }))}
                 />
-                <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
+                <main className="flex min-h-screen flex-col mx-0 md:mx-8 mt-1 items-center pt-7 bg-gray-100">
                     <div className="flex w-full">
                         <div className="w-1/4 mr-4 vertical-search-bar">
                             <FosterVerticalSearchBar

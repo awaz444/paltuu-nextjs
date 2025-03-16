@@ -183,13 +183,12 @@ const Navbar = () => {
                 className={`mobile-menu ${isMenuOpen ? "open" : ""} md:hidden`}
                 style={{ backgroundColor: navbarBackground[userRole] }}
             >
-                {/* Close Button */}
-                <button
+                {/* <button
                     className="close-button"
                     onClick={() => setIsMenuOpen(false)}
                 >
                     &times;
-                </button>
+                </button> */}
 
                 {/* Navigation Links */}
                 <div className="navLinks-mobile">

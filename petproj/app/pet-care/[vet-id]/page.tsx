@@ -334,7 +334,7 @@ export default function VetDetailsPage({
                                 <div className="flex flex-wrap gap-2">
                                     {vetDetails.specializations.map((spec) => (
                                         <Tag key={spec.category_id} className="rounded-lg bg-primary/10 text-primary border-0">
-                                            {spec.category_name}s
+                                            {spec.category_name}
                                         </Tag>
                                     ))}
                                 </div>
@@ -356,14 +356,21 @@ export default function VetDetailsPage({
                         <div className="space-y-6">
                             <Section title="Availability">
                                 <div className="grid grid-cols-2 gap-4">
-                                    {vetDetails.availability.map((avail) => (
-                                        <div key={avail.availability_id} className="bg-gray-50 p-4 rounded-xl">
-                                            <div className="font-medium text-gray-800">{avail.day_of_week}</div>
-                                            <div className="text-primary">
-                                                {avail.start_time} - {avail.end_time}
+                                    {vetDetails.availability.map((avail) => {
+                                        // Format the time to remove seconds
+                                        const formatTime = (timeString: string) : string => {
+                                            return timeString.split(':').slice(0, 2).join(':'); // Remove seconds
+                                        };
+
+                                        return (
+                                            <div key={avail.availability_id} className="bg-gray-50 p-4 rounded-xl">
+                                                <div className="font-medium text-gray-800">{avail.day_of_week}</div>
+                                                <div className="text-primary">
+                                                    {formatTime(avail.start_time)} - {formatTime(avail.end_time)}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </Section>
 
@@ -559,7 +566,7 @@ const ReviewModal: React.FC<{
         width={600}
     >
         <Form form={form} layout="vertical" onFinish={onSubmit}>
-            <Form.Item
+            {/* <Form.Item
                 name="email"
                 label="Your Email"
                 rules={[{ required: true, message: 'Please enter your email' }]}
@@ -568,7 +575,7 @@ const ReviewModal: React.FC<{
                     placeholder="example@email.com"
                     className="rounded-lg p-3 hover:border-primary focus:border-primary"
                 />
-            </Form.Item>
+            </Form.Item> */}
 
             <Form.Item
                 name="rating"
@@ -584,7 +591,7 @@ const ReviewModal: React.FC<{
             <Form.Item
                 name="review_content"
                 label="Your Review"
-                rules={[{ required: true, message: 'Please write your review' }]}
+                rules={[{ required: false, message: 'Please write your review' }]}
             >
                 <Input.TextArea
                     rows={4}

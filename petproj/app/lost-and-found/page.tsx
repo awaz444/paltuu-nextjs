@@ -69,7 +69,7 @@ export default function LostFound() {
         } catch (error: any) {
             setError(
                 error.response?.data?.message ||
-                    "Failed to fetch lost and found posts. Please try again later."
+                "Failed to fetch lost and found posts. Please try again later."
             );
             console.error("API Error:", error); // Debug API error
         } finally {
@@ -114,8 +114,8 @@ export default function LostFound() {
             : true;
         const matchesLocation = filters.location
             ? pet.location
-                  ?.toLowerCase()
-                  .includes(filters.location.toLowerCase())
+                ?.toLowerCase()
+                .includes(filters.location.toLowerCase())
             : true;
         const matchesCategory = filters.selectedCategory
             ? pet.category_id === Number(filters.selectedCategory)
@@ -150,13 +150,13 @@ export default function LostFound() {
             <div
                 className="fullBody lg:w-3/4"
                 style={{ maxWidth: "90%", margin: "0 auto" }}>
-                    <LostAndFoundFilter
-                        onSearch={(filters) => {
-                            console.log("Filters updated:", filters); // Debug filter updates
-                            setFilters((prev) => ({ ...prev, ...filters }));
-                        }}
-                    />
-                <main className="flex min-h-screen flex-col items-center p-8">
+                <LostAndFoundFilter
+                    onSearch={(filters) => {
+                        console.log("Filters updated:", filters); // Debug filter updates
+                        setFilters((prev) => ({ ...prev, ...filters }));
+                    }}
+                />
+                <main className="flex min-h-screen flex-col mx-0 md:mx-8 mt-1 items-center pt-7 bg-gray-100">
                     <div className="w-full">
                         {/* **Tab Switch for Lost and Found** */}
                         <div className="tab-switch-container">
@@ -170,16 +170,14 @@ export default function LostFound() {
                                 }}
                             />
                             <div
-                                className={`tab ${
-                                    activeTab === "lost" ? "active" : ""
-                                }`}
+                                className={`tab ${activeTab === "lost" ? "active" : ""
+                                    }`}
                                 onClick={() => handleTabToggle("lost")}>
                                 Lost
                             </div>
                             <div
-                                className={`tab ${
-                                    activeTab === "found" ? "active" : ""
-                                }`}
+                                className={`tab ${activeTab === "found" ? "active" : ""
+                                    }`}
                                 onClick={() => handleTabToggle("found")}>
                                 Found
                             </div>

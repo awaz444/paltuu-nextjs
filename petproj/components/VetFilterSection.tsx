@@ -112,15 +112,15 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
                 <div className="md:hidden flex flex-col gap-4">
                     {/* Species filter (outside modal) */}
                     <div className="flex-1 min-w-[150px]">
-                        <label className="text-xs block mb-1">Specialization</label>
+                        <label className="text-xs block mb-1">City</label>
                         <select
                             className="w-full p-3 border rounded-xl"
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}>
-                            <option value="">Select Specialization</option>
-                            {categories.map((category) => (
-                                <option key={category.category_id} value={category.category_id}>
-                                    {category.category_name}
+                            value={selectedCity}
+                            onChange={(e) => setSelectedCity(e.target.value)}>
+                            <option value="">Select City</option>
+                            {cities.map((city) => (
+                                <option key={city.city_id} value={city.city_id}>
+                                    {city.city_name}
                                 </option>
                             ))}
                         </select>

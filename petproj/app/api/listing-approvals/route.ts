@@ -62,12 +62,9 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         }
 
         await client.connect();
-        console.log("Database connected for PUT request");
-
-        // Begin transaction
         await client.query('BEGIN');
 
-        // Update the pet's approval status
+        // Update the pet's approval status and get owner info
         const result = await client.query(
             `
             UPDATE pets
@@ -78,6 +75,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
             RETURNING
                 pet_id,
                 pet_name,
+                owner_id,
                 approved,
                 created_at;
             `,
@@ -96,44 +94,32 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
             );
         }
 
-        // Commit the transaction
+        const updatedPet = result.rows[0];
+
+        // Add notification to pet owner if approved
+        if (approved) {
+            await client.query(
+                `INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [
+                    updatedPet.owner_id,
+                    `Your pet listing "${updatedPet.pet_name}" has been approved and is now visible to everyone!`,
+                    "listing_approval",
+                    false,
+                    new Date()
+                ]
+            );
+        }
+
         await client.query('COMMIT');
-        console.log("Pet approval updated successfully:", result.rows[0]);
 
         return NextResponse.json(
             {
                 success: true,
-                message: 'Pet approved successfully.',
-                pet: result.rows[0]
+                message: `Pet ${approved ? 'approved' : 'rejected'} successfully.`,
+                pet: updatedPet
             },
-            {
-                status: 200,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-    } catch (err) {
-        console.error("PUT Error:", err);
-        // Rollback transaction if there's an error
-        try {
-            await client.query('ROLLBACK');
-        } catch (rollbackErr) {
-            console.error("Rollback error:", rollbackErr);
-        }
-
-        return NextResponse.json(
-            {
-                success: false,
-                error: 'Internal Server Error',
-                message: (err as Error).message
-            },
-            {
-                status: 500,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
         );
     } finally {
         try {

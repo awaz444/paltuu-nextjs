@@ -105,6 +105,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             await client.query(notificationQuery, notificationValues);
         }
 
+
+        // NEW: Notification for PET OWNER
+        const ownerNotificationContent = `Your pet listing "${pet_name}" has been submitted for approval. You'll be notified once it's approved.`;
+        await client.query(
+            `INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [
+                owner_id,
+                ownerNotificationContent,
+                "listing_submission",  // New notification type
+                false,
+                new Date()
+            ]
+        );
+
         return NextResponse.json(newPet, {
             status: 201,
             headers: { "Content-Type": "application/json" },

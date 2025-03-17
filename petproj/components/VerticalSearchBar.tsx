@@ -22,6 +22,8 @@ interface VerticalSearchBarProps {
     onSearchAction: () => void;
 }
 
+
+
 const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
     onSearch,
     onReset,
@@ -64,6 +66,28 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
         });
         onSearchAction(); // Trigger the search action from the parent component
     };
+
+    const handleReset = () => {
+
+        setSelectedSex("");
+        setMinAge("");
+        setMaxAge("");
+        setMinPrice("");
+        setMaxPrice("");
+        setArea("");
+        setMinChildAge("");
+        setCanLiveWithDogs(false);
+        setCanLiveWithCats(false);
+        setVaccinated(false);
+        setNeutered(false);
+        setSelectedCity("");
+        setSelectedSpecies("");
+        setBreed("");
+
+        onReset();
+    };
+
+
 
     return (
         <div className="bg-white shadow-sm p-6 rounded-3xl">
@@ -222,7 +246,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
             <div className="flex flex-col gap-3 mt-4">
                 <button
                     className="border-2 border-primary text-primary bg-white p-3 rounded-xl"
-                    onClick={onReset}>
+                    onClick={handleReset}>
                     Reset
                 </button>
                 <button

@@ -113,7 +113,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                 <div className="flex space-x-2">
                     <input
                         type="number"
-                        placeholder="Min yrs"
+                        placeholder="Min"
                         className="border rounded-xl w-1/2 p-2"
                         value={minAge}
                         onChange={(e) => {
@@ -124,7 +124,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                     <p className="mt-2">to</p>
                     <input
                         type="number"
-                        placeholder="Max yrs"
+                        placeholder="Max"
                         className="border rounded-xl w-1/2 p-2"
                         value={maxAge}
                         onChange={(e) => {
@@ -141,7 +141,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                 <div className="flex space-x-2">
                     <input
                         type="number"
-                        placeholder="Min PKR"
+                        placeholder="Min"
                         className="border rounded-xl w-1/2 p-2"
                         value={minPrice}
                         onChange={(e) => {
@@ -152,7 +152,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                     <p className="mt-2">to</p>
                     <input
                         type="number"
-                        placeholder="Max PKR"
+                        placeholder="Max"
                         className="border rounded-xl w-1/2 p-2"
                         value={maxPrice}
                         onChange={(e) => {

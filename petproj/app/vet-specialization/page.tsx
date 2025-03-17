@@ -27,6 +27,8 @@ const VetSpecializationsForm: React.FC = () => {
     console.error("Vet ID is missing.");
   }
 
+  const [isLoading, setIsLoading] = useState(false)
+
   useEffect(() => {
     // Fetch categories if not already loaded
     if (categories.length === 0) {
@@ -43,6 +45,9 @@ const VetSpecializationsForm: React.FC = () => {
   };
 
   const handleDone = async () => {
+
+    setIsLoading(true)
+
     if (!selectedCategories.length) {
       alert("Please select at least one specialization.");
       return;
@@ -70,14 +75,14 @@ const VetSpecializationsForm: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
-    {/* Left Section (Logo) - Unchanged */}
-    <div className="lg:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none">
+      {/* Left Section (Logo) - Unchanged */}
+      <div className="lg:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none">
         <img
-            src="/paltu_logo.svg"
-            alt="Paltu Logo"
-            className="mb-6 w-40 lg:w-full max-w-full"
+          src="/paltu_logo.svg"
+          alt="Paltu Logo"
+          className="mb-6 w-40 lg:w-full max-w-full"
         />
-    </div>
+      </div>
 
       {/* Right Section (Form) */}
       <div className="lg:w-1/2 bg-gray-100 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
@@ -111,10 +116,11 @@ const VetSpecializationsForm: React.FC = () => {
           {/* Done Button */}
           <button
             type="button"
+            disabled={isLoading}
             onClick={handleDone}
-            className="w-full bg-primary text-white py-2 px-4 rounded-xl hover:bg-primary-dark transition"
-          >
-            Proceed to Schedule
+            className={`w-full bg-primary text-white py-2 px-4 rounded-xl transition ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-primary-dark"
+              }`}          >
+            {isLoading ? 'Submitting...' : 'Proceed to Vet Schedule'}
           </button>
         </div>
       </div>

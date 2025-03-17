@@ -33,12 +33,16 @@ const CreateUser = () => {
     const [otp, setOtp] = useState("");
     const [otpError, setOtpError] = useState("");
 
+    const [isLoading, setIsLoading] = useState(false);
+
     useEffect(() => {
         dispatch(fetchCities());
     }, [dispatch]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        setIsLoading(true);
 
         if (!isEmailVerified) {
             alert("Please verify your email first.");
@@ -288,13 +292,13 @@ const CreateUser = () => {
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={!isEmailVerified || password !== confirmPassword}
-                        className={`w-full bg-primary text-white py-2 px-4 rounded-xl transition ${!isEmailVerified || password !== confirmPassword
-                            ? "opacity-50 cursor-not-allowed"
-                            : "hover:bg-primary-dark"
+                        disabled={isLoading || !isEmailVerified || password !== confirmPassword}
+                        className={`w-full bg-primary text-white py-2 px-4 rounded-xl transition ${isLoading || !isEmailVerified || password !== confirmPassword
+                                ? "opacity-50 cursor-not-allowed"
+                                : "hover:bg-primary-dark"
                             }`}
                     >
-                        Create Account
+                        {isLoading ? "Creating Account..." : "Create Account"}
                     </button>
                 </form>
             </div>

@@ -1,7 +1,7 @@
 // pages/verification-info.tsx
 "use client"; // Ensures this component is run on the client side
 
-import React, { Suspense } from "react";
+import React, { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation"; // Use 'next/navigation' instead of 'next/router' for client-side routing
 import Navbar from "@/components/navbar";
 import Image from "next/image";
@@ -31,8 +31,12 @@ const VerificationInfoContent  = () => {
 
     const handleStartVerification = () => {
         // Navigate to the verification page or start the process
+        setIsLoading(true);
         router.push(`/vet-get-verified-2?vet_id=${vetId}`); // Adjust the route accordingly 
     };
+
+    const [isLoading, setIsLoading] = useState(false);
+
 
     return (
         <div className="min-h-screen flex flex-col lg:flex-row">
@@ -65,13 +69,30 @@ const VerificationInfoContent  = () => {
                     <br />
 
                     <button
-                        onClick={handleStartVerification}
-                        className="bg-primary text-white rounded-3xl px-4 py-2 flex items-center gap-2">
-                        <span>Proceed to Upload Documents</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-right text-white" viewBox="0 0 16 16">
-                            <path fillRule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8" />
-                        </svg>
-                    </button>
+    onClick={handleStartVerification}
+    disabled={isLoading}
+    className={`bg-primary text-white rounded-3xl px-4 py-2 flex items-center gap-2 transition ${
+        isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-primary-dark"
+    }`}
+>
+    <span>{isLoading ? "Proceeding..." : "Proceed to Upload Documents"}</span>
+    {!isLoading && (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            className="bi bi-arrow-right text-white"
+            viewBox="0 0 16 16"
+        >
+            <path
+                fillRule="evenodd"
+                d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"
+            />
+        </svg>
+    )}
+</button>
+
                 </div>
             </div>
         </div>

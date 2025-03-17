@@ -1,0 +1,7 @@
+.transition-all {
+    transition: all 0.2s ease;
+  }
+  
+  .hover\:shadow-sm:hover {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }

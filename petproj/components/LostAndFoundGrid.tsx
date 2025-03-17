@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { Modal } from "antd";
+import { EnvironmentOutlined } from "@ant-design/icons";
 import "./petGrid.css";
 
 interface LostAndFoundPet {
@@ -52,11 +53,11 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
     }
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-3">
             <Link
                 href="/lost-and-found-create-listing"
-                className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300"
-            >
+                className="create-listing-btn hidden sm:flex bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 text-sm sm:text-base">
+
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="48"
@@ -68,6 +69,23 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
                     <path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.314.464L14.5 8l.186.464-.003.001-.006.003-.023.009a12 12 0 0 1-.397.15c-.264.095-.631.223-1.047.35-.816.252-1.879.523-2.71.523-.847 0-1.548-.28-2.158-.525l-.028-.01C7.68 8.71 7.14 8.5 6.5 8.5c-.7 0-1.638.23-2.437.477A20 20 0 0 0 3 9.342V15.5a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 1 0v.282c.226-.079.496-.17.79-.26C4.606.272 5.67 0 6.5 0c.84 0 1.524.277 2.121.519l.043.018C9.286.788 9.828 1 10.5 1c.7 0 1.638-.23 2.437-.477a20 20 0 0 0 1.349-.476l.019-.007.004-.002h.001M14 1.221c-.22.078-.48.167-.766.255-.81.252-1.872.523-2.734.523-.886 0-1.592-.286-2.203-.534l-.008-.003C7.662 1.21 7.139 1 6.5 1c-.669 0-1.606.229-2.415.478A21 21 0 0 0 3 1.845v6.433c.22-.078.48-.167.766-.255C4.576 7.77 5.638 7.5 6.5 7.5c.847 0 1.548.28 2.158.525l.028.01C9.32 8.29 9.86 8.5 10.5 8.5c.668 0 1.606-.229 2.415-.478A21 21 0 0 0 14 7.655V1.222z" />
                 </svg>
                 Report Lost/Found
+            </Link>
+            <Link
+                href="/lost-and-found-create-listing"
+                className="fixed bottom-4 right-2 sm:hidden z-50">
+                <button className="flex items-center gap-1.5 bg-white text-primary border-2 border-primary p-2 rounded-xl shadow-lg hover:bg-primary-dark transition-all duration-300 hover:scale-105">
+                <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        className="h-3.5 w-3.5" // Smaller icon
+                        viewBox="0 0 16 16">
+                    
+                        <path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.314.464L14.5 8l.186.464-.003.001-.006.003-.023.009a12 12 0 0 1-.397.15c-.264.095-.631.223-1.047.35-.816.252-1.879.523-2.71.523-.847 0-1.548-.28-2.158-.525l-.028-.01C7.68 8.71 7.14 8.5 6.5 8.5c-.7 0-1.638.23-2.437.477A20 20 0 0 0 3 9.342V15.5a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 1 0v.282c.226-.079.496-.17.79-.26C4.606.272 5.67 0 6.5 0c.84 0 1.524.277 2.121.519l.043.018C9.286.788 9.828 1 10.5 1c.7 0 1.638-.23 2.437-.477a20 20 0 0 0 1.349-.476l.019-.007.004-.002h.001M14 1.221c-.22.078-.48.167-.766.255-.81.252-1.872.523-2.734.523-.886 0-1.592-.286-2.203-.534l-.008-.003C7.662 1.21 7.139 1 6.5 1c-.669 0-1.606.229-2.415.478A21 21 0 0 0 3 1.845v6.433c.22-.078.48-.167.766-.255C4.576 7.77 5.638 7.5 6.5 7.5c.847 0 1.548.28 2.158.525l.028.01C9.32 8.29 9.86 8.5 10.5 8.5c.668 0 1.606-.229 2.415-.478A21 21 0 0 0 14 7.655V1.222z" />
+                    </svg>
+                    <span className="text-xs">Report</span> {/* Smaller text and shorter label */}
+                </button>
             </Link>
             {sortedPets.map((pet) => (
                 <div
@@ -83,12 +101,15 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
                         />
                     </div>
                     <div className="p-4">
-                        <h3 className="font-bold text-xl mb-2">
+                        <h3 className="font-bold text-xl mb-1">
                             {pet.category_name}
                         </h3>
-                        <p className="text-gray-600">
-                            {pet.city} - {pet.location}
-                        </p>
+                        <div className="flex flex-row gap-2 right mb-1">
+                            <p className="text-gray-400 text-sm sm:text-base">{pet.location},</p>
+                        </div>
+                        <div className="flex flex-row gap-2 right">
+                            <EnvironmentOutlined className="text-primary" /><p className="text-gray-600">{pet.city}</p>
+                        </div>
                         {/* {pet.pet_description && (
                             <p className="text-gray-600 mb-1 truncate">
                                 {pet.pet_description}

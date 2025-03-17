@@ -123,7 +123,7 @@ export default function PetCare() {
                     onReset={handleReset}
                     onSearchAction={handleSearch}
                 />
-                <main className="flex min-h-screen flex-col items-center p-8 bg-gray-100">
+                <main className="flex min-h-screen flex-col mx-0 md:mx-8 mt-1 items-center pt-7 bg-gray-100">
                     <div className="w-full">
                         {loading ? (
                             <MoonLoader className="mt-5 mx-auto relative top-5" size={30} color={primaryColor} />

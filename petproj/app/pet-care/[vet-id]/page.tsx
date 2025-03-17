@@ -17,6 +17,7 @@ import {
 } from "antd";
 import { CopyOutlined, WhatsAppOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import Navbar from "../../../components/navbar";
+import LoginModal from "../../../components/LoginModal";
 import './styles.css'
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
@@ -76,96 +77,109 @@ export default function VetDetailsPage({
         approvedCount: number;
     } | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [showLoginModal, setShowLoginModal] = useState(false);
     const [form] = Form.useForm();
     const router = useRouter();
     useSetPrimaryColor();
 
-
+    // Fetch user ID on mount
     useEffect(() => {
-        const fetchVetDetails = async () => {
+        const userString = localStorage.getItem("user");
+        if (userString) {
             try {
-                const response = await fetch(`/api/vets/${params["vet-id"]}`);
-                if (!response.ok) {
-                    throw new Error("Failed to fetch vet details");
-                }
-                const data = await response.json();
-                console.log(data);
-                const uniqueByKey = <T, K extends keyof T>(
-                    array: T[],
-                    key: K
-                ): T[] => {
-                    const seen = new Set<T[K]>();
-                    return array.filter((item) => {
-                        const value = item[key];
-                        if (seen.has(value)) {
-                            return false;
-                        }
-                        seen.add(value);
-                        return true;
-                    });
-                };
-
-                setVetDetails({
-                    ...data,
-                    specializations: uniqueByKey(
-                        data.specializations,
-                        "category_id"
-                    ),
-                    qualifications: uniqueByKey(
-                        data.qualifications,
-                        "qualification_id"
-                    ),
-                    availability: uniqueByKey(
-                        data.availability,
-                        "availability_id"
-                    ),
-                    reviews: uniqueByKey(data.reviews, "review_id"),
-                });
-            } catch (err) {
-                console.error("Error fetching vet details:", err);
-                router.push("/404");
-            } finally {
-                setLoading(false);
+                const user = JSON.parse(userString);
+                setUserId(user?.id || null);
+            } catch (error) {
+                console.error("Error parsing user data:", error);
             }
-        };
+        }
+    }, []);
 
-        const fetchReviewStats = async () => {
-            try {
-                const response = await fetch(
-                    `/api/vet-reviews-stats?vet_id=${params["vet-id"]}`
-                );
-                if (!response.ok) {
-                    throw new Error("Failed to fetch review stats");
-                }
-                const stats = await response.json();
+    // Handle login success
+    const handleLoginSuccess = () => {
+        const userString = localStorage.getItem("user");
+        if (userString) {
+            const user = JSON.parse(userString);
+            setUserId(user.id);
+        }
+        setShowLoginModal(false);
+    };
 
-                setReviewStats({
-                    averageRating: stats.average_rating,
-                    approvedCount: stats.approved_reviews_count,
-                });
-            } catch (err) {
-                console.error("Error fetching review stats:", err);
+    // Fetch vet details
+    const fetchVetDetails = async () => {
+        try {
+            const response = await fetch(`/api/vets/${params["vet-id"]}`);
+            if (!response.ok) {
+                throw new Error("Failed to fetch vet details");
             }
-        };
+            const data = await response.json();
+            console.log(data);
+            const uniqueByKey = <T, K extends keyof T>(
+                array: T[],
+                key: K
+            ): T[] => {
+                const seen = new Set<T[K]>();
+                return array.filter((item) => {
+                    const value = item[key];
+                    if (seen.has(value)) {
+                        return false;
+                    }
+                    seen.add(value);
+                    return true;
+                });
+            };
 
+            setVetDetails({
+                ...data,
+                specializations: uniqueByKey(data.specializations, "category_id"),
+                qualifications: uniqueByKey(data.qualifications, "qualification_id"),
+                availability: uniqueByKey(data.availability, "availability_id"),
+                reviews: uniqueByKey(data.reviews, "review_id"),
+            });
+        } catch (err) {
+            console.error("Error fetching vet details:", err);
+            router.push("/404");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch review stats
+    const fetchReviewStats = async () => {
+        try {
+            const response = await fetch(`/api/vet-reviews-stats?vet_id=${params["vet-id"]}`);
+            if (!response.ok) {
+                throw new Error("Failed to fetch review stats");
+            }
+            const stats = await response.json();
+            setReviewStats({
+                averageRating: stats.average_rating,
+                approvedCount: stats.approved_reviews_count,
+            });
+        } catch (err) {
+            console.error("Error fetching review stats:", err);
+        }
+    };
+
+    // Fetch data on mount
+    useEffect(() => {
         fetchVetDetails();
         fetchReviewStats();
     }, [params, router]);
 
+    // Handle copy to clipboard
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);
         message.success("Copied to clipboard!");
     };
 
+    // Handle WhatsApp click
     const handleWhatsApp = (phone: string) => {
-        // Ensure the phone number starts with +92
         let formattedPhone = phone.trim();
-
-        // Check if the number starts with 0 (e.g., 03001234567) and replace with +92
         if (formattedPhone.startsWith("0")) {
             formattedPhone = "+92" + formattedPhone.slice(1);
         } else if (!formattedPhone.startsWith("+92")) {
-            // If the number doesn't start with +92, assume invalid format
             message.error("Invalid phone number format. Please use a valid Pakistani number.");
             return;
         }
@@ -173,34 +187,33 @@ export default function VetDetailsPage({
         window.open(whatsappUrl, "_blank");
     };
 
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const handleOpenModal = () => setIsModalOpen(true);
-    const handleCloseModal = () => setIsModalOpen(false);
+    // Handle review button click
+    const handleReviewClick = () => {
+        if (!userId) {
+            setShowLoginModal(true);
+            return;
+        }
+        setIsModalOpen(true);
+    };
 
-    const handleSubmit = async (values: {
-        email: string;
-        rating: number;
-        review_content: string;
-    }) => {
+    // Handle review submission
+    const handleSubmit = async (values: { rating: number; review_content: string }) => {
+        if (!userId) {
+            message.error("You must be logged in to submit a review");
+            return;
+        }
+
         const review_date = new Date().toISOString();
         const vet_id = params["vet-id"];
-        const approved = false;
+        const approved = false; // Reviews start unapproved
 
         try {
-            const userResponse = await fetch(
-                `/api/get-user-id?email=${encodeURIComponent(values.email)}`
-            );
-            if (!userResponse.ok) {
-                throw new Error("Failed to fetch user ID");
-            }
-            const { user_id } = await userResponse.json();
-
-            const reviewResponse = await fetch(`/api/vet-reviews-stats`, {
+            const response = await fetch(`/api/vet-reviews-stats`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     vet_id,
-                    user_id,
+                    user_id: userId,
                     rating: values.rating,
                     review_content: values.review_content,
                     review_date,
@@ -208,40 +221,28 @@ export default function VetDetailsPage({
                 }),
             });
 
-            if (!reviewResponse.ok) {
-                throw new Error("Failed to submit review");
-            }
+            if (!response.ok) throw new Error("Failed to submit review");
 
-            const newReview = await reviewResponse.json();
+            // Show success message
+            message.success("Review submitted for approval! It will appear once approved.");
 
-            // setVetDetails(prev =>
-            //     prev
-            //         ? {
-            //               ...prev,
-            //               reviews: [
-            //                   ...prev.reviews,
-            //                   {
-            //                       review_id: newReview.review_id,
-            //                       rating: values.rating,
-            //                       review_content: values.review_content,
-            //                       review_date,
-            //                       review_maker_name: values.email,
-            //                   },
-            //               ],
-            //           }
-            //         : prev
-            // );
-
+            // Close modal and refresh data
             handleCloseModal();
+            await fetchVetDetails();
+            await fetchReviewStats();
+
         } catch (err) {
             console.error("Error submitting review:", err);
+            message.error("Failed to submit review");
         }
     };
 
-    const [primaryColor, setPrimaryColor] = useState("#A03048"); // Default fallback color
+    // Handle modal close
+    const handleCloseModal = () => setIsModalOpen(false);
 
+    // Primary color setup
+    const [primaryColor, setPrimaryColor] = useState("#A03048");
     useEffect(() => {
-        // Get the computed style of the `--primary-color` CSS variable
         const rootStyles = getComputedStyle(document.documentElement);
         const color = rootStyles.getPropertyValue("--primary-color").trim();
         if (color) {
@@ -290,29 +291,11 @@ export default function VetDetailsPage({
                                     <span>{vetDetails.clinic_name}, {vetDetails.city}</span>
                                 </div>
 
-                                {/* <div className="flex flex-wrap gap-2">
-                                    <div className="bg-primary/10 py-1 rounded-xl">
-                                        <span className="font-semibold text-primary">Best Suited For: </span>
-                                        {vetDetails.specializations.map((spec) => (
-                                            <Tag key={spec.category_id} className="rounded-lg bg-primary/10 text-primary border-0">
-                                                {spec.category_name}s
-                                            </Tag>
-                                        ))}
-                                    </div>
-                                </div> */}
-
                                 <div className="flex flex-wrap gap-4">
                                     <div className="bg-primary/10 py-1 rounded-xl">
                                         <span className="font-semibold text-primary">Minimum Consultation Fee:</span>
                                         <span className="ml-2">PKR {vetDetails.minimum_fee}</span>
                                     </div>
-
-                                    {/* <button
-                                        onClick={() => setIsModalVisible(true)}
-                                        className="bg-primary text-white px-6 py-2 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
-                                    >
-                                        Book Appointment
-                                    </button> */}
                                 </div>
                             </div>
                         </div>
@@ -334,7 +317,7 @@ export default function VetDetailsPage({
                                 <div className="flex flex-wrap gap-2">
                                     {vetDetails.specializations.map((spec) => (
                                         <Tag key={spec.category_id} className="rounded-lg bg-primary/10 text-primary border-0">
-                                            {spec.category_name}s
+                                            {spec.category_name}
                                         </Tag>
                                     ))}
                                 </div>
@@ -356,14 +339,20 @@ export default function VetDetailsPage({
                         <div className="space-y-6">
                             <Section title="Availability">
                                 <div className="grid grid-cols-2 gap-4">
-                                    {vetDetails.availability.map((avail) => (
-                                        <div key={avail.availability_id} className="bg-gray-50 p-4 rounded-xl">
-                                            <div className="font-medium text-gray-800">{avail.day_of_week}</div>
-                                            <div className="text-primary">
-                                                {avail.start_time} - {avail.end_time}
+                                    {vetDetails.availability.map((avail) => {
+                                        const formatTime = (timeString: string): string => {
+                                            return timeString.split(':').slice(0, 2).join(':');
+                                        };
+
+                                        return (
+                                            <div key={avail.availability_id} className="bg-gray-50 p-4 rounded-xl">
+                                                <div className="font-medium text-gray-800">{avail.day_of_week}</div>
+                                                <div className="text-primary">
+                                                    {formatTime(avail.start_time)} - {formatTime(avail.end_time)}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </Section>
 
@@ -418,7 +407,7 @@ export default function VetDetailsPage({
                                         <Rate
                                             disabled
                                             value={reviewStats.averageRating}
-                                            className="text-primary [&>.ant-rate-star-zero>div]:text-gray-300"
+                                            className="text-primary [&>.ant-rate-star-zero>div]:text-gray-300 text-lg sm:text-md"
                                         />
                                     </div>
                                     <div className="text-gray-600">
@@ -427,10 +416,10 @@ export default function VetDetailsPage({
                                 </div>
                             )}
                             <button
-                                onClick={() => setIsModalOpen(true)}
+                                onClick={handleReviewClick}
                                 className="bg-primary text-white px-6 py-2 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
                             >
-                                Write a Review
+                                {userId ? "Write a Review" : "Login to Review"}
                             </button>
                         </div>
 
@@ -449,7 +438,14 @@ export default function VetDetailsPage({
                 </Card>
             </div>
 
-            {/* Modals */}
+            {/* Login Modal */}
+            <LoginModal
+                visible={showLoginModal}
+                onClose={() => setShowLoginModal(false)}
+                onSuccess={handleLoginSuccess}
+            />
+
+            {/* Review Modal */}
             <ReviewModal
                 open={isModalOpen}
                 onClose={handleCloseModal}
@@ -560,17 +556,6 @@ const ReviewModal: React.FC<{
     >
         <Form form={form} layout="vertical" onFinish={onSubmit}>
             <Form.Item
-                name="email"
-                label="Your Email"
-                rules={[{ required: true, message: 'Please enter your email' }]}
-            >
-                <Input
-                    placeholder="example@email.com"
-                    className="rounded-lg p-3 hover:border-primary focus:border-primary"
-                />
-            </Form.Item>
-
-            <Form.Item
                 name="rating"
                 label="Rating"
                 rules={[{ required: true, message: 'Please select a rating' }]}
@@ -584,7 +569,7 @@ const ReviewModal: React.FC<{
             <Form.Item
                 name="review_content"
                 label="Your Review"
-                rules={[{ required: true, message: 'Please write your review' }]}
+                rules={[{ required: false, message: 'Please write your review' }]}
             >
                 <Input.TextArea
                     rows={4}

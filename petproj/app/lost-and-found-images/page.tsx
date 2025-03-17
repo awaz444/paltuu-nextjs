@@ -72,7 +72,7 @@ function CreatePetList() {
 
       if (response.status === 201) {
         message.success("Image uploaded successfully.");
-        router.push("/listing-created"); // Redirect after successful upload
+        router.push("/listing-created-lost-and-found"); 
       } else {
         message.error("Failed to upload image.");
       }

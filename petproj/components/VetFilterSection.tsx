@@ -137,61 +137,61 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
                             More Filters
                         </button>
                     </div>
+                </div>
 
-                    {/* More Filters Modal */}
-                    {isModalOpen && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setIsModalOpen(false)}>
-                            <div className="bg-white p-6 rounded-2xl max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-                                <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-lg font-semibold">More Filters</h2>
-                                    <button className="text-xl" onClick={() => setIsModalOpen(false)}>✕</button>
-                                </div>
+                {/* More Filters Modal */}
+                {isModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setIsModalOpen(false)}>
+                        <div className="bg-white p-6 rounded-2xl max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-lg font-semibold">More Filters</h2>
+                                <button className="text-xl" onClick={() => setIsModalOpen(false)}>✕</button>
+                            </div>
 
-                                {/* Qualification inside modal */}
-                                <div className="mb-4">
-                                    <label className="text-xs block mb-1">Qualification</label>
-                                    <select
-                                        className="w-full p-3 border rounded-xl"
-                                        value={selectedQualification}
-                                        onChange={(e) => setSelectedQualification(e.target.value)}>
-                                        <option value="">Select Qualification</option>
-                                        {qualifications.map((q) => (
-                                            <option key={q.qualification_id} value={q.qualification_id}>
-                                                {q.qualification_name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                            {/* Qualification inside modal */}
+                            <div className="mb-4">
+                                <label className="text-xs block mb-1">Qualification</label>
+                                <select
+                                    className="w-full p-3 border rounded-xl"
+                                    value={selectedQualification}
+                                    onChange={(e) => setSelectedQualification(e.target.value)}>
+                                    <option value="">Select Qualification</option>
+                                    {qualifications.map((q) => (
+                                        <option key={q.qualification_id} value={q.qualification_id}>
+                                            {q.qualification_name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                                {/* City inside modal */}
-                                <div className="mb-4">
-                                    <label className="text-xs block mb-1">City</label>
-                                    <select
-                                        className="w-full p-3 border rounded-xl"
-                                        value={selectedCity}
-                                        onChange={(e) => setSelectedCity(e.target.value)}>
-                                        <option value="">Select City</option>
-                                        {cities.map((city) => (
-                                            <option key={city.city_id} value={city.city_id}>
-                                                {city.city_name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                            {/* City inside modal */}
+                            <div className="mb-4">
+                                <label className="text-xs block mb-1">City</label>
+                                <select
+                                    className="w-full p-3 border rounded-xl"
+                                    value={selectedCity}
+                                    onChange={(e) => setSelectedCity(e.target.value)}>
+                                    <option value="">Select City</option>
+                                    {cities.map((city) => (
+                                        <option key={city.city_id} value={city.city_id}>
+                                            {city.city_name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                                {/* Reset & Apply Buttons */}
-                                <div className="flex flex-col gap-4">
-                                    <button className="border-2 border-primary text-primary bg-white p-3 rounded-2xl w-full" onClick={handleReset}>
-                                        Reset
-                                    </button>
-                                    <button className="text-white p-3 rounded-2xl w-full bg-primary" onClick={handleSearch}>
-                                        Search
-                                    </button>
-                                </div>
+                            {/* Reset & Apply Buttons */}
+                            <div className="flex flex-col gap-4">
+                                <button className="border-2 border-primary text-primary bg-white p-3 rounded-2xl w-full" onClick={handleReset}>
+                                    Reset
+                                </button>
+                                <button className="text-white p-3 rounded-2xl w-full bg-primary" onClick={handleSearch}>
+                                    Search
+                                </button>
                             </div>
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
         </div>
     );

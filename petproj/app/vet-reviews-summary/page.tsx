@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Navbar from "@/components/navbar";
 import { Spin, message } from "antd";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
+import MoonLoader from "react-spinners/MoonLoader";
 
 import "./page.css";
 
@@ -244,14 +245,23 @@ const ReviewsSummary = () => {
         </div>
     );
 
+    const [primaryColor, setPrimaryColor] = useState("#A03048");
+    useEffect(() => {
+        const rootStyles = getComputedStyle(document.documentElement);
+        const color = rootStyles.getPropertyValue("--primary-color").trim();
+        if (color) {
+            setPrimaryColor(color);
+        }
+    }, []);
+
     return (
         <div>
             <Navbar />
             <div className="flex flex-col min-h-screen items-center mt-5 mx-3">
                 <h2 className="text-2xl font-bold mb-4 text-primary">Reviews Summary</h2>
                 {loading ? (
-                    <div className="flex justify-center items-center h-40">
-                        <Spin size="large" className="text-primary" />
+                    <div className="flex justify-center items-center h-screen">
+                        <MoonLoader size={30} color={primaryColor} />
                     </div>
                 ) : (
                     <div className="w-full max-w-4xl">
@@ -273,9 +283,15 @@ const ReviewsSummary = () => {
                         </div>
 
                         <div className="mt-8">
-                            <h3 className="text-xl font-semibold mb-3 text-center text-primary">
+                            <h3 className="text-xl font-semibold mb-1 text-center text-primary">
                                 Pending Reviews
                             </h3>
+                            <h5 className="text-sm font-semibold text-center text-primary">
+                                Approve if you recall them availing your services.
+                            </h5>
+                            <h6 className="text-sm font-semibold mb-3 text-center text-primary">
+                                Once approved, the review will stay on your profile.
+                            </h6>
                             <div className="flex flex-col items-center">
                                 {pendingReviews.length > 0 ? (
                                     pendingReviews.map((review) =>

@@ -22,6 +22,8 @@ interface VerticalSearchBarProps {
     onSearchAction: () => void;
 }
 
+
+
 const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
     onSearch,
     onReset,
@@ -65,6 +67,28 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
         onSearchAction(); // Trigger the search action from the parent component
     };
 
+    const handleReset = () => {
+
+        setSelectedSex("");
+        setMinAge("");
+        setMaxAge("");
+        setMinPrice("");
+        setMaxPrice("");
+        setArea("");
+        setMinChildAge("");
+        setCanLiveWithDogs(false);
+        setCanLiveWithCats(false);
+        setVaccinated(false);
+        setNeutered(false);
+        setSelectedCity("");
+        setSelectedSpecies("");
+        setBreed("");
+
+        onReset();
+    };
+
+
+
     return (
         <div className="bg-white shadow-sm p-6 rounded-3xl">
 
@@ -89,7 +113,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                 <div className="flex space-x-2">
                     <input
                         type="number"
-                        placeholder="Min yrs"
+                        placeholder="Min"
                         className="border rounded-xl w-1/2 p-2"
                         value={minAge}
                         onChange={(e) => {
@@ -100,7 +124,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                     <p className="mt-2">to</p>
                     <input
                         type="number"
-                        placeholder="Max yrs"
+                        placeholder="Max"
                         className="border rounded-xl w-1/2 p-2"
                         value={maxAge}
                         onChange={(e) => {
@@ -117,7 +141,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                 <div className="flex space-x-2">
                     <input
                         type="number"
-                        placeholder="Min PKR"
+                        placeholder="Min"
                         className="border rounded-xl w-1/2 p-2"
                         value={minPrice}
                         onChange={(e) => {
@@ -128,7 +152,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                     <p className="mt-2">to</p>
                     <input
                         type="number"
-                        placeholder="Max PKR"
+                        placeholder="Max"
                         className="border rounded-xl w-1/2 p-2"
                         value={maxPrice}
                         onChange={(e) => {
@@ -222,7 +246,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
             <div className="flex flex-col gap-3 mt-4">
                 <button
                     className="border-2 border-primary text-primary bg-white p-3 rounded-xl"
-                    onClick={onReset}>
+                    onClick={handleReset}>
                     Reset
                 </button>
                 <button

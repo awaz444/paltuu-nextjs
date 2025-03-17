@@ -15,6 +15,8 @@ const VetScheduleForm = () => {
   const [userId, setUserId] = useState(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
+  
 
 
   const searchParams = useSearchParams();
@@ -96,7 +98,7 @@ const VetScheduleForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    setIsLoading(true);
     const validSchedules = schedules.filter(
       (schedule) => schedule.day && schedule.startTime && schedule.endTime
     );
@@ -247,12 +249,14 @@ const VetScheduleForm = () => {
                 Add More
               </button>
 
-              <button
-                type="submit"
-                className="w-full mt-2 py-2 sm:py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition duration-300 text-sm sm:text-base"
-              >
-                Proceed to Uploading Documents
-              </button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`w-full bg-primary text-white py-2 px-4 rounded-xl transition ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-primary-dark"
+              }`}
+          >
+            {isLoading ? "Submitting..." : "Proceed to Upload Documents"}
+          </button>
             </div>
           </form>
         </div>

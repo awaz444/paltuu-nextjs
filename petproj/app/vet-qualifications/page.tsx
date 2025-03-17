@@ -11,6 +11,8 @@ const VetQualificationsForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const vetId = searchParams.get("vet_id");
+  const [isLoading, setIsLoading] = useState(false);
+
 
   const { qualifications, loading, error } = useSelector(
     (state: RootState) => state.qualifications
@@ -28,6 +30,8 @@ const VetQualificationsForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    setIsLoading(true)
 
     if (!selectedQualifications.length) {
       alert("Please select at least one qualification.");
@@ -168,10 +172,13 @@ const VetQualificationsForm = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-primary text-white py-2 px-4 rounded-xl hover:bg-primary-dark transition"
+            disabled={isLoading}
+            className={`w-full bg-primary text-white py-2 px-4 rounded-xl transition ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-primary-dark"
+              }`}
           >
-            Submit & Proceed to Add Specializations
+            {isLoading ? "Submitting..." : "Proceed to Add Specializations"}
           </button>
+
         </form>
       </div>
     </div>

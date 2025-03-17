@@ -18,6 +18,8 @@ const VerificationInfoContent  = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [userId, setUserId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
   const router = useRouter();
   useSetPrimaryColor();
 
@@ -118,6 +120,8 @@ const VerificationInfoContent  = () => {
     });
 
   const handleSubmit = async (qualificationId: number, fileList: any[]) => {
+    setIsLoading(true);
+
     if (fileList.length === 0) {
       message.error("Please upload at least one certificate image.");
       return;
@@ -261,17 +265,22 @@ const VerificationInfoContent  = () => {
                           )}
                           {!submittedQualifications[qualification.qualification_id] && (
                             <button
-                              type="button"
-                              onClick={() =>
+                            type="button"
+                            onClick={() => {
+                                setIsLoading(true);
                                 handleSubmit(
-                                  qualification.qualification_id,
-                                  fileLists[qualification.qualification_id] || []
-                                )
-                              }
-                              className="mt-4 p-3 bg-primary text-white rounded-xl"
-                            >
-                              Submit Certificate
-                            </button>
+                                    qualification.qualification_id,
+                                    fileLists[qualification.qualification_id] || []
+                                ).finally(() => setIsLoading(false)); // Reset loading after submission
+                            }}
+                            disabled={isLoading}
+                            className={`mt-4 p-3 rounded-xl transition ${
+                                isLoading ? "bg-primary opacity-50 cursor-not-allowed" : "bg-primary text-white hover:bg-primary-dark"
+                            }`}
+                        >
+                            {isLoading ? "Submitting..." : "Submit Certificate"}
+                        </button>
+                        
                           )}
                         </li>
                       ))}

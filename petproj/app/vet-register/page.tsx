@@ -74,8 +74,13 @@ const VetRegisterForm = () => {
         }
     };
 
+    const [isLoading, setIsLoading] = useState(false);
+
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        setIsLoading(true)
 
         if (userId !== null) {
             const vetData = {
@@ -247,10 +252,13 @@ const VetRegisterForm = () => {
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        className="w-full bg-primary text-white py-2 px-4 rounded-xl hover:bg-primary-dark transition"
+                        disabled={isLoading}
+                        className={`w-full bg-primary text-white py-2 px-4 rounded-xl transition ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-primary-dark"
+                            }`}
                     >
-                        Submit Vet Registration
+                        {isLoading ? "Submitting..." : "Proceed to Vet Qualifications"}
                     </button>
+
                 </form>
             </div>
         </div>

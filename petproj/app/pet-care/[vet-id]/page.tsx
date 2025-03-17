@@ -442,7 +442,7 @@ export default function VetDetailsPage({
                                         <Rate
                                             disabled
                                             value={reviewStats.averageRating}
-                                            className="text-primary [&>.ant-rate-star-zero>div]:text-gray-300"
+                                            className="text-primary [&>.ant-rate-star-zero>div]:text-gray-300 text-lg sm:text-md" // Added responsive text size
                                         />
                                     </div>
                                     <div className="text-gray-600">
@@ -477,7 +477,7 @@ export default function VetDetailsPage({
                 visible={showLoginModal}
                 onClose={() => setShowLoginModal(false)}
                 onSuccess={handleLoginSuccess}
-                // If you want to prevent closing without login
+            // If you want to prevent closing without login
             />
 
             {/* Modals */}

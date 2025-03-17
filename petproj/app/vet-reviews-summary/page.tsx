@@ -166,19 +166,26 @@ const ReviewsSummary = () => {
             key={review.review_id}
             className="flex items-start relative bg-white p-6 mb-6 rounded-2xl shadow-sm border border-gray-200 hover:border-primary w-4/5 max-w-3xl"
         >
+            {/* User Image - Always Visible */}
             <img
                 src={review.user_image_url || "/placeholder.jpg"}
                 alt={review.user_name}
                 className="w-16 h-16 object-cover rounded-full mr-4"
             />
+
             <div className="flex-grow">
                 <div className="flex items-center justify-between">
-                    <div>
-                        <span className="font-bold text-lg text-primary mr-2">
-                            {review.user_name} -{" "}
-                            <span className="stars">{renderStars(review.rating)}</span>
-                        </span>
-                    </div>
+                    {/* User Name - Always Visible */}
+                    <span className="font-bold text-lg text-primary mr-2">
+                        {review.user_name}
+                        {isPending && (
+                            <span className="text-sm text-gray-500 ml-2">
+                                (Pending Approval)
+                            </span>
+                        )}
+                    </span>
+
+                    {/* Action Buttons - Always Visible */}
                     {isPending && (
                         <div className="flex items-center space-x-2">
                             <button
@@ -212,10 +219,27 @@ const ReviewsSummary = () => {
                         </div>
                     )}
                 </div>
-                <p className="text-gray-600 mb-2">"{review.review_content}"</p>
-                <p className="text-sm text-gray-400">
-                    {new Date(review.review_date).toLocaleDateString()}
-                </p>
+
+                {/* Blurred Content for Pending Reviews */}
+                <div className={isPending ? "filter blur-sm transition-all" : ""}>
+                    {/* Rating Stars */}
+                    <div className="stars">
+                        {renderStars(isPending ? 5 : review.rating)}
+                    </div>
+
+                    {/* Review Content */}
+                    <p className="text-gray-600 mb-2">"{review.review_content}"</p>
+
+                    {/* Review Date */}
+                    <p className="text-sm text-gray-400">
+                        {new Date(review.review_date).toLocaleDateString()}
+                    </p>
+                </div>
+
+                {/* Semi-transparent overlay for pending reviews */}
+                {isPending && (
+                    <div className="absolute inset-0 bg-white bg-opacity-40 pointer-events-none" />
+                )}
             </div>
         </div>
     );
@@ -227,7 +251,7 @@ const ReviewsSummary = () => {
                 <h2 className="text-2xl font-bold mb-4 text-primary">Reviews Summary</h2>
                 {loading ? (
                     <div className="flex justify-center items-center h-40">
-                        <Spin size="large" className="text-primary bg-primary" />
+                        <Spin size="large" className="text-primary" />
                     </div>
                 ) : (
                     <div className="w-full max-w-4xl">

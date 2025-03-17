@@ -221,7 +221,7 @@ const ReviewsSummary = () => {
                 </div>
 
                 {/* Blurred Content for Pending Reviews */}
-                <div className={isPending ? "filter blur-sm hover:blur-none transition-all" : ""}>
+                <div className={isPending ? "filter blur-sm transition-all" : ""}>
                     {/* Rating Stars */}
                     <div className="stars">
                         {renderStars(isPending ? 5 : review.rating)}

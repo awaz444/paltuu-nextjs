@@ -39,14 +39,14 @@ const Navbar = () => {
             if (user?.method === "google") {
                 await signOut({ callbackUrl: "/login", redirect: true });
             } else {
-                // Clear all local storage and state
+                // Clear all local storage first
                 localStorage.removeItem("user");
                 localStorage.removeItem("token");
                 localStorage.removeItem("next-auth.session-token");
                 localStorage.removeItem("next-auth.csrf-token");
                 localStorage.removeItem("next-auth.callback-url");
 
-                // Use fetch to call the logout API endpoint
+                // Call the logout API
                 const response = await fetch('/api/users/logout', {
                     method: 'GET',
                     headers: {
@@ -54,19 +54,25 @@ const Navbar = () => {
                     },
                 });
 
-                if (response.ok) {
-                    apiLogout(); // Clear context state
-                    router.replace('/login'); // Use router.replace to redirect
-                } else {
+                if (!response.ok) {
                     throw new Error('Logout failed');
                 }
+
+                // Clear context state
+                apiLogout();
+
+                // Use router.push instead of replace and wait for it to complete
+                await router.push('/login');
+
+                // Force a page reload to ensure clean state
+                window.location.href = '/login';
             }
         } catch (error) {
             console.error('Logout error:', error);
-            // Fallback: clear everything and redirect
+            // Fallback: clear everything and force redirect
             localStorage.clear();
             apiLogout();
-            router.replace('/login');
+            window.location.href = '/login';
         }
     };
 

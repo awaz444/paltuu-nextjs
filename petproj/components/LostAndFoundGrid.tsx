@@ -27,7 +27,6 @@ interface LostAndFoundPet {
 interface LostAndFoundGridProps {
     pets: LostAndFoundPet[];
 }
-
 const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
     useSetPrimaryColor();
 

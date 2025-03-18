@@ -187,7 +187,7 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
                                         ? 'bg-green-100 text-green-800'
                                         : 'bg-primary-100 text-primary-800'
                                     }`}>
-                                    {selectedPet.status}
+                                    {selectedPet.status === 'active' ? 'Still Lost/Found' : 'Lost/Found!'}
                                 </div>
 
                                 {/* Details List */}

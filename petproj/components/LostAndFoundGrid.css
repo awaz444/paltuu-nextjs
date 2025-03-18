@@ -1,0 +1,31 @@
+.custom-modal .ant-modal-content {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.custom-modal .ant-modal-header {
+    border-radius: 16px 16px 0 0;
+    padding: 24px;
+    border-bottom: none;
+}
+
+.custom-modal .ant-modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.custom-modal .ant-modal-close {
+    top: 24px;
+    right: 24px;
+}
+
+@media (max-width: 768px) {
+    .custom-modal .ant-modal-content {
+        margin: 16px;
+    }
+    
+    .modal-content-wrapper {
+        padding: 0 8px;
+    }
+}

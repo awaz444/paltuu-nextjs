@@ -8,21 +8,23 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         await client.connect();
 
         const query = `
-            SELECT 
-                lost_and_found_posts.*, 
-                cities.city_name AS city,
-                pet_category.category_name AS category,
-                users.phone_number AS user_phone_number,
-                lost_and_found_post_images.image_url AS image
-            FROM lost_and_found_posts
-            JOIN cities ON lost_and_found_posts.city_id = cities.city_id
-            JOIN pet_category ON lost_and_found_posts.category_id = pet_category.category_id
-            JOIN users ON lost_and_found_posts.user_id = users.user_id
-            LEFT JOIN lost_and_found_post_images ON lost_and_found_posts.post_id = lost_and_found_post_images.post_id
-            WHERE lost_and_found_posts.status != 'resolved'
-            ORDER BY lost_and_found_posts.post_date DESC;
-        `;
-    
+        SELECT 
+            lost_and_found_posts.*, 
+            cities.city_name AS city,
+            pet_category.category_name AS category,
+            users.phone_number AS user_phone_number,
+            users.name AS user_name,
+            users.profile_image_url AS user_profile_image,
+            lost_and_found_post_images.image_url AS image
+        FROM lost_and_found_posts
+        JOIN cities ON lost_and_found_posts.city_id = cities.city_id
+        JOIN pet_category ON lost_and_found_posts.category_id = pet_category.category_id
+        JOIN users ON lost_and_found_posts.user_id = users.user_id
+        LEFT JOIN lost_and_found_post_images ON lost_and_found_posts.post_id = lost_and_found_post_images.post_id
+        WHERE lost_and_found_posts.status != 'resolved'
+        ORDER BY lost_and_found_posts.post_date DESC;
+    `;
+
 
         const result = await client.query(query);
 
@@ -33,9 +35,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     } catch (err) {
         console.error(err);
         return NextResponse.json(
-            { 
-                error: "Internal Server Error", 
-                message: (err as Error).message || "An unknown error occurred" 
+            {
+                error: "Internal Server Error",
+                message: (err as Error).message || "An unknown error occurred"
             },
             {
                 status: 500,
@@ -60,7 +62,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             location,
             contact_info,
             category_id,
-            date = null ,
+            date = null,
         } = body;
 
         if (
@@ -70,7 +72,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             !city_id ||
             !location ||
             !contact_info ||
-            !category_id 
+            !category_id
         ) {
             return NextResponse.json(
                 { error: "Missing required fields" },
@@ -94,9 +96,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             pet_description,
             city_id,
             location,
-            contact_info,  
+            contact_info,
             category_id,
-            date,  
+            date,
         ];
 
         const result = await client.query(query, values);
@@ -108,9 +110,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     } catch (err) {
         console.error(err);
         return NextResponse.json(
-            { 
-                error: "Internal Server Error", 
-                message: (err as Error).message || "An unknown error occurred" 
+            {
+                error: "Internal Server Error",
+                message: (err as Error).message || "An unknown error occurred"
             },
             {
                 status: 500,

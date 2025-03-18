@@ -22,7 +22,9 @@ interface LostAndFoundPet {
     image_url: string | null;
     city: string;
     category_name: string;
-    date: string | null; // This is the new date field for sorting
+    date: string | null;
+    user_name: string; // Add this
+    user_profile_image: string | null; // Add this
 }
 
 export default function LostFound() {
@@ -46,7 +48,7 @@ export default function LostFound() {
         try {
             const response = await axios.get("/api/lost-and-found");
             console.log("API Response:", response); // Debug API response
-
+    
             // Map the response data to match the interface
             const mappedPets = response.data.map((pet: any) => ({
                 post_id: pet.post_id,
@@ -63,8 +65,10 @@ export default function LostFound() {
                 city: pet.city, // City name directly from response
                 category_name: pet.category, // Category name directly from response
                 date: pet.date || null, // Adding the date field for sorting
+                user_name: pet.user_name, // Add this
+                user_profile_image: pet.user_profile_image || null, // Add this
             }));
-
+    
             setPets(mappedPets); // Update state with mapped data
         } catch (error: any) {
             setError(

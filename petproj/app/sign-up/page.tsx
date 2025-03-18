@@ -13,6 +13,7 @@ import OTPInput from "react-otp-input";
 const CreateUser = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { cities } = useSelector((state: RootState) => state.cities);
+    const { error: userError } = useSelector((state: RootState) => state.user);
     const router = useRouter();
 
     const [username, setUsername] = useState("");
@@ -33,6 +34,11 @@ const CreateUser = () => {
     const [otp, setOtp] = useState("");
     const [otpError, setOtpError] = useState("");
 
+    const [emailExistsError, setEmailExistsError] = useState("");
+    const [passwordMismatchError, setPasswordMismatchError] = useState("");
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [generalError, setGeneralError] = useState("");
+
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -41,16 +47,21 @@ const CreateUser = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
         setIsLoading(true);
+        setEmailExistsError("");
+        setPasswordMismatchError("");
+        setFormErrors({});
+        setGeneralError("");
 
         if (!isEmailVerified) {
-            alert("Please verify your email first.");
+            setFormErrors(prev => ({ ...prev, email: "Please verify your email first" }));
+            setIsLoading(false);
             return;
         }
 
         if (password !== confirmPassword) {
-            alert("Passwords do not match");
+            setPasswordMismatchError("Passwords do not match");
+            setIsLoading(false);
             return;
         }
 
@@ -66,24 +77,59 @@ const CreateUser = () => {
         };
 
         try {
-            const result = (await dispatch(postUser(newUser))) as { payload: User };
+            const result = await dispatch(postUser(newUser));
+
+            if (postUser.rejected.match(result)) {
+                const errorPayload = result.payload as { message?: string; errorCode?: string };
+                if (errorPayload?.errorCode === 'EMAIL_EXISTS') {
+                    setEmailExistsError("This email is already registered");
+                    setIsEmailVerified(false);
+                    setShowOtpModal(false);
+                } else {
+                    setGeneralError(errorPayload?.message || "Failed to create account. Please try again.");
+                }
+                return;
+            }
+
             if (role === "vet") {
                 router.push(`/vet-register?user_id=${result.payload.user_id}`);
             } else {
                 router.push("/login");
             }
         } catch (error) {
-            console.error("Error creating user:", error);
+            setGeneralError("An unexpected error occurred. Please try again.");
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleVerifyEmail = async () => {
         if (!validateEmail(email)) {
-            alert("Please enter a valid email address");
+            setFormErrors(prev => ({ ...prev, email: "Please enter a valid email address" }));
             return;
         }
-        // TODO: Implement email sending logic
-        setShowOtpModal(true);
+
+        try {
+            // Implement actual email verification API call
+            const response = await fetch('/api/verify-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Email verification failed");
+            }
+
+            setShowOtpModal(true);
+            setFormErrors(prev => ({ ...prev, email: "" }));
+        } catch (error) {
+            setFormErrors(prev => ({
+                ...prev,
+                email: error instanceof Error ? error.message : "Failed to send verification code"
+            }));
+        }
     };
 
     const validateEmail = (email: string) => {
@@ -104,12 +150,23 @@ const CreateUser = () => {
         }
 
         try {
-            // TODO: Implement OTP verification logic
+            // Implement actual OTP verification API call
+            const response = await fetch('/api/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, otp }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Invalid verification code");
+            }
+
             setIsEmailVerified(true);
             setShowOtpModal(false);
             setOtpError("");
         } catch (error) {
-            setOtpError("Invalid verification code");
+            setOtpError(error instanceof Error ? error.message : "Verification failed");
         }
     };
 
@@ -150,6 +207,12 @@ const CreateUser = () => {
                         />
                     </div>
 
+                    {generalError && (
+                        <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+                            {generalError}
+                        </div>
+                    )}
+
                     {/* Email */}
                     <div>
                         <label className="block text-gray-700 text-sm font-medium mb-1">
@@ -175,6 +238,11 @@ const CreateUser = () => {
                                 {isEmailVerified ? "Verified" : "Verify"}
                             </button>
                         </div>
+                        {(formErrors.email || emailExistsError) && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {formErrors.email || emailExistsError}
+                            </p>
+                        )}
                     </div>
 
                     {/* Phone Number */}
@@ -195,7 +263,6 @@ const CreateUser = () => {
                                 onChange={(e) => setPhoneNumber(e.target.value)}
                                 placeholder="3338888666"
                                 className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                                required
                             />
                         </div>
                     </div>
@@ -239,6 +306,12 @@ const CreateUser = () => {
                             {showConfirmPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
                         </span>
                     </div>
+
+                    {passwordMismatchError && (
+                        <p className="text-red-500 text-sm mt-1">
+                            {passwordMismatchError}
+                        </p>
+                    )}
 
                     {/* Date of Birth */}
                     <div>
@@ -294,8 +367,8 @@ const CreateUser = () => {
                         type="submit"
                         disabled={isLoading || !isEmailVerified || password !== confirmPassword}
                         className={`w-full bg-primary text-white py-2 px-4 rounded-xl transition ${isLoading || !isEmailVerified || password !== confirmPassword
-                                ? "opacity-50 cursor-not-allowed"
-                                : "hover:bg-primary-dark"
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:bg-primary-dark"
                             }`}
                     >
                         {isLoading ? "Creating Account..." : "Create Account"}
@@ -335,6 +408,11 @@ const CreateUser = () => {
                         Verify Code
                     </button>
                 </div>
+                {otpError && (
+                    <p className="text-red-500 text-center text-sm mt-2">
+                        {otpError}
+                    </p>
+                )}
             </Modal>
 
 

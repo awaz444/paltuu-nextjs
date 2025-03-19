@@ -40,7 +40,7 @@ const LostAndFoundFilter: React.FC<LostAndFoundFilterProps> = ({ onSearch }) => 
 
     return (
         <div className="bg-gray-100 pt-6">
-            <div className="bg-white px-6 py-4 w-700 mx-8 rounded-2xl">
+            <div className="bg-white mx-0 md:mx-8 px-5 py-5 w-700 rounded-2xl">
                 {/* PC Layout (Full Filters Visible) */}
                 <div className="hidden md:flex flex-wrap gap-4 mb-4 mt-4 items-center">
                     <div className="flex-1 min-w-[150px]">

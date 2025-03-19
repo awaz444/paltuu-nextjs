@@ -33,11 +33,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: session.user.email || "",
         role: session.user.role || "guest",
         method: "google",
-    });
-
-      // setUser(googleUser);
+      });
       setIsAuthenticated(true);
-      localStorage.setItem("user", JSON.stringify(user));
     }
   }, [status, session]);
 
@@ -52,35 +49,62 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
+    console.log("Logout started, user method:", user?.method);
+    
     try {
-      // First handle NextAuth logout if user is logged in with Google
-      if (user?.method === "google") {
-        await nextAuthSignOut({
-          callbackUrl: "/login",
-          redirect: false
-        });
-      }
-
-      // Clear local storage
+      // Clear local storage first
       localStorage.removeItem("user");
       localStorage.removeItem("token");
-      localStorage.removeItem("next-auth.session-token");
-      localStorage.removeItem("next-auth.csrf-token");
-      localStorage.removeItem("next-auth.callback-url");
-
+      sessionStorage.clear();
+      
+      // For Google users, handle NextAuth signOut correctly
+      if (user?.method === "google") {
+        console.log("Executing Google logout flow");
+        await nextAuthSignOut({
+          callbackUrl: "/login", // Important - where to go after signout
+          redirect: true         // This ensures it redirects properly
+        });
+        return; // Return here because NextAuth will handle the redirect
+      }
+      
+      // For API users, proceed with API logout
+      console.log("Executing API logout flow");
+      try {
+        const response = await fetch('/api/users/logout', {
+          method: 'GET',
+          credentials: 'include', // Important for cookies
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API logout failed with status: ${response.status}`);
+        }
+        
+        console.log("API logout successful");
+      } catch (err) {
+        console.error("API logout error:", err);
+      }
+      
       // Clear state
       setUser(null);
       setIsAuthenticated(false);
-
-      // Use window.location.replace instead of fetch for consistent behavior
-      window.location.replace('/api/users/logout');
+      
+      // Manual cookie clearing as fallback (helps with cross-platform issues)
+      document.cookie.split(";").forEach(function(c) {
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      
+      // Final redirect for non-Google users
+      console.log("Redirecting to login page");
+      window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);
-      // Fallback: clear everything and redirect
+      // Emergency fallback
       localStorage.clear();
-      setUser(null);
-      setIsAuthenticated(false);
-      window.location.replace('/login');
+      sessionStorage.clear();
+      document.cookie.split(";").forEach(function(c) {
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      window.location.href = '/login';
     }
   };
 

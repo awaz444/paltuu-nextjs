@@ -1,0 +1,18 @@
+/* Primary color for buttons */
+.bg-primary {
+    background-color: var(--primary-color);
+}
+
+.hover\:bg-primary-dark:hover {
+    background-color: var(--primary-dark);
+}
+
+/* Focus ring for inputs */
+.focus\:ring-primary:focus {
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+/* Transition for smooth hover effects */
+.transition-all {
+    transition: all 0.2s ease;
+}

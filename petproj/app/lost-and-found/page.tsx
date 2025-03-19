@@ -34,7 +34,7 @@ export default function LostFound() {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [filters, setFilters] = useState({
-        selectedCity: "",
+        selectedCity: "1",
         location: "",
         selectedCategory: "",
     });
@@ -156,7 +156,7 @@ export default function LostFound() {
                 style={{ maxWidth: "90%", margin: "0 auto" }}>
                 <LostAndFoundFilter
                     onSearch={(filters) => {
-                        console.log("Filters updated:", filters); // Debug filter updates
+                        console.log("Filters updated:", filters); 
                         setFilters((prev) => ({ ...prev, ...filters }));
                     }}
                 />

@@ -13,8 +13,8 @@ interface VetFilterSectionProps {
         selectedQualification: string;
         selectedCategory: string;
     }) => void;
-    onReset?: () => void; // Add this
-    onSearchAction?: () => void; // Add this
+    onReset?: () => void;
+    onSearchAction?: () => void;
 }
 
 const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
@@ -25,7 +25,8 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
 
     useSetPrimaryColor();
 
-    const [selectedCity, setSelectedCity] = useState("");
+    // Set default city to Karachi (assuming city_id for Karachi is "1")
+    const [selectedCity, setSelectedCity] = useState("1");
     const [selectedQualification, setSelectedQualification] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,10 +38,10 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
     }, [dispatch]);
 
     const handleReset = () => {
-        setSelectedCity("");
+        setSelectedCity("1"); // Reset to Karachi
         setSelectedQualification("");
         setSelectedCategory("");
-        onSearch({ selectedCity: "", selectedQualification: "", selectedCategory: "" });
+        onSearch({ selectedCity: "1", selectedQualification: "", selectedCategory: "" });
     };
 
     const handleSearch = () => {
@@ -110,7 +111,6 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
 
                 {/* Mobile & Tablet Layout */}
                 <div className="md:hidden flex flex-col gap-4">
-                    {/* Species filter (outside modal) */}
                     <div className="flex-1 min-w-[150px]">
                         <label className="text-xs block mb-1">City</label>
                         <select
@@ -126,13 +126,10 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
                         </select>
                     </div>
 
-                    {/* Search & More Filters buttons */}
                     <div className="flex gap-4 w-full">
                         <button className="text-white p-3 rounded-2xl flex-1 bg-primary" onClick={handleSearch}>
                             Search
                         </button>
-
-                        {/* More Filters Button */}
                         <button className="border-2 border-primary text-primary bg-white p-3 rounded-2xl flex-1 whitespace-nowrap" onClick={() => setIsModalOpen(true)}>
                             More Filters
                         </button>
@@ -148,7 +145,6 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
                                 <button className="text-xl" onClick={() => setIsModalOpen(false)}>✕</button>
                             </div>
 
-                            {/* Qualification inside modal */}
                             <div className="mb-4">
                                 <label className="text-xs block mb-1">Qualification</label>
                                 <select
@@ -164,7 +160,6 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
                                 </select>
                             </div>
 
-                            {/* City inside modal */}
                             <div className="mb-4">
                                 <label className="text-xs block mb-1">City</label>
                                 <select
@@ -180,7 +175,6 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
                                 </select>
                             </div>
 
-                            {/* Reset & Apply Buttons */}
                             <div className="flex flex-col gap-4">
                                 <button className="border-2 border-primary text-primary bg-white p-3 rounded-2xl w-full" onClick={handleReset}>
                                     Reset

@@ -40,7 +40,7 @@ export default function PetCare() {
     const handleReset = () => {
         console.log("Resetting filters");
         setFilters({
-            selectedCity: "",
+            selectedCity: "1",
             selectedCategory: "",
             selectedQualification: "",
         });

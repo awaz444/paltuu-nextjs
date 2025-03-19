@@ -9,7 +9,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
-
 const Navbar = () => {
     const [activeLink, setActiveLink] = useState("");
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,42 +35,10 @@ const Navbar = () => {
 
     const handleLogout = async () => {
         try {
-            if (user?.method === "google") {
-                await signOut({ callbackUrl: "/login", redirect: true });
-            } else {
-                // Clear all local storage first
-                localStorage.removeItem("user");
-                localStorage.removeItem("token");
-                localStorage.removeItem("next-auth.session-token");
-                localStorage.removeItem("next-auth.csrf-token");
-                localStorage.removeItem("next-auth.callback-url");
-
-                // Call the logout API
-                const response = await fetch('/api/users/logout', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Logout failed');
-                }
-
-                // Clear context state
-                apiLogout();
-
-                // Use router.push instead of replace and wait for it to complete
-                await router.push('/login');
-
-                // Force a page reload to ensure clean state
-                window.location.href = '/login';
-            }
+            await apiLogout(); // Use the AuthContext logout
         } catch (error) {
             console.error('Logout error:', error);
-            // Fallback: clear everything and force redirect
-            localStorage.clear();
-            apiLogout();
+            // Force redirect as fallback
             window.location.href = '/login';
         }
     };
@@ -99,13 +66,13 @@ const Navbar = () => {
         admin: "#7fe1d3",
     };
 
-    // Calculate dropdown width dynamically
+    // Updated dropdown items with isAction flag
     const dropdownItems = [
-        { href: "/profile", label: "My Profile" },
-        { href: "/my-listings", label: "My Listings" },
-        { href: "/my-applications", label: "My Applications" },
-        { href: "/notifications", label: "Notifications" },
-        { href: "/logout", label: "Logout" },
+        { href: "/profile", label: "My Profile", isAction: false },
+        { href: "/my-listings", label: "My Listings", isAction: false },
+        { href: "/my-applications", label: "My Applications", isAction: false },
+        { href: "/notifications", label: "Notifications", isAction: false },
+        { href: "/logout", label: "Logout", isAction: true },
     ];
 
     const userRole: UserRole =
@@ -138,7 +105,6 @@ const Navbar = () => {
         { name: "Lost & Found", href: "lost-and-found" },
         { name: "Paltuu AI", href: "llm" },
     ];
-
 
     useEffect(() => {
         const fetchVerificationStatus = async () => {
@@ -189,13 +155,6 @@ const Navbar = () => {
                 className={`mobile-menu ${isMenuOpen ? "open" : ""} md:hidden`}
                 style={{ backgroundColor: navbarBackground[userRole] }}
             >
-                {/* <button
-                    className="close-button"
-                    onClick={() => setIsMenuOpen(false)}
-                >
-                    &times;
-                </button> */}
-
                 {/* Navigation Links */}
                 <div className="navLinks-mobile">
                     {links.map((link) => (
@@ -231,7 +190,6 @@ const Navbar = () => {
                                 height={12}
                                 className="filter invert"
                             />
-
                         </button>
                     ) : (
                         <Link href="/login">
@@ -239,18 +197,31 @@ const Navbar = () => {
                         </Link>
                     )}
 
-                    {/* Dropdown Menu (Mobile) */}
+                    {/* Dropdown Menu (Mobile) - Updated to handle logout action */}
                     {isDropdownOpen && (
                         <div className="dropdown-menu-mobile">
                             {dropdownItems.map((item) => (
-                                <Link key={item.href} href={item.href}>
-                                    <div
+                                item.isAction ? (
+                                    <div 
+                                        key={item.href}
                                         className="dropdown-item-mobile"
-                                        onClick={() => setIsMenuOpen(false)}
+                                        onClick={() => {
+                                            setIsMenuOpen(false);
+                                            handleLogout();
+                                        }}
                                     >
                                         {item.label}
                                     </div>
-                                </Link>
+                                ) : (
+                                    <Link key={item.href} href={item.href}>
+                                        <div
+                                            className="dropdown-item-mobile"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            {item.label}
+                                        </div>
+                                    </Link>
+                                )
                             ))}
                         </div>
                     )}
@@ -346,15 +317,6 @@ const Navbar = () => {
                                     Notifications
                                 </div>
                             </Link>
-
-                            {/* Add Become Verified / Verified option */}
-                            {/* {userRole === "vet" && !isVerified && (
-                                <Link href="/vet-get-verified-1">
-                                    <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold italic">
-                                        Get Verified
-                                    </div>
-                                </Link>
-                            )} */}
 
                             <div
                                 onClick={handleLogout}

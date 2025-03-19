@@ -9,7 +9,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
-
 const Navbar = () => {
     const [activeLink, setActiveLink] = useState("");
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -34,16 +33,15 @@ const Navbar = () => {
 
     const router = useRouter(); // Router for navigation
 
-    // In Navbar.tsx
-const handleLogout = async () => {
-    try {
-      await apiLogout(); // Use the AuthContext logout
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Force redirect as fallback
-      window.location.href = '/login';
-    }
-  };
+    const handleLogout = async () => {
+        try {
+            await apiLogout(); // Use the AuthContext logout
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Force redirect as fallback
+            window.location.href = '/login';
+        }
+    };
 
     type UserRole = "guest" | "regular user" | "vet" | "admin";
 
@@ -68,13 +66,13 @@ const handleLogout = async () => {
         admin: "#7fe1d3",
     };
 
-    // Calculate dropdown width dynamically
+    // Updated dropdown items with isAction flag
     const dropdownItems = [
-        { href: "/profile", label: "My Profile" },
-        { href: "/my-listings", label: "My Listings" },
-        { href: "/my-applications", label: "My Applications" },
-        { href: "/notifications", label: "Notifications" },
-        { href: "/logout", label: "Logout" },
+        { href: "/profile", label: "My Profile", isAction: false },
+        { href: "/my-listings", label: "My Listings", isAction: false },
+        { href: "/my-applications", label: "My Applications", isAction: false },
+        { href: "/notifications", label: "Notifications", isAction: false },
+        { href: "/logout", label: "Logout", isAction: true },
     ];
 
     const userRole: UserRole =
@@ -107,7 +105,6 @@ const handleLogout = async () => {
         { name: "Lost & Found", href: "lost-and-found" },
         { name: "Paltuu AI", href: "llm" },
     ];
-
 
     useEffect(() => {
         const fetchVerificationStatus = async () => {
@@ -158,13 +155,6 @@ const handleLogout = async () => {
                 className={`mobile-menu ${isMenuOpen ? "open" : ""} md:hidden`}
                 style={{ backgroundColor: navbarBackground[userRole] }}
             >
-                {/* <button
-                    className="close-button"
-                    onClick={() => setIsMenuOpen(false)}
-                >
-                    &times;
-                </button> */}
-
                 {/* Navigation Links */}
                 <div className="navLinks-mobile">
                     {links.map((link) => (
@@ -200,7 +190,6 @@ const handleLogout = async () => {
                                 height={12}
                                 className="filter invert"
                             />
-
                         </button>
                     ) : (
                         <Link href="/login">
@@ -208,18 +197,31 @@ const handleLogout = async () => {
                         </Link>
                     )}
 
-                    {/* Dropdown Menu (Mobile) */}
+                    {/* Dropdown Menu (Mobile) - Updated to handle logout action */}
                     {isDropdownOpen && (
                         <div className="dropdown-menu-mobile">
                             {dropdownItems.map((item) => (
-                                <Link key={item.href} href={item.href}>
-                                    <div
+                                item.isAction ? (
+                                    <div 
+                                        key={item.href}
                                         className="dropdown-item-mobile"
-                                        onClick={() => setIsMenuOpen(false)}
+                                        onClick={() => {
+                                            setIsMenuOpen(false);
+                                            handleLogout();
+                                        }}
                                     >
                                         {item.label}
                                     </div>
-                                </Link>
+                                ) : (
+                                    <Link key={item.href} href={item.href}>
+                                        <div
+                                            className="dropdown-item-mobile"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            {item.label}
+                                        </div>
+                                    </Link>
+                                )
                             ))}
                         </div>
                     )}
@@ -315,15 +317,6 @@ const handleLogout = async () => {
                                     Notifications
                                 </div>
                             </Link>
-
-                            {/* Add Become Verified / Verified option */}
-                            {/* {userRole === "vet" && !isVerified && (
-                                <Link href="/vet-get-verified-1">
-                                    <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold italic">
-                                        Get Verified
-                                    </div>
-                                </Link>
-                            )} */}
 
                             <div
                                 onClick={handleLogout}

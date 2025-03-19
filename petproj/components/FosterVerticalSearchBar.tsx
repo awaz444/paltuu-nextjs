@@ -57,21 +57,21 @@ const FosterVerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
         onSearchAction(); // Trigger the search action from the parent component
     };
 
-const handleReset = () => {
-    setSelectedSex("");
-    setMinAge("");
-    setMaxAge("");
-    setArea("");
-    setMinChildAge("");
-    setCanLiveWithDogs(false);
-    setCanLiveWithCats(false);
-    setVaccinated(false);
-    setNeutered(false);
-    setSelectedCity("");
-    setSelectedSpecies("");
-    setBreed("");
-    onReset();
-};
+    const handleReset = () => {
+        setSelectedSex("");
+        setMinAge("");
+        setMaxAge("");
+        setArea("");
+        setMinChildAge("");
+        setCanLiveWithDogs(false);
+        setCanLiveWithCats(false);
+        setVaccinated(false);
+        setNeutered(false);
+        setSelectedCity("");
+        setSelectedSpecies("");
+        setBreed("");
+        onReset();
+    };
 
 
     return (
@@ -103,7 +103,7 @@ const handleReset = () => {
                         className="border rounded-xl w-1/2 p-2"
                         value={minAge}
                         onChange={(e) => {
-                            const value = Math.max(0, Number(e.target.value)); // Prevent negative values
+                            const value = Math.max(0, Math.min(30, Number(e.target.value))); 
                             setMinAge(value.toString());
                         }}
                     />
@@ -114,7 +114,7 @@ const handleReset = () => {
                         className="border rounded-xl w-1/2 p-2"
                         value={maxAge}
                         onChange={(e) => {
-                            const value = Math.max(0, Number(e.target.value)); // Prevent negative values
+                            const value = Math.max(Number(minAge),Math.min(30, Number(e.target.value)));// Prevent negative values
                             setMaxAge(value.toString());
                         }}
                     />
@@ -135,15 +135,16 @@ const handleReset = () => {
 
             {/* Age of Youngest Child Filter */}
             <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">
-                    Min Age of Children in Home
-                </label>
+                <label className="block text-sm font-medium mb-1">Min Age of Children in Home</label>
                 <input
                     type="number"
                     placeholder="Min age"
                     className="border rounded-xl w-full p-2"
                     value={minChildAge}
-                    onChange={(e) => setMinChildAge(e.target.value)}
+                    onChange={(e) => {
+                        const value = Math.max(0, Math.min(17, Number(e.target.value))); // Clamp value between 0 and 17
+                        setMinChildAge(value.toString()); // Ensure the state is stored as a string
+                    }}
                 />
             </div>
 

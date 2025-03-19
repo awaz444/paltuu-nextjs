@@ -34,7 +34,7 @@ export default function LostFound() {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [filters, setFilters] = useState({
-        selectedCity: "",
+        selectedCity: "1",
         location: "",
         selectedCategory: "",
     });

@@ -15,7 +15,7 @@ const LostAndFoundFilter: React.FC<LostAndFoundFilterProps> = ({ onSearch }) => 
     const { cities } = useSelector((state: RootState) => state.cities);
     const { categories } = useSelector((state: RootState) => state.categories);
 
-    const [selectedCity, setSelectedCity] = useState("");
+    const [selectedCity, setSelectedCity] = useState("1");
     const [location, setLocation] = useState("");
     const [selectedSpecies, setSelectedSpecies] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false); // Controls modal visibility

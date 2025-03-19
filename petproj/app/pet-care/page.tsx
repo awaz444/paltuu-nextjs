@@ -16,7 +16,7 @@ export default function PetCare() {
     );
 
     const [filters, setFilters] = useState({
-        selectedCity: "",
+        selectedCity: "1",
         selectedCategory: "", // Combined filter for specialization
         selectedQualification: "",
     });
@@ -40,7 +40,7 @@ export default function PetCare() {
     const handleReset = () => {
         console.log("Resetting filters");
         setFilters({
-            selectedCity: "",
+            selectedCity: "1",
             selectedCategory: "",
             selectedQualification: "",
         });
@@ -113,6 +113,7 @@ export default function PetCare() {
                 className="fullBody"
                 style={{ maxWidth: "90%", margin: "0 auto" }}>
                 <VetFilterSection
+                    filters={filters} // Pass filters as a prop
                     onSearch={(newFilters) => {
                         console.log("Updating filters:", newFilters);
                         setFilters((prevFilters) => ({

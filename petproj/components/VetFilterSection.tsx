@@ -8,16 +8,21 @@ import { fetchPetCategories } from "../app/store/slices/petCategoriesSlice";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 
 interface VetFilterSectionProps {
+    filters: {
+        selectedCity: string;
+        selectedQualification: string;
+        selectedCategory: string;
+    };
     onSearch: (filters: {
         selectedCity: string;
         selectedQualification: string;
         selectedCategory: string;
     }) => void;
-    onReset?: () => void; // Add this
-    onSearchAction?: () => void; // Add this
+    onReset?: () => void;
+    onSearchAction?: () => void;
 }
 
-const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
+const VetFilterSection: React.FC<VetFilterSectionProps> = ({ filters, onSearch, onReset, onSearchAction }) => {
     const dispatch = useDispatch<AppDispatch>();
     const { cities } = useSelector((state: RootState) => state.cities);
     const { qualifications } = useSelector((state: RootState) => state.qualifications);
@@ -25,9 +30,6 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
 
     useSetPrimaryColor();
 
-    const [selectedCity, setSelectedCity] = useState("");
-    const [selectedQualification, setSelectedQualification] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
@@ -37,14 +39,11 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
     }, [dispatch]);
 
     const handleReset = () => {
-        setSelectedCity("");
-        setSelectedQualification("");
-        setSelectedCategory("");
-        onSearch({ selectedCity: "", selectedQualification: "", selectedCategory: "" });
+        onReset?.(); // Call the parent's reset handler
     };
 
     const handleSearch = () => {
-        onSearch({ selectedCity, selectedQualification, selectedCategory });
+        onSearch(filters); // Pass the current filters to the parent
         setIsModalOpen(false);
     };
 
@@ -57,8 +56,8 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
                         <label className="text-xs block mb-1">Qualification</label>
                         <select
                             className="w-full p-3 border rounded-xl"
-                            value={selectedQualification}
-                            onChange={(e) => setSelectedQualification(e.target.value)}>
+                            value={filters.selectedQualification}
+                            onChange={(e) => onSearch({ ...filters, selectedQualification: e.target.value })}>
                             <option value="">Select Qualification</option>
                             {qualifications.map((q) => (
                                 <option key={q.qualification_id} value={q.qualification_id}>
@@ -72,8 +71,8 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
                         <label className="text-xs block mb-1">City</label>
                         <select
                             className="w-full p-3 border rounded-xl"
-                            value={selectedCity}
-                            onChange={(e) => setSelectedCity(e.target.value)}>
+                            value={filters.selectedCity}
+                            onChange={(e) => onSearch({ ...filters, selectedCity: e.target.value })}>
                             <option value="">Select City</option>
                             {cities.map((city) => (
                                 <option key={city.city_id} value={city.city_id}>
@@ -87,8 +86,8 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
                         <label className="text-xs block mb-1">Specialization</label>
                         <select
                             className="w-full p-3 border rounded-xl"
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}>
+                            value={filters.selectedCategory}
+                            onChange={(e) => onSearch({ ...filters, selectedCategory: e.target.value })}>
                             <option value="">Select Specialization</option>
                             {categories.map((category) => (
                                 <option key={category.category_id} value={category.category_id}>
@@ -110,13 +109,12 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
 
                 {/* Mobile & Tablet Layout */}
                 <div className="md:hidden flex flex-col gap-4">
-                    {/* Species filter (outside modal) */}
                     <div className="flex-1 min-w-[150px]">
                         <label className="text-xs block mb-1">City</label>
                         <select
                             className="w-full p-3 border rounded-xl"
-                            value={selectedCity}
-                            onChange={(e) => setSelectedCity(e.target.value)}>
+                            value={filters.selectedCity}
+                            onChange={(e) => onSearch({ ...filters, selectedCity: e.target.value })}>
                             <option value="">Select City</option>
                             {cities.map((city) => (
                                 <option key={city.city_id} value={city.city_id}>
@@ -126,13 +124,10 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
                         </select>
                     </div>
 
-                    {/* Search & More Filters buttons */}
                     <div className="flex gap-4 w-full">
                         <button className="text-white p-3 rounded-2xl flex-1 bg-primary" onClick={handleSearch}>
                             Search
                         </button>
-
-                        {/* More Filters Button */}
                         <button className="border-2 border-primary text-primary bg-white p-3 rounded-2xl flex-1 whitespace-nowrap" onClick={() => setIsModalOpen(true)}>
                             More Filters
                         </button>
@@ -148,13 +143,12 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
                                 <button className="text-xl" onClick={() => setIsModalOpen(false)}>✕</button>
                             </div>
 
-                            {/* Qualification inside modal */}
                             <div className="mb-4">
                                 <label className="text-xs block mb-1">Qualification</label>
                                 <select
                                     className="w-full p-3 border rounded-xl"
-                                    value={selectedQualification}
-                                    onChange={(e) => setSelectedQualification(e.target.value)}>
+                                    value={filters.selectedQualification}
+                                    onChange={(e) => onSearch({ ...filters, selectedQualification: e.target.value })}>
                                     <option value="">Select Qualification</option>
                                     {qualifications.map((q) => (
                                         <option key={q.qualification_id} value={q.qualification_id}>
@@ -164,13 +158,12 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
                                 </select>
                             </div>
 
-                            {/* City inside modal */}
                             <div className="mb-4">
                                 <label className="text-xs block mb-1">City</label>
                                 <select
                                     className="w-full p-3 border rounded-xl"
-                                    value={selectedCity}
-                                    onChange={(e) => setSelectedCity(e.target.value)}>
+                                    value={filters.selectedCity}
+                                    onChange={(e) => onSearch({ ...filters, selectedCity: e.target.value })}>
                                     <option value="">Select City</option>
                                     {cities.map((city) => (
                                         <option key={city.city_id} value={city.city_id}>
@@ -180,7 +173,6 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
                                 </select>
                             </div>
 
-                            {/* Reset & Apply Buttons */}
                             <div className="flex flex-col gap-4">
                                 <button className="border-2 border-primary text-primary bg-white p-3 rounded-2xl w-full" onClick={handleReset}>
                                     Reset

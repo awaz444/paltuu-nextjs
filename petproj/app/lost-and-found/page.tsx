@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import Navbar from "../../components/navbar";
 import LostAndFoundFilter from "../../components/Lost&FoundFilter";
-import LostAndFoundGrid from "../../components/LostAndFoundGrid"; // Use LostAndFoundGrid instead of PetGrid
-import axios from "axios"; // Import axios for API calls
+import LostAndFoundGrid from "../../components/LostAndFoundGrid";
+import axios from "axios";
 import { MoonLoader } from "react-spinners";
 import "./styles.css";
 
@@ -23,8 +23,8 @@ interface LostAndFoundPet {
     city: string;
     category_name: string;
     date: string | null;
-    user_name: string; // Add this
-    user_profile_image: string | null; // Add this
+    user_name: string;
+    user_profile_image: string | null;
 }
 
 export default function LostFound() {
@@ -41,15 +41,17 @@ export default function LostFound() {
 
     const [activeTab, setActiveTab] = useState<"lost" | "found">("lost");
 
-    // **Fetch lost & found posts from API**
     const fetchLostAndFoundPosts = async () => {
         setLoading(true);
         setError(null);
         try {
             const response = await axios.get("/api/lost-and-found");
-            console.log("API Response:", response); // Debug API response
-    
-            // Map the response data to match the interface
+            console.log("API Response:", response);
+
+            if (!response.data || !Array.isArray(response.data)) {
+                throw new Error("Invalid API response");
+            }
+
             const mappedPets = response.data.map((pet: any) => ({
                 post_id: pet.post_id,
                 user_id: pet.user_id,
@@ -62,31 +64,29 @@ export default function LostFound() {
                 status: pet.status,
                 category_id: pet.category_id,
                 image_url: pet.image || null,
-                city: pet.city, // City name directly from response
-                category_name: pet.category, // Category name directly from response
-                date: pet.date || null, // Adding the date field for sorting
-                user_name: pet.user_name, // Add this
-                user_profile_image: pet.user_profile_image || null, // Add this
+                city: pet.city,
+                category_name: pet.category,
+                date: pet.date || null,
+                user_name: pet.user_name,
+                user_profile_image: pet.user_profile_image || null,
             }));
-    
-            setPets(mappedPets); // Update state with mapped data
+
+            setPets(mappedPets);
         } catch (error: any) {
             setError(
                 error.response?.data?.message ||
                 "Failed to fetch lost and found posts. Please try again later."
             );
-            console.error("API Error:", error); // Debug API error
+            console.error("API Error:", error);
         } finally {
             setLoading(false);
         }
     };
 
-    // **Fetch posts when the component mounts**
     useEffect(() => {
         fetchLostAndFoundPosts();
     }, []);
 
-    // **Reset filters to default values**
     const handleReset = () => {
         setFilters({
             selectedCity: "",
@@ -95,15 +95,13 @@ export default function LostFound() {
         });
     };
 
-    // **Search based on filters**
     const handleSearch = () => {
-        console.log("Searching with filters:", filters); // Debug filter state
+        console.log("Searching with filters:", filters);
     };
 
-    const [primaryColor, setPrimaryColor] = useState("#000000"); // Default fallback color
+    const [primaryColor, setPrimaryColor] = useState("#000000");
 
     useEffect(() => {
-        // Get the computed style of the `--primary-color` CSS variable
         const rootStyles = getComputedStyle(document.documentElement);
         const color = rootStyles.getPropertyValue("--primary-color").trim();
         if (color) {
@@ -111,15 +109,12 @@ export default function LostFound() {
         }
     }, []);
 
-    // **Filter pets based on city, location, category, and status**
     const filteredPets = pets.filter((pet) => {
         const matchesCity = filters.selectedCity
             ? pet.city_id === Number(filters.selectedCity)
             : true;
         const matchesLocation = filters.location
-            ? pet.location
-                ?.toLowerCase()
-                .includes(filters.location.toLowerCase())
+            ? pet.location?.toLowerCase().includes(filters.location.toLowerCase())
             : true;
         const matchesCategory = filters.selectedCategory
             ? pet.category_id === Number(filters.selectedCategory)
@@ -130,20 +125,15 @@ export default function LostFound() {
                 ? pet.post_type === "lost"
                 : pet.post_type === "found";
 
-        return (
-            matchesCity && matchesLocation && matchesCategory && matchesStatus
-        );
+        return matchesCity && matchesLocation && matchesCategory && matchesStatus;
     });
 
-    // **Sort pets by date, handle null values (found pets)**
     const sortedPets = filteredPets.sort((a, b) => {
-        const dateA = new Date(a.date || 0); // If date is null, treat it as 0 (oldest)
-        const dateB = new Date(b.date || 0); // If date is null, treat it as 0 (oldest)
-
-        return dateB.getTime() - dateA.getTime(); // Sort in descending order
+        const dateA = new Date(a.date ?? 0);
+        const dateB = new Date(b.date ?? 0);
+        return dateB.getTime() - dateA.getTime();
     });
 
-    // **Toggle active tab (Lost / Found)**
     const handleTabToggle = (tab: "lost" | "found") => {
         setActiveTab(tab);
     };
@@ -156,13 +146,12 @@ export default function LostFound() {
                 style={{ maxWidth: "90%", margin: "0 auto" }}>
                 <LostAndFoundFilter
                     onSearch={(filters) => {
-                        console.log("Filters updated:", filters); 
+                        console.log("Filters updated:", filters);
                         setFilters((prev) => ({ ...prev, ...filters }));
                     }}
                 />
                 <main className="flex min-h-screen flex-col mx-0 md:mx-8 mt-1 items-center pt-7 bg-gray-100">
                     <div className="w-full">
-                        {/* **Tab Switch for Lost and Found** */}
                         <div className="tab-switch-container">
                             <div
                                 className="tab-switch-slider bg-primary"
@@ -194,11 +183,17 @@ export default function LostFound() {
                                 color={primaryColor}
                             />
                         ) : error ? (
-                            <p className="text-red-500">{error}</p>
+                            <div className="text-center">
+                                <p className="text-red-500">{error}</p>
+                                <button
+                                    className="mt-2 px-4 py-2 bg-primary text-white rounded"
+                                    onClick={fetchLostAndFoundPosts}
+                                >
+                                    Retry
+                                </button>
+                            </div>
                         ) : (
-                            <>
-                                <LostAndFoundGrid pets={sortedPets} />
-                            </>
+                            <LostAndFoundGrid pets={sortedPets} />
                         )}
                     </div>
                 </main>

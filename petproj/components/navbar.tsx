@@ -34,47 +34,16 @@ const Navbar = () => {
 
     const router = useRouter(); // Router for navigation
 
-    const handleLogout = async () => {
-        try {
-            if (user?.method === "google") {
-                await signOut({ callbackUrl: "/login", redirect: true });
-            } else {
-                // Clear all local storage first
-                localStorage.removeItem("user");
-                localStorage.removeItem("token");
-                localStorage.removeItem("next-auth.session-token");
-                localStorage.removeItem("next-auth.csrf-token");
-                localStorage.removeItem("next-auth.callback-url");
-
-                // Call the logout API
-                const response = await fetch('/api/users/logout', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Logout failed');
-                }
-
-                // Clear context state
-                apiLogout();
-
-                // Use router.push instead of replace and wait for it to complete
-                await router.push('/login');
-
-                // Force a page reload to ensure clean state
-                window.location.href = '/login';
-            }
-        } catch (error) {
-            console.error('Logout error:', error);
-            // Fallback: clear everything and force redirect
-            localStorage.clear();
-            apiLogout();
-            window.location.href = '/login';
-        }
-    };
+    // In Navbar.tsx
+const handleLogout = async () => {
+    try {
+      await apiLogout(); // Use the AuthContext logout
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force redirect as fallback
+      window.location.href = '/login';
+    }
+  };
 
     type UserRole = "guest" | "regular user" | "vet" | "admin";
 

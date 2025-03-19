@@ -53,34 +53,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      // First handle NextAuth logout if user is logged in with Google
-      if (user?.method === "google") {
-        await nextAuthSignOut({
-          callbackUrl: "/login",
-          redirect: false
-        });
-      }
-
-      // Clear local storage
+      // Clear all local storage first
       localStorage.removeItem("user");
       localStorage.removeItem("token");
-      localStorage.removeItem("next-auth.session-token");
-      localStorage.removeItem("next-auth.csrf-token");
-      localStorage.removeItem("next-auth.callback-url");
-
-      // Clear state
+      sessionStorage.clear();
+      
+      // Handle both types of logout
+      if (user?.method === "google") {
+        await nextAuthSignOut({ redirect: false });
+      }
+      
+      // Clear all state
       setUser(null);
       setIsAuthenticated(false);
-
-      // Use window.location.replace instead of fetch for consistent behavior
-      window.location.replace('/api/users/logout');
+      
+      // Call API logout endpoint
+      try {
+        await fetch('/api/users/logout', {
+          method: 'GET',
+          credentials: 'include', // Important for cookies
+        });
+      } catch (err) {
+        console.error("Error calling logout API:", err);
+      }
+      
+      // Hard redirect for a complete reset - most reliable way
+      window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);
-      // Fallback: clear everything and redirect
+      // Emergency fallback
       localStorage.clear();
-      setUser(null);
-      setIsAuthenticated(false);
-      window.location.replace('/login');
+      sessionStorage.clear();
+      document.cookie.split(";").forEach(function(c) {
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      window.location.href = '/login';
     }
   };
 

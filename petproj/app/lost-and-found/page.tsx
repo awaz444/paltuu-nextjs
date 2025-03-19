@@ -156,7 +156,7 @@ export default function LostFound() {
                 style={{ maxWidth: "90%", margin: "0 auto" }}>
                 <LostAndFoundFilter
                     onSearch={(filters) => {
-                        console.log("Filters updated:", filters); // Debug filter updates
+                        console.log("Filters updated:", filters); 
                         setFilters((prev) => ({ ...prev, ...filters }));
                     }}
                 />

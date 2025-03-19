@@ -116,7 +116,7 @@ const MyProfile = () => {
             const formData = new FormData();
             formData.append('file', file);
 
-            const uploadRes = await fetch(`/api/upload-profile-image/${userId}`, {
+            const uploadRes = await fetch(`/api/update-profile-image/${userId}`, {
                 method: 'POST',
                 body: formData
             });
@@ -135,7 +135,8 @@ const MyProfile = () => {
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setUpdatedData(prev => prev ? { ...prev, [e.target.name]: e.target.value } : null);
+        const { name, value } = e.target;
+        setUpdatedData((prev) => prev ? { ...prev, [name]: value } : null);
     };
 
     const handleSaveChanges = async () => {
@@ -149,12 +150,27 @@ const MyProfile = () => {
             });
 
             if (!res.ok) throw new Error('Update failed');
-            setData(await res.json());
+
+            const result = await res.json();
+            setData(result.user);
+            setUpdatedData(result.user);
             setEditing(false);
-            Modal.success({ title: 'Profile Updated', content: 'Your changes have been saved' });
+
+            message.success({
+                content: 'Profile updated successfully',
+                duration: 3,
+            });
         } catch (error) {
-            Modal.error({ title: 'Update Failed', content: 'Could not save changes' });
+            message.error({
+                content: 'Failed to update profile',
+                duration: 3,
+            });
         }
+    };
+
+    const handleCancel = () => {
+        setUpdatedData(data);
+        setEditing(false);
     };
 
     const ProfileField = ({ label, value, name, type = "text", editable = true, cities = [] }: {
@@ -171,13 +187,13 @@ const MyProfile = () => {
                 name === "city" ? (
                     <select
                         name={name}
-                        value={value}
+                        value={value || ""}
                         onChange={handleInputChange}
                         className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                     >
                         <option value="">Select City</option>
                         {cities.map(city => (
-                            <option key={city.city_id} value={city.city_id}>
+                            <option key={city.city_id} value={city.city_name}>
                                 {city.city_name}
                             </option>
                         ))}
@@ -186,7 +202,7 @@ const MyProfile = () => {
                     <input
                         type={type}
                         name={name}
-                        value={value}
+                        value={value || ""}
                         onChange={handleInputChange}
                         className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                         disabled={!editable}
@@ -195,7 +211,7 @@ const MyProfile = () => {
             ) : (
                 <p className="p-2 bg-gray-50 rounded-lg">
                     {name === "city"
-                        ? cities.find(city => city.city_id === value)?.city_name || "Not provided"
+                        ? cities.find(city => city.city_name === value)?.city_name || value || "Not provided"
                         : value || "Not provided"
                     }
                 </p>
@@ -234,14 +250,14 @@ const MyProfile = () => {
                             {editing ? (
                                 <>
                                     <button
-                                        onClick={() => setEditing(false)}
+                                        onClick={handleCancel}
                                         className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={handleSaveChanges}
-                                        className="px-4 py-2 bg-primary text-white rounded-lg  transition-all"
+                                        className="px-4 py-2 bg-primary text-white rounded-lg transition-all"
                                     >
                                         Save Changes
                                     </button>

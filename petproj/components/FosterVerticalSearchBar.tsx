@@ -37,6 +37,8 @@ const FosterVerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
     const [selectedSpecies, setSelectedSpecies] = useState(""); // Added state for species
     const [breed, setBreed] = useState(""); // Added state for breed
 
+
+
     const handleSearch = () => {
         onSearch({
             selectedSex,
@@ -54,6 +56,23 @@ const FosterVerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
         });
         onSearchAction(); // Trigger the search action from the parent component
     };
+
+const handleReset = () => {
+    setSelectedSex("");
+    setMinAge("");
+    setMaxAge("");
+    setArea("");
+    setMinChildAge("");
+    setCanLiveWithDogs(false);
+    setCanLiveWithCats(false);
+    setVaccinated(false);
+    setNeutered(false);
+    setSelectedCity("");
+    setSelectedSpecies("");
+    setBreed("");
+    onReset();
+};
+
 
     return (
         <div className="bg-white shadow-sm p-6 rounded-3xl">
@@ -181,7 +200,7 @@ const FosterVerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
             <div className="flex flex-col gap-3 mt-4">
                 <button
                     className="border-2 border-primary text-primary bg-white p-3 rounded-xl"
-                    onClick={onReset}>
+                    onClick={handleReset}>
                     Reset
                 </button>
                 <button

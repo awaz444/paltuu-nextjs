@@ -36,7 +36,7 @@ export default function LostFound() {
     const [filters, setFilters] = useState({
         selectedCity: "1",
         location: "",
-        selectedCategory: "",
+        selectedSpecies: "",
     });
 
     const [activeTab, setActiveTab] = useState<"lost" | "found">("lost");
@@ -91,7 +91,7 @@ export default function LostFound() {
         setFilters({
             selectedCity: "",
             location: "",
-            selectedCategory: "",
+            selectedSpecies: "",
         });
     };
 
@@ -121,8 +121,8 @@ export default function LostFound() {
                 ?.toLowerCase()
                 .includes(filters.location.toLowerCase())
             : true;
-        const matchesCategory = filters.selectedCategory
-            ? pet.category_id === Number(filters.selectedCategory)
+        const matchesCategory = filters.selectedSpecies
+            ? pet.category_id === Number(filters.selectedSpecies)
             : true;
 
         const matchesStatus =

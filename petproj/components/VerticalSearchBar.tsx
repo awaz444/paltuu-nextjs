@@ -117,8 +117,9 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         className="border rounded-xl w-1/2 p-2"
                         value={minAge}
                         onChange={(e) => {
-                            const value = Math.max(0, Number(e.target.value)); // Prevent negative values
+                            const value = Math.max(0, Math.min(30, Number(e.target.value))); // Prevent negative values
                             setMinAge(value.toString());
+                            setMaxAge((prevMax) => (value > Number(prevMax) ? value.toString() : prevMax)); // Ensure maxAge starts from minAge
                         }}
                     />
                     <p className="mt-2">to</p>
@@ -128,7 +129,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         className="border rounded-xl w-1/2 p-2"
                         value={maxAge}
                         onChange={(e) => {
-                            const value = Math.max(0, Number(e.target.value)); // Prevent negative values
+                            const value = Math.max(Number(minAge), Math.min(30, Number(e.target.value))); // Ensure maxAge is not less than minAge
                             setMaxAge(value.toString());
                         }}
                     />
@@ -156,7 +157,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         className="border rounded-xl w-1/2 p-2"
                         value={maxPrice}
                         onChange={(e) => {
-                            const value = Math.max(0, Number(e.target.value)); // Prevent negative values
+                            const value = Math.max(Number(minPrice), Number(e.target.value)); // Prevent negative values
                             setMaxPrice(value.toString());
                         }}
                     />

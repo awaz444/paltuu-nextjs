@@ -37,6 +37,8 @@ const FosterVerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
     const [selectedSpecies, setSelectedSpecies] = useState(""); // Added state for species
     const [breed, setBreed] = useState(""); // Added state for breed
 
+
+
     const handleSearch = () => {
         onSearch({
             selectedSex,
@@ -54,6 +56,23 @@ const FosterVerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
         });
         onSearchAction(); // Trigger the search action from the parent component
     };
+
+    const handleReset = () => {
+        setSelectedSex("");
+        setMinAge("");
+        setMaxAge("");
+        setArea("");
+        setMinChildAge("");
+        setCanLiveWithDogs(false);
+        setCanLiveWithCats(false);
+        setVaccinated(false);
+        setNeutered(false);
+        setSelectedCity("");
+        setSelectedSpecies("");
+        setBreed("");
+        onReset();
+    };
+
 
     return (
         <div className="bg-white shadow-sm p-6 rounded-3xl">
@@ -84,7 +103,7 @@ const FosterVerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         className="border rounded-xl w-1/2 p-2"
                         value={minAge}
                         onChange={(e) => {
-                            const value = Math.max(0, Number(e.target.value)); // Prevent negative values
+                            const value = Math.max(0, Math.min(30, Number(e.target.value))); 
                             setMinAge(value.toString());
                         }}
                     />
@@ -95,7 +114,7 @@ const FosterVerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
                         className="border rounded-xl w-1/2 p-2"
                         value={maxAge}
                         onChange={(e) => {
-                            const value = Math.max(0, Number(e.target.value)); // Prevent negative values
+                            const value = Math.max(Number(minAge),Math.min(30, Number(e.target.value)));// Prevent negative values
                             setMaxAge(value.toString());
                         }}
                     />
@@ -116,15 +135,16 @@ const FosterVerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
 
             {/* Age of Youngest Child Filter */}
             <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">
-                    Min Age of Children in Home
-                </label>
+                <label className="block text-sm font-medium mb-1">Min Age of Children in Home</label>
                 <input
                     type="number"
                     placeholder="Min age"
                     className="border rounded-xl w-full p-2"
                     value={minChildAge}
-                    onChange={(e) => setMinChildAge(e.target.value)}
+                    onChange={(e) => {
+                        const value = Math.max(0, Math.min(17, Number(e.target.value))); // Clamp value between 0 and 17
+                        setMinChildAge(value.toString()); // Ensure the state is stored as a string
+                    }}
                 />
             </div>
 
@@ -181,7 +201,7 @@ const FosterVerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
             <div className="flex flex-col gap-3 mt-4">
                 <button
                     className="border-2 border-primary text-primary bg-white p-3 rounded-xl"
-                    onClick={onReset}>
+                    onClick={handleReset}>
                     Reset
                 </button>
                 <button

@@ -194,7 +194,7 @@ const MyProfile = () => {
                 )
             ) : (
                 <p className="p-2 bg-gray-50 rounded-lg">
-                    {name === "city" 
+                    {name === "city"
                         ? cities.find(city => city.city_id === value)?.city_name || "Not provided"
                         : value || "Not provided"
                     }
@@ -311,12 +311,31 @@ const MyProfile = () => {
                                     value={updatedData.email}
                                     editable={false}
                                 />
-                                <ProfileField
-                                    label="Phone Number"
-                                    name="phone_number"
-                                    type="tel"
-                                    value={updatedData.phone_number}
-                                />
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium text-gray-600">Phone Number</label>
+                                    {editing ? (
+                                        <div className="flex space-x-2">
+                                            <input
+                                                type="text"
+                                                value="+92"
+                                                className="w-12 border border-gray-300 pl-2 rounded-xl py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                                                disabled
+                                            />
+                                            <input
+                                                type="text"
+                                                name="phone_number"
+                                                value={updatedData.phone_number}
+                                                onChange={handleInputChange}
+                                                placeholder="3338888666"
+                                                className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <p className="p-2 bg-gray-50 rounded-lg">
+                                            +92{updatedData.phone_number}
+                                        </p>
+                                    )}
+                                </div>
                                 <ProfileField
                                     label="Date of Birth"
                                     name="dob"

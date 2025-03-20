@@ -46,20 +46,20 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  {vets.map((vet) => {
-    const formattedName = vet.name.match(/^dr\.?\s*/i) 
-      ? vet.name 
-      : `Dr. ${vet.name}`;
+      {vets.map((vet) => {
+        const formattedName = vet.name.match(/^dr\.?\s*/i)
+          ? vet.name
+          : `Dr. ${vet.name}`;
 
-    return (
-      <Link
-        key={vet.vet_id}
-        href={`/pet-care/${vet.vet_id}`}
-        className="h-full"
-      >
-        <div className="h-full flex flex-col bg-white p-4 rounded-2xl shadow-sm border border-gray-200 hover:border-primary relative overflow-hidden"> {/* Added overflow-hidden */}
-          {/* Call Button - Top Right */}
-          <button
+        return (
+          <Link
+            key={vet.vet_id}
+            href={`/pet-care/${vet.vet_id}`}
+            className="h-full"
+          >
+            <div className="h-full flex flex-col bg-white p-4 rounded-2xl shadow-sm border-2 border-transparent hover:border-primary relative overflow-hidden"> {/* Added overflow-hidden */}
+              {/* Call Button - Top Right */}
+              <button
                 className="absolute top-2 right-2 bg-primary text-white p-2 rounded-xl w-10 h-10 flex items-center justify-center shadow-md hover:scale-105 transition-all duration-300 z-10"
                 onClick={(e) => {
                   e.preventDefault();
@@ -70,49 +70,49 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
                 <PhoneOutlined />
               </button>
 
-          {/* Content Area */}
-          <div className="flex-grow flex flex-col min-h-0"> {/* Added min-h-0 for proper flex containment */}
-            <div className="flex flex-col sm:flex-row">
-              <img
-                src={vet.profile_image_url || "/placeholder.jpg"}
-                alt={vet.name}
-                className="w-24 h-24 object-cover rounded-full sm:mr-4 mb-4 sm:mb-0 flex-shrink-0"
-              />
-              <div className="flex-grow min-w-0"> {/* Added min-w-0 for proper truncation */}
-                <div className="flex flex-wrap items-center gap-x-2">
-                  <div className="font-bold text-xl text-primary truncate max-w-[calc(100%-28px)]">
-                    {formattedName}
+              {/* Content Area */}
+              <div className="flex-grow flex flex-col min-h-0"> {/* Added min-h-0 for proper flex containment */}
+                <div className="flex flex-col sm:flex-row">
+                  <img
+                    src={vet.profile_image_url || "/placeholder.jpg"}
+                    alt={vet.name}
+                    className="w-24 h-24 object-cover rounded-full sm:mr-4 mb-4 sm:mb-0 flex-shrink-0"
+                  />
+                  <div className="flex-grow min-w-0"> {/* Added min-w-0 for proper truncation */}
+                    <div className="flex flex-wrap items-center gap-x-2">
+                      <div className="font-bold text-xl text-primary truncate max-w-[calc(100%-28px)]">
+                        {formattedName}
+                      </div>
+                      {vet.profile_verified && <i className="bi bi-patch-check-fill text-[#cc8800]" />}
+                    </div>
+                    <p className="text-gray-700 truncate max-w-full">{vet.clinic_name}</p>
+                    <p className="text-gray-600 truncate max-w-full">{vet.city_name}</p>
+                    <p className="text-gray-600 truncate max-w-full">{vet.location}</p>
+                    {vet.qualifications.length > 0 && (
+                      <div className="mt-2 text-gray-500 line-clamp-2 break-words">
+                        {vet.qualifications.map((qual, index) => (
+                          <span
+                            key={index}
+                            className="inline-block max-w-full truncate"
+                          >
+                            {qual.qualification_name} ({qual.year_acquired})
+                            {index < vet.qualifications.length - 1 && ", "}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {vet.profile_verified && <i className="bi bi-patch-check-fill text-[#cc8800]" />}
                 </div>
-                <p className="text-gray-700 truncate max-w-full">{vet.clinic_name}</p>
-                <p className="text-gray-600 truncate max-w-full">{vet.city_name}</p>
-                <p className="text-gray-600 truncate max-w-full">{vet.location}</p>
-                {vet.qualifications.length > 0 && (
-                  <div className="mt-2 text-gray-500 line-clamp-2 break-words">
-                    {vet.qualifications.map((qual, index) => (
-                      <span
-                        key={index}
-                        className="inline-block max-w-full truncate"
-                      >
-                        {qual.qualification_name} ({qual.year_acquired})
-                        {index < vet.qualifications.length - 1 && ", "}
-                      </span>
-                    ))}
-                  </div>
-                )}
+              </div>
+
+              {/* Fee Badge */}
+              <div className="mt-auto pt-2 bg-gray-100 text-sm text-primary font-bold py-1 px-3 rounded-lg w-fit">
+                Fee Starting from: PKR {vet.minimum_fee}
               </div>
             </div>
-          </div>
-
-          {/* Fee Badge */}
-          <div className="mt-auto pt-2 bg-gray-100 text-sm text-primary font-bold py-1 px-3 rounded-lg w-fit">
-            Fee Starting from: PKR {vet.minimum_fee}
-          </div>
-        </div>
-      </Link>
-    )
-  })}
+          </Link>
+        )
+      })}
       <Modal
         title="Contact Information"
         open={isModalVisible}

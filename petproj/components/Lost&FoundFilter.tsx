@@ -10,7 +10,7 @@ interface LostAndFoundFilterProps {
     onSearch: (filters: { 
         selectedCity: string; 
         location: string; 
-        selectedCategory: string  // Changed from selectedSpecies to selectedCategory
+        selectedCategory: string 
     }) => void;
 }
 

@@ -1,4 +1,4 @@
-    import { createClient } from '../../../db/index';
+import { createClient } from '../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
 
 // POST: Create a new foster application
@@ -28,7 +28,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     try {
         await client.connect();
+        await client.query('BEGIN'); // Start transaction
 
+        // 1. Insert foster application
         const result = await client.query(
             `INSERT INTO foster_applications (
                 user_id, pet_id, fosterer_name, fosterer_address, foster_start_date, 
@@ -61,11 +63,57 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             ]
         );
 
+        // 2. Get pet owner details
+        const petResult = await client.query(
+            `SELECT owner_id, pet_name FROM pets WHERE pet_id = $1`,
+            [pet_id]
+        );
+
+        if (petResult.rowCount === 0) {
+            await client.query('ROLLBACK');
+            return NextResponse.json(
+                { error: 'Pet not found' },
+                { status: 404 }
+            );
+        }
+
+        const { owner_id: ownerId, pet_name: petName } = petResult.rows[0];
+
+        // 3. Create notifications
+        // Notification to foster applicant
+        await client.query(
+            `INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [
+                user_id,
+                `Your foster application for ${petName} has been submitted successfully! The owner will review your application.`,
+                'foster_application_submission',
+                false,
+                new Date()
+            ]
+        );
+
+        // Notification to pet owner
+        await client.query(
+            `INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [
+                ownerId,
+                `New foster application received for ${petName}! Please review the details.`,
+                'new_foster_application',
+                false,
+                new Date()
+            ]
+        );
+
+        await client.query('COMMIT'); // Commit transaction
+
         return NextResponse.json(result.rows[0], {
             status: 201,
             headers: { 'Content-Type': 'application/json' },
         });
     } catch (err) {
+        await client.query('ROLLBACK').catch(console.error);
         console.error(err);
         return NextResponse.json(
             { error: 'Internal Server Error', message: (err as Error).message },

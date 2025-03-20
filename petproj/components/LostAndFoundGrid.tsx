@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { Modal } from "antd";
-import { EnvironmentOutlined, UserOutlined } from "@ant-design/icons";
+import { EnvironmentOutlined, UserOutlined, ExclamationOutlined } from "@ant-design/icons";
 import "./LostAndFoundGrid.css";
 
 interface LostAndFoundPet {
@@ -106,7 +106,7 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
                             {pet.category_name}
                         </h3>
                         <div className="flex flex-row gap-2 mb-1">
-                            <p className="text-gray-400 text-sm sm:text-base">{pet.location},</p>
+                            <p className="text-gray-400 text-sm sm:text-base">{pet.location}</p>
                         </div>
                         <div className="flex flex-row gap-2 items-center mb-2">
                             <EnvironmentOutlined className="text-primary" />
@@ -182,14 +182,16 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
 
                             {/* Details Section */}
                             <div className="space-y-4">
-                                {/* Status Badge */}
-                                <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${selectedPet.status === 'resolved'
+                                <div className="flex flex-row">
+                                    <div className="text-primary text-lg"><ExclamationOutlined /></div>
+                                    {/* Status Badge */}
+                                    <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${selectedPet.status === 'resolved'
                                         ? 'bg-green-100 text-green-800'
                                         : 'bg-primary-100 text-primary-800'
-                                    }`}>
-                                    {selectedPet.status === 'active' ? 'Still Lost/Found' : 'Lost/Found!'}
+                                        }`}>
+                                        {selectedPet.status === 'active' ? 'Still Lost/Found' : 'Lost/Found!'}
+                                    </div>
                                 </div>
-
                                 {/* Details List */}
                                 <div className="space-y-3">
                                     <div>

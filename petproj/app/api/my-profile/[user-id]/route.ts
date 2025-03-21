@@ -93,25 +93,37 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
         const body = await req.json();
         const { name, email, city, dob, phone_number } = body;
 
-        if (!name || !email || !city || !dob || !phone_number) {
+        // Validate required fields
+        if (!name || !email || !phone_number) {
             return NextResponse.json(
-                { error: "All fields (name, email, city, dob, phone_number) are required" },
+                { error: "Name, email, and phone number are required" },
                 { status: 400 }
             );
         }
 
-        // Ensure the city exists or add it
+        // Handle city ID - Modified this part to fix the type error
         let cityId: number | null = null;
+        if (city) {
+            // Check if city exists by name only
+            const checkCityQuery = `
+                SELECT city_id FROM cities
+                WHERE city_name = $1
+                LIMIT 1;
+            `;
+            const checkCityResult = await client.query(checkCityQuery, [city]);
 
-        const checkCityQuery = `SELECT city_id FROM cities WHERE city_name = $1 LIMIT 1;`;
-        const checkCityResult = await client.query(checkCityQuery, [city]);
-
-        if (checkCityResult.rows.length > 0) {
-            cityId = checkCityResult.rows[0].city_id;
-        } else {
-            const insertCityQuery = `INSERT INTO cities (city_name) VALUES ($1) RETURNING city_id;`;
-            const insertCityResult = await client.query(insertCityQuery, [city]);
-            cityId = insertCityResult.rows[0].city_id;
+            if (checkCityResult.rows.length > 0) {
+                cityId = checkCityResult.rows[0].city_id;
+            } else {
+                // Create new city if it doesn't exist
+                const insertCityQuery = `
+                    INSERT INTO cities (city_name)
+                    VALUES ($1)
+                    RETURNING city_id;
+                `;
+                const insertCityResult = await client.query(insertCityQuery, [city]);
+                cityId = insertCityResult.rows[0].city_id;
+            }
         }
 
         // Update user information
@@ -130,6 +142,8 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
                 email,
                 dob,
                 phone_number,
+                profile_image_url,
+                created_at,
                 (SELECT city_name FROM cities WHERE cities.city_id = users.city_id) AS city;
         `;
         const values = [name, email, cityId, dob, phone_number, user_id];
@@ -143,7 +157,11 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
             );
         }
 
-        return NextResponse.json(result.rows[0], { status: 200 });
+        return NextResponse.json({
+            message: "Profile updated successfully",
+            user: result.rows[0]
+        }, { status: 200 });
+
     } catch (err) {
         console.error(err);
         return NextResponse.json(

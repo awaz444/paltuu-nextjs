@@ -13,8 +13,8 @@ export async function POST(req: Request) {
 
     const storedOtp = await prisma.oTP.findUnique({ where: { email } });
 
-    if (!storedOtp) {
-      return new Response(JSON.stringify({ message: "OTP Not Found" }), { status: 400 });
+    if (!storedOtp || !storedOtp.createdat) {
+      return new Response(JSON.stringify({ message: "OTP Not Found or Invalid" }), { status: 400 });
     }
 
     // Ensure createdat is not null before comparison

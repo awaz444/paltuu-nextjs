@@ -1,42 +1,55 @@
+import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
-export async function POST(req) {
-  const { email, otp } = await req.json();
-
-  const storedOtp = await prisma.OTP.findUnique({
-    where: { email },
-  });
-
-  if (!storedOtp) {
-    return new Response(JSON.stringify({ message: "OTP Not Found" }), { status: 400 });
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method Not Allowed" });
   }
 
-  // Check Expiration (5 mins)
-  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-  if (storedOtp.createdat < fiveMinutesAgo) {
-    await prisma.OTP.delete({ where: { email } });
-    return new Response(JSON.stringify({ message: "OTP Expired" }), { status: 400 });
-  }
+  try {
+    const { email, otp } = req.body as { email: string; otp: string };
 
-  // Check Attempts Limit
-  if (storedOtp.attempts >= 3) {
-    await prisma.OTP.delete({ where: { email } });
-    return new Response(JSON.stringify({ message: "Too Many Attempts, OTP Blocked" }), { status: 400 });
-  }
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
 
-  const isMatch = await bcrypt.compare(otp, storedOtp.otp);
-  if (!isMatch) {
-    await prisma.OTP.update({
-      where: { email },
-      data: { attempts: { increment: 1 } },
-    });
-    return new Response(JSON.stringify({ message: "Invalid OTP" }), { status: 400 });
-  }
+    const storedOtp = await prisma.oTP.findUnique({ where: { email } });
 
-  // OTP Verified -> Delete OTP
-  await prisma.OTP.delete({ where: { email } });
-  return new Response(JSON.stringify({ message: "OTP Verified" }), { status: 200 });
+    if (!storedOtp) {
+      return res.status(400).json({ message: "OTP Not Found" });
+    }
+
+    // Check Expiration (5 mins)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    if (storedOtp.createdat < fiveMinutesAgo) {
+      await prisma.oTP.delete({ where: { email } });
+      return res.status(400).json({ message: "OTP Expired" });
+    }
+
+    // Check Attempts Limit
+    if (storedOtp.attempts >= 3) {
+      await prisma.oTP.delete({ where: { email } });
+      return res.status(400).json({ message: "Too Many Attempts, OTP Blocked" });
+    }
+
+    const isMatch = await bcrypt.compare(otp, storedOtp.otp);
+    if (!isMatch) {
+      await prisma.oTP.update({
+        where: { email },
+        data: { attempts: { increment: 1 } },
+      });
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    // OTP Verified -> Delete OTP
+    await prisma.oTP.delete({ where: { email } });
+
+    return res.status(200).json({ message: "OTP Verified" });
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 }

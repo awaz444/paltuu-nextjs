@@ -24,13 +24,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Check Expiration (5 mins)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    if (storedOtp.createdat < fiveMinutesAgo) {
+    if (!storedOtp.createdat || new Date(storedOtp.createdat) < fiveMinutesAgo) {
       await prisma.oTP.delete({ where: { email } });
       return res.status(400).json({ message: "OTP Expired" });
     }
 
+    // Ensure `attempts` is a valid number
+    const attempts = storedOtp.attempts ?? 0;
+
     // Check Attempts Limit
-    if (storedOtp.attempts >= 3) {
+    if (attempts >= 3) {
       await prisma.oTP.delete({ where: { email } });
       return res.status(400).json({ message: "Too Many Attempts, OTP Blocked" });
     }

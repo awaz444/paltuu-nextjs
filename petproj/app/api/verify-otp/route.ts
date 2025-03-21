@@ -17,20 +17,28 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ message: "OTP Not Found" }), { status: 400 });
     }
 
-    // Check Expiration (5 mins)
+    // Ensure createdat is not null before comparison
+    const createdAt = storedOtp.createdat ?? new Date(0);
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    if (storedOtp.createdat < fiveMinutesAgo) {
+    
+    if (createdAt < fiveMinutesAgo) {
       await prisma.oTP.delete({ where: { email } });
       return new Response(JSON.stringify({ message: "OTP Expired" }), { status: 400 });
     }
 
+    // Ensure attempts is not null
+    const attempts = storedOtp.attempts ?? 0;
+
     // Check Attempts Limit
-    if (storedOtp.attempts >= 3) {
+    if (attempts >= 3) {
       await prisma.oTP.delete({ where: { email } });
       return new Response(JSON.stringify({ message: "Too Many Attempts, OTP Blocked" }), { status: 400 });
     }
 
-    const isMatch = await bcrypt.compare(otp, storedOtp.otp);
+    // Ensure storedOtp.otp is not null before comparing
+    const hashedOtp = storedOtp.otp ?? "";
+    const isMatch = await bcrypt.compare(otp, hashedOtp);
+
     if (!isMatch) {
       await prisma.oTP.update({
         where: { email },

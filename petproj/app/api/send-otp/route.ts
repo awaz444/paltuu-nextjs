@@ -1,22 +1,18 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-import mailjet from "node-mailjet";
+import Mailjet from "node-mailjet";
 
 const prisma = new PrismaClient();
-const mailjetClient = mailjet.apiConnect(
-  process.env.MAILJET_API_KEY,
-  process.env.MAILJET_SECRET_KEY
+const mailjetClient = Mailjet.apiConnect(
+  process.env.MAILJET_API_KEY!,
+  process.env.MAILJET_SECRET_KEY!
 );
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method Not Allowed" });
-  }
-
+export async function POST(req: Request) {
   try {
-    const { email } = req.body;
+    const { email } = await req.json();
     if (!email) {
-      return res.status(400).json({ message: "Email is required" });
+      return new Response(JSON.stringify({ message: "Email is required" }), { status: 400 });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000);
@@ -31,7 +27,7 @@ export default async function handler(req, res) {
     await mailjetClient.post("send", { version: "v3.1" }).request({
       Messages: [
         {
-          From: { Email: process.env.MAILJET_FROM_EMAIL, Name: "Paltuu" },
+          From: { Email: process.env.MAILJET_FROM_EMAIL!, Name: "Paltuu" },
           To: [{ Email: email }],
           Subject: "Your OTP Code",
           TextPart: `Your OTP code is: ${otp}`,
@@ -39,9 +35,9 @@ export default async function handler(req, res) {
       ],
     });
 
-    return res.status(200).json({ message: "OTP Sent" });
+    return new Response(JSON.stringify({ message: "OTP Sent" }), { status: 200 });
   } catch (error) {
-    console.error("Mailjet error:", error);
-    return res.status(500).json({ message: "Failed to send OTP" });
+    console.error("Error sending OTP:", error);
+    return new Response(JSON.stringify({ message: "Failed to Send OTP" }), { status: 500 });
   }
 }

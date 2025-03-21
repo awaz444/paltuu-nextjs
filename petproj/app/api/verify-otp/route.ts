@@ -13,13 +13,15 @@ export async function POST(req: Request) {
 
     const storedOtp = await prisma.oTP.findUnique({ where: { email } });
 
-    if (!storedOtp) {
-      return new Response(JSON.stringify({ message: "OTP Not Found" }), { status: 400 });
+    if (!storedOtp || !storedOtp.createdat) {
+      return new Response(JSON.stringify({ message: "OTP Not Found or Invalid" }), { status: 400 });
     }
 
     // Check Expiration (5 mins)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    if (storedOtp.createdat < fiveMinutesAgo) {
+    const createdAt = new Date(storedOtp.createdat); // Ensure it's a valid Date object
+
+    if (createdAt < fiveMinutesAgo) {
       await prisma.oTP.delete({ where: { email } });
       return new Response(JSON.stringify({ message: "OTP Expired" }), { status: 400 });
     }

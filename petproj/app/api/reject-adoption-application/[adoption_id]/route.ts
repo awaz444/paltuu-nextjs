@@ -19,18 +19,20 @@ export async function POST(req: NextRequest, { params }: { params: { adoption_id
 
     try {
         await client.connect();
+        await client.query('BEGIN'); // Start transaction
 
-        // Update the status of the adoption application to "rejected"
-        const query = `
+        // 1. Update the status of the adoption application to "rejected"
+        const updateQuery = `
             UPDATE adoption_applications
             SET status = 'rejected'
             WHERE adoption_id = $1
-            RETURNING adoption_id, status;
+            RETURNING adoption_id, status, user_id, pet_id;
         `;
 
-        const result = await client.query(query, [adoption_id]);
+        const updateResult = await client.query(updateQuery, [adoption_id]);
 
-        if (result.rowCount === 0) {
+        if (updateResult.rowCount === 0) {
+            await client.query('ROLLBACK');
             return NextResponse.json(
                 { error: "Adoption application not found or already updated" },
                 {
@@ -40,7 +42,44 @@ export async function POST(req: NextRequest, { params }: { params: { adoption_id
             );
         }
 
-        const updatedApplication = result.rows[0];
+        const updatedApplication = updateResult.rows[0];
+        const { user_id: applicantId, pet_id: petId } = updatedApplication;
+
+        // 2. Fetch pet details (pet name) for the notification
+        const petQuery = `
+            SELECT pet_name FROM pets WHERE pet_id = $1;
+        `;
+
+        const petResult = await client.query(petQuery, [petId]);
+
+        if (petResult.rowCount === 0) {
+            await client.query('ROLLBACK');
+            return NextResponse.json(
+                { error: "Pet not found" },
+                {
+                    status: 404,
+                    headers: { "Content-Type": "application/json" },
+                }
+            );
+        }
+
+        const { pet_name: petName } = petResult.rows[0];
+
+        // 3. Create a notification for the applicant
+        const notificationQuery = `
+            INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+            VALUES ($1, $2, $3, $4, $5);
+        `;
+
+        await client.query(notificationQuery, [
+            applicantId,
+            `Your adoption application for ${petName} has been rejected.`,
+            'adoption_rejected',
+            false,
+            new Date()
+        ]);
+
+        await client.query('COMMIT'); // Commit transaction
 
         return NextResponse.json(
             {
@@ -53,6 +92,7 @@ export async function POST(req: NextRequest, { params }: { params: { adoption_id
             }
         );
     } catch (error) {
+        await client.query('ROLLBACK').catch(console.error);
         console.error("Database Error:", error);
         return NextResponse.json(
             { error: "Internal Server Error", message: (error as Error).message },

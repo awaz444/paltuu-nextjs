@@ -68,7 +68,7 @@ const Navbar = () => {
 
     // Updated dropdown items with isAction flag
     const dropdownItems = [
-        { href: "/profile", label: "My Profile", isAction: false },
+        { href: "/my-profile", label: "My Profile", isAction: false },
         { href: "/my-listings", label: "My Listings", isAction: false },
         { href: "/my-applications", label: "My Applications", isAction: false },
         { href: "/notifications", label: "Notifications", isAction: false },
@@ -202,7 +202,7 @@ const Navbar = () => {
                         <div className="dropdown-menu-mobile">
                             {dropdownItems.map((item) => (
                                 item.isAction ? (
-                                    <div 
+                                    <div
                                         key={item.href}
                                         className="dropdown-item-mobile"
                                         onClick={() => {

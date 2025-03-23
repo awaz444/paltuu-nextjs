@@ -49,7 +49,7 @@ export const fetchVetQualifications = createAsyncThunk(
 // ✅ Async thunk to post a new qualification
 export const postVetQualification = createAsyncThunk(
   'vetQualifications/postVetQualification',
-  async (qualificationData: { vet_id: string, qualification_id: number, year_acquired: string, note: string }, thunkAPI) => {
+  async (qualificationData: { vet_id: string; qualification_id: number; year_acquired: string; note: string }, thunkAPI) => {
     try {
       const response = await fetch(`/api/vet-qualification`, {
         method: 'POST',
@@ -65,19 +65,49 @@ export const postVetQualification = createAsyncThunk(
       }
 
       const result = await response.json();
-
-      // Check if response has "data" field to extract the qualification
       const qualification = result?.data || result;
       if (!qualification || !qualification.qualification_id) {
         throw new Error('Unexpected response format. Expected qualification object.');
       }
 
-      return qualification; // Return the created qualification as payload
+      return qualification;
     } catch (error: unknown) {
       if (error instanceof Error) {
         return thunkAPI.rejectWithValue(error.message);
       }
       return thunkAPI.rejectWithValue('An unknown error occurred while posting vet qualification.');
+    }
+  }
+);
+
+// ✅ Async thunk to update an existing qualification
+export const updateVetQualification = createAsyncThunk(
+  'vetQualifications/updateVetQualification',
+  async (qualificationData: { qualification_id: number; year_acquired: string; note: string }, thunkAPI) => {
+    try {
+      const response = await fetch(`/api/vet-qualification/${qualificationData.qualification_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          year_acquired: qualificationData.year_acquired,
+          note: qualificationData.note,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorDetail = await response.json();
+        throw new Error(errorDetail?.message || 'Failed to update vet qualification');
+      }
+
+      const updatedQualification = await response.json();
+      return updatedQualification;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return thunkAPI.rejectWithValue(error.message);
+      }
+      return thunkAPI.rejectWithValue('An unknown error occurred while updating vet qualification.');
     }
   }
 );
@@ -88,8 +118,8 @@ const vetQualificationsSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    // ✅ Handle fetchVetQualifications cases
     builder
+      // ✅ Handle fetchVetQualifications cases
       .addCase(fetchVetQualifications.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -120,6 +150,26 @@ const vetQualificationsSlice = createSlice({
       .addCase(postVetQualification.rejected, (state, action) => {
         state.loading = false;
         state.error = typeof action.payload === 'string' ? action.payload : 'Failed to post vet qualification.';
+      });
+
+    // ✅ Handle updateVetQualification cases
+    builder
+      .addCase(updateVetQualification.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateVetQualification.fulfilled, (state, action: PayloadAction<VetQualification>) => {
+        state.loading = false;
+        const index = state.qualifications.findIndex(
+          (q) => q.qualification_id === action.payload.qualification_id
+        );
+        if (index !== -1) {
+          state.qualifications[index] = action.payload;
+        }
+      })
+      .addCase(updateVetQualification.rejected, (state, action) => {
+        state.loading = false;
+        state.error = typeof action.payload === 'string' ? action.payload : 'Failed to update vet qualification.';
       });
   },
 });

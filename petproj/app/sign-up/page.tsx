@@ -41,6 +41,10 @@ const CreateUser = () => {
 
     const [isLoading, setIsLoading] = useState(false);
 
+    const handleBackToLogin = () => {
+        router.push('/login');
+    };
+
     useEffect(() => {
         dispatch(fetchCities());
     }, [dispatch]);
@@ -55,6 +59,15 @@ const CreateUser = () => {
 
         if (!isEmailVerified) {
             setFormErrors(prev => ({ ...prev, email: "Please verify your email first" }));
+            setIsLoading(false);
+            return;
+        }
+
+        if (!validatePassword(password)) {
+            setFormErrors(prev => ({
+                ...prev,
+                password: "Password must contain at least 8 characters, one uppercase, one lowercase, one number, and one special character"
+            }));
             setIsLoading(false);
             return;
         }
@@ -111,7 +124,7 @@ const CreateUser = () => {
 
         try {
             // Implement actual email verification API call
-            const response = await fetch('/api/verify-email', {
+            const response = await fetch('/api/send-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email }),
@@ -134,6 +147,11 @@ const CreateUser = () => {
 
     const validateEmail = (email: string) => {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    const validatePassword = (password: string) => {
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        return passwordRegex.test(password);
     };
 
     const handleOtpChange = (otp: string) => {
@@ -183,6 +201,17 @@ const CreateUser = () => {
 
             {/* Right Section (Form) */}
             <div className="lg:w-1/2 bg-gray-100 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
+
+                <button
+                    onClick={handleBackToLogin}
+                    className="absolute top-4 left-4 text-white hover:text-white-600 flex items-center"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                    </svg>
+                    Back to Login
+                </button>
+
                 <form
                     onSubmit={handleSubmit}
                     className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6 space-y-4"
@@ -225,6 +254,7 @@ const CreateUser = () => {
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                                 required
+                                disabled={isEmailVerified}
                             />
                             <button
                                 type="button"
@@ -244,74 +274,6 @@ const CreateUser = () => {
                             </p>
                         )}
                     </div>
-
-                    {/* Phone Number */}
-                    <div>
-                        <label className="block text-gray-700 text-sm font-medium mb-1">
-                            Phone Number
-                        </label>
-                        <div className="flex space-x-2">
-                            <input
-                                type="text"
-                                value="+92"
-                                className="w-12 border border-gray-300 pl-2 rounded-xl py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                                disabled
-                            />
-                            <input
-                                type="text"
-                                value={phone_number}
-                                onChange={(e) => setPhoneNumber(e.target.value)}
-                                placeholder="3338888666"
-                                className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Password */}
-                    <div className="relative">
-                        <label className="block text-gray-700 text-sm font-medium mb-1">
-                            Password
-                        </label>
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                            required
-                        />
-                        <span
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-6"
-                        >
-                            {showPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-                        </span>
-                    </div>
-
-                    {/* Confirm Password */}
-                    <div className="relative">
-                        <label className="block text-gray-700 text-sm font-medium mb-1">
-                            Confirm Password
-                        </label>
-                        <input
-                            type={showConfirmPassword ? "text" : "password"}
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                            required
-                        />
-                        <span
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-6"
-                        >
-                            {showConfirmPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-                        </span>
-                    </div>
-
-                    {passwordMismatchError && (
-                        <p className="text-red-500 text-sm mt-1">
-                            {passwordMismatchError}
-                        </p>
-                    )}
 
                     {/* Date of Birth */}
                     <div>
@@ -346,6 +308,75 @@ const CreateUser = () => {
                             ))}
                         </select>
                     </div>
+
+                    <div className="relative">
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Password
+                        </label>
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            required
+                            pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                        />
+                        {/* Show password toggle */}
+                        {formErrors.password && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {formErrors.password}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Confirm Password */}
+                    <div className="relative">
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Confirm Password
+                        </label>
+                        <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            required
+                        />
+                        <span
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-6"
+                        >
+                            {showConfirmPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                        </span>
+                    </div>
+
+                    {passwordMismatchError && (
+                        <p className="text-red-500 text-sm mt-1">
+                            {passwordMismatchError}
+                        </p>
+                    )}
+
+                    {/* Phone Number */}
+                    <div>
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Phone Number
+                        </label>
+                        <div className="flex space-x-2">
+                            <input
+                                type="text"
+                                value="+92"
+                                className="w-12 border border-gray-300 pl-2 rounded-xl py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                                disabled
+                            />
+                            <input
+                                type="text"
+                                value={phone_number}
+                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                placeholder="3338888666"
+                                className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                            />
+                        </div>
+                    </div>
+
 
                     {/* Role Checkbox */}
                     <div className="flex items-center space-x-2">

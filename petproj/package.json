@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@ant-design/icons": "^5.5.1",
@@ -33,6 +34,7 @@
     "next": "^14.0.3",
     "next-auth": "^4.24.10",
     "next-cloudinary": "^6.16.0",
+    "node-mailjet": "^6.0.8",
     "nodemailer": "^6.9.16",
     "pg": "^8.13.1",
     "prisma": "^5.22.0",

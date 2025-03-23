@@ -21,12 +21,12 @@ export async function POST(
         // Start the transaction
         await client.query("BEGIN");
 
-        // Step 1: Change the status of the specific foster application to 'accepted'
+        // Step 1: Change the status of the specific foster application to 'approved'
         const updateFosterQuery = `
             UPDATE foster_applications
             SET status = 'approved'
             WHERE foster_id = $1
-            RETURNING pet_id;
+            RETURNING pet_id, user_id;
         `;
         const fosterResult = await client.query(updateFosterQuery, [foster_id]);
 
@@ -34,23 +34,61 @@ export async function POST(
             throw new Error("Foster application not found");
         }
 
-        const pet_id = fosterResult.rows[0].pet_id;
+        const { pet_id, user_id: approvedUserId } = fosterResult.rows[0];
 
         // Step 2: Change the pet's status to 'fostered'
         const updatePetQuery = `
             UPDATE pets
             SET adoption_status = 'fostered'
-            WHERE pet_id = $1;
+            WHERE pet_id = $1
+            RETURNING pet_name;
         `;
-        await client.query(updatePetQuery, [pet_id]);
+        const petResult = await client.query(updatePetQuery, [pet_id]);
+
+        if (petResult.rowCount === 0) {
+            throw new Error("Pet not found");
+        }
+
+        const { pet_name: petName } = petResult.rows[0];
 
         // Step 3: Reject all other foster applications for the same pet_id
         const rejectOtherApplicationsQuery = `
             UPDATE foster_applications
             SET status = 'rejected'
-            WHERE pet_id = $1 AND foster_id != $2;
+            WHERE pet_id = $1 AND foster_id != $2
+            RETURNING user_id;
         `;
-        await client.query(rejectOtherApplicationsQuery, [pet_id, foster_id]);
+        const rejectResult = await client.query(rejectOtherApplicationsQuery, [pet_id, foster_id]);
+
+        // Step 4: Send notifications
+        // Notification to the approved applicant
+        const approvedNotificationQuery = `
+            INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+            VALUES ($1, $2, $3, $4, $5);
+        `;
+        await client.query(approvedNotificationQuery, [
+            approvedUserId,
+            `Congratulations! Your foster application for ${petName} has been approved.`,
+            'foster_approved',
+            false,
+            new Date()
+        ]);
+
+        // Notifications to all rejected applicants
+        const rejectedNotificationQuery = `
+            INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+            VALUES ($1, $2, $3, $4, $5);
+        `;
+        for (const row of rejectResult.rows) {
+            const { user_id: rejectedUserId } = row;
+            await client.query(rejectedNotificationQuery, [
+                rejectedUserId,
+                `Your foster application for ${petName} has been rejected.`,
+                'foster_rejected',
+                false,
+                new Date()
+            ]);
+        }
 
         // Commit the transaction
         await client.query("COMMIT");

@@ -1,0 +1,366 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model accepted_adoptions {
+  adoption_id     Int       @id @default(autoincrement())
+  user_id         Int?
+  pet_id          Int?
+  adoption_date   DateTime? @db.Timestamp(6)
+  adopter_address String?   @db.VarChar(255)
+  adoption_status String?   @db.VarChar(255)
+  created_at      DateTime? @default(now()) @db.Timestamp(6)
+  pets            pets?     @relation(fields: [pet_id], references: [pet_id], onDelete: NoAction, onUpdate: NoAction)
+  users           users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model admin_action_logs {
+  log_id           Int       @id @default(autoincrement())
+  admin_id         Int?
+  action_performed String?
+  target_entity    String?   @db.VarChar(255)
+  date_performed   DateTime? @default(now()) @db.Timestamp(6)
+  status           String?   @db.VarChar(255)
+  users            users?    @relation(fields: [admin_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model adoption_applications {
+  adoption_id             Int       @id @default(autoincrement())
+  user_id                 Int?
+  pet_id                  Int?
+  adopter_name            String?   @db.VarChar(255)
+  adopter_address         String?   @db.VarChar(255)
+  created_at              DateTime? @default(now()) @db.Timestamp(6)
+  status                  String?   @db.VarChar(255)
+  age_of_youngest_child   Int?
+  other_pets_details      String?
+  other_pets_neutered     Boolean?
+  has_secure_outdoor_area Boolean?
+  pet_sleep_location      String?   @db.VarChar(255)
+  pet_left_alone          String?
+  additional_details      String?
+  agree_to_terms          Boolean?
+  pets                    pets?     @relation(fields: [pet_id], references: [pet_id], onDelete: Cascade)
+  users                   users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model cities {
+  city_id              Int                    @id @default(autoincrement())
+  city_name            String                 @db.VarChar(255)
+  lost_and_found_posts lost_and_found_posts[]
+  pets                 pets[]
+  users                users[]
+}
+
+model favorite_things {
+  fav_thing_id        Int                   @id @default(autoincrement())
+  fav_thing_name      String                @db.VarChar(255)
+  pet_favorite_things pet_favorite_things[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model foster_applications {
+  foster_id               Int       @id @default(autoincrement())
+  user_id                 Int?
+  pet_id                  Int?
+  fosterer_name           String?   @db.VarChar(255)
+  fosterer_address        String?   @db.VarChar(255)
+  foster_start_date       DateTime? @db.Timestamp(6)
+  foster_end_date         DateTime? @db.Timestamp(6)
+  created_at              DateTime? @default(now()) @db.Timestamp(6)
+  status                  String?   @db.VarChar(255)
+  fostering_experience    String?
+  age_of_youngest_child   Int?
+  other_pets_details      String?
+  other_pets_neutered     Boolean?
+  has_secure_outdoor_area Boolean?
+  pet_sleep_location      String?   @db.VarChar(255)
+  pet_left_alone          String?
+  time_at_home            String?
+  reason_for_fostering    String?
+  additional_details      String?
+  agree_to_terms          Boolean?
+  pets                    pets?     @relation(fields: [pet_id], references: [pet_id], onDelete: NoAction, onUpdate: NoAction)
+  users                   users?    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+model lost_and_found_post_images {
+  image_id             Int                  @id @default(autoincrement())
+  post_id              Int
+  image_url            String               @db.VarChar(255)
+  created_at           DateTime?            @default(now()) @db.Timestamp(6)
+  lost_and_found_posts lost_and_found_posts @relation(fields: [post_id], references: [post_id], onDelete: Cascade, map: "fk_post_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model lost_and_found_posts {
+  post_id                    Int                          @id @default(autoincrement())
+  user_id                    Int?
+  post_type                  String?                      @db.VarChar(255)
+  pet_description            String?
+  city_id                    Int?
+  location                   String?                      @db.VarChar(255)
+  contact_info               String?                      @db.VarChar(255)
+  post_date                  DateTime?                    @default(now()) @db.Timestamp(6)
+  status                     String?                      @default("active") @db.VarChar(255)
+  category_id                Int?
+  date                       DateTime?                    @db.Date
+  lost_and_found_post_images lost_and_found_post_images[]
+  pet_category               pet_category?                @relation(fields: [category_id], references: [category_id], onDelete: Cascade)
+  cities                     cities?                      @relation(fields: [city_id], references: [city_id], onDelete: Cascade, onUpdate: NoAction)
+  users                      users?                       @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model notifications {
+  notification_id      Int       @id @default(autoincrement())
+  user_id              Int?
+  notification_content String?
+  notification_type    String?   @db.VarChar(255)
+  date_sent            DateTime? @default(now()) @db.Timestamp(6)
+  is_read              Boolean?  @default(false)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ongoing_fosters {
+  foster_id         Int       @id @default(autoincrement())
+  user_id           Int?
+  pet_id            Int?
+  foster_start_date DateTime? @db.Timestamp(6)
+  foster_end_date   DateTime? @db.Timestamp(6)
+  foster_duration   String?   @db.VarChar(255)
+  status            String?   @db.VarChar(255)
+  created_at        DateTime? @default(now()) @db.Timestamp(6)
+  pets              pets?     @relation(fields: [pet_id], references: [pet_id], onDelete: NoAction, onUpdate: NoAction)
+  users             users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model ongoing_sponsorships {
+  sponsorship_id         Int       @id @default(autoincrement())
+  user_id                Int?
+  pet_id                 Int?
+  sponsorship_start_date DateTime? @db.Timestamp(6)
+  sponsorship_end_date   DateTime? @db.Timestamp(6)
+  sponsorship_amount     Decimal?  @db.Decimal(10, 2)
+  created_at             DateTime? @default(now()) @db.Timestamp(6)
+  pets                   pets?     @relation(fields: [pet_id], references: [pet_id], onDelete: NoAction, onUpdate: NoAction)
+  users                  users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model pet_category {
+  category_id          Int                    @id @default(autoincrement())
+  category_name        String                 @db.VarChar(255)
+  lost_and_found_posts lost_and_found_posts[]
+  pets                 pets[]
+  vet_specializations  vet_specializations[]
+}
+
+model pet_favorite_things {
+  pet_id          Int
+  fav_thing_id    Int
+  favorite_things favorite_things @relation(fields: [fav_thing_id], references: [fav_thing_id], onDelete: Cascade, onUpdate: NoAction)
+  pets            pets            @relation(fields: [pet_id], references: [pet_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([pet_id, fav_thing_id])
+}
+
+model pet_images {
+  image_id   Int       @id @default(autoincrement())
+  pet_id     Int?
+  image_url  String?   @db.VarChar(255)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  order      Int?
+  pets       pets?     @relation(fields: [pet_id], references: [pet_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pets {
+  pet_id                 Int                     @id @default(autoincrement())
+  owner_id               Int?
+  pet_name               String                  @db.VarChar(255)
+  pet_type               Int?
+  pet_breed              String?                 @db.VarChar(255)
+  city_id                Int?
+  area                   String?                 @db.VarChar(255)
+  age                    Int?
+  description            String?                 @db.VarChar(255)
+  adoption_status        String?                 @db.VarChar(255)
+  price                  Decimal?                @default(0) @db.Decimal(10, 2)
+  min_age_of_children    Int?
+  can_live_with_dogs     Boolean?
+  can_live_with_cats     Boolean?
+  must_have_someone_home Boolean?
+  energy_level           Int?
+  cuddliness_level       Int?
+  health_issues          String?                 @db.VarChar(255)
+  created_at             DateTime?               @default(now()) @db.Timestamp(6)
+  sex                    String?                 @db.VarChar(255)
+  listing_type           String?                 @db.VarChar(255)
+  vaccinated             Boolean?
+  neutered               Boolean?
+  payment_frequency      String?                 @db.VarChar(10)
+  approved               Boolean?                @default(false)
+  accepted_adoptions     accepted_adoptions[]
+  adoption_applications  adoption_applications[]
+  foster_applications    foster_applications[]
+  ongoing_fosters        ongoing_fosters[]
+  ongoing_sponsorships   ongoing_sponsorships[]
+  pet_favorite_things    pet_favorite_things[]
+  pet_images             pet_images[]
+  cities                 cities?                 @relation(fields: [city_id], references: [city_id], onDelete: Cascade, onUpdate: NoAction)
+  users                  users?                  @relation(fields: [owner_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  pet_category           pet_category?           @relation(fields: [pet_type], references: [category_id], onUpdate: NoAction)
+  sponsor_applications   sponsor_applications[]
+}
+
+model qualifications {
+  qualification_id             Int                            @id @default(autoincrement())
+  qualification_name           String?                        @db.VarChar(255)
+  description                  String?
+  created_at                   DateTime?                      @default(now()) @db.Timestamp(6)
+  vet_qualifications           vet_qualifications[]
+  vet_verification_application vet_verification_application[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model sponsor_applications {
+  sponsorship_id           Int       @id @default(autoincrement())
+  user_id                  Int?
+  pet_id                   Int?
+  sponsorship_start_date   DateTime? @db.Timestamp(6)
+  sponsorship_amount       Decimal?  @db.Decimal(10, 2)
+  created_at               DateTime? @default(now()) @db.Timestamp(6)
+  status                   String?   @db.VarChar(255)
+  reason_for_sponsorship   String?
+  sponsorship_duration     String?   @db.VarChar(255)
+  are_you_able_to_meet_pet Boolean?
+  updates_preference       String?   @db.VarChar(255)
+  additional_details       String?
+  agree_to_terms           Boolean?
+  pets                     pets?     @relation(fields: [pet_id], references: [pet_id], onDelete: NoAction, onUpdate: NoAction)
+  users                    users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  user_id               Int                     @id @default(autoincrement())
+  name                  String                  @db.VarChar(255)
+  dob                   DateTime?               @db.Date
+  city_id               Int?
+  email                 String                  @unique @db.VarChar(255)
+  password              String                  @db.VarChar(255)
+  phone_number          String?                 @db.VarChar(255)
+  profile_image_url     String?                 @db.VarChar(255)
+  role                  String?                 @db.VarChar(255)
+  created_at            DateTime?               @default(now()) @db.Timestamp(6)
+  oauth_provider        String?
+  oauth_id              String?
+  id                    Int?                    @unique
+  username              String?
+  phone_verified        Boolean?                @default(false)
+  accepted_adoptions    accepted_adoptions[]
+  admin_action_logs     admin_action_logs[]
+  adoption_applications adoption_applications[]
+  foster_applications   foster_applications[]
+  lost_and_found_posts  lost_and_found_posts[]
+  ongoing_fosters       ongoing_fosters[]
+  ongoing_sponsorships  ongoing_sponsorships[]
+  pets                  pets[]
+  sponsor_applications  sponsor_applications[]
+  cities                cities?                 @relation(fields: [city_id], references: [city_id], onDelete: Cascade, onUpdate: NoAction)
+  vet_reviews           vet_reviews[]
+  vets                  vets[]
+}
+
+model vet_availability {
+  availability_id Int       @id @default(autoincrement())
+  vet_id          Int?
+  day_of_week     String?   @db.VarChar(255)
+  start_time      DateTime? @db.Time(6)
+  end_time        DateTime? @db.Time(6)
+  vets            vets?     @relation(fields: [vet_id], references: [vet_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model vet_qualifications {
+  vet_id                Int
+  qualification_id      Int
+  year_acquired         Int?
+  note                  String?
+  vet_qualifications_id Int            @id @default(autoincrement())
+  qualifications        qualifications @relation(fields: [qualification_id], references: [qualification_id], onDelete: Cascade, map: "fk_qualification")
+  vets                  vets           @relation(fields: [vet_id], references: [vet_id], onDelete: Cascade, map: "fk_vet")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model vet_reviews {
+  review_id      Int       @id @default(autoincrement())
+  vet_id         Int?
+  user_id        Int?
+  rating         Int?
+  review_content String?
+  review_date    DateTime? @default(now()) @db.Timestamp(6)
+  approved       Boolean?  @default(false)
+  users          users?    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  vets           vets?     @relation(fields: [vet_id], references: [vet_id], onDelete: Cascade)
+}
+
+model vet_specializations {
+  vet_id       Int
+  category_id  Int
+  pet_category pet_category @relation(fields: [category_id], references: [category_id], onDelete: Cascade, onUpdate: NoAction)
+  vets         vets         @relation(fields: [vet_id], references: [vet_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([vet_id, category_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model vet_verification_application {
+  application_id   Int            @id @default(autoincrement())
+  vet_id           Int
+  qualification_id Int
+  image_url        String?        @db.VarChar(255)
+  created_at       DateTime?      @default(now()) @db.Timestamp(6)
+  status           String?        @default("pending") @db.VarChar(10)
+  qualifications   qualifications @relation(fields: [qualification_id], references: [qualification_id], onDelete: NoAction, onUpdate: NoAction)
+  vets             vets           @relation(fields: [vet_id], references: [vet_id], onDelete: Cascade)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model vets {
+  vet_id                       Int                            @id @default(autoincrement())
+  user_id                      Int?
+  clinic_name                  String?                        @db.VarChar(255)
+  location                     String?                        @db.VarChar(255)
+  minimum_fee                  Int?
+  contact_details              String?                        @db.VarChar(255)
+  profile_verified             Boolean?                       @default(false)
+  created_at                   DateTime?                      @default(now()) @db.Timestamp(6)
+  bio                          String?
+  clinic_whatsapp              String?                        @db.VarChar(15)
+  clinic_email                 String?                        @db.VarChar(255)
+  applied                      Boolean?                       @default(false)
+  approved                     Boolean?                       @default(false)
+  vet_availability             vet_availability[]
+  vet_qualifications           vet_qualifications[]
+  vet_reviews                  vet_reviews[]
+  vet_specializations          vet_specializations[]
+  vet_verification_application vet_verification_application[]
+  users                        users?                         @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model OTP {
+  id        String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email     String    @unique @db.VarChar(255)
+  otp       String    @db.VarChar(255)
+  attempts  Int?      @default(0)
+  createdat DateTime? @default(now()) @db.Timestamp(6)
+
+  @@map("OTP")
+}

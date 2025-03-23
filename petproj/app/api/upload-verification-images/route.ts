@@ -15,23 +15,17 @@ export async function POST(request: NextRequest) {
 
   try {
     const data = await request.formData();
-    const files = data.getAll("files") as File[]; // Get all files from the request
+    const files = data.getAll("files") as File[];
 
     if (!files || files.length === 0) {
-      return NextResponse.json(
-        { error: "No files were provided" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No files were provided" }, { status: 400 });
     }
 
-    const vet_id = data.get("vet_id"); // Vet ID for linking verification
-    const qualification_id = data.get("qualification_id"); // Associated qualification ID
+    const vet_id = data.get("vet_id");
+    const qualification_id = data.get("qualification_id");
 
     if (!vet_id || !qualification_id) {
-      return NextResponse.json(
-        { error: "Vet ID or Qualification ID is missing from the request" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Vet ID or Qualification ID is missing from the request" }, { status: 400 });
     }
 
     console.log("Vet ID:", vet_id, "Qualification ID:", qualification_id);
@@ -48,7 +42,7 @@ export async function POST(request: NextRequest) {
               reject(error);
             } else {
               console.log("Uploaded URL:", result!.secure_url);
-              resolve(result!.secure_url); // Ensure `secure_url` exists
+              resolve(result!.secure_url);
             }
           }
         );
@@ -62,47 +56,58 @@ export async function POST(request: NextRequest) {
     await client.connect();
     console.log("Database connected");
 
-    // Insert image URLs into the vet-verification-application table
+    // Insert image URLs into the vet_verification_application table
     for (let i = 0; i < urls.length; i++) {
       const image_url = urls[i];
-      const image_id = uuidv4();
 
       console.log(`Inserting image ${i + 1} into the database`);
       try {
         const query = `
           WITH vet_data AS (
-            SELECT vet_id 
-            FROM vets 
-            WHERE user_id = $1
+            SELECT vet_id, user_id FROM vets WHERE user_id = $1
           )
-          -- Insert into vet_verification_application using the fetched vet_id
           INSERT INTO vet_verification_application (vet_id, qualification_id, image_url)
-          VALUES ((SELECT vet_id FROM vet_data), $2, $3);
+          VALUES ((SELECT vet_id FROM vet_data), $2, $3)
+          RETURNING (SELECT user_id FROM vet_data);
         `;
         const queryParams = [vet_id, qualification_id, image_url];
 
         console.log("Query Parameters:", queryParams);
-        await client.query(query, queryParams);
+        const result = await client.query(query, queryParams);
+        const vetUserId = result.rows[0]?.user_id; // Get the user_id of the vet
         console.log(`Image ${i + 1} inserted successfully`);
+
+        // Send notification to the vet
+        if (vetUserId) {
+          const notificationQuery = `
+            INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+            VALUES ($1, $2, $3, $4, $5);
+          `;
+          await client.query(notificationQuery, [
+            vetUserId,
+            "You have applied as a vet. Your application will be reviewed by an admin.",
+            "vet_application",
+            false,
+            new Date(),
+          ]);
+          console.log("Notification sent to vet user:", vetUserId);
+        }
       } catch (error) {
         console.error(`Error inserting image ${i + 1}:`, error);
-        throw error; // Rethrow to break the process if needed
+        throw error;
       }
     }
 
     return NextResponse.json(
-      { message: "Images uploaded and stored successfully", urls },
+      { message: "Images uploaded and stored successfully. Notification sent.", urls },
       { status: 200 }
     );
   } catch (error) {
     console.error("Error:", error);
-    return NextResponse.json(
-      { error: "Failed to upload images", details: (error as Error).message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to upload images", details: (error as Error).message }, { status: 500 });
   } finally {
     try {
-      await client.end(); // Close the database connection after the operation
+      await client.end();
       console.log("Database connection closed");
     } catch (error) {
       console.error("Error closing database connection:", error);

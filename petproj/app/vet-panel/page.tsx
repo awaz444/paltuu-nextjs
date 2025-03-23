@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
+import VetQualificationEditModal from "components/VetQualificationEditModal";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import Link from "next/link";
 import { MoonLoader } from "react-spinners";
@@ -40,24 +41,27 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
     const [data, setData] = useState<VetPanelData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [vetid, setvetid] = useState<string>("");
+
 
     useEffect(() => {
         const fetchVetData = async () => {
             setLoading(true);
-    
+
             try {
                 // Get the user from localStorage
                 const userString = localStorage.getItem("user");
                 if (!userString) {
                     throw new Error("User data not found in local storage");
                 }
-    
+
                 const user = JSON.parse(userString);
                 const userId = user?.id;
                 if (!userId) {
                     throw new Error("User ID is missing from the user object");
                 }
-    
+                
                 // Fetch vet_id using the API
                 const vetResponse = await fetch(`/api/get-vet-id?user_id=${userId}`);
                 if (!vetResponse.ok) {
@@ -65,9 +69,10 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                         `Failed to fetch vet ID. Status: ${vetResponse.status}`
                     );
                 }
-    
+
                 const { vet_id } = await vetResponse.json();
                 console.log(vet_id)
+                setvetid(vet_id)
                 // Fetch vet panel data using the vet_id
                 const res = await fetch(`/api/vet-panel/${vet_id}`);
                 if (!res.ok) {
@@ -75,7 +80,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                         `Failed to fetch vet data. Status: ${res.status}`
                     );
                 }
-    
+
                 const responseData: VetPanelData = await res.json();
                 setData(responseData);
             } catch (error) {
@@ -89,7 +94,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                 setLoading(false);
             }
         };
-    
+
         fetchVetData();
     }, []);
 
@@ -183,11 +188,10 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                                     Profile Verified:
                                 </span>{" "}
                                 <span
-                                    className={`px-2 py-1 rounded ${
-                                        personal_info.profile_verified
+                                    className={`px-2 py-1 rounded ${personal_info.profile_verified
                                             ? "bg-green-200 text-green-800 border border-green-800"
                                             : "bg-red-200 text-red-800 border border-red-800"
-                                    }`}>
+                                        }`}>
                                     {personal_info.profile_verified
                                         ? "Yes"
                                         : "No"}
@@ -203,16 +207,12 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                     <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
-                            title="Edit Qualifications">
-                            <img
-                                src="/pen.svg"
-                                alt="Edit"
-                                className="hover:text-primary"
-                            />
+                            title="Edit Qualifications"
+                            onClick={() => setIsModalOpen(true)} // Open modal when clicked
+                        >
+                            <img src="/pen.svg" alt="Edit" className="hover:text-primary" />
                         </button>
-                        <h4 className="text-lg font-bold text-primary mb-4">
-                            Qualifications
-                        </h4>
+                        <h4 className="text-lg font-bold text-primary mb-4">Qualifications</h4>
                         {qualifications.length > 0 ? (
                             <ul className="list-disc list-inside">
                                 {qualifications.map((item, index) => (
@@ -223,9 +223,14 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                             <p>No qualifications listed.</p>
                         )}
                     </div>
+                    <VetQualificationEditModal
+                        vetId={vetid}
+                        isOpen={isModalOpen}
+                        onClose={() => setIsModalOpen(false)}
+                    />
 
                     {/* Specializations */}
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary border border-gray-200 hover:border-primary">
+                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
                             title="Edit Specializations">
@@ -251,12 +256,12 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
 
                     {/* Reviews Summary */}
                     <Link href='/vet-reviews-summary'>
-                        <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary border border-gray-200 hover:border-primary border border-gray-200 hover:border-primary">
+                        <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
                             <div
                                 className="absolute top-4 right-4 w-6 h-6"
                                 title="View Reviews">
                                 <img
-                                    src="/arrow-right.svg"  
+                                    src="/arrow-right.svg"
                                     alt="Details"
                                     className="hover:text-primary"
                                 />
@@ -280,7 +285,7 @@ const VetPanel = ({ params }: VetPanelPageProps) => {
                     </Link>
 
                     {/* Schedule */}
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary border border-gray-200 hover:border-primary">
+                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
                             title="Edit Schedule">

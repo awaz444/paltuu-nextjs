@@ -19,6 +19,10 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false); // Loading state for Google login
 
+    const handleBackToHome = () => {
+        router.push('/browse-pets');
+    };
+
     // Redirect to dashboard if already authenticated
     useEffect(() => {
         if (isAuthenticated) {
@@ -64,7 +68,7 @@ export default function Login() {
             setLoading(false);
         }
     };
-    
+
     // Handle Google login
     const handleGoogleLogin = async () => {
         try {
@@ -88,6 +92,17 @@ export default function Login() {
 
             {/* Right Side */}
             <div className="sm:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 bg-gray-100">
+
+                <button
+                    onClick={handleBackToHome}
+                    className="absolute top-4 left-4 text-white hover:text-white-600 flex items-center"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                    </svg>
+                    Back to Home
+                </button>
+
                 <h2 className="text-3xl font-semibold mb-4">Login</h2>
                 <p className="text-gray-600">
                     Enter your credentials to access your account.

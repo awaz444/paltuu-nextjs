@@ -7,10 +7,10 @@ import { fetchPetCategories } from "../app/store/slices/petCategoriesSlice";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 
 interface LostAndFoundFilterProps {
-    onSearch: (filters: { 
-        selectedCity: string; 
-        location: string; 
-        selectedCategory: string 
+    onSearch: (filters: {
+        selectedCity: string;
+        location: string;
+        selectedCategory: string
     }) => void;
 }
 
@@ -40,9 +40,9 @@ const LostAndFoundFilter: React.FC<LostAndFoundFilterProps> = ({ onSearch }) => 
 
     // In LostAndFoundFilter
     const handleSearch = () => {
-        onSearch({ 
-            selectedCity, 
-            location, 
+        onSearch({
+            selectedCity,
+            location,
             selectedCategory: selectedSpecies  // Now matches the interface
         });
     };
@@ -99,17 +99,13 @@ const LostAndFoundFilter: React.FC<LostAndFoundFilterProps> = ({ onSearch }) => 
 
                 {/* Mobile Layout - Show "Species" filter + Search & More Filters buttons */}
                 <div className="md:hidden flex flex-col gap-4">
-                    <div>
-                        <label className="text-xs">Species</label>
-                        <select
-                            className="w-full p-3 border rounded-xl"
-                            value={selectedSpecies}
-                            onChange={(e) => setSelectedSpecies(e.target.value)}
-                        >
-                            <option value="">Select Species</option>
-                            {categories.map((category) => (
-                                <option key={category.category_id} value={category.category_id}>
-                                    {category.category_name}
+                    <div className="flex-1 min-w-[150px]">
+                        <label className="text-xs">City</label>
+                        <select className="w-full p-3 border rounded-xl" value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)}>
+                            <option value="">Select City</option>
+                            {cities.map((city) => (
+                                <option key={city.city_id} value={city.city_id}>
+                                    {city.city_name}
                                 </option>
                             ))}
                         </select>

@@ -12,16 +12,16 @@ import { useSearchParams } from 'next/navigation';
 
 // type FileType = Parameters<typeof UploadProps["beforeUpload"]>[0];
 const beforeUpload = (file: File) => {
-    const isImage = file.type.startsWith('image/');
-    if (!isImage) {
-      message.error("You can only upload image files!");
-    }
-    const isSmallEnough = file.size / 1024 / 1024 < 5; // 5MB max size
-    if (!isSmallEnough) {
-      message.error("Image must be smaller than 5MB!");
-    }
-    return isImage && isSmallEnough;
-  };
+  const isImage = file.type.startsWith('image/');
+  if (!isImage) {
+    message.error("You can only upload image files!");
+  }
+  const isSmallEnough = file.size / 1024 / 1024 < 5; // 5MB max size
+  if (!isSmallEnough) {
+    message.error("Image must be smaller than 5MB!");
+  }
+  return isImage && isSmallEnough;
+};
 
 const getBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -41,11 +41,12 @@ function CreatePetList() {
   const [fileList, setFileList] = useState<UploadFile[]>([]); // State for uploaded files
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
+  const [isLoading, setIsLoading] = useState(false)
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    setIsLoading(true);
     if (!petId) {
       message.error("Pet ID is missing.");
       return;
@@ -88,6 +89,8 @@ function CreatePetList() {
     } catch (error) {
       message.error("Error occurred while uploading images.");
       console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -148,10 +151,12 @@ function CreatePetList() {
 
           <button
             type="submit"
-            className="mt-4 p-3 bg-primary text-white rounded-3xl w-full"
+            className="mt-4 p-3 bg-primary text-white rounded-3xl w-full disabled:opacity-50"
+            disabled={isLoading} // ✅ Disable button when Loading
           >
-            Upload Images
+            {isLoading ? "Uploading..." : "Upload Images"} {/* ✅ Show loading text */}
           </button>
+
         </form>
       </div>
     </>
@@ -164,7 +169,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-const CreatePetListing : React.FC = () => {
+const CreatePetListing: React.FC = () => {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <CreatePetList />

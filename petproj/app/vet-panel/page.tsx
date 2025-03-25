@@ -6,6 +6,8 @@ import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import { CameraOutlined, LoadingOutlined, LockOutlined, PlusOutlined } from "@ant-design/icons";
 import { format } from "date-fns";
 import { Modal, Input, Form, message, Button } from "antd";
+import Link from "next/link";
+import { FaArrowRight } from "react-icons/fa";
 import './styles.css';
 
 interface UserProfileData {
@@ -834,41 +836,45 @@ const VetProfile = () => {
                             ))}
                         </div>
                     </ProfileSection>
-                </div>
 
-                <div className="bg-white rounded-xl shadow-lg p-6  mt-3">
+                </div>
+                <div className="bg-white rounded-xl shadow-lg p-6 mt-3">
                     {/* Reviews Section */}
                     <ProfileSection title="Reviews">
                         {vetData.reviews.total_approved_reviews === 0 ? (
                             <p className="text-gray-500">No reviews yet</p>
                         ) : (
-                            <div className="space-y-4">
-                                <div className="border rounded-lg p-4">
-                                    <div className="flex justify-between mb-2">
-                                        <span className="font-medium">Total Approved Reviews</span>
-                                        <span>{vetData.reviews.total_approved_reviews}</span>
-                                    </div>
-                                    <div className="flex justify-between mb-2">
-                                        <span className="font-medium">Total Pending Reviews</span>
-                                        <span>{vetData.reviews.total_pending_reviews}</span>
-                                    </div>
-                                    <div className="flex justify-between mb-2">
-                                        <span className="font-medium">Average Rating</span>
-                                        <span>{vetData.reviews.average_rating}</span>
-                                    </div>
-                                    <div className="flex justify-between mb-2">
-                                        <span className="font-medium">Most Recent Review Date</span>
-                                        <span>
-                                            {vetData.reviews.most_recent_review_date
-                                                ? new Date(vetData.reviews.most_recent_review_date).toLocaleDateString()
-                                                : "N/A"}
-                                        </span>
+                            <Link href="/vet-reviews-summary" className="block">
+                                <FaArrowRight className="w-4 h-4" /> {/* Right Arrow */}
+                                <div className="space-y-4 cursor-pointer hover:bg-gray-100 p-4 rounded-lg transition">
+                                    <div className="border rounded-lg p-4">
+                                        <div className="flex justify-between mb-2">
+                                            <span className="font-medium">Total Approved Reviews</span>
+                                            <span>{vetData.reviews.total_approved_reviews}</span>
+                                        </div>
+                                        <div className="flex justify-between mb-2">
+                                            <span className="font-medium">Total Pending Reviews</span>
+                                            <span>{vetData.reviews.total_pending_reviews}</span>
+                                        </div>
+                                        <div className="flex justify-between mb-2">
+                                            <span className="font-medium">Average Rating</span>
+                                            <span>{vetData.reviews.average_rating}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="font-medium">Most Recent Review Date</span>
+                                            <span className="flex items-center gap-2">
+                                                {vetData.reviews.most_recent_review_date
+                                                    ? new Date(vetData.reviews.most_recent_review_date).toLocaleDateString()
+                                                    : "N/A"}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </Link>
                         )}
                     </ProfileSection>
                 </div>
+
 
                 {/* Password Change Modal */}
                 <Modal

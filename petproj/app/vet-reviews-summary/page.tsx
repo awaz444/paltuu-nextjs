@@ -222,25 +222,31 @@ const ReviewsSummary = () => {
                 </div>
 
                 {/* Blurred Content for Pending Reviews */}
-                <div className={isPending ? "filter blur-sm transition-all" : ""}>
+                <div
+                    className={isPending ? "filter blur-sm transition-all" : ""}
+                    style={isPending ? { userSelect: "none" } : {}}
+                >
                     {/* Rating Stars */}
-                    <div className="stars">
+                    <div className="stars" style={isPending ? { userSelect: "none" } : {}}>
                         {renderStars(isPending ? 5 : review.rating)}
                     </div>
 
                     {/* Review Content */}
-                    <p className="text-gray-600 mb-2">"{review.review_content}"</p>
+                    <p className="text-gray-600 mb-2" style={isPending ? { userSelect: "none" } : {}}>
+                        "{review.review_content}"
+                    </p>
 
                     {/* Review Date */}
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-gray-400" style={isPending ? { userSelect: "none" } : {}}>
                         {new Date(review.review_date).toLocaleDateString()}
                     </p>
                 </div>
 
                 {/* Semi-transparent overlay for pending reviews */}
                 {isPending && (
-                    <div className="absolute inset-0 bg-white bg-opacity-40 pointer-events-none" />
+                    <div className="absolute inset-0 bg-white bg-opacity-40 pointer-events-none" style={{ userSelect: "none" }} />
                 )}
+
             </div>
         </div>
     );

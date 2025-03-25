@@ -117,7 +117,6 @@ export async function POST(request: NextRequest) {
     // **Insert notifications for all admin users**
     if (adminUserIds.length > 0) {
       const adminNotificationContent = `A new vet verification application has been submitted. Please review it.`;
-
       const notificationQuery = `
         INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
         VALUES ${adminUserIds

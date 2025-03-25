@@ -2,317 +2,460 @@
 
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
-import VetQualificationEditModal from "components/VetQualificationEditModal";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
-import Link from "next/link";
-import { MoonLoader } from "react-spinners";
+import { CameraOutlined, LoadingOutlined, LockOutlined } from "@ant-design/icons";
+import { format } from "date-fns";
+import { Modal, Input, Form, message } from "antd";
+import './styles.css';
 
-interface VetPanelPageProps {
-    params: {
-        vetId: string;
-    };
+interface UserProfileData {
+    user_id: string;
+    name: string;
+    dob: string;
+    email: string;
+    profile_image_url: string;
+    phone_number: string;
+    city: string;
+    created_at: string;
 }
 
-interface VetPanelData {
-    personal_info: {
-        profile_image_url: string;
-        vet_name: string;
-        clinic_name: string;
-        location: string;
-        city: string;
-        contact_details: string;
-        email: string;
-        minimum_fee: number;
-        profile_verified: boolean;
-    };
-    reviews_summary: {
-        average_rating: number;
-        total_reviews: number;
-    };
-    qualifications: string[];
-    specializations: string[];
-    schedules: { day_of_week: string; start_time: string; end_time: string }[];
+interface City {
+    city_id: string;
+    city_name: string;
 }
 
-const VetPanel = ({ params }: VetPanelPageProps) => {
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+const MyProfile = () => {
     useSetPrimaryColor();
+    const [userId, setUserId] = useState<string | null>(null);
+    const [data, setData] = useState<UserProfileData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [editing, setEditing] = useState(false);
+    const [updatedData, setUpdatedData] = useState<UserProfileData | null>(null);
+    const [imageLoading, setImageLoading] = useState(false);
+    const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+    const [passwordForm] = Form.useForm();
+    const [cities, setCities] = useState<City[]>([]);
 
-    const { vetId } = params;
-    const [data, setData] = useState<VetPanelData | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [vetid, setvetid] = useState<string>("");
+    const handlePasswordChange = async (values: {
+        currentPassword: string;
+        newPassword: string;
+        confirmPassword: string;
+    }) => {
+        try {
+            if (values.newPassword !== values.confirmPassword) {
+                throw new Error("New passwords don't match");
+            }
 
+            if (!passwordRegex.test(values.newPassword)) {
+                throw new Error(
+                    "Password must contain at least 8 characters, including uppercase, lowercase, number, and special character"
+                );
+            }
+
+            const res = await fetch(`/api/change-password/${userId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    currentPassword: values.currentPassword,
+                    newPassword: values.newPassword
+                })
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Password change failed");
+            }
+
+            message.success("Password changed successfully");
+            setPasswordModalVisible(false);
+            passwordForm.resetFields();
+        } catch (error: any) {
+            message.error(error.message || "Failed to change password");
+        }
+    };
 
     useEffect(() => {
-        const fetchVetData = async () => {
-            setLoading(true);
+        const loadUserData = async () => {
+            const storedUser = localStorage.getItem("user");
+            if (!storedUser) return;
 
+            const parsedUser = JSON.parse(storedUser);
+            if (!parsedUser?.id) return;
+
+            setUserId(parsedUser.id);
             try {
-                // Get the user from localStorage
-                const userString = localStorage.getItem("user");
-                if (!userString) {
-                    throw new Error("User data not found in local storage");
-                }
+                // Fetch user profile data
+                const res = await fetch(`/api/my-profile/${parsedUser.id}`);
+                if (!res.ok) throw new Error('Failed to fetch profile');
+                const profileData = await res.json();
+                setData(profileData);
+                setUpdatedData(profileData);
 
-                const user = JSON.parse(userString);
-                const userId = user?.id;
-                if (!userId) {
-                    throw new Error("User ID is missing from the user object");
-                }
-                
-                // Fetch vet_id using the API
-                const vetResponse = await fetch(`/api/get-vet-id?user_id=${userId}`);
-                if (!vetResponse.ok) {
-                    throw new Error(
-                        `Failed to fetch vet ID. Status: ${vetResponse.status}`
-                    );
-                }
-
-                const { vet_id } = await vetResponse.json();
-                console.log(vet_id)
-                setvetid(vet_id)
-                // Fetch vet panel data using the vet_id
-                const res = await fetch(`/api/vet-panel/${vet_id}`);
-                if (!res.ok) {
-                    throw new Error(
-                        `Failed to fetch vet data. Status: ${res.status}`
-                    );
-                }
-
-                const responseData: VetPanelData = await res.json();
-                setData(responseData);
+                // Fetch cities data
+                const citiesRes = await fetch('/api/cities');
+                if (!citiesRes.ok) throw new Error('Failed to fetch cities');
+                const citiesData = await citiesRes.json();
+                setCities(citiesData);
             } catch (error) {
-                // Type guard to handle `unknown` errors
-                if (error instanceof Error) {
-                    setError(error.message);
-                } else {
-                    setError("An unknown error occurred");
-                }
+                console.error("Error loading data:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchVetData();
+        loadUserData();
     }, []);
 
-    const [primaryColor, setPrimaryColor] = useState("#000000"); // Default fallback color
+    const handleImageUpload = async (file: File) => {
+        if (!userId) return;
 
-    useEffect(() => {
-        // Get the computed style of the `--primary-color` CSS variable
-        const rootStyles = getComputedStyle(document.documentElement);
-        const color = rootStyles.getPropertyValue("--primary-color").trim();
-        if (color) {
-            setPrimaryColor(color);
+        setImageLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const uploadRes = await fetch(`/api/update-profile-image/${userId}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!uploadRes.ok) throw new Error('Upload failed');
+            const { url } = await uploadRes.json();
+
+            setUpdatedData(prev => prev ? { ...prev, profile_image_url: url } : null);
+            setData(prev => prev ? { ...prev, profile_image_url: url } : null);
+
+        } catch (error) {
+            Modal.error({ title: 'Upload Failed', content: 'Could not update profile image' });
+        } finally {
+            setImageLoading(false);
         }
-    }, []);
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setUpdatedData((prev) => prev ? { ...prev, [name]: value } : null);
+    };
+
+    const handleSaveChanges = async () => {
+        if (!userId || !updatedData) return;
+
+        try {
+            const res = await fetch(`/api/my-profile/${userId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedData)
+            });
+
+            if (!res.ok) throw new Error('Update failed');
+
+            const result = await res.json();
+            setData(result.user);
+            setUpdatedData(result.user);
+            setEditing(false);
+
+            message.success({
+                content: 'Profile updated successfully',
+                duration: 3,
+            });
+        } catch (error) {
+            message.error({
+                content: 'Failed to update profile',
+                duration: 3,
+            });
+        }
+    };
+
+    const handleCancel = () => {
+        setUpdatedData(data);
+        setEditing(false);
+    };
+
+    const ProfileField = ({ label, value, name, type = "text", editable = true, cities = [] }: {
+        label: string;
+        value: string;
+        name: string;
+        type?: string;
+        editable?: boolean;
+        cities?: City[];
+    }) => (
+        <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-600">{label}</label>
+            {editing && editable ? (
+                name === "city" ? (
+                    <select
+                        name={name}
+                        value={value || ""}
+                        onChange={handleInputChange}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    >
+                        <option value="">Select City</option>
+                        {cities.map(city => (
+                            <option key={city.city_id} value={city.city_name}>
+                                {city.city_name}
+                            </option>
+                        ))}
+                    </select>
+                ) : (
+                    <input
+                        type={type}
+                        name={name}
+                        value={value || ""}
+                        onChange={handleInputChange}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        disabled={!editable}
+                    />
+                )
+            ) : (
+                <p className="p-2 bg-gray-50 rounded-lg">
+                    {name === "city"
+                        ? cities.find(city => city.city_name === value)?.city_name || value || "Not provided"
+                        : value || "Not provided"
+                    }
+                </p>
+            )}
+        </div>
+    );
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <MoonLoader size={30} color={primaryColor} />
+            <div className="flex justify-center items-center h-screen">
+                <LoadingOutlined className="text-4xl text-primary animate-spin" />
             </div>
         );
     }
 
-    if (!data) {
+    if (!data || !updatedData) {
         return (
             <div className="flex justify-center items-center h-screen">
-                <p className="text-red-600">
-                    Error loading data. Please try again later.
-                </p>
+                <p className="text-red-500">Failed to load profile data</p>
             </div>
         );
     }
-
-    const {
-        personal_info,
-        reviews_summary,
-        qualifications,
-        specializations,
-        schedules,
-    } = data;
 
     return (
         <>
             <Navbar />
-            <div className="bg-gray-100 min-h-screen px-6 py-8">
-                {/* Personal Info Box */}
-                <div className="bg-white shadow-lg rounded-lg p-6 mb-6 relative border border-gray-200 hover:border-primary">
-                    <button
-                        className="absolute top-4 right-4 w-6 h-6"
-                        title="Edit Personal Info">
-                        <img src="/pen.svg" alt="Edit" />
-                    </button>
-                    <h3 className="text-xl font-bold mb-4 text-primary">
-                        Personal Information
-                    </h3>
-                    <div className="flex gap-4">
-                        <img
-                            className="w-24 h-24 rounded-full shadow-md"
-                            src={
-                                personal_info.profile_image_url ||
-                                "./placeholder.jpg"
-                            }
-                            alt={personal_info.vet_name}
-                        />
+            <div className="max-w-4xl mx-auto px-4 py-8">
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                    {/* Header Section */}
+                    <div className="flex justify-between items-start mb-8">
                         <div>
-                            <p>
-                                <span className="font-bold">Vet Name:</span>{" "}
-                                {personal_info.vet_name}
-                            </p>
-                            <p className="mt-2">
-                                <span className="font-bold">Clinic Name:</span>{" "}
-                                {personal_info.clinic_name}
-                            </p>
-                            <p className="mt-2">
-                                <span className="font-bold">Location:</span>{" "}
-                                {personal_info.location}, {personal_info.city}
-                            </p>
-                            <p className="mt-2">
-                                <span className="font-bold">Contact:</span>{" "}
-                                {personal_info.contact_details}
-                            </p>
-                            <p className="mt-2">
-                                <span className="font-bold">Email:</span>{" "}
-                                {personal_info.email}
-                            </p>
-                            <p className="mt-2">
-                                <span className="font-bold">Minimum Fee:</span>{" "}
-                                PKR {personal_info.minimum_fee}
-                            </p>
-                            <p className="mt-2">
-                                <span className="font-bold">
-                                    Profile Verified:
-                                </span>{" "}
-                                <span
-                                    className={`px-2 py-1 rounded ${personal_info.profile_verified
-                                            ? "bg-green-200 text-green-800 border border-green-800"
-                                            : "bg-red-200 text-red-800 border border-red-800"
-                                        }`}>
-                                    {personal_info.profile_verified
-                                        ? "Yes"
-                                        : "No"}
-                                </span>
-                            </p>
+                            <h1 className="text-2xl font-bold text-gray-900">{data.name}</h1>
+                            <p className="text-gray-500">Member since {format(new Date(data.created_at), 'MMM yyyy')}</p>
+                        </div>
+                        <div className="flex gap-4">
+                            {editing ? (
+                                <>
+                                    <button
+                                        onClick={handleCancel}
+                                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSaveChanges}
+                                        className="px-4 py-2 bg-primary text-white rounded-lg transition-all"
+                                    >
+                                        Save Changes
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    onClick={() => setEditing(true)}
+                                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-all"
+                                >
+                                    Edit Profile
+                                </button>
+                            )}
                         </div>
                     </div>
-                </div>
 
-                {/* 2x2 Grid for Smaller Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Qualifications */}
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
-                        <button
-                            className="absolute top-4 right-4 w-6 h-6"
-                            title="Edit Qualifications"
-                            onClick={() => setIsModalOpen(true)} // Open modal when clicked
-                        >
-                            <img src="/pen.svg" alt="Edit" className="hover:text-primary" />
-                        </button>
-                        <h4 className="text-lg font-bold text-primary mb-4">Qualifications</h4>
-                        {qualifications.length > 0 ? (
-                            <ul className="list-disc list-inside">
-                                {qualifications.map((item, index) => (
-                                    <li key={index}>{item}</li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p>No qualifications listed.</p>
-                        )}
-                    </div>
-                    <VetQualificationEditModal
-                        vetId={vetid}
-                        isOpen={isModalOpen}
-                        onClose={() => setIsModalOpen(false)}
-                    />
-
-                    {/* Specializations */}
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
-                        <button
-                            className="absolute top-4 right-4 w-6 h-6"
-                            title="Edit Specializations">
-                            <img
-                                src="/pen.svg"
-                                alt="Edit"
-                                className="hover:text-primary"
-                            />
-                        </button>
-                        <h4 className="text-lg font-bold text-primary mb-4">
-                            Specializations
-                        </h4>
-                        {specializations.length > 0 ? (
-                            <ul className="list-disc list-inside">
-                                {specializations.map((item, index) => (
-                                    <li key={index}>{item}</li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p>No specializations listed.</p>
-                        )}
-                    </div>
-
-                    {/* Reviews Summary */}
-                    <Link href='/vet-reviews-summary'>
-                        <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
-                            <div
-                                className="absolute top-4 right-4 w-6 h-6"
-                                title="View Reviews">
+                    {/* Profile Content */}
+                    <div className="grid md:grid-cols-3 gap-8">
+                        {/* Profile Picture Section */}
+                        <div className="md:col-span-1 flex flex-col items-center">
+                            <div className="relative group">
                                 <img
-                                    src="/arrow-right.svg"
-                                    alt="Details"
-                                    className="hover:text-primary"
+                                    className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+                                    src={data.profile_image_url || "/placeholder.jpg"}
+                                    alt={data.name}
+                                />
+                                {editing && (
+                                    <>
+                                        <input
+                                            type="file"
+                                            id="profileImage"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                                        />
+                                        <label
+                                            htmlFor="profileImage"
+                                            className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            {imageLoading ? (
+                                                <LoadingOutlined className="text-2xl text-white" />
+                                            ) : (
+                                                <CameraOutlined className="text-2xl text-white" />
+                                            )}
+                                        </label>
+                                    </>
+                                )}
+                            </div>
+                            {editing && (
+                                <p className="text-sm text-gray-500 mt-2 text-center">
+                                    Click image to update
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Profile Details */}
+                        <div className="md:col-span-2 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <ProfileField
+                                    label="Full Name"
+                                    name="name"
+                                    value={updatedData.name}
+                                />
+                                <ProfileField
+                                    label="Email Address"
+                                    name="email"
+                                    type="email"
+                                    value={updatedData.email}
+                                    editable={false}
+                                />
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium text-gray-600">Phone Number</label>
+                                    {editing ? (
+                                        <div className="flex space-x-2">
+                                            <input
+                                                type="text"
+                                                value="+92"
+                                                className="w-12 border border-gray-300 pl-2 rounded-xl py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                                                disabled
+                                            />
+                                            <input
+                                                type="text"
+                                                name="phone_number"
+                                                value={updatedData.phone_number}
+                                                onChange={handleInputChange}
+                                                placeholder="3338888666"
+                                                className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <p className="p-2 bg-gray-50 rounded-lg">
+                                            +92{updatedData.phone_number}
+                                        </p>
+                                    )}
+                                </div>
+                                <ProfileField
+                                    label="Date of Birth"
+                                    name="dob"
+                                    type="date"
+                                    value={updatedData.dob}
+                                />
+                                <ProfileField
+                                    label="City"
+                                    name="city"
+                                    value={updatedData.city}
+                                    cities={cities}
                                 />
                             </div>
-                            <h4 className="text-lg font-bold text-primary mb-4">
-                                Reviews Summary
-                            </h4>
-                            <p>
-                                <span className="font-bold">
-                                    Average Rating:
-                                </span>{" "}
-                                {reviews_summary.average_rating} / 5
-                            </p>
-                            <p>
-                                <span className="font-bold">
-                                    Total Reviews:
-                                </span>{" "}
-                                {reviews_summary.total_reviews}
-                            </p>
-                        </div>
-                    </Link>
 
-                    {/* Schedule */}
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
-                        <button
-                            className="absolute top-4 right-4 w-6 h-6"
-                            title="Edit Schedule">
-                            <img src="/pen.svg" alt="Edit" />
-                        </button>
-                        <h4 className="text-lg font-bold text-primary mb-4">
-                            Schedule
-                        </h4>
-                        {schedules.length > 0 ? (
-                            <ul>
-                                {schedules.map((item, index) => (
-                                    <li key={index}>
-                                        <span className="font-bold">
-                                            {item.day_of_week}:
-                                        </span>{" "}
-                                        {item.start_time} - {item.end_time}
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p>No schedule available.</p>
-                        )}
+                            {/* Security Section */}
+                            <div className="border-t pt-6">
+                                <h3 className="text-lg font-semibold mb-4">Security</h3>
+                                <button
+                                    onClick={() => setPasswordModalVisible(true)}
+                                    className="px-4 py-2 bg-primary text-white rounded-lg transition-all"
+                                >
+                                    <LockOutlined /> {/* Add the LockOutlined icon here */}
+                                    Change Password
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                {/* Password Change Modal */}
+                <Modal
+                    title="Change Password"
+                    visible={passwordModalVisible}
+                    onCancel={() => setPasswordModalVisible(false)}
+                    footer={null}
+                    destroyOnClose
+                >
+                    <Form
+                        form={passwordForm}
+                        layout="vertical"
+                        onFinish={handlePasswordChange}
+                    >
+                        <Form.Item
+                            label="Current Password"
+                            name="currentPassword"
+                            rules={[
+                                { required: true, message: 'Please input your current password!' }
+                            ]}
+                        >
+                            <Input.Password placeholder="Enter current password" />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="New Password"
+                            name="newPassword"
+                            rules={[
+                                { required: true, message: 'Please input new password!' },
+                                () => ({
+                                    validator(_, value) {
+                                        if (!value || passwordRegex.test(value)) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject(
+                                            new Error('Password must contain: 8+ characters, 1 uppercase, 1 lowercase, 1 number, 1 special character')
+                                        );
+                                    },
+                                }),
+                            ]}
+                        >
+                            <Input.Password placeholder="Enter new password" />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="Confirm New Password"
+                            name="confirmPassword"
+                            dependencies={['newPassword']}
+                            rules={[
+                                { required: true, message: 'Please confirm your new password!' },
+                                ({ getFieldValue }) => ({
+                                    validator(_, value) {
+                                        if (!value || getFieldValue('newPassword') === value) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject(new Error('Passwords do not match!'));
+                                    },
+                                }),
+                            ]}
+                        >
+                            <Input.Password placeholder="Confirm new password" />
+                        </Form.Item>
+
+                        <Form.Item>
+                            <button
+                                type="submit"
+                                className="w-full px-4 py-2 bg-primary text-white rounded-lg transition-all flex items-center justify-center gap-2"
+                            >
+                                Change Password
+                            </button>
+                        </Form.Item>
+                    </Form>
+                </Modal>
             </div>
         </>
     );
 };
 
-export default VetPanel;
+export default MyProfile;

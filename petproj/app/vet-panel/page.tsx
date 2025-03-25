@@ -845,8 +845,12 @@ const VetProfile = () => {
                             <p className="text-gray-500">No reviews yet</p>
                         ) : (
                             <Link href="/vet-reviews-summary" className="block">
-                                <FaArrowRight className="w-4 h-4" /> {/* Right Arrow */}
+
                                 <div className="space-y-4 cursor-pointer hover:bg-gray-100 p-4 rounded-lg transition">
+                                    <div className="flex justify-between items-center mb-2 text-primary">
+                                        <span className="font-medium">Manage Reviews </span>
+                                        <FaArrowRight className="w-4 h-4" /> {/* Right Arrow */}
+                                    </div>
                                     <div className="border rounded-lg p-4">
                                         <div className="flex justify-between mb-2">
                                             <span className="font-medium">Total Approved Reviews</span>
@@ -868,8 +872,10 @@ const VetProfile = () => {
                                                     : "N/A"}
                                             </span>
                                         </div>
+
                                     </div>
                                 </div>
+
                             </Link>
                         )}
                     </ProfileSection>

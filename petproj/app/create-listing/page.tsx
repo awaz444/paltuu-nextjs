@@ -48,6 +48,7 @@ export default function CreatePetListing() {
     const [paymentFrequency, setPaymentFrequency] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [userId, setUserId] = useState<number | null>(null);
@@ -93,7 +94,7 @@ export default function CreatePetListing() {
     // Handle form submission
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
+        setIsSubmitting(true);
         // Retrieve the user object from local storage
 
         const userString = localStorage.getItem("user");
@@ -157,6 +158,9 @@ export default function CreatePetListing() {
             })
             .catch((error) => {
                 console.error("Error posting pet:", error);
+            })
+            .finally(() => {
+                setIsSubmitting(false);
             });
     };
 
@@ -567,8 +571,10 @@ export default function CreatePetListing() {
 
                     <button
                         type="submit"
-                        className="mt-4 p-3 bg-primary text-white rounded-3xl w-full">
-                        Proceed to Upload Images
+                        className="mt-4 p-3 bg-primary text-white rounded-3xl w-full disabled:bg-gray-400"
+                        disabled={isSubmitting} // Disables button when submitting
+                    >
+                        {isSubmitting ? "Proceeding..." : "Proceed to Upload Images"}
                     </button>
                 </form>
             </div>

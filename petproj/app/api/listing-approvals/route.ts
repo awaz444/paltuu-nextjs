@@ -1,5 +1,11 @@
 import { createClient } from '../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
+import Mailjet from "node-mailjet";
+
+const mailjetClient = Mailjet.apiConnect(
+    process.env.MAILJET_NOTIFICATION_API_KEY!,
+    process.env.MAILJET_NOTIFICATION_SECRET_KEY!
+);
 
 // GET method to fetch all unapproved pets
 export async function GET(req: NextRequest): Promise<NextResponse> {
@@ -109,6 +115,34 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
                     new Date()
                 ]
             );
+
+            // Fetch owner's email
+            const ownerResult = await client.query(
+                `SELECT email FROM users WHERE user_id = $1`,
+                [updatedPet.owner_id]
+            );
+
+            if ((ownerResult.rowCount || 0) > 0) {
+                const ownerEmail = ownerResult.rows[0].email;
+
+                // Send email notification
+                try {
+                    await mailjetClient.post("send", { version: "v3.1" }).request({
+                        Messages: [
+                            {
+                                From: { Email: process.env.MAILJET_NOTIFICATION_FROM_EMAIL!, Name: "Paltuu" },
+                                To: [{ Email: ownerEmail }],
+                                Subject: "Your Pet Listing Has Been Approved!",
+                                TextPart: `Great news! Your pet listing "${updatedPet.pet_name}" has been approved and is now live on our platform.`,
+                            },
+                        ],
+                    });
+
+                    console.log(`Approval email sent to ${ownerEmail}`);
+                } catch (emailErr) {
+                    console.error("Error sending approval email:", emailErr);
+                }
+            }
         }
 
         await client.query('COMMIT');

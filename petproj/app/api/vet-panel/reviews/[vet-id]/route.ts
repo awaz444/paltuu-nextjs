@@ -20,12 +20,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
         const query = `
             SELECT 
-                availability_id,
-                vet_id,
-                day_of_week,
-                start_time,
-                end_time
-            FROM vet_availability
+                COUNT(*) FILTER (WHERE approved = true) AS total_approved_reviews,
+                COUNT(*) FILTER (WHERE approved = false) AS total_pending_reviews,
+                COALESCE(AVG(rating) FILTER (WHERE approved = true), 0) AS average_rating,
+                MAX(review_date) FILTER (WHERE approved = true) AS most_recent_review_date
+            FROM vet_reviews
             WHERE vet_id = $1;
         `;
 
@@ -33,7 +32,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
         if (result.rows.length === 0) {
             return NextResponse.json(
-                { error: "No availability found for this vet" },
+                { error: "No reviews found for this vet" },
                 {
                     status: 404,
                     headers: { "Content-Type": "application/json" },
@@ -41,7 +40,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             );
         }
 
-        return NextResponse.json(result.rows, {
+        const reviewStats = result.rows[0];
+
+        const response = {
+            total_approved_reviews: parseInt(reviewStats.total_approved_reviews, 10) || 0,
+            total_pending_reviews: parseInt(reviewStats.total_pending_reviews, 10) || 0,
+            average_rating: parseFloat(reviewStats.average_rating).toFixed(1), // Rounded to 1 decimal place
+            most_recent_review_date: reviewStats.most_recent_review_date || null,
+        };
+
+        return NextResponse.json(response, {
             status: 200,
             headers: { "Content-Type": "application/json" },
         });

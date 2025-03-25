@@ -20,20 +20,19 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
         const query = `
             SELECT 
-                availability_id,
-                vet_id,
-                day_of_week,
-                start_time,
-                end_time
-            FROM vet_availability
-            WHERE vet_id = $1;
+                vs.vet_id, 
+                vs.category_id, 
+                pc.category_name
+            FROM vet_specializations vs
+            JOIN pet_category pc ON vs.category_id = pc.category_id
+            WHERE vs.vet_id = $1;
         `;
 
         const result = await client.query(query, [vet_id]);
 
         if (result.rows.length === 0) {
             return NextResponse.json(
-                { error: "No availability found for this vet" },
+                { error: "No specializations found for this vet" },
                 {
                     status: 404,
                     headers: { "Content-Type": "application/json" },

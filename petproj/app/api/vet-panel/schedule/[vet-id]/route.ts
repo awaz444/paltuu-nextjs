@@ -62,69 +62,64 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 export async function PUT(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     const vet_id = req.nextUrl.pathname.split("/").pop();
+    const { availability } = await req.json();
 
-    if (!vet_id) {
+    if (!vet_id || !Array.isArray(availability)) {
         return NextResponse.json(
-            { error: "Vet ID is required" },
+            { error: "Invalid request. Vet ID and availability data are required" },
             { status: 400 }
         );
     }
 
     try {
         await client.connect();
-        const { availability } = await req.json();
-
-        if (!Array.isArray(availability) || availability.length === 0) {
-            return NextResponse.json(
-                { error: "Availability array is required" },
-                { status: 400 }
-            );
-        }
-
-        // Fetch existing availability records
-        const existingQuery = `
-            SELECT availability_id, day_of_week FROM vet_availability WHERE vet_id = $1;
-        `;
-        const existingResult = await client.query(existingQuery, [vet_id]);
-        const existingAvailability = existingResult.rows.reduce((acc, a) => {
-            acc[a.day_of_week] = a.availability_id;
-            return acc;
-        }, {} as Record<string, number>);
 
         for (const slot of availability) {
-            const { day_of_week, start_time, end_time } = slot;
+            const { availability_id, day_of_week, start_time, end_time } = slot;
 
-            if (existingAvailability[day_of_week]) {
-                // Update existing availability
-                await client.query(
-                    `UPDATE vet_availability 
-                     SET start_time = $1, end_time = $2
-                     WHERE vet_id = $3 AND day_of_week = $4;`,
-                    [start_time, end_time, vet_id, day_of_week]
+            if (!day_of_week || !start_time || !end_time) {
+                return NextResponse.json(
+                    { error: "Missing required fields: day_of_week, start_time, end_time" },
+                    { status: 400 }
                 );
+            }
+
+            if (availability_id) {
+                // Update existing slot
+                const updateQuery = `
+                    UPDATE vet_availability
+                    SET day_of_week = $1, start_time = $2, end_time = $3
+                    WHERE availability_id = $4 AND vet_id = $5;
+                `;
+                await client.query(updateQuery, [day_of_week, start_time, end_time, availability_id, vet_id]);
             } else {
-                // Insert new availability
-                await client.query(
-                    `INSERT INTO vet_availability (vet_id, day_of_week, start_time, end_time)
-                     VALUES ($1, $2, $3, $4);`,
-                    [vet_id, day_of_week, start_time, end_time]
-                );
+                // Insert new slot
+                const insertQuery = `
+                    INSERT INTO vet_availability (vet_id, day_of_week, start_time, end_time)
+                    VALUES ($1, $2, $3, $4);
+                `;
+                await client.query(insertQuery, [vet_id, day_of_week, start_time, end_time]);
             }
         }
 
-        // Fetch updated availability
-        const updatedQuery = `
-            SELECT availability_id, day_of_week, start_time, end_time 
-            FROM vet_availability WHERE vet_id = $1;
+        // Fetch updated availability data
+        const updatedAvailabilityQuery = `
+            SELECT availability_id, day_of_week, start_time, end_time
+            FROM vet_availability
+            WHERE vet_id = $1
+            ORDER BY day_of_week, start_time;
         `;
-        const updatedResult = await client.query(updatedQuery, [vet_id]);
+        const updatedAvailabilityResult = await client.query(updatedAvailabilityQuery, [vet_id]);
 
         return NextResponse.json(
-            { message: "Vet availability updated successfully", availability: updatedResult.rows },
+            {
+                message: "Vet availability updated successfully",
+                availability: updatedAvailabilityResult.rows
+            },
             { status: 200 }
         );
     } catch (err) {
-        console.error(err);
+        console.error("Error updating vet availability:", err);
         return NextResponse.json(
             { error: "Internal Server Error", message: (err as Error).message },
             { status: 500 }

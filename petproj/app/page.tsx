@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useSetPrimaryColor } from "./hooks/useSetPrimaryColor";
 
 export default function Home() {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
@@ -28,9 +29,11 @@ export default function Home() {
     checkHealth();
   }, []);
 
+  useSetPrimaryColor();
+
   return (
     <>
-      <main className="flex min-h-screen flex-col items-center p-24" style={{ backgroundColor: 'rgb(var(--background-color))' }}>
+      <main className="flex min-h-screen flex-col items-center p-24 bg-primary">
         <Image src="/maroonLogo.png" alt="Logo" className="mx-auto" width={250} height={100}/>
         {/* Connection Status Indicator */}
         <div className="mt-2">

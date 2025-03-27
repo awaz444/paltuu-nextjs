@@ -71,6 +71,7 @@ const CreateUser = () => {
             setIsLoading(false);
             return;
         }
+        
 
         if (password !== confirmPassword) {
             setPasswordMismatchError("Passwords do not match");

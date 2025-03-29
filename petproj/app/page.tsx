@@ -33,7 +33,7 @@ export default function Home() {
 
   return (
     <>
-      <main className="flex min-h-screen flex-col items-center p-24 bg-primary">
+      <main className="flex min-h-screen flex-col items-center p-24 bg-white">
         <Image src="/maroonLogo.png" alt="Logo" className="mx-auto" width={250} height={100}/>
         {/* Connection Status Indicator */}
         <div className="mt-2">

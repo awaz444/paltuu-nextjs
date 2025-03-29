@@ -1,6 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../db/index";
 
+export async function POST(req: NextRequest): Promise<NextResponse> {
+    const client = createClient();
+    const vet_id = req.nextUrl.pathname.split("/").pop();
+    const { qualification_id, year_acquired, note } = await req.json();
+
+    if (!vet_id || !qualification_id || !year_acquired) {
+        return NextResponse.json(
+            { error: "Vet ID, Qualification ID, and Year Acquired are required" },
+            { status: 400 }
+        );
+    }
+
+    try {
+        await client.connect();
+
+        const insertQuery = `
+            INSERT INTO vet_qualifications (vet_id, qualification_id, year_acquired, note)
+            VALUES ($1, $2, $3, $4)
+            RETURNING *;
+        `;
+
+        const result = await client.query(insertQuery, [vet_id, qualification_id, year_acquired, note]);
+
+        return NextResponse.json(
+            { message: "Qualification added successfully", data: result.rows[0] },
+            { status: 201 }
+        );
+    } catch (err) {
+        console.error("Error adding qualification:", err);
+        return NextResponse.json(
+            { error: "Internal Server Error", message: (err as Error).message },
+            { status: 500 }
+        );
+    } finally {
+        await client.end();
+    }
+}
+
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     const vet_id = req.nextUrl.pathname.split("/").pop();
@@ -123,6 +162,50 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         );
     } catch (err) {
         console.error(err);
+        return NextResponse.json(
+            { error: "Internal Server Error", message: (err as Error).message },
+            { status: 500 }
+        );
+    } finally {
+        await client.end();
+    }
+}
+
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
+    const client = createClient();
+    const vet_id = req.nextUrl.pathname.split("/").pop();
+    const { qualification_id } = await req.json();
+
+    if (!vet_id || !qualification_id) {
+        return NextResponse.json(
+            { error: "Vet ID and Qualification ID are required" },
+            { status: 400 }
+        );
+    }
+
+    try {
+        await client.connect();
+
+        const deleteQuery = `
+            DELETE FROM vet_qualifications
+            WHERE vet_id = $1 AND qualification_id = $2;
+        `;
+
+        const result = await client.query(deleteQuery, [vet_id, qualification_id]);
+
+        if (result.rowCount === 0) {
+            return NextResponse.json(
+                { error: "Qualification not found" },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json(
+            { message: "Qualification deleted successfully" },
+            { status: 200 }
+        );
+    } catch (err) {
+        console.error("Error deleting qualification:", err);
         return NextResponse.json(
             { error: "Internal Server Error", message: (err as Error).message },
             { status: 500 }

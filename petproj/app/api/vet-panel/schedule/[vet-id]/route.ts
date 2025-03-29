@@ -1,6 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../db/index";
 
+export async function POST(req: NextRequest): Promise<NextResponse> {
+    const client = createClient();
+    const vet_id = req.nextUrl.pathname.split("/").pop();
+    const { day_of_week, start_time, end_time } = await req.json();
+
+    if (!vet_id || !day_of_week || !start_time || !end_time) {
+        return NextResponse.json(
+            { error: "Vet ID, Day of Week, Start Time, and End Time are required" },
+            { status: 400 }
+        );
+    }
+
+    try {
+        await client.connect();
+
+        const insertQuery = `
+            INSERT INTO vet_availability (vet_id, day_of_week, start_time, end_time)
+            VALUES ($1, $2, $3, $4)
+            RETURNING *;
+        `;
+
+        const result = await client.query(insertQuery, [vet_id, day_of_week, start_time, end_time]);
+
+        return NextResponse.json(
+            { message: "Availability slot added successfully", data: result.rows[0] },
+            { status: 201 }
+        );
+    } catch (err) {
+        console.error("Error adding availability slot:", err);
+        return NextResponse.json(
+            { error: "Internal Server Error", message: (err as Error).message },
+            { status: 500 }
+        );
+    } finally {
+        await client.end();
+    }
+}
+
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     const vet_id = req.nextUrl.pathname.split("/").pop();
@@ -120,6 +159,50 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         );
     } catch (err) {
         console.error("Error updating vet availability:", err);
+        return NextResponse.json(
+            { error: "Internal Server Error", message: (err as Error).message },
+            { status: 500 }
+        );
+    } finally {
+        await client.end();
+    }
+}
+
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
+    const client = createClient();
+    const vet_id = req.nextUrl.pathname.split("/").pop();
+    const { availability_id } = await req.json();
+
+    if (!vet_id || !availability_id) {
+        return NextResponse.json(
+            { error: "Vet ID and Availability ID are required" },
+            { status: 400 }
+        );
+    }
+
+    try {
+        await client.connect();
+
+        const deleteQuery = `
+            DELETE FROM vet_availability
+            WHERE vet_id = $1 AND availability_id = $2;
+        `;
+
+        const result = await client.query(deleteQuery, [vet_id, availability_id]);
+
+        if (result.rowCount === 0) {
+            return NextResponse.json(
+                { error: "Availability slot not found" },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json(
+            { message: "Availability slot deleted successfully" },
+            { status: 200 }
+        );
+    } catch (err) {
+        console.error("Error deleting availability:", err);
         return NextResponse.json(
             { error: "Internal Server Error", message: (err as Error).message },
             { status: 500 }

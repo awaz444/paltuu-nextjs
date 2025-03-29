@@ -1,6 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../db/index";
 
+export async function POST(req: NextRequest): Promise<NextResponse> {
+    const client = createClient();
+    const vet_id = req.nextUrl.pathname.split("/").pop();
+    const { category_id } = await req.json();
+
+    if (!vet_id || !category_id) {
+        return NextResponse.json(
+            { error: "Vet ID and Category ID are required" },
+            { status: 400 }
+        );
+    }
+
+    try {
+        await client.connect();
+
+        const insertQuery = `
+            INSERT INTO vet_specializations (vet_id, category_id)
+            VALUES ($1, $2)
+            RETURNING *;
+        `;
+
+        const result = await client.query(insertQuery, [vet_id, category_id]);
+
+        return NextResponse.json(
+            { message: "Specialization added successfully", data: result.rows[0] },
+            { status: 201 }
+        );
+    } catch (err) {
+        console.error("Error adding specialization:", err);
+        return NextResponse.json(
+            { error: "Internal Server Error", message: (err as Error).message },
+            { status: 500 }
+        );
+    } finally {
+        await client.end();
+    }
+}
+
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     const vet_id = req.nextUrl.pathname.split("/").pop();
@@ -110,6 +149,49 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         );
     } catch (err) {
         console.error("Error updating vet specializations:", err);
+        return NextResponse.json(
+            { error: "Internal Server Error", message: (err as Error).message },
+            { status: 500 }
+        );
+    } finally {
+        await client.end();
+    }
+}
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
+    const client = createClient();
+    const vet_id = req.nextUrl.pathname.split("/").pop();
+    const { category_id } = await req.json();
+
+    if (!vet_id || !category_id) {
+        return NextResponse.json(
+            { error: "Vet ID and Category ID are required" },
+            { status: 400 }
+        );
+    }
+
+    try {
+        await client.connect();
+
+        const deleteQuery = `
+            DELETE FROM vet_specializations
+            WHERE vet_id = $1 AND category_id = $2;
+        `;
+
+        const result = await client.query(deleteQuery, [vet_id, category_id]);
+
+        if (result.rowCount === 0) {
+            return NextResponse.json(
+                { error: "Specialization not found" },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json(
+            { message: "Specialization deleted successfully" },
+            { status: 200 }
+        );
+    } catch (err) {
+        console.error("Error deleting specialization:", err);
         return NextResponse.json(
             { error: "Internal Server Error", message: (err as Error).message },
             { status: 500 }

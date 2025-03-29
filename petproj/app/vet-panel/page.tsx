@@ -112,6 +112,11 @@ const VetProfile = () => {
     const [isEditingSpecialization, setIsEditingSpecialization] = useState<number | null>(null);
     const [isEditingSchedule, setIsEditingSchedule] = useState<number | null>(null);
     const [vetId, setVetId] = useState<string | null>(null);
+    const [deleting, setDeleting] = useState<{
+        qualifications: number | null;
+        specializations: number | null;
+        schedule: number | null;
+    }>({ qualifications: null, specializations: null, schedule: null });
 
     const fetchVetId = async (userId: string) => {
         try {
@@ -203,7 +208,7 @@ const VetProfile = () => {
 
     const [vetLoading, setVetLoading] = useState(false);
 
-    const fetchVetData = async (vetId: string) => {
+    const fetchVetData = async (vetId: string | null) => {
         try {
             console.log("Fetching vet data for vetId:", vetId); // Debug log
             const responses = await Promise.all([
@@ -290,95 +295,112 @@ const VetProfile = () => {
             setImageLoading(false);
         }
     };
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handlePersonalInfoChange = (field: keyof UserProfileData, value: string) => {
+        setUpdatedData(prev => prev ? {
+            ...prev,
+            [field]: value
+        } : null);
+    };
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setUpdatedData((prev) => prev ? { ...prev, [name]: value } : null);
+
+        // Handle personal info updates
+        if (name in (updatedData || {})) {
+            setUpdatedData(prev => prev ? { ...prev, [name]: value } : null);
+        }
+        // Handle vet info updates
+        else if (name in (updatedVetData.clinicDetails || {})) {
+            handleClinicDetailsChange(name as keyof ClinicDetails, value);
+        }
     };
 
     const handleSaveChanges = async () => {
-        if (!userId || !updatedData) return;
+        const id = userId || vetId;
+        if (!id) {
+            message.error("Profile not available for saving");
+            return;
+        }
 
         try {
-            const res = await fetch(`/api/my-profile/${userId}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updatedData)
-            });
+            // Save personal info if changed
+            if (updatedData) {
+                const res = await fetch(`/api/my-profile/${id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(updatedData)
+                });
+                if (!res.ok) throw new Error('Failed to update profile');
+                const result = await res.json();
+                setData(result.user);
+                setUpdatedData(result.user);
+            }
 
-            if (!res.ok) throw new Error('Update failed');
+            // Save vet info if changed
+            if (vetId && updatedVetData) {
+                // Save clinic details
+                if (updatedVetData.clinicDetails) {
+                    await fetch(`/api/vet-panel/clinic-details/${vetId}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(updatedVetData.clinicDetails)
+                    });
+                }
 
-            const result = await res.json();
-            setData(result.user);
-            setUpdatedData(result.user);
+                // Save other vet data - removed Promise.all since we want sequential execution
+                // with proper error handling for each request
+
+                // Save qualifications
+                const qualRes = await fetch(`/api/vet-panel/qualifications/${vetId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        qualifications: updatedVetData.qualifications.map(q => ({
+                            qualification_id: q.qualification_id,
+                            year_acquired: q.year_acquired,
+                            note: q.note
+                        }))
+                    })
+                });
+                if (!qualRes.ok) throw new Error('Failed to update qualifications');
+
+                // Save specializations
+                const specRes = await fetch(`/api/vet-panel/specialization/${vetId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        specializations: updatedVetData.specializations.map(s => s.category_id)
+                    })
+                });
+                if (!specRes.ok) throw new Error('Failed to update specializations');
+
+                // Save schedule
+                const schedRes = await fetch(`/api/vet-panel/schedule/${vetId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        availability: updatedVetData.schedule.map(s => ({
+                            availability_id: s.availability_id,
+                            day_of_week: s.day_of_week,
+                            start_time: s.start_time,
+                            end_time: s.end_time
+                        }))
+                    })
+                });
+                if (!schedRes.ok) throw new Error('Failed to update schedule');
+            }
+
+            message.success("Profile updated successfully");
             setEditing(false);
-
-            message.success({
-                content: 'Profile updated successfully',
-                duration: 3,
-            });
+            fetchVetData(vetId); // Refresh the data after successful update
         } catch (error) {
-            message.error({
-                content: 'Failed to update profile',
-                duration: 3,
-            });
+            console.error('Error saving changes:', error);
+            message.error(error instanceof Error ? error.message : "Failed to update profile");
         }
     };
 
     const handleCancel = () => {
         setUpdatedData(data);
         setEditing(false);
-    };
-
-    const handleSaveVetChanges = async () => {
-        if (!vetId) {  // Changed from userId to vetId
-            console.error('No vetId available for saving');
-            message.error("Vet profile not available for saving");
-            return;
-        }
-
-        try {
-            // Save clinic details if changed
-            if (updatedVetData.clinicDetails) {
-                const res = await fetch(`/api/vet-panel/clinic-details/${vetId}`, {  // Changed to vetId
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(updatedVetData.clinicDetails)
-                });
-                if (!res.ok) throw new Error('Failed to update clinic details');
-            }
-
-            // Save qualifications
-            const qualificationsRes = await fetch(`/api/vet-panel/qualifications/${vetId}`, {  // Changed to vetId
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updatedVetData.qualifications)
-            });
-            if (!qualificationsRes.ok) throw new Error('Failed to update qualifications');
-
-            // Save schedule
-            const scheduleRes = await fetch(`/api/vet-panel/schedule/${vetId}`, {  // Changed to vetId
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updatedVetData.schedule)
-            });
-            if (!scheduleRes.ok) throw new Error('Failed to update schedule');
-
-            // Save specializations
-            const specializationsRes = await fetch(`/api/vet-panel/specialization/${vetId}`, {  // Changed to vetId
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updatedVetData.specializations)
-            });
-            if (!specializationsRes.ok) throw new Error('Failed to update specializations');
-
-            message.success("Vet profile updated successfully");
-            setEditing(false);
-            fetchVetData(vetId);  // Changed to vetId
-        } catch (error) {
-            console.error('Error saving vet data:', error);
-            message.error(error instanceof Error ? error.message : "Failed to update vet profile");
-        }
     };
 
     // Handle adding/editing qualifications
@@ -431,61 +453,153 @@ const VetProfile = () => {
         setIsEditingSchedule(updatedVetData.schedule.length);
     };
 
+    //delete functions
+    const deleteQualification = async (vetId: string, qualificationId: number) => {
+        setDeleting(prev => ({ ...prev, qualifications: qualificationId }));
+        try {
+            const res = await fetch(`/api/vet-panel/qualifications/${vetId}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ qualification_id: qualificationId })
+            });
+            if (!res.ok) throw new Error('Failed to delete qualification');
+            return true;
+        } catch (error) {
+            console.error("Error deleting qualification:", error);
+            return false;
+        } finally {
+            setDeleting(prev => ({ ...prev, qualifications: null }));
+        }
+    };
+
+
+    const deleteSpecialization = async (vetId: string, categoryId: number) => {
+        setDeleting(prev => ({ ...prev, specializations: categoryId }));
+        try {
+            const res = await fetch(`/api/vet-panel/specialization/${vetId}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ category_id: categoryId })
+            });
+            if (!res.ok) throw new Error('Failed to delete specialization');
+            return true;
+        } catch (error) {
+            console.error("Error deleting specialization:", error);
+            message.error("Failed to delete specialization");
+            return false;
+        } finally {
+            setDeleting(prev => ({ ...prev, specializations: null }));
+        }
+    };
+
+    const deleteScheduleSlot = async (vetId: string, availabilityId: number) => {
+        setDeleting(prev => ({ ...prev, schedule: availabilityId }));
+        try {
+            const res = await fetch(`/api/vet-panel/schedule/${vetId}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ availability_id: availabilityId })
+            });
+            if (!res.ok) throw new Error('Failed to delete schedule slot');
+            return true;
+        } catch (error) {
+            console.error("Error deleting schedule slot:", error);
+            message.error("Failed to delete schedule slot");
+            return false;
+        } finally {
+            setDeleting(prev => ({ ...prev, schedule: null }));
+        }
+    };
+
     // Handle adding/editing schedule
-    const handleScheduleChange = (index: number, field: keyof Schedule, value: string) => {
-        const updatedSchedule = [...updatedVetData.schedule];
-        updatedSchedule[index] = {
-            ...updatedSchedule[index],
-            [field]: value
-        };
+    const handleScheduleChange = (availability_id: number, field: keyof Schedule, value: string) => {
+        const updatedSchedule = updatedVetData.schedule.map((slot) =>
+            slot.availability_id === availability_id ? { ...slot, [field]: value } : slot
+        );
+
         setUpdatedVetData({ ...updatedVetData, schedule: updatedSchedule });
     };
 
-    const ProfileField = ({ label, value, name, type = "text", editable = true, cities = [] }: {
+    const handleClinicDetailsChange = (field: keyof ClinicDetails, value: string) => {
+        setUpdatedVetData(prev => ({
+            ...prev,
+            clinicDetails: {
+                ...(prev.clinicDetails || {
+                    vet_id: 0,
+                    user_id: 0,
+                    clinic_name: '',
+                    location: '',
+                    minimum_fee: 0,
+                    contact_details: '',
+                    profile_verified: false,
+                    created_at: '',
+                    bio: '',
+                    clinic_whatsapp: '',
+                    clinic_email: '',
+                    applied: false,
+                    approved: false
+                }),
+                [field]: value
+            }
+        }));
+    };
+
+    interface ProfileFieldProps {
         label: string;
-        value: string;
         name: string;
+        value: string;
         type?: string;
         editable?: boolean;
         cities?: City[];
-    }) => (
-        <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-600">{label}</label>
-            {editing && editable ? (
-                name === "city" ? (
-                    <select
-                        name={name}
-                        value={value || ""}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    >
-                        <option value="">Select City</option>
-                        {cities.map(city => (
-                            <option key={city.city_id} value={city.city_name}>
-                                {city.city_name}
-                            </option>
-                        ))}
-                    </select>
+        onChange?: (name: string, value: string) => void; // Modified to include field name
+    }
+
+    const ProfileField: React.FC<ProfileFieldProps> = ({
+        label,
+        name,
+        value,
+        type = "text",
+        editable = true,
+        cities = [],
+        onChange
+    }) => {
+        const handleChange = (newValue: string) => {
+            onChange?.(name, newValue); // Pass both field name and value
+        };
+
+        return (
+            <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-600">{label}</label>
+                {editing && editable ? (
+                    name === "city" ? (
+                        <select
+                            value={value || ""}
+                            onChange={(e) => handleChange(e.target.value)}
+                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        >
+                            <option value="">Select City</option>
+                            {cities.map(city => (
+                                <option key={city.city_id} value={city.city_name}>
+                                    {city.city_name}
+                                </option>
+                            ))}
+                        </select>
+                    ) : (
+                        <input
+                            type={type}
+                            value={value || ""}
+                            onChange={(e) => handleChange(e.target.value)}
+                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        />
+                    )
                 ) : (
-                    <input
-                        type={type}
-                        name={name}
-                        value={value || ""}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        disabled={!editable}
-                    />
-                )
-            ) : (
-                <p className="p-2 bg-gray-50 rounded-lg">
-                    {name === "city"
-                        ? cities.find(city => city.city_name === value)?.city_name || value || "Not provided"
-                        : value || "Not provided"
-                    }
-                </p>
-            )}
-        </div>
-    );
+                    <p className="p-2 bg-gray-50 rounded-lg">
+                        {value || "Not provided"}
+                    </p>
+                )}
+            </div>
+        );
+    };
 
     if (loading) {
         return (
@@ -521,7 +635,7 @@ const VetProfile = () => {
         <div className="">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">{title}</h3>
-                {editing && (
+                {editable && (
                     <div className="flex gap-2">
                         {onAdd && (
                             <Button
@@ -537,7 +651,7 @@ const VetProfile = () => {
                 )}
             </div>
             {children}
-            {editing && (onSave || onCancel) && (
+            {editable && (onSave || onCancel) && (
                 <div className="flex justify-end gap-2 mt-4">
                     {onCancel && (
                         <Button onClick={onCancel}>
@@ -641,13 +755,14 @@ const VetProfile = () => {
                                 <ProfileField
                                     label="Full Name"
                                     name="name"
-                                    value={updatedData.name}
+                                    value={updatedData?.name || ""}
+                                    onChange={(name, value) => handlePersonalInfoChange(name as keyof UserProfileData, value)}
                                 />
                                 <ProfileField
                                     label="Email Address"
                                     name="email"
                                     type="email"
-                                    value={updatedData.email}
+                                    value={updatedData?.email || ""}
                                     editable={false}
                                 />
                                 <div className="space-y-1">
@@ -662,16 +777,15 @@ const VetProfile = () => {
                                             />
                                             <input
                                                 type="text"
-                                                name="phone_number"
-                                                value={updatedData.phone_number}
-                                                onChange={handleInputChange}
+                                                value={updatedData?.phone_number || ""}
+                                                onChange={(e) => handlePersonalInfoChange('phone_number', e.target.value)}
                                                 placeholder="3338888666"
                                                 className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                                             />
                                         </div>
                                     ) : (
                                         <p className="p-2 bg-gray-50 rounded-lg">
-                                            +92{updatedData.phone_number}
+                                            +92{updatedData?.phone_number || "Not provided"}
                                         </p>
                                     )}
                                 </div>
@@ -679,13 +793,15 @@ const VetProfile = () => {
                                     label="Date of Birth"
                                     name="dob"
                                     type="date"
-                                    value={new Date(updatedData.dob).toLocaleDateString()}
+                                    value={updatedData?.dob ? new Date(updatedData.dob).toISOString().split('T')[0] : ""}
+                                    onChange={(name, value) => handlePersonalInfoChange(name as keyof UserProfileData, value)}
                                 />
                                 <ProfileField
                                     label="City"
                                     name="city"
-                                    value={updatedData.city}
+                                    value={updatedData?.city || ""}
                                     cities={cities}
+                                    onChange={(name, value) => handlePersonalInfoChange(name as keyof UserProfileData, value)}
                                 />
                             </div>
 
@@ -705,31 +821,34 @@ const VetProfile = () => {
                 </div>
 
                 <div className="bg-white rounded-xl shadow-lg p-6 mt-3">
-                    {/* Clinic Details Section */}
                     <ProfileSection
                         title="Clinic Details"
                         editable={editing}
-                        onSave={handleSaveVetChanges}  // Add this
+                        onSave={handleSaveChanges}  // Add this
                         onCancel={() => setEditing(false)}
                     >
+                        {/* Clinic Details Section */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <ProfileField
                                 label="Clinic Name"
-                                name="clinicName"
-                                value={vetData.clinicDetails?.clinic_name || "Not provided"}
+                                name="clinic_name"  // Must match your ClinicDetails interface
+                                value={updatedVetData.clinicDetails?.clinic_name || ""}
                                 editable={editing}
+                                onChange={(name, value) => handleClinicDetailsChange(name as keyof ClinicDetails, value)}
                             />
                             <ProfileField
                                 label="Address"
-                                name="address"
-                                value={vetData.clinicDetails?.location || "Not provided"}
+                                name="location"  // Must match your ClinicDetails interface
+                                value={updatedVetData.clinicDetails?.location || ""}
                                 editable={editing}
+                                onChange={(name, value) => handleClinicDetailsChange(name as keyof ClinicDetails, value)}
                             />
                             <ProfileField
                                 label="Contact"
-                                name="clinicContact"
-                                value={vetData.clinicDetails?.contact_details || "Not provided"}
+                                name="contact_details"  // Must match your ClinicDetails interface
+                                value={updatedVetData.clinicDetails?.contact_details || ""}
                                 editable={editing}
+                                onChange={(name, value) => handleClinicDetailsChange(name as keyof ClinicDetails, value)}
                             />
                         </div>
                     </ProfileSection>
@@ -737,35 +856,74 @@ const VetProfile = () => {
 
                 <div className="bg-white rounded-xl shadow-lg p-6 mt-3">
                     {/* Qualifications Section */}
-                    <ProfileSection
-                        title="Qualifications"
-                        editable={editing}
-                        onAdd={() => {/* Add qualification logic */ }}
-                    >
-                        {vetData.qualifications.length === 0 ? (
+                    <ProfileSection title="Qualifications" editable={editing} onAdd={addNewQualification}>
+                        {updatedVetData.qualifications.length === 0 ? (
                             <p className="text-gray-500">No qualifications added</p>
                         ) : (
                             <div className="space-y-4">
-                                {vetData.qualifications.map((qualification, index) => (
-                                    <div key={index} className="border rounded-lg p-4">
-                                        <ProfileField
-                                            label="Degree"
-                                            name={`qualifications[${index}].degree`}
-                                            value={qualification.qualification_name}
-                                            editable={editing}
-                                        />
-                                        <ProfileField
-                                            label="Institution"
-                                            name={`qualifications[${index}].institution`}
-                                            value={qualification.note}
-                                            editable={editing}
-                                        />
-                                        <ProfileField
-                                            label="Year"
-                                            name={`qualifications[${index}].year`}
-                                            value={qualification.year_acquired.toString()}
-                                            editable={editing}
-                                        />
+                                {updatedVetData.qualifications.map((qualification, index) => (
+                                    <div key={index} className="border rounded-lg p-4 relative"> {/* This is the existing div */}
+                                        {/* ADD DELETE BUTTON HERE */}
+                                        {editing && (
+                                            <button
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    if (vetId && qualification.qualification_id) {
+                                                        const success = await deleteQualification(vetId, qualification.qualification_id);
+                                                        if (success) {
+                                                            const updated = [...updatedVetData.qualifications];
+                                                            updated.splice(index, 1);
+                                                            setUpdatedVetData({ ...updatedVetData, qualifications: updated });
+                                                            message.success("Qualification deleted successfully");
+                                                        }
+                                                    }
+                                                }}
+                                                className="absolute top-2 right-2 text-red-500 hover:text-red-700 transition-all duration-200 ease-in-out hover:scale-125"
+                                                title="Delete qualification"
+                                                disabled={deleting.qualifications === qualification.qualification_id}
+                                            >
+                                                {deleting.qualifications === qualification.qualification_id ? (
+                                                    <LoadingOutlined className="text-red-500" />
+                                                ) : (
+                                                    '×'
+                                                )}
+                                            </button>
+                                        )}
+                                        <label className="block text-sm font-medium text-gray-700">Degree</label>
+                                        {editing ? (
+                                            <input
+                                                type="text"
+                                                value={qualification.qualification_name}
+                                                onChange={(e) => handleQualificationChange(index, "qualification_name", e.target.value)}
+                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            />
+                                        ) : (
+                                            <p className="mt-1 text-gray-900">{qualification.qualification_name}</p>
+                                        )}
+
+                                        <label className="block text-sm font-medium text-gray-700 mt-3">Institution</label>
+                                        {editing ? (
+                                            <input
+                                                type="text"
+                                                value={qualification.note}
+                                                onChange={(e) => handleQualificationChange(index, "note", e.target.value)}
+                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            />
+                                        ) : (
+                                            <p className="mt-1 text-gray-900">{qualification.note}</p>
+                                        )}
+
+                                        <label className="block text-sm font-medium text-gray-700 mt-3">Year</label>
+                                        {editing ? (
+                                            <input
+                                                type="number"
+                                                value={qualification.year_acquired}
+                                                onChange={(e) => handleQualificationChange(index, "year_acquired", e.target.value)}
+                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            />
+                                        ) : (
+                                            <p className="mt-1 text-gray-900">{qualification.year_acquired}</p>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -776,21 +934,43 @@ const VetProfile = () => {
 
                 <div className="bg-white rounded-xl shadow-lg p-6  mt-3">
                     {/* Specializations Section */}
-                    <ProfileSection
-                        title="Specializations"
-                        editable={editing}
-                        onAdd={() => {/* Add specialization logic */ }}
-                    >
-                        {vetData.specializations.length === 0 ? (
+                    <ProfileSection title="Specializations" editable={editing} onAdd={addNewSpecialization}>
+                        {updatedVetData.specializations.length === 0 ? (
                             <p className="text-gray-500">No specializations added</p>
                         ) : (
                             <div className="flex flex-wrap gap-2">
-                                {vetData.specializations.map((spec, index) => (
-                                    <div key={index} className="bg-primary/10 px-3 py-1 rounded-full">
+                                {updatedVetData.specializations.map((spec, index) => (
+                                    <div key={index} className="bg-primary/10 px-3 py-1 rounded-full relative"> {/* Existing div */}
+                                        {/* ADD DELETE BUTTON HERE */}
+                                        {editing && (
+                                            <button
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    if (vetId && spec.category_id) {
+                                                        const success = await deleteSpecialization(vetId, spec.category_id);
+                                                        if (success) {
+                                                            const updated = [...updatedVetData.specializations];
+                                                            updated.splice(index, 1);
+                                                            setUpdatedVetData({ ...updatedVetData, specializations: updated });
+                                                            message.success("Specialization deleted successfully");
+                                                        }
+                                                    }
+                                                }}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-700 transition-all duration-200 ease-in-out hover:scale-125"
+                                                title="Delete specialization"
+                                                disabled={deleting.specializations === spec.category_id}
+                                            >
+                                                {deleting.specializations === spec.category_id ? (
+                                                    <LoadingOutlined className="text-white text-xs" />
+                                                ) : (
+                                                    '×'
+                                                )}
+                                            </button>
+                                        )}
                                         {editing ? (
                                             <input
                                                 value={spec.category_name}
-                                                onChange={(e) => {/* Update specialization */ }}
+                                                onChange={(e) => handleSpecializationChange(index, e.target.value)}
                                                 className="bg-transparent focus:outline-none"
                                             />
                                         ) : (
@@ -806,37 +986,85 @@ const VetProfile = () => {
 
                 <div className="bg-white rounded-xl shadow-lg p-6  mt-3">
                     {/* Schedule Section */}
-                    <ProfileSection title="Schedule" editable={editing}>
+                    <ProfileSection title="Schedule" editable={editing} onAdd={addNewScheduleSlot}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {vetData.schedule.map((slot, index) => (
-                                <div key={index} className="border rounded-lg p-4">
-                                    <ProfileField
-                                        label="Day"
-                                        name={`schedule[${index}].day`}
-                                        value={slot.day_of_week}
-                                        editable={editing}
-                                    />
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <ProfileField
-                                            label="Opening Time"
-                                            name={`schedule[${index}].opening_time`}
-                                            value={slot.start_time}
-                                            type="time"
-                                            editable={editing}
-                                        />
-                                        <ProfileField
-                                            label="Closing Time"
-                                            name={`schedule[${index}].closing_time`}
-                                            value={slot.end_time}
-                                            type="time"
-                                            editable={editing}
-                                        />
+                            {updatedVetData.schedule.map((slot) => (
+                                <div key={slot.availability_id} className="border rounded-lg p-4 relative"> {/* Existing div */}
+                                    {/* ADD DELETE BUTTON HERE */}
+                                    {editing && (
+                                        <button
+                                            onClick={async (e) => {
+                                                e.stopPropagation();
+                                                if (vetId && slot.availability_id) {
+                                                    const success = await deleteScheduleSlot(vetId, slot.availability_id);
+                                                    if (success) {
+                                                        const updated = updatedVetData.schedule.filter(
+                                                            s => s.availability_id !== slot.availability_id
+                                                        );
+                                                        setUpdatedVetData({ ...updatedVetData, schedule: updated });
+                                                        message.success("Schedule slot deleted successfully");
+                                                    }
+                                                }
+                                            }}
+                                            className="absolute top-2 right-2 text-red-500 hover:text-red-700 transition-all duration-200 ease-in-out hover:scale-125"
+                                            title="Delete schedule slot"
+                                            disabled={deleting.schedule === slot.availability_id}
+                                        >
+                                            {deleting.schedule === slot.availability_id ? (
+                                                <LoadingOutlined className="text-red-500" />
+                                            ) : (
+                                                '×'
+                                            )}
+                                        </button>
+                                    )}
+                                    <label className="block text-sm font-medium text-gray-700">Day</label>
+                                    {editing ? (
+                                        <select
+                                            value={slot.day_of_week}
+                                            onChange={(e) => handleScheduleChange(slot.availability_id, "day_of_week", e.target.value)}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                        >
+                                            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                                                <option key={day} value={day}>{day}</option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <p className="mt-1 text-gray-900">{slot.day_of_week}</p>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-4 mt-3">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Opening Time</label>
+                                            {editing ? (
+                                                <input
+                                                    type="time"
+                                                    value={slot.start_time}
+                                                    onChange={(e) => handleScheduleChange(slot.availability_id, "start_time", e.target.value)}
+                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                                />
+                                            ) : (
+                                                <p className="mt-1 text-gray-900">{slot.start_time}</p>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">Closing Time</label>
+                                            {editing ? (
+                                                <input
+                                                    type="time"
+                                                    value={slot.end_time}
+                                                    onChange={(e) => handleScheduleChange(slot.availability_id, "end_time", e.target.value)}
+                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                                />
+                                            ) : (
+                                                <p className="mt-1 text-gray-900">{slot.end_time}</p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </ProfileSection>
-
                 </div>
                 <div className="bg-white rounded-xl shadow-lg p-6 mt-3">
                     {/* Reviews Section */}

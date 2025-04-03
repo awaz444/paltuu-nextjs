@@ -2,6 +2,19 @@
 import { createClient } from '../../../db/index'; 
 import { NextRequest, NextResponse } from 'next/server';
 
+// Function to format phone number correctly
+function formatPhoneNumber(phone: string): string | null {
+    const cleanedPhone = phone.replace(/\D/g, ""); // Remove non-numeric characters
+
+    if (cleanedPhone.length === 10) {
+        return `+92${cleanedPhone}`;
+    } else if (cleanedPhone.length === 11) {
+        return `+92${cleanedPhone.slice(1)}`; // Remove the first digit and add +92
+    } else {
+        return null; // Invalid phone number
+    }
+}
+
 // POST method to create a new user
 export async function POST(req: NextRequest): Promise<NextResponse> {
     const { username, name, DOB, city_id, email, password, phone_number, role, profile_image_url } = await req.json();
@@ -9,27 +22,36 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     try {
         await client.connect();
+
+        // Validate and format phone number
+        const formattedPhone = formatPhoneNumber(phone_number);
+        if (!formattedPhone) {
+            return NextResponse.json(
+                { error: "Invalid phone number. It must be 10 or 11 digits long." },
+                { status: 400, headers: { "Content-Type": "application/json" } }
+            );
+        }
+
         const result = await client.query(
-            'INSERT INTO users (username, name, DOB, city_id, email, password, phone_number, role, profile_image_url, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP) RETURNING *',
-            [username, name, DOB, city_id, email, password, phone_number, role, profile_image_url]
+            "INSERT INTO users (username, name, DOB, city_id, email, password, phone_number, role, profile_image_url, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP) RETURNING *",
+            [username, name, DOB, city_id, email, password, formattedPhone, role, profile_image_url]
         );
+
         return NextResponse.json(result.rows[0], {
             status: 201,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { "Content-Type": "application/json" },
         });
     } catch (err) {
-        console.error('Error creating user:', err);
+        console.error("Error creating user:", err);
         return NextResponse.json(
-            { error: 'Internal Server Error', message: (err as Error).message },
-            {
-                status: 500,
-                headers: { 'Content-Type': 'application/json' },
-            }
+            { error: "Internal Server Error", message: (err as Error).message },
+            { status: 500, headers: { "Content-Type": "application/json" } }
         );
     } finally {
         await client.end();
     }
 }
+
 
 
 // GET method to fetch all users

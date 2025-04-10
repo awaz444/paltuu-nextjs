@@ -71,7 +71,7 @@ const CreateUser = () => {
             setIsLoading(false);
             return;
         }
-        
+
 
         if (password !== confirmPassword) {
             setPasswordMismatchError("Passwords do not match");
@@ -203,7 +203,7 @@ const CreateUser = () => {
             {/* Right Section (Form) */}
             <div className="lg:w-1/2 bg-gray-100 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
 
-                <button
+                {/* <button
                     onClick={handleBackToLogin}
                     className="absolute top-4 left-4 text-white hover:text-white-600 flex items-center"
                 >
@@ -211,7 +211,7 @@ const CreateUser = () => {
                         <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
                     </svg>
                     Back to Login
-                </button>
+                </button> */}
 
                 <form
                     onSubmit={handleSubmit}

@@ -1,7 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPaw, faUsers, faDog, faSearch, faStethoscope, faMapMarkerAlt, faBars, faStar, faStarHalfAlt } from '@fortawesome/free-solid-svg-icons';
-import { faFacebook, faTwitter, faInstagram, faYoutube, faLinkedin } from '@fortawesome/free-brands-svg-icons';
 import Image from 'next/image';
 
 const HeroSection = () => {
@@ -10,12 +9,12 @@ const HeroSection = () => {
             {/* Header */}
             <header className="bg-white text-primary py-4 px-6 lg:px-20 flex items-center justify-between">
                 <div className="logo mx-auto text-primary">
-                    <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
+                    <Image src="/paltuu.svg" alt="Logo" width={150} height={150} />
                 </div>
                 <FontAwesomeIcon icon={faBars} className="md:hidden text-2xl cursor-pointer" />
             </header>
 
-            <section className="bg-white text-black py-24 px-6 lg:px-20">
+            <section className="bg-white text-black py-18 px-6 lg:px-20">
                 <div className="max-w-4xl mx-auto text-center">
                     {/* Subheading */}
                     <p className="text-sm text-primary italic mb-2 tracking-wide">
@@ -84,7 +83,7 @@ const HeroSection = () => {
             {/* Testimonials */}
             <section className="py-16 px-6 lg:px-20 bg-gray-50">
                 <h2 className="text-3xl font-bold text-center mb-12">
-                    What Our Users Say 🐕
+                    What Our Users Say
                 </h2>
                 <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                     {[

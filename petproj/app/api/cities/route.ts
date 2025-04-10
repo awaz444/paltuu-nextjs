@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
-    
     try {
         await client.connect();
         const result = await client.query('SELECT * FROM cities');

@@ -18,6 +18,14 @@ export async function POST(req: Request) {
     const otp = Math.floor(100000 + Math.random() * 900000);
     const hashedOtp = await bcrypt.hash(otp.toString(), 10);
 
+    const existingUser = await prisma.users.findUnique({
+      where: { email },
+    });
+    
+    if (existingUser) {
+      return new Response(JSON.stringify({ message: "Email already registered" }), { status: 409 });
+    }
+
     await prisma.oTP.upsert({
       where: { email },
       update: { otp: hashedOtp, createdat: new Date(), attempts: 0 },

@@ -21,14 +21,14 @@ const HeroSection = () => {
             {/* Header */}
             <header className="bg-primary text-primary py-10 px-6 lg:px-20 flex items-center justify-between rounded-b-[3rem] rounded-t-none">
                 <div className="logo mx-auto text-primary">
-                    <Image src="/paltu_logo.svg" alt="Logo" width={350} height={350} />
+                    <Image src="/paltu_logo.svg" alt="Logo" width={250} height={250} />
                 </div>
             </header>
 
             <section className="bg-white text-black py-20 px-6 lg:px-20">
                 <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
                     {/* Text Content */}
-                    <div className="text-center md:text-left flex flex-col items-center md:items-start">
+                    <div className="text-center md:text-left flex flex-col items-center md:items-start relative top-[-15px]">
 
                         {/* Subheading Row */}
                         <div className="relative top-[50px] mb-4 flex items-center gap-2 justify-center md:justify-start md:left-[-50px]">
@@ -73,7 +73,7 @@ const HeroSection = () => {
 
 
                     {/* Founders Club Block */}
-                    <div className="bg-primary/5 border border-primary rounded-2xl p-8 text-center shadow-md mt-5">
+                    <div className="bg-primary/5 border border-primary rounded-2xl p-8 text-center shadow-md mt-7">
                         {/* Heading with primary_icon.svg */}
                         <h4 className="text-xl md:text-2xl font-semibold text-primary mb-6 flex justify-center items-center gap-3">
                             {/* <Image src="/primary_icon.svg" alt="Icon" width={24} height={24} /> */}

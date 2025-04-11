@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import { Modal, Button } from "antd";
 import OTPInput from "react-otp-input";
+import './styles.css'
 
 const CreateUser = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -44,6 +45,31 @@ const CreateUser = () => {
     const handleBackToLogin = () => {
         router.push('/login');
     };
+
+    const PasswordRules = ({ password }: { password: string }) => (
+        <div className="mt-2 space-y-1 text-sm">
+            <p className={`flex items-center ${password.length > 0 ? 'text-gray-600' : 'text-gray-400'}`}>
+                Password must contain:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+                <li className={`flex items-center ${/[A-Z]/.test(password) ? 'text-green-500' : 'text-red-500'}`}>
+                    {/[A-Z]/.test(password) ? '✓' : '✗'} At least one uppercase letter
+                </li>
+                <li className={`flex items-center ${/[a-z]/.test(password) ? 'text-green-500' : 'text-red-500'}`}>
+                    {/[a-z]/.test(password) ? '✓' : '✗'} At least one lowercase letter
+                </li>
+                <li className={`flex items-center ${/[0-9]/.test(password) ? 'text-green-500' : 'text-red-500'}`}>
+                    {/[0-9]/.test(password) ? '✓' : '✗'} At least one number
+                </li>
+                <li className={`flex items-center ${/[@$!%*?&]/.test(password) ? 'text-green-500' : 'text-red-500'}`}>
+                    {/[@$!%*?&]/.test(password) ? '✓' : '✗'} At least one special character (@$!%*?&)
+                </li>
+                <li className={`flex items-center ${password.length >= 8 ? 'text-green-500' : 'text-red-500'}`}>
+                    {password.length >= 8 ? '✓' : '✗'} Minimum 8 characters
+                </li>
+            </ul>
+        </div>
+    );
 
     useEffect(() => {
         dispatch(fetchCities());
@@ -150,6 +176,23 @@ const CreateUser = () => {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     };
 
+    const EmailValidation = ({ email }: { email: string }) => {
+        const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+        return (
+            <div className="mt-2 space-y-1 text-sm">
+                <p className={`flex items-center ${email.length > 0 ? 'text-gray-600' : 'text-gray-400'}`}>
+                    Email must be:
+                </p>
+                <ul className="list-disc pl-5 space-y-1">
+                    <li className={`flex items-center ${isValid ? 'text-green-500' : 'text-red-500'}`}>
+                        {isValid ? '✓' : '✗'} Properly formatted (e.g., example@domain.com)
+                    </li>
+                </ul>
+            </div>
+        );
+    };
+
     const validatePassword = (password: string) => {
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
         return passwordRegex.test(password);
@@ -244,10 +287,7 @@ const CreateUser = () => {
                     )}
 
                     {/* Email */}
-                    <div>
-                        <label className="block text-gray-700 text-sm font-medium mb-1">
-                            Email
-                        </label>
+                    <div className="relative">
                         <div className="flex gap-2">
                             <input
                                 type="email"
@@ -261,18 +301,20 @@ const CreateUser = () => {
                                 type="button"
                                 onClick={handleVerifyEmail}
                                 disabled={!validateEmail(email) || isEmailVerified}
-                                className={`px-4 rounded-xl ${isEmailVerified
+                                className={`px-4 rounded-xl transition-colors ${isEmailVerified
                                     ? "bg-green-500 text-white"
-                                    : "bg-primary text-white hover:bg-primary-dark"
-                                    } transition-colors`}
+                                    : validateEmail(email)
+                                        ? "bg-primary text-white hover:bg-primary-dark"
+                                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                    }`}
                             >
                                 {isEmailVerified ? "Verified" : "Verify"}
                             </button>
                         </div>
-                        {(formErrors.email || emailExistsError) && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {formErrors.email || emailExistsError}
-                            </p>
+                        {!isEmailVerified && (
+                            <div className="absolute z-10 top-full left-0 mt-1 w-full left-[-500px]">
+                                <EmailValidation email={email} />
+                            </div>
                         )}
                     </div>
 
@@ -345,12 +387,9 @@ const CreateUser = () => {
                             required
                             pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
                         />
-                        {/* Show password toggle */}
-                        {formErrors.password && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {formErrors.password}
-                            </p>
-                        )}
+                        <div className="absolute z-10 top-full left-0 mt-1 w-full left-[-500px]">
+                            <PasswordRules password={password} />
+                        </div>
                     </div>
 
                     {/* Confirm Password */}
@@ -415,40 +454,53 @@ const CreateUser = () => {
                 onCancel={() => setShowOtpModal(false)}
                 footer={null}
                 centered
+                className="[&_.ant-modal-content]:p-6"
             >
                 <div className="space-y-4">
-                    <p className="text-gray text-center">
+                    <p className="text-center text-gray-600">
                         Enter the 6-digit code sent to {email}
                     </p>
                     <OTPInput
                         value={otp}
                         onChange={handleOtpChange}
                         numInputs={6}
-                        renderSeparator={<span className="mx-2 text-xl text-gray"> </span> as any}
-                        renderInput={(props) => <input {...props} />}
-                        inputStyle="w-24 h-16 text-3xl text-center border border-gray rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                        containerStyle="flex justify-center space-x-2"
+                        renderSeparator={<span className="mx-1" />}
+                        renderInput={(props) => (
+                            <input
+                                {...props}
+                                type="tel" // Changed from number to tel
+                                inputMode="numeric"
+                                className="w-12 h-12 text-2xl text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent appearance-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                        )}
+                        containerStyle="flex justify-center gap-2"
                     />
-                    {otpError && <p className="text-red-500 text-center">{otpError}</p>}
-                    <button
-                        type="button"
-                        disabled={otp.length !== 6}
-                        onClick={handleSubmitOtp}
-                        className={`w-full bg-primary text-white py-2 px-4 rounded-xl transition ${otp.length !== 6 ? "opacity-50 cursor-not-allowed" : "hover:bg-primary-dark"
-                            }`}
-                    >
-                        Verify Code
-                    </button>
-                </div>
-                {otpError && (
-                    <p className="text-red-500 text-center text-sm mt-2">
-                        {otpError}
+                    {otpError && <p className="text-red-500 text-center text-sm">{otpError}</p>}
+                    <div className="flex gap-2 mt-4">
+                        <button
+                            type="button"
+                            onClick={handleSubmitOtp}
+                            disabled={otp.length !== 6}
+                            className={`w-full bg-primary text-white py-2 rounded-lg transition ${otp.length !== 6 ? "opacity-50 cursor-not-allowed" : "hover:bg-primary-dark"
+                                }`}
+                        >
+                            Verify Code
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleVerifyEmail}
+                            className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition"
+                        >
+                            Resend Code
+                        </button>
+                    </div>
+
+                    {/* Mobile Number Pad Hint */}
+                    <p className="text-center text-sm text-gray-500 md:hidden">
+                        Numeric keypad will appear on mobile devices
                     </p>
-                )}
+                </div>
             </Modal>
-
-
-
         </div>
     );
 };

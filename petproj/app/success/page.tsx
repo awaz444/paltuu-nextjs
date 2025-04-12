@@ -114,13 +114,13 @@ const SuccessPage = () => {
                             <div className="space-y-2">
                                 <h3 className="font-semibold text-lg text-gray-800">Stay Connected</h3>
                                 <div className="flex justify-center items-center space-x-4">
-                                    <a href="#" className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition">
+                                    <a href="https://instagram.com/paltuupk" className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition">
                                         <InstagramIcon />
                                     </a>
-                                    <a href="#" className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition">
+                                    <a href="https://www.tiktok.com/@paltuupk" className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition">
                                         <TikTokIcon />
                                     </a>
-                                    <a href="#" className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition">
+                                    <a href="https://www.linkedin.com/company/paltuu" className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition">
                                         <LinkedInIcon />
                                     </a>
                                 </div>

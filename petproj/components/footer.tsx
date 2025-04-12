@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const Footer = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const hideFooterRoutes = ["/login", "/sign-up", "/vet-register", "/vet-qualifications", "/vet-specialization" , "/vet-schedule", "/vet-get-verified-1", "/vet-get-verified-2", '/'];
+  const hideFooterRoutes = ["/login", "/success", "/sign-up", "/vet-register", "/vet-qualifications", "/vet-specialization" , "/vet-schedule", "/vet-get-verified-1", "/vet-get-verified-2", '/'];
   const pathName = usePathname();
 
   
@@ -30,7 +30,7 @@ const Footer = () => {
         </div>
         <div className="mb-4">
           <p>Follow us on Instagram</p>
-          <a href="https://instagram.com/paltuu.pk" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">
+          <a href="https://instagram.com/paltuupk" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">
             @paltuu.pk
           </a>
         </div>

@@ -72,45 +72,56 @@ const HeroSection = () => {
                     </div>
 
 
-                    {/* Founders Club Block */}
-                    <div className="bg-primary/5 border border-primary rounded-2xl p-8 text-center shadow-md mt-7">
-                        {/* Heading with primary_icon.svg */}
-                        <h4 className="text-xl md:text-2xl font-semibold text-primary mb-6 flex justify-center items-center gap-3">
-                            {/* <Image src="/primary_icon.svg" alt="Icon" width={24} height={24} /> */}
-                            Become a Founding Member
-                        </h4>
+                    {/* Container for Founders Club + Cat */}
+                    <div className="relative mt-10"> {/* Increased mt for more space */}
+                        {/* Big ass cat positioned above the box */}
+                        <div className="absolute -top-28 right-4 w-40 h-40 md:w-64 md:h-64 transform rotate-2 z-10">
+                            <Image
+                                src="/cat peeking.png"
+                                alt="Fun cat illustration"
+                                width={350}  // Large size
+                                height={350}
+                                className="object-contain"
+                                priority // Ensures quick loading
+                            />
+                        </div>
 
-                        {/* Perks List */}
-                        <ul className="text-base md:text-lg text-gray-800 text-left space-y-4 mb-8">
-                            <li className="flex items-start gap-3">
-                                <FontAwesomeIcon icon={faPaw} className="text-primary mt-1" />
-                                Early access to exclusive pet listings
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <FontAwesomeIcon icon={faUsers} className="text-primary mt-1" />
-                                Priority invites to pet events & adoption drives
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <FontAwesomeIcon icon={faStar} className="text-primary mt-1" />
-                                Founders badge on your profile
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <FontAwesomeIcon icon={faGift} className="text-primary mt-1" />
-                                Surprise merch & pet goodies
-                            </li>
-                        </ul>
+                        {/* Founders Club Block */}
+                        <div className="bg-primary/5 border border-primary rounded-2xl p-8 text-center shadow-md">
+                            {/* Heading with primary_icon.svg */}
+                            <h4 className="text-xl md:text-2xl font-semibold text-primary mb-6 flex justify-center items-center gap-3">
+                                Become a Founding Member
+                            </h4>
 
-                        <a
-                            href="/sign-up"
-                            className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#FFD700] via-[#c95f68] to-[#a03048] text-white font-bold px-10 py-4 rounded-full text-lg shadow-lg hover:scale-105 transition-transform duration-300"
-                        >
-                            <Image src="/white_icon.svg" alt="Icon" width={20} height={20} />
-                            Join Our Founders Club
-                        </a>
+                            {/* Perks List */}
+                            <ul className="text-base md:text-lg text-gray-800 text-left space-y-4 mb-8">
+                                <li className="flex items-start gap-3">
+                                    <FontAwesomeIcon icon={faPaw} className="text-primary mt-1" />
+                                    Early access to exclusive pet listings
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <FontAwesomeIcon icon={faUsers} className="text-primary mt-1" />
+                                    Priority invites to pet events & adoption drives
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <FontAwesomeIcon icon={faStar} className="text-primary mt-1" />
+                                    Founders badge on your profile
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <FontAwesomeIcon icon={faGift} className="text-primary mt-1" />
+                                    Surprise merch & pet goodies
+                                </li>
+                            </ul>
 
-
+                            <a
+                                href="/sign-up"
+                                className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#FFD700] via-[#c95f68] to-[#a03048] text-white font-bold px-10 py-4 rounded-full text-lg shadow-lg hover:scale-105 transition-transform duration-300"
+                            >
+                                <Image src="/white_icon.svg" alt="Icon" width={20} height={20} />
+                                Join Our Founders Club
+                            </a>
+                        </div>
                     </div>
-
                 </div>
             </section>
 

@@ -19,27 +19,35 @@ const HeroSection = () => {
     return (
         <div className="font-montserrat bg-white">
             {/* Header */}
-            <header className="bg-primary text-primary py-10 px-6 lg:px-20 flex items-center justify-between rounded-b-[3rem] rounded-t-none">
-                <div className="logo mx-auto text-primary">
-                    <Image src="/paltu_logo.svg" alt="Logo" width={250} height={250} />
+
+            <header className="bg-primary text-primary py-4 px-4 md:py-10 md:px-6 lg:px-20 flex items-center justify-between rounded-b-[3rem] rounded-t-none">
+                <div className="logo mx-auto">
+                    <Image
+                        src="/paltu_logo.svg"
+                        alt="Logo"
+                        width={200}
+                        height={200}
+                        className="w-32 md:w-48 lg:w-64" // Smaller logo on mobile
+                    />
                 </div>
             </header>
 
-            <section className="bg-white text-black py-20 px-6 lg:px-20">
-                <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+            {/* Section - tight spacing on mobile */}
+            <section className="bg-white text-black pt-6 pb-10 px-4 md:py-20 md:px-6 lg:px-20 -mt-2 md:mt-0">
+                <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10 items-start">
                     {/* Text Content */}
-                    <div className="text-center md:text-left flex flex-col items-center md:items-start relative top-[-15px]">
+                    <div className="text-center md:text-left flex flex-col items-center md:items-start relative md:top-[-15px]">
 
-                        {/* Subheading Row */}
-                        <div className="relative top-[50px] mb-4 flex items-center gap-2 justify-center md:justify-start md:left-[-50px]">
+                        {/* Subheading Row - compact mobile, unchanged desktop */}
+                        <div className="relative md:top-[50px] mb-2 md:mb-4 flex items-center gap-1 md:gap-2 justify-center md:justify-start md:left-[-50px]">
                             <Image
                                 src="/swiggly.svg"
                                 alt="Swiggly Icon"
-                                width={90}
-                                height={90}
-                                className="-rotate-12"
+                                width={60}
+                                height={60}
+                                className="w-12 md:w-20 -rotate-12"
                             />
-                            <p className="text-sm text-primary italic tracking-wide relative top-[-10px] left-[-9px]">
+                            <p className="text-xs md:text-sm text-primary italic tracking-wide relative top-[-6px] md:top-[-10px] left-[-4px] md:left-[-9px]">
                                 Available in Karachi, Lahore and Islamabad
                             </p>
                         </div>
@@ -47,7 +55,7 @@ const HeroSection = () => {
 
 
                         {/* Hero Headings */}
-                        <div className="m">
+                        <div className="-mt-8 md:mt-0">
                             <h1 className="text-5xl md:text-6xl font-extrabold leading-tight">
                                 PAKISTAN’S
                             </h1>

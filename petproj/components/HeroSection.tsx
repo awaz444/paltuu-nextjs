@@ -77,7 +77,7 @@ const HeroSection = () => {
                         {/* Cat on the right (existing) */}
                         <div className=" z-20 absolute 
                             -top-[4.05rem] right-2 w-28 h-28       /* Mobile */
-                            md:-top-16 md:-right-6 md:w-32 md:h-32  /* Tablet */
+                            md:-top-[4.6rem] md:right-2 md:w-32 md:h-32  /* Tablet */
                             lg:-top-[5.4rem] lg:-right-20 lg:w-64 lg:h-64">
                             <Image
                                 src="/cat-on-box.png"

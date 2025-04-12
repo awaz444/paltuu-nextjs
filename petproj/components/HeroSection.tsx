@@ -73,21 +73,21 @@ const HeroSection = () => {
 
 
                     {/* Container for Founders Club + Cat */}
-                    <div className="relative mt-10"> {/* Increased mt for more space */}
-                        {/* Big ass cat positioned above the box */}
-                        <div className="absolute -top-[7.2rem] right-4 w-40 h-40 md:w-64 md:h-64 z-10">
+                    <div className="relative mt-10">
+                        {/* Cat on the right (existing) */}
+                        <div className="absolute -top-[7.25rem] right-1 w-40 h-40 md:w-64 md:h-64 z-10">
                             <Image
                                 src="/cat-on-box.png"
                                 alt="Fun cat illustration"
-                                width={200}  // Large size
+                                width={200}
                                 height={200}
                                 className="object-contain"
-                                priority // Ensures quick loading
+                                priority
                             />
                         </div>
 
                         {/* Founders Club Block */}
-                        <div className="bg-primary/5 border border-primary rounded-2xl p-8 text-center shadow-md">
+                        <div className="bg-primary/5 border border-primary rounded-2xl p-8 text-center shadow-md relative z-0">
                             {/* Heading with primary_icon.svg */}
                             <h4 className="text-xl md:text-2xl font-semibold text-primary mb-6 flex justify-center items-center gap-3">
                                 Become a Founding Member

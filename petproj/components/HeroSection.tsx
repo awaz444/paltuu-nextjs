@@ -75,7 +75,10 @@ const HeroSection = () => {
                     {/* Container for Founders Club + Cat */}
                     <div className="relative mt-10">
                         {/* Cat on the right (existing) */}
-                        <div className="absolute -top-[5.35rem] -right-20 w-40 h-40 md:w-64 md:h-64 z-10">
+                        <div className=" z-20 absolute 
+                            -top-[4.05rem] right-2 w-28 h-28       /* Mobile */
+                            md:-top-16 md:-right-6 md:w-32 md:h-32  /* Tablet */
+                            lg:-top-[5.4rem] lg:-right-20 lg:w-64 lg:h-64">
                             <Image
                                 src="/cat-on-box.png"
                                 alt="Fun cat illustration"
@@ -89,7 +92,10 @@ const HeroSection = () => {
                         {/* Founders Club Block */}
                         <div className="bg-primary/5 border border-primary rounded-2xl p-8 text-center shadow-md relative z-0 overflow-hidden">
                             {/* Dog peeking from bottom left inside the box */}
-                            <div className="absolute -bottom-4 left-0 w-24 h-24 md:w-32 md:h-32 z-0">
+                            <div className="absolute 
+                                bottom-0 left-0 w-20 h-20        /* Mobile */
+                                md:bottom-0 md:left-0 md:w-24 md:h-24  /* Tablet */
+                                lg:-bottom-4 lg:w-32 lg:h-32">
                                 <Image
                                     src="/dog-peekingi.png"
                                     alt="Cute dog peeking"
@@ -99,7 +105,7 @@ const HeroSection = () => {
                                     priority
                                 />
                             </div>
-                            
+
 
                             {/* Heading with primary_icon.svg */}
                             <h4 className="text-xl md:text-2xl font-semibold text-primary mb-6 flex justify-center items-center gap-3 relative z-10">
@@ -128,10 +134,10 @@ const HeroSection = () => {
 
                             <a
                                 href="/sign-up"
-                                className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#FFD700] via-[#c95f68] to-[#a03048] text-white font-bold px-10 py-4 rounded-full text-lg shadow-lg hover:scale-105 transition-transform duration-300 relative z-10"
+                                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#FFD700] via-[#c95f68] to-[#a03048] text-white font-bold px-6 py-3 md:px-10 md:py-4 rounded-full text-sm md:text-lg shadow-lg hover:scale-105 transition-transform duration-300 relative z-10 whitespace-nowrap"
                             >
-                                <Image src="/white_icon.svg" alt="Icon" width={20} height={20} />
-                                Join Our Founders Club
+                                <Image src="/white_icon.svg" alt="Icon" width={16} height={16} className="w-4 h-4 md:w-5 md:h-5" />
+                                <span className="truncate">Join Founders Club</span>
                             </a>
                         </div>
                     </div>

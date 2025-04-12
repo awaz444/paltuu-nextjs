@@ -1,8 +1,26 @@
-.absolute.z-10 {
-    z-index: 10;
-    background: white;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-top: 0.25rem;
+  /* Hide number input spinners */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Validation dialog animations */
+.animate-popup {
+  animation: popup 0.2s ease-out;
+}
+
+@keyframes popup {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import { Modal, Button } from "antd";
 import OTPInput from "react-otp-input";
-import './styles.css'
+import "./styles.css";
 
 const CreateUser = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -42,30 +42,62 @@ const CreateUser = () => {
 
     const [isLoading, setIsLoading] = useState(false);
 
+    const [isEmailFocused, setIsEmailFocused] = useState(false);
+    const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+
     const handleBackToLogin = () => {
-        router.push('/login');
+        router.push("/");
     };
 
     const PasswordRules = ({ password }: { password: string }) => (
-        <div className="mt-2 space-y-1 text-sm">
-            <p className={`flex items-center ${password.length > 0 ? 'text-gray-600' : 'text-gray-400'}`}>
+        <div className="mt-0 space-y-1 text-sm">
+            <p
+                className={`flex items-center ${
+                    password.length > 0 ? "text-gray-600" : "text-gray-400"
+                }`}>
                 Password must contain:
             </p>
             <ul className="list-disc pl-5 space-y-1">
-                <li className={`flex items-center ${/[A-Z]/.test(password) ? 'text-green-500' : 'text-red-500'}`}>
-                    {/[A-Z]/.test(password) ? '✓' : '✗'} At least one uppercase letter
+                <li
+                    className={`flex items-center ${
+                        /[A-Z]/.test(password)
+                            ? "text-green-500"
+                            : "text-red-500"
+                    }`}>
+                    {/[A-Z]/.test(password) ? "✓" : "✗"} At least one uppercase
+                    letter
                 </li>
-                <li className={`flex items-center ${/[a-z]/.test(password) ? 'text-green-500' : 'text-red-500'}`}>
-                    {/[a-z]/.test(password) ? '✓' : '✗'} At least one lowercase letter
+                <li
+                    className={`flex items-center ${
+                        /[a-z]/.test(password)
+                            ? "text-green-500"
+                            : "text-red-500"
+                    }`}>
+                    {/[a-z]/.test(password) ? "✓" : "✗"} At least one lowercase
+                    letter
                 </li>
-                <li className={`flex items-center ${/[0-9]/.test(password) ? 'text-green-500' : 'text-red-500'}`}>
-                    {/[0-9]/.test(password) ? '✓' : '✗'} At least one number
+                <li
+                    className={`flex items-center ${
+                        /[0-9]/.test(password)
+                            ? "text-green-500"
+                            : "text-red-500"
+                    }`}>
+                    {/[0-9]/.test(password) ? "✓" : "✗"} At least one number
                 </li>
-                <li className={`flex items-center ${/[@$!%*?&]/.test(password) ? 'text-green-500' : 'text-red-500'}`}>
-                    {/[@$!%*?&]/.test(password) ? '✓' : '✗'} At least one special character (@$!%*?&)
+                <li
+                    className={`flex items-center ${
+                        /[@$!%*?&]/.test(password)
+                            ? "text-green-500"
+                            : "text-red-500"
+                    }`}>
+                    {/[@$!%*?&]/.test(password) ? "✓" : "✗"} At least one
+                    special character (@$!%*?&)
                 </li>
-                <li className={`flex items-center ${password.length >= 8 ? 'text-green-500' : 'text-red-500'}`}>
-                    {password.length >= 8 ? '✓' : '✗'} Minimum 8 characters
+                <li
+                    className={`flex items-center ${
+                        password.length >= 8 ? "text-green-500" : "text-red-500"
+                    }`}>
+                    {password.length >= 8 ? "✓" : "✗"} Minimum 8 characters
                 </li>
             </ul>
         </div>
@@ -84,20 +116,23 @@ const CreateUser = () => {
         setGeneralError("");
 
         if (!isEmailVerified) {
-            setFormErrors(prev => ({ ...prev, email: "Please verify your email first" }));
-            setIsLoading(false);
-            return;
-        }
-
-        if (!validatePassword(password)) {
-            setFormErrors(prev => ({
+            setFormErrors((prev) => ({
                 ...prev,
-                password: "Password must contain at least 8 characters, one uppercase, one lowercase, one number, and one special character"
+                email: "Please verify your email first",
             }));
             setIsLoading(false);
             return;
         }
 
+        if (!validatePassword(password)) {
+            setFormErrors((prev) => ({
+                ...prev,
+                password:
+                    "Password must contain at least 8 characters, one uppercase, one lowercase, one number, and one special character",
+            }));
+            setIsLoading(false);
+            return;
+        }
 
         if (password !== confirmPassword) {
             setPasswordMismatchError("Passwords do not match");
@@ -120,13 +155,19 @@ const CreateUser = () => {
             const result = await dispatch(postUser(newUser));
 
             if (postUser.rejected.match(result)) {
-                const errorPayload = result.payload as { message?: string; errorCode?: string };
-                if (errorPayload?.errorCode === 'EMAIL_EXISTS') {
+                const errorPayload = result.payload as {
+                    message?: string;
+                    errorCode?: string;
+                };
+                if (errorPayload?.errorCode === "EMAIL_EXISTS") {
                     setEmailExistsError("This email is already registered");
                     setIsEmailVerified(false);
                     setShowOtpModal(false);
                 } else {
-                    setGeneralError(errorPayload?.message || "Failed to create account. Please try again.");
+                    setGeneralError(
+                        errorPayload?.message ||
+                            "Failed to create account. Please try again."
+                    );
                 }
                 return;
             }
@@ -145,29 +186,37 @@ const CreateUser = () => {
 
     const handleVerifyEmail = async () => {
         if (!validateEmail(email)) {
-            setFormErrors(prev => ({ ...prev, email: "Please enter a valid email address" }));
+            setFormErrors((prev) => ({
+                ...prev,
+                email: "Please enter a valid email address",
+            }));
             return;
         }
 
         try {
             // Implement actual email verification API call
-            const response = await fetch('/api/send-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const response = await fetch("/api/send-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || "Email verification failed");
+                throw new Error(
+                    errorData.message || "Email verification failed"
+                );
             }
 
             setShowOtpModal(true);
-            setFormErrors(prev => ({ ...prev, email: "" }));
+            setFormErrors((prev) => ({ ...prev, email: "" }));
         } catch (error) {
-            setFormErrors(prev => ({
+            setFormErrors((prev) => ({
                 ...prev,
-                email: error instanceof Error ? error.message : "Failed to send verification code"
+                email:
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to send verification code",
             }));
         }
     };
@@ -180,13 +229,20 @@ const CreateUser = () => {
         const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
         return (
-            <div className="mt-2 space-y-1 text-sm">
-                <p className={`flex items-center ${email.length > 0 ? 'text-gray-600' : 'text-gray-400'}`}>
+            <div className="mt-0 space-y-1 text-sm">
+                <p
+                    className={`flex items-center ${
+                        email.length > 0 ? "text-gray-600" : "text-gray-400"
+                    }`}>
                     Email must be:
                 </p>
                 <ul className="list-disc pl-5 space-y-1">
-                    <li className={`flex items-center ${isValid ? 'text-green-500' : 'text-red-500'}`}>
-                        {isValid ? '✓' : '✗'} Properly formatted (e.g., example@domain.com)
+                    <li
+                        className={`flex items-center ${
+                            isValid ? "text-green-500" : "text-red-500"
+                        }`}>
+                        {isValid ? "✓" : "✗"} Properly formatted (e.g.,
+                        example@domain.com)
                     </li>
                 </ul>
             </div>
@@ -194,7 +250,8 @@ const CreateUser = () => {
     };
 
     const validatePassword = (password: string) => {
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        const passwordRegex =
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
         return passwordRegex.test(password);
     };
 
@@ -213,22 +270,26 @@ const CreateUser = () => {
 
         try {
             // Implement actual OTP verification API call
-            const response = await fetch('/api/verify-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const response = await fetch("/api/verify-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, otp }),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || "Invalid verification code");
+                throw new Error(
+                    errorData.message || "Invalid verification code"
+                );
             }
 
             setIsEmailVerified(true);
             setShowOtpModal(false);
             setOtpError("");
         } catch (error) {
-            setOtpError(error instanceof Error ? error.message : "Verification failed");
+            setOtpError(
+                error instanceof Error ? error.message : "Verification failed"
+            );
         }
     };
 
@@ -245,22 +306,22 @@ const CreateUser = () => {
 
             {/* Right Section (Form) */}
             <div className="lg:w-1/2 bg-gray-100 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
-
-                {/* <button
+                { <button
                     onClick={handleBackToLogin}
                     className="absolute top-4 left-4 text-white hover:text-white-600 flex items-center"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
                     </svg>
-                    Back to Login
-                </button> */}
+                    Back to Founders Club
+                </button> }
 
                 <form
                     onSubmit={handleSubmit}
-                    className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6 space-y-4"
-                >
-                    <h2 className="text-3xl font-semibold text-center mb-2">Sign Up</h2>
+                    className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6 space-y-4">
+                    <h2 className="text-3xl font-semibold text-center mb-2">
+                        Sign Up
+                    </h2>
                     <p className="text-gray-600 text-center mb-6">
                         Fill in the details to create a new account.
                     </p>
@@ -286,13 +347,22 @@ const CreateUser = () => {
                         </div>
                     )}
 
-                    {/* Email */}
                     <div className="relative">
-                        <div className="flex gap-2">
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Email
+                        </label>
+                        <div className="flex gap-2 relative">
                             <input
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                onFocus={() => setIsEmailFocused(true)}
+                                onBlur={() =>
+                                    setTimeout(
+                                        () => setIsEmailFocused(false),
+                                        100
+                                    )
+                                }
                                 className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                                 required
                                 disabled={isEmailVerified}
@@ -300,21 +370,31 @@ const CreateUser = () => {
                             <button
                                 type="button"
                                 onClick={handleVerifyEmail}
-                                disabled={!validateEmail(email) || isEmailVerified}
-                                className={`px-4 rounded-xl transition-colors ${isEmailVerified
-                                    ? "bg-green-500 text-white"
-                                    : validateEmail(email)
+                                disabled={
+                                    !validateEmail(email) || isEmailVerified
+                                }
+                                className={`px-4 rounded-xl transition-colors ${
+                                    isEmailVerified
+                                        ? "bg-green-500 text-white"
+                                        : validateEmail(email)
                                         ? "bg-primary text-white hover:bg-primary-dark"
                                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    }`}
-                            >
+                                }`}>
                                 {isEmailVerified ? "Verified" : "Verify"}
                             </button>
+
+                            {isEmailFocused && !isEmailVerified && (
+                                 <div className="absolute top-full left-0 mt-2 w-full z-10 animate-popup">
+                                    <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+                                        <EmailValidation email={email} />
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        {!isEmailVerified && (
-                            <div className="absolute z-10 top-full left-0 mt-1 w-full left-[-500px]">
-                                <EmailValidation email={email} />
-                            </div>
+                        {(formErrors.email || emailExistsError) && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {formErrors.email || emailExistsError}
+                            </p>
                         )}
                     </div>
 
@@ -364,8 +444,7 @@ const CreateUser = () => {
                             value={cityId || ""}
                             onChange={(e) => setCityId(Number(e.target.value))}
                             className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                            required
-                        >
+                            required>
                             <option value="">Select a City</option>
                             {cities.map((city) => (
                                 <option key={city.city_id} value={city.city_id}>
@@ -379,17 +458,36 @@ const CreateUser = () => {
                         <label className="block text-gray-700 text-sm font-medium mb-1">
                             Password
                         </label>
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                            required
-                            pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
-                        />
-                        <div className="absolute z-10 top-full left-0 mt-1 w-full left-[-500px]">
-                            <PasswordRules password={password} />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                onFocus={() => setIsPasswordFocused(true)}
+                                onBlur={() =>
+                                    setTimeout(
+                                        () => setIsPasswordFocused(false),
+                                        100
+                                    )
+                                }
+                                className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                                required
+                                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                            />
+
+                            {isPasswordFocused && (
+                                 <div className="absolute top-full left-0 mt-2 w-full z-10 animate-popup">
+                                    <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+                                        <PasswordRules password={password} />
+                                    </div>
+                                </div>
+                            )}
                         </div>
+                        {formErrors.password && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {formErrors.password}
+                            </p>
+                        )}
                     </div>
 
                     {/* Confirm Password */}
@@ -405,10 +503,15 @@ const CreateUser = () => {
                             required
                         />
                         <span
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-6"
-                        >
-                            {showConfirmPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                            onClick={() =>
+                                setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-6">
+                            {showConfirmPassword ? (
+                                <EyeInvisibleOutlined />
+                            ) : (
+                                <EyeOutlined />
+                            )}
                         </span>
                     </div>
 
@@ -425,23 +528,33 @@ const CreateUser = () => {
                             checked={role === "vet"}
                             onChange={() =>
                                 setRole((prevRole) =>
-                                    prevRole === "regular user" ? "vet" : "regular user"
+                                    prevRole === "regular user"
+                                        ? "vet"
+                                        : "regular user"
                                 )
                             }
                             className="h-4 w-4 border-gray-300 text-primary rounded focus:ring-primary focus:outline-none"
                         />
-                        <label className="text-gray-700 text-sm">I am a vet</label>
+                        <label className="text-gray-700 text-sm">
+                            I am a vet
+                        </label>
                     </div>
 
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={isLoading || !isEmailVerified || password !== confirmPassword}
-                        className={`w-full bg-primary text-white py-2 px-4 rounded-xl transition ${isLoading || !isEmailVerified || password !== confirmPassword
-                            ? "opacity-50 cursor-not-allowed"
-                            : "hover:bg-primary-dark"
-                            }`}
-                    >
+                        disabled={
+                            isLoading ||
+                            !isEmailVerified ||
+                            password !== confirmPassword
+                        }
+                        className={`w-full bg-primary text-white py-2 px-4 rounded-xl transition ${
+                            isLoading ||
+                            !isEmailVerified ||
+                            password !== confirmPassword
+                                ? "opacity-50 cursor-not-allowed"
+                                : "hover:bg-primary-dark"
+                        }`}>
                         {isLoading ? "Creating Account..." : "Create Account"}
                     </button>
                 </form>
@@ -454,8 +567,7 @@ const CreateUser = () => {
                 onCancel={() => setShowOtpModal(false)}
                 footer={null}
                 centered
-                className="[&_.ant-modal-content]:p-6"
-            >
+                className="[&_.ant-modal-content]:p-6">
                 <div className="space-y-4">
                     <p className="text-center text-gray-600">
                         Enter the 6-digit code sent to {email}
@@ -475,22 +587,27 @@ const CreateUser = () => {
                         )}
                         containerStyle="flex justify-center gap-2"
                     />
-                    {otpError && <p className="text-red-500 text-center text-sm">{otpError}</p>}
+                    {otpError && (
+                        <p className="text-red-500 text-center text-sm">
+                            {otpError}
+                        </p>
+                    )}
                     <div className="flex gap-2 mt-4">
                         <button
                             type="button"
                             onClick={handleSubmitOtp}
                             disabled={otp.length !== 6}
-                            className={`w-full bg-primary text-white py-2 rounded-lg transition ${otp.length !== 6 ? "opacity-50 cursor-not-allowed" : "hover:bg-primary-dark"
-                                }`}
-                        >
+                            className={`w-full bg-primary text-white py-2 rounded-lg transition ${
+                                otp.length !== 6
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "hover:bg-primary-dark"
+                            }`}>
                             Verify Code
                         </button>
                         <button
                             type="button"
                             onClick={handleVerifyEmail}
-                            className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition"
-                        >
+                            className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition">
                             Resend Code
                         </button>
                     </div>

@@ -22,18 +22,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
-      setUser({ ...parsedUser, method: "api" });
+      setUser({ ...parsedUser, method: parsedUser.method || "api" });
       setIsAuthenticated(true);
     }
 
     if (status === "authenticated" && session?.user) {
-      setUser({
+      const googleUser = {
         id: session.user.user_id || undefined,
         name: session.user.name || undefined,
         email: session.user.email || "",
         role: session.user.role || "guest",
-        method: "google",
-      });
+        method: "google" as const,
+      };
+
+      // Store Google user in localStorage
+      localStorage.setItem("user", JSON.stringify(googleUser));
+
+      setUser(googleUser);
       setIsAuthenticated(true);
     }
   }, [status, session]);
@@ -50,13 +55,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     console.log("Logout started, user method:", user?.method);
-    
+
     try {
       // Clear local storage first
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       sessionStorage.clear();
-      
+
       // For Google users, handle NextAuth signOut correctly
       if (user?.method === "google") {
         console.log("Executing Google logout flow");
@@ -66,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
         return; // Return here because NextAuth will handle the redirect
       }
-      
+
       // For API users, proceed with API logout
       console.log("Executing API logout flow");
       try {
@@ -74,25 +79,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           method: 'GET',
           credentials: 'include', // Important for cookies
         });
-        
+
         if (!response.ok) {
           throw new Error(`API logout failed with status: ${response.status}`);
         }
-        
+
         console.log("API logout successful");
       } catch (err) {
         console.error("API logout error:", err);
       }
-      
+
       // Clear state
       setUser(null);
       setIsAuthenticated(false);
-      
+
       // Manual cookie clearing as fallback (helps with cross-platform issues)
       document.cookie.split(";").forEach(function(c) {
         document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
       });
-      
+
       // Final redirect for non-Google users
       console.log("Redirecting to login page");
       window.location.href = '/login';

@@ -8,6 +8,7 @@ export async function POST(request: NextRequest) {
     const { username, name, DOB, city_id, email, password, phone_number, role } = reqBody;
 
     console.log(reqBody);
+    const emailNew = email.toLowerCase();
 
     // Check if the user already exists
     const checkUserQuery = `SELECT * FROM users WHERE email = $1`;
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
       name,
       DOB,
       city_id,
-      email,
+      emailNew,
       password,
       phone_number,
       role,

@@ -75,26 +75,39 @@ const HeroSection = () => {
                     {/* Container for Founders Club + Cat */}
                     <div className="relative mt-10">
                         {/* Cat on the right (existing) */}
-                        <div className="absolute -top-[7.25rem] right-1 w-40 h-40 md:w-64 md:h-64 z-10">
+                        <div className="absolute -top-[5.35rem] -right-20 w-40 h-40 md:w-64 md:h-64 z-10">
                             <Image
                                 src="/cat-on-box.png"
                                 alt="Fun cat illustration"
-                                width={200}
-                                height={200}
+                                width={150}
+                                height={150}
                                 className="object-contain"
                                 priority
                             />
                         </div>
 
                         {/* Founders Club Block */}
-                        <div className="bg-primary/5 border border-primary rounded-2xl p-8 text-center shadow-md relative z-0">
+                        <div className="bg-primary/5 border border-primary rounded-2xl p-8 text-center shadow-md relative z-0 overflow-hidden">
+                            {/* Dog peeking from bottom left inside the box */}
+                            <div className="absolute -bottom-4 left-0 w-24 h-24 md:w-32 md:h-32 z-0">
+                                <Image
+                                    src="/dog-peekingi.png"
+                                    alt="Cute dog peeking"
+                                    width={112}
+                                    height={112}
+                                    className="object-contain"
+                                    priority
+                                />
+                            </div>
+                            
+
                             {/* Heading with primary_icon.svg */}
-                            <h4 className="text-xl md:text-2xl font-semibold text-primary mb-6 flex justify-center items-center gap-3">
+                            <h4 className="text-xl md:text-2xl font-semibold text-primary mb-6 flex justify-center items-center gap-3 relative z-10">
                                 Become a Founding Member
                             </h4>
 
                             {/* Perks List */}
-                            <ul className="text-base md:text-lg text-gray-800 text-left space-y-4 mb-8">
+                            <ul className="text-base md:text-lg text-gray-800 text-left space-y-4 mb-8 relative z-10">
                                 <li className="flex items-start gap-3">
                                     <FontAwesomeIcon icon={faPaw} className="text-primary mt-1" />
                                     Early access to exclusive pet listings
@@ -115,7 +128,7 @@ const HeroSection = () => {
 
                             <a
                                 href="/sign-up"
-                                className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#FFD700] via-[#c95f68] to-[#a03048] text-white font-bold px-10 py-4 rounded-full text-lg shadow-lg hover:scale-105 transition-transform duration-300"
+                                className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#FFD700] via-[#c95f68] to-[#a03048] text-white font-bold px-10 py-4 rounded-full text-lg shadow-lg hover:scale-105 transition-transform duration-300 relative z-10"
                             >
                                 <Image src="/white_icon.svg" alt="Icon" width={20} height={20} />
                                 Join Our Founders Club

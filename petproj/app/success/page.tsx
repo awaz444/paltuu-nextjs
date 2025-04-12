@@ -8,15 +8,34 @@ import Image from "next/image";
 
 const SuccessPage = () => {
     const [showConfetti, setShowConfetti] = useState(true);
+    const [windowSize, setWindowSize] = useState({
+        width: typeof window !== "undefined" ? window.innerWidth : 0,
+        height: typeof window !== "undefined" ? window.innerHeight : 0,
+    });
     const primaryColor = "#a03048";
     const primaryLight = "#f8e8eb";
 
     useEffect(() => {
+        // Handle window resize
+        const handleResize = () => {
+            setWindowSize({
+                width: window.innerWidth,
+                height: window.innerHeight,
+            });
+        };
+
+        // Set confetti timer for 10 seconds
         const confettiTimer = setTimeout(() => {
             setShowConfetti(false);
         }, 10000);
 
-        return () => clearTimeout(confettiTimer);
+        // Add event listener for window resize
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            clearTimeout(confettiTimer);
+            window.removeEventListener('resize', handleResize);
+        };
     }, []);
 
     return (
@@ -26,13 +45,16 @@ const SuccessPage = () => {
                 <meta name="description" content="Exclusive access for early supporters" />
             </Head>
 
+            {/* Confetti that shows for 10 seconds */}
             {showConfetti && (
                 <Confetti
-                    width={typeof window !== "undefined" ? window.innerWidth : 0}
-                    height={typeof window !== "undefined" ? window.innerHeight : 0}
+                    width={windowSize.width}
+                    height={windowSize.height}
                     recycle={false}
                     numberOfPieces={200}
                     colors={[primaryColor, "#d1a0a9", "#f8e8eb", "#ffffff"]}
+                    gravity={0.2}
+                    initialVelocityY={10}
                 />
             )}
 

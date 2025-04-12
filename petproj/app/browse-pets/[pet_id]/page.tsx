@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
-import LoginModal from "../../../components/LoginModal"; // Create this component from provided login code
+import LoginModal from "../../../components/LoginModal"; 
 import {
     Spin,
     Card,

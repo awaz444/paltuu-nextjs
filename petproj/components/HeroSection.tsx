@@ -75,12 +75,12 @@ const HeroSection = () => {
                     {/* Container for Founders Club + Cat */}
                     <div className="relative mt-10"> {/* Increased mt for more space */}
                         {/* Big ass cat positioned above the box */}
-                        <div className="absolute -top-28 right-4 w-40 h-40 md:w-64 md:h-64 transform rotate-2 z-10">
+                        <div className="absolute -top-[7.2rem] right-4 w-40 h-40 md:w-64 md:h-64 z-10">
                             <Image
-                                src="/cat peeking.png"
+                                src="/cat-on-box.png"
                                 alt="Fun cat illustration"
-                                width={350}  // Large size
-                                height={350}
+                                width={200}  // Large size
+                                height={200}
                                 className="object-contain"
                                 priority // Ensures quick loading
                             />

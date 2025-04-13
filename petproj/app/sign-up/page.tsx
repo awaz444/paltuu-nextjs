@@ -316,9 +316,7 @@ const CreateUser = () => {
     const handleOtpChange = (otp: string) => {
         setOtp(otp);
         setOtpError(""); // Clear previous errors when typing
-        if (otp.length === 6) {
-            handleSubmitOtp();
-        }
+        // Removed the auto-submit condition
     };
 
     const handleSubmitOtp = async () => {
@@ -566,9 +564,7 @@ const CreateUser = () => {
                                 pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
                             />
                             <span
-                                onClick={() =>
-                                    setShowPassword(!showPassword)
-                                }
+                                onClick={() => setShowPassword(!showPassword)}
                                 className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-1">
                                 {showPassword ? (
                                     <EyeInvisibleOutlined />
@@ -576,7 +572,7 @@ const CreateUser = () => {
                                     <EyeOutlined />
                                 )}
                             </span>
-
+                            a
                             {isPasswordFocused && (
                                 <div className="absolute top-full left-0 mt-2 w-full z-10 animate-popup">
                                     <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">

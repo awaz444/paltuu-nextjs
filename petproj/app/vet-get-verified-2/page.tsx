@@ -138,7 +138,7 @@ const VerificationInfoContent  = () => {
         formData.append("files", file.originFileObj);
       }
     });
-    formData.append("vet_id", userId.toString());
+    formData.append("vet_id", vetIdNumber.toString());
     formData.append("qualification_id", qualificationId.toString());
 
     try {

@@ -3,7 +3,6 @@ import { createClient } from "../../../db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 
-// Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
   api_key: process.env.CLOUDINARY_API_KEY!,
@@ -13,41 +12,48 @@ cloudinary.config({
 export async function POST(request: NextRequest) {
   const client = createClient();
 
+  console.log("[INFO] Incoming vet verification POST request");
+
   try {
     const data = await request.formData();
+    console.log("[DEBUG] Form data received");
+
     const files = data.getAll("files") as File[];
-
-    if (!files || files.length === 0) {
-      return NextResponse.json(
-        { error: "No files were provided" },
-        { status: 400 }
-      );
-    }
-
     const vet_id = data.get("vet_id");
     const qualification_id = data.get("qualification_id");
 
+    console.log("[DEBUG] Extracted fields:", {
+      vet_id,
+      qualification_id,
+      numFiles: files?.length || 0,
+    });
+
+    if (!files || files.length === 0) {
+      console.warn("[WARN] No files provided in request");
+      return NextResponse.json({ error: "No files were provided" }, { status: 400 });
+    }
+
     if (!vet_id || !qualification_id) {
+      console.warn("[WARN] Missing vet_id or qualification_id");
       return NextResponse.json(
         { error: "Vet ID or Qualification ID is missing from the request" },
         { status: 400 }
       );
     }
 
-    console.log("Vet ID:", vet_id, "Qualification ID:", qualification_id);
-
-    // Upload files to Cloudinary
-    const uploadPromises = files.map(async (file) => {
+    // Upload to Cloudinary
+    console.log("[INFO] Starting Cloudinary uploads...");
+    const uploadPromises = files.map(async (file, index) => {
       const buffer = Buffer.from(await file.arrayBuffer());
       return new Promise<string>((resolve, reject) => {
         const upload = cloudinary.uploader.upload_stream(
           { resource_type: "image" },
           (error, result) => {
             if (error) {
-              console.error("Cloudinary upload error:", error);
+              console.error(`[ERROR] Cloudinary upload failed (file ${index + 1}):`, error);
               reject(error);
             } else {
-              console.log("Uploaded URL:", result!.secure_url);
+              console.log(`[INFO] File ${index + 1} uploaded:`, result!.secure_url);
               resolve(result!.secure_url);
             }
           }
@@ -57,14 +63,15 @@ export async function POST(request: NextRequest) {
     });
 
     const urls = await Promise.all(uploadPromises);
-    console.log("Uploaded URLs:", urls);
+    console.log("[INFO] All files uploaded to Cloudinary:", urls);
 
     await client.connect();
-    console.log("Database connected");
+    console.log("[INFO] Connected to database");
 
-    // Insert image URLs into vet_verification_application table
+    // Insert uploaded image URLs
     for (let i = 0; i < urls.length; i++) {
       const image_url = urls[i];
+      console.log(`[DEBUG] Inserting image ${i + 1} to DB`, { vet_id, qualification_id, image_url });
 
       const query = `
         WITH vet_data AS (
@@ -77,44 +84,40 @@ export async function POST(request: NextRequest) {
       `;
       const queryParams = [vet_id, qualification_id, image_url];
 
-      console.log("Query Parameters:", queryParams);
-      await client.query(query, queryParams);
-      console.log(`Image ${i + 1} inserted successfully`);
+      try {
+        await client.query(query, queryParams);
+        console.log(`[INFO] Image ${i + 1} inserted into vet_verification_application`);
+      } catch (queryErr) {
+        console.error(`[ERROR] Failed to insert image ${i + 1}:`, queryErr);
+      }
     }
 
-    // **Fetch the vet's user ID**
-    const vetUserResult = await client.query(
-      `SELECT user_id FROM vets WHERE vet_id = $1`,
-      [vet_id]
-    );
+    // Fetch vet user ID
+    console.log("[INFO] Fetching vet user ID...");
+    const vetUserResult = await client.query(`SELECT user_id FROM vets WHERE vet_id = $1`, [vet_id]);
     const vetUserId = vetUserResult.rows[0]?.user_id;
 
     if (!vetUserId) {
-      console.error("Vet user ID not found.");
+      console.error("[ERROR] Vet user ID not found for vet_id:", vet_id);
       return NextResponse.json({ error: "Vet user ID not found" }, { status: 400 });
     }
+    console.log("[DEBUG] Vet user ID:", vetUserId);
 
-    // **Fetch all admin user IDs**
-    const adminResult = await client.query(
-      `SELECT user_id FROM users WHERE role = 'admin'`
-    );
-    const adminUserIds = adminResult.rows.map((row) => row.user_id);
-
-    // **Insert notification for the vet**
+    // Notify the vet
     const vetNotificationContent = `Your vet verification application has been submitted. It will be reviewed by an admin.`;
     await client.query(
       `INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
        VALUES ($1, $2, $3, $4, $5)`,
-      [
-        vetUserId,
-        vetNotificationContent,
-        "vet_application",
-        false,
-        new Date(),
-      ]
+      [vetUserId, vetNotificationContent, "vet_application", false, new Date()]
     );
+    console.log("[INFO] Notification sent to vet user");
 
-    // **Insert notifications for all admin users**
+    // Notify all admins
+    console.log("[INFO] Fetching admin users...");
+    const adminResult = await client.query(`SELECT user_id FROM users WHERE role = 'admin'`);
+    const adminUserIds = adminResult.rows.map((row) => row.user_id);
+    console.log("[DEBUG] Admin user IDs:", adminUserIds);
+
     if (adminUserIds.length > 0) {
       const adminNotificationContent = `A new vet verification application has been submitted. Please review it.`;
       const notificationQuery = `
@@ -122,13 +125,10 @@ export async function POST(request: NextRequest) {
         VALUES ${adminUserIds
           .map(
             (_, i) =>
-              `($${i * 5 + 1}, $${i * 5 + 2}, $${i * 5 + 3}, $${
-                i * 5 + 4
-              }, $${i * 5 + 5})`
+              `($${i * 5 + 1}, $${i * 5 + 2}, $${i * 5 + 3}, $${i * 5 + 4}, $${i * 5 + 5})`
           )
           .join(", ")}
       `;
-
       const notificationValues = adminUserIds.flatMap((user_id) => [
         user_id,
         adminNotificationContent,
@@ -138,6 +138,9 @@ export async function POST(request: NextRequest) {
       ]);
 
       await client.query(notificationQuery, notificationValues);
+      console.log("[INFO] Notifications sent to all admin users");
+    } else {
+      console.warn("[WARN] No admin users found to notify");
     }
 
     return NextResponse.json(
@@ -145,7 +148,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error:", error);
+    console.error("[FATAL ERROR] Unexpected server error:", error);
     return NextResponse.json(
       { error: "Failed to upload images", details: (error as Error).message },
       { status: 500 }
@@ -153,9 +156,9 @@ export async function POST(request: NextRequest) {
   } finally {
     try {
       await client.end();
-      console.log("Database connection closed");
+      console.log("[INFO] Database connection closed");
     } catch (error) {
-      console.error("Error closing database connection:", error);
+      console.error("[ERROR] Failed to close database connection:", error);
     }
   }
 }

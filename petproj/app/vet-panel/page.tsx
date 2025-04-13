@@ -5,7 +5,7 @@ import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import { CameraOutlined, LoadingOutlined, LockOutlined, PlusOutlined } from "@ant-design/icons";
 import { format } from "date-fns";
-import { Modal, Input, Form, message, Button } from "antd";
+import { Modal, Input, Form, message, Button, Select } from "antd";
 import Link from "next/link";
 import { FaArrowRight } from "react-icons/fa";
 import './styles.css';
@@ -45,7 +45,7 @@ interface ClinicDetails {
 interface Qualification {
     vet_qualifications_id: number;
     vet_id: number;
-    qualification_id: number;
+    qualification_id?: number;
     qualification_name: string; // Changed from 'degree'
     year_acquired: number; // Changed from 'year'
     note: string; // Changed from 'institution'
@@ -70,6 +70,11 @@ interface Specialization {
     vet_id: number;
     category_id: number;
     category_name: string; // Changed from 'specialization'
+}
+
+interface PetCategory {
+    category_id: number;
+    category_name: string;
 }
 
 interface VetProfileData {
@@ -117,6 +122,15 @@ const VetProfile = () => {
         specializations: number | null;
         schedule: number | null;
     }>({ qualifications: null, specializations: null, schedule: null });
+    const [petCategories, setPetCategories] = useState<PetCategory[]>([]);
+    const [qualificationModalVisible, setQualificationModalVisible] = useState(false);
+    const [specializationModalVisible, setSpecializationModalVisible] = useState(false);
+    const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
+    const [qualificationForm] = Form.useForm();
+    const [specializationForm] = Form.useForm();
+    const [scheduleForm] = Form.useForm();
+
+
 
     const fetchVetId = async (userId: string) => {
         try {
@@ -196,6 +210,11 @@ const VetProfile = () => {
                 if (!citiesRes.ok) throw new Error('Failed to fetch cities');
                 const citiesData = await citiesRes.json();
                 setCities(citiesData);
+
+                const categoriesRes = await fetch('/api/pet-categories');
+                if (!categoriesRes.ok) throw new Error('Failed to fetch pet categories');
+                const categoriesData = await categoriesRes.json();
+                setPetCategories(categoriesData);
             } catch (error) {
                 console.error("Error loading data:", error);
             } finally {
@@ -346,44 +365,35 @@ const VetProfile = () => {
                     });
                 }
 
-                // Save other vet data - removed Promise.all since we want sequential execution
-                // with proper error handling for each request
-
-                // Save qualifications
+                // Save qualifications (only updates, additions are handled separately)
                 const qualRes = await fetch(`/api/vet-panel/qualifications/${vetId}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        qualifications: updatedVetData.qualifications.map(q => ({
-                            qualification_id: q.qualification_id,
-                            year_acquired: q.year_acquired,
-                            note: q.note
-                        }))
+                        qualifications: updatedVetData.qualifications
+                            .filter(q => q.vet_qualifications_id !== 0) // Only existing qualifications
+                            .map(q => ({
+                                qualification_id: q.qualification_id,
+                                year_acquired: q.year_acquired,
+                                note: q.note
+                            }))
                     })
                 });
                 if (!qualRes.ok) throw new Error('Failed to update qualifications');
 
-                // Save specializations
-                const specRes = await fetch(`/api/vet-panel/specialization/${vetId}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        specializations: updatedVetData.specializations.map(s => s.category_id)
-                    })
-                });
-                if (!specRes.ok) throw new Error('Failed to update specializations');
-
-                // Save schedule
+                // Save schedule (only updates, additions are handled separately)
                 const schedRes = await fetch(`/api/vet-panel/schedule/${vetId}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        availability: updatedVetData.schedule.map(s => ({
-                            availability_id: s.availability_id,
-                            day_of_week: s.day_of_week,
-                            start_time: s.start_time,
-                            end_time: s.end_time
-                        }))
+                        availability: updatedVetData.schedule
+                            .filter(s => s.availability_id !== 0) // Only existing schedules
+                            .map(s => ({
+                                availability_id: s.availability_id,
+                                day_of_week: s.day_of_week,
+                                start_time: s.start_time,
+                                end_time: s.end_time
+                            }))
                     })
                 });
                 if (!schedRes.ok) throw new Error('Failed to update schedule');
@@ -403,6 +413,111 @@ const VetProfile = () => {
         setEditing(false);
     };
 
+    const handleAddQualification = async (qualification: Omit<Qualification, 'vet_qualifications_id' | 'vet_id'>) => {
+        if (!vetId) return;
+
+        try {
+            const res = await fetch(`/api/vet-panel/qualifications/${vetId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(qualification)
+            });
+
+            if (!res.ok) throw new Error('Failed to add qualification');
+            const newQualification = await res.json();
+            return newQualification;
+        } catch (error) {
+            console.error("Error adding qualification:", error);
+            throw error;
+        }
+    };
+
+    const handleAddSpecialization = async (categoryId: number) => {
+        if (!vetId) return;
+
+        try {
+            const res = await fetch(`/api/vet-panel/specialization/${vetId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ category_id: categoryId })
+            });
+
+            if (!res.ok) throw new Error('Failed to add specialization');
+            const newSpecialization = await res.json();
+            return newSpecialization;
+        } catch (error) {
+            console.error("Error adding specialization:", error);
+            throw error;
+        }
+    };
+
+    const handleAddSchedule = async (schedule: Omit<Schedule, 'availability_id' | 'vet_id'>) => {
+        if (!vetId) return;
+
+        try {
+            const res = await fetch(`/api/vet-panel/schedule/${vetId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(schedule)
+            });
+
+            if (!res.ok) throw new Error('Failed to add schedule');
+            const newSchedule = await res.json();
+            return newSchedule;
+        } catch (error) {
+            console.error("Error adding schedule:", error);
+            throw error;
+        }
+    };
+
+    const handleQualificationSubmit = async () => {
+        try {
+          const values = await qualificationForm.validateFields();
+          
+          // The API should assign qualification_id on the server side
+          await handleAddQualification({
+            qualification_name: values.qualification_name,
+            note: values.note,
+            year_acquired: values.year_acquired
+          });
+          
+          setQualificationModalVisible(false);
+          fetchVetData(vetId); // Refresh data
+          message.success("Qualification added successfully");
+        } catch (error) {
+          console.error("Qualification submission error:", error);
+          message.error("Failed to add qualification");
+        }
+      };
+  
+  const handleSpecializationSubmit = async () => {
+    try {
+      const values = await specializationForm.validateFields();
+      await handleAddSpecialization(values.category_id);
+      setSpecializationModalVisible(false);
+      fetchVetData(vetId); // Refresh data
+      message.success("Specialization added successfully");
+    } catch (error) {
+      message.error("Failed to add specialization");
+    }
+  };
+  
+  const handleScheduleSubmit = async () => {
+    try {
+      const values = await scheduleForm.validateFields();
+      await handleAddSchedule({
+        day_of_week: values.day_of_week,
+        start_time: values.start_time,
+        end_time: values.end_time
+      });
+      setScheduleModalVisible(false);
+      fetchVetData(vetId); // Refresh data
+      message.success("Schedule slot added successfully");
+    } catch (error) {
+      message.error("Failed to add schedule slot");
+    }
+  };
+
     // Handle adding/editing qualifications
     const handleQualificationChange = (index: number, field: keyof Qualification, value: string) => {
         const updatedQualifications = [...updatedVetData.qualifications];
@@ -413,16 +528,6 @@ const VetProfile = () => {
         setUpdatedVetData({ ...updatedVetData, qualifications: updatedQualifications });
     };
 
-    const addNewQualification = () => {
-        setUpdatedVetData({
-            ...updatedVetData,
-            qualifications: [
-                ...updatedVetData.qualifications,
-                { vet_qualifications_id: 0, vet_id: 0, qualification_id: 0, qualification_name: '', note: '', year_acquired: new Date().getFullYear() }
-            ]
-        });
-        setIsEditingQualification(updatedVetData.qualifications.length);
-    };
 
     // Handle adding/editing specializations
     const handleSpecializationChange = (index: number, value: string) => {
@@ -431,26 +536,20 @@ const VetProfile = () => {
         setUpdatedVetData({ ...updatedVetData, specializations: updatedSpecializations });
     };
 
-    const addNewSpecialization = () => {
-        setUpdatedVetData({
-            ...updatedVetData,
-            specializations: [
-                ...updatedVetData.specializations,
-                { vet_id: 0, category_id: 0, category_name: '' }
-            ]
-        });
-        setIsEditingSpecialization(updatedVetData.specializations.length);
+
+    const showQualificationModal = () => {
+        qualificationForm.resetFields();
+        setQualificationModalVisible(true);
     };
 
-    const addNewScheduleSlot = () => {
-        setUpdatedVetData({
-            ...updatedVetData,
-            schedule: [
-                ...updatedVetData.schedule,
-                { availability_id: 0, vet_id: 0, day_of_week: 'Monday', start_time: '09:00', end_time: '17:00' }
-            ]
-        });
-        setIsEditingSchedule(updatedVetData.schedule.length);
+    const showSpecializationModal = () => {
+        specializationForm.resetFields();
+        setSpecializationModalVisible(true);
+    };
+
+    const showScheduleModal = () => {
+        scheduleForm.resetFields();
+        setScheduleModalVisible(true);
     };
 
     //delete functions
@@ -856,7 +955,7 @@ const VetProfile = () => {
 
                 <div className="bg-white rounded-xl shadow-lg p-6 mt-3">
                     {/* Qualifications Section */}
-                    <ProfileSection title="Qualifications" editable={editing} onAdd={addNewQualification}>
+                    <ProfileSection title="Qualifications" editable={editing} onAdd={showQualificationModal}>
                         {updatedVetData.qualifications.length === 0 ? (
                             <p className="text-gray-500">No qualifications added</p>
                         ) : (
@@ -934,59 +1033,58 @@ const VetProfile = () => {
 
                 <div className="bg-white rounded-xl shadow-lg p-6  mt-3">
                     {/* Specializations Section */}
-                    <ProfileSection title="Specializations" editable={editing} onAdd={addNewSpecialization}>
-                        {updatedVetData.specializations.length === 0 ? (
-                            <p className="text-gray-500">No specializations added</p>
-                        ) : (
-                            <div className="flex flex-wrap gap-2">
-                                {updatedVetData.specializations.map((spec, index) => (
-                                    <div key={index} className="bg-primary/10 px-3 py-1 rounded-full relative"> {/* Existing div */}
-                                        {/* ADD DELETE BUTTON HERE */}
-                                        {editing && (
-                                            <button
-                                                onClick={async (e) => {
-                                                    e.stopPropagation();
-                                                    if (vetId && spec.category_id) {
-                                                        const success = await deleteSpecialization(vetId, spec.category_id);
-                                                        if (success) {
-                                                            const updated = [...updatedVetData.specializations];
-                                                            updated.splice(index, 1);
-                                                            setUpdatedVetData({ ...updatedVetData, specializations: updated });
-                                                            message.success("Specialization deleted successfully");
-                                                        }
+                    <ProfileSection title="Specializations" editable={editing} onAdd={showSpecializationModal}>                        {updatedVetData.specializations.length === 0 ? (
+                        <p className="text-gray-500">No specializations added</p>
+                    ) : (
+                        <div className="flex flex-wrap gap-2">
+                            {updatedVetData.specializations.map((spec, index) => (
+                                <div key={index} className="bg-primary/10 px-3 py-1 rounded-full relative"> {/* Existing div */}
+                                    {/* ADD DELETE BUTTON HERE */}
+                                    {editing && (
+                                        <button
+                                            onClick={async (e) => {
+                                                e.stopPropagation();
+                                                if (vetId && spec.category_id) {
+                                                    const success = await deleteSpecialization(vetId, spec.category_id);
+                                                    if (success) {
+                                                        const updated = [...updatedVetData.specializations];
+                                                        updated.splice(index, 1);
+                                                        setUpdatedVetData({ ...updatedVetData, specializations: updated });
+                                                        message.success("Specialization deleted successfully");
                                                     }
-                                                }}
-                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-700 transition-all duration-200 ease-in-out hover:scale-125"
-                                                title="Delete specialization"
-                                                disabled={deleting.specializations === spec.category_id}
-                                            >
-                                                {deleting.specializations === spec.category_id ? (
-                                                    <LoadingOutlined className="text-white text-xs" />
-                                                ) : (
-                                                    '×'
-                                                )}
-                                            </button>
-                                        )}
-                                        {editing ? (
-                                            <input
-                                                value={spec.category_name}
-                                                onChange={(e) => handleSpecializationChange(index, e.target.value)}
-                                                className="bg-transparent focus:outline-none"
-                                            />
-                                        ) : (
-                                            <span className="text-primary">{spec.category_name}</span>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                                                }
+                                            }}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-700 transition-all duration-200 ease-in-out hover:scale-125"
+                                            title="Delete specialization"
+                                            disabled={deleting.specializations === spec.category_id}
+                                        >
+                                            {deleting.specializations === spec.category_id ? (
+                                                <LoadingOutlined className="text-white text-xs" />
+                                            ) : (
+                                                '×'
+                                            )}
+                                        </button>
+                                    )}
+                                    {editing ? (
+                                        <input
+                                            value={spec.category_name}
+                                            onChange={(e) => handleSpecializationChange(index, e.target.value)}
+                                            className="bg-transparent focus:outline-none"
+                                        />
+                                    ) : (
+                                        <span className="text-primary">{spec.category_name}</span>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     </ProfileSection>
                 </div>
 
 
                 <div className="bg-white rounded-xl shadow-lg p-6  mt-3">
                     {/* Schedule Section */}
-                    <ProfileSection title="Schedule" editable={editing} onAdd={addNewScheduleSlot}>
+                    <ProfileSection title="Schedule" editable={editing} onAdd={showScheduleModal}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {updatedVetData.schedule.map((slot) => (
                                 <div key={slot.availability_id} className="border rounded-lg p-4 relative"> {/* Existing div */}
@@ -1182,7 +1280,131 @@ const VetProfile = () => {
                         </Form.Item>
                     </Form>
                 </Modal>
+                {/* Qualification Modal */}
+                <Modal
+                    title="Add Qualification"
+                    visible={qualificationModalVisible}
+                    onCancel={() => setQualificationModalVisible(false)}
+                    footer={[
+                        <Button key="back" onClick={() => setQualificationModalVisible(false)}>
+                            Cancel
+                        </Button>,
+                        <Button
+                            key="submit"
+                            type="primary"
+                            onClick={() => handleQualificationSubmit}
+                        >
+                            Add Qualification
+                        </Button>,
+                    ]}
+                >
+                    <Form form={qualificationForm} layout="vertical">
+                        <Form.Item
+                            name="qualification_name"
+                            label="Degree/Qualification"
+                            rules={[{ required: true, message: 'Please enter qualification name' }]}
+                        >
+                            <Input placeholder="e.g. Doctor of Veterinary Medicine" />
+                        </Form.Item>
+                        <Form.Item
+                            name="note"
+                            label="Institution"
+                            rules={[{ required: true, message: 'note' }]}
+                        >
+                            <Input placeholder="Please write a note e.g surgeon etc " />
+                        </Form.Item>
+                        <Form.Item
+                            name="year_acquired"
+                            label="Year Acquired"
+                            rules={[{ required: true, message: 'Please enter year' }]}
+                        >
+                            <Input type="number" placeholder="e.g. 2020" />
+                        </Form.Item>
+                    </Form>
+                </Modal>
+
+                {/* Specialization Modal */}
+                <Modal
+                    title="Add Specialization"
+                    visible={specializationModalVisible}
+                    onCancel={() => setSpecializationModalVisible(false)}
+                    footer={[
+                        <Button key="back" onClick={() => setSpecializationModalVisible(false)}>
+                            Cancel
+                        </Button>,
+                        <Button
+                            key="submit"
+                            type="primary"
+                            onClick={() => handleSpecializationSubmit}                       >
+                            Add Specialization
+                        </Button>,
+                    ]}
+                >
+                    <Form form={specializationForm} layout="vertical">
+                        <Form.Item
+                            name="category_id"
+                            label="Specialization"
+                            rules={[{ required: true, message: 'Please select a specialization' }]}
+                        >
+                            <Select placeholder="Select a specialization">
+                                {petCategories.map(category => (
+                                    <Select.Option key={category.category_id} value={category.category_id}>
+                                        {category.category_name}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </Form>
+                </Modal>
+
+                {/* Schedule Modal */}
+                <Modal
+                    title="Add Schedule Slot"
+                    visible={scheduleModalVisible}
+                    onCancel={() => setScheduleModalVisible(false)}
+                    footer={[
+                        <Button key="back" onClick={() => setScheduleModalVisible(false)}>
+                            Cancel
+                        </Button>,
+                        <Button
+                            key="submit"
+                            type="primary"
+                            onClick={() => handleScheduleSubmit}
+                        >
+                            Add Schedule
+                        </Button>,
+                    ]}
+                >
+                    <Form form={scheduleForm} layout="vertical">
+                        <Form.Item
+                            name="day_of_week"
+                            label="Day of Week"
+                            rules={[{ required: true, message: 'Please select a day' }]}
+                        >
+                            <Select placeholder="Select a day">
+                                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                                    <Select.Option key={day} value={day}>{day}</Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                        <Form.Item
+                            name="start_time"
+                            label="Start Time"
+                            rules={[{ required: true, message: 'Please select start time' }]}
+                        >
+                            <Input type="time" />
+                        </Form.Item>
+                        <Form.Item
+                            name="end_time"
+                            label="End Time"
+                            rules={[{ required: true, message: 'Please select end time' }]}
+                        >
+                            <Input type="time" />
+                        </Form.Item>
+                    </Form>
+                </Modal>
             </div>
+
         </>
     );
 };

@@ -4,41 +4,64 @@ import { createClient } from "../../../../../db/index";
 export async function POST(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     const vet_id = req.nextUrl.pathname.split("/").pop();
-    const { day_of_week, start_time, end_time } = await req.json();
-
-    if (!vet_id || !day_of_week || !start_time || !end_time) {
-        return NextResponse.json(
-            { error: "Vet ID, Day of Week, Start Time, and End Time are required" },
-            { status: 400 }
-        );
+    const slots = await req.json(); // Now expects an array of slots
+  
+    if (!vet_id || !Array.isArray(slots)) {
+      return NextResponse.json(
+        { error: "Vet ID and an array of slots are required" },
+        { status: 400 }
+      );
     }
-
+  
     try {
-        await client.connect();
-
+      await client.connect();
+  
+      // Validate all slots first
+      for (const slot of slots) {
+        if (!slot.day_of_week || !slot.start_time || !slot.end_time) {
+          return NextResponse.json(
+            { error: "Each slot must have day_of_week, start_time, and end_time" },
+            { status: 400 }
+          );
+        }
+      }
+  
+      // Insert all slots in a transaction
+      const insertedSlots = [];
+      await client.query('BEGIN'); // Start transaction
+  
+      for (const slot of slots) {
         const insertQuery = `
-            INSERT INTO vet_availability (vet_id, day_of_week, start_time, end_time)
-            VALUES ($1, $2, $3, $4)
-            RETURNING *;
+          INSERT INTO vet_availability (vet_id, day_of_week, start_time, end_time)
+          VALUES ($1, $2, $3, $4)
+          RETURNING *;
         `;
-
-        const result = await client.query(insertQuery, [vet_id, day_of_week, start_time, end_time]);
-
-        return NextResponse.json(
-            { message: "Availability slot added successfully", data: result.rows[0] },
-            { status: 201 }
-        );
+        const result = await client.query(insertQuery, [
+          vet_id,
+          slot.day_of_week,
+          slot.start_time,
+          slot.end_time
+        ]);
+        insertedSlots.push(result.rows[0]);
+      }
+  
+      await client.query('COMMIT'); // Commit transaction
+  
+      return NextResponse.json(
+        { message: "Slots added successfully", data: insertedSlots },
+        { status: 201 }
+      );
     } catch (err) {
-        console.error("Error adding availability slot:", err);
-        return NextResponse.json(
-            { error: "Internal Server Error", message: (err as Error).message },
-            { status: 500 }
-        );
+      await client.query('ROLLBACK'); // Rollback on error
+      console.error("Error adding slots:", err);
+      return NextResponse.json(
+        { error: "Internal Server Error", message: (err as Error).message },
+        { status: 500 }
+      );
     } finally {
-        await client.end();
+      await client.end();
     }
-}
-
+  }
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();

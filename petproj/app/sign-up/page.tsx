@@ -59,7 +59,7 @@ const CreateUser = () => {
         try {
             setGoogleLoading(true);
             await signIn("google", {
-                callbackUrl: "/success"
+                callbackUrl: "/success",
             });
         } catch (error) {
             console.error("Google login failed:", error);
@@ -122,6 +122,42 @@ const CreateUser = () => {
             </ul>
         </div>
     );
+
+    const ConfirmPasswordValidation = ({
+        password,
+        confirmPassword,
+    }: {
+        password: string;
+        confirmPassword: string;
+    }) => (
+        <div className="mt-0 space-y-1 text-sm">
+            <p
+                className={`flex items-center ${
+                    confirmPassword.length > 0
+                        ? "text-gray-600"
+                        : "text-gray-400"
+                }`}>
+                Confirm password must:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+                <li
+                    className={`flex items-center ${
+                        password === confirmPassword &&
+                        confirmPassword.length > 0
+                            ? "text-green-500"
+                            : "text-red-500"
+                    }`}>
+                    {password === confirmPassword && confirmPassword.length > 0
+                        ? "✓"
+                        : "✗"}
+                    Match the password above
+                </li>
+            </ul>
+        </div>
+    );
+
+    const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] =
+        useState(false);
 
     useEffect(() => {
         dispatch(fetchCities());
@@ -316,7 +352,23 @@ const CreateUser = () => {
     return (
         <div className="min-h-screen flex flex-col lg:flex-row">
             {/* Left Section (Logo) - Unchanged */}
-            <div className="lg:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none">
+            <div className="lg:w-1/2 lg:h-screen flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none sticky top-0">
+                <button
+                    onClick={handleBackToLogin}
+                    className="absolute top-4 left-4 text-white hover:text-white-600 flex items-center">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-1"
+                        viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path
+                            fillRule="evenodd"
+                            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                            clipRule="evenodd"
+                        />
+                    </svg>
+                </button>
+
                 <img
                     src="/paltu_logo.svg"
                     alt="Paltu Logo"
@@ -325,7 +377,7 @@ const CreateUser = () => {
             </div>
 
             {/* Right Section (Form) */}
-            <div className="lg:w-1/2 bg-gray-100 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
+            <div className="lg:w-1/2 bg-gray-100 lg:h-screen lg:overflow-y-auto flex flex-col items-center justify-start px-4 py-8 lg:px-8 lg:py-12 relative">
                 {
                     <button
                         onClick={handleBackToLogin}
@@ -518,29 +570,61 @@ const CreateUser = () => {
                         )}
                     </div>
 
-                    {/* Confirm Password */}
                     <div className="relative">
                         <label className="block text-gray-700 text-sm font-medium mb-1">
                             Confirm Password
                         </label>
-                        <input
-                            type={showConfirmPassword ? "text" : "password"}
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                            required
-                        />
-                        <span
-                            onClick={() =>
-                                setShowConfirmPassword(!showConfirmPassword)
-                            }
-                            className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-6">
-                            {showConfirmPassword ? (
-                                <EyeInvisibleOutlined />
-                            ) : (
-                                <EyeOutlined />
-                            )}
-                        </span>
+                        <div className="relative">
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                value={confirmPassword}
+                                onChange={(e) =>
+                                    setConfirmPassword(e.target.value)
+                                }
+                                onFocus={() =>
+                                    setIsConfirmPasswordFocused(true)
+                                }
+                                onBlur={() =>
+                                    setTimeout(
+                                        () =>
+                                            setIsConfirmPasswordFocused(false),
+                                        100
+                                    )
+                                }
+                                className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                                required
+                            />
+                            <span
+                                onClick={() =>
+                                    setShowConfirmPassword(!showConfirmPassword)
+                                }
+                                className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-6">
+                                {showConfirmPassword ? (
+                                    <EyeInvisibleOutlined />
+                                ) : (
+                                    <EyeOutlined />
+                                )}
+                            </span>
+
+                            {isConfirmPasswordFocused &&
+                                confirmPassword.length > 0 && (
+                                    <div className="absolute top-full left-0 mt-2 w-full z-10 animate-popup">
+                                        <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+                                            <ConfirmPasswordValidation
+                                                password={password}
+                                                confirmPassword={
+                                                    confirmPassword
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                        </div>
+                        {passwordMismatchError && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {passwordMismatchError}
+                            </p>
+                        )}
                     </div>
 
                     {passwordMismatchError && (

@@ -51,6 +51,8 @@ const CreateUser = () => {
 
     const [showVetInfoModal, setShowVetInfoModal] = useState(false);
 
+    const [isVerifying, setIsVerifying] = useState(false);
+
     const handleBackToLogin = () => {
         router.push("/");
     };
@@ -313,19 +315,15 @@ const CreateUser = () => {
 
     const handleOtpChange = (otp: string) => {
         setOtp(otp);
+        setOtpError(""); // Clear previous errors when typing
         if (otp.length === 6) {
             handleSubmitOtp();
         }
     };
 
     const handleSubmitOtp = async () => {
-        if (otp.length !== 6) {
-            setOtpError("Please enter a 6-digit code");
-            return;
-        }
-
         try {
-            // Implement actual OTP verification API call
+            setIsVerifying(true);
             const response = await fetch("/api/verify-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -334,18 +332,31 @@ const CreateUser = () => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(
-                    errorData.message || "Invalid verification code"
-                );
+                if (errorData.message.includes("Invalid")) {
+                    throw new Error("Invalid OTP");
+                } else if (errorData.message.includes("Not Found")) {
+                    throw new Error("OTP Not Found or Invalid");
+                } else {
+                    throw new Error("Verification failed");
+                }
             }
 
             setIsEmailVerified(true);
             setShowOtpModal(false);
             setOtpError("");
         } catch (error) {
-            setOtpError(
-                error instanceof Error ? error.message : "Verification failed"
-            );
+            const errorMessage =
+                error instanceof Error ? error.message : "Verification failed";
+            if (
+                errorMessage === "Invalid OTP" ||
+                errorMessage === "OTP Not Found or Invalid"
+            ) {
+                setOtpError(errorMessage);
+            } else {
+                setOtpError(""); // Don't show other errors
+            }
+        } finally {
+            setIsVerifying(false);
         }
     };
 
@@ -817,29 +828,38 @@ const CreateUser = () => {
                         renderInput={(props) => (
                             <input
                                 {...props}
-                                type="tel" // Changed from number to tel
+                                type="tel"
                                 inputMode="numeric"
-                                className="w-12 h-12 text-2xl text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent appearance-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
+                                className="w-12 h-12 text-2xl text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                maxLength={1}
                             />
                         )}
                         containerStyle="flex justify-center gap-2"
+                        shouldAutoFocus
                     />
                     {otpError && (
                         <p className="text-red-500 text-center text-sm">
-                            {otpError}
+                            {otpError === "Invalid OTP" ||
+                            otpError === "OTP Not Found or Invalid"
+                                ? otpError
+                                : null}
                         </p>
                     )}
                     <div className="flex gap-2 mt-4">
                         <button
                             type="button"
                             onClick={handleSubmitOtp}
-                            disabled={otp.length !== 6}
-                            className={`w-full bg-primary text-white py-2 rounded-lg transition ${
-                                otp.length !== 6
+                            disabled={otp.length !== 6 || isVerifying}
+                            className={`w-full bg-primary text-white py-2 rounded-lg transition flex items-center justify-center ${
+                                otp.length !== 6 || isVerifying
                                     ? "opacity-50 cursor-not-allowed"
                                     : "hover:bg-primary-dark"
                             }`}>
-                            Verify Code
+                            {isVerifying ? (
+                                "Loading..."
+                            ) : (
+                                "Verify Code"
+                            )}
                         </button>
                         <button
                             type="button"
@@ -848,7 +868,6 @@ const CreateUser = () => {
                             Resend Code
                         </button>
                     </div>
-
                     {/* Mobile Number Pad Hint */}
                     <p className="text-center text-sm text-gray-500 md:hidden">
                         Numeric keypad will appear on mobile devices

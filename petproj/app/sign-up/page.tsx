@@ -609,7 +609,7 @@ const CreateUser = () => {
                                 onClick={() =>
                                     setShowConfirmPassword(!showConfirmPassword)
                                 }
-                                className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-6">
+                                className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-1">
                                 {showConfirmPassword ? (
                                     <EyeInvisibleOutlined />
                                 ) : (

@@ -58,7 +58,9 @@ const CreateUser = () => {
     const handleGoogleLogin = async () => {
         try {
             setGoogleLoading(true);
-            await signIn("google"); // next-auth handles Google login
+            await signIn("google", {
+                callbackUrl: "/success"
+            });
         } catch (error) {
             console.error("Google login failed:", error);
             toast.error("Google login failed. Please try again!");
@@ -193,7 +195,7 @@ const CreateUser = () => {
             if (role === "vet") {
                 router.push(`/vet-register?user_id=${result.payload.user_id}`);
             } else {
-                router.push("/login");
+                router.push("/success");
             }
         } catch (error) {
             setGeneralError("An unexpected error occurred. Please try again.");

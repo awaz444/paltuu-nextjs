@@ -665,7 +665,6 @@ const CreateUser = () => {
                                     <EyeOutlined />
                                 )}
                             </span>
-                            a
                             {isPasswordFocused && (
                                 <div className="absolute top-full left-0 mt-2 w-full z-10 animate-popup">
                                     <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">

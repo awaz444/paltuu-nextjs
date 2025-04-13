@@ -567,10 +567,10 @@ const CreateUser = () => {
                             />
                             <span
                                 onClick={() =>
-                                    setShowConfirmPassword(!showConfirmPassword)
+                                    setShowPassword(!showPassword)
                                 }
                                 className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-1">
-                                {showConfirmPassword ? (
+                                {showPassword ? (
                                     <EyeInvisibleOutlined />
                                 ) : (
                                     <EyeOutlined />

@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { RootState, AppDispatch } from "../store/store";
 import { fetchCities } from "../store/slices/citiesSlice";
 import { postUser } from "../store/slices/userSlice";
+import { signIn } from "next-auth/react";
 import { User } from "../types/user";
 import { useRouter } from "next/navigation";
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import { Modal, Button } from "antd";
+import { toast } from "react-hot-toast";
 import OTPInput from "react-otp-input";
 import "./styles.css";
 
@@ -45,8 +47,22 @@ const CreateUser = () => {
     const [isEmailFocused, setIsEmailFocused] = useState(false);
     const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
+    const [googleLoading, setGoogleLoading] = useState(false); // Loading state for Google login
+
     const handleBackToLogin = () => {
         router.push("/");
+    };
+
+    const handleGoogleLogin = async () => {
+        try {
+            setGoogleLoading(true);
+            await signIn("google"); // next-auth handles Google login
+        } catch (error) {
+            console.error("Google login failed:", error);
+            toast.error("Google login failed. Please try again!");
+        } finally {
+            setGoogleLoading(false);
+        }
     };
 
     const PasswordRules = ({ password }: { password: string }) => (
@@ -300,21 +316,29 @@ const CreateUser = () => {
                 <img
                     src="/paltu_logo.svg"
                     alt="Paltu Logo"
-                    className="mb-6 w-40 lg:w-full max-w-full"
+                    className="mb-3 mt-2 w-40 lg:w-full max-w-full"
                 />
             </div>
 
             {/* Right Section (Form) */}
             <div className="lg:w-1/2 bg-gray-100 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
-                { <button
-                    onClick={handleBackToLogin}
-                    className="absolute top-4 left-4 text-white hover:text-white-600 flex items-center"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-                    </svg>
-                    Back to Founders Club
-                </button> }
+                {
+                    <button
+                        onClick={handleBackToLogin}
+                        className="absolute top-4 left-4 text-white hover:text-white-600 flex items-center">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 mr-1"
+                            viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path
+                                fillRule="evenodd"
+                                d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                                clipRule="evenodd"
+                            />
+                        </svg>
+                    </button>
+                }
 
                 <form
                     onSubmit={handleSubmit}
@@ -384,7 +408,7 @@ const CreateUser = () => {
                             </button>
 
                             {isEmailFocused && !isEmailVerified && (
-                                 <div className="absolute top-full left-0 mt-2 w-full z-10 animate-popup">
+                                <div className="absolute top-full left-0 mt-2 w-full z-10 animate-popup">
                                     <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
                                         <EmailValidation email={email} />
                                     </div>
@@ -476,7 +500,7 @@ const CreateUser = () => {
                             />
 
                             {isPasswordFocused && (
-                                 <div className="absolute top-full left-0 mt-2 w-full z-10 animate-popup">
+                                <div className="absolute top-full left-0 mt-2 w-full z-10 animate-popup">
                                     <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
                                         <PasswordRules password={password} />
                                     </div>
@@ -540,7 +564,7 @@ const CreateUser = () => {
                         </label>
                     </div>
 
-                    {/* Submit Button */}
+                    {/* Existing Submit Button */}
                     <button
                         type="submit"
                         disabled={
@@ -556,6 +580,52 @@ const CreateUser = () => {
                                 : "hover:bg-primary-dark"
                         }`}>
                         {isLoading ? "Creating Account..." : "Create Account"}
+                    </button>
+
+                    {/* OR Divider */}
+                    <div className="relative flex items-center py-4">
+                        <div className="flex-grow border-t border-gray-300"></div>
+                        <span className="flex-shrink mx-4 text-gray-500">
+                            OR
+                        </span>
+                        <div className="flex-grow border-t border-gray-300"></div>
+                    </div>
+
+                    {/* Google Login Button */}
+                    <button
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        disabled={googleLoading}
+                        className={`w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${
+                            googleLoading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="w-5 h-5">
+                            <path
+                                d="M23.76 12.26c0-.79-.07-1.58-.19-2.34H12v4.44h6.66c-.29 1.56-1.15 2.88-2.46 3.76v3.12h3.98c2.32-2.14 3.68-5.29 3.68-8.98z"
+                                fill="#4285F4"
+                            />
+                            <path
+                                d="M12 24c3.3 0 6.07-1.09 8.09-2.94l-3.98-3.12c-1.1.74-2.52 1.18-4.11 1.18-3.15 0-5.82-2.13-6.77-5.01H1.2v3.14C3.25 21.08 7.34 24 12 24z"
+                                fill="#34A853"
+                            />
+                            <path
+                                d="M5.23 14.12c-.25-.74-.39-1.54-.39-2.37 0-.83.14-1.63.38-2.37V6.23H1.2A11.98 11.98 0 000 12c0 1.89.44 3.68 1.2 5.27l4.03-3.15z"
+                                fill="#FBBC05"
+                            />
+                            <path
+                                d="M12 4.74c1.8 0 3.4.62 4.67 1.84l3.5-3.5C17.99 1.12 15.22 0 12 0 7.34 0 3.25 2.92 1.2 6.73l4.03 3.15c.94-2.88 3.61-5.01 6.77-5.01z"
+                                fill="#EA4335"
+                            />
+                        </svg>
+                        <span>
+                            {googleLoading
+                                ? "Logging in..."
+                                : "Continue with Google"}
+                        </span>
                     </button>
                 </form>
             </div>

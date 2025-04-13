@@ -20,7 +20,7 @@ export default function Login() {
     const [googleLoading, setGoogleLoading] = useState(false); // Loading state for Google login
 
     const handleBackToHome = () => {
-        router.push('/browse-pets');
+        router.push("/browse-pets");
     };
 
     // Redirect to dashboard if already authenticated
@@ -85,22 +85,30 @@ export default function Login() {
     return (
         <div className="min-h-screen flex flex-col sm:flex-row bg-gray-100">
             {/* Left Side */}
-            <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white 
-        rounded-b-3xl sm:rounded-b-none sm:rounded-r-3xl">
-                <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
+            <div className="lg:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none">
+                <img
+                    src="/paltu_logo.svg"
+                    alt="Paltu Logo"
+                    className="mb-3 mt-2 w-40 lg:w-full max-w-full"
+                />
             </div>
 
             {/* Right Side */}
             <div className="sm:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 bg-gray-100">
-
                 <button
                     onClick={handleBackToHome}
-                    className="absolute top-4 left-4 text-white hover:text-white-600 flex items-center"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                    className="absolute top-4 left-4 text-white hover:text-white-600 flex items-center">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-1"
+                        viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path
+                            fillRule="evenodd"
+                            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                            clipRule="evenodd"
+                        />
                     </svg>
-                    Back to Home
                 </button>
 
                 <h2 className="text-3xl font-semibold mb-4">Login</h2>
@@ -147,8 +155,9 @@ export default function Login() {
                     <button
                         type="submit"
                         disabled={buttonDisabled || loading}
-                        className={`w-full py-2 px-4 rounded-xl text-white bg-primary hover:bg-primary-dark transition ${loading ? "opacity-50 cursor-not-allowed" : ""
-                            }`}>
+                        className={`w-full py-2 px-4 rounded-xl text-white bg-primary hover:bg-primary-dark transition ${
+                            loading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}>
                         {loading ? "Logging in..." : "Log In"}
                     </button>
 
@@ -157,8 +166,9 @@ export default function Login() {
                         type="button"
                         onClick={handleGoogleLogin}
                         disabled={googleLoading}
-                        className={`mt-4 w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${googleLoading ? "opacity-50 cursor-not-allowed" : ""
-                            }`}>
+                        className={`mt-4 w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${
+                            googleLoading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 24 24"

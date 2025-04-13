@@ -9,9 +9,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     try {
         await client.connect(); // Connect to the database
 
-        if (!vet_id || !qualification_id || !year_acquired || !note) {
+        if (!vet_id || !qualification_id || !year_acquired) {
             return NextResponse.json(
-                { error: "All fields are required: vet_id, qualification_id, year_acquired, note." },
+                { error: "All fields are required: vet_id, qualification_id, year_acquired" },
                 { status: 400 }
             );
         }

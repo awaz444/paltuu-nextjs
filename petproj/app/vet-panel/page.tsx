@@ -117,6 +117,9 @@ const VetProfile = () => {
     const [isEditingSpecialization, setIsEditingSpecialization] = useState<number | null>(null);
     const [isEditingSchedule, setIsEditingSchedule] = useState<number | null>(null);
     const [vetId, setVetId] = useState<string | null>(null);
+    const [submittingQualification, setSubmittingQualification] = useState(false);
+    const [submittingSpecialization, setSubmittingSpecialization] = useState(false);
+    const [submittingSchedule, setSubmittingSchedule] = useState(false);
     const [deleting, setDeleting] = useState<{
         qualifications: number | null;
         specializations: number | null;
@@ -469,54 +472,115 @@ const VetProfile = () => {
             throw error;
         }
     };
-
-    const handleQualificationSubmit = async () => {
+    const handleScheduleSubmit = async () => {
+        if (submittingSchedule || !vetId) return;
+        setSubmittingSchedule(true);
+      
         try {
-          const values = await qualificationForm.validateFields();
-          
-          // The API should assign qualification_id on the server side
-          await handleAddQualification({
-            qualification_name: values.qualification_name,
-            note: values.note,
-            year_acquired: values.year_acquired
+          const values = await scheduleForm.validateFields();
+      
+          // 1. Prepare ONLY the slots array (no vet_id in body!)
+          const slots = [{
+            day_of_week: values.day_of_week,
+            start_time: values.start_time.endsWith(':00') 
+              ? values.start_time.slice(0, -3) // Remove ":00" if present
+              : values.start_time,
+            end_time: values.end_time.endsWith(':00') 
+              ? values.end_time.slice(0, -3) 
+              : values.end_time
+          }];
+      
+          console.log('Sending:', { slots }); // Verify before sending
+      
+          // 2. Send to endpoint with vet_id in URL
+          const response = await fetch(`/api/vet-panel/schedule/${vetId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(localStorage.getItem("token") && {
+                Authorization: `Bearer ${localStorage.getItem("token")}`
+              })
+            },
+            body: JSON.stringify(slots) // Send ONLY the array
           });
-          
-          setQualificationModalVisible(false);
-          fetchVetData(vetId); // Refresh data
-          message.success("Qualification added successfully");
+      
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to add slot");
+          }
+      
+          // Success
+          message.success("Slot added!");
+          setScheduleModalVisible(false);
+          scheduleForm.resetFields();
+          await fetchVetData(vetId);
+      
         } catch (error) {
-          console.error("Qualification submission error:", error);
-          message.error("Failed to add qualification");
+          console.error("Error:", error);
+          message.error({content: "Failed to add slot"});
+        } finally {
+          setSubmittingSchedule(false);
         }
       };
-  
-  const handleSpecializationSubmit = async () => {
-    try {
-      const values = await specializationForm.validateFields();
-      await handleAddSpecialization(values.category_id);
-      setSpecializationModalVisible(false);
-      fetchVetData(vetId); // Refresh data
-      message.success("Specialization added successfully");
-    } catch (error) {
-      message.error("Failed to add specialization");
-    }
-  };
-  
-  const handleScheduleSubmit = async () => {
-    try {
-      const values = await scheduleForm.validateFields();
-      await handleAddSchedule({
-        day_of_week: values.day_of_week,
-        start_time: values.start_time,
-        end_time: values.end_time
-      });
-      setScheduleModalVisible(false);
-      fetchVetData(vetId); // Refresh data
-      message.success("Schedule slot added successfully");
-    } catch (error) {
-      message.error("Failed to add schedule slot");
-    }
-  };
+
+    const handleQualificationSubmit = async () => {
+        if (submittingQualification) return;
+        setSubmittingQualification(true);
+
+        try {
+            const values = await qualificationForm.validateFields();
+            message.loading({ content: 'Adding qualification...', key: 'qual' });
+
+            await handleAddQualification({
+                qualification_name: values.qualification_name,
+                note: values.note,
+                year_acquired: values.year_acquired
+            });
+
+            setQualificationModalVisible(false);
+            qualificationForm.resetFields();
+            await fetchVetData(vetId);
+
+            message.success({
+                content: "Qualification added successfully",
+                key: 'qual',
+                duration: 3
+            });
+        } catch (error) {
+            console.error("Submission error:", error);
+            message.error({ content: "Failed to add qualification", key: 'qual' });
+        } finally {
+            setSubmittingQualification(false);
+        }
+    };
+
+    const handleSpecializationSubmit = async () => {
+        if (submittingSpecialization) return;
+        setSubmittingSpecialization(true);
+
+        try {
+            const values = await specializationForm.validateFields();
+            message.loading({ content: 'Adding specialization...', key: 'spec' });
+
+            await handleAddSpecialization(values.category_id);
+
+            setSpecializationModalVisible(false);
+            specializationForm.resetFields();
+            await fetchVetData(vetId);
+
+            message.success({
+                content: "Specialization added successfully",
+                key: 'spec',
+                duration: 3
+            });
+        } catch (error) {
+            console.error("Submission error:", error);
+            message.error({ content: "Failed to add specialization" });
+        } finally {
+            setSubmittingSpecialization(false);
+        }
+    };
+
 
     // Handle adding/editing qualifications
     const handleQualificationChange = (index: number, field: keyof Qualification, value: string) => {
@@ -1290,12 +1354,13 @@ const VetProfile = () => {
                             Cancel
                         </Button>,
                         <Button
-                            key="submit"
                             type="primary"
-                            onClick={() => handleQualificationSubmit}
+                            onClick={handleQualificationSubmit}
+                            loading={submittingQualification}
+                            disabled={submittingQualification}
                         >
                             Add Qualification
-                        </Button>,
+                        </Button>
                     ]}
                 >
                     <Form form={qualificationForm} layout="vertical">
@@ -1332,12 +1397,16 @@ const VetProfile = () => {
                         <Button key="back" onClick={() => setSpecializationModalVisible(false)}>
                             Cancel
                         </Button>,
+                        // In Modal footer:
                         <Button
-                            key="submit"
                             type="primary"
-                            onClick={() => handleSpecializationSubmit}                       >
+                            onClick={handleSpecializationSubmit}
+                            loading={submittingSpecialization}
+                            disabled={submittingSpecialization}
+                        >
                             Add Specialization
-                        </Button>,
+                        </Button>
+
                     ]}
                 >
                     <Form form={specializationForm} layout="vertical">
@@ -1367,9 +1436,10 @@ const VetProfile = () => {
                             Cancel
                         </Button>,
                         <Button
-                            key="submit"
                             type="primary"
-                            onClick={() => handleScheduleSubmit}
+                            onClick={handleScheduleSubmit}
+                            loading={submittingSchedule}
+                            disabled={submittingSchedule}
                         >
                             Add Schedule
                         </Button>,

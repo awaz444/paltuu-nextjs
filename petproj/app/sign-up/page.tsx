@@ -565,6 +565,17 @@ const CreateUser = () => {
                                 required
                                 pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
                             />
+                            <span
+                                onClick={() =>
+                                    setShowConfirmPassword(!showConfirmPassword)
+                                }
+                                className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-1">
+                                {showConfirmPassword ? (
+                                    <EyeInvisibleOutlined />
+                                ) : (
+                                    <EyeOutlined />
+                                )}
+                            </span>
 
                             {isPasswordFocused && (
                                 <div className="absolute top-full left-0 mt-2 w-full z-10 animate-popup">
@@ -855,11 +866,7 @@ const CreateUser = () => {
                                     ? "opacity-50 cursor-not-allowed"
                                     : "hover:bg-primary-dark"
                             }`}>
-                            {isVerifying ? (
-                                "Loading..."
-                            ) : (
-                                "Verify Code"
-                            )}
+                            {isVerifying ? "Loading..." : "Verify Code"}
                         </button>
                         <button
                             type="button"

@@ -408,9 +408,102 @@ const CreateUser = () => {
                 <form
                     onSubmit={handleSubmit}
                     className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6 space-y-4">
+
                     <h2 className="text-3xl font-semibold text-center mb-2">
                         Sign Up
                     </h2>
+
+                    <div className="relative border-2 border-yellow-400 bg-yellow-50 p-4 rounded-xl shadow-md">
+                        <div className="flex items-start space-x-3">
+                            <div className="mt-1">
+                                <input
+                                    type="checkbox"
+                                    id="vetCheckbox"
+                                    checked={role === "vet"}
+                                    onChange={() => {
+                                        const newRole =
+                                            role === "regular user"
+                                                ? "vet"
+                                                : "regular user";
+                                        setRole(newRole);
+                                        // When changing to vet role, show info modal
+                                        if (newRole === "vet") {
+                                            setShowVetInfoModal(true);
+                                        }
+                                    }}
+                                    className="h-5 w-5 border-gray-300 text-primary rounded focus:ring-primary focus:outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    htmlFor="vetCheckbox"
+                                    className="font-medium text-gray-800 text-base cursor-pointer">
+                                    I am a veterinarian
+                                </label>
+                                <p className="text-gray-600 text-sm mt-1">
+                                    Selecting this will enable vet-specific
+                                    features and verification process.
+                                    <strong className="block mt-1 text-red-600">
+                                        Note: Google sign-up will not be
+                                        available for vet accounts.
+                                    </strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {role === "regular user" && (
+                        <>
+                            {/* Google Login Button */}
+                            <button
+                                type="button"
+                                onClick={handleGoogleLogin}
+                                disabled={googleLoading}
+                                className={`w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${
+                                    googleLoading
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : ""
+                                }`}>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                    className="w-5 h-5">
+                                    <path
+                                        d="M23.76 12.26c0-.79-.07-1.58-.19-2.34H12v4.44h6.66c-.29 1.56-1.15 2.88-2.46 3.76v3.12h3.98c2.32-2.14 3.68-5.29 3.68-8.98z"
+                                        fill="#4285F4"
+                                    />
+                                    <path
+                                        d="M12 24c3.3 0 6.07-1.09 8.09-2.94l-3.98-3.12c-1.1.74-2.52 1.18-4.11 1.18-3.15 0-5.82-2.13-6.77-5.01H1.2v3.14C3.25 21.08 7.34 24 12 24z"
+                                        fill="#34A853"
+                                    />
+                                    <path
+                                        d="M5.23 14.12c-.25-.74-.39-1.54-.39-2.37 0-.83.14-1.63.38-2.37V6.23H1.2A11.98 11.98 0 000 12c0 1.89.44 3.68 1.2 5.27l4.03-3.15z"
+                                        fill="#FBBC05"
+                                    />
+                                    <path
+                                        d="M12 4.74c1.8 0 3.4.62 4.67 1.84l3.5-3.5C17.99 1.12 15.22 0 12 0 7.34 0 3.25 2.92 1.2 6.73l4.03 3.15c.94-2.88 3.61-5.01 6.77-5.01z"
+                                        fill="#EA4335"
+                                    />
+                                </svg>
+                                <span>
+                                    {googleLoading
+                                        ? "Logging in..."
+                                        : "Continue with Google"}
+                                </span>
+                            </button>
+
+                            {/* OR Divider */}
+                            <div className="relative flex items-center py-2">
+                                <div className="flex-grow border-t border-gray-300"></div>
+                                <span className="flex-shrink mx-4 text-gray-500">
+                                    OR
+                                </span>
+                                <div className="flex-grow border-t border-gray-300"></div>
+                            </div>
+                        </>
+                    )}
+
                     <p className="text-gray-600 text-center mb-6">
                         Fill in the details to create a new account.
                     </p>
@@ -651,45 +744,6 @@ const CreateUser = () => {
                         </p>
                     )}
 
-                    <div className="relative border-2 border-yellow-400 bg-yellow-50 p-4 rounded-xl shadow-md">
-                        <div className="flex items-start space-x-3">
-                            <div className="mt-1">
-                                <input
-                                    type="checkbox"
-                                    id="vetCheckbox"
-                                    checked={role === "vet"}
-                                    onChange={() => {
-                                        const newRole =
-                                            role === "regular user"
-                                                ? "vet"
-                                                : "regular user";
-                                        setRole(newRole);
-                                        // When changing to vet role, show info modal
-                                        if (newRole === "vet") {
-                                            setShowVetInfoModal(true);
-                                        }
-                                    }}
-                                    className="h-5 w-5 border-gray-300 text-primary rounded focus:ring-primary focus:outline-none"
-                                />
-                            </div>
-                            <div>
-                                <label
-                                    htmlFor="vetCheckbox"
-                                    className="font-medium text-gray-800 text-base cursor-pointer">
-                                    I am a veterinarian
-                                </label>
-                                <p className="text-gray-600 text-sm mt-1">
-                                    Selecting this will enable vet-specific
-                                    features and verification process.
-                                    <strong className="block mt-1 text-red-600">
-                                        Note: Google sign-up will not be
-                                        available for vet accounts.
-                                    </strong>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
                     <Modal
                         title="Veterinarian Account Information"
                         visible={showVetInfoModal}
@@ -760,58 +814,6 @@ const CreateUser = () => {
                         }`}>
                         {isLoading ? "Creating Account..." : "Create Account"}
                     </button>
-
-                    {role === "regular user" && (
-                        <>
-                            {/* OR Divider */}
-                            <div className="relative flex items-center py-4">
-                                <div className="flex-grow border-t border-gray-300"></div>
-                                <span className="flex-shrink mx-4 text-gray-500">
-                                    OR
-                                </span>
-                                <div className="flex-grow border-t border-gray-300"></div>
-                            </div>
-
-                            {/* Google Login Button */}
-                            <button
-                                type="button"
-                                onClick={handleGoogleLogin}
-                                disabled={googleLoading}
-                                className={`w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${
-                                    googleLoading
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
-                                }`}>
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                    className="w-5 h-5">
-                                    <path
-                                        d="M23.76 12.26c0-.79-.07-1.58-.19-2.34H12v4.44h6.66c-.29 1.56-1.15 2.88-2.46 3.76v3.12h3.98c2.32-2.14 3.68-5.29 3.68-8.98z"
-                                        fill="#4285F4"
-                                    />
-                                    <path
-                                        d="M12 24c3.3 0 6.07-1.09 8.09-2.94l-3.98-3.12c-1.1.74-2.52 1.18-4.11 1.18-3.15 0-5.82-2.13-6.77-5.01H1.2v3.14C3.25 21.08 7.34 24 12 24z"
-                                        fill="#34A853"
-                                    />
-                                    <path
-                                        d="M5.23 14.12c-.25-.74-.39-1.54-.39-2.37 0-.83.14-1.63.38-2.37V6.23H1.2A11.98 11.98 0 000 12c0 1.89.44 3.68 1.2 5.27l4.03-3.15z"
-                                        fill="#FBBC05"
-                                    />
-                                    <path
-                                        d="M12 4.74c1.8 0 3.4.62 4.67 1.84l3.5-3.5C17.99 1.12 15.22 0 12 0 7.34 0 3.25 2.92 1.2 6.73l4.03 3.15c.94-2.88 3.61-5.01 6.77-5.01z"
-                                        fill="#EA4335"
-                                    />
-                                </svg>
-                                <span>
-                                    {googleLoading
-                                        ? "Logging in..."
-                                        : "Continue with Google"}
-                                </span>
-                            </button>
-                        </>
-                    )}
                 </form>
             </div>
 

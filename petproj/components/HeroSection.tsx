@@ -34,9 +34,9 @@ const HeroSection = () => {
                     <Image
                         src="/paltu_logo.svg"
                         alt="Logo"
-                        width={200}
-                        height={200}
-                        className="w-32 md:w-48 lg:w-64"
+                        width={250}
+                        height={250}
+                        className="w-42 md:w-48 lg:w-64"
                     />
                 </div>
             </header>

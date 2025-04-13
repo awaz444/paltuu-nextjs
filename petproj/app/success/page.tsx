@@ -56,10 +56,11 @@ const SuccessPage = () => {
                     width={windowSize.width}
                     height={windowSize.height}
                     recycle={false}
-                    numberOfPieces={200}
+                    numberOfPieces={400}
                     colors={[primaryColor, "#d1a0a9", "#f8e8eb", "#ffffff"]}
-                    gravity={0.2}
+                    gravity={0.1}
                     initialVelocityY={10}
+                    className="absolute top-0 left-0 z-20"
                 />
             )}
 
@@ -71,7 +72,7 @@ const SuccessPage = () => {
             `}</style>
 
             <div className="min-h-screen bg-gradient-to-br from-[#faf5f6] to-[#f0e4e8] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-                <div className="max-w-2xl w-full bg-white rounded-3xl shadow-lg overflow-hidden z-10">
+                <div className="max-w-2xl w-full bg-white rounded-3xl shadow-lg overflow-hidden z-0">
                     {/* Header */}
                     <div
                         className="p-8 text-center rounded-3xl"

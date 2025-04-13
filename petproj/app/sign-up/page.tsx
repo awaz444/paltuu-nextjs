@@ -49,6 +49,10 @@ const CreateUser = () => {
 
     const [googleLoading, setGoogleLoading] = useState(false); // Loading state for Google login
 
+    const [showVetInfoModal, setShowVetInfoModal] = useState(false);
+
+    const [isVerifying, setIsVerifying] = useState(false);
+
     const handleBackToLogin = () => {
         router.push("/");
     };
@@ -56,7 +60,9 @@ const CreateUser = () => {
     const handleGoogleLogin = async () => {
         try {
             setGoogleLoading(true);
-            await signIn("google"); // next-auth handles Google login
+            await signIn("google", {
+                callbackUrl: "/success",
+            });
         } catch (error) {
             console.error("Google login failed:", error);
             toast.error("Google login failed. Please try again!");
@@ -118,6 +124,42 @@ const CreateUser = () => {
             </ul>
         </div>
     );
+
+    const ConfirmPasswordValidation = ({
+        password,
+        confirmPassword,
+    }: {
+        password: string;
+        confirmPassword: string;
+    }) => (
+        <div className="mt-0 space-y-1 text-sm">
+            <p
+                className={`flex items-center ${
+                    confirmPassword.length > 0
+                        ? "text-gray-600"
+                        : "text-gray-400"
+                }`}>
+                Confirm password must:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+                <li
+                    className={`flex items-center ${
+                        password === confirmPassword &&
+                        confirmPassword.length > 0
+                            ? "text-green-500"
+                            : "text-red-500"
+                    }`}>
+                    {password === confirmPassword && confirmPassword.length > 0
+                        ? "✓"
+                        : "✗"}
+                    Match the password above
+                </li>
+            </ul>
+        </div>
+    );
+
+    const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] =
+        useState(false);
 
     useEffect(() => {
         dispatch(fetchCities());
@@ -191,7 +233,7 @@ const CreateUser = () => {
             if (role === "vet") {
                 router.push(`/vet-register?user_id=${result.payload.user_id}`);
             } else {
-                router.push("/login");
+                router.push("/success");
             }
         } catch (error) {
             setGeneralError("An unexpected error occurred. Please try again.");
@@ -273,19 +315,13 @@ const CreateUser = () => {
 
     const handleOtpChange = (otp: string) => {
         setOtp(otp);
-        if (otp.length === 6) {
-            handleSubmitOtp();
-        }
+        setOtpError(""); // Clear previous errors when typing
+        // Removed the auto-submit condition
     };
 
     const handleSubmitOtp = async () => {
-        if (otp.length !== 6) {
-            setOtpError("Please enter a 6-digit code");
-            return;
-        }
-
         try {
-            // Implement actual OTP verification API call
+            setIsVerifying(true);
             const response = await fetch("/api/verify-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -294,25 +330,54 @@ const CreateUser = () => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(
-                    errorData.message || "Invalid verification code"
-                );
+                if (errorData.message.includes("Invalid")) {
+                    throw new Error("Invalid OTP");
+                } else if (errorData.message.includes("Not Found")) {
+                    throw new Error("OTP Not Found or Invalid");
+                } else {
+                    throw new Error("Verification failed");
+                }
             }
 
             setIsEmailVerified(true);
             setShowOtpModal(false);
             setOtpError("");
         } catch (error) {
-            setOtpError(
-                error instanceof Error ? error.message : "Verification failed"
-            );
+            const errorMessage =
+                error instanceof Error ? error.message : "Verification failed";
+            if (
+                errorMessage === "Invalid OTP" ||
+                errorMessage === "OTP Not Found or Invalid"
+            ) {
+                setOtpError(errorMessage);
+            } else {
+                setOtpError(""); // Don't show other errors
+            }
+        } finally {
+            setIsVerifying(false);
         }
     };
 
     return (
         <div className="min-h-screen flex flex-col lg:flex-row">
             {/* Left Section (Logo) - Unchanged */}
-            <div className="lg:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none">
+            <div className="lg:w-1/2 lg:h-screen flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none sticky top-0">
+                <button
+                    onClick={handleBackToLogin}
+                    className="absolute top-4 left-4 text-white hover:text-white-600 flex items-center">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-1"
+                        viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path
+                            fillRule="evenodd"
+                            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                            clipRule="evenodd"
+                        />
+                    </svg>
+                </button>
+
                 <img
                     src="/paltu_logo.svg"
                     alt="Paltu Logo"
@@ -321,7 +386,7 @@ const CreateUser = () => {
             </div>
 
             {/* Right Section (Form) */}
-            <div className="lg:w-1/2 bg-gray-100 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
+            <div className="lg:w-1/2 bg-gray-100 lg:h-screen lg:overflow-y-auto flex flex-col items-center justify-start px-4 py-8 lg:px-8 lg:py-12 relative">
                 {
                     <button
                         onClick={handleBackToLogin}
@@ -343,9 +408,102 @@ const CreateUser = () => {
                 <form
                     onSubmit={handleSubmit}
                     className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6 space-y-4">
+
                     <h2 className="text-3xl font-semibold text-center mb-2">
                         Sign Up
                     </h2>
+
+                    <div className="relative border-2 border-yellow-400 bg-yellow-50 p-4 rounded-xl shadow-md">
+                        <div className="flex items-start space-x-3">
+                            <div className="mt-1">
+                                <input
+                                    type="checkbox"
+                                    id="vetCheckbox"
+                                    checked={role === "vet"}
+                                    onChange={() => {
+                                        const newRole =
+                                            role === "regular user"
+                                                ? "vet"
+                                                : "regular user";
+                                        setRole(newRole);
+                                        // When changing to vet role, show info modal
+                                        if (newRole === "vet") {
+                                            setShowVetInfoModal(true);
+                                        }
+                                    }}
+                                    className="h-5 w-5 border-gray-300 text-primary rounded focus:ring-primary focus:outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    htmlFor="vetCheckbox"
+                                    className="font-medium text-gray-800 text-base cursor-pointer">
+                                    I am a veterinarian
+                                </label>
+                                <p className="text-gray-600 text-sm mt-1">
+                                    Selecting this will enable vet-specific
+                                    features and verification process.
+                                    <strong className="block mt-1 text-red-600">
+                                        Note: Google sign-up will not be
+                                        available for vet accounts.
+                                    </strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {role === "regular user" && (
+                        <>
+                            {/* Google Login Button */}
+                            <button
+                                type="button"
+                                onClick={handleGoogleLogin}
+                                disabled={googleLoading}
+                                className={`w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${
+                                    googleLoading
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : ""
+                                }`}>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                    className="w-5 h-5">
+                                    <path
+                                        d="M23.76 12.26c0-.79-.07-1.58-.19-2.34H12v4.44h6.66c-.29 1.56-1.15 2.88-2.46 3.76v3.12h3.98c2.32-2.14 3.68-5.29 3.68-8.98z"
+                                        fill="#4285F4"
+                                    />
+                                    <path
+                                        d="M12 24c3.3 0 6.07-1.09 8.09-2.94l-3.98-3.12c-1.1.74-2.52 1.18-4.11 1.18-3.15 0-5.82-2.13-6.77-5.01H1.2v3.14C3.25 21.08 7.34 24 12 24z"
+                                        fill="#34A853"
+                                    />
+                                    <path
+                                        d="M5.23 14.12c-.25-.74-.39-1.54-.39-2.37 0-.83.14-1.63.38-2.37V6.23H1.2A11.98 11.98 0 000 12c0 1.89.44 3.68 1.2 5.27l4.03-3.15z"
+                                        fill="#FBBC05"
+                                    />
+                                    <path
+                                        d="M12 4.74c1.8 0 3.4.62 4.67 1.84l3.5-3.5C17.99 1.12 15.22 0 12 0 7.34 0 3.25 2.92 1.2 6.73l4.03 3.15c.94-2.88 3.61-5.01 6.77-5.01z"
+                                        fill="#EA4335"
+                                    />
+                                </svg>
+                                <span>
+                                    {googleLoading
+                                        ? "Logging in..."
+                                        : "Continue with Google"}
+                                </span>
+                            </button>
+
+                            {/* OR Divider */}
+                            <div className="relative flex items-center py-2">
+                                <div className="flex-grow border-t border-gray-300"></div>
+                                <span className="flex-shrink mx-4 text-gray-500">
+                                    OR
+                                </span>
+                                <div className="flex-grow border-t border-gray-300"></div>
+                            </div>
+                        </>
+                    )}
+
                     <p className="text-gray-600 text-center mb-6">
                         Fill in the details to create a new account.
                     </p>
@@ -498,7 +656,15 @@ const CreateUser = () => {
                                 required
                                 pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
                             />
-
+                            <span
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-1">
+                                {showPassword ? (
+                                    <EyeInvisibleOutlined />
+                                ) : (
+                                    <EyeOutlined />
+                                )}
+                            </span>
                             {isPasswordFocused && (
                                 <div className="absolute top-full left-0 mt-2 w-full z-10 animate-popup">
                                     <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
@@ -514,29 +680,61 @@ const CreateUser = () => {
                         )}
                     </div>
 
-                    {/* Confirm Password */}
                     <div className="relative">
                         <label className="block text-gray-700 text-sm font-medium mb-1">
                             Confirm Password
                         </label>
-                        <input
-                            type={showConfirmPassword ? "text" : "password"}
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                            required
-                        />
-                        <span
-                            onClick={() =>
-                                setShowConfirmPassword(!showConfirmPassword)
-                            }
-                            className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-6">
-                            {showConfirmPassword ? (
-                                <EyeInvisibleOutlined />
-                            ) : (
-                                <EyeOutlined />
-                            )}
-                        </span>
+                        <div className="relative">
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                value={confirmPassword}
+                                onChange={(e) =>
+                                    setConfirmPassword(e.target.value)
+                                }
+                                onFocus={() =>
+                                    setIsConfirmPasswordFocused(true)
+                                }
+                                onBlur={() =>
+                                    setTimeout(
+                                        () =>
+                                            setIsConfirmPasswordFocused(false),
+                                        100
+                                    )
+                                }
+                                className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
+                                required
+                            />
+                            <span
+                                onClick={() =>
+                                    setShowConfirmPassword(!showConfirmPassword)
+                                }
+                                className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 mt-1">
+                                {showConfirmPassword ? (
+                                    <EyeInvisibleOutlined />
+                                ) : (
+                                    <EyeOutlined />
+                                )}
+                            </span>
+
+                            {isConfirmPasswordFocused &&
+                                confirmPassword.length > 0 && (
+                                    <div className="absolute top-full left-0 mt-2 w-full z-10 animate-popup">
+                                        <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+                                            <ConfirmPasswordValidation
+                                                password={password}
+                                                confirmPassword={
+                                                    confirmPassword
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                        </div>
+                        {passwordMismatchError && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {passwordMismatchError}
+                            </p>
+                        )}
                     </div>
 
                     {passwordMismatchError && (
@@ -545,24 +743,58 @@ const CreateUser = () => {
                         </p>
                     )}
 
-                    {/* Role Checkbox */}
-                    <div className="flex items-center space-x-2">
-                        <input
-                            type="checkbox"
-                            checked={role === "vet"}
-                            onChange={() =>
-                                setRole((prevRole) =>
-                                    prevRole === "regular user"
-                                        ? "vet"
-                                        : "regular user"
-                                )
-                            }
-                            className="h-4 w-4 border-gray-300 text-primary rounded focus:ring-primary focus:outline-none"
-                        />
-                        <label className="text-gray-700 text-sm">
-                            I am a vet
-                        </label>
-                    </div>
+                    <Modal
+                        title="Veterinarian Account Information"
+                        visible={showVetInfoModal}
+                        onCancel={() => setShowVetInfoModal(false)}
+                        centered
+                        footer={null}
+                        className="[&_.ant-modal-content]:p-6">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-center mb-4">
+                                <div className="bg-[#d8ccff] p-3 rounded-full">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-10 w-10 text-[#480777]"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
+                                </div>
+                            </div>
+                            <p className="text-[#2c0551]">
+                                You're creating a{" "}
+                                <strong>Veterinarian Account</strong>. Please
+                                note:
+                            </p>
+                            <ul className="list-disc pl-5 space-y-2 text-[#480777]">
+                                <li>
+                                    Vet accounts require additional verification
+                                    after initial signup
+                                </li>
+                                <li>
+                                    You'll need to provide professional
+                                    credentials in the next step
+                                </li>
+                                <li>
+                                    <strong>
+                                        Google sign-up is not available for vet
+                                        accounts
+                                    </strong>
+                                </li>
+                                <li>
+                                    Vet accounts have access to professional
+                                    features and network benefits
+                                </li>
+                            </ul>
+                        </div>
+                    </Modal>
 
                     {/* Existing Submit Button */}
                     <button
@@ -580,52 +812,6 @@ const CreateUser = () => {
                                 : "hover:bg-primary-dark"
                         }`}>
                         {isLoading ? "Creating Account..." : "Create Account"}
-                    </button>
-
-                    {/* OR Divider */}
-                    <div className="relative flex items-center py-4">
-                        <div className="flex-grow border-t border-gray-300"></div>
-                        <span className="flex-shrink mx-4 text-gray-500">
-                            OR
-                        </span>
-                        <div className="flex-grow border-t border-gray-300"></div>
-                    </div>
-
-                    {/* Google Login Button */}
-                    <button
-                        type="button"
-                        onClick={handleGoogleLogin}
-                        disabled={googleLoading}
-                        className={`w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${
-                            googleLoading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}>
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            className="w-5 h-5">
-                            <path
-                                d="M23.76 12.26c0-.79-.07-1.58-.19-2.34H12v4.44h6.66c-.29 1.56-1.15 2.88-2.46 3.76v3.12h3.98c2.32-2.14 3.68-5.29 3.68-8.98z"
-                                fill="#4285F4"
-                            />
-                            <path
-                                d="M12 24c3.3 0 6.07-1.09 8.09-2.94l-3.98-3.12c-1.1.74-2.52 1.18-4.11 1.18-3.15 0-5.82-2.13-6.77-5.01H1.2v3.14C3.25 21.08 7.34 24 12 24z"
-                                fill="#34A853"
-                            />
-                            <path
-                                d="M5.23 14.12c-.25-.74-.39-1.54-.39-2.37 0-.83.14-1.63.38-2.37V6.23H1.2A11.98 11.98 0 000 12c0 1.89.44 3.68 1.2 5.27l4.03-3.15z"
-                                fill="#FBBC05"
-                            />
-                            <path
-                                d="M12 4.74c1.8 0 3.4.62 4.67 1.84l3.5-3.5C17.99 1.12 15.22 0 12 0 7.34 0 3.25 2.92 1.2 6.73l4.03 3.15c.94-2.88 3.61-5.01 6.77-5.01z"
-                                fill="#EA4335"
-                            />
-                        </svg>
-                        <span>
-                            {googleLoading
-                                ? "Logging in..."
-                                : "Continue with Google"}
-                        </span>
                     </button>
                 </form>
             </div>
@@ -650,29 +836,34 @@ const CreateUser = () => {
                         renderInput={(props) => (
                             <input
                                 {...props}
-                                type="tel" // Changed from number to tel
+                                type="tel"
                                 inputMode="numeric"
-                                className="w-12 h-12 text-2xl text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent appearance-none [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
+                                className="w-12 h-12 text-2xl text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                maxLength={1}
                             />
                         )}
                         containerStyle="flex justify-center gap-2"
+                        shouldAutoFocus
                     />
                     {otpError && (
                         <p className="text-red-500 text-center text-sm">
-                            {otpError}
+                            {otpError === "Invalid OTP" ||
+                            otpError === "OTP Not Found or Invalid"
+                                ? otpError
+                                : null}
                         </p>
                     )}
                     <div className="flex gap-2 mt-4">
                         <button
                             type="button"
                             onClick={handleSubmitOtp}
-                            disabled={otp.length !== 6}
-                            className={`w-full bg-primary text-white py-2 rounded-lg transition ${
-                                otp.length !== 6
+                            disabled={otp.length !== 6 || isVerifying}
+                            className={`w-full bg-primary text-white py-2 rounded-lg transition flex items-center justify-center ${
+                                otp.length !== 6 || isVerifying
                                     ? "opacity-50 cursor-not-allowed"
                                     : "hover:bg-primary-dark"
                             }`}>
-                            Verify Code
+                            {isVerifying ? "Loading..." : "Verify Code"}
                         </button>
                         <button
                             type="button"
@@ -681,7 +872,6 @@ const CreateUser = () => {
                             Resend Code
                         </button>
                     </div>
-
                     {/* Mobile Number Pad Hint */}
                     <p className="text-center text-sm text-gray-500 md:hidden">
                         Numeric keypad will appear on mobile devices

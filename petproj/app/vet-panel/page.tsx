@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import { CameraOutlined, LoadingOutlined, LockOutlined, PlusOutlined } from "@ant-design/icons";
@@ -114,9 +114,6 @@ const VetProfile = () => {
     const [passwordForm] = Form.useForm();
     const [cities, setCities] = useState<City[]>([]);
     const [updatedVetData, setUpdatedVetData] = useState<VetProfileData>(vetData);
-    const [isEditingQualification, setIsEditingQualification] = useState<number | null>(null);
-    const [isEditingSpecialization, setIsEditingSpecialization] = useState<number | null>(null);
-    const [isEditingSchedule, setIsEditingSchedule] = useState<number | null>(null);
     const [vetId, setVetId] = useState<string | null>(null);
     const [submittingQualification, setSubmittingQualification] = useState(false);
     const [submittingSpecialization, setSubmittingSpecialization] = useState(false);
@@ -137,7 +134,38 @@ const VetProfile = () => {
         qualification_id: number;
         qualification_name: string;
     }>>([]);
+    const editableClinicFields = [
+        'clinic_name',
+        'location',
+        'contact_details',
+        'minimum_fee',
+        'clinic_whatsapp',
+        'clinic_email'
+    ] as const;
 
+    // 2. Your existing type
+    type EditableClinicFields = typeof editableClinicFields[number];
+
+    // 3. Add this type guard (uses your existing EditableClinicFields)
+    function isEditableField(field: keyof ClinicDetails): field is EditableClinicFields {
+        return editableClinicFields.includes(field as any);
+    }
+    // Refs for each input to maintain focus
+    const inputIds = {
+        clinic_name: `clinic-name-${Math.random().toString(36).substr(2, 9)}`,
+        location: `location-${Math.random().toString(36).substr(2, 9)}`,
+        contact_details: `contact-${Math.random().toString(36).substr(2, 9)}`,
+        minimum_fee: `fee-${Math.random().toString(36).substr(2, 9)}`,
+        clinic_whatsapp: `whatsapp-${Math.random().toString(36).substr(2, 9)}`,
+        clinic_email: `email-${Math.random().toString(36).substr(2, 9)}`
+    } as const;
+    const [clinicForm, setClinicForm] = useState<Partial<ClinicDetails>>({});
+    const getInputId = (field: keyof ClinicDetails): string => {
+        return isEditableField(field) ? inputIds[field] : '';
+    };
+
+    // Add this right after your state declarations
+    const clinicDetails = useMemo(() => updatedVetData.clinicDetails, [updatedVetData.clinicDetails]);
     useEffect(() => {
         const fetchQualifications = async () => {
             try {
@@ -152,6 +180,12 @@ const VetProfile = () => {
         fetchQualifications();
     }, []);
 
+    // Initialize form when data loads
+    useEffect(() => {
+        if (updatedVetData.clinicDetails) {
+            setClinicForm(updatedVetData.clinicDetails);
+        }
+    }, [updatedVetData.clinicDetails]);
 
     const fetchVetId = async (userId: string) => {
         try {
@@ -350,9 +384,14 @@ const VetProfile = () => {
         }
         // Handle vet info updates
         else if (name in (updatedVetData.clinicDetails || {})) {
-            handleClinicDetailsChange(name as keyof ClinicDetails, value);
+            handleClinicChange(name as keyof ClinicDetails, value);
         }
     };
+    useEffect(() => {
+        if (editing && updatedVetData.clinicDetails) {
+            setClinicForm(updatedVetData.clinicDetails);
+        }
+    }, [editing, updatedVetData.clinicDetails]);
 
     const handleSaveChanges = async () => {
         const id = userId || vetId;
@@ -378,14 +417,25 @@ const VetProfile = () => {
             // Save vet info if changed
             if (vetId && updatedVetData) {
                 // Save clinic details
-                if (updatedVetData.clinicDetails) {
-                    await fetch(`/api/vet-panel/clinic-details/${vetId}`, {
+                // Ensure clinicDetails includes the latest form data before saving
+                const clinicDetailsToSave = {
+                    ...updatedVetData.clinicDetails,
+                    ...clinicForm
+                };
+
+                // Save clinic details
+                if (clinicDetailsToSave) {
+                    const clinicRes = await fetch(`/api/vet-panel/clinic-details/${vetId}`, {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(updatedVetData.clinicDetails)
+                        body: JSON.stringify(clinicDetailsToSave)
                     });
-                }
 
+                    if (!clinicRes.ok) {
+                        const errorData = await clinicRes.json();
+                        throw new Error(errorData.message || 'Failed to update clinic details');
+                    }
+                }
                 // Save qualifications (only updates, additions are handled separately)
                 const qualRes = await fetch(`/api/vet-panel/qualifications/${vetId}`, {
                     method: "PUT",
@@ -708,29 +758,30 @@ const VetProfile = () => {
         setUpdatedVetData({ ...updatedVetData, schedule: updatedSchedule });
     };
 
-    const handleClinicDetailsChange = (field: keyof ClinicDetails, value: string) => {
+    const handleClinicChange = useCallback((field: keyof ClinicDetails, value: string | number) => {
+        setClinicForm(prev => {
+            const newForm = { ...prev, [field]: value };
+            
+            // Also update the updatedVetData to keep everything in sync
+            setUpdatedVetData(prev => ({
+                ...prev,
+                clinicDetails: {
+                    ...prev.clinicDetails,
+                    ...newForm
+                } as ClinicDetails
+            }));
+            
+            return newForm;
+        });
+    }, []);
+    // Save handler that updates the main state
+    const handleSaveClinicDetails = useCallback(() => {
         setUpdatedVetData(prev => ({
             ...prev,
-            clinicDetails: {
-                ...(prev.clinicDetails || {
-                    vet_id: 0,
-                    user_id: 0,
-                    clinic_name: '',
-                    location: '',
-                    minimum_fee: 0,
-                    contact_details: '',
-                    profile_verified: false,
-                    created_at: '',
-                    bio: '',
-                    clinic_whatsapp: '',
-                    clinic_email: '',
-                    applied: false,
-                    approved: false
-                }),
-                [field]: value
-            }
+            clinicDetails: { ...prev.clinicDetails, ...clinicForm } as ClinicDetails
         }));
-    };
+    }, [clinicForm]);
+
 
     interface ProfileFieldProps {
         label: string;
@@ -859,6 +910,42 @@ const VetProfile = () => {
             )}
         </div>
     );
+    const renderField = (
+        field: keyof ClinicDetails,
+        label: string,
+        type: string = 'text',
+        format?: (value: any) => string
+    ) => {
+        const validField = editableClinicFields.includes(field as EditableClinicFields)
+            ? field as EditableClinicFields
+            : null;
+
+        return (
+            <div className="space-y-1">
+                <label htmlFor={validField ? inputIds[validField] : ''} className="text-sm font-medium text-gray-600">
+                    {label}
+                </label>
+                {editing ? (
+                    validField && (
+                        <input
+                            id={inputIds[validField]}
+                            type={type}
+                            value={clinicForm[validField] || ''}
+                            onChange={(e) => handleClinicChange(
+                                validField,
+                                type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value
+                            )}
+                            className="w-full p-2 border border-gray-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary transition-colors duration-200"
+                        />
+                    )
+                ) : (
+                    <p className="p-2 bg-gray-50 rounded-lg">
+                        {format ? format(clinicForm[field]) : clinicForm[field] || "Not provided"}
+                    </p>
+                )}
+            </div>
+        );
+    };
 
     return (
         <>
@@ -940,12 +1027,22 @@ const VetProfile = () => {
                         {/* Profile Details */}
                         <div className="md:col-span-2 space-y-6 mt-3">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <ProfileField
-                                    label="Full Name"
-                                    name="name"
-                                    value={updatedData?.name || ""}
-                                    onChange={(name, value) => handlePersonalInfoChange(name as keyof UserProfileData, value)}
-                                />
+                                {/* Full Name */}
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium text-gray-600">Full Name</label>
+                                    {editing ? (
+                                        <input
+                                            type="text"
+                                            value={updatedData?.name || ""}
+                                            onChange={(e) => handlePersonalInfoChange('name', e.target.value)}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                        />
+                                    ) : (
+                                        <p className="p-2 bg-gray-50 rounded-lg">
+                                            {updatedData?.name || "Not provided"}
+                                        </p>
+                                    )}
+                                </div>
                                 <ProfileField
                                     label="Email Address"
                                     name="email"
@@ -977,20 +1074,45 @@ const VetProfile = () => {
                                         </p>
                                     )}
                                 </div>
-                                <ProfileField
-                                    label="Date of Birth"
-                                    name="dob"
-                                    type="date"
-                                    value={updatedData?.dob ? new Date(updatedData.dob).toISOString().split('T')[0] : ""}
-                                    onChange={(name, value) => handlePersonalInfoChange(name as keyof UserProfileData, value)}
-                                />
-                                <ProfileField
-                                    label="City"
-                                    name="city"
-                                    value={updatedData?.city || ""}
-                                    cities={cities}
-                                    onChange={(name, value) => handlePersonalInfoChange(name as keyof UserProfileData, value)}
-                                />
+                                {/* Date of Birth */}
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium text-gray-600">Date of Birth</label>
+                                    {editing ? (
+                                        <input
+                                            type="date"
+                                            value={updatedData?.dob ? new Date(updatedData.dob).toISOString().split('T')[0] : ""}
+                                            onChange={(e) => handlePersonalInfoChange('dob', e.target.value)}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                        />
+                                    ) : (
+                                        <p className="p-2 bg-gray-50 rounded-lg">
+                                            {updatedData?.dob ? format(new Date(updatedData.dob), 'MMM dd, yyyy') : "Not provided"}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* City */}
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium text-gray-600">City</label>
+                                    {editing ? (
+                                        <select
+                                            value={updatedData?.city || ""}
+                                            onChange={(e) => handlePersonalInfoChange('city', e.target.value)}
+                                            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                        >
+                                            <option value="">Select City</option>
+                                            {cities.map(city => (
+                                                <option key={city.city_id} value={city.city_name}>
+                                                    {city.city_name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <p className="p-2 bg-gray-50 rounded-lg">
+                                            {updatedData?.city || "Not provided"}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Security Section */}
@@ -1007,41 +1129,20 @@ const VetProfile = () => {
                         </div>
                     </div>
                 </div>
-
                 <div className="bg-white rounded-xl shadow-lg p-6 mt-3">
-                    <ProfileSection
-                        title="Clinic Details"
-                        editable={editing}
-                        onSave={handleSaveChanges}  // Add this
-                        onCancel={() => setEditing(false)}
-                    >
-                        {/* Clinic Details Section */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <ProfileField
-                                label="Clinic Name"
-                                name="clinic_name"  // Must match your ClinicDetails interface
-                                value={updatedVetData.clinicDetails?.clinic_name || ""}
-                                editable={editing}
-                                onChange={(name, value) => handleClinicDetailsChange(name as keyof ClinicDetails, value)}
-                            />
-                            <ProfileField
-                                label="Address"
-                                name="location"  // Must match your ClinicDetails interface
-                                value={updatedVetData.clinicDetails?.location || ""}
-                                editable={editing}
-                                onChange={(name, value) => handleClinicDetailsChange(name as keyof ClinicDetails, value)}
-                            />
-                            <ProfileField
-                                label="Contact"
-                                name="contact_details"  // Must match your ClinicDetails interface
-                                value={updatedVetData.clinicDetails?.contact_details || ""}
-                                editable={editing}
-                                onChange={(name, value) => handleClinicDetailsChange(name as keyof ClinicDetails, value)}
-                            />
-                        </div>
-                    </ProfileSection>
-                </div>
+                    {/* Simple header without action buttons */}
+                    <h3 className="text-lg font-semibold mb-4">Clinic Information</h3>
 
+                    {/* Clinic fields - will be controlled by the main edit/save buttons */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {renderField('clinic_name', 'Clinic Name')}
+                        {renderField('location', 'Location')}
+                        {renderField('contact_details', 'Contact Number')}
+                        {renderField('minimum_fee', 'Minimum Fee', 'number', (value) => `Rs. ${value || '0'}`)}
+                        {renderField('clinic_whatsapp', 'WhatsApp Number')}
+                        {renderField('clinic_email', 'Clinic Email', 'email')}
+                    </div>
+                </div>
                 <div className="bg-white rounded-xl shadow-lg p-6 mt-3">
                     {/* Qualifications Section */}
                     <ProfileSection title="Qualifications" editable={editing} onAdd={showQualificationModal}>

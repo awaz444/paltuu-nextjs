@@ -8,25 +8,49 @@ export async function middleware(request: NextRequest) {
   // Define public paths that don't require authentication
   const isPublicPath = ['/login', '/sign-up', '/browse-pets', '/foster-pets', '/pet-care', '/llm', '/forgot-password', '/reset-password'].includes(pathname);
 
-  // Check if the path is a listing detail page
-  // const isListingPage = pathname.startsWith('/browse-pets/') || pathname.startsWith('/foster-pets/');
+  // Define admin-only paths
+  const adminOnlyPaths = [
+    '/admin-panel',
+    '/admin-approve-vets',
+    '/admin-pet',
+    '/admin-pet-approval',
+    '/admin-user'
+  ];
 
-  // Special handling for logout
+  const isAdminPath = adminOnlyPaths.includes(pathname);
+
   if (pathname === '/api/users/logout') {
     return NextResponse.next();
   }
 
-  // Check for NextAuth session token
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET
   });
 
-  // Check for custom auth token in cookies
   const customAuthToken = request.cookies.get('token')?.value;
 
-  // User is authenticated if either token exists
   const isAuthenticated = !!token || !!customAuthToken;
+
+  if (isAdminPath) {
+    const isAdmin = token?.role === 'admin';
+
+    if (!isAdmin && customAuthToken) {
+      try {
+        const [headerB64, payloadB64] = customAuthToken.split('.');
+        const payload = JSON.parse(Buffer.from(payloadB64, 'base64').toString());
+        if (payload.role !== 'admin') {
+          return NextResponse.redirect(new URL('/browse-pets', request.url));
+        }
+      } catch (error) {
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
+    }
+
+    if (!isAdmin && !customAuthToken) {
+      return NextResponse.redirect(new URL('/browse-pets', request.url));
+    }
+  }
 
   if (!isAuthenticated && !isPublicPath) {
     const callbackUrl = encodeURIComponent(request.nextUrl.pathname);
@@ -36,11 +60,16 @@ export async function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// Update matcher to include listing detail pages
+// Update matcher to include all protected routes
 export const config = {
   matcher: [
     '/profile',
     '/my-listings',
     '/my-applications',
+    '/admin-panel',
+    '/admin-approve-vets',
+    '/admin-pet',
+    '/admin-pet-approval',
+    '/admin-user'
   ]
 };

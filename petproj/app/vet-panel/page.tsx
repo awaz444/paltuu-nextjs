@@ -164,22 +164,6 @@ const VetProfile = () => {
         return isEditableField(field) ? inputIds[field] : '';
     };
 
-    // Add this right after your state declarations
-    const clinicDetails = useMemo(() => updatedVetData.clinicDetails, [updatedVetData.clinicDetails]);
-    useEffect(() => {
-        const fetchQualifications = async () => {
-            try {
-                const res = await fetch('/api/qualifications');
-                const data = await res.json();
-                setQualifications(data);
-            } catch (error) {
-                console.error("Failed to fetch qualifications:", error);
-            }
-        };
-
-        fetchQualifications();
-    }, []);
-
     // Initialize form when data loads
     useEffect(() => {
         if (updatedVetData.clinicDetails) {
@@ -484,24 +468,6 @@ const VetProfile = () => {
         setEditing(false);
     };
 
-    const handleAddQualification = async (qualification: Omit<Qualification, 'vet_qualifications_id' | 'vet_id'>) => {
-        if (!vetId) return;
-
-        try {
-            const res = await fetch(`/api/vet-panel/qualifications/${vetId}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(qualification)
-            });
-
-            if (!res.ok) throw new Error('Failed to add qualification');
-            const newQualification = await res.json();
-            return newQualification;
-        } catch (error) {
-            console.error("Error adding qualification:", error);
-            throw error;
-        }
-    };
 
     const handleAddSpecialization = async (categoryId: number) => {
         if (!vetId) return;
@@ -522,24 +488,6 @@ const VetProfile = () => {
         }
     };
 
-    const handleAddSchedule = async (schedule: Omit<Schedule, 'availability_id' | 'vet_id'>) => {
-        if (!vetId) return;
-
-        try {
-            const res = await fetch(`/api/vet-panel/schedule/${vetId}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(schedule)
-            });
-
-            if (!res.ok) throw new Error('Failed to add schedule');
-            const newSchedule = await res.json();
-            return newSchedule;
-        } catch (error) {
-            console.error("Error adding schedule:", error);
-            throw error;
-        }
-    };
     const handleScheduleSubmit = async () => {
         if (submittingSchedule || !vetId) return;
         setSubmittingSchedule(true);
@@ -774,14 +722,6 @@ const VetProfile = () => {
             return newForm;
         });
     }, []);
-    // Save handler that updates the main state
-    const handleSaveClinicDetails = useCallback(() => {
-        setUpdatedVetData(prev => ({
-            ...prev,
-            clinicDetails: { ...prev.clinicDetails, ...clinicForm } as ClinicDetails
-        }));
-    }, [clinicForm]);
-
 
     interface ProfileFieldProps {
         label: string;

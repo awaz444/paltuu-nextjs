@@ -64,7 +64,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                 vq.qualification_id,
                 q.qualification_name,
                 vq.year_acquired,
-                vq.note
+                vq.note,
+                vq.status  -- Added the status column
             FROM vet_qualifications vq
             JOIN qualifications q ON vq.qualification_id = q.qualification_id
             WHERE vq.vet_id = $1;
@@ -99,6 +100,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         await client.end();
     }
 }
+
 export async function PUT(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     const vet_id = req.nextUrl.pathname.split("/").pop();

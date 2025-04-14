@@ -49,6 +49,7 @@ interface Qualification {
     qualification_name: string; // Changed from 'degree'
     year_acquired: number; // Changed from 'year'
     note: string; // Changed from 'institution'
+    status: string;
 }
 
 interface ReviewSummary {
@@ -132,7 +133,24 @@ const VetProfile = () => {
     const [qualificationForm] = Form.useForm();
     const [specializationForm] = Form.useForm();
     const [scheduleForm] = Form.useForm();
+    const [qualifications, setQualifications] = useState<Array<{
+        qualification_id: number;
+        qualification_name: string;
+    }>>([]);
 
+    useEffect(() => {
+        const fetchQualifications = async () => {
+            try {
+                const res = await fetch('/api/qualifications');
+                const data = await res.json();
+                setQualifications(data);
+            } catch (error) {
+                console.error("Failed to fetch qualifications:", error);
+            }
+        };
+
+        fetchQualifications();
+    }, []);
 
 
     const fetchVetId = async (userId: string) => {
@@ -475,53 +493,53 @@ const VetProfile = () => {
     const handleScheduleSubmit = async () => {
         if (submittingSchedule || !vetId) return;
         setSubmittingSchedule(true);
-      
+
         try {
-          const values = await scheduleForm.validateFields();
-      
-          // 1. Prepare ONLY the slots array (no vet_id in body!)
-          const slots = [{
-            day_of_week: values.day_of_week,
-            start_time: values.start_time.endsWith(':00') 
-              ? values.start_time.slice(0, -3) // Remove ":00" if present
-              : values.start_time,
-            end_time: values.end_time.endsWith(':00') 
-              ? values.end_time.slice(0, -3) 
-              : values.end_time
-          }];
-      
-          console.log('Sending:', { slots }); // Verify before sending
-      
-          // 2. Send to endpoint with vet_id in URL
-          const response = await fetch(`/api/vet-panel/schedule/${vetId}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(localStorage.getItem("token") && {
-                Authorization: `Bearer ${localStorage.getItem("token")}`
-              })
-            },
-            body: JSON.stringify(slots) // Send ONLY the array
-          });
-      
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Failed to add slot");
-          }
-      
-          // Success
-          message.success("Slot added!");
-          setScheduleModalVisible(false);
-          scheduleForm.resetFields();
-          await fetchVetData(vetId);
-      
+            const values = await scheduleForm.validateFields();
+
+            // 1. Prepare ONLY the slots array (no vet_id in body!)
+            const slots = [{
+                day_of_week: values.day_of_week,
+                start_time: values.start_time.endsWith(':00')
+                    ? values.start_time.slice(0, -3) // Remove ":00" if present
+                    : values.start_time,
+                end_time: values.end_time.endsWith(':00')
+                    ? values.end_time.slice(0, -3)
+                    : values.end_time
+            }];
+
+            console.log('Sending:', { slots }); // Verify before sending
+
+            // 2. Send to endpoint with vet_id in URL
+            const response = await fetch(`/api/vet-panel/schedule/${vetId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(localStorage.getItem("token") && {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`
+                    })
+                },
+                body: JSON.stringify(slots) // Send ONLY the array
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Failed to add slot");
+            }
+
+            // Success
+            message.success("Slot added!");
+            setScheduleModalVisible(false);
+            scheduleForm.resetFields();
+            await fetchVetData(vetId);
+
         } catch (error) {
-          console.error("Error:", error);
-          message.error({content: "Failed to add slot"});
+            console.error("Error:", error);
+            message.error({ content: "Failed to add slot" });
         } finally {
-          setSubmittingSchedule(false);
+            setSubmittingSchedule(false);
         }
-      };
+    };
 
     const handleQualificationSubmit = async () => {
         if (submittingQualification) return;
@@ -529,26 +547,33 @@ const VetProfile = () => {
 
         try {
             const values = await qualificationForm.validateFields();
-            message.loading({ content: 'Adding qualification...', key: 'qual' });
 
-            await handleAddQualification({
-                qualification_name: values.qualification_name,
-                note: values.note,
-                year_acquired: values.year_acquired
+            const response = await fetch(`/api/vet-panel/qualifications/${vetId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(localStorage.getItem("token") && {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`
+                    })
+                },
+                body: JSON.stringify({
+                    qualification_id: values.qualification_id,
+                    year_acquired: values.year_acquired,
+                    note: values.note || null
+                })
             });
 
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Failed to add qualification");
+            }
+
+            message.success("Qualification added successfully!");
             setQualificationModalVisible(false);
             qualificationForm.resetFields();
             await fetchVetData(vetId);
-
-            message.success({
-                content: "Qualification added successfully",
-                key: 'qual',
-                duration: 3
-            });
         } catch (error) {
-            console.error("Submission error:", error);
-            message.error({ content: "Failed to add qualification", key: 'qual' });
+            message.error({ content: "Failed to add qualification" });
         } finally {
             setSubmittingQualification(false);
         }
@@ -1020,75 +1045,86 @@ const VetProfile = () => {
                 <div className="bg-white rounded-xl shadow-lg p-6 mt-3">
                     {/* Qualifications Section */}
                     <ProfileSection title="Qualifications" editable={editing} onAdd={showQualificationModal}>
-                        {updatedVetData.qualifications.length === 0 ? (
-                            <p className="text-gray-500">No qualifications added</p>
+                        {updatedVetData.qualifications.filter(q => q.status === 'approved').length === 0 ? (
+                            <p className="text-gray-500">
+                                {editing ? "No approved qualifications yet" : "No qualifications to display"}
+                            </p>
                         ) : (
                             <div className="space-y-4">
-                                {updatedVetData.qualifications.map((qualification, index) => (
-                                    <div key={index} className="border rounded-lg p-4 relative"> {/* This is the existing div */}
-                                        {/* ADD DELETE BUTTON HERE */}
-                                        {editing && (
-                                            <button
-                                                onClick={async (e) => {
-                                                    e.stopPropagation();
-                                                    if (vetId && qualification.qualification_id) {
-                                                        const success = await deleteQualification(vetId, qualification.qualification_id);
-                                                        if (success) {
-                                                            const updated = [...updatedVetData.qualifications];
-                                                            updated.splice(index, 1);
-                                                            setUpdatedVetData({ ...updatedVetData, qualifications: updated });
-                                                            message.success("Qualification deleted successfully");
+                                {updatedVetData.qualifications
+                                    .filter(q => q.status === 'approved')
+                                    .map((qualification, index) => (
+                                        <div key={index} className="border rounded-lg p-4 relative">
+                                            {/* Delete button (existing code) */}
+                                            {editing && (
+                                                <button
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        if (vetId && qualification.qualification_id) {
+                                                            const success = await deleteQualification(vetId, qualification.qualification_id);
+                                                            if (success) {
+                                                                const updated = [...updatedVetData.qualifications];
+                                                                updated.splice(index, 1);
+                                                                setUpdatedVetData({ ...updatedVetData, qualifications: updated });
+                                                                message.success("Qualification deleted successfully");
+                                                            }
                                                         }
-                                                    }
-                                                }}
-                                                className="absolute top-2 right-2 text-red-500 hover:text-red-700 transition-all duration-200 ease-in-out hover:scale-125"
-                                                title="Delete qualification"
-                                                disabled={deleting.qualifications === qualification.qualification_id}
-                                            >
-                                                {deleting.qualifications === qualification.qualification_id ? (
-                                                    <LoadingOutlined className="text-red-500" />
-                                                ) : (
-                                                    '×'
-                                                )}
-                                            </button>
-                                        )}
-                                        <label className="block text-sm font-medium text-gray-700">Degree</label>
-                                        {editing ? (
-                                            <input
-                                                type="text"
-                                                value={qualification.qualification_name}
-                                                onChange={(e) => handleQualificationChange(index, "qualification_name", e.target.value)}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                            />
-                                        ) : (
-                                            <p className="mt-1 text-gray-900">{qualification.qualification_name}</p>
-                                        )}
+                                                    }}
+                                                    className="absolute top-2 right-2 text-red-500 hover:text-red-700 transition-all duration-200 ease-in-out hover:scale-125"
+                                                    title="Delete qualification"
+                                                    disabled={deleting.qualifications === qualification.qualification_id}
+                                                >
+                                                    {deleting.qualifications === qualification.qualification_id ? (
+                                                        <LoadingOutlined className="text-red-500" />
+                                                    ) : (
+                                                        '×'
+                                                    )}
+                                                </button>
+                                            )}
 
-                                        <label className="block text-sm font-medium text-gray-700 mt-3">Institution</label>
-                                        {editing ? (
-                                            <input
-                                                type="text"
-                                                value={qualification.note}
-                                                onChange={(e) => handleQualificationChange(index, "note", e.target.value)}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                            />
-                                        ) : (
-                                            <p className="mt-1 text-gray-900">{qualification.note}</p>
-                                        )}
+                                            {/* Approved badge (new addition) */}
+                                            <span className="absolute top-2 right-10 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                                                Approved
+                                            </span>
 
-                                        <label className="block text-sm font-medium text-gray-700 mt-3">Year</label>
-                                        {editing ? (
-                                            <input
-                                                type="number"
-                                                value={qualification.year_acquired}
-                                                onChange={(e) => handleQualificationChange(index, "year_acquired", e.target.value)}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                            />
-                                        ) : (
-                                            <p className="mt-1 text-gray-900">{qualification.year_acquired}</p>
-                                        )}
-                                    </div>
-                                ))}
+                                            {/* Existing fields (unchanged) */}
+                                            <label className="block text-sm font-medium text-gray-700">Degree</label>
+                                            {editing ? (
+                                                <input
+                                                    type="text"
+                                                    value={qualification.qualification_name}
+                                                    onChange={(e) => handleQualificationChange(index, "qualification_name", e.target.value)}
+                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                                />
+                                            ) : (
+                                                <p className="mt-1 text-gray-900">{qualification.qualification_name}</p>
+                                            )}
+
+                                            <label className="block text-sm font-medium text-gray-700 mt-3">Institution</label>
+                                            {editing ? (
+                                                <input
+                                                    type="text"
+                                                    value={qualification.note}
+                                                    onChange={(e) => handleQualificationChange(index, "note", e.target.value)}
+                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                                />
+                                            ) : (
+                                                <p className="mt-1 text-gray-900">{qualification.note}</p>
+                                            )}
+
+                                            <label className="block text-sm font-medium text-gray-700 mt-3">Year</label>
+                                            {editing ? (
+                                                <input
+                                                    type="number"
+                                                    value={qualification.year_acquired}
+                                                    onChange={(e) => handleQualificationChange(index, "year_acquired", e.target.value)}
+                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                                />
+                                            ) : (
+                                                <p className="mt-1 text-gray-900">{qualification.year_acquired}</p>
+                                            )}
+                                        </div>
+                                    ))}
                             </div>
                         )}
                     </ProfileSection>
@@ -1354,40 +1390,49 @@ const VetProfile = () => {
                             Cancel
                         </Button>,
                         <Button
+                            key="submit"
                             type="primary"
                             onClick={handleQualificationSubmit}
                             loading={submittingQualification}
-                            disabled={submittingQualification}
                         >
                             Add Qualification
-                        </Button>
+                        </Button>,
                     ]}
                 >
                     <Form form={qualificationForm} layout="vertical">
                         <Form.Item
-                            name="qualification_name"
-                            label="Degree/Qualification"
-                            rules={[{ required: true, message: 'Please enter qualification name' }]}
+                            name="qualification_id"
+                            label="Qualification"
+                            rules={[{ required: true, message: 'Please select a qualification' }]}
                         >
-                            <Input placeholder="e.g. Doctor of Veterinary Medicine" />
+                            <Select placeholder="Select a qualification">
+                                {qualifications.map((q) => (
+                                    <Select.Option
+                                        key={q.qualification_id}
+                                        value={q.qualification_id}
+                                    >
+                                        {q.qualification_name}
+                                    </Select.Option>
+                                ))}
+                            </Select>
                         </Form.Item>
-                        <Form.Item
-                            name="note"
-                            label="Institution"
-                            rules={[{ required: true, message: 'note' }]}
-                        >
-                            <Input placeholder="Please write a note e.g surgeon etc " />
-                        </Form.Item>
+
                         <Form.Item
                             name="year_acquired"
                             label="Year Acquired"
-                            rules={[{ required: true, message: 'Please enter year' }]}
+                            rules={[{ required: true, message: 'Please enter year acquired' }]}
                         >
                             <Input type="number" placeholder="e.g. 2020" />
                         </Form.Item>
+
+                        <Form.Item
+                            name="note"
+                            label="Additional Notes"
+                        >
+                            <Input.TextArea placeholder="Any additional information" />
+                        </Form.Item>
                     </Form>
                 </Modal>
-
                 {/* Specialization Modal */}
                 <Modal
                     title="Add Specialization"

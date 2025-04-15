@@ -183,6 +183,22 @@ const VetProfile = () => {
             throw error;
         }
     };
+    const fetchQualifications = async () => {
+        try {
+          const response = await fetch('/api/qualifications');
+          if (!response.ok) throw new Error('Failed to fetch qualifications');
+          const data = await response.json();
+          setQualifications(data);
+        } catch (error) {
+          console.error('Error fetching qualifications:', error);
+          message.error('Could not load qualifications. Please try again.');
+        }
+      };
+      useEffect(() => {
+        if (qualificationModalVisible) {
+          fetchQualifications();
+        }
+      }, [qualificationModalVisible]);
 
     const handlePasswordChange = async (values: {
         currentPassword: string;
@@ -495,29 +511,32 @@ const VetProfile = () => {
         try {
             const values = await scheduleForm.validateFields();
 
-            // 1. Prepare ONLY the slots array (no vet_id in body!)
+            // Format time properly (ensure HH:MM or HH:MM:SS)
+            const formatTime = (timeStr: string): string => {
+                if (!timeStr.includes(':')) {
+                    return `${timeStr}:00`; // Convert "20" → "20:00"
+                }
+                return timeStr; // Keep existing format if valid
+            };
+
             const slots = [{
                 day_of_week: values.day_of_week,
-                start_time: values.start_time.endsWith(':00')
-                    ? values.start_time.slice(0, -3) // Remove ":00" if present
-                    : values.start_time,
-                end_time: values.end_time.endsWith(':00')
-                    ? values.end_time.slice(0, -3)
-                    : values.end_time
+                start_time: formatTime(values.start_time),
+                end_time: formatTime(values.end_time)
             }];
 
-            console.log('Sending:', { slots }); // Verify before sending
+            console.log('Sending:', { slots }); // Verify format before sending
 
-            // 2. Send to endpoint with vet_id in URL
             const response = await fetch(`/api/vet-panel/schedule/${vetId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     ...(localStorage.getItem("token") && {
                         Authorization: `Bearer ${localStorage.getItem("token")}`
-                    })
+                    }
+                    )
                 },
-                body: JSON.stringify(slots) // Send ONLY the array
+                body: JSON.stringify(slots)
             });
 
             if (!response.ok) {
@@ -525,7 +544,6 @@ const VetProfile = () => {
                 throw new Error(errorData.error || "Failed to add slot");
             }
 
-            // Success
             message.success("Slot added!");
             setScheduleModalVisible(false);
             scheduleForm.resetFields();
@@ -538,7 +556,6 @@ const VetProfile = () => {
             setSubmittingSchedule(false);
         }
     };
-
     const handleQualificationSubmit = async () => {
         if (submittingQualification) return;
         setSubmittingQualification(true);
@@ -1103,9 +1120,9 @@ const VetProfile = () => {
                 <div className="bg-white rounded-xl shadow-lg p-6 mt-3">
                     {/* Qualifications Section */}
                     <ProfileSection title="Qualifications" editable={editing} onAdd={showQualificationModal}>
-                        {updatedVetData.qualifications.filter(q => q.status === 'approved').length === 0 ? (
+                        {updatedVetData.qualifications.length === 0 ? (
                             <p className="text-gray-500">
-                                {editing ? "No approved qualifications yet" : "No qualifications to display"}
+                                {editing ? "No qualifications added yet" : "No qualifications to display"}
                             </p>
                         ) : (
                             <div className="space-y-4">
@@ -1140,8 +1157,8 @@ const VetProfile = () => {
 
                                         {/* Status badge */}
                                         <span className={`absolute top-2 ${editing ? 'right-10' : 'right-2'} text-xs px-2 py-1 rounded-full ${qualification.status === 'approved'
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-yellow-100 text-yellow-800'
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-yellow-100 text-yellow-800'
                                             }`}>
                                             {qualification.status === 'approved' ? 'Approved' : 'Pending'}
                                         </span>
@@ -1155,9 +1172,9 @@ const VetProfile = () => {
                                                 </p>
                                             </div>
 
-                                            {/* Institution/Note - Read-only */}
+                                            {/* Note - Read-only */}
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700">Institution/Note</label>
+                                                <label className="block text-sm font-medium text-gray-700">Note</label>
                                                 <p className="mt-1 p-2 bg-gray-50 rounded-lg">
                                                     {qualification.note || "Not provided"}
                                                 </p>

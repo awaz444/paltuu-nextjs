@@ -4,64 +4,73 @@ import { createClient } from "../../../../../db/index";
 export async function POST(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     const vet_id = req.nextUrl.pathname.split("/").pop();
-    const slots = await req.json(); // Now expects an array of slots
-  
+    const slots = await req.json();
+
     if (!vet_id || !Array.isArray(slots)) {
-      return NextResponse.json(
-        { error: "Vet ID and an array of slots are required" },
-        { status: 400 }
-      );
-    }
-  
-    try {
-      await client.connect();
-  
-      // Validate all slots first
-      for (const slot of slots) {
-        if (!slot.day_of_week || !slot.start_time || !slot.end_time) {
-          return NextResponse.json(
-            { error: "Each slot must have day_of_week, start_time, and end_time" },
+        return NextResponse.json(
+            { error: "Vet ID and an array of slots are required" },
             { status: 400 }
-          );
-        }
-      }
-  
-      // Insert all slots in a transaction
-      const insertedSlots = [];
-      await client.query('BEGIN'); // Start transaction
-  
-      for (const slot of slots) {
-        const insertQuery = `
-          INSERT INTO vet_availability (vet_id, day_of_week, start_time, end_time)
-          VALUES ($1, $2, $3, $4)
-          RETURNING *;
-        `;
-        const result = await client.query(insertQuery, [
-          vet_id,
-          slot.day_of_week,
-          slot.start_time,
-          slot.end_time
-        ]);
-        insertedSlots.push(result.rows[0]);
-      }
-  
-      await client.query('COMMIT'); // Commit transaction
-  
-      return NextResponse.json(
-        { message: "Slots added successfully", data: insertedSlots },
-        { status: 201 }
-      );
-    } catch (err) {
-      await client.query('ROLLBACK'); // Rollback on error
-      console.error("Error adding slots:", err);
-      return NextResponse.json(
-        { error: "Internal Server Error", message: (err as Error).message },
-        { status: 500 }
-      );
-    } finally {
-      await client.end();
+        );
     }
-  }
+
+    try {
+        await client.connect();
+
+        // Validate all slots
+        for (const slot of slots) {
+            if (!slot.day_of_week || !slot.start_time || !slot.end_time) {
+                return NextResponse.json(
+                    { error: "Each slot must have day_of_week, start_time, and end_time" },
+                    { status: 400 }
+                );
+            }
+
+            // Validate time format (HH:MM or HH:MM:SS)
+            const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
+            if (!timeRegex.test(slot.start_time) || !timeRegex.test(slot.end_time)) {
+                return NextResponse.json(
+                    { error: "Time must be in HH:MM or HH:MM:SS format" },
+                    { status: 400 }
+                );
+            }
+        }
+
+        // Insert slots
+        const insertedSlots = [];
+        await client.query('BEGIN');
+
+        for (const slot of slots) {
+            const insertQuery = `
+                INSERT INTO vet_availability (vet_id, day_of_week, start_time, end_time)
+                VALUES ($1, $2, $3, $4)
+                RETURNING *;
+            `;
+            const result = await client.query(insertQuery, [
+                vet_id,
+                slot.day_of_week,
+                slot.start_time,
+                slot.end_time
+            ]);
+            insertedSlots.push(result.rows[0]);
+        }
+
+        await client.query('COMMIT');
+        return NextResponse.json(
+            { message: "Slots added successfully", data: insertedSlots },
+            { status: 201 }
+        );
+
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error("Error adding slots:", err);
+        return NextResponse.json(
+            { error: "Internal Server Error", message: (err as Error).message },
+            { status: 500 }
+        );
+    } finally {
+        await client.end();
+    }
+}
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();

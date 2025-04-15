@@ -709,7 +709,7 @@ const VetProfile = () => {
     const handleClinicChange = useCallback((field: keyof ClinicDetails, value: string | number) => {
         setClinicForm(prev => {
             const newForm = { ...prev, [field]: value };
-            
+
             // Also update the updatedVetData to keep everything in sync
             setUpdatedVetData(prev => ({
                 ...prev,
@@ -718,7 +718,7 @@ const VetProfile = () => {
                     ...newForm
                 } as ClinicDetails
             }));
-            
+
             return newForm;
         });
     }, []);
@@ -871,10 +871,24 @@ const VetProfile = () => {
                             id={inputIds[validField]}
                             type={type}
                             value={clinicForm[validField] || ''}
-                            onChange={(e) => handleClinicChange(
-                                validField,
-                                type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value
-                            )}
+                            onChange={(e) => {
+                                if (field === 'minimum_fee') {
+                                    const value = parseFloat(e.target.value);
+                                    // Only update if value is positive or empty
+                                    if (!isNaN(value) && value >= 0 || e.target.value === '') {
+                                        handleClinicChange(
+                                            validField,
+                                            type === 'number' ? value : e.target.value
+                                        );
+                                    }
+                                } else {
+                                    handleClinicChange(
+                                        validField,
+                                        type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value
+                                    );
+                                }
+                            }}
+                            min={field === 'minimum_fee' ? "0" : undefined}
                             className="w-full p-2 border border-gray-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary transition-colors duration-200"
                         />
                     )
@@ -1096,7 +1110,7 @@ const VetProfile = () => {
                                     .filter(q => q.status === 'approved')
                                     .map((qualification, index) => (
                                         <div key={index} className="border rounded-lg p-4 relative">
-                                            {/* Delete button (existing code) */}
+                                            {/* Delete button */}
                                             {editing && (
                                                 <button
                                                     onClick={async (e) => {
@@ -1123,47 +1137,55 @@ const VetProfile = () => {
                                                 </button>
                                             )}
 
-                                            {/* Approved badge (new addition) */}
                                             <span className="absolute top-2 right-10 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
                                                 Approved
                                             </span>
 
-                                            {/* Existing fields (unchanged) */}
-                                            <label className="block text-sm font-medium text-gray-700">Degree</label>
-                                            {editing ? (
-                                                <input
-                                                    type="text"
-                                                    value={qualification.qualification_name}
-                                                    onChange={(e) => handleQualificationChange(index, "qualification_name", e.target.value)}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                                />
-                                            ) : (
-                                                <p className="mt-1 text-gray-900">{qualification.qualification_name}</p>
-                                            )}
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">Degree</label>
+                                                    {editing ? (
+                                                        <input
+                                                            type="text"
+                                                            value={qualification.qualification_name}
+                                                            onChange={(e) => handleQualificationChange(index, "qualification_name", e.target.value)}
+                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                                        />
+                                                    ) : (
+                                                        <p className="mt-1 text-gray-900">{qualification.qualification_name}</p>
+                                                    )}
+                                                </div>
 
-                                            <label className="block text-sm font-medium text-gray-700 mt-3">Institution</label>
-                                            {editing ? (
-                                                <input
-                                                    type="text"
-                                                    value={qualification.note}
-                                                    onChange={(e) => handleQualificationChange(index, "note", e.target.value)}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                                />
-                                            ) : (
-                                                <p className="mt-1 text-gray-900">{qualification.note}</p>
-                                            )}
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">Institution</label>
+                                                    {editing ? (
+                                                        <input
+                                                            type="text"
+                                                            value={qualification.note}
+                                                            onChange={(e) => handleQualificationChange(index, "note", e.target.value)}
+                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                                        />
+                                                    ) : (
+                                                        <p className="mt-1 text-gray-900">{qualification.note}</p>
+                                                    )}
+                                                </div>
 
-                                            <label className="block text-sm font-medium text-gray-700 mt-3">Year</label>
-                                            {editing ? (
-                                                <input
-                                                    type="number"
-                                                    value={qualification.year_acquired}
-                                                    onChange={(e) => handleQualificationChange(index, "year_acquired", e.target.value)}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                                />
-                                            ) : (
-                                                <p className="mt-1 text-gray-900">{qualification.year_acquired}</p>
-                                            )}
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">Year</label>
+                                                    {editing ? (
+                                                        <input
+                                                            type="number"
+                                                            value={qualification.year_acquired}
+                                                            onChange={(e) => handleQualificationChange(index, "year_acquired", e.target.value)}
+                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                                            min="1900"
+                                                            max={new Date().getFullYear()}
+                                                        />
+                                                    ) : (
+                                                        <p className="mt-1 text-gray-900">{qualification.year_acquired}</p>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                             </div>

@@ -1142,22 +1142,17 @@ const VetProfile = () => {
                                             </span>
 
                                             <div className="space-y-3">
+                                                {/* Degree - Read-only */}
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700">Degree</label>
-                                                    {editing ? (
-                                                        <input
-                                                            type="text"
-                                                            value={qualification.qualification_name}
-                                                            onChange={(e) => handleQualificationChange(index, "qualification_name", e.target.value)}
-                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                                        />
-                                                    ) : (
-                                                        <p className="mt-1 text-gray-900">{qualification.qualification_name}</p>
-                                                    )}
+                                                    <p className="mt-1 p-2 bg-gray-50 rounded-lg">
+                                                        {qualification.qualification_name || "Not provided"}
+                                                    </p>
                                                 </div>
 
+                                                {/* Institution/Note - Editable */}
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">Institution</label>
+                                                    <label className="block text-sm font-medium text-gray-700">Institution/Note</label>
                                                     {editing ? (
                                                         <input
                                                             type="text"
@@ -1166,24 +1161,18 @@ const VetProfile = () => {
                                                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                                                         />
                                                     ) : (
-                                                        <p className="mt-1 text-gray-900">{qualification.note}</p>
+                                                        <p className="mt-1 p-2 bg-gray-50 rounded-lg">
+                                                            {qualification.note || "Not provided"}
+                                                        </p>
                                                     )}
                                                 </div>
 
+                                                {/* Year - Read-only */}
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700">Year</label>
-                                                    {editing ? (
-                                                        <input
-                                                            type="number"
-                                                            value={qualification.year_acquired}
-                                                            onChange={(e) => handleQualificationChange(index, "year_acquired", e.target.value)}
-                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                                            min="1900"
-                                                            max={new Date().getFullYear()}
-                                                        />
-                                                    ) : (
-                                                        <p className="mt-1 text-gray-900">{qualification.year_acquired}</p>
-                                                    )}
+                                                    <p className="mt-1 p-2 bg-gray-50 rounded-lg">
+                                                        {qualification.year_acquired || "Not provided"}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>

@@ -612,7 +612,10 @@ const VetProfile = () => {
             ...updatedQualifications[index],
             [field]: field === "year_acquired" ? parseInt(value) || 0 : value
         };
-        setUpdatedVetData({ ...updatedVetData, qualifications: updatedQualifications });
+        setUpdatedVetData(prev => ({
+            ...prev,
+            qualifications: updatedQualifications
+        }));
     };
 
 
@@ -1106,77 +1109,70 @@ const VetProfile = () => {
                             </p>
                         ) : (
                             <div className="space-y-4">
-                                {updatedVetData.qualifications
-                                    .filter(q => q.status === 'approved')
-                                    .map((qualification, index) => (
-                                        <div key={index} className="border rounded-lg p-4 relative">
-                                            {/* Delete button */}
-                                            {editing && (
-                                                <button
-                                                    onClick={async (e) => {
-                                                        e.stopPropagation();
-                                                        if (vetId && qualification.qualification_id) {
-                                                            const success = await deleteQualification(vetId, qualification.qualification_id);
-                                                            if (success) {
-                                                                const updated = [...updatedVetData.qualifications];
-                                                                updated.splice(index, 1);
-                                                                setUpdatedVetData({ ...updatedVetData, qualifications: updated });
-                                                                message.success("Qualification deleted successfully");
-                                                            }
+                                {updatedVetData.qualifications.map((qualification, index) => (
+                                    <div key={index} className="border rounded-lg p-4 relative">
+                                        {/* Delete button - kept as requested */}
+                                        {editing && (
+                                            <button
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    if (vetId && qualification.qualification_id) {
+                                                        const success = await deleteQualification(vetId, qualification.qualification_id);
+                                                        if (success) {
+                                                            const updated = [...updatedVetData.qualifications];
+                                                            updated.splice(index, 1);
+                                                            setUpdatedVetData({ ...updatedVetData, qualifications: updated });
+                                                            message.success("Qualification deleted successfully");
                                                         }
-                                                    }}
-                                                    className="absolute top-2 right-2 text-red-500 hover:text-red-700 transition-all duration-200 ease-in-out hover:scale-125"
-                                                    title="Delete qualification"
-                                                    disabled={deleting.qualifications === qualification.qualification_id}
-                                                >
-                                                    {deleting.qualifications === qualification.qualification_id ? (
-                                                        <LoadingOutlined className="text-red-500" />
-                                                    ) : (
-                                                        '×'
-                                                    )}
-                                                </button>
-                                            )}
+                                                    }
+                                                }}
+                                                className="absolute top-2 right-2 text-red-500 hover:text-red-700 transition-all duration-200 ease-in-out hover:scale-125"
+                                                title="Delete qualification"
+                                                disabled={deleting.qualifications === qualification.qualification_id}
+                                            >
+                                                {deleting.qualifications === qualification.qualification_id ? (
+                                                    <LoadingOutlined className="text-red-500" />
+                                                ) : (
+                                                    '×'
+                                                )}
+                                            </button>
+                                        )}
 
-                                            <span className="absolute top-2 right-10 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                                                Approved
-                                            </span>
+                                        {/* Status badge */}
+                                        <span className={`absolute top-2 ${editing ? 'right-10' : 'right-2'} text-xs px-2 py-1 rounded-full ${qualification.status === 'approved'
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-yellow-100 text-yellow-800'
+                                            }`}>
+                                            {qualification.status === 'approved' ? 'Approved' : 'Pending'}
+                                        </span>
 
-                                            <div className="space-y-3">
-                                                {/* Degree - Read-only */}
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">Degree</label>
-                                                    <p className="mt-1 p-2 bg-gray-50 rounded-lg">
-                                                        {qualification.qualification_name || "Not provided"}
-                                                    </p>
-                                                </div>
+                                        <div className="space-y-3">
+                                            {/* Degree - Read-only */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700">Degree</label>
+                                                <p className="mt-1 p-2 bg-gray-50 rounded-lg">
+                                                    {qualification.qualification_name || "Not provided"}
+                                                </p>
+                                            </div>
 
-                                                {/* Institution/Note - Editable */}
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">Institution/Note</label>
-                                                    {editing ? (
-                                                        <input
-                                                            type="text"
-                                                            value={qualification.note}
-                                                            onChange={(e) => handleQualificationChange(index, "note", e.target.value)}
-                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                                        />
-                                                    ) : (
-                                                        <p className="mt-1 p-2 bg-gray-50 rounded-lg">
-                                                            {qualification.note || "Not provided"}
-                                                        </p>
-                                                    )}
-                                                </div>
+                                            {/* Institution/Note - Read-only */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700">Institution/Note</label>
+                                                <p className="mt-1 p-2 bg-gray-50 rounded-lg">
+                                                    {qualification.note || "Not provided"}
+                                                </p>
+                                            </div>
 
-                                                {/* Year - Read-only */}
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">Year</label>
-                                                    <p className="mt-1 p-2 bg-gray-50 rounded-lg">
-                                                        {qualification.year_acquired || "Not provided"}
-                                                    </p>
-                                                </div>
+                                            {/* Year - Read-only */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700">Year</label>
+                                                <p className="mt-1 p-2 bg-gray-50 rounded-lg">
+                                                    {qualification.year_acquired || "Not provided"}
+                                                </p>
                                             </div>
                                         </div>
-                                    ))}
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </ProfileSection>

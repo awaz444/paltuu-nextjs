@@ -45,6 +45,13 @@ const Navbar = () => {
 
     type UserRole = "guest" | "regular user" | "vet" | "admin";
 
+    // Determine role first
+const userRole: UserRole =
+(user?.role as UserRole) ||
+(session?.user?.role as UserRole) ||
+"guest";
+
+
     const navbarBackground: Record<UserRole, string> = {
         guest: "#A03048",
         "regular user": "#A03048",
@@ -68,17 +75,27 @@ const Navbar = () => {
 
     // Updated dropdown items with isAction flag
     const dropdownItems = [
-        { href: "/my-profile", label: "My Profile", isAction: false },
+        {
+            href:
+                userRole === "vet"
+                    ? "/vet-panel"
+                    : userRole === "admin"
+                    ? "/admin-panel"
+                    : "/my-profile",
+            label:
+                userRole === "vet"
+                    ? "Vet Panel"
+                    : userRole === "admin"
+                    ? "Admin Panel"
+                    : "My Profile",
+            isAction: false,
+        },
         { href: "/my-listings", label: "My Listings", isAction: false },
         { href: "/my-applications", label: "My Applications", isAction: false },
         { href: "/notifications", label: "Notifications", isAction: false },
         { href: "/logout", label: "Logout", isAction: true },
     ];
-
-    const userRole: UserRole =
-        (user?.role as UserRole) ||
-        (session?.user?.role as UserRole) ||
-        "guest";
+    
 
     const navbarStyle = { backgroundColor: navbarBackground[userRole] };
 

@@ -33,6 +33,7 @@ export default function CreatePetListing() {
     const [cityId, setCityId] = useState("");
     const [area, setArea] = useState("");
     const [age, setAge] = useState(0);
+    const [months, setMonths] = useState<number | null>(null);
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
     const [minAgeOfChildren, setMinAgeOfChildren] = useState(0);
@@ -91,7 +92,7 @@ export default function CreatePetListing() {
         }
     };
 
-    // Handle form submission
+    // Handle form submissi on
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -123,6 +124,7 @@ export default function CreatePetListing() {
             city_id: cityId ? Number(cityId) : null,
             area: area || "",
             age: age || null,
+            months: age ? Math.round(age * 12) : null,
             description: description || null,
             adoption_status: "available",
             price: price ? Number(price) : null,
@@ -314,6 +316,24 @@ export default function CreatePetListing() {
                             }}
                         />
                     </div>
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Months</label>
+                        <input
+                            type="number"
+                            min="0"
+                            max="11"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
+                            placeholder="Months (0-11)"
+                            value={months ?? ""}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                const parsedMonth = value ? parseInt(value) : null;
+                                if (parsedMonth === null || (parsedMonth >= 0 && parsedMonth <= 11)) {
+                                    setMonths(parsedMonth);
+                                }
+                            }}
+                        />
+                    </div>
 
                     {/* Sex */}
                     <div className="mb-4">
@@ -493,7 +513,7 @@ export default function CreatePetListing() {
                         </label>
                     </div>
 
-                    {/* Energy Level Slider */}
+
                     {/* Energy Level */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">
@@ -576,8 +596,8 @@ export default function CreatePetListing() {
                     >
                         {isSubmitting ? "Proceeding..." : "Proceed to Upload Images"}
                     </button>
-                </form>
-            </div>
+                </form >
+            </div >
         </>
     );
 }

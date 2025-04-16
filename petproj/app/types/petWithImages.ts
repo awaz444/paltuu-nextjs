@@ -8,6 +8,7 @@ export type PetWithImages = {
     city_id: number;
     area: string;
     age: number;
+    months: number;
     description: string;
     adoption_status: string;
     price: string | null;

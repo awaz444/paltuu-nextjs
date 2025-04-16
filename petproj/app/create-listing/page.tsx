@@ -124,7 +124,7 @@ export default function CreatePetListing() {
             city_id: cityId ? Number(cityId) : null,
             area: area || "",
             age: age || null,
-            months: age ? Math.round(age * 12) : null,
+            months: months || null,
             description: description || null,
             adoption_status: "available",
             price: price ? Number(price) : null,

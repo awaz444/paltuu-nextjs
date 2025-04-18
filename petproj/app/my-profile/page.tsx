@@ -34,6 +34,7 @@ interface ProfileFieldProps {
     editable?: boolean;
     cities?: City[];
     onChange?: (name: string, value: string) => void;
+    editing?: boolean;
 }
 
 const ProfileField: React.FC<ProfileFieldProps> = ({
@@ -43,7 +44,8 @@ const ProfileField: React.FC<ProfileFieldProps> = ({
     type = "text",
     editable = true,
     cities = [],
-    onChange
+    onChange,
+    editing = false
 }) => {
     const handleChange = (newValue: string) => {
         onChange?.(name, newValue);
@@ -52,7 +54,7 @@ const ProfileField: React.FC<ProfileFieldProps> = ({
     return (
         <div className="space-y-1">
             <label className="text-sm font-medium text-gray-600">{label}</label>
-            {editable ? (
+            {editing && editable ? (
                 name === "city" ? (
                     <select
                         value={value || ""}
@@ -335,15 +337,18 @@ const MyProfile = () => {
                                 <ProfileField
                                     label="Full Name"
                                     name="name"
-                                    value={updatedData.name}
+                                    value={updatedData?.name || ""}
                                     onChange={(name, value) => handlePersonalInfoChange(name as keyof UserProfileData, value)}
+                                    editable={editing}
+                                    editing={editing}
                                 />
                                 <ProfileField
                                     label="Email Address"
                                     name="email"
                                     type="email"
-                                    value={updatedData.email}
+                                    value={updatedData?.email || ""}
                                     editable={false}
+                                    editing={editing}
                                 />
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium text-gray-600">Phone Number</label>
@@ -357,7 +362,7 @@ const MyProfile = () => {
                                             />
                                             <input
                                                 type="text"
-                                                value={updatedData.phone_number}
+                                                value={updatedData?.phone_number || ""}
                                                 onChange={(e) => handlePersonalInfoChange('phone_number', e.target.value)}
                                                 placeholder="3338888666"
                                                 className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
@@ -365,7 +370,7 @@ const MyProfile = () => {
                                         </div>
                                     ) : (
                                         <p className="p-2 bg-gray-50 rounded-lg">
-                                            +92{updatedData.phone_number}
+                                            +92{updatedData?.phone_number}
                                         </p>
                                     )}
                                 </div>
@@ -373,15 +378,19 @@ const MyProfile = () => {
                                     label="Date of Birth"
                                     name="dob"
                                     type="date"
-                                    value={updatedData.dob}
+                                    value={updatedData?.dob || ""}
                                     onChange={(name, value) => handlePersonalInfoChange(name as keyof UserProfileData, value)}
+                                    editable={editing}
+                                    editing={editing}
                                 />
                                 <ProfileField
                                     label="City"
                                     name="city"
-                                    value={updatedData.city}
+                                    value={updatedData?.city || ""}
                                     cities={cities}
                                     onChange={(name, value) => handlePersonalInfoChange(name as keyof UserProfileData, value)}
+                                    editable={editing}
+                                    editing={editing}
                                 />
                             </div>
 

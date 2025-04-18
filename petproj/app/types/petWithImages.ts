@@ -31,6 +31,7 @@ export type PetWithImages = {
     profile_image_url: string | null;
     image_id: number | null;
     image_url: string | null;
-    
+    foster_start_date?: string; // Added property
+    foster_end_date?: string;   // Added property
     additional_images: string[]; // Array of image URLs, can be between 0 to 5 images
 };

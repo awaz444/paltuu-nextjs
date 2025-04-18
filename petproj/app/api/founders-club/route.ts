@@ -63,3 +63,55 @@ export async function POST(request: NextRequest) {
         await client.end();
     }
 }
+
+export async function GET(req: NextRequest): Promise<NextResponse> {
+    const userId = req.nextUrl.searchParams.get("user_id");
+
+    if (!userId) {
+        return NextResponse.json(
+            { success: false, error: "Missing user_id" },
+            { status: 400 }
+        );
+    }
+
+    const client = createClient();
+
+    try {
+        await client.connect();
+
+        const query = `
+            SELECT founding_club FROM users
+            WHERE user_id = $1
+            LIMIT 1;
+        `;
+
+        const result = await client.query(query, [userId]);
+
+        if (result.rowCount === 0) {
+            return NextResponse.json(
+                { success: false, error: "User not found" },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json(
+            {
+                success: true,
+                isFoundersClub: result.rows[0].founding_club === true,
+            },
+            { status: 200 }
+        );
+    } catch (err) {
+        console.error("Founders Club check error:", err);
+        return NextResponse.json(
+            {
+                success: false,
+                error: "Internal server error",
+                message: (err as Error).message,
+            },
+            { status: 500 }
+        );
+    } finally {
+        await client.end();
+    }
+}

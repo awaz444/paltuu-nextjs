@@ -126,14 +126,36 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
         window.open(whatsappUrl, "_blank");
     };
 
-    const handleAdoptClick = () => {
+    const handleAdoptClick = async () => {
         if (pet.adoption_status !== 'available') return;
 
         if (!userId) {
             setShowLoginModal(true);
             return;
         }
-        setIsModalVisible(true);
+
+        try {
+            const res = await fetch(`/api/my-profile/${userId}`);
+            if (!res.ok) throw new Error('Failed to fetch profile');
+
+            const profileData = await res.json();
+
+            if (!profileData.phone_number || !profileData.city) {
+                message.warning({
+                    content: 'Please complete your profile by adding your phone number and city before applying for adoption.',
+                    duration: 5,
+                });
+                setTimeout(() => {
+                    window.location.href = '/my-profile';
+                }, 2000);
+                return;
+            }
+
+            setIsModalVisible(true);
+        } catch (error) {
+            console.error('Error checking profile:', error);
+            message.error('Failed to verify profile information');
+        }
     };
 
     const handleContactClick = () => {
@@ -141,11 +163,34 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
         setIsModalOpen(true);
     };
 
-    const handleLoginSuccess = () => {
+    const handleLoginSuccess = async () => {
         const userString = localStorage.getItem("user");
         if (userString) {
             const user = JSON.parse(userString);
             setUserId(user.id);
+
+            try {
+                // Check user profile completion after login
+                const res = await fetch(`/api/my-profile/${user.id}`);
+                if (!res.ok) throw new Error('Failed to fetch profile');
+
+                const profileData = await res.json();
+
+                // If phone number or city is missing, redirect to profile
+                if (!profileData.phone_number || !profileData.city) {
+                    message.warning({
+                        content: 'Please complete your profile by adding your phone number and city before applying for adoption.',
+                        duration: 5,
+                    });
+                    setTimeout(() => {
+                        window.location.href = '/my-profile';
+                    }, 2000);
+                    return;
+                }
+            } catch (error) {
+                console.error('Error checking profile:', error);
+                message.error('Failed to verify profile information');
+            }
         }
         setShowLoginModal(false);
     };

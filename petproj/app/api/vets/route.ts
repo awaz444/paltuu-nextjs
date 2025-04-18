@@ -1,3 +1,5 @@
+export const revalidate = 0;
+
 // pages/api/vets/route.ts
 import { createClient } from "../../../db/index";
 import { NextRequest, NextResponse } from "next/server";

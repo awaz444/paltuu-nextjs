@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import React, { useState, useEffect } from "react";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
@@ -31,9 +31,11 @@ import {
 } from "@ant-design/icons";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
-import './styles.css'
+import "./styles.css";
 
-const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) => {
+const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
+    params,
+}) => {
     const { pet_id } = params;
     const [pet, setPet] = useState<PetWithImages | null>(null);
     const [carouselImages, setCarouselImages] = useState<string[]>([]);
@@ -44,6 +46,15 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
     const [showLoginModal, setShowLoginModal] = useState(false);
 
     useSetPrimaryColor();
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        });
+    };
 
     useEffect(() => {
         const userString = localStorage.getItem("user");
@@ -65,6 +76,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
 
                 const petData = await res.json();
                 setPet(petData);
+                console.log(petData);
 
                 const images = [
                     petData.profile_image_url,
@@ -96,7 +108,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
     };
 
     const handleAdoptClick = () => {
-        if (pet?.adoption_status !== 'available') return;
+        if (pet?.adoption_status !== "available") return;
 
         if (!userId) {
             setShowLoginModal(true);
@@ -106,7 +118,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
     };
 
     const handleContactClick = () => {
-        if (pet?.adoption_status !== 'available') return;
+        if (pet?.adoption_status !== "available") return;
         setIsModalOpen(true);
     };
 
@@ -164,13 +176,16 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                 visible={IsModalOpen}
                 onCancel={() => setIsModalOpen(false)}
                 footer={null}
-                className="rounded-lg"
-            >
+                className="rounded-lg">
                 <div className="space-y-4">
                     <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                         <div>
-                            <p className="font-medium text-gray-700">{pet.phone_number}</p>
-                            <p className="text-sm text-gray-500">Phone Number</p>
+                            <p className="font-medium text-gray-700">
+                                {pet.phone_number}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                                Phone Number
+                            </p>
                         </div>
                         <Button
                             icon={<CopyOutlined className="text-primary" />}
@@ -182,8 +197,12 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
 
                     <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                         <div>
-                            <p className="font-medium text-gray-700">{pet.email}</p>
-                            <p className="text-sm text-gray-500">Email Address</p>
+                            <p className="font-medium text-gray-700">
+                                {pet.email}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                                Email Address
+                            </p>
                         </div>
                         <Button
                             icon={<CopyOutlined className="text-primary" />}
@@ -198,8 +217,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                         block
                         icon={<WhatsAppOutlined />}
                         className="bg-green-500 hover:bg-green-600 text-white h-12 rounded-lg flex items-center justify-center"
-                        onClick={() => handleWhatsApp(pet.phone_number)}
-                    >
+                        onClick={() => handleWhatsApp(pet.phone_number)}>
                         Message via WhatsApp
                     </Button>
                 </div>
@@ -215,12 +233,15 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                 <Carousel
                                     autoplay
                                     dots={{ className: "custom-dots" }}
-                                    className="rounded-xl overflow-hidden"
-                                >
+                                    className="rounded-xl overflow-hidden">
                                     {carouselImages.map((image) => (
-                                        <div key={image} className="aspect-square">
+                                        <div
+                                            key={image}
+                                            className="aspect-square">
                                             <img
-                                                src={image || "/placeholder.jpg"}
+                                                src={
+                                                    image || "/placeholder.jpg"
+                                                }
                                                 alt={`${pet.pet_name}-image`}
                                                 className="w-full h-full object-cover"
                                             />
@@ -242,22 +263,30 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                                 version="1.1"
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 viewBox="0 0 63.445 63.445"
-                                                className="w-5 h-5"
-                                            >
+                                                className="w-5 h-5">
                                                 {/* SVG paths */}
                                             </svg>
                                             <span>{pet.pet_breed}</span>
                                             <span>•</span>
-                                            <span>{pet.age} {pet.age > 1 ? "years" : "year"} old</span>
+                                            <span>
+                                                {pet.age}{" "}
+                                                {pet.age > 1 ? "years" : "year"}{" "}
+                                                old
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <Tag
-                                    color={pet.adoption_status === "available" ? "green" : "red"}
-                                    className="rounded-full px-4 py-1 text-base"
-                                >
-                                    {pet.adoption_status === "available" ? "Available" : "Fostered"}
+                                    color={
+                                        pet.adoption_status === "available"
+                                            ? "green"
+                                            : "red"
+                                    }
+                                    className="rounded-full px-4 py-1 text-base">
+                                    {pet.adoption_status === "available"
+                                        ? "Available"
+                                        : "Fostered"}
                                 </Tag>
 
                                 <div className="bg-gray-50 p-6 rounded-xl">
@@ -283,7 +312,13 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                         </h3>
                                         <p className="text-xl font-bold text-gray-800">
                                             {pet.price
-                                                ? `PKR ${pet.price}${pet.payment_frequency ? ` per ${pet.payment_frequency}` : ""}`
+                                                ? `PKR ${parseFloat(
+                                                      pet.price
+                                                  ).toFixed(0)}${
+                                                      pet.payment_frequency
+                                                          ? ` per ${pet.payment_frequency}`
+                                                          : ""
+                                                  }`
                                                 : "None"}
                                         </p>
                                     </div>
@@ -303,11 +338,12 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                     size="large"
                                     className="button-one h-14 text-lg bg-primary font-semibold rounded-xl hover:bg-primary"
                                     onClick={handleAdoptClick}
-                                    disabled={pet.adoption_status !== 'available'}
-                                >
-                                    {pet.adoption_status === 'available' 
-                                        ? userId  
-                                            ? "Apply for Fostering" 
+                                    disabled={
+                                        pet.adoption_status !== "available"
+                                    }>
+                                    {pet.adoption_status === "available"
+                                        ? userId
+                                            ? "Apply for Fostering"
                                             : "Login to Apply"
                                         : "Already Fostered"}
                                 </Button>
@@ -317,10 +353,11 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                     size="large"
                                     className="button-two h-14 text-lg font-semibold rounded-xl border-primary text-primary"
                                     onClick={handleContactClick}
-                                    disabled={pet.adoption_status !== 'available'}
-                                >
-                                    {pet.adoption_status === 'available' 
-                                        ? "Contact Owner" 
+                                    disabled={
+                                        pet.adoption_status !== "available"
+                                    }>
+                                    {pet.adoption_status === "available"
+                                        ? "Contact Owner"
                                         : "Not Available"}
                                 </Button>
                             </div>
@@ -329,22 +366,75 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                         <Divider className="my-8" />
 
                         {/* Detailed Information Sections */}
+                        {/* Detailed Information Sections */}
                         <div className="grid md:grid-cols-2 gap-8">
                             <div className="space-y-6">
-                                <Section title="About" icon={<InfoCircleOutlined />}>
+                                <Section
+                                    title="About"
+                                    icon={<InfoCircleOutlined />}>
                                     <p className="text-gray-600 leading-relaxed">
-                                        {pet.description || "No description provided."}
+                                        {pet.description ||
+                                            "No description provided."}
                                     </p>
                                 </Section>
 
-                                <Section title="Health & Care" icon={<MedicineBoxOutlined />}>
-                                    <InfoRow label="Vaccinated" value={pet.vaccinated ? "Yes" : "No"} />
-                                    <InfoRow label="Neutered" value={pet.neutered ? "Yes" : "No"} />
-                                    <InfoRow label="Health Issues" value={pet.health_issues || "None"} />
+                                <Section
+                                    title="Health & Care"
+                                    icon={<MedicineBoxOutlined />}>
+                                    <InfoRow
+                                        label="Vaccinated"
+                                        value={pet.vaccinated ? "Yes" : "No"}
+                                    />
+                                    <InfoRow
+                                        label="Neutered"
+                                        value={pet.neutered ? "Yes" : "No"}
+                                    />
+                                    <InfoRow
+                                        label="Health Issues"
+                                        value={pet.health_issues || "None"}
+                                    />
                                 </Section>
                             </div>
 
                             <div className="space-y-6">
+                                {/* Move Foster Period here, right before Behavior */}
+                                {pet.foster_start_date &&
+                                    pet.foster_end_date && (
+                                        <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-xl">
+                                            <div className="flex items-center gap-4">
+                                                <div className="bg-yellow-500 text-white p-3 rounded-lg">
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        className="h-6 w-6"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor">
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                        />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-sm font-semibold text-yellow-700 mb-1">
+                                                        Foster Period
+                                                    </h3>
+                                                    <p className="text-lg font-semibold text-yellow-900">
+                                                        {formatDate(
+                                                            pet.foster_start_date
+                                                        )}{" "}
+                                                        -{" "}
+                                                        {formatDate(
+                                                            pet.foster_end_date
+                                                        )}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                 <Section title="Behavior">
                                     {/* Energy Level */}
                                     <div className="mb-4">
@@ -360,7 +450,13 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                                 disabled
                                                 className="mt-2 w-full appearance-none h-2 rounded-lg bg-gray-300"
                                                 style={{
-                                                    background: `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${(pet.energy_level - 1) * 25}%, #D1D5DB ${(pet.energy_level - 1) * 25}%, #D1D5DB 100%)`
+                                                    background: `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
+                                                        (pet.energy_level - 1) *
+                                                        25
+                                                    }%, #D1D5DB ${
+                                                        (pet.energy_level - 1) *
+                                                        25
+                                                    }%, #D1D5DB 100%)`,
                                                 }}
                                             />
                                             <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
@@ -384,7 +480,15 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                                 disabled
                                                 className="mt-2 w-full appearance-none h-2 rounded-lg bg-gray-300"
                                                 style={{
-                                                    background: `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${(pet.cuddliness_level - 1) * 25}%, #D1D5DB ${(pet.cuddliness_level - 1) * 25}%, #D1D5DB 100%)`
+                                                    background: `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
+                                                        (pet.cuddliness_level -
+                                                            1) *
+                                                        25
+                                                    }%, #D1D5DB ${
+                                                        (pet.cuddliness_level -
+                                                            1) *
+                                                        25
+                                                    }%, #D1D5DB 100%)`,
                                                 }}
                                             />
                                             <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
@@ -394,10 +498,32 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                         </div>
                                     </div>
                                 </Section>
+
                                 <Section title="Living Preferences">
-                                    <InfoRow label="Good with Dogs" value={pet.can_live_with_dogs ? "Yes" : "No"} />
-                                    <InfoRow label="Good with Cats" value={pet.can_live_with_cats ? "Yes" : "No"} />
-                                    <InfoRow label="Requires Companion at all times" value={pet.must_have_someone_home ? "Yes" : "No"} />
+                                    <InfoRow
+                                        label="Good with Dogs"
+                                        value={
+                                            pet.can_live_with_dogs
+                                                ? "Yes"
+                                                : "No"
+                                        }
+                                    />
+                                    <InfoRow
+                                        label="Good with Cats"
+                                        value={
+                                            pet.can_live_with_cats
+                                                ? "Yes"
+                                                : "No"
+                                        }
+                                    />
+                                    <InfoRow
+                                        label="Requires Companion at all times"
+                                        value={
+                                            pet.must_have_someone_home
+                                                ? "Yes"
+                                                : "No"
+                                        }
+                                    />
                                 </Section>
                             </div>
                         </div>
@@ -416,17 +542,27 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
     );
 };
 
-const Section: React.FC<{ title: string; icon?: React.ReactNode; children?: React.ReactNode }> = ({ title, icon, children }) => (
+const Section: React.FC<{
+    title: string;
+    icon?: React.ReactNode;
+    children?: React.ReactNode;
+}> = ({ title, icon, children }) => (
     <div className="space-y-4">
         <div className="flex items-center gap-2 mb-2">
-            {icon && React.cloneElement(icon as React.ReactElement, { className: "text-primary text-lg" })}
+            {icon &&
+                React.cloneElement(icon as React.ReactElement, {
+                    className: "text-primary text-lg",
+                })}
             <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
         </div>
         {children}
     </div>
 );
 
-const InfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
+const InfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({
+    label,
+    value,
+}) => (
     <div className="flex justify-between items-center py-2 border-b border-gray-100">
         <span className="text-gray-600">{label}</span>
         <span className="text-gray-800 font-medium">{value}</span>

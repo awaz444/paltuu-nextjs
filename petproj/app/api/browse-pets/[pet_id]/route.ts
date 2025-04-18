@@ -29,6 +29,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             pets.area, 
             pets.age, 
             pets.months,
+            pets.foster_start_date,
+            pets.foster_end_date, 
             pets.description, 
             pets.adoption_status, 
             pets.price, 

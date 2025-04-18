@@ -28,20 +28,17 @@ const HeroSection = () => {
             {/* Header */}
 
             <header className="bg-primary text-primary py-4 px-4 md:py-10 md:px-6 lg:px-20 flex items-center justify-between rounded-b-[1rem] rounded-t-none shadow-lg">
-                <div className="logo">
+                {" "}
+                {/* Added shadow-lg */}
+                <div className="logo mx-auto">
                     <Image
                         src="/paltu_logo.svg"
                         alt="Logo"
                         width={250}
                         height={250}
-                        className="w-32 md:w-48 lg:w-64"
+                        className="w-42 md:w-48 lg:w-64"
                     />
                 </div>
-                <a
-                    href="/login"
-                    className="bg-white text-primary px-6 py-2 rounded-full font-semibold hover:bg-gray-100 transition-colors">
-                    Login
-                </a>
             </header>
 
             {/* Section - tight spacing on mobile */}
@@ -139,7 +136,7 @@ const HeroSection = () => {
 
                             {/* Heading with primary_icon.svg */}
                             <h4 className="text-xl md:text-2xl font-semibold text-primary mb-6 flex justify-center items-center gap-3 relative z-10">
-                                Why choose Paltuu?
+                            Become a Founding Member
                             </h4>
 
                             {/* Perks List */}
@@ -149,42 +146,44 @@ const HeroSection = () => {
                                         icon={faPaw}
                                         className="text-primary mt-1"
                                     />
-                                    Largest network of adoptable pets
+                                    Early access to exclusive pet listings
                                 </li>
                                 <li className="flex items-start gap-3">
                                     <FontAwesomeIcon
                                         icon={faUsers}
                                         className="text-primary mt-1"
                                     />
-                                    Verified shelters & breeders
+                                    Priority invites to pet events & adoption
+                                    drives
                                 </li>
                                 <li className="flex items-start gap-3">
                                     <FontAwesomeIcon
                                         icon={faStar}
                                         className="text-primary mt-1"
                                     />
-                                    24/7 veterinary support
+                                    Founders badge on your profile
                                 </li>
                                 <li className="flex items-start gap-3">
                                     <FontAwesomeIcon
-                                        icon={faMapMarkerAlt}
+                                        icon={faGift}
                                         className="text-primary mt-1"
                                     />
-                                    Location-based services
+                                    Surprise merch & pet goodies
                                 </li>
                             </ul>
 
                             <a
                                 href="/sign-up"
-                                className="inline-flex items-center justify-center gap-2 bg-primary text-white font-bold px-6 py-3 md:px-10 md:py-4 rounded-full text-sm md:text-lg shadow-lg hover:scale-105 transition-transform duration-300 relative z-10 whitespace-nowrap">
-                                <Image
+                                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#FFD700] via-[#c95f68] to-[#a03048] text-white font-bold px-6 py-3 md:px-10 md:py-4 rounded-full text-sm md:text-lg shadow-lg hover:scale-105 transition-transform duration-300 relative z-10 whitespace-nowrap">                                <Image
                                     src="/white_icon.svg"
                                     alt="Icon"
                                     width={16}
                                     height={16}
                                     className="w-4 h-4 md:w-5 md:h-5"
                                 />
-                                <span className="truncate">Go To Paltuu</span>
+                                                              <span className="truncate">
+                                     Join Founders Club
+                                 </span>
                             </a>
                         </div>
                     </div>

@@ -27,16 +27,20 @@ export default function RootLayout({
         <html lang="en">
             <head>
                 <link rel="icon" href="/favicon-light.png" id="favicon" />
+
+                {/* ✅ Google AdSense Script */}
+                <script
+                    async
+                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1403927121021328"
+                    crossOrigin="anonymous"
+                ></script>
             </head>
             <body className={montserrat.className}>
                 <AppClientWrapper>
-                    {" "}
-                    {/* Navbar is a Client Component */}
                     <ClientProvider>
                         {children}
                         <Analytics />
-                    </ClientProvider>{" "}
-                    {/* ClientProvider wraps client-side Redux */}
+                    </ClientProvider>
                 </AppClientWrapper>
                 <Footer />
                 <Toaster />

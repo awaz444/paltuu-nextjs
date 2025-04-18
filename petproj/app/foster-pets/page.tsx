@@ -39,6 +39,7 @@ interface Pet {
     profile_image_url: string | null;
     image_id: number | null;
     image_url: string | null;
+    months: number; // Add the missing 'months' property
 }
 
 export default function FosterPets() {

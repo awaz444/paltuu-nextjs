@@ -1,3 +1,5 @@
+export const revalidate = 0; 
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../db/index";
 
@@ -34,7 +36,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     } catch (err) {
         console.error(err);
 
-        // It's important to return a more specific error response
         return NextResponse.json(
             { 
                 error: "Internal Server Error", 
@@ -46,6 +47,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             }
         );
     } finally {
-        await client.end(); // Ensure the client connection is properly closed
+        await client.end();
     }
 }

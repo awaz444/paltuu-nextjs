@@ -1,3 +1,5 @@
+export const revalidate = 0;
+
 import { createClient } from '../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
 import Mailjet from "node-mailjet";

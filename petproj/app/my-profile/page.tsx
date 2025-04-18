@@ -26,6 +26,67 @@ interface City {
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
+interface ProfileFieldProps {
+    label: string;
+    name: string;
+    value: string;
+    type?: string;
+    editable?: boolean;
+    cities?: City[];
+    onChange?: (name: string, value: string) => void;
+}
+
+const ProfileField: React.FC<ProfileFieldProps> = ({
+    label,
+    name,
+    value,
+    type = "text",
+    editable = true,
+    cities = [],
+    onChange
+}) => {
+    const handleChange = (newValue: string) => {
+        onChange?.(name, newValue);
+    };
+
+    return (
+        <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-600">{label}</label>
+            {editable ? (
+                name === "city" ? (
+                    <select
+                        value={value || ""}
+                        onChange={(e) => handleChange(e.target.value)}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    >
+                        <option value="">Select City</option>
+                        {cities.map(city => (
+                            <option key={city.city_id} value={city.city_name}>
+                                {city.city_name}
+                            </option>
+                        ))}
+                    </select>
+                ) : (
+                    <input
+                        type={type}
+                        value={value || ""}
+                        onChange={(e) => handleChange(e.target.value)}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        disabled={!editable}
+                    />
+                )
+            ) : (
+                <p className="p-2 bg-gray-50 rounded-lg">
+                    {name === "city"
+                        ? cities.find(city => city.city_name === value)?.city_name || value || "Not provided"
+                        : value || "Not provided"
+                    }
+                </p>
+            )}
+        </div>
+    );
+};
+
 const MyProfile = () => {
     useSetPrimaryColor();
     const [userId, setUserId] = useState<string | null>(null);
@@ -37,6 +98,13 @@ const MyProfile = () => {
     const [passwordModalVisible, setPasswordModalVisible] = useState(false);
     const [passwordForm] = Form.useForm();
     const [cities, setCities] = useState<City[]>([]);
+
+    const handlePersonalInfoChange = (field: keyof UserProfileData, value: string) => {
+        setUpdatedData(prev => prev ? {
+            ...prev,
+            [field]: value
+        } : null);
+    };
 
     const handlePasswordChange = async (values: {
         currentPassword: string;
@@ -134,11 +202,6 @@ const MyProfile = () => {
         }
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setUpdatedData((prev) => prev ? { ...prev, [name]: value } : null);
-    };
-
     const handleSaveChanges = async () => {
         if (!userId || !updatedData) return;
 
@@ -172,52 +235,6 @@ const MyProfile = () => {
         setUpdatedData(data);
         setEditing(false);
     };
-
-    const ProfileField = ({ label, value, name, type = "text", editable = true, cities = [] }: {
-        label: string;
-        value: string;
-        name: string;
-        type?: string;
-        editable?: boolean;
-        cities?: City[];
-    }) => (
-        <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-600">{label}</label>
-            {editing && editable ? (
-                name === "city" ? (
-                    <select
-                        name={name}
-                        value={value || ""}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    >
-                        <option value="">Select City</option>
-                        {cities.map(city => (
-                            <option key={city.city_id} value={city.city_name}>
-                                {city.city_name}
-                            </option>
-                        ))}
-                    </select>
-                ) : (
-                    <input
-                        type={type}
-                        name={name}
-                        value={value || ""}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        disabled={!editable}
-                    />
-                )
-            ) : (
-                <p className="p-2 bg-gray-50 rounded-lg">
-                    {name === "city"
-                        ? cities.find(city => city.city_name === value)?.city_name || value || "Not provided"
-                        : value || "Not provided"
-                    }
-                </p>
-            )}
-        </div>
-    );
 
     if (loading) {
         return (
@@ -319,6 +336,7 @@ const MyProfile = () => {
                                     label="Full Name"
                                     name="name"
                                     value={updatedData.name}
+                                    onChange={(name, value) => handlePersonalInfoChange(name as keyof UserProfileData, value)}
                                 />
                                 <ProfileField
                                     label="Email Address"
@@ -339,9 +357,8 @@ const MyProfile = () => {
                                             />
                                             <input
                                                 type="text"
-                                                name="phone_number"
                                                 value={updatedData.phone_number}
-                                                onChange={handleInputChange}
+                                                onChange={(e) => handlePersonalInfoChange('phone_number', e.target.value)}
                                                 placeholder="3338888666"
                                                 className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                                             />
@@ -357,12 +374,14 @@ const MyProfile = () => {
                                     name="dob"
                                     type="date"
                                     value={updatedData.dob}
+                                    onChange={(name, value) => handlePersonalInfoChange(name as keyof UserProfileData, value)}
                                 />
                                 <ProfileField
                                     label="City"
                                     name="city"
                                     value={updatedData.city}
                                     cities={cities}
+                                    onChange={(name, value) => handlePersonalInfoChange(name as keyof UserProfileData, value)}
                                 />
                             </div>
 
@@ -373,7 +392,7 @@ const MyProfile = () => {
                                     onClick={() => setPasswordModalVisible(true)}
                                     className="px-4 py-2 bg-primary text-white rounded-lg transition-all"
                                 >
-                                    <LockOutlined /> {/* Add the LockOutlined icon here */}
+                                    <LockOutlined />
                                     Change Password
                                 </button>
                             </div>

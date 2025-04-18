@@ -13,8 +13,10 @@ const Navbar = () => {
     const [activeLink, setActiveLink] = useState("");
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [showFoundersTooltip, setShowFoundersTooltip] = useState(false);
     let hideTimeout: ReturnType<typeof setTimeout>;
     const [isVerified, setIsVerified] = useState<boolean | null>(null);
+    const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
 
     const handleMouseEnter = () => {
         clearTimeout(hideTimeout); // Cancel the hide timeout
@@ -37,20 +39,19 @@ const Navbar = () => {
         try {
             await apiLogout(); // Use the AuthContext logout
         } catch (error) {
-            console.error('Logout error:', error);
+            console.error("Logout error:", error);
             // Force redirect as fallback
-            window.location.href = '/login';
+            window.location.href = "/login";
         }
     };
 
     type UserRole = "guest" | "regular user" | "vet" | "admin";
 
     // Determine role first
-const userRole: UserRole =
-(user?.role as UserRole) ||
-(session?.user?.role as UserRole) ||
-"guest";
-
+    const userRole: UserRole =
+        (user?.role as UserRole) ||
+        (session?.user?.role as UserRole) ||
+        "guest";
 
     const navbarBackground: Record<UserRole, string> = {
         guest: "#A03048",
@@ -95,7 +96,6 @@ const userRole: UserRole =
         { href: "/notifications", label: "Notifications", isAction: false },
         { href: "/logout", label: "Logout", isAction: true },
     ];
-    
 
     const navbarStyle = { backgroundColor: navbarBackground[userRole] };
 
@@ -128,13 +128,18 @@ const userRole: UserRole =
             if (userRole === "vet" && user?.id) {
                 console.log(user.id);
                 try {
-                    const response = await fetch(`/api/is-verified-by-user-id/${user.id}`);
+                    const response = await fetch(
+                        `/api/is-verified-by-user-id/${user.id}`
+                    );
                     const data = await response.json();
                     console.log("gagea", data);
                     setIsVerified(data.profile_verified); // assuming the response contains an 'isVerified' boolean
-                    console.log("Verified", data.profile_verified)
+                    console.log("Verified", data.profile_verified);
                 } catch (error) {
-                    console.error("Failed to fetch verification status:", error);
+                    console.error(
+                        "Failed to fetch verification status:",
+                        error
+                    );
                 }
             }
         };
@@ -143,25 +148,43 @@ const userRole: UserRole =
     }, [userRole, user?.id]);
 
     useEffect(() => {
+        const checkFoundersClub = async () => {
+            if (user?.id) {
+                try {
+                    const res = await fetch(
+                        `/api/founders-club/?user_id=${user.id}`
+                    );
+                    const data = await res.json();
+                    setIsFoundersClub(data.isFoundersClub); // assuming response is { isFoundersClub: true }
+                } catch (error) {
+                    console.error("Error checking Founders Club:", error);
+                }
+            }
+        };
+
+        checkFoundersClub();
+    }, [user?.id]);
+
+    useEffect(() => {
         const currentPath = window.location.pathname.split("/")[1];
         setActiveLink(currentPath);
     }, []);
 
-    const dropdownWidth = `${Math.max(
-        displayName.length,
-        ...dropdownItems.map((item) => item.label.length)
-    ) *
-        10 +
+    const dropdownWidth = `${
+        Math.max(
+            displayName.length,
+            ...dropdownItems.map((item) => item.label.length)
+        ) *
+            10 +
         50
-        }px`;
+    }px`;
 
     return (
         <nav className="navbar" style={navbarStyle}>
             {/* Hamburger Menu Button (Mobile Only) */}
             <button
                 className="hamburger md:hidden"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
+                onClick={() => setIsMenuOpen(!isMenuOpen)}>
                 <div className="hamburger-line" />
                 <div className="hamburger-line" />
                 <div className="hamburger-line" />
@@ -170,19 +193,19 @@ const userRole: UserRole =
             {/* Mobile Menu */}
             <div
                 className={`mobile-menu ${isMenuOpen ? "open" : ""} md:hidden`}
-                style={{ backgroundColor: navbarBackground[userRole] }}
-            >
+                style={{ backgroundColor: navbarBackground[userRole] }}>
                 {/* Navigation Links */}
                 <div className="navLinks-mobile">
                     {links.map((link) => (
                         <Link key={link.href} href={`/${link.href}`}>
                             <span
-                                className={`mobile-link ${activeLink === link.href ? "active" : ""}`}
+                                className={`mobile-link ${
+                                    activeLink === link.href ? "active" : ""
+                                }`}
                                 onClick={() => {
                                     setActiveLink(link.href);
                                     setIsMenuOpen(false);
-                                }}
-                            >
+                                }}>
                                 {link.name}
                             </span>
                         </Link>
@@ -194,11 +217,57 @@ const userRole: UserRole =
                     {isAuthenticated || session ? (
                         <button
                             className="loginBtn-mobile flex flex-row gap-2"
-                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        >
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
                             {displayName}
                             {isVerified && (
                                 <i className="bi bi-patch-check-fill text-[#cc8800] mr-2" />
+                            )}
+                            {isFoundersClub && (
+                                <div className="relative">
+                                    {/* Mobile View - White Icon */}
+                                    <div
+                                        className="relative md:hidden"
+                                        onMouseEnter={() => setShowFoundersTooltip(true)}
+                                        onMouseLeave={() => setShowFoundersTooltip(false)}>
+                                        <Image
+                                            src="/white_icon.svg"
+                                            alt="Founders Club"
+                                            width={20}
+                                            height={20}
+                                            className="ml-1"
+                                        />
+                                        {showFoundersTooltip && (
+                                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap">
+                                                <div className="flex items-center gap-1">
+                                                    <span>✨ Founders Club Member ✨</span>
+                                                </div>
+                                                <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 w-2 h-2 rotate-45 bg-amber-400"></div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Desktop View - Primary Icon */}
+                                    <div
+                                        className="relative hidden md:inline"
+                                        onMouseEnter={() => setShowFoundersTooltip(true)}
+                                        onMouseLeave={() => setShowFoundersTooltip(false)}>
+                                        <Image
+                                            src="/primary_icon.svg"
+                                            alt="Founders Club"
+                                            width={20}
+                                            height={20}
+                                            className="ml-1"
+                                        />
+                                        {showFoundersTooltip && (
+                                            <div className="absolute bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap">
+                                                <div className="flex items-center gap-1">
+                                                    <span>✨ Founders Club Member ✨</span>
+                                                </div>
+                                                <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 w-2 h-2 rotate-45 bg-amber-400"></div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             )}
                             <Image
                                 src="/arrow-down.svg"
@@ -217,7 +286,7 @@ const userRole: UserRole =
                     {/* Dropdown Menu (Mobile) - Updated to handle logout action */}
                     {isDropdownOpen && (
                         <div className="dropdown-menu-mobile">
-                            {dropdownItems.map((item) => (
+                            {dropdownItems.map((item) =>
                                 item.isAction ? (
                                     <div
                                         key={item.href}
@@ -225,21 +294,21 @@ const userRole: UserRole =
                                         onClick={() => {
                                             setIsMenuOpen(false);
                                             handleLogout();
-                                        }}
-                                    >
+                                        }}>
                                         {item.label}
                                     </div>
                                 ) : (
                                     <Link key={item.href} href={item.href}>
                                         <div
                                             className="dropdown-item-mobile"
-                                            onClick={() => setIsMenuOpen(false)}
-                                        >
+                                            onClick={() =>
+                                                setIsMenuOpen(false)
+                                            }>
                                             {item.label}
                                         </div>
                                     </Link>
                                 )
-                            ))}
+                            )}
                         </div>
                     )}
                 </div>
@@ -248,7 +317,12 @@ const userRole: UserRole =
                 {/* Logo */}
                 <div className="logo">
                     <Link href="/browse-pets">
-                        <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
+                        <Image
+                            src="/paltu_logo.svg"
+                            alt="Logo"
+                            width={200}
+                            height={80}
+                        />
                     </Link>
                 </div>
 
@@ -257,10 +331,11 @@ const userRole: UserRole =
                     {links.map((link) => (
                         <Link key={link.href} href={`/${link.href}`}>
                             <span
-                                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${activeLink === link.href
-                                    ? "after:w-full"
-                                    : "after:w-0"
-                                    }`}
+                                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${
+                                    activeLink === link.href
+                                        ? "after:w-full"
+                                        : "after:w-0"
+                                }`}
                                 style={{ cursor: "pointer" }}
                                 onClick={() => setActiveLink(link.href)}>
                                 {link.name}
@@ -269,17 +344,73 @@ const userRole: UserRole =
                     ))}
                 </div>
 
-                <div className="dropdown relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+                <div
+                    className="dropdown relative"
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}>
                     {isAuthenticated || session ? (
                         <button
                             className="flex items-center justify-center gap-2 loginBtn"
                             style={{
                                 minWidth: dropdownWidth, // Set button width dynamically
-                            }}
-                        >
+                            }}>
                             {displayName}
-                            {isVerified && <i className="bi bi-patch-check-fill text-[#cc8800] mr-2" />}
-                            <Image src="/arrow-down.svg" alt="Dropdown" width={12} height={12} />
+                            {isVerified && (
+                                <i className="bi bi-patch-check-fill text-[#cc8800] mr-2" />
+                            )}
+                            {isFoundersClub && (
+                                <div className="relative">
+                                    {/* Mobile view - white icon */}
+                                    <div
+                                        className="relative md:hidden"
+                                        onMouseEnter={() => setShowFoundersTooltip(true)}
+                                        onMouseLeave={() => setShowFoundersTooltip(false)}>
+                                        <Image
+                                            src="/white_icon.svg"
+                                            alt="Founders Club"
+                                            width={20}
+                                            height={20}
+                                            className="ml-1"
+                                        />
+                                        {showFoundersTooltip && (
+                                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap">
+                                                <div className="flex items-center gap-1">
+                                                    <span>✨ Founders Club Member ✨</span>
+                                                </div>
+                                                <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 w-2 h-2 rotate-45 bg-amber-400"></div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Desktop view - primary icon */}
+                                    <div
+                                        className="relative hidden md:inline"
+                                        onMouseEnter={() => setShowFoundersTooltip(true)}
+                                        onMouseLeave={() => setShowFoundersTooltip(false)}>
+                                        <Image
+                                            src="/primary_icon.svg"
+                                            alt="Founders Club"
+                                            width={20}
+                                            height={20}
+                                            className="ml-1"
+                                        />
+                                        {showFoundersTooltip && (
+                                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap">
+                                                <div className="flex items-center gap-1">
+                                                    <span>✨ Founders Club Member ✨</span>
+                                                </div>
+                                                <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 w-2 h-2 rotate-45 bg-amber-400"></div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                            <Image
+                                src="/arrow-down.svg"
+                                alt="Dropdown"
+                                width={12}
+                                height={12}
+                            />
                         </button>
                     ) : (
                         <Link href="/login">
@@ -304,19 +435,19 @@ const userRole: UserRole =
                                     userRole === "vet"
                                         ? "/vet-panel"
                                         : userRole === "regular user"
-                                            ? "/my-profile"
-                                            : userRole === "admin"
-                                                ? "/admin-panel"
-                                                : "/"
+                                        ? "/my-profile"
+                                        : userRole === "admin"
+                                        ? "/admin-panel"
+                                        : "/"
                                 }>
                                 <div className="dropdown-item px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
                                     {userRole === "vet"
                                         ? "Vet Panel"
                                         : userRole === "regular user"
-                                            ? "My Profile"
-                                            : userRole === "admin"
-                                                ? "Admin Panel"
-                                                : "Home"}
+                                        ? "My Profile"
+                                        : userRole === "admin"
+                                        ? "Admin Panel"
+                                        : "Home"}
                                 </div>
                             </Link>
                             <Link href="/my-listings">

@@ -61,7 +61,7 @@ const CreateUser = () => {
         try {
             setGoogleLoading(true);
             await signIn("google", {
-                callbackUrl: "/success",
+                callbackUrl: "/browse-pets",
             });
         } catch (error) {
             console.error("Google login failed:", error);
@@ -206,7 +206,7 @@ const CreateUser = () => {
             if (role === "vet") {
                 router.push(`/vet-register?user_id=${result.payload.user_id}`);
             } else {
-                router.push("/success");
+                router.push("/login");
             }
         } catch (error) {
             setGeneralError("An unexpected error occurred. Please try again.");

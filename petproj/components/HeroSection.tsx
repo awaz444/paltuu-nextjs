@@ -108,7 +108,7 @@ const HeroSection = () => {
                     <div className="relative mt-10">
                         {/* Cat on the right (existing) */}
                         <div
-                            className=" z-20 absolute 
+                            className=" z-20 absolute
                             -top-[4.05rem] right-2 w-28 h-28       /* Mobile */
                             md:-top-[4.6rem] md:right-2 md:w-32 md:h-32  /* Tablet */
                             lg:-top-[5.4rem] lg:-right-20 lg:w-64 lg:h-64">
@@ -126,7 +126,7 @@ const HeroSection = () => {
                         <div className="bg-primary/5 border border-primary rounded-2xl p-8 text-center shadow-md relative z-0 overflow-hidden">
                             {/* Dog peeking from bottom left inside the box */}
                             <div
-                                className="absolute 
+                                className="absolute
                                 bottom-0 left-0 w-20 h-20        /* Mobile */
                                 md:bottom-0 md:left-0 md:w-24 md:h-24  /* Tablet */
                                 lg:-bottom-4 lg:w-32 lg:h-32">
@@ -178,7 +178,7 @@ const HeroSection = () => {
                             </ul>
 
                             <a
-                                href="/sign-up"
+                                href="/browse-pets"
                                 className="inline-flex items-center justify-center gap-2 bg-primary text-white font-bold px-6 py-3 md:px-10 md:py-4 rounded-full text-sm md:text-lg shadow-lg hover:scale-105 transition-transform duration-300 relative z-10 whitespace-nowrap">
                                 <Image
                                     src="/white_icon.svg"
@@ -293,12 +293,12 @@ const HeroSection = () => {
                 >
                     {/* Half-circle Element (Expands on hover) */}
                     <div className={`
-                        absolute -bottom-20 -right-20 w-40 h-40 
+                        absolute -bottom-20 -right-20 w-40 h-40
                         bg-red-500/10  /* Red with 10% opacity */
                         group-hover:bg-red-500/20  /* Slightly more visible on hover */
-                        rounded-full 
-                        group-hover:scale-[2.5] 
-                        transition-all duration-700 
+                        rounded-full
+                        group-hover:scale-[2.5]
+                        transition-all duration-700
                         delay-${feature.delay}
                         /* Tailwind-based clip-path for half circle */
                         before:absolute before:inset-0 before:bg-inherit
@@ -325,7 +325,7 @@ const HeroSection = () => {
                         <p className="text-gray-600 mb-4">
                             {feature.text}
                         </p>
-                        <button className="text-sm font-semibold bg-primary text-white px-4 py-2 rounded-full 
+                        <button className="text-sm font-semibold bg-primary text-white px-4 py-2 rounded-full
                         hover:bg-primary/90 transition-colors duration-300 shadow-sm">
                             Learn More
                         </button>

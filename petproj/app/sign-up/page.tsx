@@ -82,44 +82,17 @@ const CreateUser = () => {
             <ul className="list-disc pl-5 space-y-1">
                 <li
                     className={`flex items-center ${
-                        /[A-Z]/.test(password)
-                            ? "text-green-500"
-                            : "text-red-500"
+                        password.length >= 6 ? "text-green-500" : "text-red-500"
                     }`}>
-                    {/[A-Z]/.test(password) ? "✓" : "✗"} At least one uppercase
-                    letter
+                    {password.length >= 6 ? "✓" : "✗"} Minimum 6 characters
                 </li>
                 <li
                     className={`flex items-center ${
-                        /[a-z]/.test(password)
+                        /[A-Za-z]/.test(password)
                             ? "text-green-500"
                             : "text-red-500"
                     }`}>
-                    {/[a-z]/.test(password) ? "✓" : "✗"} At least one lowercase
-                    letter
-                </li>
-                <li
-                    className={`flex items-center ${
-                        /[0-9]/.test(password)
-                            ? "text-green-500"
-                            : "text-red-500"
-                    }`}>
-                    {/[0-9]/.test(password) ? "✓" : "✗"} At least one number
-                </li>
-                <li
-                    className={`flex items-center ${
-                        /[@$!%*?&]/.test(password)
-                            ? "text-green-500"
-                            : "text-red-500"
-                    }`}>
-                    {/[@$!%*?&]/.test(password) ? "✓" : "✗"} At least one
-                    special character (@$!%*?&)
-                </li>
-                <li
-                    className={`flex items-center ${
-                        password.length >= 8 ? "text-green-500" : "text-red-500"
-                    }`}>
-                    {password.length >= 8 ? "✓" : "✗"} Minimum 8 characters
+                    {/[A-Za-z]/.test(password) ? "✓" : "✗"} At least one letter
                 </li>
             </ul>
         </div>
@@ -186,7 +159,7 @@ const CreateUser = () => {
             setFormErrors((prev) => ({
                 ...prev,
                 password:
-                    "Password must contain at least 8 characters, one uppercase, one lowercase, one number, and one special character",
+                    "Password must be at least 6 characters long and contain at least one letter",
             }));
             setIsLoading(false);
             return;
@@ -308,8 +281,8 @@ const CreateUser = () => {
     };
 
     const validatePassword = (password: string) => {
-        const passwordRegex =
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        // Changed from requiring special chars to just length and one letter
+        const passwordRegex = /^(?=.*[A-Za-z]).{6,}$/;
         return passwordRegex.test(password);
     };
 
@@ -408,7 +381,6 @@ const CreateUser = () => {
                 <form
                     onSubmit={handleSubmit}
                     className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6 space-y-4">
-
                     <h2 className="text-3xl font-semibold text-center mb-2">
                         Sign Up
                     </h2>
@@ -654,7 +626,7 @@ const CreateUser = () => {
                                 }
                                 className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                                 required
-                                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                                pattern="^(?=.*[A-Za-z]).{6,}$" // Updated pattern
                             />
                             <span
                                 onClick={() => setShowPassword(!showPassword)}

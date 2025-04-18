@@ -12,6 +12,7 @@ export type Pet = {
   city_id: number | null; // Allow null
   area: string; // This will need to be updated if you want it to allow null
   age: number | null; // Allow null
+  months: number | null;
   description: string | null; // Allow null
   adoption_status: string;
   price: number | null; // Allow null

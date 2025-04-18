@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
-import LoginModal from "../../../components/LoginModal"; 
+import LoginModal from "../../../components/LoginModal";
 import {
     Spin,
     Card,
@@ -243,8 +243,13 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                         <div className="flex items-center gap-2 text-lg text-gray-600">
                                             <span>{pet.pet_breed}</span>
                                             <span>•</span>
-                                            <span>{pet.age} {pet.age > 1 ? "years" : "year"} old</span>
+                                            <span>
+                                                {pet.age > 0 && `${pet.age} ${pet.age > 1 ? "years" : "year"}`}
+                                                {pet.age > 0 && pet.months > 0 && ", "}
+                                                {pet.months > 0 && `${pet.months} ${pet.months > 1 ? "months" : "month"} old`}
+                                            </span>
                                         </div>
+
                                     </div>
                                 </div>
 

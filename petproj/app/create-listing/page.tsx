@@ -32,7 +32,8 @@ export default function CreatePetListing() {
     const [breed, setBreed] = useState("");
     const [cityId, setCityId] = useState("");
     const [area, setArea] = useState("");
-    const [age, setAge] = useState(0);
+    const [age, setAge] = useState<number | null>(null);
+    const [months, setMonths] = useState<number | null>(null);
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
     const [minAgeOfChildren, setMinAgeOfChildren] = useState(0);
@@ -49,6 +50,8 @@ export default function CreatePetListing() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [ageError, setAgeError] = useState<string | null>(null);
+    const [monthsError, setMonthsError] = useState<string | null>(null);
 
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [userId, setUserId] = useState<number | null>(null);
@@ -91,9 +94,54 @@ export default function CreatePetListing() {
         }
     };
 
-    // Handle form submission
+    // Age (Years) input
+    const handleAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        // Only allow positive numbers or empty string
+        if (value === "" || (!isNaN(Number(value)) && Number(value) >= 0)) {
+            const numberValue = value ? Number(value) : null;
+            setAge(numberValue);
+            
+            // Validate that at least one field has value
+            if ((numberValue === null || numberValue === 0) && (months === null || months === 0)) {
+                setAgeError("Either age or months must be filled");
+                setMonthsError("Either age or months must be filled");
+            } else {
+                setAgeError(null);
+                setMonthsError(null);
+            }
+        }
+    };
+
+    // Months input
+    const handleMonthsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        const parsedMonth = value ? parseInt(value) : null;
+
+        if (parsedMonth === null || (parsedMonth >= 0 && parsedMonth <= 11)) {
+            setMonths(parsedMonth);
+
+            // Validate that at least one field has value
+            if ((parsedMonth === null || parsedMonth === 0) && (age === null || age === 0)) {
+                setAgeError("Either age or months must be filled");
+                setMonthsError("Either age or months must be filled");
+            } else {
+                setAgeError(null);
+                setMonthsError(null);
+            }
+        }
+    };
+
+    // Handle form submissi on
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        // Validate age and months before submission
+        if ((age === null || age === 0) && (months === null || months === 0)) {
+            setAgeError("Either age or months must be filled");
+            setMonthsError("Either age or months must be filled");
+            return;
+        }
         setIsSubmitting(true);
         // Retrieve the user object from local storage
 
@@ -122,7 +170,8 @@ export default function CreatePetListing() {
             pet_breed: breed || null,
             city_id: cityId ? Number(cityId) : null,
             area: area || "",
-            age: age || null,
+            age: age || 0,
+            months: months || 0,
             description: description || null,
             adoption_status: "available",
             price: price ? Number(price) : null,
@@ -301,18 +350,34 @@ export default function CreatePetListing() {
                             Age (Years)
                         </label>
                         <input
-                            type="text" // Change to text for free input
-                            required
-                            className="mt-1 p-3 w-full border rounded-2xl input-field input-field input-field input-field"
-                            placeholder="Enter age" // Ensure 0 is not in the placeholder
-                            value={age || ""} // Prevent "0" from showing in the input field
-                            onChange={(e) => {
-                                const value = e.target.value;
-                                // Convert to number; default to 0 if empty or undefined
-                                const numberValue = value ? Number(value) : 0;
-                                setAge(numberValue);
-                            }}
+                            type="number"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field"
+                            placeholder="Enter age in years"
+                            value={age ?? ""}
+                            onChange={handleAgeChange}
                         />
+                        {ageError && (
+                            <p className="text-red-500 text-xs mt-1">{ageError}</p>
+                        )}
+                    </div>
+
+                    {/* Months */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Months
+                        </label>
+                        <input
+                            type="number"
+                            min="0"
+                            max="11"
+                            className="mt-1 p-3 w-full border rounded-2xl input-field"
+                            placeholder="Enter months (0-11)"
+                            value={months ?? ""}
+                            onChange={handleMonthsChange}
+                        />
+                        {monthsError && (
+                            <p className="text-red-500 text-xs mt-1">{monthsError}</p>
+                        )}
                     </div>
 
                     {/* Sex */}
@@ -493,7 +558,7 @@ export default function CreatePetListing() {
                         </label>
                     </div>
 
-                    {/* Energy Level Slider */}
+
                     {/* Energy Level */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">
@@ -576,8 +641,8 @@ export default function CreatePetListing() {
                     >
                         {isSubmitting ? "Proceeding..." : "Proceed to Upload Images"}
                     </button>
-                </form>
-            </div>
+                </form >
+            </div >
         </>
     );
 }

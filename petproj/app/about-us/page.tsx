@@ -5,7 +5,7 @@ import Image from "next/image";
 import './about-us.css'
 import '../globals.css';
 
-
+//Abdul Qadir Tareen marrij with Umer Noor
 export default function AboutUs() {
     return (
         <>

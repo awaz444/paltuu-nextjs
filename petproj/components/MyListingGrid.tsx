@@ -22,6 +22,7 @@ export interface Pet {
     city_id: number;
     area: string;
     age: number;
+    months: number;
     description: string;
     adoption_status: string;
     price: string;
@@ -108,7 +109,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
     };
 
     const handleUpdate = async () => {
-        
+
         if (!editingPet) return;
 
         dispatch(fetchAdoptionPets());
@@ -201,7 +202,9 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                     <div className="p-4">
                         <h3 className="font-bold text-2xl mb-1">{pet.pet_name}</h3>
                         <p className="text-gray-600 mb-1">
-                            {pet.age} {pet.age > 1 ? 'years' : 'year'} old
+                            {pet.age > 0 && `${pet.age} ${pet.age > 1 ? "years" : "year"}`}
+                            {pet.age > 0 && pet.months > 0 && ", "}
+                            {pet.months > 0 && `${pet.months} ${pet.months > 1 ? "months" : "month"} old`}
                         </p>
                         <p className="text-gray-600 mb-1">
                             {pet.city} - {pet.area}

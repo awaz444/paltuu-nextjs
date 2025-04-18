@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
     }
 
     if (!isAdmin && !customAuthToken) {
-      return NextResponse.redirect(new URL('/browse-pets', request.url));
+      return NextResponse.redirect(new URL('/login', request.url));
     }
   }
 

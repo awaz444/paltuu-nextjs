@@ -38,9 +38,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         // Insert new pet listing
         const result = await client.query(
-            `INSERT INTO pets (owner_id, pet_name, pet_type, pet_breed, city_id, area, age, months, description, adoption_status, 
-            min_age_of_children, can_live_with_dogs, can_live_with_cats, must_have_someone_home, energy_level, 
-            cuddliness_level, health_issues, sex, listing_type, vaccinated, neutered, price, payment_frequency, created_at) 
+            `INSERT INTO pets (
+                owner_id, pet_name, pet_type, pet_breed, city_id, area, age, months, 
+                foster_start_date, foster_end_date, description, adoption_status, 
+                min_age_of_children, can_live_with_dogs, can_live_with_cats, 
+                must_have_someone_home, energy_level, cuddliness_level, health_issues, 
+                sex, listing_type, vaccinated, neutered, price, payment_frequency, created_at
+            ) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, CURRENT_TIMESTAMP) 
             RETURNING *`,
             [
@@ -74,30 +78,29 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         const newPet = result.rows[0];
 
-        // **Fetch all admin user IDs**
+        // Fetch all admin user IDs
         const adminResult = await client.query(
             `SELECT user_id FROM users WHERE role = 'admin'`
         );
 
         const adminUserIds = adminResult.rows.map((row) => row.user_id);
 
-        // **Insert notifications for all admin users**
-        // **Insert notifications for all admin users**
+        // Insert notifications for all admin users
         if (adminUserIds.length > 0) {
             const notificationContent = `A new pet listing ${pet_name} has been added. Please approve or reject it.`;
 
             // Dynamically generate the placeholders for each row
             const notificationQuery = `
-        INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
-        VALUES ${adminUserIds
-            .map(
-                (_, i) =>
-                    `($${i * 5 + 1}, $${i * 5 + 2}, $${i * 5 + 3}, $${
-                        i * 5 + 4
-                    }, $${i * 5 + 5})`
-            )
-            .join(", ")}
-    `;
+                INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+                VALUES ${adminUserIds
+                    .map(
+                        (_, i) =>
+                            `($${i * 5 + 1}, $${i * 5 + 2}, $${i * 5 + 3}, $${
+                                i * 5 + 4
+                            }, $${i * 5 + 5})`
+                    )
+                    .join(", ")}
+            `;
 
             // Create the array of parameter values for each admin
             const notificationValues = adminUserIds.flatMap((user_id) => [
@@ -105,14 +108,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 notificationContent,
                 "listing_type",
                 false,
-                new Date(), // Use JS Date object to ensure type consistency
+                new Date(),
             ]);
 
             await client.query(notificationQuery, notificationValues);
         }
 
-
-        // NEW: Notification for PET OWNER
+        // Notification for PET OWNER
         const ownerNotificationContent = `Your pet listing "${pet_name}" has been submitted for approval. You'll be notified once it's approved.`;
         await client.query(
             `INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
@@ -120,7 +122,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             [
                 owner_id,
                 ownerNotificationContent,
-                "listing_submission",  // New notification type
+                "listing_submission",
                 false,
                 new Date()
             ]

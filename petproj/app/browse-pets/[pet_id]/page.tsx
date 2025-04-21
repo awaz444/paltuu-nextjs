@@ -1,9 +1,10 @@
-'use client';
+"use client";
 import React, { useState, useEffect } from "react";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
 import LoginModal from "../../../components/LoginModal";
+import { formatDistanceToNow } from "date-fns";
 import {
     Spin,
     Card,
@@ -31,10 +32,12 @@ import {
 } from "@ant-design/icons";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
-import './styles.css'
+import "./styles.css";
 
 let user_id: string;
-const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) => {
+const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
+    params,
+}) => {
     const { pet_id } = params;
     const [pet, setPet] = useState<PetWithImages | null>(null);
     const [carouselImages, setCarouselImages] = useState<string[]>([]);
@@ -44,6 +47,10 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
     const [error, setError] = useState<string | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
     const [showLoginModal, setShowLoginModal] = useState(false);
+
+    const formatListingDate = (dateString: string) => {
+        return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    };
 
     useSetPrimaryColor();
 
@@ -127,7 +134,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
     };
 
     const handleAdoptClick = async () => {
-        if (pet.adoption_status !== 'available') return;
+        if (pet.adoption_status !== "available") return;
 
         if (!userId) {
             setShowLoginModal(true);
@@ -136,30 +143,31 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
 
         try {
             const res = await fetch(`/api/my-profile/${userId}`);
-            if (!res.ok) throw new Error('Failed to fetch profile');
+            if (!res.ok) throw new Error("Failed to fetch profile");
 
             const profileData = await res.json();
 
             if (!profileData.phone_number || !profileData.city) {
                 message.warning({
-                    content: 'Please complete your profile by adding your phone number and city before applying for adoption.',
+                    content:
+                        "Please complete your profile by adding your phone number and city before applying for adoption.",
                     duration: 5,
                 });
                 setTimeout(() => {
-                    window.location.href = '/my-profile';
+                    window.location.href = "/my-profile";
                 }, 2000);
                 return;
             }
 
             setIsModalVisible(true);
         } catch (error) {
-            console.error('Error checking profile:', error);
-            message.error('Failed to verify profile information');
+            console.error("Error checking profile:", error);
+            message.error("Failed to verify profile information");
         }
     };
 
     const handleContactClick = () => {
-        if (pet.adoption_status !== 'available') return;
+        if (pet.adoption_status !== "available") return;
         setIsModalOpen(true);
     };
 
@@ -172,24 +180,25 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
             try {
                 // Check user profile completion after login
                 const res = await fetch(`/api/my-profile/${user.id}`);
-                if (!res.ok) throw new Error('Failed to fetch profile');
+                if (!res.ok) throw new Error("Failed to fetch profile");
 
                 const profileData = await res.json();
 
                 // If phone number or city is missing, redirect to profile
                 if (!profileData.phone_number || !profileData.city) {
                     message.warning({
-                        content: 'Please complete your profile by adding your phone number and city before applying for adoption.',
+                        content:
+                            "Please complete your profile by adding your phone number and city before applying for adoption.",
                         duration: 5,
                     });
                     setTimeout(() => {
-                        window.location.href = '/my-profile';
+                        window.location.href = "/my-profile";
                     }, 2000);
                     return;
                 }
             } catch (error) {
-                console.error('Error checking profile:', error);
-                message.error('Failed to verify profile information');
+                console.error("Error checking profile:", error);
+                message.error("Failed to verify profile information");
             }
         }
         setShowLoginModal(false);
@@ -199,7 +208,6 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
     const handleFormSubmit = (formData: any) => {
         console.log("Adoption form data submitted:", formData);
     };
-
 
     return (
         <>
@@ -213,13 +221,16 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                 visible={IsModalOpen}
                 onCancel={() => setIsModalOpen(false)}
                 footer={null}
-                className="rounded-lg"
-            >
+                className="rounded-lg">
                 <div className="space-y-4">
                     <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                         <div>
-                            <p className="font-medium text-gray-700">{pet.phone_number}</p>
-                            <p className="text-sm text-gray-500">Phone Number</p>
+                            <p className="font-medium text-gray-700">
+                                {pet.phone_number}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                                Phone Number
+                            </p>
                         </div>
                         <Button
                             icon={<CopyOutlined className="text-primary" />}
@@ -234,8 +245,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                         block
                         icon={<WhatsAppOutlined />}
                         className="bg-green-500 hover:bg-green-600 text-white h-12 rounded-lg flex items-center justify-center"
-                        onClick={() => handleWhatsApp(pet.phone_number)}
-                    >
+                        onClick={() => handleWhatsApp(pet.phone_number)}>
                         Message via WhatsApp
                     </Button>
                 </div>
@@ -251,12 +261,15 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                 <Carousel
                                     autoplay
                                     dots={{ className: "custom-dots" }}
-                                    className="rounded-xl overflow-hidden"
-                                >
+                                    className="rounded-xl overflow-hidden">
                                     {carouselImages.map((image) => (
-                                        <div key={image} className="aspect-square">
+                                        <div
+                                            key={image}
+                                            className="aspect-square">
                                             <img
-                                                src={image || "/placeholder.jpg"}
+                                                src={
+                                                    image || "/placeholder.jpg"
+                                                }
                                                 alt={`${pet.pet_name}-image`}
                                                 className="w-full h-full object-cover"
                                             />
@@ -276,20 +289,42 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                             <span>{pet.pet_breed}</span>
                                             <span>•</span>
                                             <span>
-                                                {pet.age > 0 && `${pet.age} ${pet.age > 1 ? "years" : "year"}`}
-                                                {pet.age > 0 && pet.months > 0 && ", "}
-                                                {pet.months > 0 && `${pet.months} ${pet.months > 1 ? "months" : "month"} old`}
+                                                {pet.age > 0 &&
+                                                    `${pet.age} ${
+                                                        pet.age > 1
+                                                            ? "years"
+                                                            : "year"
+                                                    }`}
+                                                {pet.age > 0 &&
+                                                    pet.months > 0 &&
+                                                    ", "}
+                                                {pet.months > 0 &&
+                                                    `${pet.months} ${
+                                                        pet.months > 1
+                                                            ? "months"
+                                                            : "month"
+                                                    } old`}
                                             </span>
                                         </div>
-
                                     </div>
+                                    <Tag
+                                        color="#a03048"
+                                        className="rounded-full px-3 py-1">
+                                        Listed{" "}
+                                        {formatListingDate(pet.created_at)}
+                                    </Tag>
                                 </div>
 
                                 <Tag
-                                    color={pet.adoption_status === "available" ? "green" : "red"}
-                                    className="rounded-full px-4 py-1 text-base"
-                                >
-                                    {pet.adoption_status === "available" ? "Available" : "Adopted"}
+                                    color={
+                                        pet.adoption_status === "available"
+                                            ? "green"
+                                            : "red"
+                                    }
+                                    className="rounded-full px-4 py-1 text-base">
+                                    {pet.adoption_status === "available"
+                                        ? "Available"
+                                        : "Adopted"}
                                 </Tag>
 
                                 <div className="bg-gray-50 p-6 rounded-xl">
@@ -314,7 +349,9 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                             Adoption Fee
                                         </h3>
                                         <p className="text-xl font-bold text-gray-800">
-                                            {pet.price ? `PKR ${pet.price}` : "None"}
+                                            {pet.price
+                                                ? `PKR ${pet.price}`
+                                                : "None"}
                                         </p>
                                     </div>
                                     <div className="bg-gray-50 p-4 rounded-xl">
@@ -334,9 +371,10 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                     size="large"
                                     className="button-one h-14 text-lg bg-primary font-semibold rounded-xl hover:bg-primary"
                                     onClick={handleAdoptClick}
-                                    disabled={pet.adoption_status !== 'available'}
-                                >
-                                    {pet.adoption_status === 'available'
+                                    disabled={
+                                        pet.adoption_status !== "available"
+                                    }>
+                                    {pet.adoption_status === "available"
                                         ? userId
                                             ? "Apply for Adoption"
                                             : "Login to Apply"
@@ -348,9 +386,10 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                     size="large"
                                     className="button-two h-14 text-lg font-semibold rounded-xl border-primary text-primary"
                                     onClick={handleContactClick}
-                                    disabled={pet.adoption_status !== 'available'}
-                                >
-                                    {pet.adoption_status === 'available'
+                                    disabled={
+                                        pet.adoption_status !== "available"
+                                    }>
+                                    {pet.adoption_status === "available"
                                         ? "Contact Owner"
                                         : "Not Available"}
                                 </Button>
@@ -362,16 +401,30 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                         {/* Detailed Information Sections */}
                         <div className="grid md:grid-cols-2 gap-8">
                             <div className="space-y-6">
-                                <Section title="About" icon={<InfoCircleOutlined />}>
+                                <Section
+                                    title="About"
+                                    icon={<InfoCircleOutlined />}>
                                     <p className="text-gray-600 leading-relaxed">
-                                        {pet.description || "No description provided."}
+                                        {pet.description ||
+                                            "No description provided."}
                                     </p>
                                 </Section>
 
-                                <Section title="Health & Care" icon={<MedicineBoxOutlined />}>
-                                    <InfoRow label="Vaccinated" value={pet.vaccinated ? "Yes" : "No"} />
-                                    <InfoRow label="Neutered" value={pet.neutered ? "Yes" : "No"} />
-                                    <InfoRow label="Health Issues" value={pet.health_issues || "None"} />
+                                <Section
+                                    title="Health & Care"
+                                    icon={<MedicineBoxOutlined />}>
+                                    <InfoRow
+                                        label="Vaccinated"
+                                        value={pet.vaccinated ? "Yes" : "No"}
+                                    />
+                                    <InfoRow
+                                        label="Neutered"
+                                        value={pet.neutered ? "Yes" : "No"}
+                                    />
+                                    <InfoRow
+                                        label="Health Issues"
+                                        value={pet.health_issues || "None"}
+                                    />
                                 </Section>
                             </div>
 
@@ -391,7 +444,13 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                                 disabled
                                                 className="mt-2 w-full appearance-none h-2 rounded-lg bg-gray-300"
                                                 style={{
-                                                    background: `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${(pet.energy_level - 1) * 25}%, #D1D5DB ${(pet.energy_level - 1) * 25}%, #D1D5DB 100%)`
+                                                    background: `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
+                                                        (pet.energy_level - 1) *
+                                                        25
+                                                    }%, #D1D5DB ${
+                                                        (pet.energy_level - 1) *
+                                                        25
+                                                    }%, #D1D5DB 100%)`,
                                                 }}
                                             />
                                             <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
@@ -415,7 +474,15 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                                 disabled
                                                 className="mt-2 w-full appearance-none h-2 rounded-lg bg-gray-300"
                                                 style={{
-                                                    background: `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${(pet.cuddliness_level - 1) * 25}%, #D1D5DB ${(pet.cuddliness_level - 1) * 25}%, #D1D5DB 100%)`
+                                                    background: `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
+                                                        (pet.cuddliness_level -
+                                                            1) *
+                                                        25
+                                                    }%, #D1D5DB ${
+                                                        (pet.cuddliness_level -
+                                                            1) *
+                                                        25
+                                                    }%, #D1D5DB 100%)`,
                                                 }}
                                             />
                                             <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
@@ -426,9 +493,30 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                                     </div>
                                 </Section>
                                 <Section title="Living Preferences">
-                                    <InfoRow label="Good with Dogs" value={pet.can_live_with_dogs ? "Yes" : "No"} />
-                                    <InfoRow label="Good with Cats" value={pet.can_live_with_cats ? "Yes" : "No"} />
-                                    <InfoRow label="Requires Companion at all times" value={pet.must_have_someone_home ? "Yes" : "No"} />
+                                    <InfoRow
+                                        label="Good with Dogs"
+                                        value={
+                                            pet.can_live_with_dogs
+                                                ? "Yes"
+                                                : "No"
+                                        }
+                                    />
+                                    <InfoRow
+                                        label="Good with Cats"
+                                        value={
+                                            pet.can_live_with_cats
+                                                ? "Yes"
+                                                : "No"
+                                        }
+                                    />
+                                    <InfoRow
+                                        label="Requires Companion at all times"
+                                        value={
+                                            pet.must_have_someone_home
+                                                ? "Yes"
+                                                : "No"
+                                        }
+                                    />
                                 </Section>
                             </div>
                         </div>
@@ -447,17 +535,27 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
     );
 };
 
-const Section: React.FC<{ title: string; icon?: React.ReactNode; children?: React.ReactNode }> = ({ title, icon, children }) => (
+const Section: React.FC<{
+    title: string;
+    icon?: React.ReactNode;
+    children?: React.ReactNode;
+}> = ({ title, icon, children }) => (
     <div className="space-y-4">
         <div className="flex items-center gap-2 mb-2">
-            {icon && React.cloneElement(icon as React.ReactElement, { className: "text-primary text-lg" })}
+            {icon &&
+                React.cloneElement(icon as React.ReactElement, {
+                    className: "text-primary text-lg",
+                })}
             <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
         </div>
         {children}
     </div>
 );
 
-const InfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
+const InfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({
+    label,
+    value,
+}) => (
     <div className="flex justify-between items-center py-2 border-b border-gray-100">
         <span className="text-gray-600">{label}</span>
         <span className="text-gray-800 font-medium">{value}</span>

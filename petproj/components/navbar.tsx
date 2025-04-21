@@ -81,14 +81,14 @@ const Navbar = () => {
                 userRole === "vet"
                     ? "/vet-panel"
                     : userRole === "admin"
-                        ? "/admin-panel"
-                        : "/my-profile",
+                    ? "/admin-panel"
+                    : "/my-profile",
             label:
                 userRole === "vet"
                     ? "Vet Panel"
                     : userRole === "admin"
-                        ? "Admin Panel"
-                        : "My Profile",
+                    ? "Admin Panel"
+                    : "My Profile",
             isAction: false,
         },
         { href: "/my-listings", label: "My Listings", isAction: false },
@@ -170,13 +170,14 @@ const Navbar = () => {
         setActiveLink(currentPath);
     }, []);
 
-    const dropdownWidth = `${Math.max(
-        displayName.length,
-        ...dropdownItems.map((item) => item.label.length)
-    ) *
-        10 +
+    const dropdownWidth = `${
+        Math.max(
+            displayName.length,
+            ...dropdownItems.map((item) => item.label.length)
+        ) *
+            10 +
         50
-        }px`;
+    }px`;
 
     return (
         <nav className="navbar" style={navbarStyle}>
@@ -198,8 +199,9 @@ const Navbar = () => {
                     {links.map((link) => (
                         <Link key={link.href} href={`/${link.href}`}>
                             <span
-                                className={`mobile-link ${activeLink === link.href ? "active" : ""
-                                    }`}
+                                className={`mobile-link ${
+                                    activeLink === link.href ? "active" : ""
+                                }`}
                                 onClick={() => {
                                     setActiveLink(link.href);
                                     setIsMenuOpen(false);
@@ -225,8 +227,12 @@ const Navbar = () => {
                                     {/* Mobile View - White Icon */}
                                     <div
                                         className="relative md:hidden"
-                                        onMouseEnter={() => setShowFoundersTooltip(true)}
-                                        onMouseLeave={() => setShowFoundersTooltip(false)}>
+                                        onMouseEnter={() =>
+                                            setShowFoundersTooltip(true)
+                                        }
+                                        onMouseLeave={() =>
+                                            setShowFoundersTooltip(false)
+                                        }>
                                         <Image
                                             src="/white_icon.svg"
                                             alt="Founders Club"
@@ -235,20 +241,55 @@ const Navbar = () => {
                                             className="ml-1"
                                         />
                                         {showFoundersTooltip && (
-    <div className="absolute -left-36 bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap">
-        <div className="flex items-center gap-1">
-            <span>✨ Founders Club Member ✨</span>
-        </div>
-        <div className="absolute right-12 -bottom-1 w-2 h-2 rotate-45 bg-amber-400"></div>
-    </div>
-)}
+                                            <div className="absolute left-1/2 -top-8 transform -translate-x-1/2 -translate-y-full px-4 py-2 bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 text-white text-sm font-bold rounded-lg shadow-xl z-20 whitespace-nowrap animate-pulse-slow">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-lg">
+                                                        🎖
+                                                    </span>
+                                                    <span className="relative">
+                                                        <span className="text-shadow">
+                                                            Founders Club Elite
+                                                        </span>
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            {[...Array(3)].map(
+                                                                (_, i) => (
+                                                                    <span
+                                                                        key={i}
+                                                                        className="absolute animate-sparkle"
+                                                                        style={{
+                                                                            transform: `rotate(${
+                                                                                i *
+                                                                                120
+                                                                            }deg) translateY(-8px)`,
+                                                                            opacity: 0,
+                                                                        }}>
+                                                                        ✨
+                                                                    </span>
+                                                                )
+                                                            )}
+                                                        </div>
+                                                    </span>
+                                                    <span className="text-lg">
+                                                        🏆
+                                                    </span>
+                                                </div>
+                                                <div className="absolute -bottom-2 left-1/2 w-4 h-4 bg-amber-400 transform -translate-x-1/2 rotate-45"></div>
+
+                                                {/* Glowing border effect */}
+                                                <div className="absolute inset-0 rounded-lg border-2 border-amber-200/50 animate-glow"></div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Desktop View - Primary Icon */}
                                     <div
                                         className="relative hidden md:inline"
-                                        onMouseEnter={() => setShowFoundersTooltip(true)}
-                                        onMouseLeave={() => setShowFoundersTooltip(false)}>
+                                        onMouseEnter={() =>
+                                            setShowFoundersTooltip(true)
+                                        }
+                                        onMouseLeave={() =>
+                                            setShowFoundersTooltip(false)
+                                        }>
                                         <Image
                                             src="/primary_icon.svg"
                                             alt="Founders Club"
@@ -257,13 +298,16 @@ const Navbar = () => {
                                             className="ml-1"
                                         />
                                         {showFoundersTooltip && (
-  <div className="absolute left-0 bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap transform translate-x-1/4">
-    <div className="flex items-center gap-1">
-      <span>✨ Founders Club Member ✨</span>
-    </div>
-    <div className="absolute left-1/4 -bottom-1 w-2 h-2 rotate-45 bg-amber-400"></div>
-  </div>
-)}
+                                            <div className="absolute left-0 bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap transform translate-x-1/4">
+                                                <div className="flex items-center gap-1">
+                                                    <span>
+                                                        ✨ Founders Club Member
+                                                        ✨
+                                                    </span>
+                                                </div>
+                                                <div className="absolute left-1/4 -bottom-1 w-2 h-2 rotate-45 bg-amber-400"></div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -329,10 +373,11 @@ const Navbar = () => {
                     {links.map((link) => (
                         <Link key={link.href} href={`/${link.href}`}>
                             <span
-                                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${activeLink === link.href
+                                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${
+                                    activeLink === link.href
                                         ? "after:w-full"
                                         : "after:w-0"
-                                    }`}
+                                }`}
                                 style={{ cursor: "pointer" }}
                                 onClick={() => setActiveLink(link.href)}>
                                 {link.name}
@@ -360,8 +405,12 @@ const Navbar = () => {
                                     {/* Mobile view - white icon */}
                                     <div
                                         className="relative md:hidden"
-                                        onMouseEnter={() => setShowFoundersTooltip(true)}
-                                        onMouseLeave={() => setShowFoundersTooltip(false)}>
+                                        onMouseEnter={() =>
+                                            setShowFoundersTooltip(true)
+                                        }
+                                        onMouseLeave={() =>
+                                            setShowFoundersTooltip(false)
+                                        }>
                                         <Image
                                             src="/white_icon.svg"
                                             alt="Founders Club"
@@ -370,20 +419,27 @@ const Navbar = () => {
                                             className="ml-1"
                                         />
                                         {showFoundersTooltip && (
-  <div className="absolute left-0 bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap transform translate-x-1/4">
-    <div className="flex items-center gap-1">
-      <span>✨ Founders Club Member ✨</span>
-    </div>
-    <div className="absolute left-1/4 -bottom-1 w-2 h-2 rotate-45 bg-amber-400"></div>
-  </div>
-)}
+                                            <div className="absolute left-0 bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap transform translate-x-1/4">
+                                                <div className="flex items-center gap-1">
+                                                    <span>
+                                                        ✨ Founders Club Member
+                                                        ✨
+                                                    </span>
+                                                </div>
+                                                <div className="absolute left-1/4 -bottom-1 w-2 h-2 rotate-45 bg-amber-400"></div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Desktop view - primary icon */}
                                     <div
                                         className="relative hidden md:inline"
-                                        onMouseEnter={() => setShowFoundersTooltip(true)}
-                                        onMouseLeave={() => setShowFoundersTooltip(false)}>
+                                        onMouseEnter={() =>
+                                            setShowFoundersTooltip(true)
+                                        }
+                                        onMouseLeave={() =>
+                                            setShowFoundersTooltip(false)
+                                        }>
                                         <Image
                                             src="/primary_icon.svg"
                                             alt="Founders Club"
@@ -394,7 +450,10 @@ const Navbar = () => {
                                         {showFoundersTooltip && (
                                             <div className="absolute -left-36 bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap">
                                                 <div className="flex items-center gap-1">
-                                                    <span>✨ Founders Club Member ✨</span>
+                                                    <span>
+                                                        ✨ Founders Club Member
+                                                        ✨
+                                                    </span>
                                                 </div>
                                                 <div className="absolute right-16 -bottom-1 w-2 h-2 rotate-45 bg-amber-400"></div>
                                             </div>
@@ -432,19 +491,19 @@ const Navbar = () => {
                                     userRole === "vet"
                                         ? "/vet-panel"
                                         : userRole === "regular user"
-                                            ? "/my-profile"
-                                            : userRole === "admin"
-                                                ? "/admin-panel"
-                                                : "/"
+                                        ? "/my-profile"
+                                        : userRole === "admin"
+                                        ? "/admin-panel"
+                                        : "/"
                                 }>
                                 <div className="dropdown-item px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
                                     {userRole === "vet"
                                         ? "Vet Panel"
                                         : userRole === "regular user"
-                                            ? "My Profile"
-                                            : userRole === "admin"
-                                                ? "Admin Panel"
-                                                : "Home"}
+                                        ? "My Profile"
+                                        : userRole === "admin"
+                                        ? "Admin Panel"
+                                        : "Home"}
                                 </div>
                             </Link>
                             <Link href="/my-listings">

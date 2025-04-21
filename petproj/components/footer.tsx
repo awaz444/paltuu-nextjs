@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const Footer = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const hideFooterRoutes = ["/login", "/success", "/sign-up", "/vet-register", "/vet-qualifications", "/vet-specialization" , "/vet-schedule", "/vet-get-verified-1", "/vet-get-verified-2", '/'];
+  const hideFooterRoutes = ["/login", "/success", "/sign-up", "/vet-register", "/rescue-register", "/vet-qualifications", "/vet-specialization" , "/vet-schedule", "/vet-get-verified-1", "/vet-get-verified-2", '/'];
   const pathName = usePathname();
 
   

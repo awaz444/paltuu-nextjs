@@ -229,19 +229,6 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({ params }) =>
                         />
                     </div>
 
-                    <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                        <div>
-                            <p className="font-medium text-gray-700">{pet.email}</p>
-                            <p className="text-sm text-gray-500">Email Address</p>
-                        </div>
-                        <Button
-                            icon={<CopyOutlined className="text-primary" />}
-                            size="small"
-                            onClick={() => handleCopy(pet.email)}
-                            className="border-none shadow-none"
-                        />
-                    </div>
-
                     <Button
                         type="primary"
                         block

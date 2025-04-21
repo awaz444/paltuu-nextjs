@@ -2,7 +2,7 @@
 import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, LoadingOutlined } from "@ant-design/icons"; // Added LoadingOutlined
 import { Image, Upload, message } from "antd";
 import type { UploadFile, UploadProps } from "antd";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
@@ -40,18 +40,22 @@ function CreatePetList() {
   const [fileList, setFileList] = useState<UploadFile[]>([]); // State for uploaded files
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false); // New loading state
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsSubmitting(true); // Start loading
 
     if (!postId) {
       message.error("Post ID is missing.");
+      setIsSubmitting(false);
       return;
     }
 
     if (fileList.length === 0) {
       message.error("Please upload at least one image.");
+      setIsSubmitting(false);
       return;
     }
 
@@ -79,6 +83,8 @@ function CreatePetList() {
     } catch (error) {
       message.error("Error occurred while uploading image.");
       console.error(error);
+    } finally {
+      setIsSubmitting(false); // End loading regardless of success/failure
     }
   };
 
@@ -137,12 +143,20 @@ function CreatePetList() {
             )}
           </div>
 
-          {/* Submit Button */}
+          {/* Submit Button with Loading State */}
           <button
             type="submit"
-            className="mt-4 p-3 bg-primary text-white rounded-3xl w-full"
+            className="mt-4 p-3 bg-primary text-white rounded-3xl w-full flex items-center justify-center gap-2"
+            disabled={isSubmitting}
           >
-            Upload Image
+            {isSubmitting ? (
+              <>
+                <LoadingOutlined />
+                Uploading...
+              </>
+            ) : (
+              "Upload Image"
+            )}
           </button>
         </form>
       </div>

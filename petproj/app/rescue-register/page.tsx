@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { UploadFile } from "antd";
 import StepOne from "./steps/StepOne_Profile";
@@ -7,8 +7,8 @@ import StepTwo from "./steps/StepTwo_Socials";
 import StepThree from "./steps/StepThree_Verification";
 import StepFour from "./steps/StepFour_Facilities";
 import StepFive from "./steps/StepFive_Emergency";
-// import { completeRescueRegistration } from "@/actions/rescueActions";
 import { toast } from "react-hot-toast";
+import { MoonLoader } from "react-spinners";
 
 interface FormData {
     shelterName: string;
@@ -37,7 +37,7 @@ interface FormData {
     services: string[];
 }
 
-const RescueRegister = () => {
+const RescueRegisterContent = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userId = searchParams.get("user_id");
@@ -46,6 +46,7 @@ const RescueRegister = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [imageList, setImageList] = useState<UploadFile[]>([]);
     const [services, setServices] = useState<string[]>([]);
+    const [primaryColor, setPrimaryColor] = useState("#000000");
 
     const [formData, setFormData] = useState<FormData>({
         shelterName: "",
@@ -75,6 +76,14 @@ const RescueRegister = () => {
     });
 
     useEffect(() => {
+        const rootStyles = getComputedStyle(document.documentElement);
+        const color = rootStyles.getPropertyValue("--primary-color").trim();
+        if (color) {
+            setPrimaryColor(color);
+        }
+    }, []);
+
+    useEffect(() => {
         if (!userId) {
             toast.error(
                 "Invalid registration flow. Please start from the beginning."
@@ -94,43 +103,11 @@ const RescueRegister = () => {
 
         setIsSubmitting(true);
         try {
-            // Commented out API call for frontend development
             console.log("Form data to be submitted:", {
                 ...formData,
                 services,
                 imageList,
             });
-
-            /* Actual API call would look like this:
-            const formDataToSend = new FormData();
-            
-            Object.entries(formData).forEach(([key, value]) => {
-                if (key === "socials") {
-                    formDataToSend.append("instagram", value.instagram);
-                    formDataToSend.append("facebook", value.facebook);
-                    formDataToSend.append("website", value.website);
-                } else if (key === "photos" && Array.isArray(value)) {
-                    value.forEach((photo, index) => {
-                        formDataToSend.append(`photos[${index}]`, photo);
-                    });
-                } else if (value !== null && value !== undefined) {
-                    formDataToSend.append(key, value);
-                }
-            });
-
-            services.forEach((service) => {
-                formDataToSend.append("services", service);
-            });
-
-            const result = await completeRescueRegistration(formDataToSend);
-            
-            if (result.success) {
-                toast.success("Rescue shelter registration completed successfully!");
-                router.push("/dashboard");
-            } else {
-                toast.error(result.message || "Registration failed. Please try again.");
-            }
-            */
 
             // Simulate successful submission for frontend testing
             toast.success("Registration would be submitted here (simulated)");
@@ -263,7 +240,17 @@ const RescueRegister = () => {
             {/* Right side dynamic form */}
             <div className="w-full sm:w-1/2 bg-gray-100 flex items-center justify-center px-4 py-8 sm:px-8 sm:py-12 transition-all duration-300 ease-in-out">
                 {userId ? (
-                    renderStep()
+                    isSubmitting ? (
+                        <div className="flex flex-col items-center justify-center">
+                            <MoonLoader
+                                size={30}
+                                color={primaryColor}
+                            />
+                            <p className="mt-4">Submitting your registration...</p>
+                        </div>
+                    ) : (
+                        renderStep()
+                    )
                 ) : (
                     <div className="text-center">
                         <h3 className="text-xl font-semibold text-red-600">
@@ -282,6 +269,18 @@ const RescueRegister = () => {
                 )}
             </div>
         </div>
+    );
+};
+
+const RescueRegister = () => {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+                <MoonLoader size={50} color="#3B82F6" />
+            </div>
+        }>
+            <RescueRegisterContent />
+        </Suspense>
     );
 };
 

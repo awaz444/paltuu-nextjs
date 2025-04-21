@@ -144,7 +144,7 @@ const RescueStepFour: React.FC<StepFourProps> = ({
                             : "hover:bg-primary-dark"
                     }`}
                 >
-                    {isSubmitting ? "Submitting..." : "Complete Registration"}
+                    {isSubmitting ? "Submitting..." : "Next"}
                 </button>
             </div>
         </div>

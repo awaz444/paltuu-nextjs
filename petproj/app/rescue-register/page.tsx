@@ -218,7 +218,7 @@ const RescueRegisterContent = () => {
     return (
         <div className="min-h-screen flex">
             {/* Left side static */}
-            <div className="hidden sm:flex sm:w-1/2 flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
+            <div className="lg:w-1/2 lg:h-screen flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none sticky top-0">
                 <img
                     src="/paltu_logo.svg"
                     alt="Paltu Logo"
@@ -242,11 +242,10 @@ const RescueRegisterContent = () => {
                 {userId ? (
                     isSubmitting ? (
                         <div className="flex flex-col items-center justify-center">
-                            <MoonLoader
-                                size={30}
-                                color={primaryColor}
-                            />
-                            <p className="mt-4">Submitting your registration...</p>
+                            <MoonLoader size={30} color={primaryColor} />
+                            <p className="mt-4">
+                                Submitting your registration...
+                            </p>
                         </div>
                     ) : (
                         renderStep()
@@ -274,11 +273,12 @@ const RescueRegisterContent = () => {
 
 const RescueRegister = () => {
     return (
-        <Suspense fallback={
-            <div className="flex items-center justify-center min-h-screen">
-                <MoonLoader size={50} color="#3B82F6" />
-            </div>
-        }>
+        <Suspense
+            fallback={
+                <div className="flex items-center justify-center min-h-screen">
+                    <MoonLoader size={50} color="#3B82F6" />
+                </div>
+            }>
             <RescueRegisterContent />
         </Suspense>
     );

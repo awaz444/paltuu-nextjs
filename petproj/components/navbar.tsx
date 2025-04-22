@@ -241,42 +241,14 @@ const Navbar = () => {
                                             className="ml-1"
                                         />
                                         {showFoundersTooltip && (
-                                            <div className="absolute left-1/2 -top-8 transform -translate-x-1/2 -translate-y-full px-4 py-2 bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 text-white text-sm font-bold rounded-lg shadow-xl z-20 whitespace-nowrap animate-pulse-slow">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-lg">
-                                                        🎖
-                                                    </span>
-                                                    <span className="relative">
-                                                        <span className="text-shadow">
-                                                            Founders Club Elite
-                                                        </span>
-                                                        <div className="absolute inset-0 flex items-center justify-center">
-                                                            {[...Array(3)].map(
-                                                                (_, i) => (
-                                                                    <span
-                                                                        key={i}
-                                                                        className="absolute animate-sparkle"
-                                                                        style={{
-                                                                            transform: `rotate(${
-                                                                                i *
-                                                                                120
-                                                                            }deg) translateY(-8px)`,
-                                                                            opacity: 0,
-                                                                        }}>
-                                                                        ✨
-                                                                    </span>
-                                                                )
-                                                            )}
-                                                        </div>
-                                                    </span>
-                                                    <span className="text-lg">
-                                                        🏆
+                                            <div className="absolute -left-36 bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap">
+                                                <div className="flex items-center gap-1">
+                                                    <span>
+                                                        ✨ Founders Club Member
+                                                        ✨
                                                     </span>
                                                 </div>
-                                                <div className="absolute -bottom-2 left-1/2 w-4 h-4 bg-amber-400 transform -translate-x-1/2 rotate-45"></div>
-
-                                                {/* Glowing border effect */}
-                                                <div className="absolute inset-0 rounded-lg border-2 border-amber-200/50 animate-glow"></div>
+                                                <div className="absolute right-16 -bottom-1 w-2 h-2 rotate-45 bg-amber-400"></div>
                                             </div>
                                         )}
                                     </div>
@@ -419,7 +391,7 @@ const Navbar = () => {
                                             className="ml-1"
                                         />
                                         {showFoundersTooltip && (
-                                            <div className="absolute left-0 bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap transform translate-x-1/4">
+                                            <div className="absolute left-[calc(-9rem)] bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap transform translate-x-1/3">
                                                 <div className="flex items-center gap-1">
                                                     <span>
                                                         ✨ Founders Club Member
@@ -448,7 +420,7 @@ const Navbar = () => {
                                             className="ml-1"
                                         />
                                         {showFoundersTooltip && (
-                                            <div className="absolute -left-36 bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap">
+                                            <div className="absolute left-[calc(-8rem)] bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap">
                                                 <div className="flex items-center gap-1">
                                                     <span>
                                                         ✨ Founders Club Member

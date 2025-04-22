@@ -26,12 +26,6 @@
   100% { opacity: 0.5; }
 }
 
-@keyframes sparkle {
-  0% { opacity: 0; transform: scale(0); }
-  50% { opacity: 1; transform: scale(1.2); }
-  100% { opacity: 0; transform: scale(0); }
-}
-
 .animate-pulse-slow {
   animation: pulse-slow 2s infinite;
 }
@@ -46,6 +40,22 @@
 
 .text-shadow {
   text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+@keyframes sparkle {
+  0% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.5) rotate(180deg); }
+  100% { opacity: 0; transform: scale(0) rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.sparkle-container {
+  position: relative;
+  overflow: visible;
 }
 
 /* Logo positioning */

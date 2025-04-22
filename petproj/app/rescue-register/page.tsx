@@ -221,7 +221,7 @@ const RescueRegisterContent = () => {
             <div className="lg:w-1/2 lg:h-screen flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none sticky top-0">
                 <img
                     src="/paltu_logo.svg"
-                    alt="Paltu Logo"
+                    alt="Paltu Logo"    
                     className="mb-6 w-3/4 max-w-md"
                 />
                 <div className="text-center mt-4">
@@ -229,7 +229,7 @@ const RescueRegisterContent = () => {
                         Rescue Shelter Registration
                     </h2>
                     <p className="text-lg">Step {step} of 5</p>
-                    <div className="w-full bg-gray-300 rounded-full h-2.5 mt-4">
+                    <div className="w-full bg-gray-400 rounded-full h-2.5 mt-4">
                         <div
                             className="bg-white h-2.5 rounded-full"
                             style={{ width: `${(step / 5) * 100}%` }}></div>

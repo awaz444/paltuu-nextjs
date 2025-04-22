@@ -6,6 +6,7 @@ import Footer from "@/components/footer";
 import AppClientWrapper from "@/context/AppClientWrapper";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "react-hot-toast";
+import Script from "next/script"; // Import the Script component
 
 const montserrat = Montserrat({
     subsets: ["latin"],
@@ -28,12 +29,26 @@ export default function RootLayout({
             <head>
                 <link rel="icon" href="/favicon-light.png" id="favicon" />
 
-                {/* ✅ Google AdSense Script */}
+                {/* Google AdSense Script */}
                 <script
                     async
                     src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1403927121021328"
                     crossOrigin="anonymous"
                 ></script>
+                
+                {/* Google Analytics Script */}
+                <Script
+                    strategy="afterInteractive"
+                    src="https://www.googletagmanager.com/gtag/js?id=G-724EM6FN42"
+                />
+                <Script id="google-analytics" strategy="afterInteractive">
+                    {`
+                        window.dataLayer = window.dataLayer || [];
+                        function gtag(){dataLayer.push(arguments);}
+                        gtag('js', new Date());
+                        gtag('config', 'G-724EM6FN42');
+                    `}
+                </Script>
             </head>
             <body className={montserrat.className}>
                 <AppClientWrapper>

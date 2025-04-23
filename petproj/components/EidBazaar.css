@@ -1,0 +1,42 @@
+/* Status badges */
+.status-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+  }
+  
+  .status-badge.available {
+    background-color: #10B981; /* Green */
+  }
+  
+  .status-badge.reserved {
+    background-color: #F59E0B; /* Amber */
+  }
+  
+  .status-badge.sold {
+    background-color: #EF4444; /* Red */
+  }
+  
+  /* Price styling */
+  .price {
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin: 5px 0;
+  }
+  
+  /* Modal specific styles */
+  .eid-modal .ant-modal-body {
+    padding: 0;
+  }
+  
+  .modal-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }

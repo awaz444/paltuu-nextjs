@@ -13,7 +13,6 @@ const Navbar = () => {
     const [activeLink, setActiveLink] = useState("");
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [showFoundersTooltip, setShowFoundersTooltip] = useState(false);
     let hideTimeout: ReturnType<typeof setTimeout>;
     const [isVerified, setIsVerified] = useState<boolean | null>(null);
     const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
@@ -81,14 +80,14 @@ const Navbar = () => {
                 userRole === "vet"
                     ? "/vet-panel"
                     : userRole === "admin"
-                    ? "/admin-panel"
-                    : "/my-profile",
+                        ? "/admin-panel"
+                        : "/my-profile",
             label:
                 userRole === "vet"
                     ? "Vet Panel"
                     : userRole === "admin"
-                    ? "Admin Panel"
-                    : "My Profile",
+                        ? "Admin Panel"
+                        : "My Profile",
             isAction: false,
         },
         { href: "/my-listings", label: "My Listings", isAction: false },
@@ -170,14 +169,13 @@ const Navbar = () => {
         setActiveLink(currentPath);
     }, []);
 
-    const dropdownWidth = `${
-        Math.max(
-            displayName.length,
-            ...dropdownItems.map((item) => item.label.length)
-        ) *
-            10 +
+    const dropdownWidth = `${Math.max(
+        displayName.length,
+        ...dropdownItems.map((item) => item.label.length)
+    ) *
+        10 +
         50
-    }px`;
+        }px`;
 
     return (
         <nav className="navbar" style={navbarStyle}>
@@ -191,112 +189,61 @@ const Navbar = () => {
             </button>
 
             {/* Mobile Menu */}
-            <div
-                className={`mobile-menu ${isMenuOpen ? "open" : ""} md:hidden`}
+            <div className={`mobile-menu ${isMenuOpen ? "open" : ""} md:hidden`}
                 style={{ backgroundColor: navbarBackground[userRole] }}>
-                {/* Navigation Links */}
+
+                {/* Navigation Links (no changes) */}
                 <div className="navLinks-mobile">
                     {links.map((link) => (
                         <Link key={link.href} href={`/${link.href}`}>
-                            <span
-                                className={`mobile-link ${
-                                    activeLink === link.href ? "active" : ""
-                                }`}
-                                onClick={() => {
-                                    setActiveLink(link.href);
-                                    setIsMenuOpen(false);
-                                }}>
+                            <span className={`mobile-link ${activeLink === link.href ? "active" : ""}`}>
                                 {link.name}
                             </span>
                         </Link>
                     ))}
                 </div>
 
-                {/* Dropdown (Mobile) */}
+                {/* Dropdown (Mobile) - Now with conditional shine */}
                 <div className="dropdown-mobile">
                     {isAuthenticated || session ? (
-                        <button
-                            className="loginBtn-mobile flex flex-row gap-2"
-                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-                            {displayName}
-                            {isVerified && (
-                                <i className="bi bi-patch-check-fill text-[#cc8800] mr-2" />
-                            )}
-                            {isFoundersClub && (
-                                <div className="relative">
-                                    {/* Mobile View - White Icon */}
-                                    <div
-                                        className="relative md:hidden"
-                                        onMouseEnter={() =>
-                                            setShowFoundersTooltip(true)
-                                        }
-                                        onMouseLeave={() =>
-                                            setShowFoundersTooltip(false)
-                                        }>
-                                        <Image
-                                            src="/white_icon.svg"
-                                            alt="Founders Club"
-                                            width={20}
-                                            height={20}
-                                            className="ml-1"
-                                        />
-                                        {showFoundersTooltip && (
-                                            <div className="absolute -left-36 bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap">
-                                                <div className="flex items-center gap-1">
-                                                    <span>
-                                                        ✨ Founders Club Member
-                                                        ✨
-                                                    </span>
-                                                </div>
-                                                <div className="absolute right-16 -bottom-1 w-2 h-2 rotate-45 bg-amber-400"></div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Desktop View - Primary Icon */}
-                                    <div
-                                        className="relative hidden md:inline"
-                                        onMouseEnter={() =>
-                                            setShowFoundersTooltip(true)
-                                        }
-                                        onMouseLeave={() =>
-                                            setShowFoundersTooltip(false)
-                                        }>
-                                        <Image
-                                            src="/primary_icon.svg"
-                                            alt="Founders Club"
-                                            width={20}
-                                            height={20}
-                                            className="ml-1"
-                                        />
-                                        {showFoundersTooltip && (
-                                            <div className="absolute left-0 bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap transform translate-x-1/4">
-                                                <div className="flex items-center gap-1">
-                                                    <span>
-                                                        ✨ Founders Club Member
-                                                        ✨
-                                                    </span>
-                                                </div>
-                                                <div className="absolute left-1/4 -bottom-1 w-2 h-2 rotate-45 bg-amber-400"></div>
-                                            </div>
-                                        )}
-                                    </div>
+                        <div className="relative group">
+                            {/* Shine effect (only when menu is open) */}
+                            {isMenuOpen && (
+                                <div className="absolute inset-0 overflow-hidden rounded-lg">
+                                    <div className="shine-effect-mobile"></div>
                                 </div>
                             )}
-                            <Image
-                                src="/arrow-down.svg"
-                                alt="Dropdown"
-                                width={12}
-                                height={12}
-                                className="filter invert"
-                            />
-                        </button>
+
+                            <button
+                                className="loginBtn-mobile flex flex-row gap-2 relative z-10"
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+                                {displayName}
+                                {isVerified && (
+                                    <i className="bi bi-patch-check-fill text-[#cc8800] mr-2" />
+                                )}
+                                {isFoundersClub && (
+                                    <Image
+                                        src="/white_icon.svg"
+                                        alt="Founders Club"
+                                        width={20}
+                                        height={20}
+                                        className="ml-1"
+                                    />
+                                )}
+                                <Image
+                                    src="/arrow-down.svg"
+                                    alt="Dropdown"
+                                    width={12}
+                                    height={12}
+                                    className="filter invert"
+                                />
+                            </button>
+                        </div>
                     ) : (
                         <Link href="/login">
                             <button className="loginBtn-mobile">Login</button>
                         </Link>
                     )}
-
                     {/* Dropdown Menu (Mobile) - Updated to handle logout action */}
                     {isDropdownOpen && (
                         <div className="dropdown-menu-mobile">
@@ -345,11 +292,10 @@ const Navbar = () => {
                     {links.map((link) => (
                         <Link key={link.href} href={`/${link.href}`}>
                             <span
-                                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${
-                                    activeLink === link.href
-                                        ? "after:w-full"
-                                        : "after:w-0"
-                                }`}
+                                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${activeLink === link.href
+                                    ? "after:w-full"
+                                    : "after:w-0"
+                                    }`}
                                 style={{ cursor: "pointer" }}
                                 onClick={() => setActiveLink(link.href)}>
                                 {link.name}
@@ -364,73 +310,28 @@ const Navbar = () => {
                     onMouseLeave={handleMouseLeave}>
                     {isAuthenticated || session ? (
                         <button
-                            className="flex items-center justify-center gap-2 loginBtn"
+                            className="flex items-center justify-center gap-2 loginBtn relative group overflow-hidden"
                             style={{
-                                minWidth: dropdownWidth, // Set button width dynamically
+                                minWidth: dropdownWidth,
                             }}>
-                            {displayName}
+                            {/* Golden Shine Effect (now covers whole button) */}
+                            <div className="absolute inset-0 overflow-hidden">
+                                <div className="shine-effect"></div>
+                            </div>
+
+                            {/* Content (needs higher z-index) */}
+                            <span className="relative z-10">{displayName}</span>
                             {isVerified && (
-                                <i className="bi bi-patch-check-fill text-[#cc8800] mr-2" />
+                                <i className="bi bi-patch-check-fill text-[#cc8800] mr-2 relative z-10" />
                             )}
                             {isFoundersClub && (
-                                <div className="relative">
-                                    {/* Mobile view - white icon */}
-                                    <div
-                                        className="relative md:hidden"
-                                        onMouseEnter={() =>
-                                            setShowFoundersTooltip(true)
-                                        }
-                                        onMouseLeave={() =>
-                                            setShowFoundersTooltip(false)
-                                        }>
-                                        <Image
-                                            src="/white_icon.svg"
-                                            alt="Founders Club"
-                                            width={20}
-                                            height={20}
-                                            className="ml-1"
-                                        />
-                                        {showFoundersTooltip && (
-                                            <div className="absolute left-[calc(-9rem)] bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap transform translate-x-1/3">
-                                                <div className="flex items-center gap-1">
-                                                    <span>
-                                                        ✨ Founders Club Member
-                                                        ✨
-                                                    </span>
-                                                </div>
-                                                <div className="absolute left-1/4 -bottom-1 w-2 h-2 rotate-45 bg-amber-400"></div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Desktop view - primary icon */}
-                                    <div
-                                        className="relative hidden md:inline"
-                                        onMouseEnter={() =>
-                                            setShowFoundersTooltip(true)
-                                        }
-                                        onMouseLeave={() =>
-                                            setShowFoundersTooltip(false)
-                                        }>
-                                        <Image
-                                            src="/primary_icon.svg"
-                                            alt="Founders Club"
-                                            width={20}
-                                            height={20}
-                                            className="ml-1"
-                                        />
-                                        {showFoundersTooltip && (
-                                            <div className="absolute left-[calc(-8rem)] bottom-full mb-2 px-3 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-white text-xs font-bold rounded-lg shadow-lg z-20 whitespace-nowrap">
-                                                <div className="flex items-center gap-1">
-                                                    <span>
-                                                        ✨ Founders Club Member
-                                                        ✨
-                                                    </span>
-                                                </div>
-                                                <div className="absolute right-16 -bottom-1 w-2 h-2 rotate-45 bg-amber-400"></div>
-                                            </div>
-                                        )}
-                                    </div>
+                                <div className="relative z-10">
+                                    <Image
+                                        src="/primary_icon.svg"
+                                        alt="Founders Club"
+                                        width={20}
+                                        height={20}
+                                    />
                                 </div>
                             )}
                             <Image
@@ -438,6 +339,7 @@ const Navbar = () => {
                                 alt="Dropdown"
                                 width={12}
                                 height={12}
+                                className="relative z-10"
                             />
                         </button>
                     ) : (
@@ -463,19 +365,19 @@ const Navbar = () => {
                                     userRole === "vet"
                                         ? "/vet-panel"
                                         : userRole === "regular user"
-                                        ? "/my-profile"
-                                        : userRole === "admin"
-                                        ? "/admin-panel"
-                                        : "/"
+                                            ? "/my-profile"
+                                            : userRole === "admin"
+                                                ? "/admin-panel"
+                                                : "/"
                                 }>
                                 <div className="dropdown-item px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
                                     {userRole === "vet"
                                         ? "Vet Panel"
                                         : userRole === "regular user"
-                                        ? "My Profile"
-                                        : userRole === "admin"
-                                        ? "Admin Panel"
-                                        : "Home"}
+                                            ? "My Profile"
+                                            : userRole === "admin"
+                                                ? "Admin Panel"
+                                                : "Home"}
                                 </div>
                             </Link>
                             <Link href="/my-listings">

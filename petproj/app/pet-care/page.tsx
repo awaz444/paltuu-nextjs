@@ -38,7 +38,7 @@ export default function PetCare() {
     }, [dispatch]);
 
     const handleReset = () => {
-        console.log("Resetting filters");
+        // console.log("Resetting filters");s
         setFilters({
             selectedCity: "1",
             selectedCategory: "",
@@ -53,8 +53,9 @@ export default function PetCare() {
     // Filter vets based on the current filters
     const filteredVets = vets.filter((vet) => {
         // Log the current vet being checked
-        console.log(`Checking vet: ${vet.name}`);
-        console.log("Current filters:", filters);
+        // console.log(`Checking vet: ${vet.name}`);
+
+        // console.log("Current filters:", filters);
 
         const matchesCity = filters.selectedCity
             ? vet.city_id === parseInt(filters.selectedCity)
@@ -104,7 +105,7 @@ export default function PetCare() {
         return matchesAll;
     });
 
-    console.log("Filtered Vets:", filteredVets); // Log the final filtered vets
+    // console.log("Filtered Vets:", filteredVets); // Log the final filtered vets
 
     return (
         <>
@@ -114,7 +115,7 @@ export default function PetCare() {
                 style={{ maxWidth: "90%", margin: "0 auto" }}>
                 <VetFilterSection
                     onSearch={(newFilters) => {
-                        console.log("Updating filters:", newFilters);
+                        // console.log("Updating filters:", newFilters);
                         setFilters((prevFilters) => ({
                             ...prevFilters,
                             ...newFilters,

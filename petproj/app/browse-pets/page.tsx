@@ -70,7 +70,7 @@ export default function BrowsePets() {
     };
 
     const handleSearch = () => {
-        console.log("Searching with filters:", filters);
+        // console.log("Searching with filters:", filters);
     };
 
     const filteredPets = pets.filter((pet: any) => {

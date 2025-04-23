@@ -209,7 +209,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
     const handleModalClose = () => setIsModalVisible(false);
     const handleFormSubmit = (formData: any) => {
-        console.log("Adoption form data submitted:", formData);
+        // console.log("Adoption form data submitted:", formData);
     };
 
     return (

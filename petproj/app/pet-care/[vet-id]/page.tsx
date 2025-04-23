@@ -114,7 +114,7 @@ export default function VetDetailsPage({
                 throw new Error("Failed to fetch vet details");
             }
             const data = await response.json();
-            console.log(data);
+            // console.log(data);
             const uniqueByKey = <T, K extends keyof T>(
                 array: T[],
                 key: K

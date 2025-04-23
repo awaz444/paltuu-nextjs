@@ -1,0 +1,479 @@
+/* Base Styles */
+.rescue-page-container {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    padding: 2rem;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+    .action-buttons {
+        flex-direction: row;
+        width: auto;
+        min-width: 300px;
+    }
+}
+
+.back-btn:hover {
+    text-decoration: underline;
+}
+
+.rescue-card {
+    background: white;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+}
+
+/* In your CSS */
+.rescue-header {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.rescue-story, 
+.medical-section, 
+.special-needs, 
+.action-section {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 2rem;
+}
+
+@media (min-width: 768px) {
+    .rescue-header {
+        flex-direction: row;
+        align-items: flex-start; /* Align items to the top */
+        gap: 3rem;
+    }
+
+    .rescue-info {
+        flex: 1;
+        min-width: 60%; /* Ensure info section doesn't get too wide */
+    }
+
+    .image-carousel {
+        width: 25%; /* Reduced to 50% of original 50% width */
+        min-width: 300px; /* Set a minimum width to prevent it from getting too small */
+        margin-left: auto; /* Push to right side */
+      }
+}
+.rescue-info {
+    flex: 1;
+}
+
+.rescue-info h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color: #1f2937;
+}
+
+/* Badges */
+.badge-container {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.urgency-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: white;
+}
+
+.urgency-badge.critical {
+    background-color: #dc2626;
+}
+
+.urgency-badge.high {
+    background-color: #ea580c;
+}
+
+.urgency-badge.moderate {
+    background-color: #d97706;
+}
+
+.urgency-badge.stable {
+    background-color: #16a34a;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.at-shelter {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-badge.adopted {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.fostered {
+    background-color: #f3e8ff;
+    color: #7e22ce;
+}
+
+.status-badge.medical-care {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Pet Meta */
+.pet-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .pet-meta {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #4b5563;
+}
+
+.shelter-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.shelter-avatar {
+    position: relative;
+    margin-top: 1rem;
+}
+
+/* Round the shelter avatar */
+.shelter-avatar img {
+    border-radius: 15%; /* Makes it perfectly round */
+    width: 80px;
+    height: 80px;
+    object-fit: cover; /* Ensures the image fills the circle */
+  }
+
+.verified-badge {
+    position: absolute;
+    right: -0.25rem;
+    bottom: -0.25rem;
+    background: white;
+    border-radius: 9999px;
+    padding: 0.25rem;
+    color: #3b82f6;
+}
+
+.shelter-info h2 {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.shelter-location {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* Image Carousel */
+.image-carousel {
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .image-carousel {
+        width: 30%;
+    }
+}
+
+.carousel-image {
+    height: 0;
+    padding-bottom: 100%;
+    position: relative;
+}
+
+.carousel-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 1rem;
+}
+
+/* Rescue Story */
+.rescue-story {
+    margin-bottom: 2rem;
+    margin-top: 2rem;
+}
+
+.rescue-story h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rescue-story p {
+    color: #4b5563;
+    line-height: 1.75;
+}
+
+/* Medical Section */
+.medical-section {
+    margin-bottom: 2rem;
+}
+
+.medical-section h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.conditions-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .conditions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.condition-card {
+    background-color: #fef2f2;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    position: relative;
+}
+
+.condition-card h3 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.condition-card p {
+    font-size: 0.875rem;
+}
+
+.condition-card .treated {
+    color: #16a34a;
+}
+
+.condition-card .needs-treatment {
+    color: #dc2626;
+}
+
+.warning-icon {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Special Needs */
+.special-needs {
+    margin-bottom: 2rem;
+}
+
+.special-needs h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.needs-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.need-tag {
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.875rem;
+    color: #4b5563;
+}
+
+.action-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  @media (min-width: 768px) {
+    .action-section {
+      flex-direction: row;
+      align-items: center; /* Center align buttons with text */
+      justify-content: space-between;
+    }
+    
+    .action-details {
+      flex: 1;
+      max-width: 50%;
+    }
+    
+    .action-buttons {
+      width: auto;
+      min-width: 300px;
+    }
+  }
+
+.action-details h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.action-details p {
+    color: #6b7280;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .action-buttons {
+        width: auto;
+        min-width: 250px;
+    }
+}
+
+.sponsor-btn {
+    margin-top: 1rem;
+}
+
+/* Custom Buttons */
+.custom-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.custom-btn.primary {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+}
+
+.custom-btn.primary:hover {
+    background-color: #2563eb;
+}
+
+.custom-btn.secondary {
+    background-color: #10b981;
+    color: white;
+    border: none;
+}
+
+.custom-btn.secondary:hover {
+    background-color: #059669;
+}
+
+.custom-btn.outline {
+    background-color: transparent;
+    color: #3b82f6;
+    border: 2px solid #3b82f6;
+}
+
+.custom-btn.outline:hover {
+    background-color: #eff6ff;
+}
+
+.not-found-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.not-found-container h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #1f2937;
+}
+
+/* Add to your existing carousel styles */
+.ant-carousel .slick-prev,
+.ant-carousel .slick-next {
+    color: var(--primary);
+    font-size: 1.5rem;
+    z-index: 1;
+}
+
+.ant-carousel .slick-prev:hover,
+.ant-carousel .slick-next:hover {
+    color: var(--primary-dark);
+}
+
+.ant-carousel .slick-dots li button {
+    background: var(--text-light);
+    opacity: 0.4;
+}
+
+.ant-carousel .slick-dots li.slick-active button {
+    background: var(--primary);
+    opacity: 1;
+}

@@ -147,7 +147,10 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
             const profileData = await res.json();
 
-            if (!profileData.phone_number || !profileData.city) {
+            const isPhoneMissing = !profileData.phone_number;
+            const isCityMissing = !profileData.city;
+
+            if (isPhoneMissing || isCityMissing) {
                 message.warning({
                     content:
                         "Please complete your profile by adding your phone number and city before applying for adoption.",
@@ -206,7 +209,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
     const handleModalClose = () => setIsModalVisible(false);
     const handleFormSubmit = (formData: any) => {
-        console.log("Adoption form data submitted:", formData);
+        // console.log("Adoption form data submitted:", formData);
     };
 
     return (

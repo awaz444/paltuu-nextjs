@@ -29,6 +29,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
+    "formidable": "^3.5.4",
     "fortawesome": "^0.0.1-security",
     "framer-motion": "^12.6.2",
     "gauge": "^5.0.2",
@@ -60,6 +61,7 @@
   "devDependencies": {
     "@svgr/webpack": "^8.1.0",
     "@types/bcrypt": "^5.0.2",
+    "@types/formidable": "^3.4.5",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22",
     "@types/nodemailer": "^6.4.17",

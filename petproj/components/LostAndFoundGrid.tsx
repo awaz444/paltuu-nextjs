@@ -101,6 +101,7 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
                             className="w-full aspect-square object-cover rounded-2xl"
                         />
                     </div>
+                    
                     <div className="p-4">
                         <h3 className="font-bold text-xl mb-1">
                             {pet.category_name}

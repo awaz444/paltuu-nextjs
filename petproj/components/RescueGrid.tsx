@@ -3,12 +3,12 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { Modal } from "antd";
-import { 
-  EnvironmentOutlined, 
-  UserOutlined, 
-  HeartOutlined,
-  MedicineBoxOutlined,
-  InfoCircleOutlined 
+import {
+    EnvironmentOutlined,
+    UserOutlined,
+    HeartOutlined,
+    MedicineBoxOutlined,
+    InfoCircleOutlined,
 } from "@ant-design/icons";
 import "./RescueGrid.css";
 
@@ -22,8 +22,8 @@ interface RescuePet {
     description: string;
     rescue_story: string;
     rescue_date: string;
-    urgency_level: 'critical' | 'high' | 'moderate' | 'stable';
-    status: 'at shelter' | 'adopted' | 'fostered' | 'medical care';
+    urgency_level: "critical" | "high" | "moderate" | "stable";
+    status: "at shelter" | "adopted" | "fostered" | "medical care";
     medical_conditions: {
         condition: string;
         treatment_required: boolean;
@@ -38,14 +38,13 @@ interface RescuePet {
     foster_available: boolean;
     vaccinated: boolean | null;
     neutered: boolean | null;
-    temperament: 'calm' | 'energetic' | 'anxious' | 'playful' | 'independent';
+    temperament: "calm" | "energetic" | "anxious" | "playful" | "independent";
     shelter: {
         id: number;
         name: string;
         profilePicture: string;
         location: string;
         contactInfo: string;
-        verified: boolean;
         website?: string;
         rescueCount: number;
     };
@@ -72,17 +71,17 @@ const RescueGrid: React.FC<RescueGridProps> = ({ pets }) => {
     };
 
     const urgencyColor = {
-        critical: 'bg-red-600',
-        high: 'bg-orange-500',
-        moderate: 'bg-yellow-500',
-        stable: 'bg-green-500'
+        critical: "bg-red-600",
+        high: "bg-orange-500",
+        moderate: "bg-yellow-500",
+        stable: "bg-green-500",
     };
 
     const statusColor = {
-        'at shelter': 'bg-blue-100 text-blue-800',
-        'adopted': 'bg-green-100 text-green-800',
-        'fostered': 'bg-purple-100 text-purple-800',
-        'medical care': 'bg-red-100 text-red-800'
+        "at shelter": "bg-blue-100 text-blue-800",
+        adopted: "bg-green-100 text-green-800",
+        fostered: "bg-purple-100 text-purple-800",
+        "medical care": "bg-red-100 text-red-800",
     };
 
     const sortedPets = [...pets].sort((a, b) => {
@@ -91,88 +90,90 @@ const RescueGrid: React.FC<RescueGridProps> = ({ pets }) => {
     });
 
     if (sortedPets.length === 0) {
-        return <p className="text-center py-10 text-gray-500">No rescue pets available at the moment.</p>;
+        return (
+            <p className="text-center py-10 text-gray-500">
+                No rescue pets available at the moment.
+            </p>
+        );
     }
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-6">
-            
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-6">
             {/* Rescue Pet Cards */}
             {sortedPets.map((pet) => (
                 <Link
-                key={pet.rescue_id}
-                href={
-                    '/rescue-pets/' + pet.rescue_id
-                }
-                passHref
-            >
-                <div
                     key={pet.rescue_id}
-                    className="bg-white rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:cursor-pointer hover:scale-102 transition-all duration-300"
-                    onClick={() => showModal(pet)}
-                >
-                    {/* Urgency Badge */}
-                    <div className={`absolute top-3 left-3 ${urgencyColor[pet.urgency_level]} text-white text-xs font-bold px-2 py-1 rounded-full z-10`}>
-                        {pet.urgency_level.toUpperCase()}
-                    </div>
-
-                    {/* Pet Image */}
-                    <div className="relative aspect-square">
-                        <img
-                            src={pet.images[0] || "/pet-placeholder.jpg"}
-                            alt={pet.pet_name}
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
-
-                    {/* Pet Info */}
-                    <div className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                            <h3 className="font-bold text-xl">{pet.pet_name}</h3>
-                            <span className={`text-xs px-2 py-1 rounded-full ${statusColor[pet.status]}`}>
-                                {pet.status.replace('_', ' ')}
-                            </span>
+                    href={"/rescue-pets/" + pet.rescue_id}
+                    passHref>
+                    <div
+                        key={pet.rescue_id}
+                        className="bg-white rounded-3xl pr-3 pl-3 pt-3 shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:cursor-pointer hover:scale-102 transition-all duration-300 relative"
+                        onClick={() => showModal(pet)}>
+                        {/* Urgency Badge */}
+                        <div
+                            className={`absolute top-3 left-3 ${
+                                urgencyColor[pet.urgency_level]
+                            } text-white text-xs font-bold px-2 py-1 mt-2 ml-2 rounded-full z-10`}>
+                            {pet.urgency_level.toUpperCase()}
                         </div>
 
-                        <div className="flex items-center gap-2 text-gray-600 mb-2">
-                            <span>
-                                {pet.approximate_age_lower}-{pet.approximate_age_higher} years
-                            </span>
-                            <span>•</span>
-                            <span className="capitalize">{pet.sex}</span>
+                        <div className="relative">
+                            <img
+                                src={pet.images[0] || "./dog-placeholder.png"}
+                                alt={pet.pet_name || "Lost or Found Pet"}
+                                className="w-full aspect-square object-cover rounded-2xl"
+                            />
                         </div>
 
-                        <div className="flex items-center gap-2 mb-2">
-                            <EnvironmentOutlined className="text-primary" />
-                            <p className="text-gray-600">{pet.shelter.location}</p>
-                        </div>
+                        {/* Pet Info */}
+                        <div className="p-4">
+                            <div className="flex justify-between items-start mb-2">
+                                <h3 className="font-bold text-xl">
+                                    {pet.pet_name}
+                                </h3>
+                                <span
+                                    className={`text-xs px-2 py-1 rounded-full ${
+                                        statusColor[pet.status]
+                                    }`}>
+                                    {pet.status.replace("_", " ")}
+                                </span>
+                            </div>
 
-                        {/* Shelter Info */}
-                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-                            {pet.shelter.profilePicture ? (
-                                <img
-                                    src={pet.shelter.profilePicture}
-                                    alt={pet.shelter.name}
-                                    className="w-6 h-6 rounded-full object-cover"
-                                />
-                            ) : (
-                                <UserOutlined className="text-primary" />
-                            )}
-                            <p className="text-sm text-gray-600 truncate">
-                                {pet.shelter.name}
-                                {pet.shelter.verified && (
-                                    <span className="ml-1 text-blue-500">✓</span>
+                            <div className="flex items-center gap-2 text-gray-600 mb-2">
+                                <span>
+                                    {pet.approximate_age_lower}-
+                                    {pet.approximate_age_higher} years
+                                </span>
+                                <span>•</span>
+                                <span className="capitalize">{pet.sex}</span>
+                            </div>
+
+                            <div className="flex items-center gap-2 mb-2">
+                                <EnvironmentOutlined className="text-primary" />
+                                <p className="text-gray-600">
+                                    {pet.shelter.location}
+                                </p>
+                            </div>
+
+                            {/* Shelter Info */}
+                            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                                {pet.shelter.profilePicture ? (
+                                    <img
+                                        src={pet.shelter.profilePicture}
+                                        alt={pet.shelter.name}
+                                        className="w-6 h-6 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <UserOutlined className="text-primary" />
                                 )}
-                            </p>
+                                <p className="text-sm text-gray-600 truncate">
+                                    {pet.shelter.name}
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </Link>
-            ))
-
-            }
-
-            
+                </Link>
+            ))}
         </div>
     );
 };

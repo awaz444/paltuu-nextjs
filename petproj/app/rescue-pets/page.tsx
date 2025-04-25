@@ -40,7 +40,6 @@ export type RescuePet = {
         profilePicture: string;
         location: string;
         contactInfo: string;
-        verified: boolean;
         website?: string;
         rescueCount: number;
     };
@@ -76,7 +75,7 @@ const sampleRescuePets: RescuePet[] = [
         current_location: "Paws Haven Shelter",
         sex: "male",
         images: [
-            "/dogs/buddy1.jpg",
+            "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744871298/dfkz7tda87dhn5nt1ziu.jpg",
             "/dogs/buddy2.jpg",
             "/dogs/buddy3.jpg"
         ],
@@ -88,10 +87,9 @@ const sampleRescuePets: RescuePet[] = [
         shelter: {
             id: 101,
             name: "Paws Haven",
-            profilePicture: "/shelters/paws-haven.jpg",
+            profilePicture: "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744871298/dfkz7tda87dhn5nt1ziu.jpg",
             location: "Karachi",
             contactInfo: "contact@pawshaven.org",
-            verified: true,
             website: "www.pawshaven.org",
             rescueCount: 142
         }
@@ -119,7 +117,7 @@ const sampleRescuePets: RescuePet[] = [
         current_location: "Foster Home - Lahore",
         sex: "female",
         images: [
-            "/cats/mittens1.jpg",
+            "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744871298/dfkz7tda87dhn5nt1ziu.jpg",
             "/cats/mittens2.jpg"
         ],
         adoption_fee: null,
@@ -130,10 +128,9 @@ const sampleRescuePets: RescuePet[] = [
         shelter: {
             id: 102,
             name: "Second Chance Felines",
-            profilePicture: "/shelters/second-chance.jpg",
+            profilePicture: "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744871298/dfkz7tda87dhn5nt1ziu.jpg",
             location: "Lahore",
             contactInfo: "adopt@secondchance.org",
-            verified: true,
             rescueCount: 89
         }
     },
@@ -161,7 +158,7 @@ const sampleRescuePets: RescuePet[] = [
         current_location: "Happy Tails Sanctuary",
         sex: "male",
         images: [
-            "/dogs/rocky1.jpg",
+            "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744871298/dfkz7tda87dhn5nt1ziu.jpg",
             "/dogs/rocky2.jpg"
         ],
         adoption_fee: 50,
@@ -172,10 +169,9 @@ const sampleRescuePets: RescuePet[] = [
         shelter: {
             id: 103,
             name: "Happy Tails",
-            profilePicture: "/shelters/happy-tails.jpg",
+            profilePicture: "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744871298/dfkz7tda87dhn5nt1ziu.jpg",
             location: "Islamabad",
             contactInfo: "info@happytails.pk",
-            verified: false,
             rescueCount: 56
         }
     }

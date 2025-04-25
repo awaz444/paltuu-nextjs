@@ -103,23 +103,67 @@ const RescueRegisterContent = () => {
 
         setIsSubmitting(true);
         try {
-            console.log("Form data to be submitted:", {
-                ...formData,
-                services,
-                imageList,
+            // Create FormData object
+            const formDataToSend = new FormData();
+
+            // Append all non-file fields as JSON
+            formDataToSend.append(
+                "data",
+                JSON.stringify({
+                    ...formData,
+                    userId,
+                    services,
+                    socials: formData.socials,
+                    animalTypes: formData.animalTypes,
+                })
+            );
+
+            // Append files
+            if (formData.logo) {
+                formDataToSend.append("logo", formData.logo);
+            }
+
+            formData.photos.forEach((photo) => {
+                formDataToSend.append("photos", photo);
             });
 
-            // Simulate successful submission for frontend testing
-            toast.success("Registration would be submitted here (simulated)");
-            console.log("Registration data:", {
-                formData,
-                services,
-                imageList,
+            if (formData.regCert) {
+                formDataToSend.append("regCert", formData.regCert);
+            }
+
+            if (formData.cnicFront) {
+                formDataToSend.append("cnicFront", formData.cnicFront);
+            }
+
+            if (formData.cnicBack) {
+                formDataToSend.append("cnicBack", formData.cnicBack);
+            }
+
+            // Make API call
+            const response = await fetch("/api/rescue/shelters", {
+                method: "POST",
+                body: formDataToSend,
             });
-            router.push("/dashboard");
+
+            if (!response.ok) {
+                throw new Error("Failed to submit registration");
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                toast.success("Shelter registration submitted successfully!");
+                router.push("/dashboard");
+            } else {
+                throw new Error(result.error || "Registration failed");
+            }
         } catch (error) {
             console.error("Registration error:", error);
-            toast.error("An unexpected error occurred. Please try again.");
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "An unexpected error occurred. Please try again."
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -221,7 +265,7 @@ const RescueRegisterContent = () => {
             <div className="lg:w-1/2 lg:h-screen flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none sticky top-0">
                 <img
                     src="/paltu_logo.svg"
-                    alt="Paltu Logo"    
+                    alt="Paltu Logo"
                     className="mb-6 w-3/4 max-w-md"
                 />
                 <div className="text-center mt-4">

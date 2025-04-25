@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Modal } from "antd";
 import Link from "next/link";
+import EidBazaarListing from "./EidBazarListing";
 import { EnvironmentOutlined, UserOutlined } from "@ant-design/icons";
 
 export interface QurbaniAnimal {
@@ -9,8 +10,11 @@ export interface QurbaniAnimal {
   breed: string;
   age: number;
   weight: number;
+  teethCount?: number;                  // New field
+  hornCondition?: 'Good' | 'Damaged' | 'Broken' | 'None'; // New field
+  isVaccinated: boolean;               // New field
   description?: string;
-  price: number;
+  price: number | null;
   status: "Available" | "Sold" | "Reserved";
   location: string;
   city: string;
@@ -26,6 +30,24 @@ interface EidBazaarGridProps {
 
 const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
   const [selectedAnimal, setSelectedAnimal] = useState<QurbaniAnimal | null>(null);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
+
+  const handleCreateSubmit = (values: QurbaniAnimal) => {
+    console.log("New listing:", values);
+    // Here you would typically:
+    // 1. Make API call to create listing
+    // 2. Refresh the animal list
+    // 3. Close the modal
+    setCreateModalVisible(false);
+    // Example:
+    // axios.post('/api/eid-bazaar', values)
+    //   .then(() => {
+    //     message.success('Listing created successfully');
+    //     setCreateModalVisible(false);
+    //     // Refresh your animals data here
+    //   })
+    //   .catch(error => message.error('Error creating listing'));
+  };
 
   if (animals.length === 0) {
     return (
@@ -37,11 +59,12 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
 
   return (
     <>
+      {/* Create Listing Button - Matches Lost & Found style */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {/* Create Listing Button - Matches Lost & Found style */}
-        <Link
-          href="/eid-bazaar/create-listing"
-          className="create-listing-btn hidden sm:flex bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 text-sm sm:text-base"
+        {/* Modified Create Listing Button to open modal */}
+        <div
+          className="create-listing-btn hidden sm:flex bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 text-sm sm:text-base cursor-pointer"
+          onClick={() => setCreateModalVisible(true)}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -51,16 +74,16 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
             className="bi bi-plus-circle mb-3"
             viewBox="0 0 16 16"
           >
-            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
           </svg>
           Sell Animal
-        </Link>
+        </div>
 
         {/* Mobile create button */}
-        <Link
-          href="/eid-bazaar/create-listing"
+        <div
           className="fixed bottom-4 right-2 sm:hidden z-50"
+          onClick={() => setCreateModalVisible(true)}
         >
           <button className="flex items-center gap-1.5 bg-white text-primary border-2 border-primary p-2 rounded-xl shadow-lg transition-all duration-300 hover:scale-105">
             <svg
@@ -71,17 +94,17 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
               className="h-3.5 w-3.5"
               viewBox="0 0 16 16"
             >
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
             </svg>
             <span className="text-xs">Add</span>
           </button>
-        </Link>
+        </div>
 
         {/* Animal Cards - Consistent with Lost & Found design */}
         {animals.map(animal => (
-          <div 
-            key={animal.id} 
+          <div
+            key={animal.id}
             className="bg-white pr-3 pl-3 pt-3 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:cursor-pointer hover:scale-102 transition-all duration-300"
             onClick={() => setSelectedAnimal(animal)}
           >
@@ -91,22 +114,36 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                 alt={animal.breed}
                 className="w-full aspect-square object-cover rounded-2xl"
               />
-              <span className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${
-                animal.status === "Available" ? "bg-green-100 text-green-800" :
+              <span className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${animal.status === "Available" ? "bg-green-100 text-green-800" :
                 animal.status === "Reserved" ? "bg-yellow-100 text-yellow-800" :
-                "bg-gray-100 text-gray-800"
-              }`}>
+                  "bg-gray-100 text-gray-800"
+                }`}>
                 {animal.status}
               </span>
             </div>
             <div className="p-4">
-              <h3 className="font-bold text-xl mb-1">
+              {/* Swapped positions of price and breed */}
+              <p className="text-primary font-semibold text-lg mb-1">
+                {animal.price !== null ? animal.price.toLocaleString() + ' PKR' : 'Call for Price'}
+              </p>
+              <h3 className="font-bold text-xl mb-2">
                 {animal.breed}
               </h3>
-              <p className="text-primary font-semibold mb-1">{animal.price.toLocaleString()} PKR</p>
-              <div className="flex flex-row gap-2 mb-1">
-                <p className="text-gray-400 text-sm sm:text-base">{animal.species} • {animal.age} yrs • {animal.weight}</p>
+
+              {/* Replaced weight/age/species with teeth and vaccinated indicators */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {animal.isVaccinated && (
+                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                    Vaccinated
+                  </span>
+                )}
+                {animal.teethCount && (
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                     {animal.teethCount} teeth
+                  </span>
+                )}
               </div>
+
               <div className="flex flex-row gap-2 items-center mb-2">
                 <EnvironmentOutlined className="text-primary" />
                 <p className="text-gray-600">{animal.city}, {animal.location}</p>
@@ -178,8 +215,12 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
 
               {/* Details Section */}
               <div className="space-y-4">
-                <div className="bg-primary-100 text-primary-800 px-3 py-1 rounded-full text-sm font-medium inline-block">
-                  {selectedAnimal.price.toLocaleString()} PKR
+                <div className={selectedAnimal.price !== null ?
+                  "bg-primary-100 text-primary-800 px-3 py-1 rounded-full text-sm font-medium inline-block" :
+                  "bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium inline-block"}>
+                  {selectedAnimal.price !== null ?
+                    selectedAnimal.price.toLocaleString() + ' PKR' :
+                    'Call for Price'}
                 </div>
 
                 <div className="space-y-3">
@@ -208,6 +249,24 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                       <label className="text-sm font-medium text-gray-500">Breed</label>
                       <p className="text-gray-800">{selectedAnimal.breed}</p>
                     </div>
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    <div className="flex gap-4">
+                      <span className="font-medium">Vaccination:</span>
+                      <span>{selectedAnimal.isVaccinated ? "✅ Certified" : "❌ Not vaccinated"}</span>
+                    </div>
+                    {selectedAnimal.teethCount && (
+                      <div className="flex gap-4">
+                        <span className="font-medium">Teeth Count:</span>
+                        <span>{selectedAnimal.teethCount} (Age verified)</span>
+                      </div>
+                    )}
+                    {selectedAnimal.hornCondition && (
+                      <div className="flex gap-4">
+                        <span className="font-medium">Horn Condition:</span>
+                        <span>{selectedAnimal.hornCondition}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Description Section */}
@@ -241,7 +300,7 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                         {selectedAnimal.sellerContact}
                       </a>
                     </div>
-                    <button className="mt-4 w-full bg-green-500 text-white py-2 rounded-lg flex items-center justify-center gap-2">
+                    <button className="mt-4 w-full bg-primary text-white py-2 rounded-lg flex items-center justify-center gap-2">
                       Contact via WhatsApp
                     </button>
                   </div>
@@ -251,8 +310,32 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
           </div>
         </Modal>
       )}
+
+      {/* Create Listing Modal */}
+      <Modal
+        title={<span className="text-xl font-bold text-gray-800">Create New Listing</span>}
+        open={createModalVisible}
+        onCancel={() => setCreateModalVisible(false)}
+        footer={null}
+        width={500}
+        destroyOnClose
+        className="rounded-2xl overflow-hidden"
+        styles={{
+          header: {
+            borderBottom: '1px solid #f3f4f6',
+            padding: '16px 24px'
+          },
+          body: {
+            padding: 0
+          }
+        }}
+      >
+        <EidBazaarListing
+          onSubmit={handleCreateSubmit}
+          onCancel={() => setCreateModalVisible(false)}
+        />
+      </Modal>
     </>
   );
-};
-
+}
 export default EidBazaarGrid;

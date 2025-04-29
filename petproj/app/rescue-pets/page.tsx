@@ -21,7 +21,6 @@ export type RescuePet = {
     status: 'at shelter' | 'adopted' | 'fostered' | 'medical care';
     medical_conditions: {
         condition: string;
-        treatment_required: boolean;
         treatment_cost?: number;
         treated?: boolean;
     }[];
@@ -39,148 +38,14 @@ export type RescuePet = {
         name: string;
         profilePicture: string;
         location: string;
-        contactInfo: string;
-        website?: string;
-        rescueCount: number;
     };
 };
-
-const sampleRescuePets: RescuePet[] = [
-    {
-        rescue_id: 1,
-        rescue_org_id: 101,
-        pet_name: "Buddy",
-        pet_type: 1, // Dog
-        approximate_age_lower: 2,
-        approximate_age_higher: 4,
-        description: "Friendly golden retriever with a heart condition",
-        rescue_story: "Found abandoned in a park with severe malnutrition. After months of care, he's ready for a loving home that can manage his medical needs.",
-        rescue_date: "2023-05-15",
-        urgency_level: "high",
-        status: "at shelter",
-        medical_conditions: [
-            {
-                condition: "Heart murmur",
-                treatment_required: true,
-                treatment_cost: 500,
-                treated: false
-            },
-            {
-                condition: "Malnutrition recovery",
-                treatment_required: true,
-                treated: true
-            }
-        ],
-        special_needs: ["Special diet", "Regular vet checkups"],
-        current_location: "Paws Haven Shelter",
-        sex: "male",
-        images: [
-            "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744871298/dfkz7tda87dhn5nt1ziu.jpg",
-            "/dogs/buddy2.jpg",
-            "/dogs/buddy3.jpg"
-        ],
-        adoption_fee: 150,
-        foster_available: true,
-        vaccinated: true,
-        neutered: true,
-        temperament: "calm",
-        shelter: {
-            id: 101,
-            name: "Paws Haven",
-            profilePicture: "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744871298/dfkz7tda87dhn5nt1ziu.jpg",
-            location: "Karachi",
-            contactInfo: "contact@pawshaven.org",
-            website: "www.pawshaven.org",
-            rescueCount: 142
-        }
-    },
-    {
-        rescue_id: 2,
-        rescue_org_id: 102,
-        pet_name: "Mittens",
-        pet_type: 2, // Cat
-        approximate_age_lower: 1,
-        approximate_age_higher: 2,
-        description: "Playful tabby cat with three legs",
-        rescue_story: "Rescued from a construction site after losing a leg in an accident. She's adapted wonderfully and loves to play.",
-        rescue_date: "2023-08-22",
-        urgency_level: "moderate",
-        status: "fostered",
-        medical_conditions: [
-            {
-                condition: "Amputated leg",
-                treatment_required: false,
-                treated: true
-            }
-        ],
-        special_needs: ["Needs ground-level access"],
-        current_location: "Foster Home - Lahore",
-        sex: "female",
-        images: [
-            "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744871298/dfkz7tda87dhn5nt1ziu.jpg",
-            "/cats/mittens2.jpg"
-        ],
-        adoption_fee: null,
-        foster_available: false,
-        vaccinated: true,
-        neutered: true,
-        temperament: "playful",
-        shelter: {
-            id: 102,
-            name: "Second Chance Felines",
-            profilePicture: "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744871298/dfkz7tda87dhn5nt1ziu.jpg",
-            location: "Lahore",
-            contactInfo: "adopt@secondchance.org",
-            rescueCount: 89
-        }
-    },
-    {
-        rescue_id: 3,
-        rescue_org_id: 103,
-        pet_name: "Rocky",
-        pet_type: 1, // Dog
-        approximate_age_lower: 5,
-        approximate_age_higher: 7,
-        description: "Senior dog with arthritis looking for a quiet retirement home",
-        rescue_story: "Owner passed away and no family could take him in. This gentle soul just needs a comfortable place to spend his golden years.",
-        rescue_date: "2023-10-10",
-        urgency_level: "stable",
-        status: "at shelter",
-        medical_conditions: [
-            {
-                condition: "Arthritis",
-                treatment_required: true,
-                treatment_cost: 100,
-                treated: true
-            }
-        ],
-        special_needs: ["Joint supplements", "Soft bedding"],
-        current_location: "Happy Tails Sanctuary",
-        sex: "male",
-        images: [
-            "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744871298/dfkz7tda87dhn5nt1ziu.jpg",
-            "/dogs/rocky2.jpg"
-        ],
-        adoption_fee: 50,
-        foster_available: true,
-        vaccinated: true,
-        neutered: true,
-        temperament: "calm",
-        shelter: {
-            id: 103,
-            name: "Happy Tails",
-            profilePicture: "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744871298/dfkz7tda87dhn5nt1ziu.jpg",
-            location: "Islamabad",
-            contactInfo: "info@happytails.pk",
-            rescueCount: 56
-        }
-    }
-];
 
 export default function RescuePets() {
     useSetPrimaryColor();
 
-    const [pets] = useState<RescuePet[]>(sampleRescuePets);
+    const [pets, setPets] = useState<RescuePet[]>([]);
+    const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState({
         urgency: "",
         petType: "",
@@ -192,9 +57,24 @@ export default function RescuePets() {
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);
         const color = rootStyles.getPropertyValue("--primary-color").trim();
-        if (color) {
-            setPrimaryColor(color);
-        }
+        if (color) setPrimaryColor(color);
+    }, []);
+
+    useEffect(() => {
+        const fetchPets = async () => {
+            try {
+                const res = await fetch("/api/rescue/pets");
+                if (!res.ok) throw new Error("Failed to fetch pets");
+                const data = await res.json();
+                setPets(data);
+            } catch (err) {
+                console.error("Error fetching rescue pets:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPets();
     }, []);
 
     const filteredPets = pets.filter((pet) => {
@@ -212,7 +92,6 @@ export default function RescuePets() {
     });
 
     const sortedPets = [...filteredPets].sort((a, b) => {
-        // Sort by urgency (critical first)
         const urgencyOrder = { critical: 0, high: 1, moderate: 2, stable: 3 };
         return urgencyOrder[a.urgency_level] - urgencyOrder[b.urgency_level];
     });
@@ -220,20 +99,16 @@ export default function RescuePets() {
     return (
         <>
             <Navbar />
-            <div
-                className="fullBody "
-                style={{ maxWidth: "90%", margin: "0 auto" }}>
+            <div className="fullBody" style={{ maxWidth: "90%", margin: "0 auto" }}>
                 <RescueFilter
-                    onSearch={(filters) => {
-                        setFilters(filters);
-                    }}
-                    onReset={() => {
+                    onSearch={(filters) => setFilters(filters)}
+                    onReset={() =>
                         setFilters({
                             urgency: "",
                             petType: "",
                             location: "",
-                        });
-                    }}
+                        })
+                    }
                 />
                 <main className="flex min-h-screen flex-col mx-0 md:mx-8 mt-1 items-center pt-7 bg-gray-100">
                     <div className="w-full">
@@ -244,16 +119,22 @@ export default function RescuePets() {
                             </p>
                         </div>
 
-                        {sortedPets.length === 0 ? (
+                        {loading ? (
+                            <div className="flex justify-center py-16">
+                                <MoonLoader color={primaryColor} size={30} />
+                            </div>
+                        ) : sortedPets.length === 0 ? (
                             <div className="text-center py-10">
                                 <p className="text-gray-500">No rescue pets match your filters</p>
                                 <button
                                     className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark"
-                                    onClick={() => setFilters({
-                                        urgency: "",
-                                        petType: "",
-                                        location: "",
-                                    })}
+                                    onClick={() =>
+                                        setFilters({
+                                            urgency: "",
+                                            petType: "",
+                                            location: "",
+                                        })
+                                    }
                                 >
                                     Reset Filters
                                 </button>

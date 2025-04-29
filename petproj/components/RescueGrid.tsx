@@ -26,7 +26,6 @@ interface RescuePet {
     status: "at shelter" | "adopted" | "fostered" | "medical care";
     medical_conditions: {
         condition: string;
-        treatment_required: boolean;
         treatment_cost?: number;
         treated?: boolean;
     }[];
@@ -44,9 +43,6 @@ interface RescuePet {
         name: string;
         profilePicture: string;
         location: string;
-        contactInfo: string;
-        website?: string;
-        rescueCount: number;
     };
 }
 

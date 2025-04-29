@@ -1,6 +1,9 @@
 "use client";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { MoonLoader } from "react-spinners";
 import Navbar from "../../../components/navbar";
+import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { Carousel } from "antd";
 import {
     HeartOutlined,
@@ -13,11 +16,9 @@ import {
     QuestionOutlined,
     HomeOutlined,
 } from "@ant-design/icons";
-import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
-import { useState, useEffect } from "react";
 import "./styles.css";
 
-interface RescuePet {
+export type RescuePet = {
     rescue_id: number;
     rescue_org_id: number;
     pet_name: string;
@@ -52,60 +53,7 @@ interface RescuePet {
         verified: boolean;
         website?: string;
     };
-}
-
-// Sample data
-const rescuePets: RescuePet[] = [
-    {
-        rescue_id: 1,
-        rescue_org_id: 101,
-        pet_name: "Buddy",
-        pet_type: 1,
-        approximate_age_lower: 2,
-        approximate_age_higher: 4,
-        description: "Friendly golden retriever with heart condition",
-        rescue_story:
-            "Rescued from an abandoned building with severe malnutrition...",
-        rescue_date: "2023-05-15",
-        urgency_level: "critical",
-        status: "at shelter",
-        medical_conditions: [
-            {
-                condition: "Heart murmur",
-                treatment_cost: 500,
-                treated: false,
-            },
-            {
-                condition: "Big Cock",
-                treatment_cost: 700,
-                treated: true,
-            },
-        ],
-        special_needs: ["Special diet", "Regular vet checkups"],
-        current_location: "Paws Haven Shelter",
-        sex: "male",
-        images: [
-            "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744871298/dfkz7tda87dhn5nt1ziu.jpg",
-            "https://res.cloudinary.com/dfwykqn1d/image/upload/v1745241434/ruuzuuhdbhnjjvgybaam.jpg",
-            "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744815787/vocg0o0zbnqxowcutgft.jpg",
-        ],
-        adoption_fee: 150,
-        foster_available: true,
-        vaccinated: true,
-        neutered: true,
-        temperament: "calm",
-        shelter: {
-            id: 101,
-            name: "Paws Haven",
-            profilePicture:
-                "https://res.cloudinary.com/dfwykqn1d/image/upload/v1744815797/orew8lzb1w5ivefawvbq.jpg",
-            location: "Karachi",
-            contactInfo: "contact@pawshaven.org",
-            verified: true,
-            website: "www.pawshaven.org",
-        },
-    },
-];
+};
 
 export default function RescuePetPage({
     params,
@@ -113,15 +61,35 @@ export default function RescuePetPage({
     params: { rescue_id: string };
 }) {
     const router = useRouter();
-    const pet = rescuePets.find(
-        (p) => p.rescue_id === Number(params.rescue_id)
-    );
-    const [primaryColor, setPrimaryColor] = useState("#3b82f6"); // Default fallback color
+    const [pet, setPet] = useState<RescuePet | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [primaryColor, setPrimaryColor] = useState("#3b82f6");
 
     useSetPrimaryColor();
 
     useEffect(() => {
-        // Get the computed style of the `--primary-color` CSS variable
+        const fetchPetData = async () => {
+            try {
+                const response = await fetch(
+                    `/api/rescue/pets/${params.rescue_id}`
+                );
+                if (!response.ok) {
+                    throw new Error("Pet not found");
+                }
+                const data = await response.json();
+                setPet(data);
+            } catch (err) {
+                setError((err as Error).message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPetData();
+    }, [params.rescue_id]);
+
+    useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);
         const color = rootStyles.getPropertyValue("--primary-color").trim();
         if (color) {
@@ -129,17 +97,48 @@ export default function RescuePetPage({
         }
     }, []);
 
+    if (loading) {
+        return (
+            <>
+                <Navbar />
+                <div className="flex justify-center items-center min-h-screen">
+                    <MoonLoader color={primaryColor} size={30} />
+                </div>
+            </>
+        );
+    }
+
+    if (error) {
+        return (
+            <>
+                <Navbar />
+                <div className="not-found-container">
+                    <h1>{error}</h1>
+                    <button
+                        className="custom-btn primary"
+                        onClick={() => router.push("/rescue-pets")}
+                        style={{ backgroundColor: primaryColor }}>
+                        Browse Other Rescues
+                    </button>
+                </div>
+            </>
+        );
+    }
+
     if (!pet) {
         return (
-            <div className="not-found-container">
-                <h1>Pet Not Found</h1>
-                <button
-                    className="custom-btn primary"
-                    onClick={() => router.push("/rescue-pets")}
-                    style={{ backgroundColor: primaryColor }}>
-                    Browse Other Rescues
-                </button>
-            </div>
+            <>
+                <Navbar />
+                <div className="not-found-container">
+                    <h1>Pet Not Found</h1>
+                    <button
+                        className="custom-btn primary"
+                        onClick={() => router.push("/rescue-pets")}
+                        style={{ backgroundColor: primaryColor }}>
+                        Browse Other Rescues
+                    </button>
+                </div>
+            </>
         );
     }
 

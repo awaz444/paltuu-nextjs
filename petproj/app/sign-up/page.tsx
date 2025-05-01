@@ -8,7 +8,7 @@ import { signIn } from "next-auth/react";
 import { User } from "../types/user";
 import { useRouter } from "next/navigation";
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
-import { Modal, Button } from "antd";
+import { Modal, Button, Radio } from "antd";
 import { toast } from "react-hot-toast";
 import OTPInput from "react-otp-input";
 import "./styles.css";
@@ -29,7 +29,7 @@ const CreateUser = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [phone_number, setPhoneNumber] = useState("");
-    const [role, setRole] = useState<"regular user" | "vet">("regular user");
+    const [role, setRole] = useState<"regular user" | "vet" | "rescue shelter">("regular user");
 
     // OTP Verification States
     const [isEmailVerified, setIsEmailVerified] = useState(false);
@@ -50,6 +50,7 @@ const CreateUser = () => {
     const [googleLoading, setGoogleLoading] = useState(false); // Loading state for Google login
 
     const [showVetInfoModal, setShowVetInfoModal] = useState(false);
+    const [showRescueInfoModal, setShowRescueInfoModal] = useState(false);
 
     const [isVerifying, setIsVerifying] = useState(false);
 
@@ -179,7 +180,7 @@ const CreateUser = () => {
             email,
             password,
             phone_number,
-            role: "regular user",
+            role: "regular user", // The actual role differentiation happens after base account creation
         };
 
         try {
@@ -205,6 +206,8 @@ const CreateUser = () => {
 
             if (role === "vet") {
                 router.push(`/vet-register?user_id=${result.payload.user_id}`);
+            } else if (role === "rescue shelter") {
+                router.push(`/rescue-register?user_id=${result.payload.user_id}`);
             } else {
                 router.push("/login");
             }
@@ -289,7 +292,6 @@ const CreateUser = () => {
     const handleOtpChange = (otp: string) => {
         setOtp(otp);
         setOtpError(""); // Clear previous errors when typing
-        // Removed the auto-submit condition
     };
 
     const handleSubmitOtp = async () => {
@@ -328,6 +330,16 @@ const CreateUser = () => {
             }
         } finally {
             setIsVerifying(false);
+        }
+    };
+
+    const handleRoleChange = (selectedRole: "regular user" | "vet" | "rescue shelter") => {
+        setRole(selectedRole);
+        
+        if (selectedRole === "vet") {
+            setShowVetInfoModal(true);
+        } else if (selectedRole === "rescue shelter") {
+            setShowRescueInfoModal(true);
         }
     };
 
@@ -385,43 +397,39 @@ const CreateUser = () => {
                         Sign Up
                     </h2>
 
-                    <div className="relative border-2 border-yellow-400 bg-yellow-50 p-4 rounded-xl shadow-md">
-                        <div className="flex items-start space-x-3">
-                            <div className="mt-1">
-                                <input
-                                    type="checkbox"
-                                    id="vetCheckbox"
-                                    checked={role === "vet"}
-                                    onChange={() => {
-                                        const newRole =
-                                            role === "regular user"
-                                                ? "vet"
-                                                : "regular user";
-                                        setRole(newRole);
-                                        // When changing to vet role, show info modal
-                                        if (newRole === "vet") {
-                                            setShowVetInfoModal(true);
-                                        }
-                                    }}
-                                    className="h-5 w-5 border-gray-300 text-primary rounded focus:ring-primary focus:outline-none"
-                                />
+                    {/* Account Type Selection - Redesigned */}
+                    <div className="border-2 border-yellow-400 bg-yellow-50 p-4 rounded-xl shadow-md">
+                        <h3 className="font-medium text-gray-800 mb-2">I am registering as a:</h3>
+                        <Radio.Group 
+                            value={role} 
+                            onChange={(e) => handleRoleChange(e.target.value)}
+                            className="w-full">
+                            <div className="grid grid-cols-1 gap-2">
+                                <Radio value="regular user" className="border rounded-lg p-2 hover:bg-yellow-100">
+                                    <div className="ml-2">
+                                        <span className="font-medium">Pet Owner / Regular User</span>
+                                        <p className="text-xs text-gray-600">Standard account for pet owners and enthusiasts</p>
+                                    </div>
+                                </Radio>
+                                <Radio value="vet" className="border rounded-lg p-2 hover:bg-yellow-100">
+                                    <div className="ml-2">
+                                        <span className="font-medium">Veterinarian</span>
+                                        <p className="text-xs text-gray-600">For licensed veterinary professionals</p>
+                                    </div>
+                                </Radio>
+                                <Radio value="rescue shelter" className="border rounded-lg p-2 hover:bg-yellow-100">
+                                    <div className="ml-2">
+                                        <span className="font-medium">Rescue Shelter</span>
+                                        <p className="text-xs text-gray-600">For animal rescue organizations</p>
+                                    </div>
+                                </Radio>
                             </div>
-                            <div>
-                                <label
-                                    htmlFor="vetCheckbox"
-                                    className="font-medium text-gray-800 text-base cursor-pointer">
-                                    I am a veterinarian
-                                </label>
-                                <p className="text-gray-600 text-sm mt-1">
-                                    Selecting this will enable vet-specific
-                                    features and verification process.
-                                    <strong className="block mt-1 text-red-600">
-                                        Note: Google sign-up will not be
-                                        available for vet accounts.
-                                    </strong>
-                                </p>
-                            </div>
-                        </div>
+                        </Radio.Group>
+                        {role !== "regular user" && (
+                            <p className="mt-2 text-sm text-red-600 font-medium">
+                                Note: Google sign-up is not available for {role} accounts
+                            </p>
+                        )}
                     </div>
 
                     {role === "regular user" && (
@@ -708,65 +716,6 @@ const CreateUser = () => {
                             </p>
                         )}
                     </div>
-
-                    {passwordMismatchError && (
-                        <p className="text-red-500 text-sm mt-1">
-                            {passwordMismatchError}
-                        </p>
-                    )}
-
-                    <Modal
-                        title="Veterinarian Account Information"
-                        visible={showVetInfoModal}
-                        onCancel={() => setShowVetInfoModal(false)}
-                        centered
-                        footer={null}
-                        className="[&_.ant-modal-content]:p-6">
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-center mb-4">
-                                <div className="bg-[#d8ccff] p-3 rounded-full">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-10 w-10 text-[#480777]"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        />
-                                    </svg>
-                                </div>
-                            </div>
-                            <p className="text-[#2c0551]">
-                                You're creating a{" "}
-                                <strong>Veterinarian Account</strong>. Please
-                                note:
-                            </p>
-                            <ul className="list-disc pl-5 space-y-2 text-[#480777]">
-                                <li>
-                                    Vet accounts require additional verification
-                                    after initial signup
-                                </li>
-                                <li>
-                                    You'll need to provide professional
-                                    credentials in the next step
-                                </li>
-                                <li>
-                                    <strong>
-                                        Google sign-up is not available for vet
-                                        accounts
-                                    </strong>
-                                </li>
-                                <li>
-                                    Vet accounts have access to professional
-                                    features and network benefits
-                                </li>
-                            </ul>
-                        </div>
-                    </Modal>
 
                     {/* Existing Submit Button */}
                     <button

@@ -298,6 +298,13 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                             <Select.Option value={1}>Dog</Select.Option>
                             <Select.Option value={2}>Cat</Select.Option>
                             <Select.Option value={3}>Bird</Select.Option>
+                            <Select.Option value={4}>Fish</Select.Option>
+                            <Select.Option value={5}>Rabbit</Select.Option>
+                            <Select.Option value={6}>Hamster</Select.Option>
+                            <Select.Option value={7}>Guinea Pig</Select.Option>
+                            <Select.Option value={8}>Turtle</Select.Option>
+                            <Select.Option value={11}>Horse</Select.Option>
+                            <Select.Option value={15}>Mouse</Select.Option>
                         </Select>
                     </div>
 

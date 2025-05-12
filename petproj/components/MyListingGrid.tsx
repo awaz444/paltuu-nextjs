@@ -10,7 +10,6 @@ import { UseDispatch } from "react-redux";
 import { fetchAdoptionPets } from "@/app/store/slices/adoptionPetsSlice";
 import { fetchFosterPets } from "@/app/store/slices/fosterPetsSlice";
 
-
 const { TextArea } = Input;
 
 export interface Pet {
@@ -52,7 +51,10 @@ interface PetGridProps {
 
 const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
     const dispatch = useDispatch<AppDispatch>();
-    const [showConfirm, setShowConfirm] = useState<{ pet_id: number | null, show: boolean }>({ pet_id: null, show: false });
+    const [showConfirm, setShowConfirm] = useState<{
+        pet_id: number | null;
+        show: boolean;
+    }>({ pet_id: null, show: false });
     const [loading, setLoading] = useState(false);
     const [editingPet, setEditingPet] = useState<Pet | null>(null);
     const [successMessage, setSuccessMessage] = useState(false);
@@ -61,19 +63,19 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
     const router = useRouter(); // Initialize router for navigation
 
     const handleViewApplications = (petId: number, listing_type: string) => {
-        if (listing_type === 'adoption')
+        if (listing_type === "adoption")
             router.push(`/adoption-applicants?pet_id=${petId}`);
-        else if (listing_type === 'foster')
+        else if (listing_type === "foster")
             router.push(`/foster-applicants?pet_id=${petId}`);
     };
 
     const handleDelete = async (petId: number) => {
         dispatch(fetchAdoptionPets());
         dispatch(fetchFosterPets());
-        const response = await fetch('/api/pets', {
-            method: 'DELETE',
+        const response = await fetch("/api/pets", {
+            method: "DELETE",
             headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({ pet_id: petId }),
         });
@@ -82,9 +84,9 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
 
         if (!response.ok) {
             const errorData = await response.json();
-            console.error('Delete failed:', errorData);
+            console.error("Delete failed:", errorData);
         } else {
-            console.log('Delete successful');
+            console.log("Delete successful");
         }
     };
 
@@ -102,14 +104,11 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
         setShowConfirm({ pet_id: null, show: false });
     };
 
-
-
     const handleEdit = (pet: Pet) => {
         setEditingPet(pet);
     };
 
     const handleUpdate = async () => {
-
         if (!editingPet) return;
 
         dispatch(fetchAdoptionPets());
@@ -138,7 +137,6 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
         setEditingPet(null);
     };
 
-
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             <Link
@@ -157,54 +155,69 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                 Create new listing
             </Link>
             {pets.map((pet) => (
-
-                <div key={pet.pet_id} className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 relative">
+                <div
+                    key={pet.pet_id}
+                    className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 relative">
                     <div className="relative">
                         <div className="absolute top-2 right-2 flex gap-2">
                             {/* Delete Button */}
                             <button
                                 className="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition"
-                                onClick={() => handleConfirmation(pet.pet_id)}
-                            >
-                                <img src="/trash.svg" alt="Delete" className="w-4 h-4" />
+                                onClick={() => handleConfirmation(pet.pet_id)}>
+                                <img
+                                    src="/trash.svg"
+                                    alt="Delete"
+                                    className="w-4 h-4"
+                                />
                             </button>
                             {/* Edit Button */}
                             <button
                                 className="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition"
-                                onClick={() => handleEdit(pet)}
-                            >
-                                <img src="/pen.svg" alt="Edit" className="w-4 h-4" />
+                                onClick={() => handleEdit(pet)}>
+                                <img
+                                    src="/pen.svg"
+                                    alt="Edit"
+                                    className="w-4 h-4"
+                                />
                             </button>
                         </div>
                         {/* Adoption Status */}
                         <div className="absolute top-2 left-2 flex gap-2">
                             <div
-                                className={`${pet.approved ? 'bg-green-600' : 'bg-orange-500'
-                                    } text-white text-sm font-semibold px-3 py-1 rounded-full`}
-                            >
-                                {pet.approved ? 'Approved' : 'Pending'}
+                                className={`${
+                                    pet.approved
+                                        ? "bg-green-600"
+                                        : "bg-orange-500"
+                                } text-white text-sm font-semibold px-3 py-1 rounded-full`}>
+                                {pet.approved ? "Approved" : "Pending"}
                             </div>
-
                         </div>
                         <img
-                            src={pet.image_url || '/dog-placeholder.png'}
+                            src={pet.image_url || "/dog-placeholder.png"}
                             alt={pet.pet_name}
                             className="w-full h-48 object-cover rounded-2xl"
                         />
                         {Number(pet.price) > 0 && (
                             <div className="absolute bottom-2 right-2 bg-primary text-white text-sm font-semibold px-3 py-1 rounded-full">
                                 PKR {pet.price}
-                                {pet.payment_frequency && ` / ${pet.payment_frequency}`}
+                                {pet.payment_frequency &&
+                                    ` / ${pet.payment_frequency}`}
                             </div>
                         )}
                     </div>
                     {/* Pet Details */}
                     <div className="p-4">
-                        <h3 className="font-bold text-2xl mb-1">{pet.pet_name}</h3>
+                        <h3 className="font-bold text-2xl mb-1">
+                            {pet.pet_name}
+                        </h3>
                         <p className="text-gray-600 mb-1">
-                            {pet.age > 0 && `${pet.age} ${pet.age > 1 ? "years" : "year"}`}
+                            {pet.age > 0 &&
+                                `${pet.age} ${pet.age > 1 ? "years" : "year"}`}
                             {pet.age > 0 && pet.months > 0 && ", "}
-                            {pet.months > 0 && `${pet.months} ${pet.months > 1 ? "months" : "month"} old`}
+                            {pet.months > 0 &&
+                                `${pet.months} ${
+                                    pet.months > 1 ? "months" : "month"
+                                } old`}
                         </p>
                         <p className="text-gray-600 mb-1">
                             {pet.city} - {pet.area}
@@ -212,31 +225,33 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                     </div>
                     <button
                         className="bg-primary text-white px-4 py-2 rounded-xl mt-4"
-                        onClick={() => handleViewApplications(pet.pet_id, pet.listing_type)}
-                    >
+                        onClick={() =>
+                            handleViewApplications(pet.pet_id, pet.listing_type)
+                        }>
                         View Applications
                     </button>
                 </div>
             ))}
 
-
             {/* Confirmation Popup */}
             {showConfirm.show && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                     <div className="bg-white p-6 rounded-3xl shadow-lg max-w-sm w-full">
-                        <h3 className="text-lg font-bold mb-4">Are you sure you want to delete this pet?</h3>
+                        <h3 className="text-lg font-bold mb-4">
+                            Are you sure you want to delete this pet?
+                        </h3>
                         <div className="flex justify-between">
                             <button
                                 className="bg-primary text-white px-4 py-2 rounded-xl"
-                                onClick={() => confirmDelete(showConfirm.pet_id!)}
-                                disabled={loading}
-                            >
-                                {loading ? 'Deleting...' : 'Confirm'}
+                                onClick={() =>
+                                    confirmDelete(showConfirm.pet_id!)
+                                }
+                                disabled={loading}>
+                                {loading ? "Deleting..." : "Confirm"}
                             </button>
                             <button
                                 className="bg-white text-primary border border-primary px-4 py-2 rounded-xl"
-                                onClick={cancelDelete}
-                            >
+                                onClick={cancelDelete}>
                                 Cancel
                             </button>
                         </div>
@@ -247,32 +262,39 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
             {editingPet && (
                 <Modal
                     title="Edit Pet Listing"
-                    visible={!!editingPet}
+                    open={!!editingPet}
                     onCancel={handleCancel}
-                    onOk={handleUpdate}
-                    okText="Update"
-                    cancelText="Cancel"
-                >
+                    footer={null} // Hide default buttons
+                    className="rounded-2xl">
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Pet Name</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Pet Name
+                        </label>
                         <Input
                             placeholder="Pet Name"
                             value={editingPet.pet_name}
                             onChange={(e) =>
-                                setEditingPet({ ...editingPet, pet_name: e.target.value })
+                                setEditingPet({
+                                    ...editingPet,
+                                    pet_name: e.target.value,
+                                })
                             }
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Pet Type</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Pet Type
+                        </label>
                         <Select
                             className="w-full"
                             value={editingPet.pet_type}
                             onChange={(value) =>
-                                setEditingPet({ ...editingPet, pet_type: value })
-                            }
-                        >
+                                setEditingPet({
+                                    ...editingPet,
+                                    pet_type: value,
+                                })
+                            }>
                             <Select.Option value={1}>Dog</Select.Option>
                             <Select.Option value={2}>Cat</Select.Option>
                             <Select.Option value={3}>Bird</Select.Option>
@@ -280,75 +302,122 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Pet Breed</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Pet Breed
+                        </label>
                         <Input
                             placeholder="Pet Breed"
                             value={editingPet.pet_breed || ""}
                             onChange={(e) =>
-                                setEditingPet({ ...editingPet, pet_breed: e.target.value })
+                                setEditingPet({
+                                    ...editingPet,
+                                    pet_breed: e.target.value,
+                                })
                             }
                         />
                     </div>
 
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Age</label>
-                        <Input
-                            placeholder="Age"
-                            type="number"
-                            value={editingPet.age}
-                            onChange={(e) =>
-                                setEditingPet({ ...editingPet, age: Number(e.target.value) })
-                            }
-                        />
+                    {/* Age and Months fields */}
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                                Years
+                            </label>
+                            <Input
+                                placeholder="Years"
+                                type="number"
+                                value={editingPet.age}
+                                onChange={(e) =>
+                                    setEditingPet({
+                                        ...editingPet,
+                                        age: Number(e.target.value),
+                                    })
+                                }
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                                Months
+                            </label>
+                            <Input
+                                placeholder="Months"
+                                type="number"
+                                min="0"
+                                max="11"
+                                value={editingPet.months}
+                                onChange={(e) =>
+                                    setEditingPet({
+                                        ...editingPet,
+                                        months: Number(e.target.value),
+                                    })
+                                }
+                            />
+                        </div>
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Description</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Description
+                        </label>
                         <TextArea
                             placeholder="Description"
                             rows={4}
                             value={editingPet.description}
                             onChange={(e) =>
-                                setEditingPet({ ...editingPet, description: e.target.value })
+                                setEditingPet({
+                                    ...editingPet,
+                                    description: e.target.value,
+                                })
                             }
                         />
                     </div>
 
                     <div className="flex justify-between mb-4">
                         <button
-                            className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet.listing_type === "adoption"
-                                ? "bg-primary text-white"
-                                : "bg-gray-100"
-                                }`}
+                            className={`w-1/2 py-2 px-4 text-center rounded-lg ${
+                                editingPet.listing_type === "adoption"
+                                    ? "bg-primary text-white"
+                                    : "bg-gray-100"
+                            }`}
                             onClick={() =>
-                                setEditingPet({ ...editingPet, listing_type: "adoption" })
-                            }
-                        >
+                                setEditingPet({
+                                    ...editingPet,
+                                    listing_type: "adoption",
+                                })
+                            }>
                             Adoption
                         </button>
                         <button
-                            className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet.listing_type === "foster"
-                                ? "bg-primary text-white"
-                                : "bg-gray-100"
-                                }`}
+                            className={`w-1/2 py-2 px-4 text-center rounded-lg ${
+                                editingPet.listing_type === "foster"
+                                    ? "bg-primary text-white"
+                                    : "bg-gray-100"
+                            }`}
                             onClick={() =>
-                                setEditingPet({ ...editingPet, listing_type: "foster" })
-                            }
-                        >
+                                setEditingPet({
+                                    ...editingPet,
+                                    listing_type: "foster",
+                                })
+                            }>
                             Foster
                         </button>
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Price</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Price
+                        </label>
                         <Input
                             placeholder="Price"
                             type="number"
                             value={editingPet.price}
                             onChange={(e) =>
-                                setEditingPet({ ...editingPet, price: e.target.value })
+                                setEditingPet({
+                                    ...editingPet,
+                                    price: e.target.value,
+                                })
                             }
-                        // disabled={editingPet.listing_type === "adoption"}
+                            // disabled={editingPet.listing_type === "adoption"}
                         />
                     </div>
 
@@ -367,8 +436,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                                         payment_frequency: e.target.value,
                                     })
                                 }
-                                required
-                            >
+                                required>
                                 <option value="" disabled>
                                     Select Frequency
                                 </option>
@@ -381,7 +449,9 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                     )}
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Minimum Age of Children</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Minimum Age of Children
+                        </label>
                         <Input
                             placeholder="Minimum Age of Children"
                             type="number"
@@ -396,7 +466,9 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Can live with dogs</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Can live with dogs
+                        </label>
                         <Checkbox
                             checked={editingPet.can_live_with_dogs}
                             onChange={(e) =>
@@ -409,7 +481,9 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Can live with cats</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Can live with cats
+                        </label>
                         <Checkbox
                             checked={editingPet.can_live_with_cats}
                             onChange={(e) =>
@@ -422,7 +496,9 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Must have someone home</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Must have someone home
+                        </label>
                         <Checkbox
                             checked={editingPet.must_have_someone_home}
                             onChange={(e) =>
@@ -436,7 +512,9 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
 
                     {/* Energy Level Slider */}
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Energy Level</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Energy Level
+                        </label>
                         <div className="relative">
                             <input
                                 type="range"
@@ -451,29 +529,38 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                                     })
                                 }
                                 onMouseDown={() => {
-                                    if (editingPet.energy_level === null) setEditingPet({
-                                        ...editingPet,
-                                        energy_level: 3,
-                                    });
+                                    if (editingPet.energy_level === null)
+                                        setEditingPet({
+                                            ...editingPet,
+                                            energy_level: 3,
+                                        });
                                 }}
                                 style={{
                                     background: editingPet.energy_level
-                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${(editingPet.energy_level - 1) * 25
-                                        }%, #D1D5DB ${(editingPet.energy_level - 1) * 25
-                                        }%, #D1D5DB 100%)`
+                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
+                                              (editingPet.energy_level - 1) * 25
+                                          }%, #D1D5DB ${
+                                              (editingPet.energy_level - 1) * 25
+                                          }%, #D1D5DB 100%)`
                                         : "#D1D5DB important!", // Default background when unselected
                                 }}
                             />
                             <div className="w-full flex justify-between -top-2">
-                                <span className="text-sm text-gray-500">Chilled</span>
-                                <span className="text-sm text-gray-500">Hyper</span>
+                                <span className="text-sm text-gray-500">
+                                    Chilled
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                    Hyper
+                                </span>
                             </div>
                         </div>
                     </div>
 
                     {/* Cuddliness Level Slider */}
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Cuddliness Level</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Cuddliness Level
+                        </label>
                         <div className="relative">
                             <input
                                 type="range"
@@ -484,19 +571,29 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                                 onChange={(e) =>
                                     setEditingPet({
                                         ...editingPet,
-                                        cuddliness_level: Number(e.target.value),
+                                        cuddliness_level: Number(
+                                            e.target.value
+                                        ),
                                     })
                                 }
                                 onMouseDown={() => {
-                                    if (editingPet.cuddliness_level === null) setEditingPet({
-                                        ...editingPet,
-                                        cuddliness_level: 3,
-                                    });
+                                    if (editingPet.cuddliness_level === null)
+                                        setEditingPet({
+                                            ...editingPet,
+                                            cuddliness_level: 3,
+                                        });
                                 }}
                                 style={{
                                     background: editingPet.cuddliness_level
-                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${(editingPet.cuddliness_level - 1) * 25
-                                        }%, #D1D5DB ${(editingPet.cuddliness_level - 1) * 25}%, #D1D5DB 100%)`
+                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
+                                              (editingPet.cuddliness_level -
+                                                  1) *
+                                              25
+                                          }%, #D1D5DB ${
+                                              (editingPet.cuddliness_level -
+                                                  1) *
+                                              25
+                                          }%, #D1D5DB 100%)`
                                         : "#D1D5DB",
                                 }}
                             />
@@ -508,26 +605,32 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Health Issues</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Health Issues
+                        </label>
                         <TextArea
                             placeholder="Health Issues"
                             rows={2}
                             value={editingPet.health_issues}
                             onChange={(e) =>
-                                setEditingPet({ ...editingPet, health_issues: e.target.value })
+                                setEditingPet({
+                                    ...editingPet,
+                                    health_issues: e.target.value,
+                                })
                             }
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Sex</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Sex
+                        </label>
                         <Select
                             className="w-full"
                             value={editingPet.sex}
                             onChange={(value) =>
                                 setEditingPet({ ...editingPet, sex: value })
-                            }
-                        >
+                            }>
                             <Select.Option value="male">Male</Select.Option>
                             <Select.Option value="female">Female</Select.Option>
                         </Select>
@@ -540,8 +643,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                                 ...editingPet,
                                 vaccinated: e.target.checked,
                             })
-                        }
-                    >
+                        }>
                         Vaccinated
                     </Checkbox>
                     <Checkbox
@@ -552,13 +654,23 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                                 ...editingPet,
                                 neutered: e.target.checked,
                             })
-                        }
-                    >
+                        }>
                         Neutered
                     </Checkbox>
+                    <div className="flex justify-end gap-4 mt-6">
+                        <button
+                            onClick={handleCancel}
+                            className="px-5 py-2 text-primary rounded-3xl font-semibold border border-primary bg-white transition-colors duration-200">
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleUpdate}
+                            className="px-5 py-2 bg-primary text-white rounded-3xl font-semibold border border-primary transition-colors duration-200">
+                            Update
+                        </button>
+                    </div>
                 </Modal>
             )}
-
         </div>
     );
 };

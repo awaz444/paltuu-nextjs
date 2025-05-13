@@ -1,38 +1,37 @@
 import React, { useState } from "react";
-import { Modal, Form, Input, InputNumber, Select, Upload, Button, message, Checkbox } from "antd";
-import { UploadOutlined, UserOutlined, PhoneOutlined } from "@ant-design/icons";
+import { Form, Input, InputNumber, Select, Button, message, Checkbox, Steps } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+import AnimalPhotosUpload from "./QurbaniAnimalUpload";
 
 const { Option } = Select;
+const { Step } = Steps;
 const { TextArea } = Input;
 
 interface EidBazaarListingProps {
-    onSubmit: (values: any) => void;
+    onSubmit: (values: any) => Promise<{ animalId: number }>;
     onCancel: () => void;
 }
 
 const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel }) => {
     const [form] = Form.useForm();
-    const [fileList, setFileList] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [callForPrice, setCallForPrice] = useState(false);
-
+    const [currentStep, setCurrentStep] = useState(0);
+    const [animalId, setAnimalId] = useState<number | null>(null);
 
     const onFinish = async (values: any) => {
         try {
             setLoading(true);
             const listingData = {
                 ...values,
-                price: callForPrice ? null : values.price, // Set price to null if "Call for Price" is checked
-                images: fileList.map(file => file.thumbUrl),
+                price: callForPrice ? null : values.price,
                 status: "Available",
-                id: `animal-${Date.now()}`
             };
-            await onSubmit(listingData);
-            message.success('Listing created successfully!');
-            form.resetFields();
-            setFileList([]);
-            setCallForPrice(false);
-            onCancel();
+            
+            const response = await onSubmit(listingData);
+            setAnimalId(response.animalId);
+            setCurrentStep(1);
+            message.success('Listing created successfully! Now upload photos.');
         } catch (error) {
             message.error('Failed to create listing');
         } finally {
@@ -40,14 +39,14 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
         }
     };
 
-    const normFile = (e: any) => {
-        if (Array.isArray(e)) {
-            return e;
-        }
-        return e && e.fileList;
+    const handlePhotosUploadComplete = () => {
+        message.success('Listing with photos created successfully!');
+        form.resetFields();
+        setCallForPrice(false);
+        onCancel();
     };
 
-    return (
+    const animalDetailsForm = (
         <Form
             form={form}
             layout="vertical"
@@ -83,7 +82,7 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
                     <Input placeholder="e.g. Beetal, Sahiwal" />
                 </Form.Item>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                     <Form.Item
                         name="age"
                         label="Age (years)"
@@ -98,6 +97,14 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
                         rules={[{ required: true, message: "Please input weight" }]}
                     >
                         <InputNumber min={1} max={1000} className="w-full" />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="height"
+                        label="Height (cm)"
+                        rules={[{ required: true, message: "Please input height" }]}
+                    >
+                        <InputNumber min={1} max={300} className="w-full" />
                     </Form.Item>
                 </div>
 
@@ -146,66 +153,45 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
                         <Input placeholder="e.g. DHA, Gulshan" />
                     </Form.Item>
                 </div>
-{/* Vaccination Status (Required) */}
-<Form.Item
-  name="isVaccinated"
-  label="Vaccination Status"
-  rules={[{ required: true, message: "Please specify vaccination status" }]}
-  valuePropName="checked"
->
-  <Checkbox>
-    This animal has been vaccinated
-  </Checkbox>
-</Form.Item>
 
-{/* Teeth Count (Optional) */}
-<Form.Item
-  name="teethCount"
-  label="Number of Teeth (for age verification)"
-  help="Leave blank if unsure"
->
-  <InputNumber 
-    min={0} 
-    max={32} 
-    className="w-full" 
-    placeholder="e.g. 8" 
-  />
-</Form.Item>
-
-{/* Horn Condition (Optional) */}
-<Form.Item
-  name="hornCondition"
-  label="Horn Condition"
->
-  <Select
-    placeholder="Select condition"
-    allowClear
-    className="w-full"
-  >
-    <Option value="Good">Good - No damage</Option>
-    <Option value="Damaged">Damaged - Minor cracks</Option>
-    <Option value="Broken">Broken - Significant damage</Option>
-    <Option value="None">No horns</Option>
-  </Select>
-</Form.Item>
                 <Form.Item
-                    name="sellerContact"
-                    label="Contact Number"
-                    rules={[{
-                        required: true,
-                        pattern: new RegExp(/^[0-9]{11}$/),
-                        message: "Please enter a valid 11-digit number"
-                    }]}
+                    name="is_vaccinated"
+                    label="Vaccination Status"
+                    rules={[{ required: true, message: "Please specify vaccination status" }]}
+                    valuePropName="checked"
                 >
-                    <Input placeholder="e.g. 03001234567" />
+                    <Checkbox>
+                        This animal has been vaccinated
+                    </Checkbox>
                 </Form.Item>
 
                 <Form.Item
-                    name="sellerName"
-                    label="Your Name"
-                    rules={[{ required: true, message: "Please input your name" }]}
+                    name="teeth_count"
+                    label="Number of Teeth (for age verification)"
+                    help="Leave blank if unsure"
                 >
-                    <Input placeholder="e.g. Muhammad Ali" prefix={<UserOutlined />} />
+                    <InputNumber
+                        min={0}
+                        max={32}
+                        className="w-full"
+                        placeholder="e.g. 8"
+                    />
+                </Form.Item>
+
+                <Form.Item
+                    name="horn_condition"
+                    label="Horn Condition"
+                >
+                    <Select
+                        placeholder="Select condition"
+                        allowClear
+                        className="w-full"
+                    >
+                        <Option value="Good">Good - No damage</Option>
+                        <Option value="Damaged">Damaged - Minor cracks</Option>
+                        <Option value="Broken">Broken - Significant damage</Option>
+                        <Option value="None">No horns</Option>
+                    </Select>
                 </Form.Item>
 
                 <Form.Item
@@ -213,30 +199,6 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
                     label="Description"
                 >
                     <TextArea rows={3} placeholder="Describe the animal's features, health condition, etc." />
-                </Form.Item>
-
-                <Form.Item
-                    name="images"
-                    label="Upload Images (Max 8)"
-                    valuePropName="fileList"
-                    getValueFromEvent={normFile}
-                    rules={[{ required: true, message: "Please upload at least one image" }]}
-                >
-                    <Upload
-                        listType="picture-card"
-                        fileList={fileList}
-                        onChange={({ fileList }) => setFileList(fileList)}
-                        beforeUpload={() => false}
-                        accept="image/*"
-                        multiple
-                    >
-                        {fileList.length >= 8 ? null : (
-                            <div className="flex flex-col items-center">
-                                <UploadOutlined className="text-primary" />
-                                <div className="mt-1 text-sm">Upload</div>
-                            </div>
-                        )}
-                    </Upload>
                 </Form.Item>
             </div>
 
@@ -248,12 +210,40 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
                     type="primary"
                     htmlType="submit"
                     loading={loading}
-                    className="px-6"                    
+                    className="px-6"
                 >
-                     Create Listing
+                    Next: Upload Photos
                 </Button>
             </div>
         </Form>
+    );
+
+    const steps = [
+        {
+            title: 'Animal Details',
+            content: animalDetailsForm,
+        },
+        {
+            title: 'Upload Photos',
+            content: animalId ? (
+                <AnimalPhotosUpload 
+                    animalId={animalId} 
+                    onComplete={handlePhotosUploadComplete}
+                    onBack={() => setCurrentStep(0)}
+                />
+            ) : null,
+        },
+    ];
+
+    return (
+        <div className="p-4">
+            <Steps current={currentStep} className="mb-6">
+                {steps.map(item => (
+                    <Step key={item.title} title={item.title} />
+                ))}
+            </Steps>
+            <div className="steps-content">{steps[currentStep].content}</div>
+        </div>
     );
 };
 

@@ -3,6 +3,8 @@ import { Modal } from "antd";
 import Link from "next/link";
 import EidBazaarListing from "./EidBazarListing";
 import { EnvironmentOutlined, UserOutlined } from "@ant-design/icons";
+import axios from "axios";
+import { message } from "antd";
 
 export interface QurbaniAnimal {
   id: string;
@@ -10,17 +12,16 @@ export interface QurbaniAnimal {
   breed: string;
   age: number;
   weight: number;
-  teethCount?: number;                  // New field
-  hornCondition?: 'Good' | 'Damaged' | 'Broken' | 'None'; // New field
-  isVaccinated: boolean;               // New field
+  height: number;
+  teeth_count?: number;
+  horn_condition?: 'Good' | 'Damaged' | 'Broken' | 'None';
+  isVaccinated: boolean;
   description?: string;
   price: number | null;
   status: "Available" | "Sold" | "Reserved";
   location: string;
   city: string;
-  sellerName: string;
-  sellerContact: string;
-  sellerProfileImage?: string;
+  sellerId: number;
   images: string[];
 }
 
@@ -31,22 +32,32 @@ interface EidBazaarGridProps {
 const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
   const [selectedAnimal, setSelectedAnimal] = useState<QurbaniAnimal | null>(null);
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleCreateSubmit = (values: QurbaniAnimal) => {
-    console.log("New listing:", values);
-    // Here you would typically:
-    // 1. Make API call to create listing
-    // 2. Refresh the animal list
-    // 3. Close the modal
-    setCreateModalVisible(false);
-    // Example:
-    // axios.post('/api/eid-bazaar', values)
-    //   .then(() => {
-    //     message.success('Listing created successfully');
-    //     setCreateModalVisible(false);
-    //     // Refresh your animals data here
-    //   })
-    //   .catch(error => message.error('Error creating listing'));
+  const handleCreateSubmit = async (values: any): Promise<{ animalId: number }> => {
+    try {
+      setLoading(true);
+      // Add seller_id (you should get this from your auth context)
+      const payload = {
+        ...values,
+        seller_id: 1, // Replace with actual seller ID from your auth system
+        status: "Available"
+      };
+
+      const response = await axios.post('/api/qurbani/animals', payload);
+      
+      message.success('Animal listing created successfully!');
+      setCreateModalVisible(false);
+      
+      // Return the animal ID for photo upload
+      return { animalId: response.data.animalId };
+    } catch (error) {
+      console.error('Error creating listing:', error);
+      message.error('Failed to create listing');
+      throw error; // Re-throw to handle in the child component
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (animals.length === 0) {
@@ -122,7 +133,6 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
               </span>
             </div>
             <div className="p-4">
-              {/* Swapped positions of price and breed */}
               <p className="text-primary font-semibold text-lg mb-1">
                 {animal.price !== null ? animal.price.toLocaleString() + ' PKR' : 'Call for Price'}
               </p>
@@ -130,16 +140,15 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                 {animal.breed}
               </h3>
 
-              {/* Replaced weight/age/species with teeth and vaccinated indicators */}
               <div className="flex flex-wrap gap-2 mb-3">
                 {animal.isVaccinated && (
                   <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
                     Vaccinated
                   </span>
                 )}
-                {animal.teethCount && (
+                {animal.teeth_count && (
                   <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-                     {animal.teethCount} teeth
+                     {animal.teeth_count} teeth
                   </span>
                 )}
               </div>
@@ -148,26 +157,12 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                 <EnvironmentOutlined className="text-primary" />
                 <p className="text-gray-600">{animal.city}, {animal.location}</p>
               </div>
-              <div className="flex flex-row gap-2 items-center">
-                {animal.sellerProfileImage ? (
-                  <img
-                    src={animal.sellerProfileImage}
-                    alt={animal.sellerName}
-                    className="w-5 h-5 rounded-full object-cover"
-                  />
-                ) : (
-                  <UserOutlined className="text-primary" />
-                )}
-                <p className="text-gray-600 truncate max-w-[120px] sm:max-w-[140px]">
-                  {animal.sellerName}
-                </p>
-              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Animal Details Modal - Consistent with Lost & Found */}
+      {/* Animal Details Modal */}
       {selectedAnimal && (
         <Modal
           title={`${selectedAnimal.breed} ${selectedAnimal.species}`}
@@ -178,31 +173,6 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
           width={800}
         >
           <div className="modal-content-wrapper">
-            {/* Seller Header */}
-            <div className="flex items-center gap-3 mb-6">
-              {selectedAnimal.sellerProfileImage ? (
-                <img
-                  src={selectedAnimal.sellerProfileImage}
-                  alt={selectedAnimal.sellerName}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                  <UserOutlined className="text-xl text-gray-400" />
-                </div>
-              )}
-              <div>
-                <h3 className="font-semibold text-lg">{selectedAnimal.sellerName}</h3>
-                <p className="text-sm text-gray-500">
-                  {new Date().toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </p>
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Image Section */}
               <div className="relative w-full aspect-square">
@@ -243,11 +213,11 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-500">Weight</label>
-                      <p className="text-gray-800">{selectedAnimal.weight}</p>
+                      <p className="text-gray-800">{selectedAnimal.weight} kg</p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Breed</label>
-                      <p className="text-gray-800">{selectedAnimal.breed}</p>
+                      <label className="text-sm font-medium text-gray-500">Height</label>
+                      <p className="text-gray-800">{selectedAnimal.height} cm</p>
                     </div>
                   </div>
                   <div className="space-y-2 mt-4">
@@ -255,21 +225,20 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                       <span className="font-medium">Vaccination:</span>
                       <span>{selectedAnimal.isVaccinated ? "✅ Certified" : "❌ Not vaccinated"}</span>
                     </div>
-                    {selectedAnimal.teethCount && (
+                    {selectedAnimal.teeth_count && (
                       <div className="flex gap-4">
                         <span className="font-medium">Teeth Count:</span>
-                        <span>{selectedAnimal.teethCount} (Age verified)</span>
+                        <span>{selectedAnimal.teeth_count} (Age verified)</span>
                       </div>
                     )}
-                    {selectedAnimal.hornCondition && (
+                    {selectedAnimal.horn_condition && (
                       <div className="flex gap-4">
                         <span className="font-medium">Horn Condition:</span>
-                        <span>{selectedAnimal.hornCondition}</span>
+                        <span>{selectedAnimal.horn_condition}</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Description Section */}
                   {selectedAnimal.description && (
                     <div className="pt-2">
                       <label className="text-sm font-medium text-gray-500">Description</label>
@@ -278,32 +247,6 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                       </p>
                     </div>
                   )}
-
-                  {/* Contact Section */}
-                  <div className="pt-4 border-t border-gray-100">
-                    <label className="text-sm font-medium text-gray-500">Contact Information</label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-primary"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M2.005 5.995V18c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V6c0-1.103-.897-2-2-2h-16c-1.103 0-2 .897-2 1.995zM4 6h16v12H4V6z"></path>
-                        <path d="M16 3H8v2h8V3z"></path>
-                        <path d="M12 15.5 18 9h-6z"></path>
-                      </svg>
-                      <a
-                        href={`tel:${selectedAnimal.sellerContact}`}
-                        className="text-primary hover:text-primary-dark transition-colors"
-                      >
-                        {selectedAnimal.sellerContact}
-                      </a>
-                    </div>
-                    <button className="mt-4 w-full bg-primary text-white py-2 rounded-lg flex items-center justify-center gap-2">
-                      Contact via WhatsApp
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -338,4 +281,5 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
     </>
   );
 }
+
 export default EidBazaarGrid;

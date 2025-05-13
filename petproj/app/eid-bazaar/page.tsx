@@ -11,6 +11,7 @@ export interface QurbaniAnimal {
     breed: string;
     age: number;
     weight: number;
+    height: number;
     teethCount: number;                  // New field
     hornCondition?: 'Good' | 'Damaged' | 'Broken' | 'None'; // New field
     isVaccinated: boolean;               // New field
@@ -19,6 +20,7 @@ export interface QurbaniAnimal {
     status: "Available" | "Sold" | "Reserved";
     location: string;
     city: string;
+    sellerID: string;
     sellerName: string;
     sellerContact: string;
     sellerProfileImage?: string;
@@ -44,6 +46,7 @@ export default function EidBazaar() {
                     breed: "Beetal",
                     age: 2,
                     weight: 40,
+                    height: 40,
                     teethCount: 2,                  // New field
                     hornCondition: 'Good',
                     isVaccinated: true,
@@ -51,6 +54,7 @@ export default function EidBazaar() {
                     status: "Available",
                     location: "Gulshan",
                     city: "Karachi",
+                    sellerID: "1",
                     sellerName: "Ali Ahmed",
                     sellerContact: "03001234567",
                     images: ["/goat.jpg"]
@@ -61,6 +65,7 @@ export default function EidBazaar() {
                     breed: "Sahiwal",
                     age: 3,
                     weight: 180,
+                    height: 180,
                     price: 120000,
                     teethCount: 2,                  // New field
                     hornCondition: 'Good',
@@ -68,6 +73,7 @@ export default function EidBazaar() {
                     status: "Available",
                     location: "DHA",
                     city: "Lahore",
+                    sellerID: "1",
                     sellerName: "Bilal Khan",
                     sellerContact: "03331234567",
                     images: ["/cow.jpg"]

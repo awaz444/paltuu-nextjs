@@ -19,7 +19,6 @@ const ADOPTION_CHECKLIST = [
   "Has time to properly care for and socialize with the pet"
 ];
 
-
 const FOSTER_CHECKLIST = [
   "Has a dedicated space to house the pet safely",
   "Understands the temporary nature of fostering",

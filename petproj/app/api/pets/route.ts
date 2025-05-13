@@ -230,7 +230,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         city_id,
         area,
         age,
-        month,
+        months, // Changed from 'month' to 'months' to match frontend
         description,
         adoption_status,
         min_age_of_children,
@@ -255,10 +255,10 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         const result = await withRetry(() =>
             client.query(
                 `UPDATE pets SET owner_id = $1, pet_name = $2, pet_type = $3, pet_breed = $4, city_id = $5, area = $6, 
-                age = $7,month =$24, description = $8, adoption_status = $9, min_age_of_children = $10, can_live_with_dogs = $11, 
-                can_live_with_cats = $12, must_have_someone_home = $13, energy_level = $14, cuddliness_level = $15, 
-                health_issues = $16, sex = $17, listing_type = $18, vaccinated = $19, neutered = $20, price = $21, 
-                payment_frequency = $22 WHERE pet_id = $23 RETURNING *`,
+                age = $7, months = $8, description = $9, adoption_status = $10, min_age_of_children = $11, can_live_with_dogs = $12, 
+                can_live_with_cats = $13, must_have_someone_home = $14, energy_level = $15, cuddliness_level = $16, 
+                health_issues = $17, sex = $18, listing_type = $19, vaccinated = $20, neutered = $21, price = $22, 
+                payment_frequency = $23 WHERE pet_id = $24 RETURNING *`,
                 [
                     owner_id,
                     pet_name,
@@ -267,6 +267,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
                     city_id,
                     area,
                     age,
+                    months, // Added months parameter
                     description,
                     adoption_status,
                     min_age_of_children,
@@ -282,7 +283,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
                     neutered,
                     price,
                     payment_frequency,
-                    pet_id,
+                    pet_id, // Moved to $24
                 ]
             )
         );

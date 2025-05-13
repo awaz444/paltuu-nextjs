@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal } from "antd";
 import Link from "next/link";
 import EidBazaarListing from "./EidBazarListing";
@@ -21,7 +21,7 @@ export interface QurbaniAnimal {
   status: "Available" | "Sold" | "Reserved";
   location: string;
   city: string;
-  sellerId: number;
+  sellerId: string;
   images: string[];
 }
 
@@ -33,28 +33,75 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
   const [selectedAnimal, setSelectedAnimal] = useState<QurbaniAnimal | null>(null);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
+
+
+  // Get user ID from localStorage when component mounts
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        setUserId(user.id); // Set the user ID in state
+      } catch (error) {
+        console.error('Failed to parse user data:', error);
+      }
+    }
+  }, []);
 
   const handleCreateSubmit = async (values: any): Promise<{ animalId: number }> => {
     try {
       setLoading(true);
-      // Add seller_id (you should get this from your auth context)
+
+      // Get current user (replace with your actual auth logic)
+      if (!userId) {
+        throw new Error('User not authenticated');
+      } // Example - get from your auth context
+
+      // Prepare the payload matching your API's CreateQurbaniAnimalDto
       const payload = {
-        ...values,
-        seller_id: 1, // Replace with actual seller ID from your auth system
-        status: "Available"
+        seller_id: userId,
+        species: values.species,
+        breed: values.breed,
+        age: values.age,
+        weight: values.weight,
+        height: values.height,
+        teethCount: values.teeth_count,
+        hornCondition: values.horn_condition,
+        isVaccinated: values.is_vaccinated,
+        description: values.description,
+        price: values.callForPrice ? null : values.price,
+        location: values.location,
+        city: values.city
       };
 
-      const response = await axios.post('/api/qurbani/animals', payload);
-      
+      const response = await fetch('/api/qurbani-animals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create listing');
+      }
+
+      const data = await response.json();
       message.success('Animal listing created successfully!');
-      setCreateModalVisible(false);
-      
-      // Return the animal ID for photo upload
-      return { animalId: response.data.animalId };
-    } catch (error) {
-      console.error('Error creating listing:', error);
-      message.error('Failed to create listing');
-      throw error; // Re-throw to handle in the child component
+
+      return { animalId: data.id }; // Return the created animal ID
+    } // In your handleCreateSubmit catch block:
+    catch (error: any) {
+      let errorMessage = 'Failed to create listing';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      message.error(errorMessage);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -62,9 +109,46 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
 
   if (animals.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">No animals found matching your criteria</p>
-      </div>
+      <>
+        <div className="text-center py-12">
+          <div className="mb-8">
+            <p className="text-gray-500">No animals listed, click below to add your animal to sell.</p>
+          </div>
+
+          <div className="flex justify-center">
+            <div
+              className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 text-sm sm:text-base cursor-pointer w-64 text-center"
+              onClick={() => setCreateModalVisible(true)}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="48"
+                height="48"
+                fill="currentColor"
+                className="bi bi-plus-circle mb-3 mx-auto"
+                viewBox="0 0 16 16"
+              >
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+              </svg>
+              Sell Animal
+            </div>
+          </div>
+        </div>
+
+        {/* Add the modal here too */}
+        <Modal
+          title="Create New Listing"
+          open={createModalVisible}
+          onCancel={() => setCreateModalVisible(false)}
+          footer={null}
+        >
+          <EidBazaarListing
+            onSubmit={handleCreateSubmit}
+            onCancel={() => setCreateModalVisible(false)}
+          />
+        </Modal>
+      </>
     );
   }
 
@@ -148,7 +232,7 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                 )}
                 {animal.teeth_count && (
                   <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-                     {animal.teeth_count} teeth
+                    {animal.teeth_count} teeth
                   </span>
                 )}
               </div>

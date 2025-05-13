@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from "../../../db/index"; // Assumes you have a Postgres client setup
+import { createClient } from "../../../db/index";
 
 export interface CreateQurbaniAnimalDto {
   seller_id: number;
@@ -15,6 +15,7 @@ export interface CreateQurbaniAnimalDto {
   price: number | null;
   location: string;
   city: string;
+  status?: 'Available';
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -35,7 +36,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             description,
             price,
             location,
-            city
+            city,
+            status = 'Available' // Default to 'Available' if not provided
         } = body;
 
         // Validate required fields
@@ -62,9 +64,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         INSERT INTO qurbani_animals (
             seller_id, species, breed, age, weight, height, 
             teeth_count, horn_condition, is_vaccinated, 
-            description, price, location, city, created_at
+            description, price, location, city, status, created_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW())
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW())
         RETURNING *;
         `;
 
@@ -82,7 +84,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             price || null,
             location,
             city,
-            // created_at is handled by NOW() in the query
+            status // Added status to values
         ];
 
         const result = await client.query(query, values);

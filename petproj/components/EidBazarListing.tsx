@@ -22,23 +22,32 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
     const onFinish = async (values: any) => {
         try {
             setLoading(true);
-            const listingData = {
+
+            // Prepare the data for submission
+            const submissionData = {
                 ...values,
-                price: callForPrice ? null : values.price,
-                status: "Available",
+                callForPrice: values.callForPrice || false,
+                price: values.callForPrice ? null : values.price,
             };
-            
-            const response = await onSubmit(listingData);
+
+            // Call the parent component's submit handler
+            const response = await onSubmit(submissionData);
+
+            // If you want to automatically proceed to photo upload:
             setAnimalId(response.animalId);
             setCurrentStep(1);
-            message.success('Listing created successfully! Now upload photos.');
+            message.success('Listing created! Now you can upload photos.');
+
+            // OR if you want to close after submission:
+            // message.success('Listing created successfully!');
+            // onCancel();
+
         } catch (error) {
-            message.error('Failed to create listing');
+            // Errors are already handled by the parent component
         } finally {
             setLoading(false);
         }
     };
-
     const handlePhotosUploadComplete = () => {
         message.success('Listing with photos created successfully!');
         form.resetFields();
@@ -226,8 +235,8 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
         {
             title: 'Upload Photos',
             content: animalId ? (
-                <AnimalPhotosUpload 
-                    animalId={animalId} 
+                <AnimalPhotosUpload
+                    animalId={animalId}
                     onComplete={handlePhotosUploadComplete}
                     onBack={() => setCurrentStep(0)}
                 />

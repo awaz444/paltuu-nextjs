@@ -12,19 +12,22 @@ export interface QurbaniAnimal {
     age: number;
     weight: number;
     height: number;
-    teethCount: number;                  // New field
-    hornCondition?: 'Good' | 'Damaged' | 'Broken' | 'None'; // New field
-    isVaccinated: boolean;               // New field
+    teethCount: number;
+    hornCondition?: 'Good' | 'Damaged' | 'Broken' | 'None';
+    isVaccinated: boolean;
     description?: string;
     price: number | null;
     status: "Available" | "Sold" | "Reserved";
     location: string;
     city: string;
-    sellerID: string;
+    sellerId: string;  // Only sellerId from the database
+    images: string[];  // This will come from joined photo table
+}
+
+export interface QurbaniAnimalWithSeller extends QurbaniAnimal {
     sellerName: string;
     sellerContact: string;
     sellerProfileImage?: string;
-    images: string[];
 }
 
 export default function EidBazaar() {
@@ -39,46 +42,46 @@ export default function EidBazaar() {
     // Dummy data - replace with API call
     useEffect(() => {
         setTimeout(() => {
-            setAnimals([
-                {
-                    id: "1",
-                    species: "Goat",
-                    breed: "Beetal",
-                    age: 2,
-                    weight: 40,
-                    height: 40,
-                    teethCount: 2,                  // New field
-                    hornCondition: 'Good',
-                    isVaccinated: true,
-                    price: 45000,
-                    status: "Available",
-                    location: "Gulshan",
-                    city: "Karachi",
-                    sellerID: "1",
-                    sellerName: "Ali Ahmed",
-                    sellerContact: "03001234567",
-                    images: ["/goat.jpg"]
-                },
-                {
-                    id: "2",
-                    species: "Cow",
-                    breed: "Sahiwal",
-                    age: 3,
-                    weight: 180,
-                    height: 180,
-                    price: 120000,
-                    teethCount: 2,                  // New field
-                    hornCondition: 'Good',
-                    isVaccinated: true,
-                    status: "Available",
-                    location: "DHA",
-                    city: "Lahore",
-                    sellerID: "1",
-                    sellerName: "Bilal Khan",
-                    sellerContact: "03331234567",
-                    images: ["/cow.jpg"]
-                }
-            ]);
+            // setAnimals([
+            //     {
+            //         id: "1",
+            //         species: "Goat",
+            //         breed: "Beetal",
+            //         age: 2,
+            //         weight: 40,
+            //         height: 40,
+            //         teethCount: 2,                  // New field
+            //         hornCondition: 'Good',
+            //         isVaccinated: true,
+            //         price: 45000,
+            //         status: "Available",
+            //         location: "Gulshan",
+            //         city: "Karachi",
+            //         sellerID: "1",
+            //         sellerName: "Ali Ahmed",
+            //         sellerContact: "03001234567",
+            //         images: ["/goat.jpg"]
+            //     },
+            //     {
+            //         id: "2",
+            //         species: "Cow",
+            //         breed: "Sahiwal",
+            //         age: 3,
+            //         weight: 180,
+            //         height: 180,
+            //         price: 120000,
+            //         teethCount: 2,                  // New field
+            //         hornCondition: 'Good',
+            //         isVaccinated: true,
+            //         status: "Available",
+            //         location: "DHA",
+            //         city: "Lahore",
+            //         sellerID: "1",
+            //         sellerName: "Bilal Khan",
+            //         sellerContact: "03331234567",
+            //         images: ["/cow.jpg"]
+            //     }
+            // ]);
             setLoading(false);
         }, 1000);
     }, []);

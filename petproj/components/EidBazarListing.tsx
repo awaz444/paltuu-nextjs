@@ -8,7 +8,7 @@ const { Step } = Steps;
 const { TextArea } = Input;
 
 interface EidBazaarListingProps {
-    onSubmit: (values: any) => Promise<{ animalId: number }>;
+    onSubmit: (values: any) => Promise<{ animalId: string }>;
     onCancel: () => void;
 }
 
@@ -17,7 +17,7 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
     const [loading, setLoading] = useState(false);
     const [callForPrice, setCallForPrice] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
-    const [animalId, setAnimalId] = useState<number | null>(null);
+    const [animalId, setAnimalId] = useState<string | null>(null);
 
     const onFinish = async (values: any) => {
         try {

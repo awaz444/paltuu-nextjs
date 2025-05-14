@@ -49,7 +49,7 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
     }
   }, []);
 
-  const handleCreateSubmit = async (values: any): Promise<{ animalId: number }> => {
+  const handleCreateSubmit = async (values: any): Promise<{ animalId: string }> => {
     try {
       setLoading(true);
 
@@ -91,7 +91,7 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
       const data = await response.json();
       message.success('Animal listing created successfully!');
 
-      return { animalId: data.id }; // Return the created animal ID
+      return { animalId: String(data.id) }; // Return the created animal ID
     } // In your handleCreateSubmit catch block:
     catch (error: any) {
       let errorMessage = 'Failed to create listing';

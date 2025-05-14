@@ -4,7 +4,7 @@ import { Upload, Button, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 
 interface AnimalPhotosUploadProps {
-    animalId: number;
+    animalId: string;
     onComplete: () => void;
     onBack: () => void;
 }
@@ -17,35 +17,31 @@ const AnimalPhotosUpload: React.FC<AnimalPhotosUploadProps> = ({
     const [fileList, setFileList] = useState<any[]>([]);
     const [uploading, setUploading] = useState(false);
 
-    const handleUpload = async () => {
-        if (fileList.length === 0) {
-            message.warning('Please upload at least one photo');
-            return;
-        }
-
+     const handleUpload = async () => {
         try {
             setUploading(true);
             const formData = new FormData();
-            formData.append('animal_id', animalId.toString());
+            formData.append('animal_id', animalId); // No .toString() needed
             
             fileList.forEach(file => {
                 formData.append('files', file.originFileObj);
             });
 
-            const response = await fetch('/api/qurbani/animals/photos', {
+            // Updated endpoint to match your API
+            const response = await fetch('/api/qurbani-animals/images', {
                 method: 'POST',
                 body: formData,
             });
 
             if (!response.ok) {
-                throw new Error('Failed to upload photos');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to upload photos');
             }
 
             message.success('Photos uploaded successfully!');
             onComplete();
         } catch (error) {
-            message.error('Failed to upload photos');
-            console.error(error);
+            
         } finally {
             setUploading(false);
         }

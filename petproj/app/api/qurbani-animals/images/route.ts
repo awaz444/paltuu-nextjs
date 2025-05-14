@@ -1,7 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import { createClient } from "../../../../db/index"; // Import your custom database client
 import { NextRequest, NextResponse } from "next/server";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4, validate as isUUID } from 'uuid';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -12,7 +12,7 @@ cloudinary.config({
 
 export interface QurbaniAnimalPhoto {
   photo_id: string; // Changed to string for UUID
-  animal_id: number;
+  animal_id: string;
   photo_url: string;
   order: number;
   created_at: string;
@@ -34,14 +34,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!animal_id) {
+    if (!animal_id || !isUUID(animal_id as string)) {
       return NextResponse.json(
-        { error: "Animal ID is missing from the request" },
+        { error: "Valid animal ID is required" },
         { status: 400 }
       );
     }
-
-    console.log("Animal ID:", animal_id);
+    console.log("Received animal_id:", animal_id, "Type:", typeof animal_id);
+    // Should log: "Received animal_id: fbca22bf-e65d-4057-9dff-921f3adb241d Type: string"
 
     // Upload files to Cloudinary
     const uploadPromises = files.map(async (file) => {
@@ -69,40 +69,51 @@ export async function POST(request: NextRequest) {
     await client.connect();
     console.log("Database connected");
 
-    // Insert URLs into the database
-    for (let i = 0; i < urls.length; i++) {
-      const photo_url = urls[i];
-      const order = i + 1;
-      const photo_id = uuidv4();
+    // Start transaction for multiple inserts
+    await client.query('BEGIN');
 
-      console.log(`Inserting photo ${i + 1} into the database`);
-      try {
+    try {
+      // Insert URLs into the database
+      for (let i = 0; i < urls.length; i++) {
+        const photo_url = urls[i];
+        const order = i + 1;
+
+        console.log(`Inserting photo ${i + 1} into the database`);
         const query = `
           INSERT INTO qurbani_animals_photo (
-            photo_id, animal_id, photo_url, "order", created_at
+            animal_id, photo_url, "order"
           )
-          VALUES ($1, $2, $3, $4, NOW())
-          RETURNING *;
+          VALUES ($1, $2, $3)
+          RETURNING photo_id; 
         `;
-        const queryParams = [photo_id, animal_id, photo_url, order];
+        const queryParams = [animal_id, photo_url, order];
 
-        console.log("Query Parameters:", queryParams);
         const result = await client.query(query, queryParams);
-        console.log(`Photo ${i + 1} inserted successfully`, result.rows[0]);
-      } catch (error) {
-        console.error(`Error inserting photo ${i + 1}:`, error);
-        throw error;
+        console.log(`Photo inserted with ID:`, result.rows[0].photo_id);
       }
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
     }
 
     return NextResponse.json(
-      { message: "Photos uploaded and stored successfully", urls },
-      { status: 200 }
+      {
+        success: true,
+        message: "Photos uploaded and stored successfully",
+        urls,
+        count: urls.length
+      },
+      { status: 201 }
     );
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(
-      { error: "Failed to upload photos", details: (error as Error).message },
+      {
+        error: "Failed to upload photos",
+        details: (error as Error).message
+      },
       { status: 500 }
     );
   } finally {

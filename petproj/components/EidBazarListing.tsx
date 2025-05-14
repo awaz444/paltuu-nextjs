@@ -110,7 +110,7 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
 
                     <Form.Item
                         name="height"
-                        label="Height (cm)"
+                        label="Height (inches)"
                         rules={[{ required: true, message: "Please input height" }]}
                     >
                         <InputNumber min={1} max={300} className="w-full" />

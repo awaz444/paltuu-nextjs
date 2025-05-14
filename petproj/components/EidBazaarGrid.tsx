@@ -209,12 +209,12 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                 alt={animal.breed}
                 className="w-full aspect-square object-cover rounded-2xl"
               />
-              <span className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${animal.status === "Available" ? "bg-green-100 text-green-800" :
+              {/* <span className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${animal.status === "Available" ? "bg-green-100 text-green-800" :
                 animal.status === "Reserved" ? "bg-yellow-100 text-yellow-800" :
                   "bg-gray-100 text-gray-800"
                 }`}>
                 {animal.status}
-              </span>
+              </span> */}
             </div>
             <div className="p-4">
               <p className="text-primary font-semibold text-lg mb-1">

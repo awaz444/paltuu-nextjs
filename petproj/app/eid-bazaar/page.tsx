@@ -43,25 +43,25 @@ export default function EidBazaar() {
     useEffect(() => {
         setTimeout(() => {
             // setAnimals([
-            //     {
-            //         id: "1",
-            //         species: "Goat",
-            //         breed: "Beetal",
-            //         age: 2,
-            //         weight: 40,
-            //         height: 40,
-            //         teethCount: 2,                  // New field
-            //         hornCondition: 'Good',
-            //         isVaccinated: true,
-            //         price: 45000,
-            //         status: "Available",
-            //         location: "Gulshan",
-            //         city: "Karachi",
-            //         sellerID: "1",
-            //         sellerName: "Ali Ahmed",
-            //         sellerContact: "03001234567",
-            //         images: ["/goat.jpg"]
-            //     },
+                // {
+                //     id: "1",
+                //     species: "Goat",
+                //     breed: "Beetal",
+                //     age: 2,
+                //     weight: 40,
+                //     height: 40,
+                //     teethCount: 2,                  // New field
+                //     hornCondition: 'Good',
+                //     isVaccinated: true,
+                //     price: 45000,
+                //     status: "Available",
+                //     location: "Gulshan",
+                //     city: "Karachi",
+                //     sellerID: "1",
+                //     sellerName: "Ali Ahmed",
+                //     sellerContact: "03001234567",
+                //     images: ["/goat.jpg"]
+                // },
             //     {
             //         id: "2",
             //         species: "Cow",

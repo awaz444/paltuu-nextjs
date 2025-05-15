@@ -171,7 +171,6 @@ export async function GET() {
     `;
 
     const result = await client.query(query);
-    console.log(result);
     return NextResponse.json(result.rows, { status: 200 });
 
   } catch (error) {

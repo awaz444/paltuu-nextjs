@@ -1,0 +1,79 @@
+/* eidbazarlisting.css */
+
+/* ====== GLOBAL FIELD STYLES ====== */
+/* All form controls - base state */
+.eid-bazaar-form .ant-input,
+.eid-bazaar-form .ant-input-number,
+.eid-bazaar-form .ant-select-selector,
+.eid-bazaar-form .ant-input-affix-wrapper,
+.eid-bazaar-form .ant-picker {
+  border-color: #d9d9d9; /* Default AntD border */
+}
+
+/* ====== HOVER STATE ====== */
+.eid-bazaar-form .ant-input:hover,
+.eid-bazaar-form .ant-input-number:hover,
+.eid-bazaar-form .ant-select-selector:hover,
+.eid-bazaar-form .ant-input-affix-wrapper:hover,
+.eid-bazaar-form .ant-picker:hover {
+  border-color: var(--primary-color) !important;
+}
+
+/* ====== FOCUS/ACTIVE STATE ====== */
+.eid-bazaar-form .ant-input:focus,
+.eid-bazaar-form .ant-input-number:focus,
+.eid-bazaar-form .ant-select-focused .ant-select-selector,
+.eid-bazaar-form .ant-input-affix-wrapper:focus,
+.eid-bazaar-form .ant-picker-focused {
+  border-color: var(--primary-color) !important;
+  /* box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.1) !important; */
+}
+
+/* ====== PLACEHOLDERS ====== */
+/* Hover placeholder */
+.eid-bazaar-form .ant-input:hover::placeholder,
+.eid-bazaar-form .ant-input-affix-wrapper:hover .ant-input::placeholder {
+  color: var(--primary-color) !important;
+}
+
+/* Focus placeholder - prevents blue revert */
+.eid-bazaar-form .ant-input:focus::placeholder,
+.eid-bazaar-form .ant-input-affix-wrapper:focus .ant-input::placeholder {
+  color: var(--primary-color) !important;
+}
+
+/* ====== BUTTONS ====== */
+/* Submit - Primary */
+.eid-bazaar-form .submit-btn.ant-btn-primary {
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+/* Cancel - Outline */
+.eid-bazaar-form .cancel-btn.ant-btn {
+  border: 1px solid var(--primary-color) !important;
+  color: var(--primary-color) !important;
+  background: transparent !important;
+}
+
+/* Hover states for buttons */
+.eid-bazaar-form .submit-btn.ant-btn-primary:hover {
+  background: var(--primary-color-hover) !important;
+}
+
+.eid-bazaar-form .cancel-btn.ant-btn:hover {
+  background: rgba(var(--primary-color-rgb), 0.05) !important;
+}
+
+.eid-bazaar-steps .ant-steps-item-process .ant-steps-item-icon {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+.eid-bazaar-steps .ant-steps-item-finish .ant-steps-item-icon > .ant-steps-icon {
+  color: var(--primary-color) !important;
+}
+
+.eid-bazaar-steps .ant-steps-item-finish .ant-steps-item-icon {
+  border-color: var(--primary-color) !important;
+}

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Upload, Button, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
+import "./eidbazaarlisting.css";
 
 interface AnimalPhotosUploadProps {
     animalId: string;
@@ -48,7 +49,7 @@ const AnimalPhotosUpload: React.FC<AnimalPhotosUploadProps> = ({
     };
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 eid-bazaar-form">
             <Upload
                 listType="picture-card"
                 fileList={fileList}

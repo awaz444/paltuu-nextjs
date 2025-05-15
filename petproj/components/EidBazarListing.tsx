@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Form, Input, InputNumber, Select, Button, message, Checkbox, Steps } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
 import AnimalPhotosUpload from "./QurbaniAnimalUpload";
+import "./eidbazaarlisting.css";
 
 const { Option } = Select;
 const { Step } = Steps;
@@ -66,9 +66,9 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
                 weight: 40,
                 city: "Karachi"
             }}
-            className="px-2 space-y-4"
+            className="px-2 space-y-4 eid-bazaar-form"
         >
-            <div className="space-y-4">
+            <div className="space-y-4 border-primary">
                 <Form.Item
                     name="species"
                     label="Animal Species"
@@ -212,14 +212,14 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                <Button onClick={onCancel} className="px-6">
+                <Button onClick={onCancel} className="px-6 cancel-btn">
                     Cancel
                 </Button>
                 <Button
                     type="primary"
                     htmlType="submit"
                     loading={loading}
-                    className="px-6"
+                    className="px-6 submit-btn"
                 >
                     Next: Upload Photos
                 </Button>
@@ -246,7 +246,7 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
 
     return (
         <div className="p-4">
-            <Steps current={currentStep} className="mb-6">
+            <Steps current={currentStep} className="mb-6 eid-bazaar-steps">
                 {steps.map(item => (
                     <Step key={item.title} title={item.title} />
                 ))}

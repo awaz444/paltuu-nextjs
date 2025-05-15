@@ -90,17 +90,32 @@ const QurbaniGrid: React.FC<QurbaniGridProps> = ({ animals }) => {
     };
 
     const handleUpdate = async () => {
-        if (!editingAnimal) return;
+  if (!editingAnimal) return;
 
-        try {
-            const { id, ...updateData } = editingAnimal;
-            const response = await fetch(`/api/qurbani-animals/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(updateData),
-            });
+  try {
+    const { id, sellerName, sellerContact, sellerProfileImage, ...updateData } = editingAnimal;
+    
+    const response = await fetch(`/api/qurbani-animals/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        // Only include fields that should be updatable
+        species: updateData.species,
+        breed: updateData.breed,
+        age: updateData.age,
+        weight: updateData.weight,
+        teethCount: updateData.teethCount,
+        hornCondition: updateData.hornCondition,
+        isVaccinated: updateData.isVaccinated,
+        description: updateData.description,
+        price: updateData.price,
+        location: updateData.location,
+        city: updateData.city,
+        status: updateData.status
+      }),
+    });
 
             if (!response.ok) {
                 console.error("Update failed:", await response.json());

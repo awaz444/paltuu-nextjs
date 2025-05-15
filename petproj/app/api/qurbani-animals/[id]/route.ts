@@ -71,22 +71,6 @@ export async function PUT(
             }
         }
 
-        // Add each provided field to the update query
-        for (const [key, value] of Object.entries(body)) {
-            if (value !== undefined) {
-                let dbColumnName = key;
-
-                // Convert camelCase to snake_case for database columns
-                if (key === "teethCount") dbColumnName = "teeth_count";
-                if (key === "hornCondition") dbColumnName = "horn_condition";
-                if (key === "isVaccinated") dbColumnName = "is_vaccinated";
-
-                fieldsToUpdate.push(`${dbColumnName} = $${paramIndex}`);
-                values.push(value);
-                paramIndex++;
-            }
-        }
-
         // If no valid fields to update, return bad request
         if (fieldsToUpdate.length === 0) {
             return NextResponse.json(
@@ -96,7 +80,7 @@ export async function PUT(
         }
 
         // Add updated_at timestamp
-        fieldsToUpdate.push(`updated_at = NOW()`);
+        fieldsToUpdate.push(`created_at = NOW()`);
 
         const query = `
       UPDATE qurbani_animals

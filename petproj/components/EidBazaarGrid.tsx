@@ -155,7 +155,7 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
   return (
     <>
       {/* Create Listing Button - Matches Lost & Found style */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-3">
         {/* Modified Create Listing Button to open modal */}
         <div
           className="create-listing-btn hidden sm:flex bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 text-sm sm:text-base cursor-pointer"

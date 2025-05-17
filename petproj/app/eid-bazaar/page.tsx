@@ -44,7 +44,7 @@ export default function EidBazaar() {
     useEffect(() => {
         const fetchAnimals = async () => {
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/qurbani-animals`);
+                const response = await fetch("/api/browse-pets");
                 if (!response.ok) {
                     throw new Error('Failed to fetch animals');
                 }

@@ -107,10 +107,10 @@ const Navbar = () => {
 
     // Log the auth context props as soon as they are fetched
     useEffect(() => {
-        console.log("AuthContext - User:", user);
-        console.log("AuthContext - Role:", userRole);
-        console.log("AuthContext - isAuthenticated:", isAuthenticated);
-        console.log("NextAuth - Session:", session);
+        // console.log("AuthContext - User:", user);
+        // console.log("AuthContext - Role:", userRole);
+        // console.log("AuthContext - isAuthenticated:", isAuthenticated);
+        // console.log("NextAuth - Session:", session);
     }, [user, isAuthenticated, session]); // Logs when these values update
 
     // Navigation Links

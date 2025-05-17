@@ -54,7 +54,7 @@ const ReviewsSummary = () => {
                 if (!vet_id) {
                     throw new Error("Vet ID not found for the user");
                 }
-                console.log(vet_id);
+                // console.log(vet_id);
                 setVetId(vet_id);
 
                 // Fetch approved and pending reviews

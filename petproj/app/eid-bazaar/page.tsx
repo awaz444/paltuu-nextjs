@@ -49,7 +49,7 @@ export default function EidBazaar() {
                     throw new Error('Failed to fetch animals');
                 }
                 const data = await response.json();
-                console.log('Fetched animals:', data);
+
                 
                 // Transform the data to match the expected format
                 const transformedData = data.map((animal: any) => ({

@@ -48,7 +48,7 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
     const [userId, setUserId] = useState<number | null>(null);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-    console.log("Animals:", animals);
+
 
     // Get user ID from localStorage wahen component mounts
     useEffect(() => {

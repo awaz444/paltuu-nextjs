@@ -120,6 +120,7 @@ const Navbar = () => {
         { name: "Pet Care", href: "pet-care" },
         { name: "Lost & Found", href: "lost-and-found" },
         { name: "Paltuu AI", href: "llm" },
+        { name: "Eid Bazaar", href: "eid-bazaar" },
     ];
 
     useEffect(() => {

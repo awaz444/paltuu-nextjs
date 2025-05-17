@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Navbar from "../../components/navbar";
 import EidBazaarGrid from "../../components/EidBazaarGrid";
 import { MoonLoader } from "react-spinners";
+import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import "./styles.css";
 
 export interface QurbaniAnimal {
@@ -38,6 +39,7 @@ export default function EidBazaar() {
         species: "",
         status: "Available"
     });
+    const [primaryColor, setPrimaryColor] = useState("#000000");
 
     useEffect(() => {
         const fetchAnimals = async () => {
@@ -66,6 +68,16 @@ export default function EidBazaar() {
         };
 
         fetchAnimals();
+    }, []);
+
+    useSetPrimaryColor();
+
+    useEffect(() => {
+        const rootStyles = getComputedStyle(document.documentElement);
+        const color = rootStyles.getPropertyValue("--primary-color").trim();
+        if (color) {
+            setPrimaryColor(color);
+        }
     }, []);
 
     const filteredAnimals = animals.filter(animal =>
@@ -108,7 +120,7 @@ export default function EidBazaar() {
 
                 {loading ? (
                     <div className="flex justify-center my-12">
-                        <MoonLoader size={40} color="#3B82F6" />
+                        <MoonLoader size={40} color={primaryColor} />
                     </div>
                 ) : (
                     <EidBazaarGrid animals={filteredAnimals} />

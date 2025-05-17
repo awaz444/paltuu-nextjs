@@ -46,6 +46,7 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
     const [createModalVisible, setCreateModalVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [userId, setUserId] = useState<number | null>(null);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
     console.log("Animals:", animals);
 
@@ -61,6 +62,13 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
             }
         }
     }, []);
+
+    useEffect(() => {
+        if (selectedAnimal) {
+            setSelectedImageIndex(0);
+        }
+    }, [selectedAnimal]);
+    
 
     const handleCreateSubmit = async (
         values: any
@@ -132,9 +140,8 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
 
     const handleWhatsAppClick = () => {
         const message = `Hi, I'm interested in your ${selectedAnimal?.species} (${selectedAnimal?.breed}) listed for ${selectedAnimal?.price} PKR`;
-        const url = `https://wa.me/${
-            selectedAnimal?.sellerContact
-        }?text=${encodeURIComponent(message)}`;
+        const url = `https://wa.me/${selectedAnimal?.sellerContact
+            }?text=${encodeURIComponent(message)}`;
         window.open(url, "_blank");
     };
 
@@ -297,7 +304,7 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                     width={900}
                     centered
                     className="animal-details-modal"
-                    >
+                >
                     <div className="rounded-xl overflow-hidden bg-gray-50">
                         {/* Header Banner */}
                         <div className="bg-white px-6 py-4 text-primary">
@@ -327,34 +334,32 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                                 <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-4">
                                     <img
                                         src={
-                                            selectedAnimal.images[0] ||
+                                            selectedAnimal.images[selectedImageIndex] ||
                                             "/animal-placeholder.png"
                                         }
-                                        alt={selectedAnimal.breed}
+                                        alt={`${selectedAnimal.breed} - View ${selectedImageIndex + 1}`}
                                         className="w-full aspect-square object-cover"
                                     />
                                 </div>
 
                                 {/* Thumbnails */}
-                                {selectedAnimal.images.length > 1 && (
-                                    <div className="flex gap-2 mt-2 overflow-x-auto pb-2">
-                                        {selectedAnimal.images.map(
-                                            (img, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="w-20 h-20 flex-shrink-0">
-                                                    <img
-                                                        src={img}
-                                                        alt={`${
-                                                            selectedAnimal.breed
-                                                        } view ${index + 1}`}
-                                                        className="w-full h-full object-cover rounded-md border-2 hover:border-primary cursor-pointer"
-                                                    />
-                                                </div>
-                                            )
-                                        )}
+                                {selectedAnimal.images.map((img, index) => (
+                                    <div
+                                        key={index}
+                                        className={`w-20 h-20 flex-shrink-0 border-2 rounded-md cursor-pointer ${index === selectedImageIndex
+                                                ? "border-primary"
+                                                : "border-transparent"
+                                            }`}
+                                        onClick={() => setSelectedImageIndex(index)}
+                                    >
+                                        <img
+                                            src={img}
+                                            alt={`${selectedAnimal.breed} view ${index + 1}`}
+                                            className="w-full h-full object-cover rounded-md"
+                                        />
                                     </div>
-                                )}
+                                ))}
+
 
                                 {/* Seller information */}
                                 <div className="bg-white rounded-xl shadow-sm p-4 mt-4">
@@ -501,18 +506,17 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                                                         Horn Condition
                                                     </span>
                                                     <span
-                                                        className={`px-2 py-0.5 rounded-md text-sm ${
-                                                            selectedAnimal.hornCondition ===
+                                                        className={`px-2 py-0.5 rounded-md text-sm ${selectedAnimal.hornCondition ===
                                                             "Good"
-                                                                ? "bg-green-100 text-green-700"
-                                                                : selectedAnimal.hornCondition ===
-                                                                  "Damaged"
+                                                            ? "bg-green-100 text-green-700"
+                                                            : selectedAnimal.hornCondition ===
+                                                                "Damaged"
                                                                 ? "bg-yellow-100 text-yellow-700"
                                                                 : selectedAnimal.hornCondition ===
-                                                                  "Broken"
-                                                                ? "bg-orange-100 text-orange-700"
-                                                                : "bg-gray-100 text-gray-700"
-                                                        }`}>
+                                                                    "Broken"
+                                                                    ? "bg-orange-100 text-orange-700"
+                                                                    : "bg-gray-100 text-gray-700"
+                                                            }`}>
                                                         {
                                                             selectedAnimal.hornCondition
                                                         }
@@ -544,18 +548,17 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                                                     <div
                                                         className="bg-amber-500 h-full rounded-full"
                                                         style={{
-                                                            width: `${
-                                                                selectedAnimal.isVaccinated &&
+                                                            width: `${selectedAnimal.isVaccinated &&
                                                                 selectedAnimal.teethCount >=
-                                                                    2
-                                                                    ? "100%"
-                                                                    : "70%"
-                                                            }`,
+                                                                2
+                                                                ? "100%"
+                                                                : "70%"
+                                                                }`,
                                                         }}></div>
                                                 </div>
                                                 <span className="text-amber-700 font-medium">
                                                     {selectedAnimal.isVaccinated &&
-                                                    selectedAnimal.teethCount >=
+                                                        selectedAnimal.teethCount >=
                                                         2
                                                         ? "Excellent"
                                                         : "Good"}
@@ -563,7 +566,7 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                                             </div>
                                             <div className="text-xs text-amber-700 mt-2">
                                                 {selectedAnimal.isVaccinated &&
-                                                selectedAnimal.teethCount >= 2
+                                                    selectedAnimal.teethCount >= 2
                                                     ? "This animal meets all Qurbani requirements"
                                                     : "This animal meets basic Qurbani requirements"}
                                             </div>
@@ -577,7 +580,7 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
             )}
 
             {/* Animal Details Modal */}
-           
+
 
             {/* Create Listing Modal */}
             <Modal

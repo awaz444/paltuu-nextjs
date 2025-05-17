@@ -175,7 +175,7 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
                 </Form.Item>
 
                 <Form.Item
-                    name="teeth_count"
+                    name="teethCount"
                     label="Number of Teeth (for age verification)"
                     help="Leave blank if unsure"
                     required
@@ -189,7 +189,7 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
                 </Form.Item>
 
                 <Form.Item
-                    name="horn_condition"
+                    name="hornCondition"
                     label="Horn Condition"
                 >
                     <Select

@@ -139,7 +139,7 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
     };
 
     const handleWhatsAppClick = () => {
-        const message = `Hi, I'm interested in your ${selectedAnimal?.species} (${selectedAnimal?.breed}) listed for ${selectedAnimal?.price} PKR`;
+        const message = `Hi, I'm interested in your ${selectedAnimal?.species} (${selectedAnimal?.breed}) listed for ${selectedAnimal?.price} PKR on Paltuu.pk`;
         const url = `https://wa.me/${selectedAnimal?.sellerContact
             }?text=${encodeURIComponent(message)}`;
         window.open(url, "_blank");

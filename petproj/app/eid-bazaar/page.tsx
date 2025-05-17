@@ -49,6 +49,7 @@ export default function EidBazaar() {
                     throw new Error('Failed to fetch animals');
                 }
                 const data = await response.json();
+                console.log('Fetched animals:', data);
                 
                 // Transform the data to match the expected format
                 const transformedData = data.map((animal: any) => ({
@@ -85,6 +86,8 @@ export default function EidBazaar() {
         (filters.species ? animal.species === filters.species : true) &&
         animal.status === filters.status
     );
+
+    console.log('Filtered animals:', filteredAnimals);
 
     return (
         <>

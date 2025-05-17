@@ -5,12 +5,6 @@ import fs from "fs";
 import path from "path";
 import { createClient } from "../../../../db/index";
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const client = createClient();
 

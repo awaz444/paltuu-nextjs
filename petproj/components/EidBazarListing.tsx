@@ -178,6 +178,7 @@ const EidBazaarListing: React.FC<EidBazaarListingProps> = ({ onSubmit, onCancel 
                     name="teeth_count"
                     label="Number of Teeth (for age verification)"
                     help="Leave blank if unsure"
+                    required
                 >
                     <InputNumber
                         min={0}

@@ -147,6 +147,7 @@ export async function GET() {
         a.teeth_count AS "teethCount",
         a.horn_condition AS "hornCondition",
         a.is_vaccinated AS "isVaccinated",
+        a.description,
         a.price,
         a.status,
         a.location,

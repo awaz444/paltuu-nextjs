@@ -1,21 +1,63 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/index";
+import { getToken } from "next-auth/jwt";
+import jwt from "jsonwebtoken";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
-    const user_id = req.nextUrl.pathname.split("/").pop();
+    const requested_user_id = req.nextUrl.pathname.split("/").pop();
 
-    if (!user_id) {
+    if (!requested_user_id) {
         return NextResponse.json(
             { error: "User ID is required" },
-            {
-                status: 400,
-                headers: { "Content-Type": "application/json" },
-            }
+            { status: 400 }
         );
     }
 
     try {
+        // Get authenticated user's ID from token/session
+        let authenticated_user_id: string | null = null;
+
+        // Check NextAuth token first (for Google OAuth users)
+        const nextAuthToken = await getToken({
+            req,
+            secret: process.env.NEXTAUTH_SECRET
+        });
+
+        if (nextAuthToken?.user_id) {
+            authenticated_user_id = nextAuthToken.user_id.toString();
+        } else {
+            // Check custom JWT token (for regular login users)
+            const customToken = req.cookies.get('token')?.value;
+            if (customToken) {
+                try {
+                    const decoded = jwt.verify(customToken, process.env.TOKEN_SECRET!) as any;
+                    authenticated_user_id = decoded.id?.toString();
+                } catch (error) {
+                    return NextResponse.json(
+                        { error: "Invalid token" },
+                        { status: 401 }
+                    );
+                }
+            }
+        }
+
+        // If no authenticated user found
+        if (!authenticated_user_id) {
+            return NextResponse.json(
+                { error: "Unauthorized - Please login" },
+                { status: 401 }
+            );
+        }
+
+        // CRITICAL: Verify that the authenticated user can only access their own profile
+        if (authenticated_user_id !== requested_user_id) {
+            return NextResponse.json(
+                { error: "Forbidden - You can only access your own profile" },
+                { status: 403 }
+            );
+        }
+
         await client.connect();
 
         const query = `
@@ -33,21 +75,17 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             WHERE u.user_id = $1;
         `;
 
-        const result = await client.query(query, [user_id]);
+        const result = await client.query(query, [authenticated_user_id]);
 
         if (result.rows.length === 0) {
             return NextResponse.json(
                 { error: "User not found" },
-                {
-                    status: 404,
-                    headers: { "Content-Type": "application/json" },
-                }
+                { status: 404 }
             );
         }
 
         const user = result.rows[0];
 
-        // Structure response
         const response = {
             user_id: user.user_id,
             name: user.name,
@@ -66,11 +104,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     } catch (err) {
         console.error(err);
         return NextResponse.json(
-            { error: "Internal Server Error", message: (err as Error).message },
-            {
-                status: 500,
-                headers: { "Content-Type": "application/json" },
-            }
+            { error: "Internal Server Error" },
+            { status: 500 }
         );
     } finally {
         await client.end();
@@ -79,9 +114,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
-    const user_id = req.nextUrl.pathname.split("/").pop();
+    const requested_user_id = req.nextUrl.pathname.split("/").pop();
 
-    if (!user_id) {
+    if (!requested_user_id) {
         return NextResponse.json(
             { error: "User ID is required" },
             { status: 400 }
@@ -89,83 +124,113 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     }
 
     try {
-        await client.connect();
-        const body = await req.json();
-        const { name, email, city, dob, phone_number } = body;
+        // Same authorization logic for PATCH
+        let authenticated_user_id: string | null = null;
 
-        // Validate required fields
-        if (!name || !email || !phone_number) {
-            return NextResponse.json(
-                { error: "Name, email, and phone number are required" },
-                { status: 400 }
-            );
-        }
+        const nextAuthToken = await getToken({
+            req,
+            secret: process.env.NEXTAUTH_SECRET
+        });
 
-        // Handle city ID - Modified this part to fix the type error
-        let cityId: number | null = null;
-        if (city) {
-            // Check if city exists by name only
-            const checkCityQuery = `
-                SELECT city_id FROM cities
-                WHERE city_name = $1
-                LIMIT 1;
-            `;
-            const checkCityResult = await client.query(checkCityQuery, [city]);
-
-            if (checkCityResult.rows.length > 0) {
-                cityId = checkCityResult.rows[0].city_id;
-            } else {
-                // Create new city if it doesn't exist
-                const insertCityQuery = `
-                    INSERT INTO cities (city_name)
-                    VALUES ($1)
-                    RETURNING city_id;
-                `;
-                const insertCityResult = await client.query(insertCityQuery, [city]);
-                cityId = insertCityResult.rows[0].city_id;
+        if (nextAuthToken?.user_id) {
+            authenticated_user_id = nextAuthToken.user_id.toString();
+        } else {
+            const customToken = req.cookies.get('token')?.value;
+            if (customToken) {
+                try {
+                    const decoded = jwt.verify(customToken, process.env.TOKEN_SECRET!) as any;
+                    authenticated_user_id = decoded.id?.toString();
+                } catch (error) {
+                    return NextResponse.json(
+                        { error: "Invalid token" },
+                        { status: 401 }
+                    );
+                }
             }
         }
 
-        // Update user information
+        if (!authenticated_user_id) {
+            return NextResponse.json(
+                { error: "Unauthorized - Please login" },
+                { status: 401 }
+            );
+        }
+
+        // CRITICAL: Verify authorization for updates too
+        if (authenticated_user_id !== requested_user_id) {
+            return NextResponse.json(
+                { error: "Forbidden - You can only update your own profile" },
+                { status: 403 }
+            );
+        }
+
+        const body = await req.json();
+        const { name, dob, phone_number, city, profile_image_url } = body;
+
+        await client.connect();
+
+        // Get city_id if city name is provided
+        let cityId = null;
+        if (city) {
+            const cityQuery = 'SELECT city_id FROM cities WHERE city_name = $1';
+            const cityResult = await client.query(cityQuery, [city]);
+            if (cityResult.rows.length > 0) {
+                cityId = cityResult.rows[0].city_id;
+            }
+        }
+
         const updateQuery = `
             UPDATE users
-            SET
-                name = $1,
-                email = $2,
-                city_id = $3,
-                dob = $4,
-                phone_number = $5
+            SET name = COALESCE($1, name),
+                dob = COALESCE($2, dob),
+                phone_number = COALESCE($3, phone_number),
+                city_id = COALESCE($4, city_id),
+                profile_image_url = COALESCE($5, profile_image_url)
             WHERE user_id = $6
-            RETURNING
-                user_id,
-                name,
-                email,
-                dob,
-                phone_number,
-                profile_image_url,
-                created_at,
-                (SELECT city_name FROM cities WHERE cities.city_id = users.city_id) AS city;
+            RETURNING user_id, name, dob, email, phone_number, profile_image_url;
         `;
-        const values = [name, email, cityId, dob, phone_number, user_id];
 
-        const result = await client.query(updateQuery, values);
+        const result = await client.query(updateQuery, [
+            name, dob, phone_number, cityId, profile_image_url, authenticated_user_id
+        ]);
 
         if (result.rows.length === 0) {
             return NextResponse.json(
-                { error: "User not found" },
+                { error: "User not found or update failed" },
                 { status: 404 }
             );
         }
 
+        // Fetch updated user with city name
+        const fetchQuery = `
+            SELECT u.user_id, u.name, u.dob, u.email, u.phone_number,
+                   u.profile_image_url, c.city_name AS city, u.created_at
+            FROM users u
+            LEFT JOIN cities c ON u.city_id = c.city_id
+            WHERE u.user_id = $1;
+        `;
+
+        const fetchResult = await client.query(fetchQuery, [authenticated_user_id]);
+        const updatedUser = fetchResult.rows[0];
+
         return NextResponse.json({
             message: "Profile updated successfully",
-            user: result.rows[0]
+            user: {
+                user_id: updatedUser.user_id,
+                name: updatedUser.name,
+                dob: updatedUser.dob,
+                email: updatedUser.email,
+                phone_number: updatedUser.phone_number,
+                profile_image_url: updatedUser.profile_image_url,
+                city: updatedUser.city,
+                created_at: updatedUser.created_at,
+            }
         }, { status: 200 });
 
     } catch (err) {
-        console.error(err);
+        console.error('Error updating user profile:', err);
         return NextResponse.json(
-            { error: "Internal Server Error", details: (err as Error).message },
+            { error: "Internal Server Error" },
             { status: 500 }
         );
     } finally {

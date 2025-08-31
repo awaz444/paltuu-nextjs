@@ -208,11 +208,11 @@ const Navbar = () => {
                     {isAuthenticated || session ? (
                         <div className="relative group">
                             {/* Shine effect (only when menu is open) */}
-                            {isMenuOpen && (
+                            {/* {isMenuOpen && (
                                 <div className="absolute inset-0 overflow-hidden rounded-lg">
                                     <div className="shine-effect-mobile"></div>
                                 </div>
-                            )}
+                            )} */}
 
                             <button
                                 className="loginBtn-mobile flex flex-row gap-2 relative z-10"
@@ -315,9 +315,9 @@ const Navbar = () => {
                                 minWidth: dropdownWidth,
                             }}>
                             {/* Golden Shine Effect (now covers whole button) */}
-                            <div className="absolute inset-0 overflow-hidden">
+                            {/* <div className="absolute inset-0 overflow-hidden">
                                 <div className="shine-effect"></div>
-                            </div>
+                            </div> */}
 
                             {/* Content (needs higher z-index) */}
                             <span className="relative z-10">{displayName}</span>

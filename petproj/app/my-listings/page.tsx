@@ -108,9 +108,11 @@ const UserListingsPage = () => {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                
+
                 // Fetch regular listings
-                const listingsResponse = await fetch(`/api/my-listings/${userId}`);
+                const listingsResponse = await fetch(
+                    `/api/my-listings/${userId}`
+                );
                 if (!listingsResponse.ok) {
                     throw new Error("Failed to fetch listings");
                 }
@@ -118,7 +120,9 @@ const UserListingsPage = () => {
                 setListings(listingsData.listings);
 
                 // Fetch Qurbani animals
-                const animalsResponse = await fetch(`/api/qurbani-animals/user/${userId}`);
+                const animalsResponse = await fetch(
+                    `/api/qurbani-animals/user/${userId}`
+                );
                 if (!animalsResponse.ok) {
                     throw new Error("Failed to fetch Qurbani animals");
                 }
@@ -177,7 +181,7 @@ const UserListingsPage = () => {
                 <div className="w-full max-w-2xl">
                     <div className="tab-switch-container relative flex justify-between rounded-lg bg-gray-100 p-1">
                         <div
-                            className="tab-switch-slider absolute top-0 left-0 h-full w-1/3 bg-primary transition-transform duration-300"
+                            className="tab-switch-slider absolute top-0 left-0 h-full w-1/2 bg-primary transition-transform duration-300"
                             style={{
                                 transform:
                                     activeTab === "adoption"
@@ -200,13 +204,6 @@ const UserListingsPage = () => {
                             }`}
                             onClick={() => handleTabToggle("foster")}>
                             Foster
-                        </div>
-                        <div
-                            className={`tab cursor-pointer py-2 text-center font-medium flex-1 ${
-                                activeTab === "maweshi" ? "active" : ""
-                            }`}
-                            onClick={() => handleTabToggle("maweshi")}>
-                            Maweshi Mandi '25
                         </div>
                     </div>
                 </div>

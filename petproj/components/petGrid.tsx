@@ -84,6 +84,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
 
             <Link
                 href="/create-listing"
+                data-create-listing-fab
                 className="fixed bottom-4 right-2 sm:hidden z-50">
                 <button className="flex items-center gap-1.5 bg-white text-primary border-2 border-primary p-2 rounded-xl shadow-lg transition-all duration-300 hover:scale-105">
                     <svg

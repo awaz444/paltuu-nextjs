@@ -87,22 +87,22 @@ export default function ChatBot() {
       className={`fixed right-0 z-40 transition-all duration-300 ${
         hasListingButton
           ? isOpen
-            ? 'bottom-2 right-2'
-            : 'bottom-2 right-2'
+            ? 'bottom-4 right-4' // More space on mobile when open with listing button
+            : 'bottom-4 right-4' // More space on mobile when closed with listing button
           : isOpen
-          ? 'bottom-2 right-2'
-          : 'bottom-2 right-2'
+          ? 'bottom-4 right-4'  // Default spacing on mobile when open
+          : 'bottom-4 right-4'  // Default spacing on mobile when closed
       }`}
     >
       {/* Floating Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="relative bg-white text-primary p-4 border border-primary border-2 rounded-full shadow-lg hover:bg-dark transition"
+          className="relative bg-white text-primary p-2 sm:p-3 border border-primary border-2 rounded-full shadow-lg hover:bg-dark transition"
         >
-          <MessageSquare size={24} />
+          <MessageSquare size={20} className="sm:w-4 sm:h-4" />
           {hasNewMessage && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+            <span className="absolute -top-1 -right-1 w-1 h-1 sm:w-2 sm:h-2 bg-red-500 rounded-full animate-pulse" />
           )}
         </button>
       )}

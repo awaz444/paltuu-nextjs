@@ -253,7 +253,6 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                     </Button>
                 </div>
             </Modal>
-
             <Navbar />
             <div className="pet-details min-h-screen bg-gray-50 py-8 px-4 md:px-8">
                 <div className="mx-auto max-w-6xl">
@@ -526,10 +525,11 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                     </Card>
                 </div>
             </div>
-
+            // In PetDetailsPage component, update the AdoptionFormModal usage:
             <AdoptionFormModal
                 petId={parseInt(pet_id)}
                 userId={userId || ""}
+                city={pet.city} // Pass the city here
                 visible={isModalVisible}
                 onClose={handleModalClose}
                 onSubmit={handleFormSubmit}

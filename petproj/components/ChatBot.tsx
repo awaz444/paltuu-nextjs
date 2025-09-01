@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { usePathname } from 'next/navigation';
+import { useSetPrimaryColor } from '@/app/hooks/useSetPrimaryColor';
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,6 +15,7 @@ export default function ChatBot() {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   const pathname = usePathname();
+  useSetPrimaryColor();
 
   // only show bump if route matches AND screen is small
   const hasListingButton =
@@ -82,14 +84,14 @@ export default function ChatBot() {
 
   return (
     <div
-      className={`fixed right-2 z-40 transition-all duration-300 ${
+      className={`fixed right-0 z-40 transition-all duration-300 ${
         hasListingButton
           ? isOpen
-            ? 'bottom-28'
-            : 'bottom-20'
+            ? 'bottom-2 right-2'
+            : 'bottom-2 right-2'
           : isOpen
-          ? 'bottom-12'
-          : 'bottom-4'
+          ? 'bottom-2 right-2'
+          : 'bottom-2 right-2'
       }`}
     >
       {/* Floating Button */}
@@ -107,10 +109,9 @@ export default function ChatBot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="w-80 h-[500px] bg-white rounded-xl shadow-xl flex flex-col overflow-hidden">
+        <div className="absolute bottom-0 right-0 w-80 h-[500px] bg-white rounded-xl shadow-xl flex flex-col overflow-hidden">
           <div
             className="flex justify-between items-center px-4 py-2 bg-primary text-white"
-            style={{ backgroundColor: primaryColor }}
           >
             <span className="font-semibold">Paltuu AI</span>
             <button onClick={() => setIsOpen(false)} className="text-white">

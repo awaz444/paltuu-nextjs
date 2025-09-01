@@ -98,7 +98,7 @@ export default function ChatBot() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="relative bg-primary text-white p-4 rounded-full shadow-lg hover:bg-dark transition"
+          className="relative bg-white text-primary p-4 border border-primary border-2 rounded-full shadow-lg hover:bg-dark transition"
         >
           <MessageSquare size={24} />
           {hasNewMessage && (

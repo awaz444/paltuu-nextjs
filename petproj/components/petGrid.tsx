@@ -84,20 +84,19 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
 
             <Link
                 href="/create-listing"
-                className="fixed bottom-4 right-2 sm:hidden z-50">
+                className="fixed bottom-4 left-2 sm:hidden z-50">
                 <button className="flex items-center gap-1.5 bg-white text-primary border-2 border-primary p-2 rounded-xl shadow-lg transition-all duration-300 hover:scale-105">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="16"
                         height="16"
                         fill="currentColor"
-                        className="h-3.5 w-3.5" // Smaller icon
+                        className="h-3.5 w-3.5"
                         viewBox="0 0 16 16">
                         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
                         <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
                     </svg>
-                    <span className="text-xs">Create</span>{" "}
-                    {/* Smaller text and shorter label */}
+                    <span className="text-xs">Create</span>
                 </button>
             </Link>
             {pets.map((pet) => (

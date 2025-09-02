@@ -412,7 +412,7 @@ const MyProfile = () => {
                 {/* Password Change Modal */}
                 <Modal
                     title="Change Password"
-                    visible={passwordModalVisible}
+                    open={passwordModalVisible}
                     onCancel={() => setPasswordModalVisible(false)}
                     footer={null}
                     destroyOnClose

@@ -88,7 +88,7 @@ const RescueRegisterContent = () => {
             toast.error(
                 "Invalid registration flow. Please start from the beginning."
             );
-            router.push("/register");
+            router.push("/sign-up");
         }
     }, [userId, router]);
 

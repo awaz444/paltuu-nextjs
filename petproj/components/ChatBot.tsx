@@ -4,7 +4,6 @@ import { MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { usePathname } from 'next/navigation';
 import { useSetPrimaryColor } from '@/app/hooks/useSetPrimaryColor';
-import { useSession } from 'next-auth/react';
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,12 +15,11 @@ export default function ChatBot() {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   const pathname = usePathname();
-  const { data: session } = useSession();
   useSetPrimaryColor();
 
-  const hideChatbot = pathname === '/' || pathname.startsWith('/login');
+  const hideChatbot = pathname === '/browse-pets' || pathname.startsWith('/login');
 
-  if (!session || hideChatbot) return null;
+  if (hideChatbot) return null;
 
   const hasListingButton =
     (pathname === '/browse-pets' ||

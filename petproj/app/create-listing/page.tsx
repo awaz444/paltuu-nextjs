@@ -430,7 +430,7 @@ export default function CreatePetListing() {
                             {/* Area */}
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700">
-                                    Area/Neighborhood
+                                    Area/Neighborhood *
                                 </label>
                                 <input
                                     type="text"
@@ -444,7 +444,7 @@ export default function CreatePetListing() {
                             {/* Sex */}
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700">
-                                    Sex
+                                    Sex *
                                 </label>
                                 <select
                                     className="mt-1 p-3 w-full border rounded-2xl input-field"
@@ -460,7 +460,7 @@ export default function CreatePetListing() {
                             <div className="grid grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Age (Years)
+                                        Age (Years) *
                                     </label>
                                     <input
                                         type="number"
@@ -477,7 +477,7 @@ export default function CreatePetListing() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Months
+                                        Age (Months) *
                                     </label>
                                     <input
                                         type="number"

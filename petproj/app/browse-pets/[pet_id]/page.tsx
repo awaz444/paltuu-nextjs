@@ -351,7 +351,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
-                                    {hasValue(pet.price) && (
+                                    
                                         <div className="bg-gray-50 p-4 rounded-xl">
                                             <h3 className="text-sm font-semibold text-gray-500 mb-1">
                                                 Adoption Fee
@@ -362,7 +362,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                                     : "None"}
                                             </p>
                                         </div>
-                                    )}
+                                    
                                     {hasValue(pet.sex) && (
                                         <div className="bg-gray-50 p-4 rounded-xl">
                                             <h3 className="text-sm font-semibold text-gray-500 mb-1">

@@ -8,7 +8,7 @@ import AppClientWrapper from "@/context/AppClientWrapper";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
-import { usePathname } from "next/navigation";
+
 
 const montserrat = Montserrat({
     subsets: ["latin"],
@@ -20,9 +20,6 @@ export const metadata: Metadata = {
     title: "Paltuu",
     description: "Pakistan's First Pet Adoption Platform",
 };
-
-const pathname = usePathname();
-const hideChatbot = pathname === "/" || pathname.startsWith("/login");
 
 export default function RootLayout({
     children,
@@ -61,7 +58,7 @@ export default function RootLayout({
                         {children}
                         <div className="fixed right-2 z-50
                                     bottom-20 sm:bottom-4"> 
-                            {!hideChatbot && <ChatBot />}
+                            <ChatBot />
                         </div>
                         <Analytics />
                     </ClientProvider>

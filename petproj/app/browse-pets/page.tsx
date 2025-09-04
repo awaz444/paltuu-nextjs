@@ -70,9 +70,11 @@ export default function BrowsePets() {
     };
 
     const handleSearch = () => {
-        // console.log("Searching with filters:", filters);
+        // This function is a placeholder and does nothing
+        // Implement search functionality here when needed
+        console.log("Search action triggered");
     };
-
+ 
     const filteredPets = pets.filter((pet: any) => {
         const matchesSex = filters.selectedSex
             ? pet.sex === filters.selectedSex

@@ -115,8 +115,7 @@ const Navbar = () => {
 
     // Navigation Links
     const links = [
-        { name: "Browse pets", href: "browse-pets" },
-        { name: "Foster Pets", href: "foster-pets" },
+        { name: "Pets", href: "browse-pets" },
         { name: "Pet Care", href: "pet-care" },
         { name: "Lost & Found", href: "lost-and-found" },
         //{ name: "Paltuu AI", href: "llm" },

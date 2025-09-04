@@ -328,7 +328,7 @@ export default function CreatePetListing() {
                     {currentStep === 1 ? (
                         <>
                             {/* Listing Type */}
-                            {/* <div className="mb-4">
+                            <div className="mb-4">
                                 <div className="w-3/4 tab-switch-container mt-1">
                                     <div
                                         className="tab-switch-slider bg-primary"
@@ -362,7 +362,7 @@ export default function CreatePetListing() {
                                         Foster
                                     </div>
                                 </div>
-                            </div> */}
+                            </div>
 
                             {/* Title (replaces Pet Name) */}
                             <div className="mb-4">
@@ -430,11 +430,10 @@ export default function CreatePetListing() {
                             {/* Area */}
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700">
-                                    Area/Neighborhood *
+                                    Area/Neighborhood
                                 </label>
                                 <input
                                     type="text"
-                                    required
                                     className="mt-1 p-3 w-full border rounded-2xl input-field"
                                     placeholder="Enter your area or neighborhood"
                                     value={area}
@@ -445,11 +444,10 @@ export default function CreatePetListing() {
                             {/* Sex */}
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700">
-                                    Sex *
+                                    Sex
                                 </label>
                                 <select
                                     className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                    required
                                     value={sex}
                                     onChange={(e) => setSex(e.target.value)}>
                                     <option value="male">Male</option>
@@ -462,7 +460,7 @@ export default function CreatePetListing() {
                             <div className="grid grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Age (Years) *
+                                        Age (Years)
                                     </label>
                                     <input
                                         type="number"
@@ -479,7 +477,7 @@ export default function CreatePetListing() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Age (Months) *
+                                        Months
                                     </label>
                                     <input
                                         type="number"

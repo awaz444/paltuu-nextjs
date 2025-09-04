@@ -17,7 +17,7 @@ export default function ChatBot() {
   const pathname = usePathname();
   useSetPrimaryColor();
 
-  const hideChatbot = pathname === '/' || pathname.startsWith('/login');
+  const hideChatbot = pathname === '/browse-pets' || pathname.startsWith('/login');
 
   if (hideChatbot) return null;
 

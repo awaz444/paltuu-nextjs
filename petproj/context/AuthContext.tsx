@@ -3,10 +3,19 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 
+interface User {
+  id?: string;
+  name?: string;
+  email: string;
+  profile_picture?: string;
+  role?: string;
+  method: "google" | "api" | null;
+}
+
 interface AuthContextProps {
   isAuthenticated: boolean;
-  user: { id?: string; name?: string; email: string; role?: string; method: "google" | "api" | null } | null;
-  login: (user: { id: string; name: string; email: string; role: string }) => void;
+  user: User | null;
+  login: (user: { id: string; name: string; email: string; role: string; profile_picture?: string }) => void;
   logout: () => void;
 }
 
@@ -15,7 +24,7 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { data: session, status } = useSession();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<{ id?: string; name?: string; email: string; role?: string; method: "google" | "api" | null } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -27,12 +36,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (status === "authenticated" && session?.user) {
-      const googleUser = {
-        id: session.user.user_id || undefined,
+      const googleUser: User = {
+        id: (session.user as any).user_id || undefined,
         name: session.user.name || undefined,
         email: session.user.email || "",
-        role: session.user.role || "guest",
-        method: "google" as const,
+        role: (session.user as any).role || "guest",
+        profile_picture: session.user.image || undefined, // ✅ Capture Google profile picture
+        method: "google",
       };
 
       // Store Google user in localStorage
@@ -43,10 +53,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [status, session]);
 
-  const login = (userData: { id: string; name: string; email: string; role: string }) => {
-    const userWithMethod = {
+  const login = (userData: { id: string; name: string; email: string; role: string; profile_picture?: string }) => {
+    const userWithMethod: User = {
       ...userData,
-      method: "api" as const,
+      method: "api",
     };
     setUser(userWithMethod);
     setIsAuthenticated(true);
@@ -66,18 +76,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (user?.method === "google") {
         console.log("Executing Google logout flow");
         await nextAuthSignOut({
-          callbackUrl: "/login", // Important - where to go after signout
-          redirect: true         // This ensures it redirects properly
+          callbackUrl: "/login", // where to go after signout
+          redirect: true,
         });
-        return; // Return here because NextAuth will handle the redirect
+        return; // NextAuth will handle the redirect
       }
 
       // For API users, proceed with API logout
       console.log("Executing API logout flow");
       try {
-        const response = await fetch('/api/users/logout', {
-          method: 'GET',
-          credentials: 'include', // Important for cookies
+        const response = await fetch("/api/users/logout", {
+          method: "GET",
+          credentials: "include", // Important for cookies
         });
 
         if (!response.ok) {
@@ -93,23 +103,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(null);
       setIsAuthenticated(false);
 
-      // Manual cookie clearing as fallback (helps with cross-platform issues)
-      document.cookie.split(";").forEach(function(c) {
-        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      // Manual cookie clearing as fallback
+      document.cookie.split(";").forEach(function (c) {
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
       });
 
       // Final redirect for non-Google users
       console.log("Redirecting to login page");
-      window.location.href = '/login';
+      window.location.href = "/login";
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       // Emergency fallback
       localStorage.clear();
       sessionStorage.clear();
-      document.cookie.split(";").forEach(function(c) {
-        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      document.cookie.split(";").forEach(function (c) {
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
       });
-      window.location.href = '/login';
+      window.location.href = "/login";
     }
   };
 

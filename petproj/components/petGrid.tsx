@@ -46,7 +46,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
     useSetPrimaryColor();
 
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-3">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {/* Create new listing card */}
             <Link
                 href="/create-listing"
@@ -93,7 +93,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                     passHref>
                     <div
                         key={pet.pet_id}
-                        className="bg-white pt-4 pr-4 pl-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300">
+                        className="bg-white pt-4 px-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300">
                         <div className="relative">
                             <img
                                 src={pet.image_url || "/dog-placeholder.png"} // Fallback image if pet.image_url is null

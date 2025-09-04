@@ -18,29 +18,6 @@ export async function GET(
     try {
         await client.connect();
 
-        // Query to get all foster applications for the user with detailed pet info
-        const fosterQuery = `
-            SELECT 
-                'foster' AS application_type,
-                fa.foster_id AS application_id,
-                fa.pet_id,
-                fa.status,
-                fa.created_at,
-                p.pet_name,
-                p.pet_breed,
-                c.city_name,
-                p.area,
-                p.age,
-                p.adoption_status,
-                pi.image_url
-            FROM foster_applications AS fa
-            JOIN pets AS p ON fa.pet_id = p.pet_id
-            JOIN cities AS c ON p.city_id = c.city_id
-            LEFT JOIN pet_images AS pi ON p.pet_id = pi.pet_id AND pi.order = 1
-            WHERE fa.user_id = $1;
-        `;
-        const fosterApplications = await client.query(fosterQuery, [user_id]);
-
         // Query to get all adoption applications for the user
         const adoptionQuery = `
             SELECT 
@@ -68,7 +45,6 @@ export async function GET(
 
         // Combine both application results
         const combinedApplications = [
-            ...fosterApplications.rows,
             ...adoptionApplications.rows,
         ];
 

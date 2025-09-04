@@ -13,6 +13,7 @@ const Navbar = () => {
   const [activeLink, setActiveLink] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [mobileView, setMobileView] = useState("navlinks"); // 'navlinks' or 'dropdown'
   let hideTimeout: ReturnType<typeof setTimeout>;
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
@@ -175,6 +176,14 @@ const Navbar = () => {
     50
   }px`;
 
+  const handleNameplateClick = () => {
+    setMobileView("dropdown");
+  };
+
+  const handleBackClick = () => {
+    setMobileView("navlinks");
+  };
+
   return (
     <nav className="navbar" style={navbarStyle}>
       {/* Hamburger Menu Button (Mobile Only) */}
@@ -192,14 +201,15 @@ const Navbar = () => {
         className={`mobile-menu ${isMenuOpen ? "open" : ""} md:hidden`}
         style={{ backgroundColor: navbarBackground[userRole] }}
       >
-        {/* Navigation Links (no changes) */}
-        <div className="navLinks-mobile">
+        {/* Navigation Links - Slides out when nameplate is clicked */}
+        <div className={`navLinks-mobile transition-all duration-300 ${mobileView === "dropdown" ? "translate-x-full opacity-0 absolute" : "translate-x-0 opacity-100"}`}>
           {links.map((link) => (
             <Link key={link.href} href={`/${link.href}`}>
               <span
                 className={`mobile-link ${
                   activeLink === link.href ? "active" : ""
                 }`}
+                onClick={() => setIsMenuOpen(false)}
               >
                 {link.name}
               </span>
@@ -207,33 +217,40 @@ const Navbar = () => {
           ))}
         </div>
 
-        {/* Dropdown (Mobile) - Now with conditional shine */}
-        <div className="dropdown-mobile">
+        {/* Nameplate - Slides out when clicked */}
+        <div className={`dropdown-mobile transition-all duration-300 ${mobileView === "dropdown" ? "translate-x-full opacity-0 absolute" : "translate-x-0 opacity-100"}`}>
           {isAuthenticated || session ? (
-            <div className="relative group">
-              {/* Shine effect (only when menu is open) */}
-              {/* {isMenuOpen && (
-                                <div className="absolute inset-0 overflow-hidden rounded-lg">
-                                    <div className="shine-effect-mobile"></div>
-                                </div>
-                            )} */}
-
+            <div className="relative group w-full">
               <button
-                className="loginBtn-mobile flex flex-row gap-2 relative z-10"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="loginBtn-mobile flex flex-row items-center gap-3 w-full px-4 py-3"
+                onClick={handleNameplateClick}
               >
-                {displayName}
-                {isVerified && (
-                  <i className="bi bi-patch-check-fill text-[#cc8800] mr-2" />
-                )}
-                {isFoundersClub && (
+                <div className="relative">
                   <Image
-                    src="/white_icon.svg"
-                    alt="Founders Club"
-                    width={20}
-                    height={20}
-                    className="ml-1"
+                    src={profileImage}
+                    alt="Profile"
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-white/30"
                   />
+                  {isVerified && (
+                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
+                      <i className="bi bi-patch-check-fill text-amber-500 text-xs" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-white font-medium">{displayName}</p>
+                </div>
+                {isFoundersClub && (
+                  <div className="bg-white/20 p-1.5 rounded-full">
+                    <Image
+                      src="/white_icon.svg"
+                      alt="Founders Club"
+                      width={16}
+                      height={16}
+                    />
+                  </div>
                 )}
                 <Image
                   src="/arrow-down.svg"
@@ -249,36 +266,49 @@ const Navbar = () => {
               <button className="loginBtn-mobile">Login</button>
             </Link>
           )}
-          {/* Dropdown Menu (Mobile) - Updated to handle logout action */}
-          {isDropdownOpen && (
-            <div className="dropdown-menu-mobile">
-              {dropdownItems.map((item) =>
-                item.isAction ? (
+        </div>
+
+        {/* Dropdown Menu - Slides in when nameplate is clicked */}
+        <div className={`dropdown-content-mobile transition-all duration-300 ${mobileView === "dropdown" ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 absolute"}`}>
+          {/* Back Button */}
+          <button 
+            className="back-button-mobile flex items-center gap-2 text-white mb-4 px-4 py-2"
+            onClick={handleBackClick}
+          >
+            <i className="bi bi-arrow-left"></i>
+            Back
+          </button>
+          
+          {/* Dropdown Items */}
+          <div className="w-full">
+            {dropdownItems.map((item) =>
+              item.isAction ? (
+                <div
+                  key={item.href}
+                  className="dropdown-item-mobile"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    handleLogout();
+                  }}
+                >
+                  {item.label}
+                </div>
+              ) : (
+                <Link key={item.href} href={item.href}>
                   <div
-                    key={item.href}
                     className="dropdown-item-mobile"
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      handleLogout();
-                    }}
+                    onClick={() => setIsMenuOpen(false)}
                   >
                     {item.label}
                   </div>
-                ) : (
-                  <Link key={item.href} href={item.href}>
-                    <div
-                      className="dropdown-item-mobile"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {item.label}
-                    </div>
-                  </Link>
-                )
-              )}
-            </div>
-          )}
+                </Link>
+              )
+            )}
+          </div>
         </div>
       </div>
+      
+      {/* Rest of the desktop code remains unchanged */}
       <div className="flex items-center justify-between w-full">
         {/* Logo */}
         <div className="logo">
@@ -314,42 +344,54 @@ const Navbar = () => {
               className="flex items-center justify-center gap-2 loginBtn relative group overflow-hidden"
               style={{ minWidth: dropdownWidth }}
             >
-              {/* Profile Image */}
-              <Image
-  src={profileImage}
-  alt="Profile"
-  width={30}
-  height={30}
-  className="w-8 h-8 rounded-full object-cover"
-/>
+              {/* Profile Image with Badge - Updated nameplate */}
+              <div className="relative">
+                <Image
+                  src={profileImage}
+                  alt="Profile"
+                  width={40}
+                  height={40}
+                  className="w-10 h-10 rounded-full object-cover border-2 border-white/30 transition-all duration-300"
+                />
+                {isVerified && (
+                  <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
+                    <i className="bi bi-patch-check-fill text-amber-500 text-xs" />
+                  </div>
+                )}
+              </div>
 
-              {/* Golden Shine Effect (now covers whole button) */}
-              {/* <div className="absolute inset-0 overflow-hidden">
-                                <div className="shine-effect"></div>
-                            </div> */}
+              {/* User Name - shown only on desktop */}
+              <div>
+                <span className="text-sm font-medium">
+                  {displayName}
+                </span>
+              </div>
 
-              {/* Content (needs higher z-index) */}
-              <span className="relative z-10">{displayName}</span>
-              {isVerified && (
-                <i className="bi bi-patch-check-fill text-[#cc8800] mr-2 relative z-10" />
-              )}
-              {isFoundersClub && (
-                <div className="relative z-10">
-                  <Image
-                    src="/primary_icon.svg"
-                    alt="Founders Club"
-                    width={20}
-                    height={20}
-                  />
-                </div>
-              )}
-              <Image
-                src="/arrow-down.svg"
-                alt="Dropdown"
-                width={12}
-                height={12}
-                className="relative z-10"
-              />
+              {/* Badges */}
+              <div className="flex items-center gap-1">
+                {isFoundersClub && (
+                  <div className="bg-white/20 p-1.5 rounded-full">
+                    <Image
+                      src="/primary_icon.svg"
+                      alt="Founders Club"
+                      width={16}
+                      height={16}
+                    />
+                  </div>
+                )}
+                <svg 
+                  width="12" 
+                  height="12" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={`transition-transform duration-200 ${
+                    isDropdownOpen ? "rotate-180" : ""
+                  }`}
+                >
+                  <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
             </button>
           ) : (
             <Link href="/login">

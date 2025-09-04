@@ -105,6 +105,11 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
         }
     }, []);
 
+    // Helper function to check if a value exists
+    const hasValue = (value: any) => {
+        return value !== null && value !== undefined && value !== "";
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen">
@@ -346,24 +351,28 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-gray-50 p-4 rounded-xl">
-                                        <h3 className="text-sm font-semibold text-gray-500 mb-1">
-                                            Adoption Fee
-                                        </h3>
-                                        <p className="text-xl font-bold text-gray-800">
-                                            {pet.price
-                                                ? `PKR ${pet.price}`
-                                                : "None"}
-                                        </p>
-                                    </div>
-                                    <div className="bg-gray-50 p-4 rounded-xl">
-                                        <h3 className="text-sm font-semibold text-gray-500 mb-1">
-                                            Sex
-                                        </h3>
-                                        <p className="text-xl font-bold text-gray-800 capitalize">
-                                            {pet.sex || "Unknown"}
-                                        </p>
-                                    </div>
+                                    {hasValue(pet.price) && (
+                                        <div className="bg-gray-50 p-4 rounded-xl">
+                                            <h3 className="text-sm font-semibold text-gray-500 mb-1">
+                                                Adoption Fee
+                                            </h3>
+                                            <p className="text-xl font-bold text-gray-800">
+                                                {pet.price
+                                                    ? `PKR ${pet.price}`
+                                                    : "None"}
+                                            </p>
+                                        </div>
+                                    )}
+                                    {hasValue(pet.sex) && (
+                                        <div className="bg-gray-50 p-4 rounded-xl">
+                                            <h3 className="text-sm font-semibold text-gray-500 mb-1">
+                                                Sex
+                                            </h3>
+                                            <p className="text-xl font-bold text-gray-800 capitalize">
+                                                {pet.sex || "Unknown"}
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Modified Buttons */}
@@ -403,123 +412,150 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                         {/* Detailed Information Sections */}
                         <div className="grid md:grid-cols-2 gap-8">
                             <div className="space-y-6">
-                                <Section
-                                    title="About"
-                                    icon={<InfoCircleOutlined />}>
-                                    <p className="text-gray-600 leading-relaxed">
-                                        {pet.description ||
-                                            "No description provided."}
-                                    </p>
-                                </Section>
+                                {hasValue(pet.description) && (
+                                    <Section
+                                        title="About"
+                                        icon={<InfoCircleOutlined />}>
+                                        <p className="text-gray-600 leading-relaxed">
+                                            {pet.description}
+                                        </p>
+                                    </Section>
+                                )}
 
-                                <Section
-                                    title="Health & Care"
-                                    icon={<MedicineBoxOutlined />}>
-                                    <InfoRow
-                                        label="Vaccinated"
-                                        value={pet.vaccinated ? "Yes" : "No"}
-                                    />
-                                    <InfoRow
-                                        label="Neutered"
-                                        value={pet.neutered ? "Yes" : "No"}
-                                    />
-                                    <InfoRow
-                                        label="Health Issues"
-                                        value={pet.health_issues || "None"}
-                                    />
-                                </Section>
+                                {(hasValue(pet.vaccinated) ||
+                                    hasValue(pet.neutered) ||
+                                    hasValue(pet.health_issues)) && (
+                                    <Section
+                                        title="Health & Care"
+                                        icon={<MedicineBoxOutlined />}>
+                                        {hasValue(pet.vaccinated) && (
+                                            <InfoRow
+                                                label="Vaccinated"
+                                                value={pet.vaccinated ? "Yes" : "No"}
+                                            />
+                                        )}
+                                        {hasValue(pet.neutered) && (
+                                            <InfoRow
+                                                label="Neutered"
+                                                value={pet.neutered ? "Yes" : "No"}
+                                            />
+                                        )}
+                                        {hasValue(pet.health_issues) && (
+                                            <InfoRow
+                                                label="Health Issues"
+                                                value={pet.health_issues || "None"}
+                                            />
+                                        )}
+                                    </Section>
+                                )}
                             </div>
 
                             <div className="space-y-6">
-                                <Section title="Behavior">
-                                    {/* Energy Level */}
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Energy Level
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type="range"
-                                                min="1"
-                                                max="5"
-                                                value={pet.energy_level}
-                                                disabled
-                                                className="mt-2 w-full appearance-none h-2 rounded-lg bg-gray-300"
-                                                style={{
-                                                    background: `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
-                                                        (pet.energy_level - 1) *
-                                                        25
-                                                    }%, #D1D5DB ${
-                                                        (pet.energy_level - 1) *
-                                                        25
-                                                    }%, #D1D5DB 100%)`,
-                                                }}
-                                            />
-                                            <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
-                                                <span>Chilled</span>
-                                                <span>Hyper</span>
+                                {(hasValue(pet.energy_level) ||
+                                    hasValue(pet.cuddliness_level)) && (
+                                    <Section title="Behavior">
+                                        {/* Energy Level */}
+                                        {hasValue(pet.energy_level) && (
+                                            <div className="mb-4">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Energy Level
+                                                </label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="range"
+                                                        min="1"
+                                                        max="5"
+                                                        value={pet.energy_level}
+                                                        disabled
+                                                        className="mt-2 w-full appearance-none h-2 rounded-lg bg-gray-300"
+                                                        style={{
+                                                            background: `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
+                                                                (pet.energy_level - 1) *
+                                                                25
+                                                            }%, #D1D5DB ${
+                                                                (pet.energy_level - 1) *
+                                                                25
+                                                            }%, #D1D5DB 100%)`,
+                                                        }}
+                                                    />
+                                                    <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
+                                                        <span>Chilled</span>
+                                                        <span>Hyper</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
+                                        )}
 
-                                    {/* Cuddliness Level */}
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Cuddliness Level
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type="range"
-                                                min="1"
-                                                max="5"
-                                                value={pet.cuddliness_level}
-                                                disabled
-                                                className="mt-2 w-full appearance-none h-2 rounded-lg bg-gray-300"
-                                                style={{
-                                                    background: `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
-                                                        (pet.cuddliness_level -
-                                                            1) *
-                                                        25
-                                                    }%, #D1D5DB ${
-                                                        (pet.cuddliness_level -
-                                                            1) *
-                                                        25
-                                                    }%, #D1D5DB 100%)`,
-                                                }}
-                                            />
-                                            <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
-                                                <span>Independent</span>
-                                                <span>Cuddler</span>
+                                        {/* Cuddliness Level */}
+                                        {hasValue(pet.cuddliness_level) && (
+                                            <div className="mb-4">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    Cuddliness Level
+                                                </label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="range"
+                                                        min="1"
+                                                        max="5"
+                                                        value={pet.cuddliness_level}
+                                                        disabled
+                                                        className="mt-2 w-full appearance-none h-2 rounded-lg bg-gray-300"
+                                                        style={{
+                                                            background: `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
+                                                                (pet.cuddliness_level - 1) *
+                                                                25
+                                                            }%, #D1D5DB ${
+                                                                (pet.cuddliness_level - 1) *
+                                                                25
+                                                            }%, #D1D5DB 100%)`,
+                                                        }}
+                                                    />
+                                                    <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
+                                                        <span>Independent</span>
+                                                        <span>Cuddler</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </Section>
-                                <Section title="Living Preferences">
-                                    <InfoRow
-                                        label="Good with Dogs"
-                                        value={
-                                            pet.can_live_with_dogs
-                                                ? "Yes"
-                                                : "No"
-                                        }
-                                    />
-                                    <InfoRow
-                                        label="Good with Cats"
-                                        value={
-                                            pet.can_live_with_cats
-                                                ? "Yes"
-                                                : "No"
-                                        }
-                                    />
-                                    <InfoRow
-                                        label="Requires Companion at all times"
-                                        value={
-                                            pet.must_have_someone_home
-                                                ? "Yes"
-                                                : "No"
-                                        }
-                                    />
-                                </Section>
+                                        )}
+                                    </Section>
+                                )}
+
+                                {(hasValue(pet.can_live_with_dogs) ||
+                                    hasValue(pet.can_live_with_cats) ||
+                                    hasValue(pet.must_have_someone_home)) && (
+                                    <Section title="Living Preferences">
+                                        {hasValue(pet.can_live_with_dogs) && (
+                                            <InfoRow
+                                                label="Good with Dogs"
+                                                value={
+                                                    pet.can_live_with_dogs
+                                                        ? "Yes"
+                                                        : "No"
+                                                }
+                                            />
+                                        )}
+                                        {hasValue(pet.can_live_with_cats) && (
+                                            <InfoRow
+                                                label="Good with Cats"
+                                                value={
+                                                    pet.can_live_with_cats
+                                                        ? "Yes"
+                                                        : "No"
+                                                }
+                                            />
+                                        )}
+                                        {hasValue(pet.must_have_someone_home) && (
+                                            <InfoRow
+                                                label="Requires Companion at all times"
+                                                value={
+                                                    pet.must_have_someone_home
+                                                        ? "Yes"
+                                                        : "No"
+                                                }
+                                            />
+                                        )}
+                                    </Section>
+                                )}
                             </div>
                         </div>
                     </Card>

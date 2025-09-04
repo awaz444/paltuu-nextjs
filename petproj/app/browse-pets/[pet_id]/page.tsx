@@ -525,7 +525,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                     </Card>
                 </div>
             </div>
-            // In PetDetailsPage component, update the AdoptionFormModal usage:
+        
             <AdoptionFormModal
                 petId={parseInt(pet_id)}
                 userId={userId || ""}

@@ -104,7 +104,7 @@ const Navbar = () => {
     "User";
 
   const profileImage =
-    user?.profile_picture ||
+    user?.profile_image_url ||
     session?.user?.image || // next-auth google login usually gives `image`
     "/default-avatar.png"; // put your default icon in public folder
 
@@ -316,12 +316,12 @@ const Navbar = () => {
             >
               {/* Profile Image */}
               <Image
-                src={profileImage}
-                alt="Profile"
-                width={30}
-                height={30}
-                className="rounded-full object-cover"
-              />
+  src={profileImage}
+  alt="Profile"
+  width={30}
+  height={30}
+  className="w-8 h-8 rounded-full object-cover"
+/>
 
               {/* Golden Shine Effect (now covers whole button) */}
               {/* <div className="absolute inset-0 overflow-hidden">

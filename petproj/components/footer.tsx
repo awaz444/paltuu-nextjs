@@ -31,7 +31,7 @@ const Footer = () => {
         <div className="mb-4">
           <p>Follow us on Instagram</p>
           <a href="https://instagram.com/paltuupk" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">
-            @paltuu.pk
+            @paltuupk
           </a>
         </div>
         <div className="mb-4">

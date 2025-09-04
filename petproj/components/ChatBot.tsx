@@ -4,6 +4,7 @@ import { MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { usePathname } from 'next/navigation';
 import { useSetPrimaryColor } from '@/app/hooks/useSetPrimaryColor';
+import { useSession } from 'next-auth/react';
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,11 +16,18 @@ export default function ChatBot() {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   const pathname = usePathname();
+  const { data: session } = useSession();
   useSetPrimaryColor();
 
-  // only show bump if route matches AND screen is small
+  const hideChatbot = pathname === '/' || pathname.startsWith('/login');
+
+  if (!session || hideChatbot) return null;
+
   const hasListingButton =
-    (pathname === '/browse-pets' || pathname === '/foster-pets' || pathname === '/lost-and-found') && isSmallScreen;
+    (pathname === '/browse-pets' ||
+      pathname === '/foster-pets' ||
+      pathname === '/lost-and-found') &&
+    isSmallScreen;
 
   useEffect(() => {
     const rootStyles = getComputedStyle(document.documentElement);
@@ -87,11 +95,11 @@ export default function ChatBot() {
       className={`fixed right-0 z-40 transition-all duration-300 ${
         hasListingButton
           ? isOpen
-            ? 'bottom-4 right-4' // More space on mobile when open with listing button
-            : 'bottom-4 right-4' // More space on mobile when closed with listing button
+            ? 'bottom-4 right-4'
+            : 'bottom-4 right-4'
           : isOpen
-          ? 'bottom-4 right-4'  // Default spacing on mobile when open
-          : 'bottom-4 right-4'  // Default spacing on mobile when closed
+          ? 'bottom-4 right-4'
+          : 'bottom-4 right-4'
       }`}
     >
       {/* Floating Button */}
@@ -110,9 +118,7 @@ export default function ChatBot() {
       {/* Chat Window */}
       {isOpen && (
         <div className="absolute bottom-0 right-0 w-80 h-[500px] bg-white rounded-xl shadow-xl flex flex-col overflow-hidden">
-          <div
-            className="flex justify-between items-center px-4 py-2 bg-primary text-white"
-          >
+          <div className="flex justify-between items-center px-4 py-2 bg-primary text-white">
             <span className="font-semibold">Paltuu AI</span>
             <button onClick={() => setIsOpen(false)} className="text-white">
               ✕
@@ -121,7 +127,9 @@ export default function ChatBot() {
 
           <div className="flex-grow overflow-y-auto p-4">
             {chatLog.length === 0 ? (
-              <p className="text-gray-500">Start the conversation with Paltuu AI!</p>
+              <p className="text-gray-500">
+                Start the conversation with Paltuu AI!
+              </p>
             ) : (
               chatLog.map((chat, index) => (
                 <div key={index} className="mb-4">
@@ -134,7 +142,10 @@ export default function ChatBot() {
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="flex items-center p-2 border-t">
+          <form
+            onSubmit={handleSubmit}
+            className="flex items-center p-2 border-t"
+          >
             <input
               type="text"
               className="flex-grow border border-gray-300 rounded-xl px-3 py-2 mr-2 outline-none focus:ring-2 focus:ring-primary"
@@ -146,7 +157,9 @@ export default function ChatBot() {
             <button
               type="submit"
               className={`px-4 py-2 rounded-xl text-white transition-all ${
-                loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary hover:bg-dark'
+                loading
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-primary hover:bg-dark'
               }`}
               disabled={loading}
             >

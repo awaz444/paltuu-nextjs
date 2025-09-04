@@ -355,11 +355,13 @@ const Navbar = () => {
                     )}
                     {(isAuthenticated || session) && isDropdownOpen && (
                         <div
-                            className="dropdown-menu absolute right-0 bg-white shadow-lg z-10 rounded-2xl py-1"
+                            className="dropdown-menu absolute right-0 bg-white shadow-lg z-20 rounded-2xl py-2 text-sm font-medium"
                             style={{
-                                top: "calc(100% + 0.5rem)", // Positions it slightly below `top-full`
-                                width: dropdownWidth, // Ensure dropdown matches button width
-                            }}>
+                                top: "calc(100% + 0.5rem)",
+                                width: dropdownWidth,
+                            }}
+                        >
+                            {/* Profile / Panel */}
                             <Link
                                 href={
                                     userRole === "vet"
@@ -369,8 +371,10 @@ const Navbar = () => {
                                             : userRole === "admin"
                                                 ? "/admin-panel"
                                                 : "/"
-                                }>
-                                <div className="dropdown-item px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
+                                }
+                            >
+                                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
+                                    <i className="bi bi-person-circle text-gray-600"></i>
                                     {userRole === "vet"
                                         ? "Vet Panel"
                                         : userRole === "regular user"
@@ -380,29 +384,42 @@ const Navbar = () => {
                                                 : "Home"}
                                 </div>
                             </Link>
+
+                            {/* Divider */}
+                            <div className="border-t my-1"></div>
+
+                            {/* Other Items */}
                             <Link href="/my-listings">
-                                <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                    My Listings
-                                </div>
-                            </Link>
-                            <Link href="/my-applications">
-                                <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                    My Applications
-                                </div>
-                            </Link>
-                            <Link href="/notifications">
-                                <div className="dropdown-item px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                    Notifications
+                                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                    <i className="bi bi-card-list text-gray-600"></i> My Listings
                                 </div>
                             </Link>
 
+                            <Link href="/my-applications">
+                                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                    <i className="bi bi-file-earmark-text text-gray-600"></i> My Applications
+                                </div>
+                            </Link>
+
+                            <Link href="/notifications">
+                                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                    <i className="bi bi-bell text-gray-600"></i> Notifications
+                                </div>
+                            </Link>
+
+                            {/* Divider */}
+                            <div className="border-t my-1"></div>
+
+                            {/* Logout */}
                             <div
                                 onClick={handleLogout}
-                                className="dropdown-item px-4 py-2 text-red-600 hover:bg-gray-100 hover:rounded-b-2xl cursor-pointer">
-                                Logout
+                                className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:rounded-b-2xl cursor-pointer"
+                            >
+                                <i className="bi bi-box-arrow-right"></i> Logout
                             </div>
                         </div>
                     )}
+
                 </div>
             </div>
         </nav>

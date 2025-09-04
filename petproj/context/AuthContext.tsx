@@ -7,7 +7,7 @@ interface User {
   id?: string;
   name?: string;
   email: string;
-  profile_picture?: string;
+  profile_image_url?: string; // ✅ consistent naming
   role?: string;
   method: "google" | "api" | null;
 }
@@ -15,7 +15,13 @@ interface User {
 interface AuthContextProps {
   isAuthenticated: boolean;
   user: User | null;
-  login: (user: { id: string; name: string; email: string; role: string; profile_picture?: string }) => void;
+  login: (user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    profile_image_url?: string;
+  }) => void;
   logout: () => void;
 }
 
@@ -27,41 +33,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+  console.log("🔎 useSession status:", status);
+  console.log("🔎 NextAuth session.user:", session?.user);
 
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser({ ...parsedUser, method: parsedUser.method || "api" });
-      setIsAuthenticated(true);
-    }
-
-    if (status === "authenticated" && session?.user) {
-      const googleUser: User = {
-        id: (session.user as any).user_id || undefined,
-        name: session.user.name || undefined,
-        email: session.user.email || "",
-        role: (session.user as any).role || "guest",
-        profile_picture: session.user.image || undefined, // ✅ Capture Google profile picture
-        method: "google",
-      };
-
-      // Store Google user in localStorage
-      localStorage.setItem("user", JSON.stringify(googleUser));
-
-      setUser(googleUser);
-      setIsAuthenticated(true);
-    }
-  }, [status, session]);
-
-  const login = (userData: { id: string; name: string; email: string; role: string; profile_picture?: string }) => {
-    const userWithMethod: User = {
-      ...userData,
-      method: "api",
-    };
-    setUser(userWithMethod);
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    const parsedUser = JSON.parse(storedUser);
+    console.log("🔎 LocalStorage user:", parsedUser);
+    setUser({ ...parsedUser, method: parsedUser.method || "api" });
     setIsAuthenticated(true);
-    localStorage.setItem("user", JSON.stringify(userWithMethod));
+  }
+
+  if (status === "authenticated" && session?.user) {
+    const googleUser: User = {
+      id: (session.user as any).user_id || undefined,
+      name: session.user.name || undefined,
+      email: session.user.email || "",
+      role: (session.user as any).role || "guest",
+      profile_image_url: session.user.image || undefined,
+      method: "google",
+    };
+
+    localStorage.setItem("user", JSON.stringify(googleUser));
+    setUser(googleUser);
+    setIsAuthenticated(true);
+  }
+}, [status, session]);
+
+
+const login = (userData: { 
+  id: string; 
+  name: string; 
+  email: string; 
+  role: string; 
+  profile_image_url?: string; // backend field
+}) => {
+  const userWithMethod: User = {
+    id: userData.id,
+    name: userData.name,
+    email: userData.email,
+    role: userData.role,
+    profile_image_url: userData.profile_image_url || "/default-avatar.png",
+
+    method: "api",
   };
+
+  setUser(userWithMethod);
+  setIsAuthenticated(true);
+  localStorage.setItem("user", JSON.stringify(userWithMethod));
+};
+
 
   const logout = async () => {
     console.log("Logout started, user method:", user?.method);
@@ -76,10 +97,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (user?.method === "google") {
         console.log("Executing Google logout flow");
         await nextAuthSignOut({
-          callbackUrl: "/login", // where to go after signout
+          callbackUrl: "/login",
           redirect: true,
         });
-        return; // NextAuth will handle the redirect
+        return;
       }
 
       // For API users, proceed with API logout
@@ -87,7 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const response = await fetch("/api/users/logout", {
           method: "GET",
-          credentials: "include", // Important for cookies
+          credentials: "include",
         });
 
         if (!response.ok) {
@@ -99,7 +120,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("API logout error:", err);
       }
 
-      // Clear state
       setUser(null);
       setIsAuthenticated(false);
 
@@ -110,12 +130,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
       });
 
-      // Final redirect for non-Google users
-      console.log("Redirecting to login page");
       window.location.href = "/login";
     } catch (error) {
       console.error("Logout error:", error);
-      // Emergency fallback
       localStorage.clear();
       sessionStorage.clear();
       document.cookie.split(";").forEach(function (c) {

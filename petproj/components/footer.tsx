@@ -8,36 +8,29 @@ const Footer = () => {
   const hideFooterRoutes = ["/login", "/success", "/sign-up", "/vet-register", "/rescue-register", "/vet-qualifications", "/vet-specialization" , "/vet-schedule", "/vet-get-verified-1", "/vet-get-verified-2", '/'];
   const pathName = usePathname();
 
-  
-  // Update the year unconditionally
   useEffect(() => {
     setCurrentYear(new Date().getFullYear());
   }, []);
 
-  // Determine if the footer should be hidden
   const isHideFooter = hideFooterRoutes.includes(pathName);
 
-  // Conditional rendering for the footer
   if (isHideFooter) {
     return null;
   }
 
   return (
-    <footer className="text-white p-6 rounded-t-[3rem] rounded-b-none bg-primary mt-12">
+    <footer className="text-white py-3 px-4 rounded-t-[3rem] rounded-b-none bg-primary mt-8">
       <div className="container mx-auto text-center">
-        <div className="mb-4">
-          <Image src="/paltu_logo.svg" alt="Logo" className="mx-auto" width={250} height={100} />
+        <div className="mb-2">
+          <Image src="/paltu_logo.svg" alt="Logo" className="mx-auto" width={180} height={70} />
         </div>
-        <div className="mb-4">
-          <p>Follow us on Instagram</p>
-          <a href="https://instagram.com/paltuupk" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">
+        <div className="mb-2">
+          <p className="text-sm">Follow us on Instagram</p>
+          <a href="https://instagram.com/paltuupk" target="_blank" rel="noopener noreferrer" className="text-white hover:underline text-sm">
             @paltuupk
           </a>
         </div>
-        <div className="mb-4">
-          { /* for about us */ }
-        </div>
-        <p className="text-sm">&copy; {currentYear} Paltuu. All rights reserved.</p>
+        <p className="text-xs">&copy; {currentYear} Paltuu. All rights reserved.</p>
       </div>
     </footer>
   );

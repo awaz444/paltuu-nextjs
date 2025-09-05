@@ -33,7 +33,7 @@ export default function BrowsePets() {
     });
 
     // Commenting out the tab state since we're merging buy and adopt
-    // const [activeTab, setActiveTab] = useState<"adopt" | "buy">("adopt");
+    const [activeTab, setActiveTab] = useState<"adopt" | "buy">("adopt");
 
     useEffect(() => {
         const fetchPets = async () => {
@@ -117,30 +117,11 @@ export default function BrowsePets() {
             : true;
 
         // Commenting out the tab-based filtering since we're merging buy and adopt
-        // const matchesAdopt =
-        //     activeTab === "adopt"
-        //         ? Number(pet.price) === 0
-        //         : Number(pet.price) > 0;
+        const matchesAdopt =
+            activeTab === "adopt"
+                ? Number(pet.price) === 0
+                : Number(pet.price) > 0;
 
-        // return (
-        //     matchesSex &&
-        //     matchesMinAge &&
-        //     matchesMaxAge &&
-        //     matchesMinPrice &&
-        //     matchesMaxPrice &&
-        //     matchesArea &&
-        //     matchesMinChildAge &&
-        //     matchesDogs &&
-        //     matchesCats &&
-        //     matchesVaccinated &&
-        //     matchesNeutered &&
-        //     matchesCity &&
-        //     matchesSpecies &&
-        //     matchesBreed &&
-        //     matchesAdopt
-        // );
-
-        // Return all pets without the tab-based filtering
         return (
             matchesSex &&
             matchesMinAge &&
@@ -155,14 +136,15 @@ export default function BrowsePets() {
             matchesNeutered &&
             matchesCity &&
             matchesSpecies &&
-            matchesBreed
+            matchesBreed &&
+            matchesAdopt
         );
     });
 
     // Commenting out the tab toggle function
-    // const handleTabToggle = (tab: "adopt" | "buy") => {
-    //     setActiveTab(tab);
-    // };
+    const handleTabToggle = (tab: "adopt" | "buy") => {
+        setActiveTab(tab);
+    };
 
     const [primaryColor, setPrimaryColor] = useState("#A00000");
 
@@ -198,7 +180,7 @@ export default function BrowsePets() {
 
                         <div className="w-full">
                             {/* Commenting out the tab switch UI */}
-                            {/* <div className="tab-switch-container relative">
+                            <div className="tab-switch-container relative">
                                 <div
                                     className="tab-switch-slider absolute w-1/2 h-full transition-transform duration-300 rounded-lg bg-primary"
                                     style={{
@@ -222,7 +204,7 @@ export default function BrowsePets() {
                                     onClick={() => setActiveTab("buy")}>
                                     Buy
                                 </div>
-                            </div> */}
+                            </div>
 
                             {loading ? (
                                 <MoonLoader

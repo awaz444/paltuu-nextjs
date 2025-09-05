@@ -3,68 +3,62 @@
 import { useState, useEffect } from "react";
 import { Pet } from "@/components/MyListingGrid";
 import Navbar from "@/components/navbar";
-import { Spin } from "antd";
 import MyListingGrid from "@/components/MyListingGrid";
 import "./styles.css";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
-import EidBazaarEditableGrid from "../../components/EidBazaarEditableGrid";
+import Link from "next/link";
+import { Collapse } from "antd";
+import {
+    CheckCircleOutlined,
+    EnvironmentOutlined,
+    DollarOutlined,
+    TeamOutlined,
+    HeartOutlined,
+    MedicineBoxOutlined,
+    SafetyCertificateOutlined,
+} from "@ant-design/icons";
 
-export interface QurbaniAnimal {
-    id: string;
-    species: "Goat" | "Cow" | "Bull" | "Sheep" | "Camel";
-    breed: string;
-    age: number;
-    weight: number;
-    teethCount?: number;
-    hornCondition?: "Good" | "Damaged" | "Broken" | "None";
-    isVaccinated: boolean;
-    description?: string;
-    price: number | null;
-    status: "Available" | "Sold" | "Reserved";
-    location: string;
-    city: string;
-    sellerName: string;
-    sellerContact: string;
-    sellerProfileImage?: string;
-    images: string[];
-}
+const { Panel } = Collapse;
 
 const ADOPTION_CHECKLIST = [
-    "Applicant has a stable home environment suitable for a pet",
-    "All household members are on board with the adoption",
-    "Applicant has prior experience with pets or has done research",
-    "Financially capable of covering pet expenses (food, vet, etc.)",
-    "Willing to provide regular vet visits and vaccinations",
-    "No history of pet abuse or neglect",
-    "Has time to properly care for and socialize with the pet",
-];
-
-const FOSTER_CHECKLIST = [
-    "Has a dedicated space to house the pet safely",
-    "Understands the temporary nature of fostering",
-    "Can handle basic medical needs and medications if required",
-    "Has access to emergency veterinary care",
-    "Has flexible schedule/time to care for the pet",
-    "No other pets that could pose a risk to the foster pet",
-    "Has prior experience with fostering or handling animals",
-    "Willing to communicate regularly with the original owner/shelter",
-];
-
-const MAWESHI_CHECKLIST = [
-    "Animal meets Qurbani health requirements",
-    "Proper documentation available",
-    "Vaccination records up to date",
-    "Meets minimum age and weight requirements",
-    "Has been properly cared for and fed",
-    "No signs of illness or disease",
-    "Transport arrangements confirmed",
+    {
+        title: "Stable Home Environment",
+        description:
+            "Applicant has a stable home environment suitable for a pet",
+        icon: <EnvironmentOutlined />,
+    },
+    {
+        title: "Household Agreement",
+        description: "All household members are on board with the adoption",
+        icon: <TeamOutlined />,
+    },
+    {
+        title: "Experience & Research",
+        description:
+            "Applicant has prior experience with pets or has done research",
+        icon: <SafetyCertificateOutlined />,
+    },
+    {
+        title: "Financial Capability",
+        description:
+            "Financially capable of covering pet expenses (food, vet, etc.)",
+        icon: <DollarOutlined />,
+    },
+    {
+        title: "Veterinary Care",
+        description: "Willing to provide regular vet visits and vaccinations",
+        icon: <MedicineBoxOutlined />,
+    },
+    {
+        title: "Time Commitment",
+        description: "Has time to properly care for and socialize with the pet",
+        icon: <HeartOutlined />,
+    },
 ];
 
 const UserListingsPage = () => {
     const [listings, setListings] = useState<Pet[]>([]);
-    const [animals, setAnimals] = useState<QurbaniAnimal[]>([]);
-    const [activeTab, setActiveTab] = useState("adoption");
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -119,16 +113,6 @@ const UserListingsPage = () => {
                 const listingsData = await listingsResponse.json();
                 setListings(listingsData.listings);
 
-                // Fetch Qurbani animals
-                const animalsResponse = await fetch(
-                    `/api/qurbani-animals/user/${userId}`
-                );
-                if (!animalsResponse.ok) {
-                    throw new Error("Failed to fetch Qurbani animals");
-                }
-                const animalsData = await animalsResponse.json();
-                setAnimals(animalsData);
-
                 setIsLoading(false);
             } catch (err) {
                 if (err instanceof Error) {
@@ -143,12 +127,9 @@ const UserListingsPage = () => {
         fetchData();
     }, [userId]);
 
-    const handleTabToggle = (tab: string) => {
-        setActiveTab(tab);
-    };
-
-    const filteredListings = listings.filter(
-        (listing) => listing.listing_type === activeTab
+    // Filter only adoption listings
+    const adoptionListings = listings.filter(
+        (listing) => listing.listing_type === "adoption"
     );
 
     useEffect(() => {
@@ -177,106 +158,123 @@ const UserListingsPage = () => {
         <>
             <Navbar />
             <div className="mt-8 min-h-screen px-4 flex flex-col items-center mb-6">
-                {/* Tab Switch */}
-                <div className="w-full max-w-2xl">
-                    <div className="tab-switch-container relative flex justify-between rounded-lg bg-gray-100 p-1">
-                        <div
-                            className="tab-switch-slider absolute top-0 left-0 h-full w-1/2 bg-primary transition-transform duration-300"
-                            style={{
-                                transform:
-                                    activeTab === "adoption"
-                                        ? "translateX(0)"
-                                        : activeTab === "foster"
-                                        ? "translateX(100%)"
-                                        : "translateX(200%)",
-                            }}
-                        />
-                        <div
-                            className={`tab cursor-pointer py-2 text-center font-medium flex-1 ${
-                                activeTab === "adoption" ? "active" : ""
-                            }`}
-                            onClick={() => handleTabToggle("adoption")}>
-                            Adopt
-                        </div>
-                        <div
-                            className={`tab cursor-pointer py-2 text-center font-medium flex-1 ${
-                                activeTab === "foster" ? "active" : ""
-                            }`}
-                            onClick={() => handleTabToggle("foster")}>
-                            Foster
+                <h1 className="text-3xl font-bold text-gray-800 text-center">
+                    My Listings
+                </h1>
+                {/* Conditional rendering based on whether listings exist */}
+                {adoptionListings.length === 0 ? (
+                    <div className="w-full max-w-4xl mt-8 text-center">
+                        <div className="bg-white p-8 rounded-xl shadow-sm">
+                            <svg
+                                className="w-16 h-16 mx-auto text-gray-400 mb-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                            <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+                                No Listings Yet
+                            </h2>
+                            <p className="text-gray-600 mb-6">
+                                You haven't created any adoption listings yet.
+                            </p>
+                            <Link href="/create-listing">
+                                <button
+                                    type="button"
+                                    className="px-6 py-3 bg-primary text-white rounded-3xl hover:bg-dark transition-all duration-300">
+                                    Create Your First Listing
+                                </button>
+                            </Link>
                         </div>
                     </div>
-                </div>
+                ) : (
+                    <>
+                        <div className="w-full max-w-4xl mt-6 mb-8 bg-white rounded-xl shadow-sm overflow-hidden">
+                            <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
+                                <h2 className="text-2xl font-semibold mb-2 text-gray-800">
+                                    Adoption Readiness Checklist
+                                </h2>
+                                <p className="text-gray-600">
+                                    Complete these requirements to ensure a
+                                    successful adoption process
+                                </p>
+                            </div>
 
-                <div className="w-full max-w-4xl mt-6 mb-8 p-6 bg-gray-50 rounded-xl shadow-sm">
-                    <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-                        Before You Proceed - Essential Checks
-                    </h2>
-
-                    <div className="space-y-4">
-                        <p className="text-gray-600 mb-4">
-                            {activeTab === "adoption"
-                                ? "Ensure you've completed these mandatory requirements for adoption:"
-                                : activeTab === "foster"
-                                ? "Foster parents must confirm compliance with these regulations:"
-                                : "Qurbani animals must meet these requirements:"}
-                        </p>
-
-                        {(activeTab === "adoption"
-                            ? ADOPTION_CHECKLIST
-                            : activeTab === "foster"
-                            ? FOSTER_CHECKLIST
-                            : MAWESHI_CHECKLIST
-                        ).map((item, index) => (
-                            <div
-                                key={index}
-                                className="flex items-start space-x-3">
-                                <div className="flex-shrink-0 w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center">
-                                    <svg
-                                        className="w-3 h-3 text-primary"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20">
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
+                            <div className="p-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {ADOPTION_CHECKLIST.map((item, index) => (
+                                        <div
+                                            key={index}
+                                            className="border border-gray-200 rounded-lg p-4 flex items-start transition-all duration-300 hover:border-primary hover:shadow-sm">
+                                            <div className="rounded-full p-2 mr-3 bg-gray-100 text-gray-600">
+                                                {item.icon}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-medium text-gray-800">
+                                                    {item.title}
+                                                </h3>
+                                                <p className="text-sm text-gray-600 mt-1">
+                                                    {item.description}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                <p className="text-gray-700">{item}</p>
-                            </div>
-                        ))}
 
-                        {activeTab === "foster" && (
-                            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                <p className="text-sm text-blue-800">
-                                    Note: Foster applications require home
-                                    verification and 2-week trial period.
-                                    Regular check-ins with our team are
-                                    mandatory.
-                                </p>
+                                <Collapse
+                                    bordered={false}
+                                    className="bg-transparent mt-6"
+                                    expandIconPosition="end">
+                                    <Panel
+                                        header={
+                                            <span className="font-medium text-primary">
+                                                Why are these checks important?
+                                            </span>
+                                        }
+                                        key="1"
+                                        className="border-0">
+                                        <div className="text-gray-600 text-sm pl-5">
+                                            <ul className="list-disc space-y-2">
+                                                <li>
+                                                    These requirements help
+                                                    ensure pets are placed in
+                                                    safe, loving, and permanent
+                                                    homes
+                                                </li>
+                                                <li>
+                                                    They minimize the risk of
+                                                    pets being returned or
+                                                    rehomed
+                                                </li>
+                                                <li>
+                                                    They help match pets with
+                                                    owners who can properly care
+                                                    for them
+                                                </li>
+                                                <li>
+                                                    They ensure adopters
+                                                    understand the
+                                                    responsibilities of pet
+                                                    ownership
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </Panel>
+                                </Collapse>
                             </div>
-                        )}
+                        </div>
 
-                        {activeTab === "maweshi" && (
-                            <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
-                                <p className="text-sm text-green-800">
-                                    Note: All Qurbani animals must be certified
-                                    healthy by a veterinarian and meet Islamic
-                                    requirements.
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <div className="mt-6 w-full max-w-6xl mb-3">
-                    {activeTab === "maweshi" ? (
-                        <EidBazaarEditableGrid animals={animals} />
-                    ) : (
-                        <MyListingGrid pets={filteredListings} />
-                    )}
-                </div>
+                        <div className="mt-6 w-full max-w-6xl mb-3">
+                            <MyListingGrid pets={adoptionListings} />
+                        </div>
+                    </>
+                )}
             </div>
         </>
     );

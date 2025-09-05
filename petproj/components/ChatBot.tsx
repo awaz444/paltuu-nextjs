@@ -4,9 +4,12 @@ import { MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { usePathname } from 'next/navigation';
 import { useSetPrimaryColor } from '@/app/hooks/useSetPrimaryColor';
-import { useSession } from 'next-auth/react';
 
 export default function ChatBot() {
+  // 🧭 Run hooks in a fixed order every render
+  const pathname = usePathname();
+  useSetPrimaryColor(); // <- always called
+
   const [isOpen, setIsOpen] = useState(false);
   const [userInput, setUserInput] = useState('');
   const [chatLog, setChatLog] = useState<{ user: string; ai: string }[]>([]);
@@ -15,20 +18,7 @@ export default function ChatBot() {
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
-  const pathname = usePathname();
-  const { data: session } = useSession();
-  useSetPrimaryColor();
-
-  const hideChatbot = pathname === '/' || pathname.startsWith('/login');
-
-  if (!session || hideChatbot) return null;
-
-  const hasListingButton =
-    (pathname === '/browse-pets' ||
-      pathname === '/foster-pets' ||
-      pathname === '/lost-and-found') &&
-    isSmallScreen;
-
+  // Tailwind primary color (optional usage)
   useEffect(() => {
     const rootStyles = getComputedStyle(document.documentElement);
     const color = rootStyles.getPropertyValue('--primary-color').trim();
@@ -45,6 +35,10 @@ export default function ChatBot() {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
+
+  useEffect(() => {
+    if (isOpen) setHasNewMessage(false);
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +60,7 @@ export default function ChatBot() {
       setChatLog((prevLog) => {
         const updatedLog = [...prevLog];
         updatedLog[updatedLog.length - 1].ai =
-          data.data || 'Sorry, something went wrong!';
+          data?.data || 'Sorry, something went wrong!';
         return updatedLog;
       });
 
@@ -86,9 +80,15 @@ export default function ChatBot() {
     }
   };
 
-  useEffect(() => {
-    if (isOpen) setHasNewMessage(false);
-  }, [isOpen]);
+  // 👇 Decide visibility AFTER all hooks have run (order stays identical)
+  const hideChatbot = pathname === '/' || pathname.startsWith('/login');
+  if (hideChatbot) return null;
+
+  const hasListingButton =
+    (pathname === '/browse-pets' ||
+      pathname === '/foster-pets' ||
+      pathname === '/lost-and-found') &&
+    isSmallScreen;
 
   return (
     <div
@@ -127,9 +127,7 @@ export default function ChatBot() {
 
           <div className="flex-grow overflow-y-auto p-4">
             {chatLog.length === 0 ? (
-              <p className="text-gray-500">
-                Start the conversation with Paltuu AI!
-              </p>
+              <p className="text-gray-500">Start the conversation with Paltuu AI!</p>
             ) : (
               chatLog.map((chat, index) => (
                 <div key={index} className="mb-4">
@@ -142,10 +140,7 @@ export default function ChatBot() {
             )}
           </div>
 
-          <form
-            onSubmit={handleSubmit}
-            className="flex items-center p-2 border-t"
-          >
+          <form onSubmit={handleSubmit} className="flex items-center p-2 border-t">
             <input
               type="text"
               className="flex-grow border border-gray-300 rounded-xl px-3 py-2 mr-2 outline-none focus:ring-2 focus:ring-primary"
@@ -157,9 +152,7 @@ export default function ChatBot() {
             <button
               type="submit"
               className={`px-4 py-2 rounded-xl text-white transition-all ${
-                loading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-primary hover:bg-dark'
+                loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary hover:bg-dark'
               }`}
               disabled={loading}
             >

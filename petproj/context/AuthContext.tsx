@@ -5,6 +5,7 @@ import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 
 interface User {
   id?: string;
+  user_id?: string; // For backward compatibility
   name?: string;
   email: string;
   profile_image_url?: string; // ✅ consistent naming
@@ -40,13 +41,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   if (storedUser) {
     const parsedUser = JSON.parse(storedUser);
     console.log("🔎 LocalStorage user:", parsedUser);
-    setUser({ ...parsedUser, method: parsedUser.method || "api" });
+    // Ensure both id and user_id are set for backward compatibility
+    const userWithIds = {
+      ...parsedUser,
+      id: parsedUser.id || parsedUser.user_id,
+      // user_id: parsedUser.user_id || parsedUser.id,
+      method: parsedUser.method || "api"
+    };
+    setUser(userWithIds);
     setIsAuthenticated(true);
   }
 
   if (status === "authenticated" && session?.user) {
     const googleUser: User = {
-      id: (session.user as any).user_id || undefined,
+      id: (session.user as any).user_id || (session.user as any).id,
+      // user_id: (session.user as any).user_id || (session.user as any).id,
       name: session.user.name || undefined,
       email: session.user.email || "",
       role: (session.user as any).role || "guest",
@@ -61,20 +70,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 }, [status, session]);
 
 
-const login = (userData: { 
-  id: string; 
-  name: string; 
-  email: string; 
-  role: string; 
+const login = (userData: {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
   profile_image_url?: string; // backend field
 }) => {
   const userWithMethod: User = {
     id: userData.id,
+    // user_id: userData.id, // For backward compatibility
     name: userData.name,
     email: userData.email,
     role: userData.role,
     profile_image_url: userData.profile_image_url || "/default-avatar.png",
-
     method: "api",
   };
 

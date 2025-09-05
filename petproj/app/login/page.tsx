@@ -26,10 +26,18 @@ export default function Login() {
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/browse-pets");
+  if (isAuthenticated) {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const { role } = JSON.parse(storedUser);
+      if (role === "vet") {
+        router.push("/vet-panel");
+      } else {
+        router.push("/browse-pets");
+      }
     }
-  }, [isAuthenticated, router]);
+  }
+}, [isAuthenticated, router]);
 
   // Update button state based on user input
   useEffect(() => {
@@ -73,7 +81,11 @@ export default function Login() {
         login(userDetails);
 
         toast.success("Login successful!");
-        router.push("/browse-pets");
+        if (userDetails.role === "vet") {
+          router.push("/vet-panel");
+        } else {
+          router.push("/browse-pets");
+        }
       }
     } catch (error: any) {
       console.error("Login failed:", error.message);

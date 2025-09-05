@@ -53,10 +53,11 @@ export async function POST(request: NextRequest) {
       success: true,
       user: {
         id: user.user_id,
+        user_id: user.user_id,
         name: user.name,
         email: user.email,
         role: user.role,
-        profile_image_url: user.profile_image_url, 
+        profile_image_url: user.profile_image_url,
       },
     });
     response.cookies.set("token", token, {

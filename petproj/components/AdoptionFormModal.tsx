@@ -111,7 +111,7 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
                     <Panel header="Additional Details" key="1">
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700">
-                                Age of Youngest Child
+                                Age of Youngest Child at Your Home
                             </label>
                             <Form.Item
                                 name="age_of_youngest_child"

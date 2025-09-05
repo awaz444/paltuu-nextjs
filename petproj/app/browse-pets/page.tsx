@@ -32,7 +32,8 @@ export default function BrowsePets() {
         breed: "",
     });
 
-    const [activeTab, setActiveTab] = useState<"adopt" | "buy">("adopt");
+    // Commenting out the tab state since we're merging buy and adopt
+    // const [activeTab, setActiveTab] = useState<"adopt" | "buy">("adopt");
 
     useEffect(() => {
         const fetchPets = async () => {
@@ -115,11 +116,31 @@ export default function BrowsePets() {
             ? pet.pet_breed?.toLowerCase().includes(filters.breed.toLowerCase())
             : true;
 
-        const matchesAdopt =
-            activeTab === "adopt"
-                ? Number(pet.price) === 0
-                : Number(pet.price) > 0;
+        // Commenting out the tab-based filtering since we're merging buy and adopt
+        // const matchesAdopt =
+        //     activeTab === "adopt"
+        //         ? Number(pet.price) === 0
+        //         : Number(pet.price) > 0;
 
+        // return (
+        //     matchesSex &&
+        //     matchesMinAge &&
+        //     matchesMaxAge &&
+        //     matchesMinPrice &&
+        //     matchesMaxPrice &&
+        //     matchesArea &&
+        //     matchesMinChildAge &&
+        //     matchesDogs &&
+        //     matchesCats &&
+        //     matchesVaccinated &&
+        //     matchesNeutered &&
+        //     matchesCity &&
+        //     matchesSpecies &&
+        //     matchesBreed &&
+        //     matchesAdopt
+        // );
+
+        // Return all pets without the tab-based filtering
         return (
             matchesSex &&
             matchesMinAge &&
@@ -134,14 +155,14 @@ export default function BrowsePets() {
             matchesNeutered &&
             matchesCity &&
             matchesSpecies &&
-            matchesBreed &&
-            matchesAdopt
+            matchesBreed
         );
     });
 
-    const handleTabToggle = (tab: "adopt" | "buy") => {
-        setActiveTab(tab);
-    };
+    // Commenting out the tab toggle function
+    // const handleTabToggle = (tab: "adopt" | "buy") => {
+    //     setActiveTab(tab);
+    // };
 
     const [primaryColor, setPrimaryColor] = useState("#A00000");
 
@@ -165,7 +186,7 @@ export default function BrowsePets() {
                         setFilters((prev) => ({ ...prev, ...filters }))
                     }
                 />
-                <main className="flex min-h-screen flex-col mx-0 md:mx-8 mt-1 items-center pt-7 bg-gray-100">
+                <main className="flex min-h-screen flex-col mx-0 md:mx-8 items-center pt-7 bg-gray-100">
                     <div className="flex w-full">
                         <div className="w-1/4 mr-4 vertical-search-bar">
                             <VerticalSearchBar
@@ -176,7 +197,8 @@ export default function BrowsePets() {
                         </div>
 
                         <div className="w-full">
-                            <div className="tab-switch-container relative">
+                            {/* Commenting out the tab switch UI */}
+                            {/* <div className="tab-switch-container relative">
                                 <div
                                     className="tab-switch-slider absolute w-1/2 h-full transition-transform duration-300 rounded-lg bg-primary"
                                     style={{
@@ -200,7 +222,7 @@ export default function BrowsePets() {
                                     onClick={() => setActiveTab("buy")}>
                                     Buy
                                 </div>
-                            </div>
+                            </div> */}
 
                             {loading ? (
                                 <MoonLoader

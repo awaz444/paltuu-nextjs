@@ -329,39 +329,7 @@ export default function CreatePetListing() {
                         <>
                             {/* Listing Type */}
                             <div className="mb-4">
-                                <div className="w-3/4 tab-switch-container mt-1">
-                                    <div
-                                        className="tab-switch-slider bg-primary"
-                                        style={{
-                                            transform:
-                                                listingType === "adoption"
-                                                    ? "translateX(0)"
-                                                    : "translateX(100%)",
-                                        }}
-                                    />
-                                    <div
-                                        className={`tab ${
-                                            listingType === "adoption"
-                                                ? "active"
-                                                : ""
-                                        }`}
-                                        onClick={() =>
-                                            handleTabToggle("adoption")
-                                        }>
-                                        Adopt
-                                    </div>
-                                    <div
-                                        className={`tab ${
-                                            listingType === "foster"
-                                                ? "active"
-                                                : ""
-                                        }`}
-                                        onClick={() =>
-                                            handleTabToggle("foster")
-                                        }>
-                                        Foster
-                                    </div>
-                                </div>
+                                
                             </div>
 
                             {/* Title (replaces Pet Name) */}

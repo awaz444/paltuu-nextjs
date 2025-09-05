@@ -3,10 +3,25 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 
+interface User {
+  id?: string;
+  name?: string;
+  email: string;
+  profile_image_url?: string; // ✅ consistent naming
+  role?: string;
+  method: "google" | "api" | null;
+}
+
 interface AuthContextProps {
   isAuthenticated: boolean;
-  user: { id?: string; name?: string; email: string; role?: string; method: "google" | "api" | null } | null;
-  login: (user: { id: string; name: string; email: string; role: string }) => void;
+  user: User | null;
+  login: (user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    profile_image_url?: string;
+  }) => void;
   logout: () => void;
 }
 
@@ -15,43 +30,59 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { data: session, status } = useSession();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<{ id?: string; name?: string; email: string; role?: string; method: "google" | "api" | null } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+  console.log("🔎 useSession status:", status);
+  console.log("🔎 NextAuth session.user:", session?.user);
 
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser({ ...parsedUser, method: parsedUser.method || "api" });
-      setIsAuthenticated(true);
-    }
-
-    if (status === "authenticated" && session?.user) {
-      const googleUser = {
-        id: session.user.user_id || undefined,
-        name: session.user.name || undefined,
-        email: session.user.email || "",
-        role: session.user.role || "guest",
-        method: "google" as const,
-      };
-
-      // Store Google user in localStorage
-      localStorage.setItem("user", JSON.stringify(googleUser));
-
-      setUser(googleUser);
-      setIsAuthenticated(true);
-    }
-  }, [status, session]);
-
-  const login = (userData: { id: string; name: string; email: string; role: string }) => {
-    const userWithMethod = {
-      ...userData,
-      method: "api" as const,
-    };
-    setUser(userWithMethod);
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    const parsedUser = JSON.parse(storedUser);
+    console.log("🔎 LocalStorage user:", parsedUser);
+    setUser({ ...parsedUser, method: parsedUser.method || "api" });
     setIsAuthenticated(true);
-    localStorage.setItem("user", JSON.stringify(userWithMethod));
+  }
+
+  if (status === "authenticated" && session?.user) {
+    const googleUser: User = {
+      id: (session.user as any).user_id || undefined,
+      name: session.user.name || undefined,
+      email: session.user.email || "",
+      role: (session.user as any).role || "guest",
+      profile_image_url: session.user.image || undefined,
+      method: "google",
+    };
+
+    localStorage.setItem("user", JSON.stringify(googleUser));
+    setUser(googleUser);
+    setIsAuthenticated(true);
+  }
+}, [status, session]);
+
+
+const login = (userData: { 
+  id: string; 
+  name: string; 
+  email: string; 
+  role: string; 
+  profile_image_url?: string; // backend field
+}) => {
+  const userWithMethod: User = {
+    id: userData.id,
+    name: userData.name,
+    email: userData.email,
+    role: userData.role,
+    profile_image_url: userData.profile_image_url || "/default-avatar.png",
+
+    method: "api",
   };
+
+  setUser(userWithMethod);
+  setIsAuthenticated(true);
+  localStorage.setItem("user", JSON.stringify(userWithMethod));
+};
+
 
   const logout = async () => {
     console.log("Logout started, user method:", user?.method);
@@ -66,18 +97,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (user?.method === "google") {
         console.log("Executing Google logout flow");
         await nextAuthSignOut({
-          callbackUrl: "/login", // Important - where to go after signout
-          redirect: true         // This ensures it redirects properly
+          callbackUrl: "/login",
+          redirect: true,
         });
-        return; // Return here because NextAuth will handle the redirect
+        return;
       }
 
       // For API users, proceed with API logout
       console.log("Executing API logout flow");
       try {
-        const response = await fetch('/api/users/logout', {
-          method: 'GET',
-          credentials: 'include', // Important for cookies
+        const response = await fetch("/api/users/logout", {
+          method: "GET",
+          credentials: "include",
         });
 
         if (!response.ok) {
@@ -89,27 +120,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("API logout error:", err);
       }
 
-      // Clear state
       setUser(null);
       setIsAuthenticated(false);
 
-      // Manual cookie clearing as fallback (helps with cross-platform issues)
-      document.cookie.split(";").forEach(function(c) {
-        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      // Manual cookie clearing as fallback
+      document.cookie.split(";").forEach(function (c) {
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
       });
 
-      // Final redirect for non-Google users
-      console.log("Redirecting to login page");
-      window.location.href = '/login';
+      window.location.href = "/login";
     } catch (error) {
-      console.error('Logout error:', error);
-      // Emergency fallback
+      console.error("Logout error:", error);
       localStorage.clear();
       sessionStorage.clear();
-      document.cookie.split(";").forEach(function(c) {
-        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      document.cookie.split(";").forEach(function (c) {
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
       });
-      window.location.href = '/login';
+      window.location.href = "/login";
     }
   };
 

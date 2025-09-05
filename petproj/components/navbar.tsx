@@ -122,9 +122,9 @@ const Navbar = () => {
     // Navigation Links
     const links = [
         { name: "Pets", href: "browse-pets" },
+        // { name: "Bazaar", href: "paltuu-bazaar" },
         { name: "Pet Care", href: "pet-care" },
         { name: "Lost & Found", href: "lost-and-found" },
-        { name: "Paltuu Bazaar", href: "paltuu-bazaar" },
         //{ name: "Paltuu AI", href: "llm" },
     ];
 

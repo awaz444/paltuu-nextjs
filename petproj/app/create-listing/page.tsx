@@ -28,9 +28,6 @@ export default function CreatePetListing() {
     const [currentStep, setCurrentStep] = useState(1);
 
     // Form state
-    const [listingType, setListingType] = useState<"adoption" | "foster">(
-        "adoption"
-    );
     const [title, setTitle] = useState(""); // Changed from petName to title
     const [petType, setPetType] = useState("");
     const [cityId, setCityId] = useState("");
@@ -147,8 +144,8 @@ export default function CreatePetListing() {
         }
     };
 
-    const handleTabToggle = (type: "adoption" | "foster") => {
-        setListingType(type);
+    const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setPrice(e.target.value);
     };
 
     const beforeUpload = (file: File) => {
@@ -197,10 +194,6 @@ export default function CreatePetListing() {
         if (!petType) errors.petType = "Pet type is required";
         if (!cityId) errors.cityId = "City is required";
 
-        if (listingType === "foster" && !price) {
-            errors.price = "Price is required for foster listings";
-        }
-
         if ((age === null || age === 0) && (months === null || months === 0)) {
             errors.age = "Either age or months must be filled";
             errors.months = "Either age or months must be filled";
@@ -231,6 +224,9 @@ export default function CreatePetListing() {
         setIsSubmitting(true);
 
         try {
+            // Determine listing type based on price
+            const listingType = price ? "sell" : "adoption";
+
             // First create the pet
             const newPet = {
                 owner_id: userId,
@@ -252,7 +248,7 @@ export default function CreatePetListing() {
                 cuddliness_level: cuddlinessLevel || 3,
                 health_issues: healthIssues || null,
                 sex: sex || "male",
-                listing_type: listingType || "adoption",
+                listing_type: listingType,
                 vaccinated,
                 neutered,
                 payment_frequency: paymentFrequency || null,
@@ -327,11 +323,6 @@ export default function CreatePetListing() {
 
                     {currentStep === 1 ? (
                         <>
-                            {/* Listing Type */}
-                            <div className="mb-4">
-                                
-                            </div>
-
                             {/* Title (replaces Pet Name) */}
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700">
@@ -467,19 +458,21 @@ export default function CreatePetListing() {
                             {/* Price */}
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700">
-                                    Price {listingType === "foster" && "*"}
+                                    Price
                                 </label>
                                 <input
                                     type="text"
                                     className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                    placeholder="Enter price if applicable"
-                                    required={listingType === "foster"}
+                                    placeholder="Enter price if selling"
                                     value={price}
-                                    onChange={(e) => setPrice(e.target.value)}
+                                    onChange={handlePriceChange}
                                 />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Leave empty for adoption listings
+                                </p>
                             </div>
 
-                            {listingType === "foster" && (
+                            {price && (
                                 <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-700">
                                         Payment Frequency

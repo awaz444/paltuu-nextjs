@@ -18,154 +18,161 @@ const Navbar = () => {
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
 
-  const handleMouseEnter = () => {
-    clearTimeout(hideTimeout); // Cancel the hide timeout
-    setIsDropdownOpen(true);
-  };
-
-  const handleMouseLeave = () => {
-    hideTimeout = setTimeout(() => setIsDropdownOpen(false), 200);
-  };
-
-  // Use next-auth's useSession hook for Google login
-  const { data: session, status } = useSession();
-
-  // Use custom AuthContext for API-based login
-  const { isAuthenticated, user, logout: apiLogout } = useAuth();
-
-  const router = useRouter(); // Router for navigation
-
-  const handleLogout = async () => {
-    try {
-      await apiLogout(); // Use the AuthContext logout
-    } catch (error) {
-      console.error("Logout error:", error);
-      // Force redirect as fallback
-      window.location.href = "/login";
-    }
-  };
-
-  type UserRole = "guest" | "regular user" | "vet" | "admin";
-
-  // Determine role first
-  const userRole: UserRole =
-    (user?.role as UserRole) || (session?.user?.role as UserRole) || "guest";
-
-  const navbarBackground: Record<UserRole, string> = {
-    guest: "#A03048",
-    "regular user": "#A03048",
-    vet: "#480777",
-    admin: "#065758",
-  };
-
-  const buttonTextColor: Record<UserRole, string> = {
-    guest: "#ffffff",
-    "regular user": "#ffffff",
-    vet: "#ffffff",
-    admin: "#ffffff",
-  };
-
-  const arrowColor: Record<UserRole, string> = {
-    guest: "#ffd2e3",
-    "regular user": "#ffd2e3",
-    vet: "#e0c3f7",
-    admin: "#7fe1d3",
-  };
-
-  // Updated dropdown items with isAction flag
-  const dropdownItems = [
-    {
-      href:
-        userRole === "vet"
-          ? "/vet-panel"
-          : userRole === "admin"
-          ? "/admin-panel"
-          : "/my-profile",
-      label:
-        userRole === "vet"
-          ? "Vet Panel"
-          : userRole === "admin"
-          ? "Admin Panel"
-          : "My Profile",
-      isAction: false,
-    },
-    { href: "/my-listings", label: "My Listings", isAction: false },
-    { href: "/my-applications", label: "My Applications", isAction: false },
-    { href: "/notifications", label: "Notifications", isAction: false },
-    { href: "/logout", label: "Logout", isAction: true },
-  ];
-
-  const navbarStyle = { backgroundColor: navbarBackground[userRole] };
-
-  const displayName =
-    session?.user?.name ||
-    session?.user?.email ||
-    user?.name ||
-    user?.email ||
-    "User";
-
-  const profileImage =
-    user?.profile_image_url ||
-    session?.user?.image || // next-auth google login usually gives `image`
-    "/default-avatar.png"; // put your default icon in public folder
-
-  // Log the auth context props as soon as they are fetched
-  useEffect(() => {
-    // console.log("AuthContext - User:", user);
-    // console.log("AuthContext - Role:", userRole);
-    // console.log("AuthContext - isAuthenticated:", isAuthenticated);
-    // console.log("NextAuth - Session:", session);
-  }, [user, isAuthenticated, session]); // Logs when these values update
-
-  // Navigation Links
-  const links = [
-    { name: "Pets", href: "browse-pets" },
-    { name: "Pet Care", href: "pet-care" },
-    { name: "Lost & Found", href: "lost-and-found" },
-    //{ name: "Paltuu AI", href: "llm" },
-  ];
-
-  useEffect(() => {
-    const fetchVerificationStatus = async () => {
-      if (userRole === "vet" && user?.id) {
-        console.log(user.id);
-        try {
-          const response = await fetch(
-            `/api/is-verified-by-user-id/${user.id}`
-          );
-          const data = await response.json();
-          console.log("gagea", data);
-          setIsVerified(data.profile_verified); // assuming the response contains an 'isVerified' boolean
-          console.log("Verified", data.profile_verified);
-        } catch (error) {
-          console.error("Failed to fetch verification status:", error);
-        }
-      }
+    const handleMouseEnter = () => {
+        clearTimeout(hideTimeout); // Cancel the hide timeout
+        setIsDropdownOpen(true);
     };
 
-    fetchVerificationStatus();
-  }, [userRole, user?.id]);
-
-  useEffect(() => {
-    const checkFoundersClub = async () => {
-      if (user?.id) {
-        try {
-          const res = await fetch(`/api/founders-club/?user_id=${user.id}`);
-          const data = await res.json();
-          setIsFoundersClub(data.isFoundersClub); // assuming response is { isFoundersClub: true }
-        } catch (error) {
-          console.error("Error checking Founders Club:", error);
-        }
-      }
+    const handleMouseLeave = () => {
+        hideTimeout = setTimeout(() => setIsDropdownOpen(false), 200);
     };
 
-    checkFoundersClub();
-  }, [user?.id]);
+    // Use next-auth's useSession hook for Google login
+    const { data: session, status } = useSession();
 
-  useEffect(() => {
-    const currentPath = window.location.pathname.split("/")[1];
-    setActiveLink(currentPath);
-  }, []);
+    // Use custom AuthContext for API-based login
+    const { isAuthenticated, user, logout: apiLogout } = useAuth();
+
+    const router = useRouter(); // Router for navigation
+
+    const handleLogout = async () => {
+        try {
+            await apiLogout(); // Use the AuthContext logout
+        } catch (error) {
+            console.error("Logout error:", error);
+            // Force redirect as fallback
+            window.location.href = "/login";
+        }
+    };
+
+    type UserRole = "guest" | "regular user" | "vet" | "admin";
+
+    // Determine role first
+    const userRole: UserRole =
+        (user?.role as UserRole) ||
+        (session?.user?.role as UserRole) ||
+        "guest";
+
+    const navbarBackground: Record<UserRole, string> = {
+        guest: "#A03048",
+        "regular user": "#A03048",
+        vet: "#480777",
+        admin: "#065758",
+    };
+
+    const buttonTextColor: Record<UserRole, string> = {
+        guest: "#ffffff",
+        "regular user": "#ffffff",
+        vet: "#ffffff",
+        admin: "#ffffff",
+    };
+
+    const arrowColor: Record<UserRole, string> = {
+        guest: "#ffd2e3",
+        "regular user": "#ffd2e3",
+        vet: "#e0c3f7",
+        admin: "#7fe1d3",
+    };
+
+    // Updated dropdown items with isAction flag
+    const dropdownItems = [
+        {
+            href:
+                userRole === "vet"
+                    ? "/vet-panel"
+                    : userRole === "admin"
+                    ? "/admin-panel"
+                    : "/my-profile",
+            label:
+                userRole === "vet"
+                    ? "Vet Panel"
+                    : userRole === "admin"
+                    ? "Admin Panel"
+                    : "My Profile",
+            isAction: false,
+        },
+        { href: "/my-listings", label: "My Listings", isAction: false },
+        { href: "/my-applications", label: "My Applications", isAction: false },
+        { href: "/notifications", label: "Notifications", isAction: false },
+        { href: "/logout", label: "Logout", isAction: true },
+    ];
+
+    const navbarStyle = { backgroundColor: navbarBackground[userRole] };
+
+    const displayName =
+        session?.user?.name ||
+        session?.user?.email ||
+        user?.name ||
+        user?.email ||
+        "User";
+
+    const profileImage =
+        user?.profile_image_url ||
+        session?.user?.image || // next-auth google login usually gives `image`
+        "/default-avatar.png"; // put your default icon in public folder
+
+    // Log the auth context props as soon as they are fetched
+    useEffect(() => {
+        // console.log("AuthContext - User:", user);
+        // console.log("AuthContext - Role:", userRole);
+        // console.log("AuthContext - isAuthenticated:", isAuthenticated);
+        // console.log("NextAuth - Session:", session);
+    }, [user, isAuthenticated, session]); // Logs when these values update
+
+    // Navigation Links
+    const links = [
+        { name: "Pets", href: "browse-pets" },
+        { name: "Pet Care", href: "pet-care" },
+        { name: "Lost & Found", href: "lost-and-found" },
+        //{ name: "Paltuu AI", href: "llm" },
+    ];
+
+    useEffect(() => {
+        const fetchVerificationStatus = async () => {
+            if (userRole === "vet" && user?.id) {
+                console.log(user.id);
+                try {
+                    const response = await fetch(
+                        `/api/is-verified-by-user-id/${user.id}`
+                    );
+                    const data = await response.json();
+                    console.log("gagea", data);
+                    setIsVerified(data.profile_verified); // assuming the response contains an 'isVerified' boolean
+                    console.log("Verified", data.profile_verified);
+                } catch (error) {
+                    console.error(
+                        "Failed to fetch verification status:",
+                        error
+                    );
+                }
+            }
+        };
+
+        fetchVerificationStatus();
+    }, [userRole, user?.id]);
+
+    useEffect(() => {
+        const checkFoundersClub = async () => {
+            if (user?.id) {
+                try {
+                    const res = await fetch(
+                        `/api/founders-club/?user_id=${user.id}`
+                    );
+                    const data = await res.json();
+                    setIsFoundersClub(data.isFoundersClub); // assuming response is { isFoundersClub: true }
+                } catch (error) {
+                    console.error("Error checking Founders Club:", error);
+                }
+            }
+        };
+
+        checkFoundersClub();
+    }, [user?.id]);
+
+    useEffect(() => {
+        const currentPath = window.location.pathname.split("/")[1];
+        setActiveLink(currentPath);
+    }, []);
 
   const dropdownWidth = `${
     Math.max(
@@ -184,17 +191,16 @@ const Navbar = () => {
     setMobileView("navlinks");
   };
 
-  return (
-    <nav className="navbar" style={navbarStyle}>
-      {/* Hamburger Menu Button (Mobile Only) */}
-      <button
-        className="hamburger md:hidden"
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
-      >
-        <div className="hamburger-line" />
-        <div className="hamburger-line" />
-        <div className="hamburger-line" />
-      </button>
+    return (
+        <nav className="navbar" style={navbarStyle}>
+            {/* Hamburger Menu Button (Mobile Only) */}
+            <button
+                className="hamburger md:hidden"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                <div className="hamburger-line" />
+                <div className="hamburger-line" />
+                <div className="hamburger-line" />
+            </button>
 
       {/* Mobile Menu */}
       <div
@@ -317,22 +323,23 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {/* Desktop navigation links */}
-        <div className="navLinks hidden md:flex items-center gap-5">
-          {links.map((link) => (
-            <Link key={link.href} href={`/${link.href}`}>
-              <span
-                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${
-                  activeLink === link.href ? "after:w-full" : "after:w-0"
-                }`}
-                style={{ cursor: "pointer" }}
-                onClick={() => setActiveLink(link.href)}
-              >
-                {link.name}
-              </span>
-            </Link>
-          ))}
-        </div>
+                {/* Desktop navigation links */}
+                <div className="navLinks hidden md:flex items-center gap-5">
+                    {links.map((link) => (
+                        <Link key={link.href} href={`/${link.href}`}>
+                            <span
+                                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${
+                                    activeLink === link.href
+                                        ? "after:w-full"
+                                        : "after:w-0"
+                                }`}
+                                style={{ cursor: "pointer" }}
+                                onClick={() => setActiveLink(link.href)}>
+                                {link.name}
+                            </span>
+                        </Link>
+                    ))}
+                </div>
 
         <div
           className="dropdown relative"
@@ -437,45 +444,46 @@ const Navbar = () => {
                 </div>
               </Link>
 
-              {/* Divider */}
-              <div className="border-t my-1"></div>
+                            {/* Divider */}
+                            <div className="border-t my-1"></div>
 
-              {/* Other Items */}
-              <Link href="/my-listings">
-                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                  <i className="bi bi-card-list text-gray-600"></i> My Listings
+                            {/* Other Items */}
+                            <Link href="/my-listings">
+                                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                    <i className="bi bi-card-list text-gray-600"></i>{" "}
+                                    My Listings
+                                </div>
+                            </Link>
+
+                            <Link href="/my-applications">
+                                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                    <i className="bi bi-file-earmark-text text-gray-600"></i>{" "}
+                                    My Applications
+                                </div>
+                            </Link>
+
+                            <Link href="/notifications">
+                                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                    <i className="bi bi-bell text-gray-600"></i>{" "}
+                                    Notifications
+                                </div>
+                            </Link>
+
+                            {/* Divider */}
+                            <div className="border-t my-1"></div>
+
+                            {/* Logout */}
+                            <div
+                                onClick={handleLogout}
+                                className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:rounded-b-2xl cursor-pointer">
+                                <i className="bi bi-box-arrow-right"></i> Logout
+                            </div>
+                        </div>
+                    )}
                 </div>
-              </Link>
-
-              <Link href="/my-applications">
-                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                  <i className="bi bi-file-earmark-text text-gray-600"></i> My
-                  Applications
-                </div>
-              </Link>
-
-              <Link href="/notifications">
-                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                  <i className="bi bi-bell text-gray-600"></i> Notifications
-                </div>
-              </Link>
-
-              {/* Divider */}
-              <div className="border-t my-1"></div>
-
-              {/* Logout */}
-              <div
-                onClick={handleLogout}
-                className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:rounded-b-2xl cursor-pointer"
-              >
-                <i className="bi bi-box-arrow-right"></i> Logout
-              </div>
             </div>
-          )}
-        </div>
-      </div>
-    </nav>
-  );
+        </nav>
+    );
 };
 
 export default Navbar;

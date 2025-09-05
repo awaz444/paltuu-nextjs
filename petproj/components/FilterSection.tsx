@@ -45,9 +45,9 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
 
     return (
         <div className="filter-section bg-gray-100 pt-6">
-            <div className="bg-white mx-0 md:mx-8 px-5 py-5 w-700 rounded-2xl">
+            <div className="bg-white mx-0 md:mx-8 px-6 pt-3 pb-5 w-700 rounded-2xl">
                 {/* PC Layout */}
-                <div className="hidden md:flex flex-wrap gap-4 mb-4 mt-4 items-center">
+                <div className="hidden md:flex flex-wrap gap-4 items-center">
                     <div className="flex-1 min-w-[150px]">
                         <label className="text-xs">Species</label>
                         <select
@@ -91,8 +91,8 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
                         </select>
                     </div>
 
-                    <div className="flex gap-4 mt-4">
-                        <button className="border-2 border-primary text-primary bg-white p-3 rounded-2xl" onClick={handleReset}>
+                    <div className="flex gap-4 mt-5">
+                        <button className="border-2 border-primary text-primary bg-white px-3 py-1 rounded-2xl" onClick={handleReset}>
                             Reset
                         </button>
                         <button className="text-white p-3 rounded-2xl w-40 bg-primary" onClick={handleSearch}>

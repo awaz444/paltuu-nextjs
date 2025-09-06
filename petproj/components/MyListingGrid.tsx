@@ -206,7 +206,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                         )}
                     </div>
                     {/* Pet Details */}
-                    <div className="p-4">
+                    <div className="pt-4 pl-2">
                         <h3 className="font-bold text-2xl mb-1">
                             {pet.pet_name}
                         </h3>
@@ -223,13 +223,14 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                             {pet.city} - {pet.area}
                         </p>
                     </div>
-                    <button
+                    {pet.approved && (<button
                         className="bg-primary text-white px-4 py-2 rounded-xl mt-4"
                         onClick={() =>
                             handleViewApplications(pet.pet_id, pet.listing_type)
                         }>
                         View Applications
-                    </button>
+                    </button>)}
+                    
                 </div>
             ))}
 

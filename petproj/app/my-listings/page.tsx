@@ -127,11 +127,6 @@ const UserListingsPage = () => {
         fetchData();
     }, [userId]);
 
-    // Filter only adoption listings
-    const adoptionListings = listings.filter(
-        (listing) => listing.listing_type === "adoption"
-    );
-
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);
         const color = rootStyles.getPropertyValue("--primary-color").trim();
@@ -162,7 +157,7 @@ const UserListingsPage = () => {
                     My Listings
                 </h1>
                 {/* Conditional rendering based on whether listings exist */}
-                {adoptionListings.length === 0 ? (
+                {listings.length === 0 ? (
                     <div className="w-full max-w-4xl mt-8 text-center">
                         <div className="bg-white p-8 rounded-xl shadow-sm">
                             <svg
@@ -271,7 +266,7 @@ const UserListingsPage = () => {
                         </div>
 
                         <div className="mt-6 w-full max-w-6xl mb-3">
-                            <MyListingGrid pets={adoptionListings} />
+                            <MyListingGrid pets={listings} />
                         </div>
                     </>
                 )}

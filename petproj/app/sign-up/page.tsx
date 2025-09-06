@@ -576,7 +576,7 @@ const CreateUser = () => {
                     </div>
 
                     {/* Date of Birth */}
-                    <div>
+                    {/* <div>
                         <label className="block text-gray-700 text-sm font-medium mb-1">
                             Date of Birth
                         </label>
@@ -587,7 +587,7 @@ const CreateUser = () => {
                             className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                             required
                         />
-                    </div>
+                    </div> */}
 
                     {/* City */}
                     <div>

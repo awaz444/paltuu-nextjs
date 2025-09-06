@@ -1,0 +1,28 @@
+/* Marketplace specific styles */
+.marketplace-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+@media (min-width: 640px) {
+    .marketplace-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 768px) {
+    .marketplace-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .marketplace-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+@media (min-width: 1280px) {
+    .marketplace-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}

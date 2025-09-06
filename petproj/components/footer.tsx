@@ -19,7 +19,7 @@ const Footer = () => {
   }
 
   return (
-    <footer className="text-white py-3 px-4 rounded-t-[3rem] rounded-b-none bg-primary mt-8">
+    <footer className="text-white py-3 px-4 rounded-t-[2rem] rounded-b-none bg-primary mt-8">
       <div className="container mx-auto text-center">
         <div className="mb-2">
           <Image src="/paltu_logo.svg" alt="Logo" className="mx-auto" width={180} height={70} />

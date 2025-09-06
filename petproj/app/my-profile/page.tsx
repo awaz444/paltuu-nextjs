@@ -374,7 +374,7 @@ const MyProfile = () => {
                                         </p>
                                     )}
                                 </div>
-                                <ProfileField
+                                {/* <ProfileField
                                     label="Date of Birth"
                                     name="dob"
                                     type="date"
@@ -382,7 +382,7 @@ const MyProfile = () => {
                                     onChange={(name, value) => handlePersonalInfoChange(name as keyof UserProfileData, value)}
                                     editable={editing}
                                     editing={editing}
-                                />
+                                /> */}
                                 <ProfileField
                                     label="City"
                                     name="city"

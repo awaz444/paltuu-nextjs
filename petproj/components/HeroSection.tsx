@@ -30,7 +30,7 @@ const HeroSection = () => {
         <div className="font-montserrat bg-white">
             {/* Header */}
 
-            <header className="bg-primary text-primary py-4 px-4 md:py-10 md:px-6 lg:px-20 flex items-center justify-between rounded-b-[1rem] rounded-t-none shadow-lg">
+            <header className="bg-primary text-primary py-4 px-4 md:px-6 lg:px-20 flex items-center justify-between rounded-b-[1rem] rounded-t-none shadow-lg">
                 <div className="logo">
                     <Image
                         src="/paltu_logo.svg"

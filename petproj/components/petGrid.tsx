@@ -31,7 +31,6 @@ interface Pet {
     listing_type: string;
     vaccinated: boolean | null;
     neutered: boolean | null;
-    payment_frequency: string | null;
     city: string;
     profile_image_url: string | null;
     image_id: number | null;
@@ -87,11 +86,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
             {pets.map((pet) => (
                 <Link
                     key={pet.pet_id}
-                    href={
-                        pet.listing_type === "adoption"
-                            ? `/browse-pets/${pet.pet_id}`
-                            : `/foster-pets/${pet.pet_id}`
-                    }
+                    href={`/browse-pets/${pet.pet_id}`}
                     passHref>
                     <div
                         key={pet.pet_id}
@@ -103,14 +98,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                                 className="w-full aspect-square object-cover rounded-2xl"
                             />
                             {/* Overlay badge for price or rescue at the bottom-right */}
-                            {Number(pet.price) > 0 && (
-                                <div className="absolute bottom-2 right-2 bg-primary text-white text-[10px] sm:text-xs font-semibold px-2 sm:px-2 py-1 rounded-full">
-                                    PKR {Math.floor(Number(pet.price))}{" "}
-                                    {/* Remove decimals */}
-                                    {pet.payment_frequency &&
-                                        ` / ${pet.payment_frequency}`}
-                                </div>
-                            )}
+                            
                             {pet.listing_type === "rescue" && (
                                 <div className="absolute bottom-2 right-2 bg-primary text-white text-[10px] sm:text-xs font-semibold px-2 sm:px-2 py-1 rounded-full flex items-center">
                                     <span className="mr-1">+</span> Rescue
@@ -118,7 +106,8 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                             )}
                             {pet.listing_type === "shop" && (
                                 <div className="absolute top-2 right-2 bg-primary text-white text-[10px] sm:text-xs font-semibold px-2 sm:px-2 py-1 rounded-full flex items-center">
-                                    <ShoppingOutlined className="text-white mr-1" /> Shop
+                                    <ShoppingOutlined className="text-white mr-1" />{" "}
+                                    Shop
                                 </div>
                             )}
                         </div>

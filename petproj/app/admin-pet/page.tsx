@@ -33,7 +33,6 @@ type Pet = {
   listing_type: string;
   vaccinated: boolean;
   neutered: boolean;
-  payment_frequency?: string | null;
   approved: boolean;
 };
 

@@ -26,7 +26,6 @@ interface Pet {
   listing_type: string;
   vaccinated: boolean | null;
   neutered: boolean | null;
-  payment_frequency: string | null;
   city: string;
   profile_image_url: string | null;
   image_id: number | null;

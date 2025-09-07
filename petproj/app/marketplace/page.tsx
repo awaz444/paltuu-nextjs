@@ -49,6 +49,35 @@ const mockProducts: Product[] = [
         category: "Food & Water", // No discount on this item
         collection: "Birds",
         image_url: "https://res.cloudinary.com/dfwykqn1d/image/upload/v1/marketplace/bird-feeder.jpg"
+    },
+    {
+        product_id: 1,
+        name: "Premium Dog Collar",
+        description: "High quality leather collar for medium to large dogs",
+        price: "1499",
+        original_price: "1999", // 25% off
+        category: "Accessories",
+        collection: "Dogs",
+        image_url: "https://res.cloudinary.com/dfwykqn1d/image/upload/v1/marketplace/collar.jpg"
+    },
+    {
+        product_id: 2,
+        name: "Cat Scratching Post",
+        description: "Durable sisal rope scratching post with platform",
+        price: "2999",
+        original_price: "3499", // ~14% off
+        category: "Furniture",
+        collection: "Cats",
+        image_url: "https://res.cloudinary.com/dfwykqn1d/image/upload/v1/marketplace/scratch-post.jpg"
+    },
+    {
+        product_id: 3,
+        name: "Bird Cage Feeder",
+        description: "Automatic bird feeder with multiple compartments",
+        price: "899",
+        category: "Food & Water", // No discount on this item
+        collection: "Birds",
+        image_url: "https://res.cloudinary.com/dfwykqn1d/image/upload/v1/marketplace/bird-feeder.jpg"
     }
 ];
 

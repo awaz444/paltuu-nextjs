@@ -28,7 +28,7 @@ export default function CreatePetListing() {
     const [currentStep, setCurrentStep] = useState(1);
 
     // Form state
-    const [title, setTitle] = useState(""); // Changed from petName to title
+    const [title, setTitle] = useState("");
     const [petType, setPetType] = useState("");
     const [cityId, setCityId] = useState("");
     const [area, setArea] = useState("");
@@ -47,11 +47,15 @@ export default function CreatePetListing() {
     const [canLiveWithDogs, setCanLiveWithDogs] = useState(false);
     const [canLiveWithCats, setCanLiveWithCats] = useState(false);
     const [mustHaveSomeoneHome, setMustHaveSomeoneHome] = useState(false);
-    const [energyLevel, setEnergyLevel] = useState(3);
-    const [cuddlinessLevel, setCuddlinessLevel] = useState(3);
+    const [energyLevel, setEnergyLevel] = useState<number | null>(null);
+    const [cuddlinessLevel, setCuddlinessLevel] = useState<number | null>(null);
     const [healthIssues, setHealthIssues] = useState("");
     const [ageError, setAgeError] = useState<string | null>(null);
     const [monthsError, setMonthsError] = useState<string | null>(null);
+
+    // Track if sliders have been touched
+    const [energyLevelTouched, setEnergyLevelTouched] = useState(false);
+    const [cuddlinessLevelTouched, setCuddlinessLevelTouched] = useState(false);
 
     // Image upload state
     const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -199,9 +203,6 @@ export default function CreatePetListing() {
             errors.months = "Either age or months must be filled";
         }
 
-        // NEW: Log validation results
-        console.log("Validation found these errors:", errors);
-
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -209,9 +210,7 @@ export default function CreatePetListing() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        // NEW: Validate form before submission
         if (!validateForm()) {
-            console.log("Form validation errors:", formErrors);
             message.error("Please fix the form errors before submitting");
             return;
         }
@@ -244,8 +243,8 @@ export default function CreatePetListing() {
                 can_live_with_dogs: canLiveWithDogs,
                 can_live_with_cats: canLiveWithCats,
                 must_have_someone_home: mustHaveSomeoneHome,
-                energy_level: energyLevel || 3,
-                cuddliness_level: cuddlinessLevel || 3,
+                energy_level: energyLevelTouched ? energyLevel : null, // Only send if touched
+                cuddliness_level: cuddlinessLevelTouched ? cuddlinessLevel : null, // Only send if touched
                 health_issues: healthIssues || null,
                 sex: sex || "male",
                 listing_type: listingType,
@@ -297,6 +296,22 @@ export default function CreatePetListing() {
 
     const prevStep = () => {
         setCurrentStep(1);
+    };
+
+    // Handle energy level change
+    const handleEnergyLevelChange = (value: number) => {
+        if (!energyLevelTouched) {
+            setEnergyLevelTouched(true);
+        }
+        setEnergyLevel(value);
+    };
+
+    // Handle cuddliness level change
+    const handleCuddlinessLevelChange = (value: number) => {
+        if (!cuddlinessLevelTouched) {
+            setCuddlinessLevelTouched(true);
+        }
+        setCuddlinessLevel(value);
     };
 
     return (
@@ -557,33 +572,6 @@ export default function CreatePetListing() {
                                         </label>
                                     </div>
 
-                                    {/* Minimum Safe Age for Children */}
-                                    {/* <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Minimum Child Age for Safe
-                                            Interaction
-                                        </label>
-                                        <input
-                                            type="number"
-                                            className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                            placeholder="Minimum age in years"
-                                            value={minAgeOfChildren || ""}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                const numberValue = value
-                                                    ? Number(value)
-                                                    : 0;
-                                                setMinAgeOfChildren(
-                                                    numberValue
-                                                );
-                                            }}
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            What's the minimum age of children
-                                            this pet can safely be around?
-                                        </p>
-                                    </div> */}
-
                                     {/* Compatibility */}
                                     <div className="mb-4">
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -648,23 +636,17 @@ export default function CreatePetListing() {
                                                 className="mt-2 w-full appearance-none h-2 rounded-lg bg-gray-300"
                                                 value={energyLevel ?? 3}
                                                 onChange={(e) =>
-                                                    setEnergyLevel(
+                                                    handleEnergyLevelChange(
                                                         Number(e.target.value)
                                                     )
                                                 }
-                                                onMouseDown={() => {
-                                                    if (energyLevel === null)
-                                                        setEnergyLevel(3);
-                                                }}
                                                 style={{
-                                                    background: energyLevel
+                                                    background: energyLevel !== null
                                                         ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
-                                                              (energyLevel -
-                                                                  1) *
+                                                              ((energyLevel ?? 3) - 1) *
                                                               25
                                                           }%, #D1D5DB ${
-                                                              (energyLevel -
-                                                                  1) *
+                                                              ((energyLevel ?? 3) - 1) *
                                                               25
                                                           }%, #D1D5DB 100%)`
                                                         : "#D1D5DB",
@@ -690,25 +672,17 @@ export default function CreatePetListing() {
                                                 className="mt-2 w-full appearance-none h-2 rounded-lg bg-gray-300"
                                                 value={cuddlinessLevel ?? 3}
                                                 onChange={(e) =>
-                                                    setCuddlinessLevel(
+                                                    handleCuddlinessLevelChange(
                                                         Number(e.target.value)
                                                     )
                                                 }
-                                                onMouseDown={() => {
-                                                    if (
-                                                        cuddlinessLevel === null
-                                                    )
-                                                        setCuddlinessLevel(3);
-                                                }}
                                                 style={{
-                                                    background: cuddlinessLevel
+                                                    background: cuddlinessLevel !== null
                                                         ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
-                                                              (cuddlinessLevel -
-                                                                  1) *
+                                                              ((cuddlinessLevel ?? 3) - 1) *
                                                               25
                                                           }%, #D1D5DB ${
-                                                              (cuddlinessLevel -
-                                                                  1) *
+                                                              ((cuddlinessLevel ?? 3) - 1) *
                                                               25
                                                           }%, #D1D5DB 100%)`
                                                         : "#D1D5DB",

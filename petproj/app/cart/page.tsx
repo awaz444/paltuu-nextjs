@@ -1,0 +1,372 @@
+"use client";
+import { getOrCreateGuestSessionId } from "@/utils/guest";
+import React, { useState, useEffect } from "react";
+import {
+  X,
+  Plus,
+  Minus,
+  Heart,
+  Shield,
+  Truck,
+  ArrowLeft,
+  Check,
+} from "lucide-react";
+import Navbar from "@/components/navbar";
+import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
+
+interface CartItem {
+  item_id: number;
+  product_id: number;
+  title: string;
+  price: number;
+  quantity: number;
+  image?: string | null;
+}
+
+const CartPage = () => {
+  useSetPrimaryColor();
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updatedItems, setUpdatedItems] = useState<number[]>([]);
+
+  // ✅ Fetch cart on mount
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        const guestToken = getOrCreateGuestSessionId();
+
+        const res = await fetch("/api/cart", {
+          credentials: "include",
+          headers: { "x-guest-token": guestToken },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setCartItems(data);
+        }
+      } catch (err) {
+        console.error("Failed to load cart:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCart();
+  }, []);
+
+  // ✅ Update quantity
+  const updateQuantity = async (itemId: number, newQuantity: number) => {
+    if (newQuantity < 1) return;
+
+    try {
+      const guestToken = getOrCreateGuestSessionId();
+
+      const res = await fetch("/api/cart", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-guest-token": guestToken,
+        },
+        body: JSON.stringify({ item_id: itemId, quantity: newQuantity }),
+      });
+
+      if (res.ok) {
+        setCartItems((prev) =>
+          prev.map((item) =>
+            item.item_id === itemId ? { ...item, quantity: newQuantity } : item
+          )
+        );
+        setUpdatedItems((prev) => [...prev, itemId]);
+        setTimeout(() => {
+          setUpdatedItems((prev) => prev.filter((id) => id !== itemId));
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Failed to update quantity:", err);
+    }
+  };
+
+  // ✅ Remove item
+  const removeItem = async (itemId: number) => {
+    try {
+      const guestToken = getOrCreateGuestSessionId();
+
+      const res = await fetch("/api/cart", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "x-guest-token": guestToken,
+        },
+        body: JSON.stringify({ item_id: itemId }),
+      });
+
+      if (res.ok) {
+        setCartItems((prev) => prev.filter((item) => item.item_id !== itemId));
+      }
+    } catch (err) {
+      console.error("Failed to remove item:", err);
+    }
+  };
+
+  // ✅ Totals
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const deliveryFee = 500;
+  const total = subtotal + deliveryFee;
+
+  return (
+    <main className="min-h-screen bg-gradient-to-b from-primary/5 to-white">
+      <Navbar />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Breadcrumb */}
+        <div className="flex items-center text-sm text-gray-500 mb-6">
+          <span>Home</span>
+          <span className="mx-2">/</span>
+          <span>Marketplace</span>
+          <span className="mx-2">/</span>
+          <span className="text-primary">Cart</span>
+        </div>
+
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">
+            Your Shopping Cart 🛒
+          </h1>
+          <button
+            className="flex items-center text-primary hover:text-primary-dark font-medium"
+            onClick={() => window.history.back()}
+          >
+            <ArrowLeft size={18} className="mr-1" />
+            Continue Shopping
+          </button>
+        </div>
+
+        {/* Cart Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Cart Items Section */}
+          <div className="lg:col-span-2 space-y-6">
+            {loading ? (
+              <p className="text-gray-500">Loading cart...</p>
+            ) : cartItems.length === 0 ? (
+              <p className="text-gray-500">Your cart is empty.</p>
+            ) : (
+              cartItems.map((item) => (
+                <CartItemCard
+                  key={item.item_id}
+                  item={item}
+                  onUpdate={updateQuantity}
+                  onRemove={removeItem}
+                  updated={updatedItems.includes(item.item_id)}
+                />
+              ))
+            )}
+
+            {/* Trust Badges */}
+            <div className="bg-white rounded-2xl p-6 shadow-md mt-8">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Why shop with us?
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <TrustBadge
+                  icon={<Truck className="w-6 h-6 text-primary" />}
+                  title="Free Delivery"
+                  desc="On orders over PKR 5,000"
+                />
+                <TrustBadge
+                  icon={<Shield className="w-6 h-6 text-primary" />}
+                  title="Secure Payment"
+                  desc="100% secure payment"
+                />
+                <TrustBadge
+                  icon={<Heart className="w-6 h-6 text-primary" />}
+                  title="Pet Experts"
+                  desc="24/7 customer support"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Summary Section */}
+          <div className="bg-white shadow-lg rounded-2xl p-6 space-y-6 h-fit sticky top-28">
+            <h2 className="text-xl font-semibold text-gray-800 border-b pb-4">
+              Order Summary
+            </h2>
+
+            <div className="space-y-3">
+              <SummaryRow
+                label={`Subtotal (${cartItems.length} items)`}
+                value={subtotal}
+              />
+              <SummaryRow label="Delivery" value={deliveryFee} />
+              <SummaryRow label="Discount" value={0} isDiscount />
+            </div>
+
+            <div className="border-t pt-4">
+              <div className="flex justify-between text-lg font-bold">
+                <span>Total</span>
+                <span className="text-primary">
+                  PKR {total.toLocaleString()}
+                </span>
+              </div>
+              <p className="text-gray-500 text-sm mt-1">Including VAT</p>
+            </div>
+
+            <button className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-xl transition shadow-md">
+              Proceed to Checkout
+            </button>
+
+            <div className="text-center">
+              <p className="text-gray-500 text-sm">or</p>
+              <button className="text-primary border border-primary font-medium text-sm mt-2 px-4 py-2 rounded-xl hover:bg-primary/10 transition">
+                Continue Shopping
+              </button>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Free delivery</span> for orders
+                above PKR 5,000. Your order is{" "}
+                <span className="font-medium">
+                  {subtotal >= 5000 ? "eligible" : "not eligible"}
+                </span>{" "}
+                for free delivery.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+};
+
+export default CartPage;
+
+/* ------------------ Components ------------------ */
+function CartItemCard({
+  item,
+  onUpdate,
+  onRemove,
+  updated,
+}: {
+  item: CartItem;
+  onUpdate: (id: number, qty: number) => void;
+  onRemove: (id: number) => void;
+  updated: boolean;
+}) {
+  const [localQuantity, setLocalQuantity] = useState(item.quantity);
+
+  useEffect(() => {
+    setLocalQuantity(item.quantity);
+  }, [item.quantity]);
+
+  return (
+    <div className="flex flex-col sm:flex-row items-start gap-6 bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow">
+      {/* Image */}
+      <div className="w-full sm:w-32 h-32 rounded-xl overflow-hidden border">
+        <img
+          src={item.image ?? "https://via.placeholder.com/150?text=No+Image"}
+          alt={item.title}
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Details */}
+      <div className="flex-1">
+        <div className="flex justify-between">
+          <h2 className="text-xl font-semibold text-gray-800">{item.title}</h2>
+          <button
+            className="p-2 rounded-full hover:bg-gray-100 transition"
+            onClick={() => onRemove(item.item_id)}
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        <p className="mt-3 font-bold text-primary text-xl">
+          PKR {item.price.toLocaleString()}
+        </p>
+
+        <div className="flex items-center mt-4 gap-3">
+          <div className="flex items-center border rounded-lg overflow-hidden">
+            <button
+              className="p-2 bg-gray-100 hover:bg-gray-200 transition"
+              onClick={() => setLocalQuantity((q) => Math.max(1, q - 1))}
+            >
+              <Minus size={16} />
+            </button>
+            <span className="px-4 py-2 bg-white font-medium">
+              {localQuantity}
+            </span>
+            <button
+              className="p-2 bg-gray-100 hover:bg-gray-200 transition"
+              onClick={() => setLocalQuantity((q) => q + 1)}
+            >
+              <Plus size={16} />
+            </button>
+          </div>
+
+          {/* ✅ Show Update button only if changed */}
+          {localQuantity !== item.quantity && (
+            <button
+              onClick={() => onUpdate(item.item_id, localQuantity)}
+              className="ml-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition"
+            >
+              Update Cart
+            </button>
+          )}
+
+          {/* ✅ Show checkmark if updated */}
+          {updated && (
+            <span className="flex items-center text-green-600 font-medium ml-2">
+              <Check size={18} className="mr-1" /> Updated
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TrustBadge({
+  icon,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <div className="flex items-center">
+      <div className="bg-primary/10 p-3 rounded-full mr-3">{icon}</div>
+      <div>
+        <p className="font-medium">{title}</p>
+        <p className="text-sm text-gray-500">{desc}</p>
+      </div>
+    </div>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  isDiscount,
+}: {
+  label: string;
+  value: number;
+  isDiscount?: boolean;
+}) {
+  return (
+    <div
+      className={`flex justify-between ${isDiscount ? "text-green-600" : ""}`}
+    >
+      <span className="text-gray-600">{label}</span>
+      <span>
+        {isDiscount
+          ? `- PKR ${value.toLocaleString()}`
+          : `PKR ${value.toLocaleString()}`}
+      </span>
+    </div>
+  );
+}

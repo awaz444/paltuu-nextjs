@@ -37,7 +37,6 @@ export interface Pet {
     listing_type: string;
     vaccinated: boolean | null;
     neutered: boolean | null;
-    payment_frequency: string | null;
     city: string;
     profile_image_url: string | null;
     image_id: number | null;
@@ -197,13 +196,6 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                             alt={pet.pet_name}
                             className="w-full h-48 object-cover rounded-2xl"
                         />
-                        {Number(pet.price) > 0 && (
-                            <div className="absolute bottom-2 right-2 bg-primary text-white text-sm font-semibold px-3 py-1 rounded-full">
-                                PKR {pet.price}
-                                {pet.payment_frequency &&
-                                    ` / ${pet.payment_frequency}`}
-                            </div>
-                        )}
                     </div>
                     {/* Pet Details */}
                     <div className="pt-4 pl-2">
@@ -428,33 +420,6 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                             // disabled={editingPet.listing_type === "adoption"}
                         />
                     </div>
-
-                    {/* Payment Frequency Dropdown */}
-                    {editingPet.listing_type === "foster" && (
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700">
-                                Payment Frequency
-                            </label>
-                            <select
-                                className="mt-1 p-3 w-full border rounded-2xl"
-                                value={editingPet.payment_frequency || ""}
-                                onChange={(e) =>
-                                    setEditingPet({
-                                        ...editingPet,
-                                        payment_frequency: e.target.value,
-                                    })
-                                }
-                                required>
-                                <option value="" disabled>
-                                    Select Frequency
-                                </option>
-                                <option value="day">Daily</option>
-                                <option value="week">Weekly</option>
-                                <option value="month">Monthly</option>
-                                <option value="year">Yearly</option>
-                            </select>
-                        </div>
-                    )}
 
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">

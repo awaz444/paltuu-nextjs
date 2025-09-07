@@ -44,7 +44,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                 p.listing_type,
                 p.vaccinated,
                 p.neutered,
-                p.payment_frequency,
                 p.approved,
                 pi.image_url AS primary_image_url -- Get the image URL for order = 1
             FROM pets p
@@ -91,7 +90,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             listing_type: row.listing_type,
             vaccinated: row.vaccinated,
             neutered: row.neutered,
-            payment_frequency: row.payment_frequency,
             approved: row.approved,
             image_url: row.primary_image_url,
         }));

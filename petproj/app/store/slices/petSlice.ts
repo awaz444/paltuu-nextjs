@@ -27,7 +27,6 @@ export type Pet = {
   listing_type: string;
   vaccinated: boolean;
   neutered: boolean;
-  payment_frequency?: string | null; // Optional field for foster
 };
 
 

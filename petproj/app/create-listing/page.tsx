@@ -251,7 +251,6 @@ export default function CreatePetListing() {
                 listing_type: listingType,
                 vaccinated,
                 neutered,
-                payment_frequency: paymentFrequency || null,
             };
 
             const petResult = await dispatch(postPet(newPet)).unwrap();
@@ -559,7 +558,7 @@ export default function CreatePetListing() {
                                     </div>
 
                                     {/* Minimum Safe Age for Children */}
-                                    <div className="mb-4">
+                                    {/* <div className="mb-4">
                                         <label className="block text-sm font-medium text-gray-700">
                                             Minimum Child Age for Safe
                                             Interaction
@@ -583,7 +582,7 @@ export default function CreatePetListing() {
                                             What's the minimum age of children
                                             this pet can safely be around?
                                         </p>
-                                    </div>
+                                    </div> */}
 
                                     {/* Compatibility */}
                                     <div className="mb-4">

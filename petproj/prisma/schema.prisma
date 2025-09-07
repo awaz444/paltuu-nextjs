@@ -205,7 +205,6 @@ model pets {
   listing_type           String?                 @db.VarChar(255)
   vaccinated             Boolean?
   neutered               Boolean?
-  payment_frequency      String?                 @db.VarChar(10)
   approved               Boolean?                @default(false)
   accepted_adoptions     accepted_adoptions[]
   adoption_applications  adoption_applications[]

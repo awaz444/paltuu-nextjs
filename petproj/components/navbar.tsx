@@ -45,34 +45,51 @@ const Navbar = () => {
         }
     };
 
-    type UserRole = "guest" | "regular user" | "vet" | "admin";
+    type UserRole =
+  | "guest"
+  | "regular user"
+  | "vet"
+  | "admin"
+  | "shelter admin"
+  | "shop admin"
+  | "ecommerce admin";
 
-    // Determine role first
-    const userRole: UserRole =
-        (user?.role as UserRole) ||
-        (session?.user?.role as UserRole) ||
-        "guest";
+// Determine role first
+const userRole: UserRole =
+  (user?.role as UserRole) ||
+  (session?.user?.role as UserRole) ||
+  "guest";
 
-    const navbarBackground: Record<UserRole, string> = {
-        guest: "#A03048",
-        "regular user": "#A03048",
-        vet: "#480777",
-        admin: "#065758",
-    };
+const navbarBackground: Record<UserRole, string> = {
+  guest: "#A03048",
+  "regular user": "#A03048",
+  vet: "#480777",
+  admin: "#065758",
+  "shelter admin": "#1d6b34",
+  "shop admin": "#b86b00",
+  "ecommerce admin": "#004a99",
+};
 
-    const buttonTextColor: Record<UserRole, string> = {
-        guest: "#ffffff",
-        "regular user": "#ffffff",
-        vet: "#ffffff",
-        admin: "#ffffff",
-    };
+const buttonTextColor: Record<UserRole, string> = {
+  guest: "#ffffff",
+  "regular user": "#ffffff",
+  vet: "#ffffff",
+  admin: "#ffffff",
+  "shelter admin": "#ffffff",
+  "shop admin": "#ffffff",
+  "ecommerce admin": "#ffffff",
+};
 
-    const arrowColor: Record<UserRole, string> = {
-        guest: "#ffd2e3",
-        "regular user": "#ffd2e3",
-        vet: "#e0c3f7",
-        admin: "#7fe1d3",
-    };
+const arrowColor: Record<UserRole, string> = {
+  guest: "#ffd2e3",
+  "regular user": "#ffd2e3",
+  vet: "#e0c3f7",
+  admin: "#7fe1d3",
+  "shelter admin": "#8fe4a8",
+  "shop admin": "#ffc266",
+  "ecommerce admin": "#80b3ff",
+};
+
 
     // Updated dropdown items with isAction flag
     const dropdownItems = [

@@ -29,7 +29,7 @@ const CreateUser = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [phone_number, setPhoneNumber] = useState("");
-    const [role, setRole] = useState<"regular user" | "vet">("regular user");
+    const [role, setRole] = useState<"regular user">("regular user");
 
     // OTP Verification States
     const [isEmailVerified, setIsEmailVerified] = useState(false);
@@ -47,11 +47,16 @@ const CreateUser = () => {
     const [isEmailFocused, setIsEmailFocused] = useState(false);
     const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
-    const [googleLoading, setGoogleLoading] = useState(false); // Loading state for Google login
-
-    const [showVetInfoModal, setShowVetInfoModal] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
 
     const [isVerifying, setIsVerifying] = useState(false);
+
+    const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] =
+        useState(false);
+
+    useEffect(() => {
+        dispatch(fetchCities());
+    }, [dispatch]);
 
     const handleBackToLogin = () => {
         router.push("/");
@@ -131,13 +136,6 @@ const CreateUser = () => {
         </div>
     );
 
-    const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] =
-        useState(false);
-
-    useEffect(() => {
-        dispatch(fetchCities());
-    }, [dispatch]);
-
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsLoading(true);
@@ -203,11 +201,7 @@ const CreateUser = () => {
                 return;
             }
 
-            if (role === "vet") {
-                router.push(`/vet-register?user_id=${result.payload.user_id}`);
-            } else {
-                router.push("/login");
-            }
+            router.push("/login");
         } catch (error) {
             setGeneralError("An unexpected error occurred. Please try again.");
         } finally {
@@ -225,7 +219,6 @@ const CreateUser = () => {
         }
 
         try {
-            // Implement actual email verification API call
             const response = await fetch("/api/send-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -281,15 +274,13 @@ const CreateUser = () => {
     };
 
     const validatePassword = (password: string) => {
-        // Changed from requiring special chars to just length and one letter
         const passwordRegex = /^(?=.*[A-Za-z]).{6,}$/;
         return passwordRegex.test(password);
     };
 
     const handleOtpChange = (otp: string) => {
         setOtp(otp);
-        setOtpError(""); // Clear previous errors when typing
-        // Removed the auto-submit condition
+        setOtpError("");
     };
 
     const handleSubmitOtp = async () => {
@@ -324,7 +315,7 @@ const CreateUser = () => {
             ) {
                 setOtpError(errorMessage);
             } else {
-                setOtpError(""); // Don't show other errors
+                setOtpError("");
             }
         } finally {
             setIsVerifying(false);
@@ -333,7 +324,7 @@ const CreateUser = () => {
 
     return (
         <div className="min-h-screen flex flex-col lg:flex-row">
-            {/* Left Section (Logo) - Unchanged */}
+            {/* Left Section (Logo) */}
             <div className="lg:w-1/2 lg:h-screen flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none sticky top-0">
                 <button
                     onClick={handleBackToLogin}
@@ -360,23 +351,21 @@ const CreateUser = () => {
 
             {/* Right Section (Form) */}
             <div className="lg:w-1/2 bg-gray-100 lg:h-screen lg:overflow-y-auto flex flex-col items-center justify-start px-4 py-8 lg:px-8 lg:py-12 relative">
-                {
-                    <button
-                        onClick={handleBackToLogin}
-                        className="absolute top-4 left-4 text-white hover:text-white-600 flex items-center">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 mr-1"
-                            viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path
-                                fillRule="evenodd"
-                                d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-                                clipRule="evenodd"
-                            />
-                        </svg>
-                    </button>
-                }
+                {/* <button
+                    onClick={handleBackToLogin}
+                    className="absolute top-4 left-4 text-gray-600 hover:text-gray-800 flex items-center">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-1"
+                        viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path
+                            fillRule="evenodd"
+                            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                            clipRule="evenodd"
+                        />
+                    </svg>
+                </button> */}
 
                 <form
                     onSubmit={handleSubmit}
@@ -385,96 +374,53 @@ const CreateUser = () => {
                         Sign Up
                     </h2>
 
-                    <div className="relative border-2 border-yellow-400 bg-yellow-50 p-4 rounded-xl shadow-md">
-                        <div className="flex items-start space-x-3">
-                            <div className="mt-1">
-                                <input
-                                    type="checkbox"
-                                    id="vetCheckbox"
-                                    checked={role === "vet"}
-                                    onChange={() => {
-                                        const newRole =
-                                            role === "regular user"
-                                                ? "vet"
-                                                : "regular user";
-                                        setRole(newRole);
-                                        // When changing to vet role, show info modal
-                                        if (newRole === "vet") {
-                                            setShowVetInfoModal(true);
-                                        }
-                                    }}
-                                    className="h-5 w-5 border-gray-300 text-primary rounded focus:ring-primary focus:outline-none"
-                                />
-                            </div>
-                            <div>
-                                <label
-                                    htmlFor="vetCheckbox"
-                                    className="font-medium text-gray-800 text-base cursor-pointer">
-                                    I am a veterinarian
-                                </label>
-                                <p className="text-gray-600 text-sm mt-1">
-                                    Selecting this will enable vet-specific
-                                    features and verification process.
-                                    <strong className="block mt-1 text-red-600">
-                                        Note: Google sign-up will not be
-                                        available for vet accounts.
-                                    </strong>
-                                </p>
-                            </div>
-                        </div>
+                    {/* Google Login Button */}
+                    <button
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        disabled={googleLoading}
+                        className={`w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${
+                            googleLoading
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                        }`}>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="w-5 h-5">
+                            <path
+                                d="M23.76 12.26c0-.79-.07-1.58-.19-2.34H12v4.44h6.66c-.29 1.56-1.15 2.88-2.46 3.76v3.12h3.98c2.32-2.14 3.68-5.29 3.68-8.98z"
+                                fill="#4285F4"
+                            />
+                            <path
+                                d="M12 24c3.3 0 6.07-1.09 8.09-2.94l-3.98-3.12c-1.1.74-2.52 1.18-4.11 1.18-3.15 0-5.82-2.13-6.77-5.01H1.2v3.14C3.25 21.08 7.34 24 12 24z"
+                                fill="#34A853"
+                            />
+                            <path
+                                d="M5.23 14.12c-.25-.74-.39-1.54-.39-2.37 0-.83.14-1.63.38-2.37V6.23H1.2A11.98 11.98 0 000 12c0 1.89.44 3.68 1.2 5.27l4.03-3.15z"
+                                fill="#FBBC05"
+                            />
+                            <path
+                                d="M12 4.74c1.8 0 3.4.62 4.67 1.84l3.5-3.5C17.99 1.12 15.22 0 12 0 7.34 0 3.25 2.92 1.2 6.73l4.03 3.15c.94-2.88 3.61-5.01 6.77-5.01z"
+                                fill="#EA4335"
+                            />
+                        </svg>
+                        <span>
+                            {googleLoading
+                                ? "Logging in..."
+                                : "Continue with Google"}
+                        </span>
+                    </button>
+
+                    {/* OR Divider */}
+                    <div className="relative flex items-center py-2">
+                        <div className="flex-grow border-t border-gray-300"></div>
+                        <span className="flex-shrink mx-4 text-gray-500">
+                            OR
+                        </span>
+                        <div className="flex-grow border-t border-gray-300"></div>
                     </div>
-
-                    {role === "regular user" && (
-                        <>
-                            {/* Google Login Button */}
-                            <button
-                                type="button"
-                                onClick={handleGoogleLogin}
-                                disabled={googleLoading}
-                                className={`w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${
-                                    googleLoading
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
-                                }`}>
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                    className="w-5 h-5">
-                                    <path
-                                        d="M23.76 12.26c0-.79-.07-1.58-.19-2.34H12v4.44h6.66c-.29 1.56-1.15 2.88-2.46 3.76v3.12h3.98c2.32-2.14 3.68-5.29 3.68-8.98z"
-                                        fill="#4285F4"
-                                    />
-                                    <path
-                                        d="M12 24c3.3 0 6.07-1.09 8.09-2.94l-3.98-3.12c-1.1.74-2.52 1.18-4.11 1.18-3.15 0-5.82-2.13-6.77-5.01H1.2v3.14C3.25 21.08 7.34 24 12 24z"
-                                        fill="#34A853"
-                                    />
-                                    <path
-                                        d="M5.23 14.12c-.25-.74-.39-1.54-.39-2.37 0-.83.14-1.63.38-2.37V6.23H1.2A11.98 11.98 0 000 12c0 1.89.44 3.68 1.2 5.27l4.03-3.15z"
-                                        fill="#FBBC05"
-                                    />
-                                    <path
-                                        d="M12 4.74c1.8 0 3.4.62 4.67 1.84l3.5-3.5C17.99 1.12 15.22 0 12 0 7.34 0 3.25 2.92 1.2 6.73l4.03 3.15c.94-2.88 3.61-5.01 6.77-5.01z"
-                                        fill="#EA4335"
-                                    />
-                                </svg>
-                                <span>
-                                    {googleLoading
-                                        ? "Logging in..."
-                                        : "Continue with Google"}
-                                </span>
-                            </button>
-
-                            {/* OR Divider */}
-                            <div className="relative flex items-center py-2">
-                                <div className="flex-grow border-t border-gray-300"></div>
-                                <span className="flex-shrink mx-4 text-gray-500">
-                                    OR
-                                </span>
-                                <div className="flex-grow border-t border-gray-300"></div>
-                            </div>
-                        </>
-                    )}
 
                     <p className="text-gray-600 text-center mb-6">
                         Fill in the details to create a new account.
@@ -575,20 +521,6 @@ const CreateUser = () => {
                         </div>
                     </div>
 
-                    {/* Date of Birth */}
-                    {/* <div>
-                        <label className="block text-gray-700 text-sm font-medium mb-1">
-                            Date of Birth
-                        </label>
-                        <input
-                            type="date"
-                            value={DOB}
-                            onChange={(e) => setDOB(e.target.value)}
-                            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                            required
-                        />
-                    </div> */}
-
                     {/* City */}
                     <div>
                         <label className="block text-gray-700 text-sm font-medium mb-1">
@@ -626,7 +558,7 @@ const CreateUser = () => {
                                 }
                                 className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                                 required
-                                pattern="^(?=.*[A-Za-z]).{6,}$" // Updated pattern
+                                pattern="^(?=.*[A-Za-z]).{6,}$"
                             />
                             <span
                                 onClick={() => setShowPassword(!showPassword)}
@@ -709,66 +641,6 @@ const CreateUser = () => {
                         )}
                     </div>
 
-                    {passwordMismatchError && (
-                        <p className="text-red-500 text-sm mt-1">
-                            {passwordMismatchError}
-                        </p>
-                    )}
-
-                    <Modal
-                        title="Veterinarian Account Information"
-                        visible={showVetInfoModal}
-                        onCancel={() => setShowVetInfoModal(false)}
-                        centered
-                        footer={null}
-                        className="[&_.ant-modal-content]:p-6">
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-center mb-4">
-                                <div className="bg-[#d8ccff] p-3 rounded-full">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-10 w-10 text-[#480777]"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        />
-                                    </svg>
-                                </div>
-                            </div>
-                            <p className="text-[#2c0551]">
-                                You're creating a{" "}
-                                <strong>Veterinarian Account</strong>. Please
-                                note:
-                            </p>
-                            <ul className="list-disc pl-5 space-y-2 text-[#480777]">
-                                <li>
-                                    Vet accounts require additional verification
-                                    after initial signup
-                                </li>
-                                <li>
-                                    You'll need to provide professional
-                                    credentials in the next step
-                                </li>
-                                <li>
-                                    <strong>
-                                        Google sign-up is not available for vet
-                                        accounts
-                                    </strong>
-                                </li>
-                                <li>
-                                    Vet accounts have access to professional
-                                    features and network benefits
-                                </li>
-                            </ul>
-                        </div>
-                    </Modal>
-
-                    {/* Existing Submit Button */}
                     <button
                         type="submit"
                         disabled={
@@ -785,6 +657,20 @@ const CreateUser = () => {
                         }`}>
                         {isLoading ? "Creating Account..." : "Create Account"}
                     </button>
+
+                    {/* Partner Signup Link */}
+                    <div className="mt-6 text-center">
+                        <p className="text-sm text-gray-600">
+                            Are you a veterinary professional, pet shop owner,
+                            or rescue organization?{" "}
+                            <button
+                                type="button"
+                                className="text-primary font-semibold hover:underline focus:outline-none"
+                                onClick={() => router.push("/partner-signup")}>
+                                Register as a Paltuu Partner
+                            </button>
+                        </p>
+                    </div>
                 </form>
             </div>
 

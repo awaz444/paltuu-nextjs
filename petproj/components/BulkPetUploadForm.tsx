@@ -538,18 +538,19 @@ export default function BulkPetUploadForm({
         ))}
       </div>
 
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between gap-3 items-stretch sm:items-center mt-2">
         <Button
           type="dashed"
           icon={<PlusOutlined />}
           onClick={addPetForm}
           disabled={uploading}
+          className="w-full sm:w-auto"
         >
           Add Another Pet
         </Button>
 
-        <Space>
-          <Button onClick={() => setPetForms([{
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:justify-end">
+          <Button className="w-full sm:w-auto" onClick={() => setPetForms([{
             pet_name: '',
             pet_type: 0,
             pet_breed: entityType === 'shop' ? '' : '', // Only shops can have breed
@@ -570,10 +571,11 @@ export default function BulkPetUploadForm({
             onClick={handleBulkUpload}
             loading={uploading}
             disabled={petForms.length === 0}
+            className="w-full sm:w-auto"
           >
             Upload {petForms.length} Pet{petForms.length !== 1 ? 's' : ''}
           </Button>
-        </Space>
+        </div>
       </div>
     </div>
   );

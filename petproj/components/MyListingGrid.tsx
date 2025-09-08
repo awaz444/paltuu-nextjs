@@ -46,9 +46,10 @@ export interface Pet {
 
 interface PetGridProps {
     pets: Pet[];
+    showCreateButton?: boolean;
 }
 
-const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
+const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }) => {
     const dispatch = useDispatch<AppDispatch>();
     const [showConfirm, setShowConfirm] = useState<{
         pet_id: number | null;
@@ -138,21 +139,23 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            <Link
-                href="/create-listing"
-                className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex  flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    className="bi bi-plus-circle mb-5 plus-sign"
-                    viewBox="0 0 16 16">
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
-                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                </svg>
-                Create new listing
-            </Link>
+            {showCreateButton && (
+                <Link
+                    href="/create-listing"
+                    className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex  flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        className="bi bi-plus-circle mb-5 plus-sign"
+                        viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                    </svg>
+                    Create new listing
+                </Link>
+            )}
             {pets.map((pet) => (
                 <div
                     key={pet.pet_id}

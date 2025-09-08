@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useState, useEffect, ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 
 interface User {
@@ -30,6 +31,7 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
@@ -50,6 +52,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     setUser(userWithIds);
     setIsAuthenticated(true);
+
+    // Redirect shop/shelter to respective panels when landing on login or root
+    try {
+      const role = userWithIds.role;
+      const path = typeof window !== "undefined" ? window.location.pathname : "";
+      if (path === "/login" || path === "/") {
+        if (role === "shop admin") router.push("/shop-panel");
+        if (role === "shelter admin") router.push("/rescue-panel");
+      }
+    } catch {}
   }
 
   if (status === "authenticated" && session?.user) {
@@ -66,6 +78,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("user", JSON.stringify(googleUser));
     setUser(googleUser);
     setIsAuthenticated(true);
+
+    // Redirect shop/shelter to panels after Google login
+    try {
+      const role = googleUser.role;
+      if (role === "shop admin") router.push("/shop-panel");
+      if (role === "shelter admin") router.push("/rescue-panel");
+    } catch {}
   }
 }, [status, session]);
 
@@ -90,6 +109,12 @@ const login = (userData: {
   setUser(userWithMethod);
   setIsAuthenticated(true);
   localStorage.setItem("user", JSON.stringify(userWithMethod));
+
+  // Redirect on API login success
+  try {
+    if (userWithMethod.role === "shop admin") router.push("/shop-panel");
+    if (userWithMethod.role === "shelter admin") router.push("/rescue-panel");
+  } catch {}
 };
 
 

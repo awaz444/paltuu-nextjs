@@ -538,19 +538,18 @@ export default function BulkPetUploadForm({
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:justify-between gap-3 items-stretch sm:items-center">
+      <div className="flex justify-between items-center">
         <Button
           type="dashed"
           icon={<PlusOutlined />}
           onClick={addPetForm}
           disabled={uploading}
-          className="w-full sm:w-auto"
         >
           Add Another Pet
         </Button>
 
-        <Space wrap size={[8, 8]} className="w-full sm:w-auto justify-stretch sm:justify-end">
-          <Button className="w-full sm:w-auto" onClick={() => setPetForms([{
+        <Space>
+          <Button onClick={() => setPetForms([{
             pet_name: '',
             pet_type: 0,
             pet_breed: entityType === 'shop' ? '' : '', // Only shops can have breed
@@ -571,7 +570,6 @@ export default function BulkPetUploadForm({
             onClick={handleBulkUpload}
             loading={uploading}
             disabled={petForms.length === 0}
-            className="w-full sm:w-auto"
           >
             Upload {petForms.length} Pet{petForms.length !== 1 ? 's' : ''}
           </Button>

@@ -20,8 +20,8 @@ export type Pet = {
   can_live_with_dogs: boolean;
   can_live_with_cats: boolean;
   must_have_someone_home: boolean;
-  energy_level: number;
-  cuddliness_level: number;
+  energy_level: number | null;
+  cuddliness_level: number | null;
   health_issues: string | null; // Allow null
   sex: string;
   listing_type: string;

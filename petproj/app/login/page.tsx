@@ -24,17 +24,16 @@ export default function Login() {
         router.push("/browse-pets");
     };  
 
-    // Redirect to dashboard if already authenticated
+    // Redirect based on role if already authenticated
     useEffect(() => {
         if (isAuthenticated) {
             const storedUser = localStorage.getItem("user");
             if (storedUser) {
                 const { role } = JSON.parse(storedUser);
-                if (role === "vet") {
-                    router.push("/vet-panel");
-                } else {
-                    router.push("/browse-pets");
-                }
+                if (role === "vet") router.push("/vet-panel");
+                else if (role === "shop admin") router.push("/shop-panel");
+                else if (role === "shelter admin") router.push("/rescue-panel");
+                else router.push("/browse-pets");
             }
         }
     }, [isAuthenticated, router]);
@@ -82,11 +81,10 @@ export default function Login() {
                 login(userDetails);
 
                 toast.success("Login successful!");
-                if (userDetails.role === "vet") {
-                    router.push("/vet-panel");
-                } else {
-                    router.push("/browse-pets");
-                }
+                if (userDetails.role === "vet") router.push("/vet-panel");
+                else if (userDetails.role === "shop admin") router.push("/shop-panel");
+                else if (userDetails.role === "shelter admin") router.push("/rescue-panel");
+                else router.push("/browse-pets");
             }
         } catch (error: any) {
             console.error("Login failed:", error.message);

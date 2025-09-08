@@ -9,7 +9,18 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
-const Navbar = () => {
+interface OverrideLink { name: string; href: string }
+interface OverrideDropdownItem { href: string; label: string;icon: string; isAction?: boolean }
+
+const Navbar = ({
+  linksOverride,
+  dropdownOverride,
+  logoHref,
+}: {
+  linksOverride?: OverrideLink[];
+  dropdownOverride?: OverrideDropdownItem[];
+  logoHref?: string;
+}) => {
   const [activeLink, setActiveLink] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -58,50 +69,61 @@ const Navbar = () => {
   const userRole: UserRole =
     (user?.role as UserRole) || (session?.user?.role as UserRole) || "guest";
 
-  const navbarBackground: Record<UserRole, string> = {
-    guest: "#A03048",
-    "regular user": "#A03048",
-    vet: "#480777",
-    admin: "#065758",
-    "shelter admin": "#1d6b34",
-    "shop admin": "#b86b00",
-    "ecommerce admin": "#004a99",
-  };
+const navbarBackground: Record<UserRole, string> = {
+  guest: "#A03048",
+  "regular user": "#A03048",
+  vet: "#480777",
+  admin: "#065758",
 
-  const buttonTextColor: Record<UserRole, string> = {
-    guest: "#ffffff",
-    "regular user": "#ffffff",
-    vet: "#ffffff",
-    admin: "#ffffff",
-    "shelter admin": "#ffffff",
-    "shop admin": "#ffffff",
-    "ecommerce admin": "#ffffff",
-  };
+  "shelter admin": "#1d6b34",
+  "shop admin": "#b86b00",
+  "ecommerce admin": "#004a99",
+};
 
-  const arrowColor: Record<UserRole, string> = {
-    guest: "#ffd2e3",
-    "regular user": "#ffd2e3",
-    vet: "#e0c3f7",
-    admin: "#7fe1d3",
-    "shelter admin": "#8fe4a8",
-    "shop admin": "#ffc266",
-    "ecommerce admin": "#80b3ff",
-  };
+const buttonTextColor: Record<UserRole, string> = {
+  guest: "#ffffff",
+  "regular user": "#ffffff",
+  vet: "#ffffff",
+  admin: "#ffffff",
+  "shop admin": "#ffffff",
+  "shelter admin": "#ffffff",
+  "ecommerce admin": "#ffffff",
+};
+
+const arrowColor: Record<UserRole, string> = {
+  guest: "#ffd2e3",
+  "regular user": "#ffd2e3",
+  vet: "#e0c3f7",
+  admin: "#7fe1d3",
+
+  "shelter admin": "#8fe4a8",
+  "shop admin": "#ffc266",
+  "ecommerce admin": "#80b3ff",
+};
+
 
   // Updated dropdown items with isAction flag
-  const dropdownItems = [
+  const defaultDropdownItems = [
     {
       href:
         userRole === "vet"
           ? "/vet-panel"
           : userRole === "admin"
           ? "/admin-panel"
+                    : userRole === "shop admin"
+                    ? "/shop-panel"
+                    : userRole === "shelter admin"
+                    ? "/rescue-panel"
           : "/my-profile",
       label:
         userRole === "vet"
           ? "Vet Panel"
           : userRole === "admin"
           ? "Admin Panel"
+                    : userRole === "shop admin"
+                    ? "Shop Panel"
+                    : userRole === "shelter admin"
+                    ? "Rescue Panel"
           : "My Profile",
       icon: "bi-person-circle", // 👈 same as desktop
       isAction: false,
@@ -131,6 +153,7 @@ const Navbar = () => {
       isAction: true,
     },
   ];
+    const dropdownItems = dropdownOverride || defaultDropdownItems;
 
   const navbarStyle = { backgroundColor: navbarBackground[userRole] };
 
@@ -154,14 +177,15 @@ const Navbar = () => {
     // console.log("NextAuth - Session:", session);
   }, [user, isAuthenticated, session]); // Logs when these values update
 
-  // Navigation Links
-  const links = [
-    { name: "Pets", href: "browse-pets" },
-    { name: "Bazaar", href: "marketplace" },
-    { name: "Pet Care", href: "pet-care" },
-    { name: "Lost & Found", href: "lost-and-found" },
-    //{ name: "Paltuu AI", href: "llm" },
-  ];
+    // Navigation Links
+    const defaultLinks = [
+        { name: "Pets", href: "browse-pets" },
+        { name: "Bazaar", href: "marketplace" },
+        { name: "Pet Care", href: "pet-care" },
+        { name: "Lost & Found", href: "lost-and-found" },
+        //{ name: "Paltuu AI", href: "llm" },
+    ];
+    const links = linksOverride || defaultLinks;
 
   useEffect(() => {
     const fetchVerificationStatus = async () => {
@@ -399,7 +423,7 @@ const Navbar = () => {
       <div className="flex items-center justify-between w-full">
         {/* Logo */}
         <div className="logo">
-          <Link href="/browse-pets">
+          <Link href={logoHref || "/browse-pets"}>
             <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
           </Link>
         </div>
@@ -504,69 +528,83 @@ const Navbar = () => {
                 width: dropdownWidth,
               }}
             >
-              {/* Profile / Panel */}
-              <Link
-                href={
-                  userRole === "vet"
-                    ? "/vet-panel"
-                    : userRole === "regular user"
-                    ? "/my-profile"
-                    : userRole === "admin"
-                    ? "/admin-panel"
-                    : "/"
-                }
-              >
-                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
-                  <i className="bi bi-person-circle text-gray-600"></i>
-                  {userRole === "vet"
-                    ? "Vet Panel"
-                    : userRole === "regular user"
-                    ? "My Profile"
-                    : userRole === "admin"
-                    ? "Admin Panel"
-                    : "Home"}
+              {dropdownOverride && dropdownOverride.length ? (
+                // Render only overridden items (e.g., Home, Logout) for panels
+                <div>
+                  { (dropdownOverride as any).map((item: any) => (
+                    item.isAction ? (
+                      <div
+                        key={item.href}
+                        onClick={handleLogout}
+                        className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 cursor-pointer"
+                      >
+                        <i className="bi bi-box-arrow-right"></i> {item.label}
+                      </div>
+                    ) : (
+                      <Link key={item.href} href={item.href}>
+                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                          {item.label}
+                        </div>
+                      </Link>
+                    )
+                  ))}
                 </div>
-              </Link>
-
-              {/* Divider */}
-              <div className="border-t my-1"></div>
-
-              {/* Other Items */}
-              <Link href="/my-listings">
-                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                  <i className="bi bi-card-list text-gray-600"></i> My Listings
-                </div>
-              </Link>
-
-              <Link href="/my-applications">
-                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                  <i className="bi bi-file-earmark-text text-gray-600"></i> My
-                  Applications
-                </div>
-              </Link>
-
-              <Link href="/notifications">
-                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                  <i className="bi bi-bell text-gray-600"></i> Notifications
-                </div>
-              </Link>
-
-              {/* Divider */}
-              <div className="border-t my-1"></div>
-
-              {/* Logout */}
-              <div
-                onClick={handleLogout}
-                className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:rounded-b-2xl cursor-pointer"
-              >
-                <i className="bi bi-box-arrow-right"></i> Logout
-              </div>
+              ) : (
+                <>
+                  {/* Profile / Panel */}
+                  <Link
+                    href={
+                      userRole === "vet"
+                        ? "/vet-panel"
+                        : userRole === "regular user"
+                        ? "/my-profile"
+                        : userRole === "admin"
+                        ? "/admin-panel"
+                        : "/"
+                    }
+                  >
+                    <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
+                      <i className="bi bi-person-circle text-gray-600"></i>
+                      {userRole === "vet"
+                        ? "Vet Panel"
+                        : userRole === "regular user"
+                        ? "My Profile"
+                        : userRole === "admin"
+                        ? "Admin Panel"
+                        : "Home"}
+                    </div>
+                  </Link>
+                  <div className="border-t my-1"></div>
+                  <Link href="/my-listings">
+                    <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                      <i className="bi bi-card-list text-gray-600"></i> My Listings
+                    </div>
+                  </Link>
+                  <Link href="/my-applications">
+                    <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                      <i className="bi bi-file-earmark-text text-gray-600"></i> My Applications
+                    </div>
+                  </Link>
+                  <Link href="/notifications">
+                    <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                      <i className="bi bi-bell text-gray-600"></i> Notifications
+                    </div>
+                  </Link>
+                  <div className="border-t my-1"></div>
+                  <div
+                    onClick={handleLogout}
+                    className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:rounded-b-2xl cursor-pointer"
+                  >
+                    <i className="bi bi-box-arrow-right"></i> Logout
+                  </div>
+                </>
+              )}
             </div>
           )}
-        </div>
-      </div>
-    </nav>
-  );
+                </div>
+            </div>
+        </nav>
+    );
 };
 
 export default Navbar;

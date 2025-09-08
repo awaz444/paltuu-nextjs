@@ -21,7 +21,9 @@ import {
   InfoCircleOutlined,
   StarOutlined,
 } from "@ant-design/icons";
+import VariantList from "./variant-list";
 import { MoonLoader } from "react-spinners";
+import { getOrCreateGuestSessionId } from "@/utils/guest";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -80,6 +82,8 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [newReview, setNewReview] = useState("");
   const [newRating, setNewRating] = useState(0);
+  const [variantsData, setVariantsData] = useState<any[] | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<any | null>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -111,26 +115,27 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
           area: 'DHA Phase 6', // Placeholder - you can add location data to your product model later
           created_at: apiProduct.created_at || new Date().toISOString(),
           images: apiProduct.images.length > 0 ? apiProduct.images : ['/placeholder-product.jpg'],
-          reviews: [
-            // Placeholder reviews - you can implement a reviews system later
-            {
-              id: 1,
-              user: "Ali Khan",
-              rating: 5,
-              comment: "Great product! Highly recommended.",
-              created_at: new Date().toISOString(),
-            },
-            {
-              id: 2,
-              user: "Sara Ahmed",
-              rating: 4,
-              comment: "Good quality, fast delivery.",
-              created_at: new Date().toISOString(),
-            }
-          ]
+          reviews: []
         };
 
-        setProduct(transformedProduct);
+  setProduct(transformedProduct);
+  setVariantsData(apiProduct.variants || []);
+  // If variants exist, set default selected variant (first)
+  const defaultVariant = (apiProduct.variants && apiProduct.variants.length > 0) ? apiProduct.variants[0] : null;
+  setSelectedVariant(defaultVariant);
+
+        // Fetch reviews from the new reviews API
+        try {
+          const revRes = await fetch(`/api/bazaar/reviews?product_id=${apiProduct.product_id}`);
+          if (revRes.ok) {
+            const revs = await revRes.json();
+            setProduct((p) => p ? { ...p, reviews: revs } : p);
+          } else {
+            console.debug('No reviews or failed to fetch reviews', revRes.status);
+          }
+        } catch (e) {
+          console.error('Error fetching reviews:', e);
+        }
       } catch (err: any) {
         console.error('Error fetching product:', err);
         setError(err.message || 'Failed to load product');
@@ -147,7 +152,31 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
   };
 
   const addToCart = () => {
-    message.success(`${product?.name} added to cart!`);
+    // Persist to cart API including selected variant
+    try {
+      const sessionId = getOrCreateGuestSessionId();
+      const payload = {
+        sessionId,
+        productId: product?.id,
+        variantId: selectedVariant?.variant_id ?? null,
+        quantity: 1,
+      };
+      fetch('/api/bazaar/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).then(async (res) => {
+        if (res.ok) {
+          message.success(`${product?.name} added to cart!`);
+        } else {
+          const d = await res.json();
+          message.error(d.error || 'Failed to add to cart');
+        }
+      }).catch(() => message.error('Failed to add to cart'));
+    } catch (e) {
+      console.error('Add to cart error', e);
+      message.error('Failed to add to cart');
+    }
   };
 
   const handleReviewSubmit = () => {
@@ -281,6 +310,11 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                         {product.category}
                       </span>
                     </div>
+                    {/* Item code / SKU under product name */}
+                    <div className="mt-2 text-sm text-gray-600">
+                      <div className="text-xs text-gray-500 font-medium">Item code</div>
+                      <div className="font-mono text-sm text-gray-800">{selectedVariant?.sku ?? '—'}</div>
+                    </div>
                   </div>
                   <span className="bg-primary bg-opacity-10 text-white px-3 py-1 rounded-full text-sm font-medium">
                     Listed {formatListingDate(product.created_at)}
@@ -322,7 +356,7 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                       Price
                     </p>
                     <p className="text-2xl font-bold text-gray-800">
-                      PKR {product.price.toLocaleString()}
+                      PKR {(selectedVariant?.price_override ?? product.price).toLocaleString()}
                     </p>
                   </div>
 
@@ -331,28 +365,44 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                       Stock
                     </p>
                     <p className="text-2xl font-bold text-gray-800">
-                      {product.stock > 0 ? (
+                      {(selectedVariant ? (selectedVariant.stock > 0 ? (
+                        <span className="text-green-600">{selectedVariant.stock} Available</span>
+                      ) : (
+                        <span className="text-red-600">Out of Stock</span>
+                      )) : (product.stock > 0 ? (
                         <span className="text-green-600">{product.stock} Available</span>
                       ) : (
                         <span className="text-red-600">Out of Stock</span>
-                      )}
+                      )))}
                     </p>
                   </div>
                 </div>
+
+                  {/* Variants List */}
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold mb-3">Available Variants</h3>
+                    {/* If api provided variants we can show them; attempt to read from fetched product via API earlier */}
+                    <div className="space-y-2">
+                      {/* We try to read variants from the backend by requesting the product API directly if possible. */}
+                      {/* Fallback: show stock/price summary already present above. */}
+                      {/* useEffect loaded reviews separately; variants are not stored in the UI Product shape so we read them here via the product API again for detail. */}
+                      <VariantList productId={product.id} variants={variantsData ?? undefined} selectedVariantId={selectedVariant?.variant_id} onSelect={(v) => setSelectedVariant(v)} />
+                    </div>
+                  </div>
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 mt-6">
                   <button
                     onClick={addToCart}
-                    disabled={product.stock === 0}
+                    disabled={((selectedVariant ? selectedVariant.stock : product.stock) || 0) === 0}
                     className={`flex-1 py-3 px-6 rounded-xl font-semibold text-lg flex items-center justify-center transition-all duration-200 ${
-                      product.stock > 0
+                      ((selectedVariant ? selectedVariant.stock : product.stock) || 0) > 0
                         ? "bg-primary hover:bg-primary-dark text-white shadow-md hover:shadow-lg"
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                   >
                     <ShoppingCartOutlined className="mr-2" />
-                    {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
+                    {((selectedVariant ? selectedVariant.stock : product.stock) || 0) > 0 ? `Add to Cart` : `Out of Stock`}
                   </button>
 
                   <button className="py-3 px-6 border-2 border-primary text-primary rounded-xl font-semibold text-lg hover:bg-primary hover:text-white transition-all duration-200 flex items-center justify-center">

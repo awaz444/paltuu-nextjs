@@ -26,3 +26,9 @@
         grid-template-columns: repeat(6, 1fr);
     }
 }
+
+/* Page container used by marketplace page */
+.fullBody {
+    max-width: 90%;
+    margin: 0 auto;
+}

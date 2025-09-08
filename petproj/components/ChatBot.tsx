@@ -81,7 +81,7 @@ export default function ChatBot() {
   };
 
   // 👇 Decide visibility AFTER all hooks have run (order stays identical)
-  const hideChatbot = pathname === '/' || pathname.startsWith('/login');
+  const hideChatbot = pathname === '/' || pathname.startsWith('/login') || pathname.startsWith('/sign-up') || pathname.startsWith('/rescue-register');
   if (hideChatbot) return null;
 
   const hasListingButton =

@@ -18,7 +18,7 @@ const PartnerSignup = () => {
     const handleRoleSelect = (role: string) => {
         setSelectedRole(role);
         if (role === "vet") {
-            router.push("/vet-register");
+            router.push("/vet-step-zero");
         } else if (role === "shelter") {
             router.push("/rescue-register");
         } else if (role === "shop") {

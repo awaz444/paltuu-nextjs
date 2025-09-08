@@ -7,7 +7,7 @@ import ProductGrid from "@/components/ProductGrid";
 import "./styles.css";
 import { MoonLoader } from "react-spinners";
 
-// Product interface
+// Product interface - matching ProductGrid expectations
 interface Product {
   product_id: number;
   name: string;
@@ -18,54 +18,9 @@ interface Product {
   collection: string;
   image_url: string;
   inStock?: boolean;
-  rating?: number;       // ⭐ average rating (0–5)
-  ratingCount?: number;  // number of reviews
+  rating?: number;
+  ratingCount?: number;
 }
-
-// Mock data with ratings
-const mockProducts: Product[] = [
-  {
-    product_id: 1,
-    name: "Premium Dog Collar",
-    description: "High quality leather collar for medium to large dogs",
-    price: "1499",
-    original_price: "1999",
-    category: "Accessories",
-    collection: "Dogs",
-    image_url:
-      "https://res.cloudinary.com/dfwykqn1d/image/upload/v1/marketplace/collar.jpg",
-    inStock: true,
-    rating: 5,
-    ratingCount: 32,
-  },
-  {
-    product_id: 2,
-    name: "Cat Scratching Post",
-    description: "Durable sisal rope scratching post with platform",
-    price: "2999",
-    original_price: "3499",
-    category: "Furniture",
-    collection: "Cats",
-    image_url:
-      "https://res.cloudinary.com/dfwykqn1d/image/upload/v1/marketplace/scratch-post.jpg",
-    inStock: true,
-    rating: 4,
-    ratingCount: 18,
-  },
-  {
-    product_id: 3,
-    name: "Bird Cage Feeder",
-    description: "Automatic bird feeder with multiple compartments",
-    price: "899",
-    category: "Food & Water",
-    collection: "Birds",
-    image_url:
-      "https://res.cloudinary.com/dfwykqn1d/image/upload/v1/marketplace/bird-feeder.jpg",
-    inStock: true,
-    rating: 3,
-    ratingCount: 7,
-  },
-];
 
 export default function Marketplace() {
   useSetPrimaryColor();
@@ -73,6 +28,7 @@ export default function Marketplace() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [collections, setCollections] = useState<Array<{ collection_id: number; name: string }>>([]);
 
   const [filters, setFilters] = useState({
     category: "",
@@ -81,17 +37,71 @@ export default function Marketplace() {
   });
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate delay
-        setProducts(mockProducts);
+        setLoading(true);
+
+        // Fetch both products and collections
+        const [productsResponse, collectionsResponse] = await Promise.all([
+          fetch('/api/bazaar/products'),
+          fetch('/api/bazaar/collections')
+        ]);
+
+        if (!productsResponse.ok) {
+          throw new Error(`Failed to fetch products: ${productsResponse.status}`);
+        }
+
+        const apiProducts = await productsResponse.json();
+        let collectionsData = [];
+
+        if (collectionsResponse.ok) {
+          collectionsData = await collectionsResponse.json();
+          setCollections(collectionsData);
+        }
+
+        // Transform API data to match UI expectations
+        const transformedProducts: Product[] = apiProducts
+          .filter((product: any) => product.status === 'published') // Only show published products
+          .map((product: any) => {
+            // Get the first variant for pricing
+            const firstVariant = product.variants?.[0];
+            const displayPrice = firstVariant?.price_override || product.price || 0;
+
+            // Map collection IDs to names
+            const getCollectionName = (product: any) => {
+              if (product.collection_ids && product.collection_ids.length > 0) {
+                const collection = collectionsData.find((c: any) =>
+                  product.collection_ids.includes(c.collection_id)
+                );
+                return collection?.name || 'General';
+              }
+              return 'General';
+            };
+
+            return {
+              ...product,
+              name: product.title, // Map title to name for UI compatibility
+              category: product.categories?.[0]?.name || 'Uncategorized',
+              collection: getCollectionName(product),
+              image_url: product.images?.[0] || '/placeholder-product.jpg',
+              price: displayPrice.toString(),
+              original_price: product.compare_at_price ? product.compare_at_price.toString() : undefined,
+              inStock: product.variants?.some((v: any) => v.stock > 0) || false,
+              rating: Math.floor(Math.random() * 5) + 1, // Placeholder until you have real ratings
+              ratingCount: Math.floor(Math.random() * 50) + 1, // Placeholder until you have real ratings
+            };
+          });
+
+        setProducts(transformedProducts);
       } catch (err: any) {
-        setError(err.message);
+        console.error('Error fetching data:', err);
+        setError(err.message || 'Failed to load products');
       } finally {
         setLoading(false);
       }
     };
-    fetchProducts();
+
+    fetchData();
   }, []);
 
   const handleReset = () => {
@@ -124,10 +134,7 @@ export default function Marketplace() {
   return (
     <>
       <Navbar />
-      <div
-        className="fullBody"
-        style={{ maxWidth: "90%", margin: "0 auto" }}
-      >
+      <div className="fullBody">
         <MarketplaceFilterSection
           filters={filters}
           onSearch={handleSearch}
@@ -136,6 +143,10 @@ export default function Marketplace() {
         {loading ? (
           <div className="flex justify-center items-center min-h-[200px]">
             <MoonLoader size={30} color="#a03048" />
+          </div>
+        ) : error ? (
+          <div className="flex justify-center items-center min-h-[200px] text-red-500">
+            <p>Error loading products: {error}</p>
           </div>
         ) : (
           <ProductGrid products={filteredProducts} />

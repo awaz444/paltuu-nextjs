@@ -25,64 +25,121 @@ import { MoonLoader } from "react-spinners";
 
 const { Title, Text, Paragraph } = Typography;
 
-const mockProduct = {
-  id: 1,
-  name: "Premium Dog Food",
-  brand: "HealthyPaws",
-  category: "Food",
-  price: 2500,
-  stock: 12,
-  description:
-    "Nutritious premium dog food with high protein and balanced vitamins for your pet's health and energy. Made with real meat as the first ingredient, this formula supports muscle development and maintenance. Contains omega fatty acids for healthy skin and coat, plus antioxidants to support immune health.",
-  city: "Karachi",
-  area: "DHA Phase 6",
-  created_at: new Date("2025-08-25").toISOString(),
-  images: [
-    "https://place-puppy.com/400x400",
-    "https://place-puppy.com/401x401",
-    "https://place-puppy.com/402x402",
-  ],
-  reviews: [
-    {
-      id: 1,
-      user: "Ali Khan",
-      rating: 5,
-      comment: "My dog absolutely loves this food! His coat has never been shinier, and he has so much more energy during our daily walks. Will definitely purchase again.",
-      created_at: new Date("2025-08-26").toISOString(),
-    },
-    {
-      id: 2,
-      user: "Sara Ahmed",
-      rating: 4,
-      comment: "Good quality but a bit expensive. My picky eater finally approved of this brand after trying several others. The packaging could be better though.",
-      created_at: new Date("2025-08-28").toISOString(),
-    },
-    {
-      id: 3,
-      user: "Ahmed Raza",
-      rating: 5,
-      comment: "Worth every penny! My German Shepherd's digestion issues have improved significantly since switching to this food. Highly recommend for dogs with sensitive stomachs.",
-      created_at: new Date("2025-09-01").toISOString(),
-    },
-  ],
-};
+// Define interfaces for the API response
+interface ApiProduct {
+  product_id: number;
+  title: string;
+  description: string;
+  short_description?: string;
+  price?: number;
+  compare_at_price?: number;
+  currency: string;
+  featured: boolean;
+  status: string;
+  images: string[];
+  categories: Array<{ category_id: number; name: string }>;
+  variants: Array<{
+    variant_id: number;
+    price_override?: number;
+    stock: number;
+    attributes: any;
+  }>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// UI-compatible product interface
+interface Product {
+  id: number;
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  stock: number;
+  description: string;
+  city: string;
+  area: string;
+  created_at: string;
+  images: string[];
+  reviews: Array<{
+    id: number;
+    user: string;
+    rating: number;
+    comment: string;
+    created_at: string;
+  }>;
+}
 
 const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
   params,
 }) => {
   const { product_id } = params;
-  const [product, setProduct] = useState<typeof mockProduct | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [newReview, setNewReview] = useState("");
   const [newRating, setNewRating] = useState(0);
 
   useEffect(() => {
-    // Simulate fetch
-    setTimeout(() => {
-      setProduct(mockProduct);
-      setLoading(false);
-    }, 800);
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/bazaar/products/${product_id}`);
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError('Product not found');
+          } else {
+            throw new Error(`Failed to fetch product: ${response.status}`);
+          }
+          return;
+        }
+
+        const apiProduct: ApiProduct = await response.json();
+
+        // Transform API data to UI-compatible format
+        const transformedProduct: Product = {
+          id: apiProduct.product_id,
+          name: apiProduct.title,
+          brand: apiProduct.categories?.[0]?.name || 'Unknown Brand',
+          category: apiProduct.categories?.[0]?.name || 'Uncategorized',
+          price: apiProduct.variants?.[0]?.price_override || apiProduct.price || 0,
+          stock: apiProduct.variants?.reduce((total, variant) => total + variant.stock, 0) || 0,
+          description: apiProduct.description || apiProduct.short_description || 'No description available',
+          city: 'Karachi', // Placeholder - you can add location data to your product model later
+          area: 'DHA Phase 6', // Placeholder - you can add location data to your product model later
+          created_at: apiProduct.created_at || new Date().toISOString(),
+          images: apiProduct.images.length > 0 ? apiProduct.images : ['/placeholder-product.jpg'],
+          reviews: [
+            // Placeholder reviews - you can implement a reviews system later
+            {
+              id: 1,
+              user: "Ali Khan",
+              rating: 5,
+              comment: "Great product! Highly recommended.",
+              created_at: new Date().toISOString(),
+            },
+            {
+              id: 2,
+              user: "Sara Ahmed",
+              rating: 4,
+              comment: "Good quality, fast delivery.",
+              created_at: new Date().toISOString(),
+            }
+          ]
+        };
+
+        setProduct(transformedProduct);
+      } catch (err: any) {
+        console.error('Error fetching product:', err);
+        setError(err.message || 'Failed to load product');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
   }, [product_id]);
 
   const formatListingDate = (dateString: string) => {
@@ -118,6 +175,33 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
     return (
       <div className="flex justify-center items-center min-h-screen">
         <MoonLoader size={30} color="#a03048" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="text-center mt-10 px-4">
+          <Title level={2} className="text-gray-700">
+            {error === 'Product not found' ? 'Product not found' : 'Error loading product'}
+          </Title>
+          <Text className="text-gray-500">
+            {error === 'Product not found'
+              ? 'The product you are looking for does not exist or has been removed.'
+              : 'There was an error loading the product. Please try again later.'
+            }
+          </Text>
+          <div className="mt-4">
+            <button
+              onClick={() => window.history.back()}
+              className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -166,6 +250,7 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                       <button
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
+                        title={`View image ${index + 1}`}
                         className={`w-20 h-20 rounded-lg overflow-hidden border-2 ${
                           index === currentImageIndex
                             ? "border-primary"
@@ -269,7 +354,7 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                     <ShoppingCartOutlined className="mr-2" />
                     {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
                   </button>
-                  
+
                   <button className="py-3 px-6 border-2 border-primary text-primary rounded-xl font-semibold text-lg hover:bg-primary hover:text-white transition-all duration-200 flex items-center justify-center">
                     <DollarOutlined className="mr-2" />
                     Buy Now
@@ -336,6 +421,7 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                         <button
                           key={star}
                           onClick={() => setNewRating(star)}
+                          title={`Rate ${star} star${star > 1 ? 's' : ''}`}
                           className="focus:outline-none"
                         >
                           <svg

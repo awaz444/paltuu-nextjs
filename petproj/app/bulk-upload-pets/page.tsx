@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { message, Card, Tabs, Spin } from 'antd';
-import Navbar from '../../components/navbar';
 import { ShopOutlined, HeartOutlined } from '@ant-design/icons';
 import BulkPetUploadForm from '../../components/BulkPetUploadForm';
 
@@ -22,13 +21,6 @@ export default function BulkUploadPets() {
         console.log('Not authenticated, redirecting to login');
         message.warning('Please login to access this page');
         router.push('/login');
-        return;
-      }
-
-      // If role isn't shop admin or shelter admin, send them away
-      if (user.role !== 'shop admin' && user.role !== 'shelter admin') {
-        message.info('This page is only for shop or shelter accounts');
-        router.push('/browse-pets');
         return;
       }
 
@@ -60,7 +52,6 @@ export default function BulkUploadPets() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <Navbar />
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -71,28 +62,45 @@ export default function BulkUploadPets() {
           </p>
         </div>
 
-        {/* Render only the relevant form based on role */}
-        {user.role === 'shop admin' && (
-          <Card title="Upload Pets for Pet Shop" className="shadow-sm">
-            <BulkPetUploadForm
-              entityType="shop"
-              entityId={1}
-              entityName="My Pet Shop"
-              showPrice={true}
-            />
-          </Card>
-        )}
+        <Tabs defaultActiveKey="shops" type="card">
+          <TabPane
+            tab={
+              <span>
+                <ShopOutlined />
+                Pet Shop
+              </span>
+            }
+            key="shops"
+          >
+            <Card title="Upload Pets for Pet Shop" className="shadow-sm">
+              <BulkPetUploadForm
+                entityType="shop"
+                entityId={1} // Use a default ID for demo
+                entityName="My Pet Shop"
+                showPrice={true}
+              />
+            </Card>
+          </TabPane>
 
-        {user.role === 'shelter admin' && (
-          <Card title="Upload Pets for Rescue Shelter" className="shadow-sm">
-            <BulkPetUploadForm
-              entityType="shelter"
-              entityId={1}
-              entityName="My Rescue Shelter"
-              showPrice={false}
-            />
-          </Card>
-        )}
+          <TabPane
+            tab={
+              <span>
+                <HeartOutlined />
+                Rescue Shelter
+              </span>
+            }
+            key="shelters"
+          >
+            <Card title="Upload Pets for Rescue Shelter" className="shadow-sm">
+              <BulkPetUploadForm
+                entityType="shelter"
+                entityId={1} // Use a default ID for demo
+                entityName="My Rescue Shelter"
+                showPrice={false}
+              />
+            </Card>
+          </TabPane>
+        </Tabs>
       </div>
     </div>
   );

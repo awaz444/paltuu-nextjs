@@ -1,13 +1,13 @@
 .product-card {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .product-card img {
-    transition: transform 0.3s ease;
+  transition: transform 0.3s ease;
 }
 
 .product-card:hover img {
-    transform: scale(1.05);
+  transform: scale(1.05);
 }

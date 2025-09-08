@@ -17,7 +17,6 @@ export default function BazaarAdminPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
   const [createVisible, setCreateVisible] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -25,32 +24,12 @@ export default function BazaarAdminPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-  // Authentication check
+  // Fetch products on mount; route is protected by middleware
   useEffect(() => {
-    const checkAuth = () => {
-      if (!isAuthenticated || !user) {
-        message.warning('Please login to access the admin panel');
-        router.push('/login');
-        return;
-      }
-
-      // Check if user has admin role
-      if (user.role !== 'admin') {
-        message.error('Access denied. Admin privileges required.');
-        router.push('/');
-        return;
-      }
-
-      setAuthLoading(false);
-    };
-
-    // Add a small delay to ensure auth context is fully loaded
-    const timer = setTimeout(checkAuth, 100);
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, user, router]);
+    fetchProducts();
+  }, []);
 
   const fetchProducts = async () => {
-    if (!isAuthenticated || !user) return;
 
     setLoading(true);
     try {
@@ -65,12 +44,6 @@ export default function BazaarAdminPage() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (!authLoading && isAuthenticated && user?.role === 'admin') {
-      fetchProducts();
-    }
-  }, [authLoading, isAuthenticated, user]);
 
   // Filter products based on search and filters
   useEffect(() => {
@@ -112,7 +85,12 @@ export default function BazaarAdminPage() {
       message.success('Product created successfully!');
       setCreateVisible(false);
       fetchProducts();
-      return { productId: String(data.product_id) };
+
+      // Return the full response including variants for image upload
+      return {
+        productId: String(data.product_id),
+        variants: data.variants || []
+      };
     } catch (err) {
       message.error((err as Error).message || 'Create failed');
       throw err;
@@ -131,11 +109,17 @@ export default function BazaarAdminPage() {
 
       if (!res.ok) throw new Error('Update failed');
 
+      const data = await res.json();
       message.success('Product updated successfully!');
       setEditVisible(false);
       setEditingProduct(null);
       fetchProducts();
-      return { productId: String(editingProduct.product_id) };
+
+      // Return the full response including variants for image upload (same as create)
+      return {
+        productId: String(editingProduct.product_id),
+        variants: data.variants || []
+      };
     } catch (err) {
       message.error((err as Error).message || 'Update failed');
       throw err;
@@ -155,22 +139,10 @@ export default function BazaarAdminPage() {
     total: products.length,
     published: products.filter(p => (p.status || 'draft') === 'published').length,
     draft: products.filter(p => (p.status || 'draft') === 'draft').length,
-    outOfStock: products.filter(p => (p.stock || 0) === 0).length,
+    outOfStock: products.filter(p => ((p.stock_total ?? (Array.isArray(p.variants) ? p.variants.reduce((s:any,v:any)=>s+(v.stock||0),0) : 0)) || 0) === 0).length,
   };
 
-  // Show loading spinner while checking authentication
-  if (authLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  // Don't render anything if not authenticated (will redirect)
-  if (!isAuthenticated || !user || user.role !== 'admin') {
-    return null;
-  }
+  // Rely on middleware for route protection; render immediately
 
   return (
     <div>

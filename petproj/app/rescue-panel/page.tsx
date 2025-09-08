@@ -122,23 +122,23 @@ export default function RescuePanel() {
                   </div>
                 </div>
                 <div className="h-px bg-white/20" />
-                <button className={`relative flex items-center gap-2 text-left px-3 py-2 rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'bulk' ? 'bg-white/20 text-white cursor-default after:w-[calc(100%-1.5rem)]' : 'text-white after:w-0'}`}
+                <button className={`relative flex items-center gap-2 text-left px-3 py-2 rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'bulk' ? 'text-white cursor-default after:w-[calc(100%-1.5rem)]' : 'text-white after:w-0'}`}
                         onClick={() => setActiveTab('bulk')}>
                   <UploadOutlined /> <span>Bulk Upload Pets</span>
                 </button>
-                <button className={`relative flex items-center gap-2 text-left px-3 py-2 rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'listings' ? 'bg-white/20 text-white cursor-default after:w-[calc(100%-1.5rem)]' : 'text-white after:w-0'}`}
+                <button className={`relative flex items-center gap-2 text-left px-3 py-2 rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'listings' ? 'text-white cursor-default after:w-[calc(100%-1.5rem)]' : 'text-white after:w-0'}`}
                         onClick={() => setActiveTab('listings')}>
                   <UnorderedListOutlined /> <span>My Listings</span>
                 </button>
-                <button className={`relative flex items-center gap-2 text-left px-3 py-2 rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'profile' ? 'bg-white/20 text-white cursor-default after:w-[calc(100%-1.5rem)]' : 'text-white after:w-0'}`}
+                <button className={`relative flex items-center gap-2 text-left px-3 py-2 rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'profile' ? 'text-white cursor-default after:w-[calc(100%-1.5rem)]' : 'text-white after:w-0'}`}
                         onClick={() => setActiveTab('profile')}>
                   <UserOutlined /> <span>Profile</span>
                 </button>
-                <button className={`relative flex items-center gap-2 text-left px-3 py-2 rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'notifications' ? 'bg-white/20 text-white cursor-default after:w-[calc(100%-1.5rem)]' : 'text-white after:w-0'}`}
+                <button className={`relative flex items-center gap-2 text-left px-3 py-2 rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'notifications' ? 'text-white cursor-default after:w-[calc(100%-1.5rem)]' : 'text-white after:w-0'}`}
                         onClick={() => setActiveTab('notifications')}>
                   <BellOutlined /> <span>Notifications</span>
                 </button>
-                <button className={`relative flex items-center gap-2 text-left px-3 py-2 rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'applications' ? 'bg-white/20 text-white cursor-default after:w-[calc(100%-1.5rem)]' : 'text-white after:w-0'}`}
+                <button className={`relative flex items-center gap-2 text-left px-3 py-2 rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'applications' ? 'text-white cursor-default after:w-[calc(100%-1.5rem)]' : 'text-white after:w-0'}`}
                         onClick={() => setActiveTab('applications')}>
                   <FileTextOutlined /> <span>My Applications</span>
                 </button>

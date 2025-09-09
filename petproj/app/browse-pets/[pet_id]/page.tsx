@@ -47,6 +47,8 @@ import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
 import "./styles.css";
 
+import Link from "next/link";
+
 const { Title, Text, Paragraph } = Typography;
 
 const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
@@ -285,7 +287,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
     const renderSourceInfo = () => {
         if (!pet) return null;
-
+    
         switch (pet.listing_type) {
             case "adoption":
             case "sell":
@@ -309,40 +311,44 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                 );
             case "shop":
                 return (
-                    <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-                        <Avatar
-                            size={48}
-                            src={pet.shop?.logo_url}
-                            icon={<ShopOutlined />}
-                            className="bg-purple-100 text-purple-600"
-                        />
-                        <div>
-                            <Text className="text-sm font-medium text-gray-500 block">
-                                Shop
-                            </Text>
-                            <Text className="text-lg font-semibold text-gray-800">
-                                {pet.shop?.shop_name || "Unknown Shop"}
-                            </Text>
+                    <Link href={`/shops/${pet.shop?.shop_id}`}>
+                        <div className="flex items-center gap-3 p-4 mt-6 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                            <Avatar
+                                size={48}
+                                src={pet.shop?.logo_url}
+                                icon={<ShopOutlined />}
+                                className="bg-purple-100 text-purple-600"
+                            />
+                            <div>
+                                <Text className="text-sm font-medium text-gray-500 block">
+                                    Shop
+                                </Text>
+                                <Text className="text-lg font-semibold text-gray-800">
+                                    {pet.shop?.shop_name || "Unknown Shop"}
+                                </Text>
+                            </div>
                         </div>
-                    </div>
+                    </Link>
                 );
             case "rescue":
                 return (
-                    <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-                        <Avatar
-                            size={48}
-                            src={pet.shelter?.logo_url}
-                            className="bg-red-100 text-red-600"
-                        />
-                        <div>
-                            <Text className="text-sm font-medium text-gray-500 block">
-                                Rescue Shelter
-                            </Text>
-                            <Text className="text-lg font-semibold text-gray-800">
-                                {pet.shelter?.shelter_name || "Unknown Shelter"}
-                            </Text>
+                    <Link href={`/shelters/${pet.shelter?.shelter_id}`}>
+                        <div className="flex items-center gap-3 p-4 mt-6 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                            <Avatar
+                                size={48}
+                                src={pet.shelter?.logo_url}
+                                className="bg-red-100 text-red-600"
+                            />
+                            <div>
+                                <Text className="text-sm font-medium text-gray-500 block">
+                                    Rescue Shelter
+                                </Text>
+                                <Text className="text-lg font-semibold text-gray-800">
+                                    {pet.shelter?.shelter_name || "Unknown Shelter"}
+                                </Text>
+                            </div>
                         </div>
-                    </div>
+                    </Link>
                 );
             default:
                 return null;

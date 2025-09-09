@@ -19,6 +19,7 @@ export default function RescuePanel() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'bulk' | 'listings' | 'profile' | 'notifications' | 'applications'>('bulk');
   const [mobileSolid, setMobileSolid] = useState(true);
+  const [entityData, setEntityData] = useState<{id: number, name: string} | null>(null);
 
   useEffect(() => {
     const check = () => {
@@ -36,6 +37,32 @@ export default function RescuePanel() {
     const t = setTimeout(check, 100);
     return () => clearTimeout(t);
   }, [isAuthenticated, user, router]);
+
+  // Fetch shelter entity data
+  useEffect(() => {
+    const fetchEntityData = async () => {
+      if (!user?.id && !user?.user_id) return;
+      
+      try {
+        const userId = user.id || user.user_id;
+        const response = await fetch(`/api/user-shops-shelters?user_id=${userId}`);
+        const data = await response.json();
+        
+        if (data.success && data.entity) {
+          setEntityData({
+            id: data.entity.id,
+            name: data.entity.name
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching shelter data:', error);
+      }
+    };
+
+    if (user && (user.id || user.user_id)) {
+      fetchEntityData();
+    }
+  }, [user]);
 
   useEffect(() => {
     const onScroll = () => setMobileSolid(window.scrollY < 24);
@@ -152,8 +179,8 @@ export default function RescuePanel() {
                 <div className="mt-4">
                   <BulkPetUploadForm
                     entityType="shelter"
-                    entityId={1}
-                    entityName="My Rescue Shelter"
+                    entityId={entityData?.id || 1}
+                    entityName={entityData?.name || "My Rescue Shelter"}
                     showPrice={false}
                   />
                 </div>

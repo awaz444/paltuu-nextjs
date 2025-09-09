@@ -128,8 +128,6 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
             apiProduct.description ||
             apiProduct.short_description ||
             "No description available",
-          city: "Karachi",
-          area: "DHA Phase 6",
           created_at: apiProduct.created_at || new Date().toISOString(),
           images:
             apiProduct.images.length > 0
@@ -189,13 +187,13 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
         variantId: selectedVariant?.variant_id ?? null,
         quantity: 1,
       };
-      
+
       const res = await fetch("/api/bazaar/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      
+
       if (res.ok) {
         message.success({
           content: `${product?.name} added to cart!`,
@@ -492,14 +490,14 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                   </div>
                 </div>
 
-                <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                {/* <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
                   <p className="text-sm font-semibold text-gray-600 mb-1 flex items-center">
                     <EnvironmentOutlined className="mr-1 text-primary" /> Location
                   </p>
                   <p className="text-md font-medium text-gray-600">
                     {product.area}, {product.city}
                   </p>
-                </div>
+                </div> */}
 
                 {/* Variants List */}
                 {variantsData && variantsData.length > 0 && (

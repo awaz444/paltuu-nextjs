@@ -11,6 +11,7 @@ import userSlice from './slices/userSlice';
 import vetQualificationsSlice from '../store/slices/vetQualificationsSlice';
 import vetSpecializationSlice from '../store/slices/vetSpecializationSlice';
 import vetScheduleSlice from './slices/vetScheduleSlice';
+import cartReducer from './slices/cartSlice';
 
 
 export const store = configureStore({
@@ -27,6 +28,7 @@ export const store = configureStore({
     vetQualifications: vetQualificationsSlice,
     vetSpecialization: vetSpecializationSlice,
     vetSchedule: vetScheduleSlice,
+  cart: cartReducer,
   },
 });
 

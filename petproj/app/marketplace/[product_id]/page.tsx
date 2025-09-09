@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../../../components/navbar";
 import { formatDistanceToNow } from "date-fns";
+import { useSetPrimaryColor } from "../../hooks/useSetPrimaryColor";
 import {
   Card,
   Divider,
@@ -20,6 +21,10 @@ import {
   EnvironmentOutlined,
   InfoCircleOutlined,
   StarOutlined,
+  HeartOutlined,
+  HeartFilled,
+  ShareAltOutlined,
+  CheckOutlined,
 } from "@ant-design/icons";
 import VariantList from "./variant-list";
 import { MoonLoader } from "react-spinners";
@@ -75,6 +80,7 @@ interface Product {
 const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
   params,
 }) => {
+  useSetPrimaryColor();
   const { product_id } = params;
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,6 +90,9 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
   const [newRating, setNewRating] = useState(0);
   const [variantsData, setVariantsData] = useState<any[] | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<any | null>(null);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -93,7 +102,7 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
 
         if (!response.ok) {
           if (response.status === 404) {
-            setError('Product not found');
+            setError("Product not found");
           } else {
             throw new Error(`Failed to fetch product: ${response.status}`);
           }
@@ -106,39 +115,58 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
         const transformedProduct: Product = {
           id: apiProduct.product_id,
           name: apiProduct.title,
-          brand: apiProduct.categories?.[0]?.name || 'Unknown Brand',
-          category: apiProduct.categories?.[0]?.name || 'Uncategorized',
-          price: apiProduct.variants?.[0]?.price_override || apiProduct.price || 0,
-          stock: apiProduct.variants?.reduce((total, variant) => total + variant.stock, 0) || 0,
-          description: apiProduct.description || apiProduct.short_description || 'No description available',
-          city: 'Karachi', // Placeholder - you can add location data to your product model later
-          area: 'DHA Phase 6', // Placeholder - you can add location data to your product model later
+          brand: apiProduct.categories?.[0]?.name || "Unknown Brand",
+          category: apiProduct.categories?.[0]?.name || "Uncategorized",
+          price:
+            apiProduct.variants?.[0]?.price_override || apiProduct.price || 0,
+          stock:
+            apiProduct.variants?.reduce(
+              (total, variant) => total + variant.stock,
+              0
+            ) || 0,
+          description:
+            apiProduct.description ||
+            apiProduct.short_description ||
+            "No description available",
+          city: "Karachi",
+          area: "DHA Phase 6",
           created_at: apiProduct.created_at || new Date().toISOString(),
-          images: apiProduct.images.length > 0 ? apiProduct.images : ['/placeholder-product.jpg'],
-          reviews: []
+          images:
+            apiProduct.images.length > 0
+              ? apiProduct.images
+              : ["/placeholder-product.jpg"],
+          reviews: [],
         };
 
-  setProduct(transformedProduct);
-  setVariantsData(apiProduct.variants || []);
-  // If variants exist, set default selected variant (first)
-  const defaultVariant = (apiProduct.variants && apiProduct.variants.length > 0) ? apiProduct.variants[0] : null;
-  setSelectedVariant(defaultVariant);
+        setProduct(transformedProduct);
+        setVariantsData(apiProduct.variants || []);
+        // If variants exist, set default selected variant (first)
+        const defaultVariant =
+          apiProduct.variants && apiProduct.variants.length > 0
+            ? apiProduct.variants[0]
+            : null;
+        setSelectedVariant(defaultVariant);
 
         // Fetch reviews from the new reviews API
         try {
-          const revRes = await fetch(`/api/bazaar/reviews?product_id=${apiProduct.product_id}`);
+          const revRes = await fetch(
+            `/api/bazaar/reviews?product_id=${apiProduct.product_id}`
+          );
           if (revRes.ok) {
             const revs = await revRes.json();
-            setProduct((p) => p ? { ...p, reviews: revs } : p);
+            setProduct((p) => (p ? { ...p, reviews: revs } : p));
           } else {
-            console.debug('No reviews or failed to fetch reviews', revRes.status);
+            console.debug(
+              "No reviews or failed to fetch reviews",
+              revRes.status
+            );
           }
         } catch (e) {
-          console.error('Error fetching reviews:', e);
+          console.error("Error fetching reviews:", e);
         }
       } catch (err: any) {
-        console.error('Error fetching product:', err);
-        setError(err.message || 'Failed to load product');
+        console.error("Error fetching product:", err);
+        setError(err.message || "Failed to load product");
       } finally {
         setLoading(false);
       }
@@ -151,9 +179,9 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
     return formatDistanceToNow(new Date(dateString), { addSuffix: true });
   };
 
-  const addToCart = () => {
-    // Persist to cart API including selected variant
+  const addToCart = async () => {
     try {
+      setAddingToCart(true);
       const sessionId = getOrCreateGuestSessionId();
       const payload = {
         sessionId,
@@ -161,21 +189,28 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
         variantId: selectedVariant?.variant_id ?? null,
         quantity: 1,
       };
-      fetch('/api/bazaar/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      
+      const res = await fetch("/api/bazaar/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      }).then(async (res) => {
-        if (res.ok) {
-          message.success(`${product?.name} added to cart!`);
-        } else {
-          const d = await res.json();
-          message.error(d.error || 'Failed to add to cart');
-        }
-      }).catch(() => message.error('Failed to add to cart'));
+      });
+      
+      if (res.ok) {
+        message.success({
+          content: `${product?.name} added to cart!`,
+          icon: <CheckOutlined className="text-green-500" />,
+          className: "custom-message",
+        });
+      } else {
+        const d = await res.json();
+        message.error(d.error || "Failed to add to cart");
+      }
     } catch (e) {
-      console.error('Add to cart error', e);
-      message.error('Failed to add to cart');
+      console.error("Add to cart error", e);
+      message.error("Failed to add to cart");
+    } finally {
+      setAddingToCart(false);
     }
   };
 
@@ -197,13 +232,46 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
     });
     setNewReview("");
     setNewRating(0);
-    message.success("Review added successfully!");
+    message.success({
+      content: "Review added successfully!",
+      className: "custom-message",
+    });
+  };
+
+  const toggleWishlist = () => {
+    setIsWishlisted(!isWishlisted);
+    message.success({
+      content: !isWishlisted ? "Added to wishlist" : "Removed from wishlist",
+      className: "custom-message",
+      icon: <HeartFilled className="text-pink-500" />,
+    });
+  };
+
+  const shareProduct = () => {
+    if (navigator.share) {
+      navigator
+        .share({
+          title: product?.name,
+          text: product?.description,
+          url: window.location.href,
+        })
+        .catch(() => {
+          navigator.clipboard.writeText(window.location.href);
+          message.success("Product link copied to clipboard!");
+        });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      message.success("Product link copied to clipboard!");
+    }
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <MoonLoader size={30} color="#a03048" />
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <MoonLoader size={40} color="#a03048" />
+          <p className="mt-4 text-gray-600 font-medium">Loading product details...</p>
+        </div>
       </div>
     );
   }
@@ -212,23 +280,27 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="text-center mt-10 px-4">
-          <Title level={2} className="text-gray-700">
-            {error === 'Product not found' ? 'Product not found' : 'Error loading product'}
-          </Title>
-          <Text className="text-gray-500">
-            {error === 'Product not found'
-              ? 'The product you are looking for does not exist or has been removed.'
-              : 'There was an error loading the product. Please try again later.'
-            }
-          </Text>
-          <div className="mt-4">
-            <button
-              onClick={() => window.history.back()}
-              className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors"
-            >
-              Go Back
-            </button>
+        <div className="text-center mt-20 px-4">
+          <div className="max-w-md mx-auto">
+            <div className="mb-6 text-6xl">😞</div>
+            <Title level={2} className="text-gray-800 mb-4">
+              {error === "Product not found"
+                ? "Product Not Found"
+                : "Something Went Wrong"}
+            </Title>
+            <Text className="text-gray-600 text-lg">
+              {error === "Product not found"
+                ? "The product you are looking for does not exist or has been removed."
+                : "There was an error loading the product. Please try again later."}
+            </Text>
+            <div className="mt-8">
+              <button
+                onClick={() => window.history.back()}
+                className="bg-primary text-white px-8 py-3 rounded-xl font-medium transition-all duration-300 shadow-md hover:shadow-lg hover:bg-primary-dark"
+              >
+                Go Back
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -237,14 +309,20 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
 
   if (!product) {
     return (
-      <div className="text-center mt-10">
+      <div className="text-center mt-10 bg-gray-50 min-h-screen">
         <Navbar />
-        <Title level={2} className="text-gray-700">
+        <Title level={2} className="text-gray-700 pt-20">
           Product not found
         </Title>
       </div>
     );
   }
+
+  const averageRating =
+    product.reviews.length > 0
+      ? product.reviews.reduce((acc, review) => acc + review.rating, 0) /
+        product.reviews.length
+      : 0;
 
   return (
     <>
@@ -255,35 +333,69 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
           <div className="mb-6">
             <button
               onClick={() => window.history.back()}
-              className="flex items-center text-gray-600 hover:text-primary transition-colors duration-200 font-medium"
+              className="flex items-center text-gray-600 hover:text-primary transition-all duration-200 font-medium group"
             >
-              <ArrowLeftOutlined className="mr-2" /> Back to products
+              <ArrowLeftOutlined className="mr-2 group-hover:-translate-x-1 transition-transform" />
+              Back to products
             </button>
           </div>
 
-          <div className="bg-white shadow-xl rounded-2xl overflow-hidden p-6 md:p-8">
+          <div className="bg-white shadow-lg rounded-2xl overflow-hidden p-6 md:p-8 transition-all duration-300">
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Image Gallery */}
               <div className="lg:w-1/2">
                 <div className="relative rounded-xl overflow-hidden">
-                  <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden">
+                  <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden relative">
+                    {imageLoading && (
+                      <div className="absolute inset-0 flex justify-center items-center bg-white/80 z-10">
+                        <MoonLoader
+                          size={30}
+                          color="#a03048"
+                          loading={imageLoading}
+                        />
+                      </div>
+                    )}
                     <img
                       src={product.images[currentImageIndex]}
                       alt={`${product.name}-image`}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      className={`w-full h-full object-cover transition-transform duration-500 ${
+                        imageLoading ? "opacity-0" : "opacity-100"
+                      }`}
+                      onLoad={() => setImageLoading(false)}
                     />
+                    <div className="absolute top-4 right-4 flex flex-col space-y-3">
+                      <button
+                        onClick={toggleWishlist}
+                        className="bg-white p-3 rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110"
+                      >
+                        {isWishlisted ? (
+                          <HeartFilled className="text-red-500 text-lg" />
+                        ) : (
+                          <HeartOutlined className="text-gray-600 text-lg hover:text-red-400" />
+                        )}
+                      </button>
+                      <button
+                        onClick={shareProduct}
+                        className="bg-white p-3 rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110"
+                      >
+                        <ShareAltOutlined className="text-gray-600 text-lg hover:text-blue-500" />
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="flex mt-6 space-x-3">
+                  <div className="flex mt-6 space-x-3 overflow-x-auto pb-2">
                     {product.images.map((img, index) => (
                       <button
                         key={index}
-                        onClick={() => setCurrentImageIndex(index)}
+                        onClick={() => {
+                          setCurrentImageIndex(index);
+                          setImageLoading(true);
+                        }}
                         title={`View image ${index + 1}`}
-                        className={`w-20 h-20 rounded-lg overflow-hidden border-2 ${
+                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
                           index === currentImageIndex
-                            ? "border-primary"
-                            : "border-gray-200"
+                            ? "border-primary ring-2 ring-primary ring-opacity-50 shadow-md"
+                            : "border-gray-200 hover:border-gray-300"
                         }`}
                       >
                         <img
@@ -299,113 +411,143 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
 
               {/* Product Info */}
               <div className="lg:w-1/2 space-y-6">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                      {product.name}
-                    </h1>
-                    <div className="text-lg text-gray-600 mb-2">
-                      <span className="font-semibold">{product.brand}</span> •{" "}
-                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-sm">
-                        {product.category}
-                      </span>
-                    </div>
-                    {/* Item code / SKU under product name */}
-                    <div className="mt-2 text-sm text-gray-600">
-                      <div className="text-xs text-gray-500 font-medium">Item code</div>
-                      <div className="font-mono text-sm text-gray-800">{selectedVariant?.sku ?? '—'}</div>
-                    </div>
-                  </div>
-                  <span className="bg-primary bg-opacity-10 text-white px-3 py-1 rounded-full text-sm font-medium">
+                {/* Name + Listing Date */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <h1 className="text-3xl font-bold text-gray-900 leading-tight break-words">
+                    {product.name}
+                  </h1>
+                  <Tag className="whitespace-nowrap text-sm py-1 px-3 rounded-full bg-primary text-white border-0 self-start sm:self-auto">
                     Listed {formatListingDate(product.created_at)}
+                  </Tag>
+                </div>
+
+                {/* Brand + Category */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-gray-700">
+                    {product.brand}
+                  </span>
+                  <div className="w-1 h-1 rounded-full bg-gray-400"></div>
+                  <span className="bg-gray-100 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                    {product.category}
                   </span>
                 </div>
 
                 <div className="flex items-center mb-4">
-                  <div className="flex items-center mr-4">
-                    {[...Array(5)].map((_, i) => (
-                      <svg
-                        key={i}
-                        className={`w-5 h-5 ${
-                          i < Math.floor(
-                            product.reviews.reduce((acc, review) => acc + review.rating, 0) /
-                              product.reviews.length
-                          )
-                            ? "text-yellow-400"
-                            : "text-gray-300"
-                        }`}
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                    <span className="ml-2 text-gray-600">
+                  <div className="flex items-center">
+                    <Rate
+                      disabled
+                      defaultValue={averageRating}
+                      className="text-yellow-400 text-sm mr-2"
+                    />
+                    <span className="text-gray-600 text-sm">
                       ({product.reviews.length} reviews)
                     </span>
                   </div>
                 </div>
 
-                <Paragraph className="text-gray-700 text-lg">
+                <Paragraph className="text-gray-700 text-lg leading-relaxed border-l-4 border-primary pl-4 py-1 bg-gray-50 rounded-r">
                   {product.description}
                 </Paragraph>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 p-4 rounded-xl">
-                    <p className="text-sm font-semibold text-gray-500 mb-1">
-                      Price
+                  <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <p className="text-sm font-semibold text-gray-600 mb-1 flex items-center">
+                      <DollarOutlined className="mr-1 text-blue-500" /> Price
                     </p>
-                    <p className="text-2xl font-bold text-gray-800">
-                      PKR {(selectedVariant?.price_override ?? product.price).toLocaleString()}
+                    <p className="text-2xl font-bold text-gray-900">
+                      PKR{" "}
+                      {(
+                        selectedVariant?.price_override ?? product.price
+                      ).toLocaleString()}
                     </p>
+                    {product.price >
+                      (selectedVariant?.price_override ?? product.price) && (
+                      <p className="text-sm text-gray-500 line-through mt-1">
+                        PKR {product.price.toLocaleString()}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="bg-gray-50 p-4 rounded-xl">
-                    <p className="text-sm font-semibold text-gray-500 mb-1">
-                      Stock
+                  <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+                    <p className="text-sm font-semibold text-gray-600 mb-1 flex items-center">
+                      <ShoppingCartOutlined className="mr-1 text-green-500" /> Stock
                     </p>
-                    <p className="text-2xl font-bold text-gray-800">
-                      {(selectedVariant ? (selectedVariant.stock > 0 ? (
-                        <span className="text-green-600">{selectedVariant.stock} Available</span>
+                    <p className="text-2xl font-bold">
+                      {selectedVariant ? (
+                        selectedVariant.stock > 0 ? (
+                          <span className="text-green-600">
+                            {selectedVariant.stock} Available
+                          </span>
+                        ) : (
+                          <span className="text-red-600">Out of Stock</span>
+                        )
+                      ) : product.stock > 0 ? (
+                        <span className="text-green-600">
+                          {product.stock} Available
+                        </span>
                       ) : (
                         <span className="text-red-600">Out of Stock</span>
-                      )) : (product.stock > 0 ? (
-                        <span className="text-green-600">{product.stock} Available</span>
-                      ) : (
-                        <span className="text-red-600">Out of Stock</span>
-                      )))}
+                      )}
                     </p>
                   </div>
                 </div>
 
-                  {/* Variants List */}
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-3">Available Variants</h3>
-                    {/* If api provided variants we can show them; attempt to read from fetched product via API earlier */}
-                    <div className="space-y-2">
-                      {/* We try to read variants from the backend by requesting the product API directly if possible. */}
-                      {/* Fallback: show stock/price summary already present above. */}
-                      {/* useEffect loaded reviews separately; variants are not stored in the UI Product shape so we read them here via the product API again for detail. */}
-                      <VariantList productId={product.id} variants={variantsData ?? undefined} selectedVariantId={selectedVariant?.variant_id} onSelect={(v) => setSelectedVariant(v)} />
-                    </div>
+                <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                  <p className="text-sm font-semibold text-gray-600 mb-1 flex items-center">
+                    <EnvironmentOutlined className="mr-1 text-primary" /> Location
+                  </p>
+                  <p className="text-md font-medium text-gray-600">
+                    {product.area}, {product.city}
+                  </p>
+                </div>
+
+                {/* Variants List */}
+                {variantsData && variantsData.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-lg font-semibold mb-3 text-primary">
+                      Available Variants
+                    </h3>
+                    <VariantList
+                      productId={product.id}
+                      variants={variantsData ?? undefined}
+                      selectedVariantId={selectedVariant?.variant_id}
+                      onSelect={(v) => setSelectedVariant(v)}
+                    />
                   </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 mt-6">
                   <button
                     onClick={addToCart}
-                    disabled={((selectedVariant ? selectedVariant.stock : product.stock) || 0) === 0}
-                    className={`flex-1 py-3 px-6 rounded-xl font-semibold text-lg flex items-center justify-center transition-all duration-200 ${
-                      ((selectedVariant ? selectedVariant.stock : product.stock) || 0) > 0
-                        ? "bg-primary hover:bg-primary-dark text-white shadow-md hover:shadow-lg"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    disabled={
+                      ((selectedVariant
+                        ? selectedVariant.stock
+                        : product.stock) || 0) === 0 || addingToCart
+                    }
+                    className={`flex-1 py-3 px-6 rounded-xl font-semibold text-lg flex items-center justify-center transition-all duration-300 ${
+                      ((selectedVariant
+                        ? selectedVariant.stock
+                        : product.stock) || 0) > 0
+                        ? "bg-primary text-white shadow-md hover:shadow-lg hover:bg-primary-dark"
+                        : "bg-gray-200 text-gray-500 cursor-not-allowed"
                     }`}
                   >
-                    <ShoppingCartOutlined className="mr-2" />
-                    {((selectedVariant ? selectedVariant.stock : product.stock) || 0) > 0 ? `Add to Cart` : `Out of Stock`}
+                    {addingToCart ? (
+                      <MoonLoader size={20} color="#ffffff" />
+                    ) : (
+                      <>
+                        <ShoppingCartOutlined className="mr-2" />
+                        {((selectedVariant
+                          ? selectedVariant.stock
+                          : product.stock) || 0) > 0
+                          ? `Add to Cart`
+                          : `Out of Stock`}
+                      </>
+                    )}
                   </button>
 
-                  <button className="py-3 px-6 border-2 border-primary text-primary rounded-xl font-semibold text-lg hover:bg-primary hover:text-white transition-all duration-200 flex items-center justify-center">
+                  <button className="py-3 px-6 border-2 border-primary text-primary rounded-xl font-semibold text-lg hover:bg-primary hover:text-white transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-lg">
                     <DollarOutlined className="mr-2" />
                     Buy Now
                   </button>
@@ -417,8 +559,11 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
 
             {/* Reviews Section */}
             <div className="mt-10">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
                 <StarOutlined className="mr-2 text-primary" /> Customer Reviews
+                <span className="ml-2 text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                  {product.reviews.length} reviews
+                </span>
               </h2>
 
               <div className="space-y-6 mb-8">
@@ -426,26 +571,19 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                   product.reviews.map((review) => (
                     <div
                       key={review.id}
-                      className="p-6 bg-gray-50 rounded-lg border border-gray-100"
+                      className="p-6 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
                     >
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <h4 className="font-semibold text-gray-800">{review.user}</h4>
+                          <h4 className="font-semibold text-gray-900">
+                            {review.user}
+                          </h4>
                           <div className="flex items-center mt-1">
-                            {[...Array(5)].map((_, i) => (
-                              <svg
-                                key={i}
-                                className={`w-5 h-5 ${
-                                  i < review.rating
-                                    ? "text-yellow-400"
-                                    : "text-gray-300"
-                                }`}
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                            ))}
+                            <Rate
+                              disabled
+                              defaultValue={review.rating}
+                              className="text-yellow-400 text-sm"
+                            />
                           </div>
                         </div>
                         <span className="text-sm text-gray-500">
@@ -456,38 +594,30 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-600 text-center py-4">No reviews yet.</p>
+                  <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                    <StarOutlined className="text-4xl text-gray-300 mb-3" />
+                    <p className="text-gray-600">
+                      No reviews yet. Be the first to review this product!
+                    </p>
+                  </div>
                 )}
               </div>
 
               {/* Add Review */}
-              <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">Add Your Review</h3>
+              <div className="p-6 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  Add Your Review
+                </h3>
                 <div className="mb-4">
                   <div className="flex items-center mb-2">
-                    <span className="text-gray-700 mr-3">Your Rating:</span>
-                    <div className="flex">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          onClick={() => setNewRating(star)}
-                          title={`Rate ${star} star${star > 1 ? 's' : ''}`}
-                          className="focus:outline-none"
-                        >
-                          <svg
-                            className={`w-6 h-6 ${
-                              star <= newRating
-                                ? "text-yellow-400"
-                                : "text-gray-300"
-                            }`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        </button>
-                      ))}
-                    </div>
+                    <span className="text-gray-700 mr-3 font-medium">
+                      Your Rating:
+                    </span>
+                    <Rate
+                      value={newRating}
+                      onChange={setNewRating}
+                      className="text-yellow-400"
+                    />
                   </div>
                 </div>
                 <div className="mb-4">
@@ -501,7 +631,7 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                 </div>
                 <button
                   onClick={handleReviewSubmit}
-                  className="bg-primary hover:bg-primary-dark text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200"
+                  className="bg-primary text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg hover:bg-primary-dark"
                 >
                   Submit Review
                 </button>
@@ -510,6 +640,19 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
           </div>
         </div>
       </div>
+
+      <style jsx global>{`
+        .custom-message {
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .ant-rate-star-full {
+          color: #fbbf24;
+        }
+        .ant-tag {
+          margin-right: 0;
+        }
+      `}</style>
     </>
   );
 };

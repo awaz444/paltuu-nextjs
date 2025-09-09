@@ -407,7 +407,7 @@ export default function SinglePetUploadForm({
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit}>
-        <Card>
+        <Card className="w-full">
           <h3 className="text-lg font-semibold mb-4">
             {currentStep === 1 ? "Pet Details" : "Upload Images"}
           </h3>
@@ -424,13 +424,14 @@ export default function SinglePetUploadForm({
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="E.g. 'Max the friendly dog' or '5 kittens needing homes'"
                   required
+                  size="large"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Give your listing a descriptive title that will attract potential adopters
                 </p>
               </div>
 
-              <Row gutter={16}>
+              <Row gutter={[16, 16]}>
                 {/* Pet Type */}
                 <Col xs={24} sm={12}>
                   <div>
@@ -442,6 +443,7 @@ export default function SinglePetUploadForm({
                       onChange={setPetType}
                       placeholder="Select pet type"
                       className="w-full"
+                      size="large"
                     >
                       {categories.map((category) => (
                         <Option key={category.category_id} value={category.category_id.toString()}>
@@ -463,6 +465,7 @@ export default function SinglePetUploadForm({
                       onChange={setCityId}
                       placeholder="Select City"
                       className="w-full"
+                      size="large"
                     >
                       {cities.map((city) => (
                         <Option key={city.city_id} value={city.city_id.toString()}>
@@ -474,7 +477,7 @@ export default function SinglePetUploadForm({
                 </Col>
               </Row>
 
-              <Row gutter={16}>
+              <Row gutter={[16, 16]}>
                 {/* Area */}
                 <Col xs={24} sm={12}>
                   <div>
@@ -485,6 +488,7 @@ export default function SinglePetUploadForm({
                       value={area}
                       onChange={(e) => setArea(e.target.value)}
                       placeholder="Enter your area or neighborhood"
+                      size="large"
                     />
                   </div>
                 </Col>
@@ -499,6 +503,7 @@ export default function SinglePetUploadForm({
                       value={sex}
                       onChange={setSex}
                       className="w-full"
+                      size="large"
                     >
                       <Option value="male">Male</Option>
                       <Option value="female">Female</Option>
@@ -508,7 +513,7 @@ export default function SinglePetUploadForm({
                 </Col>
               </Row>
 
-              <Row gutter={16}>
+              <Row gutter={[16, 16]}>
                 {/* Age */}
                 <Col xs={24} sm={8}>
                   <div>
@@ -521,6 +526,7 @@ export default function SinglePetUploadForm({
                       placeholder="Years"
                       className="w-full"
                       min={0}
+                      size="large"
                     />
                     {ageError && (
                       <p className="text-red-500 text-xs mt-1">{ageError}</p>
@@ -541,6 +547,7 @@ export default function SinglePetUploadForm({
                       className="w-full"
                       min={0}
                       max={11}
+                      size="large"
                     />
                     {monthsError && (
                       <p className="text-red-500 text-xs mt-1">{monthsError}</p>
@@ -561,6 +568,7 @@ export default function SinglePetUploadForm({
                         placeholder="Enter price"
                         className="w-full"
                         min={0}
+                        size="large"
                         formatter={value => `PKR ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                         parser={value => Number(value!.replace(/PKR\s?|(,*)/g, '')) || 0}
                       />
@@ -579,6 +587,7 @@ export default function SinglePetUploadForm({
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Tell potential adopters about the pet(s) - personality, history, special needs, etc."
                   rows={3}
+                  className="w-full"
                 />
               </div>
 
@@ -593,6 +602,7 @@ export default function SinglePetUploadForm({
                     onChange={(e) => setRescueStory(e.target.value)}
                     placeholder="Tell the story of how this pet was rescued - where they were found, what condition they were in, their journey to recovery, etc."
                     rows={4}
+                    className="w-full"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Share the pet's rescue journey to help potential adopters understand their background and build a connection.
@@ -614,12 +624,13 @@ export default function SinglePetUploadForm({
                           value={breed}
                           onChange={(e) => setBreed(e.target.value)}
                           placeholder="Enter breed if known"
+                          size="large"
                         />
                       </div>
                     )}
 
                     {/* Vaccinated & Neutered */}
-                    <Row gutter={16}>
+                    <Row gutter={[16, 16]}>
                       <Col xs={24} sm={12}>
                         <div className="flex items-center">
                           <Switch
@@ -647,7 +658,7 @@ export default function SinglePetUploadForm({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Compatibility
                       </label>
-                      <Row gutter={16}>
+                      <Row gutter={[16, 16]}>
                         <Col xs={24} sm={8}>
                           <div className="flex items-center">
                             <Switch
@@ -686,12 +697,12 @@ export default function SinglePetUploadForm({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Energy Level
                       </label>
-                      <div className="relative">
+                      <div className="relative px-2">
                         <input
                           type="range"
                           min="1"
                           max="5"
-                          className="w-full appearance-none h-2 rounded-lg bg-gray-300"
+                          className="w-full appearance-none h-3 rounded-lg bg-gray-300 touch-manipulation"
                           value={energyLevel ?? 3}
                           onChange={(e) => handleEnergyLevelChange(Number(e.target.value))}
                           style={{
@@ -704,7 +715,7 @@ export default function SinglePetUploadForm({
                               : "#D1D5DB",
                           }}
                         />
-                        <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
+                        <div className="w-full flex justify-between mt-3 text-sm text-gray-500">
                           <span>Chilled</span>
                           <span>Hyper</span>
                         </div>
@@ -716,12 +727,12 @@ export default function SinglePetUploadForm({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Cuddliness Level
                       </label>
-                      <div className="relative">
+                      <div className="relative px-2">
                         <input
                           type="range"
                           min="1"
                           max="5"
-                          className="w-full appearance-none h-2 rounded-lg bg-gray-300"
+                          className="w-full appearance-none h-3 rounded-lg bg-gray-300 touch-manipulation"
                           value={cuddlinessLevel ?? 3}
                           onChange={(e) => handleCuddlinessLevelChange(Number(e.target.value))}
                           style={{
@@ -734,7 +745,7 @@ export default function SinglePetUploadForm({
                               : "#D1D5DB",
                           }}
                         />
-                        <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
+                        <div className="w-full flex justify-between mt-3 text-sm text-gray-500">
                           <span>Independent</span>
                           <span>Cuddler</span>
                         </div>
@@ -750,6 +761,7 @@ export default function SinglePetUploadForm({
                         value={healthIssues}
                         onChange={(e) => setHealthIssues(e.target.value)}
                         placeholder="Describe any health issues"
+                        size="large"
                       />
                     </div>
 
@@ -760,27 +772,36 @@ export default function SinglePetUploadForm({
                           Special Needs
                         </label>
                         <div className="space-y-2">
-                          <div className="flex gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2">
                             <Input
                               value={newSpecialNeed}
                               onChange={(e) => setNewSpecialNeed(e.target.value)}
                               placeholder="Enter special need"
                               onPressEnter={addSpecialNeed}
+                              size="large"
+                              className="flex-1"
                             />
-                            <Button type="primary" onClick={addSpecialNeed} disabled={!newSpecialNeed.trim()}>
+                            <Button 
+                              type="primary" 
+                              onClick={addSpecialNeed} 
+                              disabled={!newSpecialNeed.trim()}
+                              size="large"
+                              className="w-full sm:w-auto"
+                            >
                               Add
                             </Button>
                           </div>
                           {specialNeeds.length > 0 && (
-                            <div className="space-y-1">
+                            <div className="space-y-2">
                               {specialNeeds.map((need, index) => (
-                                <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                                  <span className="text-sm">{need}</span>
+                                <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded border">
+                                  <span className="text-sm flex-1 pr-2">{need}</span>
                                   <Button 
                                     type="text" 
                                     size="small" 
                                     danger
                                     onClick={() => removeSpecialNeed(need)}
+                                    className="flex-shrink-0"
                                   >
                                     Remove
                                   </Button>
@@ -805,21 +826,23 @@ export default function SinglePetUploadForm({
                                 value={newMedicalCondition}
                                 onChange={(e) => setNewMedicalCondition(e.target.value)}
                                 placeholder="Enter medical condition"
+                                size="large"
                               />
-                              <Row gutter={8}>
-                                <Col xs={12}>
+                              <Row gutter={[8, 8]}>
+                                <Col xs={24} sm={12}>
                                   <InputNumber
                                     value={newTreatmentCost}
                                     onChange={(value) => setNewTreatmentCost(value)}
                                     placeholder="Treatment cost (PKR)"
                                     className="w-full"
                                     min={0}
+                                    size="large"
                                     formatter={value => `PKR ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                                     parser={value => Number(value!.replace(/PKR\s?|(,*)/g, '')) || 0}
                                   />
                                 </Col>
-                                <Col xs={12}>
-                                  <div className="flex items-center">
+                                <Col xs={24} sm={12}>
+                                  <div className="flex items-center h-full">
                                     <Switch
                                       checked={newTreated}
                                       onChange={setNewTreated}
@@ -840,12 +863,12 @@ export default function SinglePetUploadForm({
                             </div>
                           </div>
                           {medicalConditions.length > 0 && (
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               {medicalConditions.map((condition, index) => (
-                                <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded border">
+                                <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between bg-gray-50 p-3 rounded border gap-2">
                                   <div className="flex-1">
                                     <div className="font-medium text-sm">{condition.condition}</div>
-                                    <div className="text-xs text-gray-600">
+                                    <div className="text-xs text-gray-600 mt-1">
                                       Cost: {condition.treatmentCost ? `PKR ${condition.treatmentCost.toLocaleString()}` : 'Not specified'} | 
                                       Status: {condition.treated ? 'Treated' : 'Not treated'}
                                     </div>
@@ -855,6 +878,7 @@ export default function SinglePetUploadForm({
                                     size="small" 
                                     danger
                                     onClick={() => removeMedicalCondition(condition.condition)}
+                                    className="flex-shrink-0 w-full sm:w-auto"
                                   >
                                     Remove
                                   </Button>
@@ -873,7 +897,8 @@ export default function SinglePetUploadForm({
                 <Button
                   type="primary"
                   onClick={nextStep}
-                  className="mt-4"
+                  className="mt-4 w-full sm:w-auto"
+                  size="large"
                 >
                   Next
                 </Button>
@@ -910,10 +935,11 @@ export default function SinglePetUploadForm({
                 )}
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   onClick={prevStep}
-                  className="flex-1"
+                  className="w-full sm:flex-1"
+                  size="large"
                 >
                   Back
                 </Button>
@@ -921,7 +947,8 @@ export default function SinglePetUploadForm({
                   type="primary"
                   htmlType="submit"
                   loading={uploading}
-                  className="flex-1"
+                  className="w-full sm:flex-1"
+                  size="large"
                 >
                   {uploading ? "Creating Listing..." : "Create Listing"}
                 </Button>

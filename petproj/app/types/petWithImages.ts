@@ -36,14 +36,17 @@ export type PetWithImages = {
         order: number;
     }>;
     owner?: {
+        user_id: number; // Add user_id
         name: string;
         profile_image_url: string | null;
     };
     shop?: {
+        shop_id: number; // Add shop_id
         shop_name: string;
         logo_url: string | null;
     };
     shelter?: {
+        shelter_id: number; // Add shelter_id
         shelter_name: string;
         logo_url: string | null;
     };

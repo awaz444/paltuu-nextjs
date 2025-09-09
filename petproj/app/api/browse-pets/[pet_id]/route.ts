@@ -120,6 +120,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             listing_type: pet.listing_type,
             vaccinated: pet.vaccinated,
             neutered: pet.neutered,
+            phone_number: pet.phone_number, // Add phone_number to response
             images: images,
         };
 
@@ -137,7 +138,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             case 'rescue':
                 if (pet.rescue_shelter_id) {
                     response.shelter = {
-                        shelter_id: pet.rescue_shelter_id,
+                        shelter_id: pet.rescue_shelter_id, // Add shelter_id
                         shelter_name: pet.shelter_name,
                         logo_url: pet.shelter_logo
                     };
@@ -146,7 +147,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             case 'shop':
                 if (pet.shop_id) {
                     response.shop = {
-                        shop_id: pet.shop_id,
+                        shop_id: pet.shop_id, // Add shop_id
                         shop_name: pet.shop_name,
                         logo_url: pet.shop_logo
                     };

@@ -49,7 +49,27 @@ const CartPage = () => {
   useEffect(() => {
     dispatch(fetchCart());
   }, [dispatch]);
-
+  // ✅ Update quantity
+  const updateQuantity = async (itemId: string | number, newQuantity: number) => {
+    if (newQuantity < 1) return;
+    try {
+      setUpdatedItems((prev) => [...prev, String(itemId)]);
+      setTimeout(() => {
+        setUpdatedItems((prev) => prev.filter((id) => id !== String(itemId)));
+      }, 2000);
+      await dispatch(updateCartItem({ cartItemId: itemId, quantity: newQuantity }) as any);
+    } catch (err) {
+      console.error("Failed to update quantity:", err);
+    }
+  };
+  // ✅ Remove item
+  const removeItem = async (itemId: string | number) => {
+    try {
+      await dispatch(removeCartItem({ cartItemId: itemId }) as any);
+    } catch (err) {
+      console.error("Failed to remove item:", err);
+    }
+  };
 
 
 

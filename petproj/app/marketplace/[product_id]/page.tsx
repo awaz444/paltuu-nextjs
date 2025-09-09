@@ -64,8 +64,6 @@ interface Product {
   price: number;
   stock: number;
   description: string;
-  city: string;
-  area: string;
   created_at: string;
   images: string[];
   reviews: Array<{
@@ -145,25 +143,19 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
             : null;
         setSelectedVariant(defaultVariant);
 
-        // Fetch reviews from the reviews API and normalize shape for the UI
+        // Fetch reviews from the new reviews API
         try {
           const revRes = await fetch(
             `/api/bazaar/reviews?product_id=${apiProduct.product_id}`
           );
           if (revRes.ok) {
-            const raw = await revRes.json().catch(() => []);
-            const revs = (raw || []).map((r: any, idx: number) => ({
-              id: r.id ?? r.review_id ?? r.reviewId ?? idx + 1,
-              user: r.user ?? r.user_name ?? r.reviewer ?? r.name ?? 'Guest',
-              rating: Number(r.rating ?? r.stars ?? r.score ?? 0),
-              comment: r.comment ?? r.body ?? r.text ?? r.content ?? '',
-              created_at: (r.created_at ?? r.createdAt ?? r.created) || new Date().toISOString(),
-            }));
-            if (revs.length > 0) {
-              setProduct((p) => (p ? { ...p, reviews: revs } : p));
-            }
+            const revs = await revRes.json();
+            setProduct((p) => (p ? { ...p, reviews: revs } : p));
           } else {
-            console.debug("No reviews or failed to fetch reviews", revRes.status);
+            console.debug(
+              "No reviews or failed to fetch reviews",
+              revRes.status
+            );
           }
         } catch (e) {
           console.error("Error fetching reviews:", e);
@@ -431,9 +423,8 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                     {product.brand}
                   </span>
                   <div className="w-1 h-1 rounded-full bg-gray-400"></div>
-                  {/* Show Item Code (SKU) instead of repeating category/brand */}
                   <span className="bg-gray-100 text-primary px-3 py-1 rounded-full text-sm font-medium">
-                    Item Code: {selectedVariant?.sku ?? variantsData?.[0]?.sku ?? '—'}
+                    {product.category}
                   </span>
                 </div>
 

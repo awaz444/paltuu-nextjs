@@ -2,20 +2,16 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Navbar from "../../../components/navbar";
-import RescuePetGrid from "../../../components/PartnerPetGrid";
+import PartnerPetGrid from "../../../components/PartnerPetGrid";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
-import "./styles.css";
 
-interface Shelter {
-    shelter_id: number;
-    shelter_name: string;
+interface Shop {
+    shop_id: number;
+    shop_name: string;
     address: string;
-    description: string;
     logo_url: string;
-    capacity: number;
     created_at: string;
-    approved: boolean;
     contact: {
         user_id: number;
         name: string;
@@ -28,33 +24,17 @@ interface Shelter {
         iban: string;
         bank_name: string;
     } | null;
-    emergency_contacts: {
-        primary_phone: string;
-        backup_phone: string;
-        vet_name: string;
-        vet_phone: string;
-    } | null;
     social_media: Array<{
         platform: string;
         url: string;
     }>;
-    facility_photos: string[];
-    verification: {
-        reg_certificate_url: string;
-        cnic_front_url: string;
-        cnic_back_url: string;
-    } | null;
-    animal_types: Array<{
-        id: number;
-        name: string;
-    }>;
     pets: any[];
 }
 
-const ShelterProfilePage: React.FC = () => {
+const ShopProfilePage: React.FC = () => {
     const params = useParams();
-    const shelter_id = params.shelter_id as string;
-    const [shelter, setShelter] = useState<Shelter | null>(null);
+    const shop_id = params.shop_id as string;
+    const [shop, setShop] = useState<Shop | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [primaryColor, setPrimaryColor] = useState("#000000");
@@ -71,23 +51,23 @@ const ShelterProfilePage: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        const fetchShelterDetails = async () => {
+        const fetchShopDetails = async () => {
             try {
-                const res = await fetch(`/api/rescue/shelters/${shelter_id}`);
-                if (!res.ok) throw new Error("Shelter not found");
+                const res = await fetch(`/api/shops/${shop_id}`);
+                if (!res.ok) throw new Error("Shop not found");
 
-                const shelterData = await res.json();
-                setShelter(shelterData);
+                const shopData = await res.json();
+                setShop(shopData);
             } catch (err) {
                 console.error(err);
-                setError("Failed to load shelter details");
+                setError("Failed to load shop details");
             } finally {
                 setLoading(false);
             }
         };
 
-        if (shelter_id) fetchShelterDetails();
-    }, [shelter_id]);
+        if (shop_id) fetchShopDetails();
+    }, [shop_id]);
 
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -115,18 +95,18 @@ const ShelterProfilePage: React.FC = () => {
         );
     }
 
-    if (error || !shelter) {
+    if (error || !shop) {
         return (
             <div className="text-center mt-10">
                 <Navbar />
                 <div className="flex flex-col items-center justify-center min-h-[50vh]">
                     <h2 className="text-2xl font-bold text-gray-700">
-                        {error || "Shelter details not available"}
+                        {error || "Shop details not available"}
                     </h2>
                     <button
                         className="mt-4 p-3 bg-primary text-white rounded-3xl w-48"
                         onClick={() => (window.location.href = "/browse-pets")}>
-                        Browse Other Shelters
+                        Browse Other Shops
                     </button>
                 </div>
             </div>
@@ -136,19 +116,19 @@ const ShelterProfilePage: React.FC = () => {
     return (
         <>
             <Navbar />
-            <div className="shelter-profile min-h-screen bg-gray-50 py-8 px-4 md:px-8">
+            <div className="shop-profile min-h-screen bg-gray-50 py-8 px-4 md:px-8">
                 <div className="mx-auto max-w-6xl">
                     {/* Header Section */}
                     <div className="bg-white shadow-xl rounded-2xl overflow-hidden mb-8 p-6">
                         <div className="flex flex-col md:flex-row gap-8 items-start">
-                            {/* Shelter Logo and Basic Info */}
+                            {/* Shop Logo and Basic Info */}
                             <div className="flex-shrink-0">
                                 <div
                                     className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center bg-cover bg-center"
                                     style={{
-                                        backgroundImage: `url(${shelter.logo_url})`,
+                                        backgroundImage: `url(${shop.logo_url})`,
                                     }}>
-                                    {!shelter.logo_url && (
+                                    {!shop.logo_url && (
                                         <svg
                                             className="w-16 h-16 text-gray-400"
                                             fill="currentColor"
@@ -166,11 +146,8 @@ const ShelterProfilePage: React.FC = () => {
                             <div className="flex-1">
                                 <div className="flex flex-wrap items-center gap-3 mb-4">
                                     <h1 className="text-3xl font-bold text-gray-800">
-                                        {shelter.shelter_name}
+                                        {shop.shop_name}
                                     </h1>
-                                    {shelter.approved && (
-                                        <i className="bi bi-patch-check-fill h-5 w-5 text-[#cc8800]" />
-                                    )}
                                 </div>
 
                                 <div className="flex flex-wrap gap-4 mb-4 text-gray-600">
@@ -185,18 +162,7 @@ const ShelterProfilePage: React.FC = () => {
                                                 clipRule="evenodd"
                                             />
                                         </svg>
-                                        <span>{shelter.address}</span>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <svg
-                                            className="w-5 h-5 mr-2"
-                                            fill="currentColor"
-                                            viewBox="0 0 20 20">
-                                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                                        </svg>
-                                        <span>
-                                            Capacity: {shelter.capacity} animals
-                                        </span>
+                                        <span>{shop.address}</span>
                                     </div>
                                     <div className="flex items-center">
                                         <svg
@@ -211,16 +177,10 @@ const ShelterProfilePage: React.FC = () => {
                                         </svg>
                                         <span>
                                             Member Since:{" "}
-                                            {formatDate(shelter.created_at)}
+                                            {formatDate(shop.created_at)}
                                         </span>
                                     </div>
                                 </div>
-
-                                {shelter.description && (
-                                    <p className="text-gray-700 mb-6">
-                                        {shelter.description}
-                                    </p>
-                                )}
 
                                 {/* Action Buttons */}
                                 <div className="flex flex-wrap gap-3 mt-6">
@@ -228,7 +188,7 @@ const ShelterProfilePage: React.FC = () => {
                                         className="p-3 bg-primary text-white rounded-2xl flex items-center gap-2"
                                         onClick={() =>
                                             handleCopy(
-                                                shelter.contact.phone_number
+                                                shop.contact.phone_number
                                             )
                                         }>
                                         <svg
@@ -237,10 +197,10 @@ const ShelterProfilePage: React.FC = () => {
                                             viewBox="0 0 20 20">
                                             <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                                         </svg>
-                                        Call Shelter
+                                        Call Shop
                                     </button>
                                     <a
-                                        href={`mailto:${shelter.contact.email}`}
+                                        href={`mailto:${shop.contact.email}`}
                                         className="p-3 bg-gray-200 text-gray-700 rounded-2xl flex items-center gap-2">
                                         <svg
                                             className="w-5 h-5"
@@ -274,15 +234,15 @@ const ShelterProfilePage: React.FC = () => {
                                     : "text-gray-500"
                             }`}
                             onClick={() => setActiveTab("info")}>
-                            Shelter Information
+                            Shop Information
                         </button>
                     </div>
 
                     {/* Tab Content */}
                     {activeTab === "pets" ? (
                         <>
-                            {shelter.pets && shelter.pets.length > 0 ? (
-                                <RescuePetGrid pets={shelter.pets} />
+                            {shop.pets && shop.pets.length > 0 ? (
+                                <PartnerPetGrid pets={shop.pets} />
                             ) : (
                                 <div className="bg-white rounded-2xl p-12 text-center">
                                     <svg
@@ -318,14 +278,14 @@ const ShelterProfilePage: React.FC = () => {
                                                 Phone Number
                                             </p>
                                             <p>
-                                                {shelter.contact.phone_number}
+                                                {shop.contact.phone_number}
                                             </p>
                                         </div>
                                         <button
                                             className="p-2 rounded-full hover:bg-gray-200"
                                             onClick={() =>
                                                 handleCopy(
-                                                    shelter.contact.phone_number
+                                                    shop.contact.phone_number
                                                 )
                                             }>
                                             <svg
@@ -343,13 +303,13 @@ const ShelterProfilePage: React.FC = () => {
                                             <p className="font-medium">
                                                 Email Address
                                             </p>
-                                            <p>{shelter.contact.email}</p>
+                                            <p>{shop.contact.email}</p>
                                         </div>
                                         <button
                                             className="p-2 rounded-full hover:bg-gray-200"
                                             onClick={() =>
                                                 handleCopy(
-                                                    shelter.contact.email
+                                                    shop.contact.email
                                                 )
                                             }>
                                             <svg
@@ -366,7 +326,7 @@ const ShelterProfilePage: React.FC = () => {
                                         <p className="font-medium">
                                             Primary Contact
                                         </p>
-                                        <p>{shelter.contact.name}</p>
+                                        <p>{shop.contact.name}</p>
                                     </div>
                                 </div>
                             </div>
@@ -376,37 +336,34 @@ const ShelterProfilePage: React.FC = () => {
                                 <h3 className="text-xl font-semibold mb-4">
                                     Bank Information
                                 </h3>
-                                {shelter.bank_info ? (
+                                {shop.bank_info ? (
                                     <div className="space-y-4">
                                         <div className="p-3 bg-gray-50 rounded-xl">
                                             <p className="font-medium">
                                                 Account Title
                                             </p>
                                             <p>
-                                                {
-                                                    shelter.bank_info
-                                                        .account_title
-                                                }
+                                                {shop.bank_info.account_title}
                                             </p>
                                         </div>
                                         <div className="p-3 bg-gray-50 rounded-xl">
                                             <p className="font-medium">
                                                 Bank Name
                                             </p>
-                                            <p>{shelter.bank_info.bank_name}</p>
+                                            <p>{shop.bank_info.bank_name}</p>
                                         </div>
                                         <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                                             <div>
                                                 <p className="font-medium">
                                                     IBAN
                                                 </p>
-                                                <p>{shelter.bank_info.iban}</p>
+                                                <p>{shop.bank_info.iban}</p>
                                             </div>
                                             <button
                                                 className="p-2 rounded-full hover:bg-gray-200"
                                                 onClick={() =>
                                                     handleCopy(
-                                                        shelter.bank_info!.iban
+                                                        shop.bank_info!.iban
                                                     )
                                                 }>
                                                 <svg
@@ -426,106 +383,14 @@ const ShelterProfilePage: React.FC = () => {
                                 )}
                             </div>
 
-                            {/* Emergency Contacts */}
-                            {shelter.emergency_contacts && (
-                                <div className="bg-white rounded-2xl p-6 md:col-span-2">
-                                    <h3 className="text-xl font-semibold mb-4">
-                                        Emergency Contacts
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <div className="p-3 bg-gray-50 rounded-xl">
-                                            <p className="font-medium">
-                                                Primary Phone
-                                            </p>
-                                            <p>
-                                                {
-                                                    shelter.emergency_contacts
-                                                        .primary_phone
-                                                }
-                                            </p>
-                                        </div>
-                                        <div className="p-3 bg-gray-50 rounded-xl">
-                                            <p className="font-medium">
-                                                Backup Phone
-                                            </p>
-                                            <p>
-                                                {shelter.emergency_contacts
-                                                    .backup_phone ||
-                                                    "Not provided"}
-                                            </p>
-                                        </div>
-                                        <div className="p-3 bg-gray-50 rounded-xl">
-                                            <p className="font-medium">
-                                                Vet Name
-                                            </p>
-                                            <p>
-                                                {shelter.emergency_contacts
-                                                    .vet_name || "Not provided"}
-                                            </p>
-                                        </div>
-                                        <div className="p-3 bg-gray-50 rounded-xl">
-                                            <p className="font-medium">
-                                                Vet Phone
-                                            </p>
-                                            <p>
-                                                {shelter.emergency_contacts
-                                                    .vet_phone ||
-                                                    "Not provided"}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Animal Types Accepted */}
-                            {shelter.animal_types.length > 0 && (
-                                <div className="bg-white rounded-2xl p-6 md:col-span-2">
-                                    <h3 className="text-xl font-semibold mb-4">
-                                        Animal Types Accepted
-                                    </h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        {shelter.animal_types.map((type) => (
-                                            <span
-                                                key={type.id}
-                                                className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                                                {type.name}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Facility Photos */}
-                            {shelter.facility_photos.length > 0 && (
-                                <div className="bg-white rounded-2xl p-6 md:col-span-2">
-                                    <h3 className="text-xl font-semibold mb-4">
-                                        Facility Photos
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {shelter.facility_photos.map(
-                                            (photo, index) => (
-                                                <img
-                                                    key={index}
-                                                    src={photo}
-                                                    alt={`Facility photo ${
-                                                        index + 1
-                                                    }`}
-                                                    className="rounded-xl object-cover h-48 w-full"
-                                                />
-                                            )
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Social Media */}
-                            {shelter.social_media.length > 0 && (
+                            {shop.social_media.length > 0 && (
                                 <div className="bg-white rounded-2xl p-6 md:col-span-2">
                                     <h3 className="text-xl font-semibold mb-4">
                                         Social Media
                                     </h3>
                                     <div className="space-y-2">
-                                        {shelter.social_media.map(
+                                        {shop.social_media.map(
                                             (item, index) => (
                                                 <a
                                                     key={index}
@@ -559,4 +424,4 @@ const ShelterProfilePage: React.FC = () => {
     );
 };
 
-export default ShelterProfilePage;
+export default ShopProfilePage;

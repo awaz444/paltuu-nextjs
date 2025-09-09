@@ -87,12 +87,36 @@ export default function Marketplace() {
               price: displayPrice.toString(),
               original_price: product.compare_at_price ? product.compare_at_price.toString() : undefined,
               inStock: product.variants?.some((v: any) => v.stock > 0) || false,
-              rating: Math.floor(Math.random() * 5) + 1, // Placeholder until you have real ratings
-              ratingCount: Math.floor(Math.random() * 50) + 1, // Placeholder until you have real ratings
+              // rating & ratingCount will be populated from the reviews API below
+              rating: 0,
+              ratingCount: 0,
             };
           });
 
-        setProducts(transformedProducts);
+        // Fetch review summaries for each product in parallel and attach avg rating + count
+        try {
+          const productsWithReviews = await Promise.all(
+            transformedProducts.map(async (p: any) => {
+              try {
+                const resp = await fetch(`/api/bazaar/reviews?product_id=${encodeURIComponent(p.product_id)}`);
+                if (!resp.ok) return { ...p, rating: 0, ratingCount: 0 };
+                const reviews = await resp.json();
+                const list = Array.isArray(reviews) ? reviews : [];
+                const ratingCount = list.length;
+                const avg = ratingCount > 0 ? list.reduce((s: number, r: any) => s + (r.rating || 0), 0) / ratingCount : 0;
+                return { ...p, rating: Math.round(avg * 10) / 10, ratingCount };
+              } catch (e) {
+                return { ...p, rating: 0, ratingCount: 0 };
+              }
+            })
+          );
+
+          setProducts(productsWithReviews);
+        } catch (err) {
+          // If reviews fetch fails, fall back to the transformed list without ratings
+          console.warn('Failed to fetch review summaries:', err);
+          setProducts(transformedProducts);
+        }
       } catch (err: any) {
         console.error('Error fetching data:', err);
         setError(err.message || 'Failed to load products');

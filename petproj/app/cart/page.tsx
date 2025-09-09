@@ -1,6 +1,8 @@
 "use client";
-import { getOrCreateGuestSessionId } from "@/utils/guest";
 import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchCart, updateCartItem, removeCartItem } from '@/app/store/slices/cartSlice';
+import type { RootState, AppDispatch } from '@/app/store/store';
 import {
   X,
   Plus,
@@ -13,106 +15,67 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
+import { useRouter } from "next/navigation";
 
 interface CartItem {
-  item_id: number;
-  product_id: number;
+  id: string | number;
   title: string;
+  qty: number;
   price: number;
-  quantity: number;
   image?: string | null;
+  code?: string | number | null;
+  variantTitle?: string | null;
+  attributes?: Array<{ name?: string; value?: string }> | any;
 }
 
 const CartPage = () => {
   useSetPrimaryColor();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [updatedItems, setUpdatedItems] = useState<number[]>([]);
+  const dispatch = useDispatch<AppDispatch>();
+  const cartState = useSelector((s: RootState) => s.cart);
+  const cartItems: CartItem[] = cartState.items.map((it: any) => ({
+    id: it.id,
+    title: it.title,
+    qty: it.qty,
+    price: it.price,
+    image: it.image,
+  code: it.code ?? it.product_id ?? null,
+  variantTitle: it.variantTitle ?? (it.variant ? it.variant.title : null),
+  attributes: it.attributes ?? (it.variant && it.variant.attributes ? it.variant.attributes : []),
+  }));
+  const loading = cartState.loading;
+  const [updatedItems, setUpdatedItems] = useState<string[]>([]);
 
-  // ✅ Fetch cart on mount
   useEffect(() => {
-    const fetchCart = async () => {
-      try {
-        const guestToken = getOrCreateGuestSessionId();
-
-        const res = await fetch("/api/cart", {
-          credentials: "include",
-          headers: { "x-guest-token": guestToken },
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setCartItems(data);
-        }
-      } catch (err) {
-        console.error("Failed to load cart:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCart();
-  }, []);
+    dispatch(fetchCart());
+  }, [dispatch]);
 
   // ✅ Update quantity
-  const updateQuantity = async (itemId: number, newQuantity: number) => {
+  const updateQuantity = async (itemId: string | number, newQuantity: number) => {
     if (newQuantity < 1) return;
-
     try {
-      const guestToken = getOrCreateGuestSessionId();
-
-      const res = await fetch("/api/cart", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-guest-token": guestToken,
-        },
-        body: JSON.stringify({ item_id: itemId, quantity: newQuantity }),
-      });
-
-      if (res.ok) {
-        setCartItems((prev) =>
-          prev.map((item) =>
-            item.item_id === itemId ? { ...item, quantity: newQuantity } : item
-          )
-        );
-        setUpdatedItems((prev) => [...prev, itemId]);
-        setTimeout(() => {
-          setUpdatedItems((prev) => prev.filter((id) => id !== itemId));
-        }, 2000);
-      }
+      setUpdatedItems((prev) => [...prev, String(itemId)]);
+      setTimeout(() => {
+        setUpdatedItems((prev) => prev.filter((id) => id !== String(itemId)));
+      }, 2000);
+      await dispatch(updateCartItem({ cartItemId: itemId, quantity: newQuantity }) as any);
     } catch (err) {
       console.error("Failed to update quantity:", err);
     }
   };
 
   // ✅ Remove item
-  const removeItem = async (itemId: number) => {
+  const removeItem = async (itemId: string | number) => {
     try {
-      const guestToken = getOrCreateGuestSessionId();
-
-      const res = await fetch("/api/cart", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          "x-guest-token": guestToken,
-        },
-        body: JSON.stringify({ item_id: itemId }),
-      });
-
-      if (res.ok) {
-        setCartItems((prev) => prev.filter((item) => item.item_id !== itemId));
-      }
+      await dispatch(removeCartItem({ cartItemId: itemId }) as any);
     } catch (err) {
       console.error("Failed to remove item:", err);
     }
   };
 
   // ✅ Totals
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const deliveryFee = 500;
-  const total = subtotal + deliveryFee;
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+  const router = useRouter();
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-primary/5 to-white">
@@ -135,7 +98,7 @@ const CartPage = () => {
           </h1>
           <button
             className="flex items-center text-primary hover:text-primary-dark font-medium"
-            onClick={() => window.history.back()}
+            onClick={() => router.push('/marketplace')}
           >
             <ArrowLeft size={18} className="mr-1" />
             Continue Shopping
@@ -153,11 +116,11 @@ const CartPage = () => {
             ) : (
               cartItems.map((item) => (
                 <CartItemCard
-                  key={item.item_id}
+                  key={item.id}
                   item={item}
                   onUpdate={updateQuantity}
                   onRemove={removeItem}
-                  updated={updatedItems.includes(item.item_id)}
+                  updated={updatedItems.includes(String(item.id))}
                 />
               ))
             )}
@@ -198,18 +161,6 @@ const CartPage = () => {
                 label={`Subtotal (${cartItems.length} items)`}
                 value={subtotal}
               />
-              <SummaryRow label="Delivery" value={deliveryFee} />
-              <SummaryRow label="Discount" value={0} isDiscount />
-            </div>
-
-            <div className="border-t pt-4">
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total</span>
-                <span className="text-primary">
-                  PKR {total.toLocaleString()}
-                </span>
-              </div>
-              <p className="text-gray-500 text-sm mt-1">Including VAT</p>
             </div>
 
             <button className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-xl transition shadow-md">
@@ -218,7 +169,7 @@ const CartPage = () => {
 
             <div className="text-center">
               <p className="text-gray-500 text-sm">or</p>
-              <button className="text-primary border border-primary font-medium text-sm mt-2 px-4 py-2 rounded-xl hover:bg-primary/10 transition">
+              <button onClick={() => router.push('/marketplace')} className="text-primary border border-primary font-medium text-sm mt-2 px-4 py-2 rounded-xl hover:bg-primary/10 transition">
                 Continue Shopping
               </button>
             </div>
@@ -250,15 +201,15 @@ function CartItemCard({
   updated,
 }: {
   item: CartItem;
-  onUpdate: (id: number, qty: number) => void;
-  onRemove: (id: number) => void;
+  onUpdate: (id: string | number, qty: number) => void;
+  onRemove: (id: string | number) => void;
   updated: boolean;
 }) {
-  const [localQuantity, setLocalQuantity] = useState(item.quantity);
+  const [localQuantity, setLocalQuantity] = useState(item.qty);
 
   useEffect(() => {
-    setLocalQuantity(item.quantity);
-  }, [item.quantity]);
+    setLocalQuantity(item.qty);
+  }, [item.qty]);
 
   return (
     <div className="flex flex-col sm:flex-row items-start gap-6 bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow">
@@ -274,10 +225,81 @@ function CartItemCard({
       {/* Details */}
       <div className="flex-1">
         <div className="flex justify-between">
-          <h2 className="text-xl font-semibold text-gray-800">{item.title}</h2>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800">{item.title}</h2>
+            <div className="text-xs text-gray-500">Item Code: <span className="font-mono text-gray-700">{(item as any).sku ?? item.code ?? '-'}</span></div>
+            {/* Variant information if available */}
+            {/* {item.variantTitle && (
+              <div className="text-sm text-gray-600 mt-1">{item.variantTitle}</div>
+            )} */}
+            {/** Render attributes as labeled, unique lines */}
+            {item.attributes && (() => {
+              // normalize attributes into {name, value} pairs
+              const normalize = (attrs: any): Array<{ name: string; value: string }> => {
+                if (!attrs) return [];
+                const capitalize = (s: string) => typeof s === 'string' && s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s ?? '';
+
+                // helper to extract name/value from an object
+                const fromObj = (o: any) => {
+                  const name = o?.name ?? o?.attribute_name ?? o?.key ?? o?.label ?? o?.title ?? '';
+                  let value = o?.value ?? o?.attribute_value ?? o?.val ?? o?.attribute ?? o?.value_text ?? o?.attributes ?? '';
+                  if (Array.isArray(value)) value = value.map(v => (v?.value ?? v)).join(', ');
+                  if (typeof value === 'object' && value !== null) value = JSON.stringify(value);
+                  return { name: String(name || '').trim(), value: String(value ?? '').trim() };
+                };
+
+                if (Array.isArray(attrs)) {
+                  return attrs.map((a: any) => {
+                    if (typeof a === 'string') {
+                      const s = a.trim();
+                      // try to split on common separators like '::', ':' or '|'
+                      const m = s.match(/^([^:|]+)::?\s*(.+)$/) || s.match(/^([^|]+)\|\s*(.+)$/) || s.match(/^([^:\-]+)-\s*(.+)$/);
+                      if (m) return { name: capitalize(m[1].trim()), value: capitalize(m[2].trim()) };
+                      // if no separator, treat as value-only
+                      return { name: '', value: capitalize(s) };
+                    }
+                    return fromObj(a);
+                  }).map(({ name, value }) => ({ name: name || '', value: value || '' }));
+                }
+
+                if (typeof attrs === 'object') {
+                  // object map: {Color: 'Red', Size: '5kg'}
+                  return Object.entries(attrs).map(([k, v]) => ({ name: capitalize(k), value: String(v ?? '') }));
+                }
+                return [];
+              };
+
+              const raw = normalize(item.attributes) || [];
+              // dedupe by name+value using a simple loop to ensure an array
+              const seen = new Set<string>();
+              const deduped: Array<{ name: string; value: string }> = [];
+              for (const cur of raw) {
+                const key = `${cur?.name ?? ''}||${cur?.value ?? ''}`;
+                if (!seen.has(key)) {
+                  seen.add(key);
+                  deduped.push({ name: cur?.name ?? '', value: cur?.value ?? '' });
+                }
+              }
+
+              if (!Array.isArray(deduped) || deduped.length === 0) return null;
+
+              return (
+                <div className="text-xs text-gray-500 mt-1">
+                  {deduped.map((attr, idx) => (
+                    <div key={idx} className="leading-snug">
+                      {attr.name ? (
+                        <span className="text-gray-600">{attr.name}: </span>
+                      ) : null}
+                      <span className="font-medium text-gray-800">{attr.value}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
           <button
             className="p-2 rounded-full hover:bg-gray-100 transition"
-            onClick={() => onRemove(item.item_id)}
+            onClick={() => onRemove(item.id)}
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -307,9 +329,9 @@ function CartItemCard({
           </div>
 
           {/* ✅ Show Update button only if changed */}
-          {localQuantity !== item.quantity && (
+          {localQuantity !== item.qty && (
             <button
-              onClick={() => onUpdate(item.item_id, localQuantity)}
+              onClick={() => onUpdate(item.id, localQuantity)}
               className="ml-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition"
             >
               Update Cart

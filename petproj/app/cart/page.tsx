@@ -50,40 +50,8 @@ const CartPage = () => {
     dispatch(fetchCart());
   }, [dispatch]);
 
-  // ✅ Update quantity
-  const updateQuantity = async (itemId: string | number, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    try {
-      setUpdatedItems((prev) => [...prev, String(itemId)]);
-      setTimeout(() => {
-        setUpdatedItems((prev) => prev.filter((id) => id !== String(itemId)));
-      }, 2000);
-      await dispatch(updateCartItem({ cartItemId: itemId, quantity: newQuantity }) as any);
-    } catch (err) {
-      console.error("Failed to update quantity, updating locally:", err);
-      // Update locally if API fails
-      setCartItems((prev) =>
-        prev.map((item) =>
-          item.item_id === itemId ? { ...item, quantity: newQuantity } : item
-        )
-      );
-      setUpdatedItems((prev) => [...prev, itemId]);
-      setTimeout(() => {
-        setUpdatedItems((prev) => prev.filter((id) => id !== itemId));
-      }, 2000);
-    }
-  };
 
-  // ✅ Remove item
-  const removeItem = async (itemId: string | number) => {
-    try {
-      await dispatch(removeCartItem({ cartItemId: itemId }) as any);
-    } catch (err) {
-      console.error("Failed to remove item, removing locally:", err);
-      // Remove locally if API fails
-      setCartItems((prev) => prev.filter((item) => item.item_id !== itemId));
-    }
-  };
+
 
   // ✅ Totals
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
@@ -142,8 +110,8 @@ const CartPage = () => {
                 <CartItemCard
                   key={item.id}
                   item={item}
-                  onUpdate={updateQuantity}
-                  onRemove={removeItem}
+                  onUpdate={() => {}}
+                  onRemove={() => {}}
                   updated={updatedItems.includes(String(item.id))}
                 />
               ))

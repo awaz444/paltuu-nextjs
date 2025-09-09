@@ -28,19 +28,32 @@ const Navbar = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [mobileView, setMobileView] = useState("navlinks"); // 'navlinks' or 'dropdown'
-  let hideTimeout: ReturnType<typeof setTimeout>;
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
 
-  const handleMouseEnter = () => {
-    clearTimeout(hideTimeout); // Cancel the hide timeout
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = () => {  
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
     setIsDropdownOpen(true);
   };
 
   const handleMouseLeave = () => {
-    hideTimeout = setTimeout(() => setIsDropdownOpen(false), 200);
+    // Set a longer timeout to allow moving to dropdown
+    hideTimeoutRef.current = setTimeout(() => setIsDropdownOpen(false), 300);
   };
 
+  useEffect(() => {
+    return () => {
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
+    };
+  }, []);
+  
   // Use next-auth's useSession hook for Google login
   const { data: session, status } = useSession();
 
@@ -540,65 +553,153 @@ const arrowColor: Record<UserRole, string> = {
           </div>
 
           {isAuthenticated || session ? (
-            <button
-              className="flex items-center justify-center gap-2 loginBtn relative group overflow-hidden"
-              style={{ minWidth: dropdownWidth }}
-              onMouseEnter={() => { clearTimeout(hideTimeout); setIsDropdownOpen(true); }}
-              onMouseLeave={() => { hideTimeout = setTimeout(() => setIsDropdownOpen(false), 200); }}
+            <div 
+              className="relative group"
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
             >
-              {/* Profile Image with Badge - Updated nameplate */}
-              <div className="relative">
-                <Image
-                  src={profileImage}
-                  alt="Profile"
-                  width={40}
-                  height={40}
-                  className="w-10 h-10 rounded-full object-cover border-2 border-white/30 transition-all duration-300"
-                />
-                {isVerified && (
-                  <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
-                    <i className="bi bi-patch-check-fill text-amber-500 text-xs" />
-                  </div>
-                )}
-              </div>
-
-              {/* User Name - shown only on desktop */}
-              <div>
-                <span className="text-sm font-medium">{displayName}</span>
-              </div>
-
-              {/* Badges */}
-              <div className="flex items-center gap-1">
-                {isFoundersClub && (
-                  <div className="bg-white/20 p-1.5 rounded-full">
-                    <Image
-                      src="/primary_icon.svg"
-                      alt="Founders Club"
-                      width={16}
-                      height={16}
-                    />
-                  </div>
-                )}
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className={`transition-transform duration-200 ${
-                    isDropdownOpen ? "rotate-180" : ""
-                  }`}
-                >
-                  <path
-                    d="M6 9L12 15L18 9"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+              <button
+                className="flex items-center justify-center gap-2 loginBtn relative overflow-hidden"
+                style={{ minWidth: dropdownWidth }}
+              >
+                {/* Profile Image with Badge - Updated nameplate */}
+                <div className="relative">
+                  <Image
+                    src={profileImage}
+                    alt="Profile"
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-white/30 transition-all duration-300"
                   />
-                </svg>
-              </div>
-            </button>
+                  {isVerified && (
+                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
+                      <i className="bi bi-patch-check-fill text-amber-500 text-xs" />
+                    </div>
+                  )}
+                </div>
+
+                {/* User Name - shown only on desktop */}
+                <div>
+                  <span className="text-sm font-medium">{displayName}</span>
+                </div>
+
+                {/* Badges */}
+                <div className="flex items-center gap-1">
+                  {isFoundersClub && (
+                    <div className="bg-white/20 p-1.5 rounded-full">
+                      <Image
+                        src="/primary_icon.svg"
+                        alt="Founders Club"
+                        width={16}
+                        height={16}
+                      />
+                    </div>
+                  )}
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`transition-transform duration-200 ${
+                      isDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  >
+                    <path
+                      d="M6 9L12 15L18 9"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </button>
+              
+              {(isAuthenticated || session) && isDropdownOpen && (
+                <div
+                  className="dropdown-menu absolute right-0 bg-white shadow-lg z-20 rounded-2xl py-2 text-sm font-medium"
+                  style={{
+                    top: "calc(100% + 0.5rem)",
+                    width: dropdownWidth,
+                  }}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  {dropdownOverride && dropdownOverride.length ? (
+                    // Render only overridden items (e.g., Home, Logout) for panels
+                    <div>
+                      { (dropdownOverride as any).map((item: any) => (
+                        item.isAction ? (
+                          <div
+                            key={item.href}
+                            onClick={handleLogout}
+                            className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 cursor-pointer"
+                          >
+                            <i className="bi bi-box-arrow-right"></i> {item.label}
+                          </div>
+                        ) : (
+                          <Link key={item.href} href={item.href}>
+                            <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                              {item.label}
+                            </div>
+                          </Link>
+                        )
+                      ))}
+                    </div>
+                  ) : (
+                    <>
+                      {/* Profile / Panel */}
+                      <Link
+                        href={
+                          userRole === "vet"
+                            ? "/vet-panel"
+                            : userRole === "regular user"
+                            ? "/my-profile"
+                            : userRole === "admin"
+                            ? "/admin-panel"
+                            : "/"
+                        }
+                      >
+                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
+                          <i className="bi bi-person-circle text-gray-600"></i>
+                          {userRole === "vet"
+                            ? "Vet Panel"
+                            : userRole === "regular user"
+                            ? "My Profile"
+                            : userRole === "admin"
+                            ? "Admin Panel"
+                            : "Home"}
+                        </div>
+                      </Link>
+                      <div className="border-t my-1"></div>
+                      <Link href="/my-listings">
+                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                          <i className="bi bi-card-list text-gray-600"></i> My Listings
+                        </div>
+                      </Link>
+                      <Link href="/my-applications">
+                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                          <i className="bi bi-file-earmark-text text-gray-600"></i> My Applications
+                        </div>
+                      </Link>
+                      <Link href="/notifications">
+                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                          <i className="bi bi-bell text-gray-600"></i> Notifications
+                        </div>
+                      </Link>
+                      <div className="border-t my-1"></div>
+                      <div
+                        onClick={handleLogout}
+                        className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:rounded-b-2xl cursor-pointer"
+                      >
+                        <i className="bi bi-box-arrow-right"></i> Logout
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           ) : (
             <Link href="/login">
               <button
@@ -610,87 +711,6 @@ const arrowColor: Record<UserRole, string> = {
                 Login
               </button>
             </Link>
-          )}
-          {(isAuthenticated || session) && isDropdownOpen && (
-            <div
-              className="dropdown-menu absolute right-0 bg-white shadow-lg z-20 rounded-2xl py-2 text-sm font-medium"
-              style={{
-                top: "calc(100% + 0.5rem)",
-                width: dropdownWidth,
-              }}
-            >
-              {dropdownOverride && dropdownOverride.length ? (
-                // Render only overridden items (e.g., Home, Logout) for panels
-                <div>
-                  { (dropdownOverride as any).map((item: any) => (
-                    item.isAction ? (
-                      <div
-                        key={item.href}
-                        onClick={handleLogout}
-                        className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 cursor-pointer"
-                      >
-                        <i className="bi bi-box-arrow-right"></i> {item.label}
-                      </div>
-                    ) : (
-                      <Link key={item.href} href={item.href}>
-                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                          {item.label}
-                        </div>
-                      </Link>
-                    )
-                  ))}
-                </div>
-              ) : (
-                <>
-                  {/* Profile / Panel */}
-                  <Link
-                    href={
-                      userRole === "vet"
-                        ? "/vet-panel"
-                        : userRole === "regular user"
-                        ? "/my-profile"
-                        : userRole === "admin"
-                        ? "/admin-panel"
-                        : "/"
-                    }
-                  >
-                    <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
-                      <i className="bi bi-person-circle text-gray-600"></i>
-                      {userRole === "vet"
-                        ? "Vet Panel"
-                        : userRole === "regular user"
-                        ? "My Profile"
-                        : userRole === "admin"
-                        ? "Admin Panel"
-                        : "Home"}
-                    </div>
-                  </Link>
-                  <div className="border-t my-1"></div>
-                  <Link href="/my-listings">
-                    <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                      <i className="bi bi-card-list text-gray-600"></i> My Listings
-                    </div>
-                  </Link>
-                  <Link href="/my-applications">
-                    <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                      <i className="bi bi-file-earmark-text text-gray-600"></i> My Applications
-                    </div>
-                  </Link>
-                  <Link href="/notifications">
-                    <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                      <i className="bi bi-bell text-gray-600"></i> Notifications
-                    </div>
-                  </Link>
-                  <div className="border-t my-1"></div>
-                  <div
-                    onClick={handleLogout}
-                    className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:rounded-b-2xl cursor-pointer"
-                  >
-                    <i className="bi bi-box-arrow-right"></i> Logout
-                  </div>
-                </>
-              )}
-            </div>
           )}
                 </div>
             </div>

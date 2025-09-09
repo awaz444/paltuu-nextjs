@@ -7,18 +7,20 @@ import { useRouter } from "next/navigation";
 import { Card, Button, Spin, message } from "antd";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import BulkPetUploadForm from "../../components/BulkPetUploadForm";
+import SinglePetUploadForm from "../../components/SinglePetUploadForm";
 import ProfileContent from "../../components/ProfileContent";
 import NotificationsContent from "../../components/NotificationsContent";
 import MyListingGrid from "../../components/MyListingGrid";
-import { UploadOutlined, UnorderedListOutlined, UserOutlined, BellOutlined, FileTextOutlined } from "@ant-design/icons";
+import { UploadOutlined, UnorderedListOutlined, UserOutlined, BellOutlined, FileTextOutlined, PlusOutlined } from "@ant-design/icons";
 
 export default function RescuePanel() {
   useSetPrimaryColor();
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'bulk' | 'listings' | 'profile' | 'notifications' | 'applications'>('bulk');
+  const [activeTab, setActiveTab] = useState<'bulk' | 'single' | 'listings' | 'profile' | 'notifications' | 'applications'>('bulk');
   const [mobileSolid, setMobileSolid] = useState(true);
+  const [entityData, setEntityData] = useState<{id: number, name: string} | null>(null);
 
   useEffect(() => {
     const check = () => {
@@ -36,6 +38,32 @@ export default function RescuePanel() {
     const t = setTimeout(check, 100);
     return () => clearTimeout(t);
   }, [isAuthenticated, user, router]);
+
+  // Fetch shelter entity data
+  useEffect(() => {
+    const fetchEntityData = async () => {
+      if (!user?.id && !user?.user_id) return;
+      
+      try {
+        const userId = user.id || user.user_id;
+        const response = await fetch(`/api/user-shops-shelters?user_id=${userId}`);
+        const data = await response.json();
+        
+        if (data.success && data.entity) {
+          setEntityData({
+            id: data.entity.id,
+            name: data.entity.name
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching shelter data:', error);
+      }
+    };
+
+    if (user && (user.id || user.user_id)) {
+      fetchEntityData();
+    }
+  }, [user]);
 
   useEffect(() => {
     const onScroll = () => setMobileSolid(window.scrollY < 24);
@@ -82,6 +110,12 @@ export default function RescuePanel() {
               <UploadOutlined /> <span className="ml-2">Bulk Upload</span>
             </button>
             <button
+              className={`relative flex-shrink-0 px-3 py-2 text-white rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'single' ? 'after:w-[calc(100%-1.5rem)] bg-white/10' : 'after:w-0'}`}
+              onClick={() => setActiveTab('single')}
+            >
+              <PlusOutlined /> <span className="ml-2">Single Pet</span>
+            </button>
+            <button
               className={`relative flex-shrink-0 px-3 py-2 text-white rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'listings' ? 'after:w-[calc(100%-1.5rem)] bg-white/10' : 'after:w-0'}`}
               onClick={() => setActiveTab('listings')}
             >
@@ -126,6 +160,10 @@ export default function RescuePanel() {
                         onClick={() => setActiveTab('bulk')}>
                   <UploadOutlined /> <span>Bulk Upload Pets</span>
                 </button>
+                <button className={`relative flex items-center gap-2 text-left px-3 py-2 rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'single' ? 'text-white cursor-default after:w-[calc(100%-1.5rem)]' : 'text-white after:w-0'}`}
+                        onClick={() => setActiveTab('single')}>
+                  <PlusOutlined /> <span>Single Pet Upload</span>
+                </button>
                 <button className={`relative flex items-center gap-2 text-left px-3 py-2 rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'listings' ? 'text-white cursor-default after:w-[calc(100%-1.5rem)]' : 'text-white after:w-0'}`}
                         onClick={() => setActiveTab('listings')}>
                   <UnorderedListOutlined /> <span>My Listings</span>
@@ -152,8 +190,21 @@ export default function RescuePanel() {
                 <div className="mt-4">
                   <BulkPetUploadForm
                     entityType="shelter"
-                    entityId={1}
-                    entityName="My Rescue Shelter"
+                    entityId={entityData?.id || 1}
+                    entityName={entityData?.name || "My Rescue Shelter"}
+                    showPrice={false}
+                  />
+                </div>
+              </Card>
+            )}
+            {activeTab === 'single' && (
+              <Card title="Single Pet Upload" className="shadow-sm">
+                <p className="mb-4">Upload a single pet listing for your shelter.</p>
+                <div className="mt-4">
+                  <SinglePetUploadForm
+                    entityType="shelter"
+                    entityId={entityData?.id || 1}
+                    entityName={entityData?.name || "My Rescue Shelter"}
                     showPrice={false}
                   />
                 </div>

@@ -2,6 +2,10 @@ import React from "react";
 import Link from "next/link";
 import { ShoppingCartOutlined } from "@ant-design/icons";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
+import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
+import { fetchCart, addToCart } from '@/app/store/slices/cartSlice';
+import type { AppDispatch } from '@/app/store/store';
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import "./productGrid.css";
 
@@ -26,33 +30,26 @@ interface ProductGridProps {
 const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
   useSetPrimaryColor();
 
+  const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+
   const handleAddToCart = async (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
-
     try {
-      const guestToken = getOrCreateGuestSessionId();
-
-      const res = await fetch("/api/cart", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-guest-token": guestToken || "",
-        },
-        body: JSON.stringify({
-          product_id: product.product_id,
-          quantity: 1,
-        }),
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        console.error("Failed to add to cart");
+      // If product has variants, redirect to product details to choose variant
+      // We check for a 'has_variants' flag or variants list — infer from product.collection or a field if available
+      // Fallback: if collection name includes 'variant' or if product has a property 'hasVariants'
+      const hasVariants = (product as any).hasVariants || (product as any).variants?.length > 0 || false;
+      if (hasVariants) {
+        router.push(`/marketplace/${product.product_id}`);
         return;
       }
 
-      const data = await res.json();
-      console.log("Cart updated:", data);
+      // Add using centralized thunk (uses bazaar endpoint)
+      dispatch(addToCart({ sessionId: getOrCreateGuestSessionId(), productId: product.product_id, variantId: null, quantity: 1 }) as any).then(() => {
+        dispatch(fetchCart());
+      });
     } catch (err) {
       console.error("Error adding to cart:", err);
     }

@@ -88,6 +88,7 @@ export default function RescuePanel() {
           { href: "/logout", label: "Logout", isAction: true },
         ]}
         logoHref="/rescue-panel"
+        hideCart
       />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-4">Rescue Shelter Panel</h1>

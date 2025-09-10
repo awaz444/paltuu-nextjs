@@ -208,29 +208,29 @@ const arrowColor: Record<UserRole, string> = {
   const cartItemsNav = cartState.items ?? [];
   const cartLoading = cartState.loading ?? false;
 
-  // Helper to ensure cart is loaded if stale or empty
-  const ensureCartLoaded = () => {
-    const now = Date.now();
-    const stale = !cartState.lastFetched || (now - (cartState.lastFetched || 0) > 60 * 1000); // 60s
-    if (stale) dispatch(fetchCart());
-  };
+  // Bounce animation for cart button
+  const [bounce, setBounce] = useState(false);
+  const prevTotalRef = useRef(0);
+  const totalCartItems = cartItemsNav.reduce((sum, item) => sum + item.qty, 0);
 
-  const handleCartMouseEnter = () => {
-    if (cartHideTimeout.current) {
-      clearTimeout(cartHideTimeout.current);
-      cartHideTimeout.current = null;
+  useEffect(() => {
+    if (totalCartItems > prevTotalRef.current) {
+      setBounce(true);
+      setTimeout(() => setBounce(false), 500); // 0.5s bounce
     }
-    setCartOpen(true);
-    ensureCartLoaded();
-  };
+    prevTotalRef.current = totalCartItems;
+  }, [totalCartItems]);
 
+  // Cart dropdown mouse handlers
+  const handleCartMouseEnter = () => {
+    if (cartHideTimeout.current) clearTimeout(cartHideTimeout.current);
+    setCartOpen(true);
+  };
   const handleCartMouseLeave = () => {
     if (cartHideTimeout.current) clearTimeout(cartHideTimeout.current);
-    cartHideTimeout.current = setTimeout(() => {
-      setCartOpen(false);
-      cartHideTimeout.current = null;
-    }, 350);
+    cartHideTimeout.current = setTimeout(() => setCartOpen(false), 350);
   };
+
 
   // Log the auth context props as soon as they are fetched
   useEffect(() => {
@@ -509,64 +509,75 @@ const arrowColor: Record<UserRole, string> = {
         </div>
 
   <div className="dropdown relative flex items-center gap-4">
-          {/* Cart button - hidden on specific pages when hideCart is true */}
-          { !hideCart && (
-            <div
-              className="relative"
-              onMouseEnter={handleCartMouseEnter}
-              onMouseLeave={handleCartMouseLeave}
+          {/* Cart */}
+        {!hideCart && (
+          <div
+            className="relative"
+            onMouseEnter={handleCartMouseEnter}
+            onMouseLeave={handleCartMouseLeave}
+          >
+            <button
+              onClick={() => setCartOpen((v) => !v)}
+              className={`flex items-center gap-2 cartBtn p-2 rounded-md bg-white/10 hover:bg-white/20 ${
+                bounce ? "animate-bounce" : ""
+              }`}
             >
-              <button onClick={() => setCartOpen((v) => !v)} className="flex items-center gap-2 cartBtn p-2 rounded-md bg-white/10 hover:bg-white/20">
-                <i className="bi bi-cart3 text-white" />
-                <span className="sr-only">Cart</span>
-                {cartItemsNav.length > 0 && (
-                  <span className="ml-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs px-2 py-0.5">
-                    {cartItemsNav.length}
-                  </span>
-                )}
-              </button>
+              <i className="bi bi-cart3 text-white" />
+              <span className="sr-only">Cart</span>
+              {totalCartItems > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs px-2 py-0.5">
+                  {totalCartItems}
+                </span>
+              )}
+            </button>
 
-              {cartOpen && (
-                <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-lg z-30 p-4 text-sm">
-                  <div className="flex items-center justify-between font-medium mb-3">
-                    <div>Cart</div>
-                    <div className="text-xs text-gray-500">{cartItemsNav.length} items</div>
-                  </div>
-                  {cartLoading ? (
-                    <div className="text-gray-500">Loading...</div>
-                  ) : cartItemsNav.length === 0 ? (
-                    <div className="text-gray-500">Your cart is empty.</div>
-                  ) : (
-                    <div className="divide-y max-h-64 overflow-auto">
-                      {cartItemsNav.map((it) => (
-                        <div key={it.id} className="py-3 flex items-center gap-4">
-                          <div className="w-14 h-14 rounded overflow-hidden bg-gray-100 flex-shrink-0">
-                            <img src={it.image ?? '/placeholder-product.jpg'} alt={it.title ?? 'cart item'} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="truncate font-medium">{it.title}</div>
-                            <div className="text-xs text-gray-500">Code: <span className="text-gray-700">{it.code ?? '-'}</span></div>
-                            <div className="text-xs text-gray-500">Qty: {it.qty}</div>
-                          </div>
-                          <div className="text-sm font-semibold">PKR {it.price.toLocaleString()}</div>
+            {cartOpen && (
+              <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-lg z-30 p-4 text-sm">
+                <div className="flex items-center justify-between font-medium mb-3">
+                  <div>Cart</div>
+                  <div className="text-xs text-gray-500">{totalCartItems} items</div>
+                </div>
+
+                {cartState.loading ? (
+                  <div className="text-gray-500">Loading...</div>
+                ) : cartItemsNav.length === 0 ? (
+                  <div className="text-gray-500">Your cart is empty.</div>
+                ) : (
+                  <div className="divide-y max-h-64 overflow-auto">
+                    {cartItemsNav.map((it) => (
+                      <div key={it.id} className="py-3 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded overflow-hidden bg-gray-100 flex-shrink-0">
+                          <img src={it.image ?? '/placeholder-product.jpg'} alt={it.title ?? 'cart item'} className="w-full h-full object-cover" />
                         </div>
-                      ))}
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate font-medium">{it.title}</div>
+                          <div className="text-xs text-gray-500">Code: <span className="text-gray-700">{it.code ?? '-'}</span></div>
+                          <div className="text-xs text-gray-500">Qty: {it.qty}</div>
+                        </div>
+                        <div className="text-sm font-semibold">
+                          PKR {(it.price * it.qty).toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="border-t mt-3 pt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm text-gray-600">Subtotal</div>
+                    <div className="text-sm font-semibold">
+                      PKR {cartItemsNav.reduce((s, i) => s + i.price * i.qty, 0).toLocaleString()}
                     </div>
-                  )}
-                  <div className="border-t mt-3 pt-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-sm text-gray-600">Subtotal</div>
-                      <div className="text-sm font-semibold">PKR {cartItemsNav.reduce((s, i) => s + i.price * i.qty, 0).toLocaleString()}</div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => (window.location.href = '/cart')} className="flex-1 bg-primary text-white py-2 rounded-lg font-medium">Go to Cart</button>
-                      <button onClick={() => (window.location.href = '/checkout')} className="flex-1 border border-primary text-primary py-2 rounded-lg font-medium">Checkout</button>
-                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => router.push('/cart')} className="flex-1 bg-primary text-white py-2 rounded-lg font-medium">Go to Cart</button>
+                    <button onClick={() => router.push('/checkout')} className="flex-1 border border-primary text-primary py-2 rounded-lg font-medium">Checkout</button>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
+        )}
 
           {isAuthenticated || session ? (
             <div 

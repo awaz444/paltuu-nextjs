@@ -86,7 +86,7 @@ const CheckoutPage = () => {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8 flex items-center">
-            <button className="flex items-center text-gray-600 hover:text-primary transition-colors mr-4">
+            <button onClick={() => router.push('/cart')} className="flex items-center text-gray-600 hover:text-primary transition-colors mr-4">
               <ArrowLeft size={20} className="mr-2" />
               Back to Cart
             </button>

@@ -10,8 +10,8 @@ export async function GET(req: NextRequest, { params }: any) {
     const colCheck = await client.query("SELECT 1 FROM information_schema.columns WHERE table_name = 'bazaar_product_media' AND column_name = 'variant_id' LIMIT 1");
     const hasVariantMediaCol = (colCheck && (colCheck.rowCount || 0) > 0) || false;
     const variantsSubquery = hasVariantMediaCol
-      ? `(SELECT json_agg(json_build_object('variant_id', v.variant_id, 'title', v.title, 'sku', v.sku, 'price_override', v.price_override, 'stock', v.stock, 'attributes', v.attributes, 'images', COALESCE((SELECT json_agg(url ORDER BY ordering) FROM bazaar_product_media m2 WHERE m2.variant_id = v.variant_id), '[]'::json))) FROM bazaar_product_variants v WHERE v.product_id = p.product_id)`
-      : `(SELECT json_agg(json_build_object('variant_id', v.variant_id, 'title', v.title, 'sku', v.sku, 'price_override', v.price_override, 'stock', v.stock, 'attributes', v.attributes, 'images', '[]'::json)) FROM bazaar_product_variants v WHERE v.product_id = p.product_id)`;
+      ? `(SELECT json_agg(json_build_object('variant_id', v.variant_id, 'title', v.title, 'sku', v.sku, 'price_override', v.price_override, 'compare_at_price', v.compare_at_price, 'stock', v.stock, 'attributes', v.attributes, 'images', COALESCE((SELECT json_agg(url ORDER BY ordering) FROM bazaar_product_media m2 WHERE m2.variant_id = v.variant_id), '[]'::json))) FROM bazaar_product_variants v WHERE v.product_id = p.product_id)`
+      : `(SELECT json_agg(json_build_object('variant_id', v.variant_id, 'title', v.title, 'sku', v.sku, 'price_override', v.price_override, 'compare_at_price', v.compare_at_price, 'stock', v.stock, 'attributes', v.attributes, 'images', '[]'::json)) FROM bazaar_product_variants v WHERE v.product_id = p.product_id)`;
 
     const q = `
       SELECT p.*,
@@ -49,7 +49,7 @@ export async function PUT(req: NextRequest, { params }: any) {
       return candidate;
     }
     // Allowed fields for direct product update
-  const updatable = ['title','slug','description','short_description','price','compare_at_price','currency','sku','shipping_weight','featured','status','seo_title','seo_description','has_variants','variant_attributes'];
+  const updatable = ['title','slug','description','short_description','price','currency','sku','shipping_weight','featured','status','seo_title','seo_description','has_variants','variant_attributes'];
 
     const fields: string[] = [];
     const values: any[] = [];
@@ -94,12 +94,13 @@ export async function PUT(req: NextRequest, { params }: any) {
       for (const v of (body as any).variants) {
         let variantSku = v.sku || `${(body as any).sku || 'SKU'}-${Math.random().toString(36).substr(2,5).toUpperCase()}`;
         variantSku = await ensureUniqueSkuAcrossTables(variantSku);
-        const variantQuery = `INSERT INTO bazaar_product_variants (product_id, title, sku, price_override, stock, weight_override, attributes, is_default, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW()) RETURNING *`;
+        const variantQuery = `INSERT INTO bazaar_product_variants (product_id, title, sku, price_override, compare_at_price, stock, weight_override, attributes, is_default, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW(),NOW()) RETURNING *`;
         const variantValues = [
           id,
           v.title || null,
           variantSku,
           v.price_override ?? null,
+          v.compare_at_price ?? null,
           v.stock ?? 0,
           v.weight_override ?? null,
           v.attributes ? JSON.stringify(v.attributes) : null,

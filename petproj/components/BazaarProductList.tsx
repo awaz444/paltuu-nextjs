@@ -89,9 +89,13 @@ const BazaarProductList: React.FC<Props> = ({ products }) => {
                     <div className="text-3xl font-bold text-primary mb-2">
                       {formatPrice(selectedProduct.price)}
                     </div>
-                    {selectedProduct.compare_at_price && selectedProduct.compare_at_price > selectedProduct.price && (
+                    {(
+                      (selectedProduct.variants && selectedProduct.variants[0]?.compare_at_price) || selectedProduct.compare_at_price
+                    ) && (
                       <div className="text-gray-500 line-through">
-                        {formatPrice(selectedProduct.compare_at_price)}
+                        {formatPrice(
+                          (selectedProduct.variants && selectedProduct.variants[0]?.compare_at_price) || selectedProduct.compare_at_price
+                        )}
                       </div>
                     )}
                   </div>

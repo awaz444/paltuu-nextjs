@@ -157,7 +157,7 @@ const CartPage = () => {
           {cartItems.length > 0 && (
             <div
               className="bg-white shadow-lg rounded-2xl p-6 space-y-6 h-fit
-                 order-2 lg:order-2 
+                 order-2 lg:order-2
                  relative lg:sticky lg:top-28"
             >
               <h2 className="text-xl font-semibold text-gray-800 border-b pb-4">
@@ -171,7 +171,7 @@ const CartPage = () => {
                 />
               </div>
 
-              <button className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-xl transition shadow-md">
+              <button onClick={() => router.push('/checkout')} className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-xl transition shadow-md">
                 Proceed to Checkout
               </button>
 
@@ -208,7 +208,7 @@ const CartPage = () => {
           {/* Trust Badges */}
           {cartItems.length > 0 && (
             <div
-              className="bg-white rounded-2xl p-6 shadow-md mt-8 
+              className="bg-white rounded-2xl p-6 shadow-md mt-8
                     order-3 lg:col-span-2 lg:order-3"
             >
               <h3 className="text-lg font-semibold text-gray-800 mb-4">

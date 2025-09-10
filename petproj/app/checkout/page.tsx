@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   Truck,
@@ -12,6 +12,8 @@ import {
   BadgePercent,
 } from "lucide-react";
 import Navbar from "@/components/navbar";
+import { useRouter } from "next/navigation";
+import { getOrCreateGuestSessionId } from "@/utils/guest";
 import { FaUniversity } from "react-icons/fa";
 
 interface CartItem {
@@ -23,35 +25,34 @@ interface CartItem {
 }
 
 const CheckoutPage = () => {
-  const [cartItems] = useState<CartItem[]>([
-    {
-      id: 1,
-      name: "Golden Retriever Puppy",
-      price: 25000,
-      image: "/pets/dog1.jpg",
-      quantity: 1,
-    },
-    {
-      id: 2,
-      name: "Persian Cat",
-      price: 18000,
-      image: "/pets/cat1.jpg",
-      quantity: 1,
-    },
-  ]);
+  const [cart, setCart] = useState<any | null>(null);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [loadingCart, setLoadingCart] = useState(true);
 
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState("");
+  const [placing, setPlacing] = useState(false);
+  const router = useRouter();
+
+  // Customer / Shipping form state
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [address, setAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cod");
+  useLoadCart(setCart, setCartItems, setLoadingCart);
 
   const subtotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
   );
-  const shipping = 1200;
-  const tax = subtotal * 0.05; // 5% tax
-  const total = subtotal + shipping + tax - discount;
+  const shipping = 200;
+  // const tax = subtotal * 0.05; // 5% tax
+  const total = subtotal + shipping - discount;
 
   const applyPromoCode = () => {
     setPromoError("");
@@ -109,6 +110,8 @@ const CheckoutPage = () => {
                     <input
                       type="email"
                       placeholder="Enter email address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     />
                   </div>
@@ -119,6 +122,8 @@ const CheckoutPage = () => {
                     <input
                       type="text"
                       placeholder="Enter your full name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
                       className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     />
                   </div>
@@ -129,6 +134,8 @@ const CheckoutPage = () => {
                     <input
                       type="text"
                       placeholder="Enter phone number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
                       className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     />
                   </div>
@@ -159,6 +166,8 @@ const CheckoutPage = () => {
                     </label>
                     <textarea
                       placeholder="Enter your complete address"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
                       className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                       rows={3}
                     />
@@ -179,7 +188,8 @@ const CheckoutPage = () => {
                       type="radio"
                       name="payment"
                       className="h-4 w-4 text-primary"
-                      defaultChecked
+                      checked={paymentMethod === 'cod'}
+                      onChange={() => setPaymentMethod('cod')}
                     />
                     <Banknote size={20} className="text-green-600" />
                     <div>
@@ -197,6 +207,8 @@ const CheckoutPage = () => {
                       type="radio"
                       name="payment"
                       className="h-4 w-4 text-primary"
+                      checked={paymentMethod === 'card'}
+                      onChange={() => setPaymentMethod('card')}
                     />
                     <CreditCard size={20} className="text-blue-600" />
                     <div className="flex flex-col">
@@ -213,7 +225,7 @@ const CheckoutPage = () => {
                             src="/mastercard.svg"
                             alt="MasterCard"
                             width={25}
-                            height={15}   
+                            height={15}
                           />
                           <Image
                             src="/unionpay.svg"
@@ -235,6 +247,8 @@ const CheckoutPage = () => {
                       type="radio"
                       name="payment"
                       className="h-4 w-4 text-primary"
+                      checked={paymentMethod === 'bank'}
+                      onChange={() => setPaymentMethod('bank')}
                     />
                     <FaUniversity size={22} className="text-indigo-600" />
                     <div>
@@ -325,7 +339,7 @@ const CheckoutPage = () => {
                     <button
                       onClick={applyPromoCode}
                       disabled={!promoCode.trim()}
-                      className="shrink-0 px-4 py-3 bg-primary text-white rounded-xl hover:bg-primary-dark 
+                      className="shrink-0 px-4 py-3 bg-primary text-white rounded-xl hover:bg-primary-dark
              disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
                     >
                       <BadgePercent size={18} className="mr-1" />
@@ -355,18 +369,18 @@ const CheckoutPage = () => {
               </div>
 
               {/* Order Totals */}
-              <div className="space-y-3 text-gray-700 border-t pt-4">
+        <div className="space-y-3 text-gray-700 border-t pt-4">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>Rs {subtotal.toLocaleString()}</span>
+          <span>Rs {subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
                   <span>Rs {shipping.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Tax</span>
-                  <span>Rs {tax.toLocaleString()}</span>
+                  {/* <span>Tax</span> */}
+                  {/* <span>Rs {tax.toLocaleString()}</span> */}
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-green-600">
@@ -387,8 +401,51 @@ const CheckoutPage = () => {
               </div>
 
               {/* Place Order Button */}
-              <button className="w-full mt-6 bg-primary hover:bg-primary-dark text-white font-semibold py-3.5 rounded-xl shadow-md transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.99]">
-                Place Order
+              <button
+                disabled={placing}
+                onClick={async () => {
+                  if (!cart || cart.items?.length === 0) return alert('Cart is empty');
+                  if (!email || !fullName || !phone || !address) return alert('Please fill required shipping information');
+                  setPlacing(true);
+                  try {
+                    const sessionId = getOrCreateGuestSessionId();
+                    const body = {
+                      userId: null,
+                      sessionId,
+                      cartId: cart.cart_id,
+                      customerInfo: { email, phone, name: fullName },
+                      shippingAddress: { city, postalCode, address },
+                      billingAddress: null,
+                      paymentMethod,
+                      notes: ''
+                    };
+
+                    const res = await fetch('/api/bazaar/orders', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(body),
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                      alert(data.message || data.error || 'Failed to place order');
+                      setPlacing(false);
+                      return;
+                    }
+
+                    const order = data.order;
+                    // redirect to order confirmed with order number
+                    router.push(`/order-confirmed?orderNumber=${encodeURIComponent(order.order_number)}`);
+                  } catch (err) {
+                    console.error('Place order failed', err);
+                    alert('Failed to place order');
+                  } finally {
+                    setPlacing(false);
+                  }
+                }}
+                className="w-full mt-6 bg-primary hover:bg-primary-dark text-white font-semibold py-3.5 rounded-xl shadow-md transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.99] disabled:opacity-60"
+              >
+                {placing ? 'Placing order...' : 'Place Order'}
               </button>
             </div>
           </div>
@@ -399,3 +456,27 @@ const CheckoutPage = () => {
 };
 
 export default CheckoutPage;
+
+// fetch cart on mount
+function useLoadCart(setCart: any, setCartItems: any, setLoadingCart: any) {
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoadingCart(true);
+      try {
+        const sessionId = getOrCreateGuestSessionId();
+        const res = await fetch(`/api/bazaar/cart?sessionId=${encodeURIComponent(sessionId)}`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!mounted) return;
+        setCart(json.cart);
+        setCartItems((json.items || []).map((it: any) => ({ id: it.cart_item_id, name: it.product_title || '', price: Number(it.effective_price || 0), image: it.image_url || '/placeholder-product.jpg', quantity: it.quantity })));
+      } catch (e) {
+        console.warn('Failed to load cart', e);
+      } finally {
+        setLoadingCart(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+}

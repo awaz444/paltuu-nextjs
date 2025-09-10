@@ -165,6 +165,18 @@ const arrowColor: Record<UserRole, string> = {
       isAction: false,
     },
     {
+      href: "/my-orders",
+      label: "My Orders",
+      icon: "bi-bag",
+      isAction: false,
+    },
+    {
+      href: "/notifications",
+      label: "Notifications",
+      icon: "bi-bell",
+      isAction: false,
+    },
+    {
       href: "/logout",
       label: "Logout",
       icon: "bi-box-arrow-right",
@@ -685,6 +697,11 @@ const arrowColor: Record<UserRole, string> = {
                       <Link href="/my-applications">
                         <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
                           <i className="bi bi-file-earmark-text text-gray-600"></i> My Applications
+                        </div>
+                      </Link>
+                      <Link href="/my-orders">
+                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                          <i className="bi bi-bag text-gray-600"></i> My Orders
                         </div>
                       </Link>
                       <Link href="/notifications">

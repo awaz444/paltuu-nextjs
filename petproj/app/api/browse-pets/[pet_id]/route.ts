@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/index";
 
+// ... existing imports ...
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     const pet_id = req.nextUrl.pathname.split('/').pop(); 
@@ -18,7 +20,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     try {
         await client.connect();
 
-        const query = `
+        // Main pet query
+        const petQuery = `
         SELECT 
             pets.pet_id, 
             pets.owner_id, 
@@ -46,16 +49,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             pets.neutered, 
             pets.shelter_id,
             pets.shop_id,
+            pets.rescue_story,
             users.user_id, 
             users.username, 
             users.name, 
             users.email, 
             users.phone_number, 
             users.profile_image_url, 
-            cities.city_name AS city, 
-            pet_images.image_id, 
-            pet_images.image_url, 
-            pet_images."order",
+            cities.city_name AS city,
             rescue_shelters.shelter_id as rescue_shelter_id,
             rescue_shelters.shelter_name,
             rescue_shelters.logo_url as shelter_logo,
@@ -65,16 +66,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         FROM pets
         JOIN users ON pets.owner_id = users.user_id
         JOIN cities ON pets.city_id = cities.city_id
-        LEFT JOIN pet_images ON pets.pet_id = pet_images.pet_id
         LEFT JOIN rescue_shelters ON pets.shelter_id = rescue_shelters.shelter_id
         LEFT JOIN shops ON pets.shop_id = shops.shop_id
         WHERE pets.pet_id = $1
-        ORDER BY pet_images."order" ASC;
         `;
 
-        const result = await client.query(query, [pet_id]);
+        const petResult = await client.query(petQuery, [pet_id]);
 
-        if (result.rows.length === 0) {
+        if (petResult.rows.length === 0) {
             return NextResponse.json(
                 { error: "Pet not found" },
                 {
@@ -84,16 +83,41 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             );
         }
 
-        const petData = result.rows;
-        const pet = petData[0]; // Extract the pet data (first record)
+        const pet = petResult.rows[0];
 
-        const images = petData
-            .filter((row: any) => row.image_id) // Only include rows with images
-            .map((image: any) => ({
-                image_id: image.image_id,
-                image_url: image.image_url,
-                order: image.order,
-            }));
+        // Images query
+        const imagesQuery = `
+            SELECT image_id, image_url, "order"
+            FROM pet_images
+            WHERE pet_id = $1
+            ORDER BY "order" ASC
+        `;
+        const imagesResult = await client.query(imagesQuery, [pet_id]);
+        const images = imagesResult.rows;
+
+        // Special needs query (only for rescue pets)
+        let specialNeeds = [];
+        if (pet.listing_type === 'rescue') {
+            const specialNeedsQuery = `
+                SELECT special_need
+                FROM rescue_special_needs
+                WHERE pet_id = $1
+            `;
+            const specialNeedsResult = await client.query(specialNeedsQuery, [pet_id]);
+            specialNeeds = specialNeedsResult.rows.map(row => row.special_need);
+        }
+
+        // Medical conditions query (only for rescue pets)
+        let medicalConditions = [];
+        if (pet.listing_type === 'rescue') {
+            const medicalConditionsQuery = `
+                SELECT condition, treatment_cost, treated
+                FROM rescue_medical_conditions
+                WHERE pet_id = $1
+            `;
+            const medicalConditionsResult = await client.query(medicalConditionsQuery, [pet_id]);
+            medicalConditions = medicalConditionsResult.rows;
+        }
 
         // Base response object
         const response: any = {
@@ -120,9 +144,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             listing_type: pet.listing_type,
             vaccinated: pet.vaccinated,
             neutered: pet.neutered,
-            phone_number: pet.phone_number, // Add phone_number to response
+            phone_number: pet.phone_number,
             images: images,
         };
+
+        // Add rescue-specific data for rescue pets
+        if (pet.listing_type === 'rescue') {
+            response.rescue_story = pet.rescue_story;
+            response.special_needs = specialNeeds;
+            response.medical_conditions = medicalConditions;
+        }
 
         // Add appropriate owner/shop/shelter details based on listing type
         switch (pet.listing_type) {
@@ -138,7 +169,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             case 'rescue':
                 if (pet.rescue_shelter_id) {
                     response.shelter = {
-                        shelter_id: pet.rescue_shelter_id, // Add shelter_id
+                        shelter_id: pet.rescue_shelter_id,
                         shelter_name: pet.shelter_name,
                         logo_url: pet.shelter_logo
                     };
@@ -147,7 +178,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             case 'shop':
                 if (pet.shop_id) {
                     response.shop = {
-                        shop_id: pet.shop_id, // Add shop_id
+                        shop_id: pet.shop_id,
                         shop_name: pet.shop_name,
                         logo_url: pet.shop_logo
                     };
@@ -173,6 +204,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             }
         );
     } finally {
-        await client.end(); // Close the database connection
+        await client.end();
     }
 }

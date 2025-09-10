@@ -99,7 +99,7 @@ const CartPage = () => {
           </h1>
           <button
             className="flex items-center text-primary hover:text-primary-dark font-medium"
-            onClick={() => router.push('/marketplace')}
+            onClick={() => window.history.back()}
           >
             <ArrowLeft size={18} className="mr-1" />
             Continue Shopping
@@ -249,7 +249,7 @@ function CartItemCard({
         <div className="flex justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-800">{item.title}</h2>
-            <div className="text-xs text-gray-500">Item Code: <span className="font-mono text-gray-700">{(item as any).sku ?? item.code ?? '-'}</span></div>
+            {/*<div className="text-xs text-gray-500">Item Code: <span className="font-mono text-gray-700">{(item as any).sku ?? item.code ?? '-'}</span></div>*/}
             {/* Variant information if available */}
             {/* {item.variantTitle && (
               <div className="text-sm text-gray-600 mt-1">{item.variantTitle}</div>

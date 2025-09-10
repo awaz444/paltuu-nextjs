@@ -7,7 +7,7 @@ import { useDispatch } from 'react-redux';
 import { fetchCart, addToCart } from '@/app/store/slices/cartSlice';
 import type { AppDispatch } from '@/app/store/store';
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
-import "./productGrid.css";
+import "./ProductGrid.css";
 
 interface Product {
   product_id: number;

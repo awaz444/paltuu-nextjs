@@ -125,7 +125,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
                   </p>
                 )}
 
-                <button
+                {/* <button
                   className={`w-full py-2 rounded-xl flex items-center justify-center gap-2 ${
                     product.inStock !== false
                       ? "bg-primary text-white hover:bg-primary-dark"
@@ -138,7 +138,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
                 >
                   <ShoppingCartOutlined />
                   {product.inStock !== false ? "Add to Cart" : "Out of Stock"}
-                </button>
+                </button> */}
               </div>
             </div>
           </Link>

@@ -13,7 +13,8 @@ import {
   ChevronUp,
   Calendar,
   Receipt,
-  ArrowLeft
+  ArrowLeft,
+  X
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -53,6 +54,12 @@ const MyOrdersPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [currentReviewItem, setCurrentReviewItem] = useState<OrderItem | null>(null);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewTitle, setReviewTitle] = useState("");
+  const [reviewBody, setReviewBody] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -140,24 +147,58 @@ const MyOrdersPage = () => {
     });
   };
 
-  const handleReviewClick = (orderId: number, itemId: number) => {
-    // This will open a review modal in the future
-    console.log(`Review order ${orderId}, item ${itemId}`);
-    // For now, we'll just mark it as reviewed in the UI
-    setOrders(orders.map(order => {
-      if (order.order_id === orderId) {
-        return {
-          ...order,
-          items: order.items.map(item => {
-            if (item.order_item_id === itemId) {
-              return { ...item, is_reviewed: true };
-            }
-            return item;
-          })
-        };
-      }
-      return order;
-    }));
+  const openReviewModal = (item: OrderItem) => {
+    setCurrentReviewItem(item);
+    setReviewRating(0);
+    setReviewTitle("");
+    setReviewBody("");
+    setReviewModalOpen(true);
+  };
+
+  const closeReviewModal = () => {
+    setReviewModalOpen(false);
+    setCurrentReviewItem(null);
+  };
+
+  const submitReview = async () => {
+    if (!currentReviewItem || !userId || reviewRating === 0) return;
+
+    setSubmittingReview(true);
+    try {
+      const res = await fetch('/api/bazaar/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          order_item_id: currentReviewItem.order_item_id,
+          product_id: currentReviewItem.product_id,
+          user_id: userId,
+          rating: reviewRating,
+          title: reviewTitle,
+          body: reviewBody
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to submit review');
+
+      // Update the local state to mark the item as reviewed
+      setOrders(orders.map(order => ({
+        ...order,
+        items: order.items.map(item => 
+          item.order_item_id === currentReviewItem.order_item_id 
+            ? { ...item, is_reviewed: true }
+            : item
+        )
+      })));
+
+      closeReviewModal();
+    } catch (err) {
+      console.error('Error submitting review:', err);
+      alert('Failed to submit review. Please try again.');
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   if (loading) {
@@ -358,7 +399,7 @@ const MyOrdersPage = () => {
                             
                             {order.status === 'delivered' && (
                               <button
-                                onClick={() => handleReviewClick(order.order_id, item.order_item_id)}
+                                onClick={() => openReviewModal(item)}
                                 disabled={item.is_reviewed}
                                 className={`mt-2 text-sm px-3 py-1 rounded-full ${
                                   item.is_reviewed
@@ -388,6 +429,100 @@ const MyOrdersPage = () => {
           </div>
         )}
       </div>
+
+      {/* Review Modal */}
+      {reviewModalOpen && currentReviewItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Review Product</h3>
+              <button onClick={closeReviewModal} className="text-gray-500 hover:text-gray-700">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="flex items-center mb-6">
+              <div className="w-16 h-16 rounded-lg overflow-hidden border mr-4">
+                <img 
+                  src={currentReviewItem.image_url || "https://via.placeholder.com/150?text=No+Image"} 
+                  alt={currentReviewItem.product_title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <h4 className="font-medium">{currentReviewItem.product_title}</h4>
+                {currentReviewItem.variant_title && (
+                  <p className="text-sm text-gray-600">{currentReviewItem.variant_title}</p>
+                )}
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Rating
+                </label>
+                <div className="flex space-x-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewRating(star)}
+                      className="text-2xl focus:outline-none"
+                    >
+                      {star <= reviewRating ? (
+                        <Star className="w-8 h-8 text-yellow-400 fill-current" />
+                      ) : (
+                        <Star className="w-8 h-8 text-gray-300" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <label htmlFor="review-title" className="block text-sm font-medium text-gray-700 mb-2">
+                  Review Title (Optional)
+                </label>
+                <input
+                  type="text"
+                  id="review-title"
+                  value={reviewTitle}
+                  onChange={(e) => setReviewTitle(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                  placeholder="Summarize your experience"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="review-body" className="block text-sm font-medium text-gray-700 mb-2">
+                  Review (Optional)
+                </label>
+                <textarea
+                  id="review-body"
+                  value={reviewBody}
+                  onChange={(e) => setReviewBody(e.target.value)}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                  placeholder="Share details of your experience with this product"
+                />
+              </div>
+              
+              <button
+                onClick={submitReview}
+                disabled={reviewRating === 0 || submittingReview}
+                className={`w-full py-3 rounded-xl font-medium ${
+                  reviewRating === 0 || submittingReview
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-primary text-white hover:bg-primary-dark'
+                }`}
+              >
+                {submittingReview ? 'Submitting...' : 'Submit Review'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };

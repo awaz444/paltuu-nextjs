@@ -20,7 +20,8 @@ export interface CreateBazaarProductDto {
   variants?: Array<{
     title?: string;
     sku?: string | null;
-    price_override?: number | null;
+  price_override?: number | null;
+  compare_at_price?: number | null;
     stock?: number | null;
     weight_override?: number | null;
     attributes?: any | null;
@@ -124,9 +125,9 @@ export async function POST(req: NextRequest) {
 
     const insertProductQuery = `
       INSERT INTO bazaar_products (
-        title, slug, description, short_description, price, compare_at_price,
+        title, slug, description, short_description, price,
         currency, sku, shipping_weight, featured, has_variants, variant_attributes, status, created_at, updated_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,NOW(),NOW()) RETURNING *;
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW()) RETURNING *;
     `;
 
     const productValues: any[] = [
@@ -135,7 +136,6 @@ export async function POST(req: NextRequest) {
       description,
       short_description,
       productPrice,
-      compare_at_price,
       currency,
       finalSku,
       shipping_weight,
@@ -183,14 +183,15 @@ export async function POST(req: NextRequest) {
         variantSku = await ensureUniqueSkuAcrossTables(variantSku);
         const variantQuery = `
           INSERT INTO bazaar_product_variants (
-            product_id, title, sku, price_override, stock, weight_override, attributes, is_default, sort_order, created_at, updated_at
-          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,0,NOW(),NOW()) RETURNING *;
+            product_id, title, sku, price_override, compare_at_price, stock, weight_override, attributes, is_default, sort_order, created_at, updated_at
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,0,NOW(),NOW()) RETURNING *;
         `;
         const variantValues = [
           product.product_id,
           v.title || null,
           variantSku,
           v.price_override ?? null,
+          v.compare_at_price ?? null,
           v.stock ?? 0,
           v.weight_override ?? null,
           v.attributes ? JSON.stringify(v.attributes) : null,
@@ -232,11 +233,11 @@ export async function GET(req: NextRequest) {
 
     // Build variants subquery differently depending on whether variant_id is present in media table
     const variantsSubquery = hasVariantMediaCol
-      ? `(SELECT json_agg(json_build_object('variant_id', v.variant_id, 'title', v.title, 'sku', v.sku, 'price_override', v.price_override, 'stock', v.stock, 'attributes', v.attributes, 'images', COALESCE((SELECT json_agg(url ORDER BY ordering) FROM bazaar_product_media m2 WHERE m2.variant_id = v.variant_id), '[]'::json))) FROM bazaar_product_variants v WHERE v.product_id = p.product_id)`
-      : `(SELECT json_agg(json_build_object('variant_id', v.variant_id, 'title', v.title, 'sku', v.sku, 'price_override', v.price_override, 'stock', v.stock, 'attributes', v.attributes, 'images', '[]'::json)) FROM bazaar_product_variants v WHERE v.product_id = p.product_id)`;
+      ? `(SELECT json_agg(json_build_object('variant_id', v.variant_id, 'title', v.title, 'sku', v.sku, 'price_override', v.price_override, 'compare_at_price', v.compare_at_price, 'stock', v.stock, 'attributes', v.attributes, 'images', COALESCE((SELECT json_agg(url ORDER BY ordering) FROM bazaar_product_media m2 WHERE m2.variant_id = v.variant_id), '[]'::json))) FROM bazaar_product_variants v WHERE v.product_id = p.product_id)`
+      : `(SELECT json_agg(json_build_object('variant_id', v.variant_id, 'title', v.title, 'sku', v.sku, 'price_override', v.price_override, 'compare_at_price', v.compare_at_price, 'stock', v.stock, 'attributes', v.attributes, 'images', '[]'::json)) FROM bazaar_product_variants v WHERE v.product_id = p.product_id)`;
 
     let query = `
-  SELECT p.product_id, p.title, p.slug, p.short_description, p.description, p.price, p.compare_at_price,
+  SELECT p.product_id, p.title, p.slug, p.short_description, p.description, p.price,
      p.currency, p.sku, p.shipping_weight, p.featured,
      COALESCE((SELECT SUM(stock) FROM bazaar_product_variants v2 WHERE v2.product_id = p.product_id), 0) AS stock_total,
      p.collection_id, p.status, p.created_at,

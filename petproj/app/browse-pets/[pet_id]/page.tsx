@@ -4,6 +4,7 @@ import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
 import LoginModal from "../../../components/LoginModal";
+import RescueDetails from "../../../components/RescueDetails";
 import { formatDistanceToNow } from "date-fns";
 import {
     Spin,
@@ -287,7 +288,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
     const renderSourceInfo = () => {
         if (!pet) return null;
-    
+
         switch (pet.listing_type) {
             case "adoption":
             case "sell":
@@ -344,7 +345,8 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                     Rescue Shelter
                                 </Text>
                                 <Text className="text-lg font-semibold text-gray-800">
-                                    {pet.shelter?.shelter_name || "Unknown Shelter"}
+                                    {pet.shelter?.shelter_name ||
+                                        "Unknown Shelter"}
                                 </Text>
                             </div>
                         </div>
@@ -893,6 +895,15 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                             </div>
                         </div>
                     </Card>
+
+                    {/* Add Rescue Details for rescue pets */}
+                    {pet.listing_type === "rescue" && (
+                        <RescueDetails
+                            rescue_story={pet.rescue_story || null}
+                            special_needs={pet.special_needs || []}
+                            medical_conditions={pet.medical_conditions || []}
+                        />
+                    )}
 
                     <AdoptionFormModal
                         petId={parseInt(pet_id)}

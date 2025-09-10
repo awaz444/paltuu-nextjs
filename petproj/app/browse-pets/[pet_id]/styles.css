@@ -123,3 +123,32 @@ input[type="range"]::-moz-range-thumb {
   align-items: center;
   gap: 6px;
 }
+
+/* Add to styles.css */
+.border-l-4 {
+  border-left-width: 4px;
+}
+
+.bg-red-50 {
+  background-color: #fef2f2;
+}
+
+.border-red-200 {
+  border-color: #fecaca;
+}
+
+.text-red-600 {
+  color: #dc2626;
+}
+
+.text-red-700 {
+  color: #b91c1c;
+}
+
+.border-orange-500 {
+  border-color: #f97316;
+}
+
+.border-purple-500 {
+  border-color: #a855f7;
+}

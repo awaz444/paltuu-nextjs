@@ -1,8 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchCart, updateCartItem, removeCartItem } from '@/app/store/slices/cartSlice';
-import type { RootState, AppDispatch } from '@/app/store/store';
+import { useSelector, useDispatch } from "react-redux";
+import {
+  fetchCart,
+  updateCartItem,
+  removeCartItem,
+} from "@/app/store/slices/cartSlice";
+import type { RootState, AppDispatch } from "@/app/store/store";
 import {
   X,
   Plus,
@@ -28,7 +32,6 @@ interface CartItem {
   attributes?: Array<{ name?: string; value?: string }> | any;
 }
 
-
 const CartPage = () => {
   useSetPrimaryColor();
   const dispatch = useDispatch<AppDispatch>();
@@ -39,9 +42,11 @@ const CartPage = () => {
     qty: it.qty,
     price: it.price,
     image: it.image,
-  code: it.code ?? it.product_id ?? null,
-  variantTitle: it.variantTitle ?? (it.variant ? it.variant.title : null),
-  attributes: it.attributes ?? (it.variant && it.variant.attributes ? it.variant.attributes : []),
+    code: it.code ?? it.product_id ?? null,
+    variantTitle: it.variantTitle ?? (it.variant ? it.variant.title : null),
+    attributes:
+      it.attributes ??
+      (it.variant && it.variant.attributes ? it.variant.attributes : []),
   }));
   const loading = cartState.loading;
   const [updatedItems, setUpdatedItems] = useState<string[]>([]);
@@ -50,14 +55,19 @@ const CartPage = () => {
     dispatch(fetchCart());
   }, [dispatch]);
   // ✅ Update quantity
-  const updateQuantity = async (itemId: string | number, newQuantity: number) => {
+  const updateQuantity = async (
+    itemId: string | number,
+    newQuantity: number
+  ) => {
     if (newQuantity < 1) return;
     try {
       setUpdatedItems((prev) => [...prev, String(itemId)]);
       setTimeout(() => {
         setUpdatedItems((prev) => prev.filter((id) => id !== String(itemId)));
       }, 2000);
-      await dispatch(updateCartItem({ cartItemId: itemId, quantity: newQuantity }) as any);
+      await dispatch(
+        updateCartItem({ cartItemId: itemId, quantity: newQuantity }) as any
+      );
     } catch (err) {
       console.error("Failed to update quantity:", err);
     }
@@ -71,10 +81,11 @@ const CartPage = () => {
     }
   };
 
-
-
   // ✅ Totals
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.price * item.qty,
+    0
+  );
 
   const router = useRouter();
 
@@ -109,16 +120,20 @@ const CartPage = () => {
         {/* Cart Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items Section */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6 order-1">
             {loading ? (
               <div className="flex justify-center items-center h-40">
                 <p className="text-gray-500">Loading cart...</p>
               </div>
             ) : cartItems.length === 0 ? (
               <div className="bg-white rounded-2xl p-8 text-center shadow-md">
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">Your cart is empty</h3>
-                <p className="text-gray-500 mb-4">Add some items to get started!</p>
-                <button 
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  Your cart is empty
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  Add some items to get started!
+                </p>
+                <button
                   className="bg-primary text-white px-6 py-2 rounded-xl hover:bg-primary-dark transition"
                   onClick={() => window.history.back()}
                 >
@@ -136,47 +151,25 @@ const CartPage = () => {
                 />
               ))
             )}
-
-            {/* Trust Badges */}
-            {cartItems.length > 0 && (
-              <div className="bg-white rounded-2xl p-6 shadow-md mt-8">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Why shop with us?
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <TrustBadge
-                    icon={<Truck className="w-6 h-6 text-primary" />}
-                    title="Free Delivery"
-                    desc="On orders over PKR 5,000"
-                  />
-                  <TrustBadge
-                    icon={<Shield className="w-6 h-6 text-primary" />}
-                    title="Secure Payment"
-                    desc="100% secure payment"
-                  />
-                  <TrustBadge
-                    icon={<Heart className="w-6 h-6 text-primary" />}
-                    title="Pet Experts"
-                    desc="24/7 customer support"
-                  />
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Summary Section - Only show if cart has items */}
+          {/* Order Summary */}
           {cartItems.length > 0 && (
-            <div className="bg-white shadow-lg rounded-2xl p-6 space-y-6 h-fit sticky top-28">
+            <div
+              className="bg-white shadow-lg rounded-2xl p-6 space-y-6 h-fit
+                 order-2 lg:order-2 
+                 relative lg:sticky lg:top-28"
+            >
               <h2 className="text-xl font-semibold text-gray-800 border-b pb-4">
                 Order Summary
               </h2>
 
-            <div className="space-y-3">
-              <SummaryRow
-                label={`Subtotal (${cartItems.length} items)`}
-                value={subtotal}
-              />
-            </div>
+              <div className="space-y-3">
+                <SummaryRow
+                  label={`Subtotal (${cartItems.length} items)`}
+                  value={subtotal}
+                />
+              </div>
 
               <button className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-xl transition shadow-md">
                 Proceed to Checkout
@@ -184,7 +177,7 @@ const CartPage = () => {
 
               <div className="text-center">
                 <p className="text-gray-500 text-sm">or</p>
-                <button 
+                <button
                   className="text-primary border border-primary font-medium text-sm mt-2 px-4 py-2 rounded-xl hover:bg-primary/10 transition"
                   onClick={() => window.history.back()}
                 >
@@ -201,9 +194,42 @@ const CartPage = () => {
                   </span>{" "}
                   for free delivery.
                   {subtotal < 5000 && (
-                    <span> Add PKR {(5000 - subtotal).toLocaleString()} more to qualify!</span>
+                    <span>
+                      {" "}
+                      Add PKR {(5000 - subtotal).toLocaleString()} more to
+                      qualify!
+                    </span>
                   )}
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* Trust Badges */}
+          {cartItems.length > 0 && (
+            <div
+              className="bg-white rounded-2xl p-6 shadow-md mt-8 
+                    order-3 lg:col-span-2 lg:order-3"
+            >
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Why shop with us?
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <TrustBadge
+                  icon={<Truck className="w-6 h-6 text-primary" />}
+                  title="Free Delivery"
+                  desc="On orders over PKR 5,000"
+                />
+                <TrustBadge
+                  icon={<Shield className="w-6 h-6 text-primary" />}
+                  title="Secure Payment"
+                  desc="100% secure payment"
+                />
+                <TrustBadge
+                  icon={<Heart className="w-6 h-6 text-primary" />}
+                  title="Pet Experts"
+                  desc="24/7 customer support"
+                />
               </div>
             </div>
           )}
@@ -248,76 +274,123 @@ function CartItemCard({
       <div className="flex-1">
         <div className="flex justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-800">{item.title}</h2>
+            <h2 className="text-xl font-semibold text-gray-800">
+              {item.title}
+            </h2>
             {/*<div className="text-xs text-gray-500">Item Code: <span className="font-mono text-gray-700">{(item as any).sku ?? item.code ?? '-'}</span></div>*/}
             {/* Variant information if available */}
             {/* {item.variantTitle && (
               <div className="text-sm text-gray-600 mt-1">{item.variantTitle}</div>
             )} */}
             {/** Render attributes as labeled, unique lines */}
-            {item.attributes && (() => {
-              // normalize attributes into {name, value} pairs
-              const normalize = (attrs: any): Array<{ name: string; value: string }> => {
-                if (!attrs) return [];
-                const capitalize = (s: string) => typeof s === 'string' && s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s ?? '';
+            {item.attributes &&
+              (() => {
+                // normalize attributes into {name, value} pairs
+                const normalize = (
+                  attrs: any
+                ): Array<{ name: string; value: string }> => {
+                  if (!attrs) return [];
+                  const capitalize = (s: string) =>
+                    typeof s === "string" && s.length > 0
+                      ? s.charAt(0).toUpperCase() + s.slice(1)
+                      : s ?? "";
 
-                // helper to extract name/value from an object
-                const fromObj = (o: any) => {
-                  const name = o?.name ?? o?.attribute_name ?? o?.key ?? o?.label ?? o?.title ?? '';
-                  let value = o?.value ?? o?.attribute_value ?? o?.val ?? o?.attribute ?? o?.value_text ?? o?.attributes ?? '';
-                  if (Array.isArray(value)) value = value.map(v => (v?.value ?? v)).join(', ');
-                  if (typeof value === 'object' && value !== null) value = JSON.stringify(value);
-                  return { name: String(name || '').trim(), value: String(value ?? '').trim() };
+                  // helper to extract name/value from an object
+                  const fromObj = (o: any) => {
+                    const name =
+                      o?.name ??
+                      o?.attribute_name ??
+                      o?.key ??
+                      o?.label ??
+                      o?.title ??
+                      "";
+                    let value =
+                      o?.value ??
+                      o?.attribute_value ??
+                      o?.val ??
+                      o?.attribute ??
+                      o?.value_text ??
+                      o?.attributes ??
+                      "";
+                    if (Array.isArray(value))
+                      value = value.map((v) => v?.value ?? v).join(", ");
+                    if (typeof value === "object" && value !== null)
+                      value = JSON.stringify(value);
+                    return {
+                      name: String(name || "").trim(),
+                      value: String(value ?? "").trim(),
+                    };
+                  };
+
+                  if (Array.isArray(attrs)) {
+                    return attrs
+                      .map((a: any) => {
+                        if (typeof a === "string") {
+                          const s = a.trim();
+                          // try to split on common separators like '::', ':' or '|'
+                          const m =
+                            s.match(/^([^:|]+)::?\s*(.+)$/) ||
+                            s.match(/^([^|]+)\|\s*(.+)$/) ||
+                            s.match(/^([^:\-]+)-\s*(.+)$/);
+                          if (m)
+                            return {
+                              name: capitalize(m[1].trim()),
+                              value: capitalize(m[2].trim()),
+                            };
+                          // if no separator, treat as value-only
+                          return { name: "", value: capitalize(s) };
+                        }
+                        return fromObj(a);
+                      })
+                      .map(({ name, value }) => ({
+                        name: name || "",
+                        value: value || "",
+                      }));
+                  }
+
+                  if (typeof attrs === "object") {
+                    // object map: {Color: 'Red', Size: '5kg'}
+                    return Object.entries(attrs).map(([k, v]) => ({
+                      name: capitalize(k),
+                      value: String(v ?? ""),
+                    }));
+                  }
+                  return [];
                 };
 
-                if (Array.isArray(attrs)) {
-                  return attrs.map((a: any) => {
-                    if (typeof a === 'string') {
-                      const s = a.trim();
-                      // try to split on common separators like '::', ':' or '|'
-                      const m = s.match(/^([^:|]+)::?\s*(.+)$/) || s.match(/^([^|]+)\|\s*(.+)$/) || s.match(/^([^:\-]+)-\s*(.+)$/);
-                      if (m) return { name: capitalize(m[1].trim()), value: capitalize(m[2].trim()) };
-                      // if no separator, treat as value-only
-                      return { name: '', value: capitalize(s) };
-                    }
-                    return fromObj(a);
-                  }).map(({ name, value }) => ({ name: name || '', value: value || '' }));
+                const raw = normalize(item.attributes) || [];
+                // dedupe by name+value using a simple loop to ensure an array
+                const seen = new Set<string>();
+                const deduped: Array<{ name: string; value: string }> = [];
+                for (const cur of raw) {
+                  const key = `${cur?.name ?? ""}||${cur?.value ?? ""}`;
+                  if (!seen.has(key)) {
+                    seen.add(key);
+                    deduped.push({
+                      name: cur?.name ?? "",
+                      value: cur?.value ?? "",
+                    });
+                  }
                 }
 
-                if (typeof attrs === 'object') {
-                  // object map: {Color: 'Red', Size: '5kg'}
-                  return Object.entries(attrs).map(([k, v]) => ({ name: capitalize(k), value: String(v ?? '') }));
-                }
-                return [];
-              };
+                if (!Array.isArray(deduped) || deduped.length === 0)
+                  return null;
 
-              const raw = normalize(item.attributes) || [];
-              // dedupe by name+value using a simple loop to ensure an array
-              const seen = new Set<string>();
-              const deduped: Array<{ name: string; value: string }> = [];
-              for (const cur of raw) {
-                const key = `${cur?.name ?? ''}||${cur?.value ?? ''}`;
-                if (!seen.has(key)) {
-                  seen.add(key);
-                  deduped.push({ name: cur?.name ?? '', value: cur?.value ?? '' });
-                }
-              }
-
-              if (!Array.isArray(deduped) || deduped.length === 0) return null;
-
-              return (
-                <div className="text-xs text-gray-500 mt-1">
-                  {deduped.map((attr, idx) => (
-                    <div key={idx} className="leading-snug">
-                      {attr.name ? (
-                        <span className="text-gray-600">{attr.name}: </span>
-                      ) : null}
-                      <span className="font-medium text-gray-800">{attr.value}</span>
-                    </div>
-                  ))}
-                </div>
-              );
-            })()}
+                return (
+                  <div className="text-xs text-gray-500 mt-1">
+                    {deduped.map((attr, idx) => (
+                      <div key={idx} className="leading-snug">
+                        {attr.name ? (
+                          <span className="text-gray-600">{attr.name}: </span>
+                        ) : null}
+                        <span className="font-medium text-gray-800">
+                          {attr.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
           </div>
           <button
             className="p-2 rounded-full hover:bg-gray-100 transition"
@@ -413,7 +486,9 @@ function SummaryRow({
     >
       <span className="text-gray-600">{label}</span>
       <span>
-        {isDiscount && value > 0 ? `- PKR ${value.toLocaleString()}` : `PKR ${value.toLocaleString()}`}
+        {isDiscount && value > 0
+          ? `- PKR ${value.toLocaleString()}`
+          : `PKR ${value.toLocaleString()}`}
       </span>
     </div>
   );

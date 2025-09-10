@@ -1,5 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { addToCart as addToCartThunk } from "../../store/slices/cartSlice";
+import type { AppDispatch } from "@/app/store/store";
+import { useSelector, useDispatch } from "react-redux";
 import Navbar from "../../../components/navbar";
 import { formatDistanceToNow } from "date-fns";
 import { useSetPrimaryColor } from "../../hooks/useSetPrimaryColor";
@@ -89,6 +92,7 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
     params,
 }) => {
     useSetPrimaryColor();
+    const dispatch = useDispatch<AppDispatch>();
     const { product_id } = params;
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
@@ -207,41 +211,43 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
         }
     }, []);
 
-    const addToCart = async () => {
-        try {
-            setAddingToCart(true);
-            const sessionId = getOrCreateGuestSessionId();
-            const payload = {
-                sessionId,
-                productId: product?.id,
-                variantId: selectedVariant?.variant_id ?? null,
-                quantity: 1,
-            };
 
-            const res = await fetch("/api/bazaar/cart", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
 
-            if (res.ok) {
-                message.success({
-                    content: `${product?.name} added to cart!`,
-                    icon: <CheckOutlined className="text-green-500" />,
-                    className: "custom-message",
-                });
-            } else {
-                const d = await res.json();
-                message.error(d.error || "Failed to add to cart");
-            }
-        } catch (e) {
-            console.error("Add to cart error", e);
-            message.error("Failed to add to cart");
-        } finally {
-            setAddingToCart(false);
-        }
-    };
-    
+
+
+
+const handleAddToCart = async () => {
+  if (!product) return;
+  try {
+    setAddingToCart(true);
+
+    const sessionId = getOrCreateGuestSessionId();
+
+    await dispatch(
+      addToCartThunk({
+        sessionId,
+        productId: product.id,
+        variantId: selectedVariant?.variant_id ?? null,
+        quantity: quantity,
+        title: product.name,
+        price: selectedVariant?.price_override ?? product.price,
+        image: product.images[0] ?? null,
+      })
+    ).unwrap();
+
+    message.success({
+      content: `${product.name} added to cart!`,
+      icon: <CheckOutlined className="text-green-500" />,
+      className: "custom-message",
+    });
+  } catch (err: any) {
+    console.error("Add to cart error", err);
+    message.error(err?.message || "Failed to add to cart");
+  } finally {
+    setAddingToCart(false);
+  }
+};
+
     const shareProduct = () => {
         if (navigator.share) {
             navigator
@@ -589,7 +595,7 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                                 {/* Action Buttons - Fixed at bottom */}
                                 <div className="flex flex-col sm:flex-row gap-4 mt-6">
                                     <button
-                                        onClick={addToCart}
+                                        onClick={handleAddToCart}
                                         disabled={
                                             ((selectedVariant
                                                 ? selectedVariant.stock

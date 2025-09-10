@@ -1,10 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import toast from "react-hot-toast";
 import {
   fetchCart,
   updateCartItem,
   removeCartItem,
+  setCartItems,
 } from "@/app/store/slices/cartSlice";
 import type { RootState, AppDispatch } from "@/app/store/store";
 import {
@@ -34,8 +36,10 @@ interface CartItem {
 
 const CartPage = () => {
   useSetPrimaryColor();
+  const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const cartState = useSelector((s: RootState) => s.cart);
+
   const cartItems: CartItem[] = cartState.items.map((it: any) => ({
     id: it.id,
     title: it.title,
@@ -43,56 +47,78 @@ const CartPage = () => {
     price: it.price,
     image: it.image,
     code: it.code ?? it.product_id ?? null,
-    variantTitle: it.variantTitle ?? (it.variant ? it.variant.title : null),
-    attributes:
-      it.attributes ??
-      (it.variant && it.variant.attributes ? it.variant.attributes : []),
+    variantTitle: it.variantTitle ?? (it.variant?.title ?? null),
+    attributes: it.attributes ?? it.variant?.attributes ?? [],
   }));
+
   const loading = cartState.loading;
   const [updatedItems, setUpdatedItems] = useState<string[]>([]);
+  const [loadingItems, setLoadingItems] = useState<{ [key: string]: boolean }>(
+    {}
+  );
 
+  // Fetch cart only on first load
   useEffect(() => {
     dispatch(fetchCart());
   }, [dispatch]);
-  // ✅ Update quantity
-  const updateQuantity = async (
-    itemId: string | number,
-    newQuantity: number
-  ) => {
-    if (newQuantity < 1) return;
-    try {
-      setUpdatedItems((prev) => [...prev, String(itemId)]);
-      setTimeout(() => {
-        setUpdatedItems((prev) => prev.filter((id) => id !== String(itemId)));
-      }, 2000);
-      await dispatch(
-        updateCartItem({ cartItemId: itemId, quantity: newQuantity }) as any
-      );
-    } catch (err) {
-      console.error("Failed to update quantity:", err);
-    }
-  };
-  // ✅ Remove item
-  const removeItem = async (itemId: string | number) => {
-    try {
-      await dispatch(removeCartItem({ cartItemId: itemId }) as any);
-    } catch (err) {
-      console.error("Failed to remove item:", err);
-    }
-  };
 
-  // ✅ Totals
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.qty,
-    0
-  );
+  const updateQuantity = async (itemId: string | number, newQuantity: number) => {
+  if (newQuantity < 1 || loadingItems[itemId]) return;
 
-  const router = useRouter();
+  setLoadingItems((prev) => ({ ...prev, [itemId]: true }));
+
+  try {
+    // Wait for API confirmation
+    await dispatch(updateCartItem({ cartItemId: itemId, quantity: newQuantity }) as any);
+
+    // Only update Redux after success
+    dispatch(
+      setCartItems(
+        cartItems.map((item) =>
+          item.id === itemId ? { ...item, qty: newQuantity } : item
+        )
+      )
+    );
+
+    // Show checkmark animation
+    setUpdatedItems((prev) => [...prev, String(itemId)]);
+    setTimeout(
+      () => setUpdatedItems((prev) => prev.filter((id) => id !== String(itemId))),
+      2000
+    );
+  } catch (err) {
+    console.error("Failed to update quantity:", err);
+    toast.error("Failed to update quantity. Please try again.");
+  } finally {
+    setLoadingItems((prev) => ({ ...prev, [itemId]: false }));
+  }
+};
+
+const removeItem = async (itemId: string | number) => {
+  if (loadingItems[itemId]) return;
+
+  setLoadingItems((prev) => ({ ...prev, [itemId]: true }));
+
+  try {
+    // Wait for API confirmation
+    await dispatch(removeCartItem({ cartItemId: itemId }) as any);
+
+    // Only update Redux after success
+    dispatch(setCartItems(cartItems.filter((item) => item.id !== itemId)));
+  } catch (err) {
+    console.error("Failed to remove item:", err);
+    toast.error("Failed to remove item. Please try again.");
+  } finally {
+    setLoadingItems((prev) => ({ ...prev, [itemId]: false }));
+  }
+};
+
+
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-primary/5 to-white">
       <Navbar />
-
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Breadcrumb */}
         <div className="flex items-center text-sm text-gray-500 mb-6">
@@ -103,11 +129,9 @@ const CartPage = () => {
           <span className="text-primary">Cart</span>
         </div>
 
-        {/* Page Header */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
-            Your Shopping Cart 🛒
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-800">Your Shopping Cart 🛒</h1>
           <button
             className="flex items-center text-primary hover:text-primary-dark font-medium"
             onClick={() => router.push('/marketplace')}
@@ -119,7 +143,7 @@ const CartPage = () => {
 
         {/* Cart Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Cart Items Section */}
+          {/* Cart Items */}
           <div className="lg:col-span-2 space-y-6 order-1">
             {loading ? (
               <div className="flex justify-center items-center h-40">
@@ -130,9 +154,7 @@ const CartPage = () => {
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">
                   Your cart is empty
                 </h3>
-                <p className="text-gray-500 mb-4">
-                  Add some items to get started!
-                </p>
+                <p className="text-gray-500 mb-4">Add some items to get started!</p>
                 <button
                   className="bg-primary text-white px-6 py-2 rounded-xl hover:bg-primary-dark transition"
                   onClick={() => window.history.back()}
@@ -148,6 +170,7 @@ const CartPage = () => {
                   onUpdate={updateQuantity}
                   onRemove={removeItem}
                   updated={updatedItems.includes(String(item.id))}
+                  //loading={!!loadingItems[item.id]}
                 />
               ))
             )}
@@ -204,7 +227,7 @@ const CartPage = () => {
               </div>
             </div>
           )}
-
+          
           {/* Trust Badges */}
           {cartItems.length > 0 && (
             <div
@@ -241,6 +264,7 @@ const CartPage = () => {
 
 export default CartPage;
 
+/* ------------------ Components ------------------ */
 /* ------------------ Components ------------------ */
 function CartItemCard({
   item,

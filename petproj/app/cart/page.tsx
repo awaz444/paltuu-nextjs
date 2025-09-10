@@ -110,7 +110,7 @@ const CartPage = () => {
           </h1>
           <button
             className="flex items-center text-primary hover:text-primary-dark font-medium"
-            onClick={() => window.history.back()}
+            onClick={() => router.push('/marketplace')}
           >
             <ArrowLeft size={18} className="mr-1" />
             Continue Shopping
@@ -145,8 +145,8 @@ const CartPage = () => {
                 <CartItemCard
                   key={item.id}
                   item={item}
-                  onUpdate={() => {}}
-                  onRemove={() => {}}
+                  onUpdate={updateQuantity}
+                  onRemove={removeItem}
                   updated={updatedItems.includes(String(item.id))}
                 />
               ))

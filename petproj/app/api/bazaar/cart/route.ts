@@ -205,16 +205,31 @@ export async function DELETE(req: NextRequest) {
   const client = createClient();
   try {
     const { searchParams } = new URL(req.url);
-    const cartItemId = searchParams.get('cartItemId');
+    let cartItemId = searchParams.get('cartItemId');
+
+    // If not provided in query, attempt to read JSON body (some clients send DELETE with body)
+    let body: any = null;
+    if (!cartItemId) {
+      try {
+        body = await req.json();
+        cartItemId = body?.cartItemId ?? body?.cart_item_id ?? null;
+      } catch (e) {
+        // ignore JSON parse errors
+      }
+    }
 
     if (!cartItemId) {
+      console.warn('Delete cart called without cartItemId', { url: req.url, body });
       return NextResponse.json({ error: 'Cart item ID is required' }, { status: 400 });
     }
 
     await client.connect();
 
-    const deleteQuery = `DELETE FROM bazaar_cart_items WHERE cart_item_id = $1 RETURNING *`;
-    const deleteResult = await client.query(deleteQuery, [cartItemId]);
+  // coerce numeric ids to number when possible
+  const param = typeof cartItemId === 'string' && /^\d+$/.test(cartItemId) ? Number(cartItemId) : cartItemId;
+  console.debug('Deleting cart item', { cartItemId: param });
+  const deleteQuery = `DELETE FROM bazaar_cart_items WHERE cart_item_id = $1 RETURNING *`;
+  const deleteResult = await client.query(deleteQuery, [param]);
 
     if (deleteResult.rows.length === 0) {
       return NextResponse.json({ error: 'Cart item not found' }, { status: 404 });

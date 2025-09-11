@@ -1,7 +1,17 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { PlusOutlined, LoadingOutlined } from "@ant-design/icons";
 import { Modal, Form, message, Button, Select, Input } from "antd";
+import { 
+  AcademicCapIcon, 
+  TagIcon, 
+  PlusIcon, 
+  XMarkIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  CalendarIcon,
+  TrashIcon,
+  ExclamationTriangleIcon
+} from "@heroicons/react/24/outline";
 
 interface Qualification {
     vet_qualifications_id: number;
@@ -28,7 +38,6 @@ const VetQualificationsTab = () => {
     const [qualifications, setQualifications] = useState<Qualification[]>([]);
     const [specializations, setSpecializations] = useState<Specialization[]>([]);
     const [vetId, setVetId] = useState<string | null>(null);
-    const [editing, setEditing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [qualificationModalVisible, setQualificationModalVisible] = useState(false);
     const [specializationModalVisible, setSpecializationModalVisible] = useState(false);
@@ -45,6 +54,15 @@ const VetQualificationsTab = () => {
         qualifications: number | null;
         specializations: number | null;
     }>({ qualifications: null, specializations: null });
+    
+    // Add state for delete confirmation modals
+    const [qualificationDeleteConfirm, setQualificationDeleteConfirm] = useState(false);
+    const [specializationDeleteConfirm, setSpecializationDeleteConfirm] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<{
+        type: 'qualification' | 'specialization' | null;
+        id: number | null;
+        name: string | null;
+    }>({ type: null, id: null, name: null });
 
     useEffect(() => {
         const loadVetId = async () => {
@@ -219,50 +237,83 @@ const VetQualificationsTab = () => {
         }
     };
 
-    const deleteQualification = async (qualificationId: number) => {
-        if (!vetId) return;
+    // Show delete confirmation for qualification
+    const showQualificationDeleteConfirm = (qualificationId: number, qualificationName: string) => {
+        setItemToDelete({
+            type: 'qualification',
+            id: qualificationId,
+            name: qualificationName
+        });
+        setQualificationDeleteConfirm(true);
+    };
+
+    // Show delete confirmation for specialization
+    const showSpecializationDeleteConfirm = (categoryId: number, categoryName: string) => {
+        setItemToDelete({
+            type: 'specialization',
+            id: categoryId,
+            name: categoryName
+        });
+        setSpecializationDeleteConfirm(true);
+    };
+
+    // Handle qualification deletion
+    const handleQualificationDelete = async () => {
+        if (!vetId || itemToDelete.id === null) return;
         
-        setDeleting(prev => ({ ...prev, qualifications: qualificationId }));
+        setDeleting(prev => ({ ...prev, qualifications: itemToDelete.id as number }));
         try {
             const res = await fetch(`/api/vet-panel/qualifications/${vetId}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ qualification_id: qualificationId })
+                body: JSON.stringify({ qualification_id: itemToDelete.id })
             });
             if (!res.ok) throw new Error('Failed to delete qualification');
             
             // Remove from local state
-            setQualifications(prev => prev.filter(q => q.vet_qualifications_id !== qualificationId));
+            setQualifications(prev => prev.filter(q => q.vet_qualifications_id !== itemToDelete.id));
             message.success("Qualification deleted successfully");
         } catch (error) {
             console.error("Error deleting qualification:", error);
             message.error("Failed to delete qualification");
         } finally {
             setDeleting(prev => ({ ...prev, qualifications: null }));
+            setQualificationDeleteConfirm(false);
+            setItemToDelete({ type: null, id: null, name: null });
         }
     };
 
-    const deleteSpecialization = async (categoryId: number) => {
-        if (!vetId) return;
+    // Handle specialization deletion
+    const handleSpecializationDelete = async () => {
+        if (!vetId || itemToDelete.id === null) return;
         
-        setDeleting(prev => ({ ...prev, specializations: categoryId }));
+        setDeleting(prev => ({ ...prev, specializations: itemToDelete.id as number }));
         try {
             const res = await fetch(`/api/vet-panel/specialization/${vetId}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ category_id: categoryId })
+                body: JSON.stringify({ category_id: itemToDelete.id })
             });
             if (!res.ok) throw new Error('Failed to delete specialization');
             
             // Remove from local state
-            setSpecializations(prev => prev.filter(s => s.category_id !== categoryId));
+            setSpecializations(prev => prev.filter(s => s.category_id !== itemToDelete.id));
             message.success("Specialization deleted successfully");
         } catch (error) {
             console.error("Error deleting specialization:", error);
             message.error("Failed to delete specialization");
         } finally {
             setDeleting(prev => ({ ...prev, specializations: null }));
+            setSpecializationDeleteConfirm(false);
+            setItemToDelete({ type: null, id: null, name: null });
         }
+    };
+
+    // Cancel delete operation
+    const handleDeleteCancel = () => {
+        setQualificationDeleteConfirm(false);
+        setSpecializationDeleteConfirm(false);
+        setItemToDelete({ type: null, id: null, name: null });
     };
 
     if (loading) {
@@ -275,66 +326,105 @@ const VetQualificationsTab = () => {
 
     return (
         <div className="space-y-8">
+            {/* Header */}
+            <div className="bg-primary text-white p-6 rounded-2xl">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 className="text-2xl font-bold">Qualifications & Specializations</h2>
+                        <p className="text-primary-100/90 mt-1">
+                            Manage your professional qualifications and areas of expertise
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             {/* Qualifications Section */}
-            <div>
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Qualifications</h2>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 className="text-xl font-semibold flex items-center gap-2">
+                            <AcademicCapIcon className="w-6 h-6 text-primary" />
+                            Qualifications
+                        </h3>
+                        <p className="text-gray-500 mt-1">
+                            Add your professional degrees and certifications
+                        </p>
+                    </div>
                     <button
                         onClick={() => setQualificationModalVisible(true)}
-                        className="px-4 py-2 bg-primary text-white rounded-lg flex items-center gap-2"
+                        className="px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all flex items-center gap-2"
                     >
-                        <PlusOutlined /> Add Qualification
+                        <PlusIcon className="w-5 h-5" />
+                        Add Qualification
                     </button>
                 </div>
 
                 {qualifications.length === 0 ? (
-                    <p className="text-gray-500 py-4">
-                        No qualifications added yet
-                    </p>
+                    <div className="text-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
+                        <AcademicCapIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-gray-500">No qualifications added yet</p>
+                        <button
+                            onClick={() => setQualificationModalVisible(true)}
+                            className="mt-3 text-primary hover:text-primary/80 font-medium"
+                        >
+                            Add your first qualification
+                        </button>
+                    </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         {qualifications.map((qualification) => (
-                            <div key={qualification.vet_qualifications_id} className="border rounded-lg p-4 relative">
+                            <div key={qualification.vet_qualifications_id} className="bg-gradient-to-br from-primary/5 to-primary/10 p-5 rounded-xl border border-primary/20 relative">
                                 <button
-                                    onClick={() => deleteQualification(qualification.vet_qualifications_id)}
-                                    className="absolute top-2 right-2 text-red-500 hover:text-red-700 transition-all duration-200 ease-in-out hover:scale-125"
+                                    onClick={() => showQualificationDeleteConfirm(qualification.vet_qualifications_id, qualification.qualification_name)}
+                                    className="absolute top-4 right-4 p-1.5 bg-white text-red-500 rounded-lg hover:bg-red-50 transition-all duration-200"
                                     title="Delete qualification"
                                     disabled={deleting.qualifications === qualification.vet_qualifications_id}
                                 >
                                     {deleting.qualifications === qualification.vet_qualifications_id ? (
-                                        <LoadingOutlined className="text-red-500" />
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
                                     ) : (
-                                        '×'
+                                        <TrashIcon className="w-4 h-4" />
                                     )}
                                 </button>
 
-                                <span className={`absolute top-2 right-10 text-xs px-2 py-1 rounded-full ${qualification.status === 'approved'
+                                <span className={`absolute top-4 left-4 text-xs px-2.5 py-1 rounded-full ${qualification.status === 'approved'
                                     ? 'bg-green-100 text-green-800'
                                     : 'bg-yellow-100 text-yellow-800'
                                     }`}>
                                     {qualification.status === 'approved' ? 'Approved' : 'Pending'}
                                 </span>
 
-                                <div className="space-y-3">
+                                <div className="mt-6 space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">Degree</label>
-                                        <p className="mt-1 p-2 bg-gray-50 rounded-lg">
+                                        <div className="flex items-center gap-2 text-sm font-medium text-gray-600 mb-1">
+                                            <AcademicCapIcon className="w-4 h-4" />
+                                            Degree
+                                        </div>
+                                        <p className="text-lg font-semibold text-gray-900">
                                             {qualification.qualification_name || "Not provided"}
                                         </p>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Note</label>
-                                        <p className="mt-1 p-2 bg-gray-50 rounded-lg">
-                                            {qualification.note || "Not provided"}
-                                        </p>
-                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <div className="flex items-center gap-2 text-sm font-medium text-gray-600 mb-1">
+                                                <CalendarIcon className="w-4 h-4" />
+                                                Year
+                                            </div>
+                                            <p className="text-gray-800 font-medium">
+                                                {qualification.year_acquired || "Not provided"}
+                                            </p>
+                                        </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Year</label>
-                                        <p className="mt-1 p-2 bg-gray-50 rounded-lg">
-                                            {qualification.year_acquired || "Not provided"}
-                                        </p>
+                                        <div>
+                                            <div className="flex items-center gap-2 text-sm font-medium text-gray-600 mb-1">
+                                                <DocumentTextIcon className="w-4 h-4" />
+                                                Note
+                                            </div>
+                                            <p className="text-gray-800">
+                                                {qualification.note || "Not provided"}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -344,36 +434,61 @@ const VetQualificationsTab = () => {
             </div>
 
             {/* Specializations Section */}
-            <div>
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Specializations</h2>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 className="text-xl font-semibold flex items-center gap-2">
+                            <TagIcon className="w-6 h-6 text-primary" />
+                            Specializations
+                        </h3>
+                        <p className="text-gray-500 mt-1">
+                            Add your areas of expertise and specializations
+                        </p>
+                    </div>
                     <button
                         onClick={() => setSpecializationModalVisible(true)}
-                        className="px-4 py-2 bg-primary text-white rounded-lg flex items-center gap-2"
+                        className="px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all flex items-center gap-2"
                     >
-                        <PlusOutlined /> Add Specialization
+                        <PlusIcon className="w-5 h-5" />
+                        Add Specialization
                     </button>
                 </div>
 
                 {specializations.length === 0 ? (
-                    <p className="text-gray-500 py-4">No specializations added</p>
+                    <div className="text-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
+                        <TagIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-gray-500">No specializations added yet</p>
+                        <button
+                            onClick={() => setSpecializationModalVisible(true)}
+                            className="mt-3 text-primary hover:text-primary/80 font-medium"
+                        >
+                            Add your first specialization
+                        </button>
+                    </div>
                 ) : (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {specializations.map((spec) => (
-                            <div key={spec.category_id} className="bg-primary/10 px-3 py-1 rounded-full relative">
-                                <button
-                                    onClick={() => deleteSpecialization(spec.category_id)}
-                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-700 transition-all duration-200 ease-in-out hover:scale-125"
-                                    title="Delete specialization"
-                                    disabled={deleting.specializations === spec.category_id}
-                                >
-                                    {deleting.specializations === spec.category_id ? (
-                                        <LoadingOutlined className="text-white text-xs" />
-                                    ) : (
-                                        '×'
-                                    )}
-                                </button>
-                                <span className="text-primary">{spec.category_name}</span>
+                            <div key={spec.category_id} className="relative group">
+                                <div className="bg-gradient-to-br from-primary/5 to-primary/10 p-4 rounded-xl border border-primary/20 flex items-center justify-between transition-all duration-200 hover:border-primary/40">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-primary/10 rounded-lg">
+                                            <TagIcon className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <span className="text-gray-800 font-medium">{spec.category_name}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => showSpecializationDeleteConfirm(spec.category_id, spec.category_name)}
+                                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
+                                        title="Delete specialization"
+                                        disabled={deleting.specializations === spec.category_id}
+                                    >
+                                        {deleting.specializations === spec.category_id ? (
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                                        ) : (
+                                            <TrashIcon className="w-4 h-4" />
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -382,7 +497,7 @@ const VetQualificationsTab = () => {
 
             {/* Qualification Modal */}
             <Modal
-                title="Add Qualification"
+                title={<div className="flex items-center gap-2 text-lg font-semibold"><AcademicCapIcon className="w-5 h-5 text-primary" /> Add Qualification</div>}
                 visible={qualificationModalVisible}
                 onCancel={() => setQualificationModalVisible(false)}
                 footer={[
@@ -394,18 +509,23 @@ const VetQualificationsTab = () => {
                         type="primary"
                         onClick={handleQualificationSubmit}
                         loading={submittingQualification}
+                        className="bg-primary hover:bg-primary/90 border-primary"
                     >
                         Add Qualification
                     </Button>,
                 ]}
+                width={600}
             >
-                <Form form={qualificationForm} layout="vertical">
+                <Form form={qualificationForm} layout="vertical" className="mt-4">
                     <Form.Item
                         name="qualification_id"
                         label="Qualification"
                         rules={[{ required: true, message: 'Please select a qualification' }]}
                     >
-                        <Select placeholder="Select a qualification">
+                        <Select 
+                            placeholder="Select a qualification"
+                            size="large"
+                        >
                             {availableQualifications.map((q) => (
                                 <Select.Option
                                     key={q.qualification_id}
@@ -422,21 +542,30 @@ const VetQualificationsTab = () => {
                         label="Year Acquired"
                         rules={[{ required: true, message: 'Please enter year acquired' }]}
                     >
-                        <Input type="number" placeholder="e.g. 2020" />
+                        <Input 
+                            type="number" 
+                            placeholder="e.g. 2020" 
+                            size="large"
+                            prefix={<CalendarIcon className="w-4 h-4 text-gray-400" />}
+                        />
                     </Form.Item>
 
                     <Form.Item
                         name="note"
                         label="Additional Notes"
                     >
-                        <Input.TextArea placeholder="Any additional information" />
+                        <Input.TextArea 
+                            placeholder="Any additional information about this qualification" 
+                            rows={4}
+                            size="large"
+                        />
                     </Form.Item>
                 </Form>
             </Modal>
 
             {/* Specialization Modal */}
             <Modal
-                title="Add Specialization"
+                title={<div className="flex items-center gap-2 text-lg font-semibold"><TagIcon className="w-5 h-5 text-primary" /> Add Specialization</div>}
                 visible={specializationModalVisible}
                 onCancel={() => setSpecializationModalVisible(false)}
                 footer={[
@@ -448,18 +577,23 @@ const VetQualificationsTab = () => {
                         onClick={handleSpecializationSubmit}
                         loading={submittingSpecialization}
                         disabled={submittingSpecialization}
+                        className="bg-primary hover:bg-primary/90 border-primary"
                     >
                         Add Specialization
                     </Button>
                 ]}
+                width={500}
             >
-                <Form form={specializationForm} layout="vertical">
+                <Form form={specializationForm} layout="vertical" className="mt-4">
                     <Form.Item
                         name="category_id"
                         label="Specialization"
                         rules={[{ required: true, message: 'Please select a specialization' }]}
                     >
-                        <Select placeholder="Select a specialization">
+                        <Select 
+                            placeholder="Select a specialization"
+                            size="large"
+                        >
                             {petCategories.map(category => (
                                 <Select.Option key={category.category_id} value={category.category_id}>
                                     {category.category_name}
@@ -468,6 +602,68 @@ const VetQualificationsTab = () => {
                         </Select>
                     </Form.Item>
                 </Form>
+            </Modal>
+
+            {/* Qualification Delete Confirmation Modal */}
+            <Modal
+                title={null}
+                visible={qualificationDeleteConfirm}
+                onCancel={handleDeleteCancel}
+                footer={[
+                    <Button key="cancel" onClick={handleDeleteCancel}>
+                        Cancel
+                    </Button>,
+                    <Button
+                        key="delete"
+                        danger
+                        onClick={handleQualificationDelete}
+                        loading={deleting.qualifications !== null}
+                        className="bg-red-500 hover:bg-red-600 border-red-500"
+                    >
+                        {deleting.qualifications !== null ? "Deleting..." : "Delete Qualification"}
+                    </Button>,
+                ]}
+                width={400}
+                closable={false}
+            >
+                <div className="flex flex-col items-center py-4">
+                    <ExclamationTriangleIcon className="w-12 h-12 text-yellow-500 mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Confirm Deletion</h3>
+                    <p className="text-gray-600 text-center">
+                        Are you sure you want to delete the qualification "{itemToDelete.name}"? This action cannot be undone.
+                    </p>
+                </div>
+            </Modal>
+
+            {/* Specialization Delete Confirmation Modal */}
+            <Modal
+                title={null}
+                visible={specializationDeleteConfirm}
+                onCancel={handleDeleteCancel}
+                footer={[
+                    <Button key="cancel" onClick={handleDeleteCancel}>
+                        Cancel
+                    </Button>,
+                    <Button
+                        key="delete"
+                        danger
+                        onClick={handleSpecializationDelete}
+                        loading={deleting.specializations !== null}
+                        className="bg-red-500 hover:bg-red-600 border-red-500"
+                    >
+                        {deleting.specializations !== null ? "Deleting..." : "Delete Specialization"}
+                    </Button>,
+                ]}
+                width={400}
+                closable={false}
+            >
+                <div className="flex flex-col items-center py-4">
+                    <ExclamationTriangleIcon className="w-12 h-12 text-yellow-500 mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Confirm Deletion</h3>
+                    <p className="text-gray-600 text-center">
+                        Are you sure you want to delete the specialization "{itemToDelete.name}"? This action cannot be undone.
+                    </p>
+                </div>
             </Modal>
         </div>
     );

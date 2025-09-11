@@ -157,7 +157,7 @@ export default function Marketplace() {
 
   return (
     <>
-      <Navbar />
+      
       <div className="fullBody">
         <MarketplaceFilterSection
           filters={filters}

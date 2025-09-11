@@ -3,9 +3,9 @@
 import Link from "next/link";
 import "./navbar.css";
 import Image from "next/image";
+import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchCart } from '@/app/store/slices/cartSlice';
 import type { RootState, AppDispatch } from '@/app/store/store';
 import { useSession, signOut } from "next-auth/react";
 import { useAuth } from "@/context/AuthContext";
@@ -32,8 +32,14 @@ const Navbar = ({
   const [mobileView, setMobileView] = useState("navlinks"); // 'navlinks' or 'dropdown'
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
+  const hideNavbarRoutes = ["/login", "/success", "/sign-up", "/vet-register", "/rescue-register", "/vet-qualifications", "/vet-specialization" , "/vet-schedule", "/vet-get-verified-1", "/vet-get-verified-2", '/', '/partner-signup', '/vet-panel', '/shop-panel', '/rescue-panel'];
+  const pathName = usePathname();
+  const isHideFooter = hideNavbarRoutes.includes(pathName);
 
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  if (isHideFooter) {
+    return null;
+  }
 
   const handleMouseEnter = () => {  
     if (hideTimeoutRef.current) {

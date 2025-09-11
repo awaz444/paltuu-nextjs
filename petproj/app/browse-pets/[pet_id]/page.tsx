@@ -368,7 +368,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     if (error || !pet) {
         return (
             <div className="text-center mt-10">
-                <Navbar />
+                
                 <div className="flex flex-col items-center justify-center min-h-[50vh]">
                     <Title level={2} className="text-gray-700">
                         {error || "Pet details not available"}
@@ -428,7 +428,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                     </Button>
                 </div>
             </Modal>
-            <Navbar />
+            
 
             <div className="pet-details min-h-screen bg-gray-50 py-8 px-4 md:px-8">
                 <div className="mx-auto max-w-6xl">

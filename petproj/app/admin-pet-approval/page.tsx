@@ -183,7 +183,7 @@ const AdminPetApproval: React.FC = () => {
 
   return (
     <>
-      <Navbar />
+      
       <div className="p-4">
         <h1 className="text-xl font-bold mb-4">Admin Pet Approval</h1>
         <Table

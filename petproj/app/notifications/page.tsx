@@ -141,7 +141,7 @@ const NotificationsPage = () => {
 
   return (
     <>
-      <Navbar />
+      
       <div className="container min-h-screen mx-auto p-4 mb-60 max-w-3xl">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>

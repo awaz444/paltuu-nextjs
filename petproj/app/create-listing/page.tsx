@@ -322,7 +322,7 @@ export default function CreatePetListing() {
                 onClose={() => setShowLoginModal(false)}
                 mandatory
             />
-            <Navbar />
+            
             <div
                 className="fullBody min-h-screen"
                 style={{ maxWidth: "90%", margin: "0 auto" }}>

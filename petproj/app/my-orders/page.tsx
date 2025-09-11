@@ -204,7 +204,7 @@ const MyOrdersPage = () => {
   if (loading) {
     return (
       <main className="min-h-screen bg-gradient-to-b from-primary/5 to-white">
-        <Navbar />
+        
         <div className="max-w-6xl mx-auto px-4 py-10">
           <div className="flex justify-center items-center h-64">
             <div className="animate-pulse text-gray-500">Loading your orders...</div>
@@ -217,7 +217,7 @@ const MyOrdersPage = () => {
   if (error) {
     return (
       <main className="min-h-screen bg-gradient-to-b from-primary/5 to-white">
-        <Navbar />
+        
         <div className="max-w-6xl mx-auto px-4 py-10">
           <div className="flex flex-col items-center justify-center h-64">
             <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
@@ -236,7 +236,7 @@ const MyOrdersPage = () => {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-primary/5 to-white">
-      <Navbar />
+      
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Breadcrumb */}

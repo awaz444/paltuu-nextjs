@@ -146,7 +146,7 @@ export default function BazaarAdminPage() {
 
   return (
     <div>
-      <Navbar />
+      
       <div className="p-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">

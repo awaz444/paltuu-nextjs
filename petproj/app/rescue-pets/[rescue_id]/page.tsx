@@ -100,7 +100,7 @@ export default function RescuePetPage({
     if (loading) {
         return (
             <>
-                <Navbar />
+                
                 <div className="flex justify-center items-center min-h-screen">
                     <MoonLoader color={primaryColor} size={30} />
                 </div>
@@ -111,7 +111,7 @@ export default function RescuePetPage({
     if (error) {
         return (
             <>
-                <Navbar />
+                
                 <div className="not-found-container">
                     <h1>{error}</h1>
                     <button
@@ -128,7 +128,7 @@ export default function RescuePetPage({
     if (!pet) {
         return (
             <>
-                <Navbar />
+                
                 <div className="not-found-container">
                     <h1>Pet Not Found</h1>
                     <button
@@ -184,7 +184,7 @@ export default function RescuePetPage({
 
     return (
         <>
-            <Navbar />
+            
 
             <div className="rescue-page-container">
                 {/* Main Content */}

@@ -118,7 +118,7 @@ const ShelterProfilePage: React.FC = () => {
     if (error || !shelter) {
         return (
             <div className="text-center mt-10">
-                <Navbar />
+                
                 <div className="flex flex-col items-center justify-center min-h-[50vh]">
                     <h2 className="text-2xl font-bold text-gray-700">
                         {error || "Shelter details not available"}
@@ -135,7 +135,7 @@ const ShelterProfilePage: React.FC = () => {
 
     return (
         <>
-            <Navbar />
+            
             <div className="shelter-profile min-h-screen bg-gray-50 py-8 px-4 md:px-8">
                 <div className="mx-auto max-w-6xl">
                     {/* Header Section */}

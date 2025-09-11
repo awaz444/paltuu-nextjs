@@ -81,7 +81,7 @@ const CheckoutPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Navbar />
+      
       <div className="bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen py-10 px-4 md:px-12 lg:px-20">
         <div className="max-w-6xl mx-auto">
           {/* Header */}

@@ -109,7 +109,7 @@ export default function PetCare() {
 
     return (
         <>
-            <Navbar />
+            
             <div
                 className="fullBody"
                 style={{ maxWidth: "90%", margin: "0 auto" }}>

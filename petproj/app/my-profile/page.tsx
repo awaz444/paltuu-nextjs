@@ -256,7 +256,7 @@ const MyProfile = () => {
 
     return (
         <>
-            <Navbar />
+            
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <div className="bg-white rounded-xl shadow-lg p-6">
                     {/* Header Section */}

@@ -118,7 +118,7 @@ const removeItem = async (itemId: string | number) => {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-primary/5 to-white">
-      <Navbar />
+      
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Breadcrumb */}
         <div className="flex items-center text-sm text-gray-500 mb-6">

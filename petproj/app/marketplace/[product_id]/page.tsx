@@ -297,7 +297,7 @@ const handleAddToCart = async () => {
     if (error) {
         return (
             <div className="min-h-screen bg-gray-50">
-                <Navbar />
+                
                 <div className="text-center mt-20 px-4">
                     <div className="max-w-md mx-auto">
                         <div className="mb-6 text-6xl">😞</div>
@@ -327,7 +327,7 @@ const handleAddToCart = async () => {
     if (!product) {
         return (
             <div className="text-center mt-10 bg-gray-50 min-h-screen">
-                <Navbar />
+                
                 <Title level={2} className="text-gray-700 pt-20">
                     Product not found
                 </Title>
@@ -343,7 +343,7 @@ const handleAddToCart = async () => {
 
     return (
         <>
-            <Navbar />
+            
             <div className="product-details min-h-screen bg-gray-50 py-8 px-4 md:px-8">
                 <div className="mx-auto max-w-6xl">
                     {/* Back Button */}

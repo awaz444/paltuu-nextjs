@@ -220,7 +220,7 @@ const AdminPetInteraction: React.FC = () => {
 
   return (
     <>
-      <Navbar />
+      
       <div className="p-4">
         <h1 className="text-xl font-bold mb-4 ml-4">Admin Pet Interaction</h1>
         <Table

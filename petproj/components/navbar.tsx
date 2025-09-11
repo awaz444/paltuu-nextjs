@@ -32,14 +32,8 @@ const Navbar = ({
   const [mobileView, setMobileView] = useState("navlinks"); // 'navlinks' or 'dropdown'
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
-  const hideNavbarRoutes = ["/login", "/success", "/sign-up", "/vet-register", "/rescue-register", "/vet-qualifications", "/vet-specialization" , "/vet-schedule", "/vet-get-verified-1", "/vet-get-verified-2", '/', '/partner-signup', '/vet-panel', '/shop-panel', '/rescue-panel'];
-  const pathName = usePathname();
-  const isHideFooter = hideNavbarRoutes.includes(pathName);
 
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  if (isHideFooter) {
-    return null;
-  }
 
   const handleMouseEnter = () => {  
     if (hideTimeoutRef.current) {

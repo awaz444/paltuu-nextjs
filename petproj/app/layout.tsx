@@ -8,7 +8,7 @@ import AppClientWrapper from "@/context/AppClientWrapper";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
-import Navbar from "@/components/navbar";
+import NavbarWrapper from "@/components/NavbarWrapper";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -55,15 +55,15 @@ export default function RootLayout({
       <body className={`${montserrat.className} flex flex-col min-h-screen`}>
         <AppClientWrapper>
           <ClientProvider>
-            {/* main content */}
-            <Navbar />
+            {/* ✅ Wrapped Navbar */}
+            <NavbarWrapper />
+
             <main className="flex-grow">{children}</main>
 
-            {/* chatbot (floats above footer, so keep it here) */}
+            {/* chatbot and analytics stay */}
             <div className="fixed right-2 z-50 bottom-20 sm:bottom-4">
               <ChatBot />
             </div>
-
             <Analytics />
           </ClientProvider>
         </AppClientWrapper>

@@ -209,3 +209,117 @@ export async function GET(req: NextRequest, { params }: { params: { shelter_id: 
         await client.end();
     }
 }
+
+export async function PUT(req: NextRequest, { params }: { params: { shelter_id: string } }): Promise<NextResponse> {
+    const client = createClient();
+    const { shelter_id } = params;
+
+    if (!shelter_id || isNaN(parseInt(shelter_id))) {
+        return NextResponse.json(
+            { error: "Valid shelter ID is required" },
+            { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+    }
+
+    try {
+        await client.connect();
+        const body = await req.json();
+        
+        const {
+            shelter_name,
+            address,
+            description,
+            capacity,
+            contact_name,
+            email,
+            phone_number,
+            account_title,
+            iban,
+            bank_name,
+            primary_phone,
+            backup_phone,
+            vet_name,
+            vet_phone,
+            social_media,
+            logo_url
+        } = body;
+
+        await client.query('BEGIN');
+
+        // Update shelter basic info
+        await client.query(
+            'UPDATE rescue_shelters SET shelter_name = $1, address = $2, description = $3, capacity = $4, logo_url = $5 WHERE shelter_id = $6',
+            [shelter_name, address, description, capacity, logo_url, shelter_id]
+        );
+
+        // Get user_id from shelter
+        const userResult = await client.query('SELECT user_id FROM rescue_shelters WHERE shelter_id = $1', [shelter_id]);
+        const userId = userResult.rows[0].user_id;
+
+        // Update user contact info
+        await client.query(
+            'UPDATE users SET name = $1, email = $2, phone_number = $3 WHERE user_id = $4',
+            [contact_name, email, phone_number, userId]
+        );
+
+        // Update or insert bank info
+        const bankExists = await client.query('SELECT bank_id FROM shelter_bank_info WHERE shelter_id = $1', [shelter_id]);
+        
+        if (bankExists.rows.length > 0) {
+            await client.query(
+                'UPDATE shelter_bank_info SET account_title = $1, iban = $2, bank_name = $3 WHERE shelter_id = $4',
+                [account_title, iban, bank_name, shelter_id]
+            );
+        } else {
+            await client.query(
+                'INSERT INTO shelter_bank_info (shelter_id, account_title, iban, bank_name) VALUES ($1, $2, $3, $4)',
+                [shelter_id, account_title, iban, bank_name]
+            );
+        }
+
+        // Update or insert emergency contacts
+        const emergencyExists = await client.query('SELECT contact_id FROM shelter_emergency_contacts WHERE shelter_id = $1', [shelter_id]);
+        
+        if (emergencyExists.rows.length > 0) {
+            await client.query(
+                'UPDATE shelter_emergency_contacts SET primary_phone = $1, backup_phone = $2, vet_name = $3, vet_phone = $4 WHERE shelter_id = $5',
+                [primary_phone, backup_phone, vet_name, vet_phone, shelter_id]
+            );
+        } else {
+            await client.query(
+                'INSERT INTO shelter_emergency_contacts (shelter_id, primary_phone, backup_phone, vet_name, vet_phone) VALUES ($1, $2, $3, $4, $5)',
+                [shelter_id, primary_phone, backup_phone, vet_name, vet_phone]
+            );
+        }
+
+        // Update social media
+        await client.query('DELETE FROM shelter_socials WHERE shelter_id = $1', [shelter_id]);
+        
+        if (social_media && social_media.length > 0) {
+            for (const social of social_media) {
+                if (social.platform && social.url) {
+                    await client.query(
+                        'INSERT INTO shelter_socials (shelter_id, platform, url) VALUES ($1, $2, $3)',
+                        [shelter_id, social.platform, social.url]
+                    );
+                }
+            }
+        }
+
+        await client.query('COMMIT');
+
+        return NextResponse.json(
+            { message: "Shelter profile updated successfully" },
+            { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(err);
+        return NextResponse.json(
+            { error: "Internal Server Error", message: (err as Error).message },
+            { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+    } finally {
+        await client.end();
+    }
+}

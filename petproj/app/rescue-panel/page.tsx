@@ -11,14 +11,20 @@ import SinglePetUploadForm from "../../components/SinglePetUploadForm";
 import ProfileContent from "../../components/ProfileContent";
 import NotificationsContent from "../../components/NotificationsContent";
 import MyListingGrid from "../../components/MyListingGrid";
-import { UploadOutlined, UnorderedListOutlined, UserOutlined, BellOutlined, FileTextOutlined, PlusOutlined } from "@ant-design/icons";
+import dynamic from 'next/dynamic';
+
+const ShelterProfileContent = dynamic(() => import('../../components/ShelterProfileContent'), {
+  ssr: false,
+  loading: () => <div className="py-6">Loading shelter profile...</div>
+});
+import { UploadOutlined, UnorderedListOutlined, UserOutlined, BellOutlined, FileTextOutlined, PlusOutlined, HomeOutlined } from "@ant-design/icons";
 
 export default function RescuePanel() {
   useSetPrimaryColor();
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'bulk' | 'single' | 'listings' | 'profile' | 'notifications' | 'applications'>('bulk');
+  const [activeTab, setActiveTab] = useState<'bulk' | 'single' | 'listings' | 'profile' | 'notifications' | 'applications' | 'shelter'>('bulk');
   const [mobileSolid, setMobileSolid] = useState(true);
   const [entityData, setEntityData] = useState<{id: number, name: string} | null>(null);
 
@@ -46,14 +52,19 @@ export default function RescuePanel() {
       
       try {
         const userId = user.id || user.user_id;
+        console.log('Fetching shelter entity data for user ID:', userId);
         const response = await fetch(`/api/user-shops-shelters?user_id=${userId}`);
         const data = await response.json();
+        console.log('Shelter entity response:', data);
         
         if (data.success && data.entity) {
           setEntityData({
             id: data.entity.id,
             name: data.entity.name
           });
+          console.log('Set entity data:', { id: data.entity.id, name: data.entity.name });
+        } else {
+          console.log('No entity data found or API error:', data);
         }
       } catch (error) {
         console.error('Error fetching shelter data:', error);
@@ -84,8 +95,8 @@ export default function RescuePanel() {
       <Navbar
         linksOverride={[{ name: "Rescue Panel", href: "rescue-panel" }]}
         dropdownOverride={[
-          { href: "/", label: "Home" },
-          { href: "/logout", label: "Logout", isAction: true },
+          { href: "/", label: "Home", icon: "bi-house" },
+          { href: "/logout", label: "Logout", icon: "bi-box-arrow-right", isAction: true },
         ]}
         logoHref="/rescue-panel"
         hideCart
@@ -140,6 +151,12 @@ export default function RescuePanel() {
             >
               <FileTextOutlined /> <span className="ml-2">Applications</span>
             </button>
+            <button
+              className={`relative flex-shrink-0 px-3 py-2 text-white rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'shelter' ? 'after:w-[calc(100%-1.5rem)] bg-white/10' : 'after:w-0'}`}
+              onClick={() => setActiveTab('shelter')}
+            >
+              <HomeOutlined /> <span className="ml-2">My Shelter</span>
+            </button>
           </div>
           {/* Spacer to prevent overlap with content */}
           <div className="h-3" />
@@ -180,6 +197,10 @@ export default function RescuePanel() {
                 <button className={`relative flex items-center gap-2 text-left px-3 py-2 rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'applications' ? 'text-white cursor-default after:w-[calc(100%-1.5rem)]' : 'text-white after:w-0'}`}
                         onClick={() => setActiveTab('applications')}>
                   <FileTextOutlined /> <span>My Applications</span>
+                </button>
+                <button className={`relative flex items-center gap-2 text-left px-3 py-2 rounded hover:bg-white/10 after:absolute after:left-3 after:bottom-1 after:h-[2px] after:bg-white after:transition-all after:duration-300 ${activeTab === 'shelter' ? 'text-white cursor-default after:w-[calc(100%-1.5rem)]' : 'text-white after:w-0'}`}
+                        onClick={() => setActiveTab('shelter')}>
+                  <HomeOutlined /> <span>My Shelter</span>
                 </button>
               </div>
             </Card>
@@ -227,6 +248,18 @@ export default function RescuePanel() {
             {activeTab === 'applications' && (
               <Card title="My Applications" className="shadow-sm">
                 <MyApplicationsContent />
+              </Card>
+            )}
+            {activeTab === 'shelter' && (
+              <Card title="My Shelter" className="shadow-sm">
+                {entityData ? (
+                  <ShelterProfileContent shelterId={entityData.id} />
+                ) : (
+                  <div className="py-6 text-center">
+                    <div className="text-lg">Loading shelter information...</div>
+                    <div className="text-sm text-gray-500 mt-2">Please wait while we fetch your shelter data</div>
+                  </div>
+                )}
               </Card>
             )}
           </div>

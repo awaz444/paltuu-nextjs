@@ -1,6 +1,17 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { message } from "antd";
+import { 
+  BuildingStorefrontIcon, 
+  MapPinIcon, 
+  PhoneIcon, 
+  CurrencyDollarIcon, 
+  ChatBubbleLeftRightIcon, 
+  EnvelopeIcon,
+  PencilSquareIcon,
+  XMarkIcon,
+  CheckIcon
+} from "@heroicons/react/24/outline";
 
 interface ClinicDetails {
     vet_id: number;
@@ -24,6 +35,7 @@ const VetClinicTab = () => {
     const [vetId, setVetId] = useState<string | null>(null);
     const [editing, setEditing] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
     const editableClinicFields = [
         'clinic_name',
@@ -90,6 +102,7 @@ const VetClinicTab = () => {
             return;
         }
 
+        setSaving(true);
         try {
             const res = await fetch(`/api/vet-panel/clinic-details/${vetId}`, {
                 method: "PUT",
@@ -113,6 +126,8 @@ const VetClinicTab = () => {
         } catch (error) {
             console.error('Error saving clinic changes:', error);
             message.error(error instanceof Error ? error.message : "Failed to update clinic information");
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -124,6 +139,7 @@ const VetClinicTab = () => {
     const renderField = (
         field: keyof ClinicDetails,
         label: string,
+        icon: React.ReactNode,
         type: string = 'text',
         format?: (value: any) => string
     ) => {
@@ -132,39 +148,54 @@ const VetClinicTab = () => {
             : null;
 
         return (
-            <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-600">
-                    {label}
-                </label>
+            <div className="bg-white p-4 rounded-xl bg-primary/50 border border-gray-200 hover:border-primary/30 transition-all duration-200 hover:shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                        {icon}
+                    </div>
+                    <label className="text-sm font-medium text-gray-700">
+                        {label}
+                    </label>
+                </div>
                 {editing ? (
                     validField && (
-                        <input
-                            type={type}
-                            value={clinicForm[validField] || ''}
-                            onChange={(e) => {
-                                if (field === 'minimum_fee') {
-                                    const value = parseFloat(e.target.value);
-                                    if (!isNaN(value) && value >= 0 || e.target.value === '') {
+                        <div className="relative">
+                            <input
+                                type={type}
+                                value={clinicForm[validField] || ''}
+                                onChange={(e) => {
+                                    if (field === 'minimum_fee') {
+                                        const value = parseFloat(e.target.value);
+                                        if (!isNaN(value) && value >= 0 || e.target.value === '') {
+                                            handleClinicChange(
+                                                validField,
+                                                type === 'number' ? value : e.target.value
+                                            );
+                                        }
+                                    } else {
                                         handleClinicChange(
                                             validField,
-                                            type === 'number' ? value : e.target.value
+                                            type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value
                                         );
                                     }
-                                } else {
-                                    handleClinicChange(
-                                        validField,
-                                        type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value
-                                    );
-                                }
-                            }}
-                            min={field === 'minimum_fee' ? "0" : undefined}
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary transition-colors duration-200"
-                        />
+                                }}
+                                min={field === 'minimum_fee' ? "0" : undefined}
+                                className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors duration-200 bg-gray-50"
+                            />
+                            <div className="absolute left-3 top-3.5 text-gray-400">
+                                {icon}
+                            </div>
+                        </div>
                     )
                 ) : (
-                    <p className="p-2 bg-gray-50 rounded-lg">
-                        {format ? format(clinicForm[field]) : clinicForm[field] || "Not provided"}
-                    </p>
+                    <div className="flex items-center gap-3 min-h-[44px]">
+                        <div className="text-gray-400">
+                            {icon}
+                        </div>
+                        <p className="text-gray-800">
+                            {format ? format(clinicForm[field]) : clinicForm[field] || "Not provided"}
+                        </p>
+                    </div>
                 )}
             </div>
         );
@@ -180,40 +211,55 @@ const VetClinicTab = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold">Clinic Information</h2>
-                {editing ? (
-                    <div className="flex gap-2">
-                        <button
-                            onClick={handleCancel}
-                            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleSaveChanges}
-                            className="px-4 py-2 bg-primary text-white rounded-lg transition-all"
-                        >
-                            Save Changes
-                        </button>
+            <div className="bg-primary text-white p-6 rounded-2xl">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 className="text-2xl font-bold">Clinic Information</h2>
+                        <p className="text-primary-100 mt-1">
+                            Manage your clinic details and contact information
+                        </p>
                     </div>
-                ) : (
-                    <button
-                        onClick={() => setEditing(true)}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-all"
-                    >
-                        Edit Clinic Info
-                    </button>
-                )}
+                    {editing ? (
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleCancel}
+                                className="px-5 py-2.5 bg-white/20 text-white rounded-xl hover:bg-white/30 transition-all flex items-center gap-2 backdrop-blur-sm"
+                            >
+                                <XMarkIcon className="w-5 h-5" />
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveChanges}
+                                disabled={saving}
+                                className="px-5 py-2.5 bg-white text-primary rounded-xl hover:bg-gray-100 transition-all flex items-center gap-2"
+                            >
+                                {saving ? (
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                ) : (
+                                    <CheckIcon className="w-5 h-5" />
+                                )}
+                                {saving ? "Saving..." : "Save Changes"}
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={() => setEditing(true)}
+                            className="px-5 py-2.5 bg-white text-primary rounded-xl hover:bg-gray-100 transition-all flex items-center gap-2"
+                        >
+                            <PencilSquareIcon className="w-5 h-5" />
+                            Edit Clinic Info
+                        </button>
+                    )}
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {renderField('clinic_name', 'Clinic Name')}
-                {renderField('location', 'Location')}
-                {renderField('contact_details', 'Contact Number')}
-                {renderField('minimum_fee', 'Minimum Fee', 'number', (value) => `Rs. ${value || '0'}`)}
-                {renderField('clinic_whatsapp', 'WhatsApp Number')}
-                {renderField('clinic_email', 'Clinic Email', 'email')}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {renderField('clinic_name', 'Clinic Name', <BuildingStorefrontIcon className="w-5 h-5" />)}
+                {renderField('location', 'Location', <MapPinIcon className="w-5 h-5" />)}
+                {renderField('contact_details', 'Contact Number', <PhoneIcon className="w-5 h-5" />)}
+                {renderField('minimum_fee', 'Minimum Fee', <CurrencyDollarIcon className="w-5 h-5" />, 'number', (value) => `Rs. ${value || '0'}`)}
+                {renderField('clinic_whatsapp', 'WhatsApp Number', <ChatBubbleLeftRightIcon className="w-5 h-5" />)}
+                {renderField('clinic_email', 'Clinic Email', <EnvelopeIcon className="w-5 h-5" />, 'email')}
             </div>
         </div>
     );

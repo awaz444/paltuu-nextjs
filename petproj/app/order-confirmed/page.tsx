@@ -2,8 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle, Package, Truck, Calendar, Download, ArrowLeft, Copy } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useAuth } from "../../context/AuthContext";
+
 
 const OrderConfirmedPage = () => {
+  const { isAuthenticated, user } = useAuth();
   const [order, setOrder] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
@@ -26,6 +29,7 @@ const OrderConfirmedPage = () => {
       }
     })();
   }, [searchParams]);
+
 
   const copyOrderNumber = async () => {
     if (!order?.order_number) return;
@@ -411,7 +415,24 @@ const OrderConfirmedPage = () => {
             Download Receipt
           </button>
         </div>
-
+        {/* Login Prompt (only show if user is not logged in) */}
+        {!user && (
+          <div className="mt-12 bg-white border border-gray-200 rounded-lg p-6 shadow-sm text-center">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Create an account or log in
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Store your order details permanently and unlock all Paltuu features
+              like order history, faster checkout, and exclusive offers.
+            </p>
+            <button
+              onClick={() => router.push("/login")}
+              className="px-8 py-3 bg-primary text-white rounded-md font-medium hover:bg-[#891d38] transition-colors duration-200"
+            >
+              Login / Sign Up
+            </button>
+          </div>
+        )}
         {/* Contact Support */}
         <div className="text-center mt-12 p-6 bg-gray-100 rounded-lg">
           <p className="text-gray-600 mb-2">Need help with your order?</p>

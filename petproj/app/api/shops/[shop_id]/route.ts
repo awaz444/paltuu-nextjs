@@ -164,3 +164,96 @@ export async function GET(req: NextRequest, { params }: { params: { shop_id: str
         await client.end();
     }
 }
+
+export async function PUT(req: NextRequest, { params }: { params: { shop_id: string } }): Promise<NextResponse> {
+    const client = createClient();
+    const { shop_id } = params;
+
+    if (!shop_id || isNaN(parseInt(shop_id))) {
+        return NextResponse.json(
+            { error: "Valid shop ID is required" },
+            { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+    }
+
+    try {
+        await client.connect();
+        const body = await req.json();
+        
+        const {
+            shop_name,
+            address,
+            contact_name,
+            email,
+            phone_number,
+            account_title,
+            iban,
+            bank_name,
+            social_media,
+            logo_url
+        } = body;
+
+        await client.query('BEGIN');
+
+        // Update shop basic info
+        await client.query(
+            'UPDATE shops SET shop_name = $1, address = $2, logo_url = $3 WHERE shop_id = $4',
+            [shop_name, address, logo_url, shop_id]
+        );
+
+        // Get user_id from shop
+        const userResult = await client.query('SELECT user_id FROM shops WHERE shop_id = $1', [shop_id]);
+        const userId = userResult.rows[0].user_id;
+
+        // Update user contact info
+        await client.query(
+            'UPDATE users SET name = $1, email = $2, phone_number = $3 WHERE user_id = $4',
+            [contact_name, email, phone_number, userId]
+        );
+
+        // Update or insert bank info
+        const bankExists = await client.query('SELECT bank_id FROM shop_bank_info WHERE shop_id = $1', [shop_id]);
+        
+        if (bankExists.rows.length > 0) {
+            await client.query(
+                'UPDATE shop_bank_info SET account_title = $1, iban = $2, bank_name = $3 WHERE shop_id = $4',
+                [account_title, iban, bank_name, shop_id]
+            );
+        } else {
+            await client.query(
+                'INSERT INTO shop_bank_info (shop_id, account_title, iban, bank_name) VALUES ($1, $2, $3, $4)',
+                [shop_id, account_title, iban, bank_name]
+            );
+        }
+
+        // Update social media
+        await client.query('DELETE FROM shop_socials WHERE shop_id = $1', [shop_id]);
+        
+        if (social_media && social_media.length > 0) {
+            for (const social of social_media) {
+                if (social.platform && social.url) {
+                    await client.query(
+                        'INSERT INTO shop_socials (shop_id, platform, url) VALUES ($1, $2, $3)',
+                        [shop_id, social.platform, social.url]
+                    );
+                }
+            }
+        }
+
+        await client.query('COMMIT');
+
+        return NextResponse.json(
+            { message: "Shop profile updated successfully" },
+            { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(err);
+        return NextResponse.json(
+            { error: "Internal Server Error", message: (err as Error).message },
+            { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+    } finally {
+        await client.end();
+    }
+}

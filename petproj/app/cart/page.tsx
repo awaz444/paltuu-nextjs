@@ -157,7 +157,7 @@ const removeItem = async (itemId: string | number) => {
                 <p className="text-gray-500 mb-4">Add some items to get started!</p>
                 <button
                   className="bg-primary text-white px-6 py-2 rounded-xl hover:bg-primary-dark transition"
-                  onClick={() => window.history.back()}
+                  onClick={() => router.push('/marketplace')}
                 >
                   Browse Products
                 </button>
@@ -227,7 +227,7 @@ const removeItem = async (itemId: string | number) => {
               </div>
             </div>
           )}
-          
+
           {/* Trust Badges */}
           {cartItems.length > 0 && (
             <div

@@ -217,14 +217,21 @@ export default function SinglePetUploadForm({
     setUploading(true);
 
     try {
-      const userId = user.id || user.user_id;
+      // Fix: Parse user ID to number
+      const userId = parseInt(user.id || user.user_id || '0', 10);
+      
+      if (userId === 0) {
+        message.error("Invalid user ID. Please login again.");
+        setUploading(false);
+        return;
+      }
       
       // Determine listing type based on entity type and price
       const listingType = entityType === 'shop' ? 'shop' : 'rescue';
 
       // Create the pet with entity ID
       const newPet = {
-        owner_id: userId,
+        owner_id: userId, // Now this is a number
         pet_name: title,
         pet_type: Number(petType),
         pet_breed: entityType === 'shop' ? (breed || null) : null,

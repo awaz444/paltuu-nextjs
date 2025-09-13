@@ -1,0 +1,246 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '../../../../db/ecom';
+
+export const revalidate = 0;
+
+// GET cart for user or session
+export async function GET(req: NextRequest) {
+  const client = createClient();
+  try {
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('userId');
+    const sessionId = searchParams.get('sessionId');
+
+    if (!userId && !sessionId) {
+      return NextResponse.json({ error: 'User ID or Session ID is required' }, { status: 400 });
+    }
+
+    await client.connect();
+
+    // Find or create cart
+    let cartQuery = `
+      SELECT cart_id, user_id, session_id, created_at, updated_at, expires_at
+      FROM bazaar_carts
+      WHERE ${userId ? 'user_id = $1' : 'session_id = $1'}
+      AND expires_at > NOW()
+      ORDER BY created_at DESC
+      LIMIT 1
+    `;
+
+    const cartResult = await client.query(cartQuery, [userId || sessionId]);
+
+    if (cartResult.rows.length === 0) {
+      // Create new cart
+      const createCartQuery = `
+        INSERT INTO bazaar_carts (user_id, session_id, created_at, updated_at, expires_at)
+        VALUES ($1, $2, NOW(), NOW(), NOW() + INTERVAL '30 days')
+        RETURNING *
+      `;
+      const newCartResult = await client.query(createCartQuery, [userId || null, sessionId || null]);
+      const cart = newCartResult.rows[0];
+
+      return NextResponse.json({
+        cart,
+        items: []
+      });
+    }
+
+    const cart = cartResult.rows[0];
+
+    // Get cart items with product details
+    const itemsQuery = `
+      SELECT
+        ci.cart_item_id,
+        ci.cart_id,
+        ci.product_id,
+        ci.variant_id,
+        ci.quantity,
+        ci.added_at,
+  p.title as product_title,
+  p.price as product_price,
+  p.slug as product_slug,
+  COALESCE((SELECT SUM(stock) FROM bazaar_product_variants pv2 WHERE pv2.product_id = p.product_id), 0) as product_stock,
+        pv.title as variant_title,
+        pv.price_override as variant_price,
+        pv.stock as variant_stock,
+        pv.attributes as variant_attributes,
+        COALESCE(pv.price_override, p.price) as effective_price,
+        COALESCE((SELECT url FROM bazaar_product_media WHERE product_id = p.product_id AND is_primary = true LIMIT 1),
+                 (SELECT url FROM bazaar_product_media WHERE product_id = p.product_id ORDER BY ordering LIMIT 1)) as image_url
+      FROM bazaar_cart_items ci
+      JOIN bazaar_products p ON ci.product_id = p.product_id
+      LEFT JOIN bazaar_product_variants pv ON ci.variant_id = pv.variant_id
+      WHERE ci.cart_id = $1
+      ORDER BY ci.added_at DESC
+    `;
+
+    const itemsResult = await client.query(itemsQuery, [cart.cart_id]);
+
+    return NextResponse.json({
+      cart,
+      items: itemsResult.rows
+    });
+
+  } catch (err) {
+    console.error('Cart fetch error:', err);
+    return NextResponse.json({ error: 'Failed to fetch cart' }, { status: 500 });
+  } finally {
+    try { await client.end(); } catch { }
+  }
+}
+
+// POST - Add item to cart
+export async function POST(req: NextRequest) {
+  const client = createClient();
+  try {
+    const body = await req.json();
+    const { userId, sessionId, productId, variantId, quantity = 1 } = body;
+
+    if (!productId || (!userId && !sessionId)) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    await client.connect();
+
+    // Find or create cart
+    let cartQuery = `
+      SELECT cart_id FROM bazaar_carts
+      WHERE ${userId ? 'user_id = $1' : 'session_id = $1'}
+      AND expires_at > NOW()
+      ORDER BY created_at DESC
+      LIMIT 1
+    `;
+
+    let cartResult = await client.query(cartQuery, [userId || sessionId]);
+
+    let cartId;
+    if (cartResult.rows.length === 0) {
+      const createCartQuery = `
+        INSERT INTO bazaar_carts (user_id, session_id, created_at, updated_at, expires_at)
+        VALUES ($1, $2, NOW(), NOW(), NOW() + INTERVAL '30 days')
+        RETURNING cart_id
+      `;
+      const newCartResult = await client.query(createCartQuery, [userId || null, sessionId || null]);
+      cartId = newCartResult.rows[0].cart_id;
+    } else {
+      cartId = cartResult.rows[0].cart_id;
+    }
+
+    // Check if item already exists in cart
+    const existingItemQuery = `
+      SELECT cart_item_id, quantity FROM bazaar_cart_items
+      WHERE cart_id = $1 AND product_id = $2 AND ($3::int IS NULL AND variant_id IS NULL OR variant_id = $3)
+    `;
+    const existingItemResult = await client.query(existingItemQuery, [cartId, productId, variantId]);
+
+    if (existingItemResult.rows.length > 0) {
+      // Update quantity
+      const updateQuery = `
+        UPDATE bazaar_cart_items
+        SET quantity = quantity + $1, updated_at = NOW()
+        WHERE cart_item_id = $2
+        RETURNING *
+      `;
+      const updateResult = await client.query(updateQuery, [quantity, existingItemResult.rows[0].cart_item_id]);
+      return NextResponse.json(updateResult.rows[0]);
+    } else {
+      // Add new item
+      const insertQuery = `
+        INSERT INTO bazaar_cart_items (cart_id, product_id, variant_id, quantity, added_at, updated_at)
+        VALUES ($1, $2, $3, $4, NOW(), NOW())
+        RETURNING *
+      `;
+      const insertResult = await client.query(insertQuery, [cartId, productId, variantId, quantity]);
+      return NextResponse.json(insertResult.rows[0]);
+    }
+
+  } catch (err) {
+    console.error('Add to cart error:', err);
+    return NextResponse.json({ error: 'Failed to add item to cart' }, { status: 500 });
+  } finally {
+    try { await client.end(); } catch { }
+  }
+}
+
+// PUT - Update cart item quantity
+export async function PUT(req: NextRequest) {
+  const client = createClient();
+  try {
+    const body = await req.json();
+    const { cartItemId, quantity } = body;
+
+    if (!cartItemId || quantity === undefined) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    await client.connect();
+
+    if (quantity <= 0) {
+      // Remove item if quantity is 0 or negative
+      const deleteQuery = `DELETE FROM bazaar_cart_items WHERE cart_item_id = $1 RETURNING *`;
+      const deleteResult = await client.query(deleteQuery, [cartItemId]);
+      return NextResponse.json({ deleted: true, item: deleteResult.rows[0] });
+    } else {
+      // Update quantity
+      const updateQuery = `
+        UPDATE bazaar_cart_items
+        SET quantity = $1, updated_at = NOW()
+        WHERE cart_item_id = $2
+        RETURNING *
+      `;
+      const updateResult = await client.query(updateQuery, [quantity, cartItemId]);
+      return NextResponse.json(updateResult.rows[0]);
+    }
+
+  } catch (err) {
+    console.error('Update cart error:', err);
+    return NextResponse.json({ error: 'Failed to update cart item' }, { status: 500 });
+  } finally {
+    try { await client.end(); } catch { }
+  }
+}
+
+// DELETE - Remove item from cart
+export async function DELETE(req: NextRequest) {
+  const client = createClient();
+  try {
+    const { searchParams } = new URL(req.url);
+    let cartItemId = searchParams.get('cartItemId');
+
+    // If not provided in query, attempt to read JSON body (some clients send DELETE with body)
+    let body: any = null;
+    if (!cartItemId) {
+      try {
+        body = await req.json();
+        cartItemId = body?.cartItemId ?? body?.cart_item_id ?? null;
+      } catch (e) {
+        // ignore JSON parse errors
+      }
+    }
+
+    if (!cartItemId) {
+      console.warn('Delete cart called without cartItemId', { url: req.url, body });
+      return NextResponse.json({ error: 'Cart item ID is required' }, { status: 400 });
+    }
+
+    await client.connect();
+
+  // coerce numeric ids to number when possible
+  const param = typeof cartItemId === 'string' && /^\d+$/.test(cartItemId) ? Number(cartItemId) : cartItemId;
+  console.debug('Deleting cart item', { cartItemId: param });
+  const deleteQuery = `DELETE FROM bazaar_cart_items WHERE cart_item_id = $1 RETURNING *`;
+  const deleteResult = await client.query(deleteQuery, [param]);
+
+    if (deleteResult.rows.length === 0) {
+      return NextResponse.json({ error: 'Cart item not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ deleted: true, item: deleteResult.rows[0] });
+
+  } catch (err) {
+    console.error('Delete cart item error:', err);
+    return NextResponse.json({ error: 'Failed to delete cart item' }, { status: 500 });
+  } finally {
+    try { await client.end(); } catch { }
+  }
+}

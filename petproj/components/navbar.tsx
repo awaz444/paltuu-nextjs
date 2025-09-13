@@ -3,177 +3,294 @@
 import Link from "next/link";
 import "./navbar.css";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { usePathname } from 'next/navigation';
+import { useState, useEffect, useRef } from "react";
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/app/store/store';
 import { useSession, signOut } from "next-auth/react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
-const Navbar = () => {
+interface OverrideLink { name: string; href: string }
+interface OverrideDropdownItem { href: string; label: string;icon: string; isAction?: boolean }
+
+const Navbar = ({
+  linksOverride,
+  dropdownOverride,
+  logoHref,
+  hideCart,
+}: {
+  linksOverride?: OverrideLink[];
+  dropdownOverride?: OverrideDropdownItem[];
+  logoHref?: string;
+  hideCart?: boolean;
+}) => {
   const [activeLink, setActiveLink] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [mobileView, setMobileView] = useState("navlinks"); // 'navlinks' or 'dropdown'
-  let hideTimeout: ReturnType<typeof setTimeout>;
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
 
-    const handleMouseEnter = () => {
-        clearTimeout(hideTimeout); // Cancel the hide timeout
-        setIsDropdownOpen(true);
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = () => {  
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+    setIsDropdownOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    // Set a longer timeout to allow moving to dropdown
+    hideTimeoutRef.current = setTimeout(() => setIsDropdownOpen(false), 300);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
     };
+  }, []);
+  
+  // Use next-auth's useSession hook for Google login
+  const { data: session, status } = useSession();
 
-    const handleMouseLeave = () => {
-        hideTimeout = setTimeout(() => setIsDropdownOpen(false), 200);
-    };
+  // Use custom AuthContext for API-based login
+  const { isAuthenticated, user, logout: apiLogout } = useAuth();
 
-    // Use next-auth's useSession hook for Google login
-    const { data: session, status } = useSession();
+  const router = useRouter(); // Router for navigation
 
-    // Use custom AuthContext for API-based login
-    const { isAuthenticated, user, logout: apiLogout } = useAuth();
+  const handleLogout = async () => {
+    try {
+      await apiLogout(); // Use the AuthContext logout
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Force redirect as fallback
+      window.location.href = "/login";
+    }
+  };
 
-    const router = useRouter(); // Router for navigation
+  type UserRole =
+    | "guest"
+    | "regular user"
+    | "vet"
+    | "admin"
+    | "shelter admin"
+    | "shop admin"
+    | "ecommerce admin";
 
-    const handleLogout = async () => {
-        try {
-            await apiLogout(); // Use the AuthContext logout
-        } catch (error) {
-            console.error("Logout error:", error);
-            // Force redirect as fallback
-            window.location.href = "/login";
-        }
-    };
+  // Determine role first
+  const userRole: UserRole =
+    (user?.role as UserRole) || (session?.user?.role as UserRole) || "guest";
 
-    type UserRole = "guest" | "regular user" | "vet" | "admin";
+const navbarBackground: Record<UserRole, string> = {
+  guest: "#A03048",
+  "regular user": "#A03048",
+  vet: "#480777",
+  admin: "#065758",
 
-    // Determine role first
-    const userRole: UserRole =
-        (user?.role as UserRole) ||
-        (session?.user?.role as UserRole) ||
-        "guest";
+  "shelter admin": "#1d6b34",
+  "shop admin": "#b86b00",
+  "ecommerce admin": "#004a99",
+};
 
-    const navbarBackground: Record<UserRole, string> = {
-        guest: "#A03048",
-        "regular user": "#A03048",
-        vet: "#480777",
-        admin: "#065758",
-    };
+const buttonTextColor: Record<UserRole, string> = {
+  guest: "#ffffff",
+  "regular user": "#ffffff",
+  vet: "#ffffff",
+  admin: "#ffffff",
+  "shop admin": "#ffffff",
+  "shelter admin": "#ffffff",
+  "ecommerce admin": "#ffffff",
+};
 
-    const buttonTextColor: Record<UserRole, string> = {
-        guest: "#ffffff",
-        "regular user": "#ffffff",
-        vet: "#ffffff",
-        admin: "#ffffff",
-    };
+const arrowColor: Record<UserRole, string> = {
+  guest: "#ffd2e3",
+  "regular user": "#ffd2e3",
+  vet: "#e0c3f7",
+  admin: "#7fe1d3",
 
-    const arrowColor: Record<UserRole, string> = {
-        guest: "#ffd2e3",
-        "regular user": "#ffd2e3",
-        vet: "#e0c3f7",
-        admin: "#7fe1d3",
-    };
+  "shelter admin": "#8fe4a8",
+  "shop admin": "#ffc266",
+  "ecommerce admin": "#80b3ff",
+};
 
-    // Updated dropdown items with isAction flag
-    const dropdownItems = [
-        {
-            href:
-                userRole === "vet"
-                    ? "/vet-panel"
-                    : userRole === "admin"
-                    ? "/admin-panel"
-                    : "/my-profile",
-            label:
-                userRole === "vet"
-                    ? "Vet Panel"
-                    : userRole === "admin"
-                    ? "Admin Panel"
-                    : "My Profile",
-            isAction: false,
-        },
-        { href: "/my-listings", label: "My Listings", isAction: false },
-        { href: "/my-applications", label: "My Applications", isAction: false },
-        { href: "/notifications", label: "Notifications", isAction: false },
-        { href: "/logout", label: "Logout", isAction: true },
-    ];
 
-    const navbarStyle = { backgroundColor: navbarBackground[userRole] };
+  // Updated dropdown items with isAction flag
+  const defaultDropdownItems = [
+    {
+      href:
+        userRole === "vet"
+          ? "/vet-panel"
+          : userRole === "admin"
+          ? "/admin-panel"
+                    : userRole === "shop admin"
+                    ? "/shop-panel"
+                    : userRole === "shelter admin"
+                    ? "/rescue-panel"
+          : "/my-profile",
+      label:
+        userRole === "vet"
+          ? "Vet Panel"
+          : userRole === "admin"
+          ? "Admin Panel"
+                    : userRole === "shop admin"
+                    ? "Shop Panel"
+                    : userRole === "shelter admin"
+                    ? "Rescue Panel"
+          : "My Profile",
+      icon: "bi-person-circle", // 👈 same as desktop
+      isAction: false,
+    },
+    {
+      href: "/my-listings",
+      label: "My Listings",
+      icon: "bi-card-list",
+      isAction: false,
+    },
+    {
+      href: "/my-applications",
+      label: "My Applications",
+      icon: "bi-file-earmark-text",
+      isAction: false,
+    },
+    {
+      href: "/notifications",
+      label: "Notifications",
+      icon: "bi-bell",
+      isAction: false,
+    },
+    {
+      href: "/my-orders",
+      label: "My Orders",
+      icon: "bi-bag",
+      isAction: false,
+    },
+    {
+      href: "/notifications",
+      label: "Notifications",
+      icon: "bi-bell",
+      isAction: false,
+    },
+    {
+      href: "/logout",
+      label: "Logout",
+      icon: "bi-box-arrow-right",
+      isAction: true,
+    },
+  ];
+    const dropdownItems = dropdownOverride || defaultDropdownItems;
 
-    const displayName =
-        session?.user?.name ||
-        session?.user?.email ||
-        user?.name ||
-        user?.email ||
-        "User";
+  const navbarStyle = { backgroundColor: navbarBackground[userRole] };
 
-    const profileImage =
-        user?.profile_image_url ||
-        session?.user?.image || // next-auth google login usually gives `image`
-        "/default-avatar.png"; // put your default icon in public folder
+  const displayName =
+    session?.user?.name ||
+    session?.user?.email ||
+    user?.name ||
+    user?.email ||
+    "User";
 
-    // Log the auth context props as soon as they are fetched
-    useEffect(() => {
-        // console.log("AuthContext - User:", user);
-        // console.log("AuthContext - Role:", userRole);
-        // console.log("AuthContext - isAuthenticated:", isAuthenticated);
-        // console.log("NextAuth - Session:", session);
-    }, [user, isAuthenticated, session]); // Logs when these values update
+  const profileImage =
+    user?.profile_image_url ||
+    session?.user?.image || // next-auth google login usually gives `image`
+    "/default-avatar.png"; // put your default icon in public folder
+
+  // Cart state for navbar dropdown
+  const [cartOpen, setCartOpen] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const cartState = useSelector((state: RootState) => state.cart);
+  const cartHideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cartItemsNav = cartState.items ?? [];
+  const cartLoading = cartState.loading ?? false;
+
+  // Bounce animation for cart button
+  const [bounce, setBounce] = useState(false);
+  const prevTotalRef = useRef(0);
+  const totalCartItems = cartItemsNav.reduce((sum, item) => sum + item.qty, 0);
+
+  useEffect(() => {
+    if (totalCartItems > prevTotalRef.current) {
+      setBounce(true);
+      setTimeout(() => setBounce(false), 500); // 0.5s bounce
+    }
+    prevTotalRef.current = totalCartItems;
+  }, [totalCartItems]);
+
+  // Cart dropdown mouse handlers
+  const handleCartMouseEnter = () => {
+    if (cartHideTimeout.current) clearTimeout(cartHideTimeout.current);
+    setCartOpen(true);
+  };
+  const handleCartMouseLeave = () => {
+    if (cartHideTimeout.current) clearTimeout(cartHideTimeout.current);
+    cartHideTimeout.current = setTimeout(() => setCartOpen(false), 350);
+  };
+
+
+  // Log the auth context props as soon as they are fetched
+  useEffect(() => {
+    // console.log("AuthContext - User:", user);
+    // console.log("AuthContext - Role:", userRole);
+    // console.log("AuthContext - isAuthenticated:", isAuthenticated);
+    // console.log("NextAuth - Session:", session);
+  }, [user, isAuthenticated, session]); // Logs when these values update
 
     // Navigation Links
-    const links = [
+    const defaultLinks = [
         { name: "Pets", href: "browse-pets" },
-        // { name: "Bazaar", href: "paltuu-bazaar" },
+        { name: "Bazaar", href: "marketplace" },
         { name: "Pet Care", href: "pet-care" },
         { name: "Lost & Found", href: "lost-and-found" },
         //{ name: "Paltuu AI", href: "llm" },
     ];
+    const links = linksOverride || defaultLinks;
 
-    useEffect(() => {
-        const fetchVerificationStatus = async () => {
-            if (userRole === "vet" && user?.id) {
-                console.log(user.id);
-                try {
-                    const response = await fetch(
-                        `/api/is-verified-by-user-id/${user.id}`
-                    );
-                    const data = await response.json();
-                    console.log("gagea", data);
-                    setIsVerified(data.profile_verified); // assuming the response contains an 'isVerified' boolean
-                    console.log("Verified", data.profile_verified);
-                } catch (error) {
-                    console.error(
-                        "Failed to fetch verification status:",
-                        error
-                    );
-                }
-            }
-        };
+  useEffect(() => {
+    const fetchVerificationStatus = async () => {
+      if (userRole === "vet" && user?.id) {
+        console.log(user.id);
+        try {
+          const response = await fetch(
+            `/api/is-verified-by-user-id/${user.id}`
+          );
+          const data = await response.json();
+          console.log("gagea", data);
+          setIsVerified(data.profile_verified); // assuming the response contains an 'isVerified' boolean
+          console.log("Verified", data.profile_verified);
+        } catch (error) {
+          console.error("Failed to fetch verification status:", error);
+        }
+      }
+    };
 
-        fetchVerificationStatus();
-    }, [userRole, user?.id]);
+    fetchVerificationStatus();
+  }, [userRole, user?.id]);
 
-    useEffect(() => {
-        const checkFoundersClub = async () => {
-            if (user?.id) {
-                try {
-                    const res = await fetch(
-                        `/api/founders-club/?user_id=${user.id}`
-                    );
-                    const data = await res.json();
-                    setIsFoundersClub(data.isFoundersClub); // assuming response is { isFoundersClub: true }
-                } catch (error) {
-                    console.error("Error checking Founders Club:", error);
-                }
-            }
-        };
+  useEffect(() => {
+    const checkFoundersClub = async () => {
+      if (user?.id) {
+        try {
+          const res = await fetch(`/api/founders-club/?user_id=${user.id}`);
+          const data = await res.json();
+          setIsFoundersClub(data.isFoundersClub); // assuming response is { isFoundersClub: true }
+        } catch (error) {
+          console.error("Error checking Founders Club:", error);
+        }
+      }
+    };
 
-        checkFoundersClub();
-    }, [user?.id]);
+    checkFoundersClub();
+  }, [user?.id]);
 
-    useEffect(() => {
-        const currentPath = window.location.pathname.split("/")[1];
-        setActiveLink(currentPath);
-    }, []);
+  useEffect(() => {
+    const currentPath = window.location.pathname.split("/")[1];
+    setActiveLink(currentPath);
+  }, []);
 
   const dropdownWidth = `${
     Math.max(
@@ -192,31 +309,198 @@ const Navbar = () => {
     setMobileView("navlinks");
   };
 
-    return (
-        <nav className="navbar" style={navbarStyle}>
-            {/* Hamburger Menu Button (Mobile Only) */}
-            <button
-                className="hamburger md:hidden"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                <div className="hamburger-line" />
-                <div className="hamburger-line" />
-                <div className="hamburger-line" />
-            </button>
-
-      {/* Mobile Menu */}
-      <div
-        className={`mobile-menu ${isMenuOpen ? "open" : ""} md:hidden`}
-        style={{ backgroundColor: navbarBackground[userRole] }}
+  return (
+    <nav className="navbar" style={navbarStyle}>
+      {/* Hamburger Menu Button (Mobile Only) */}
+      <button
+        className="hamburger md:hidden"
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
       >
-        {/* Navigation Links - Slides out when nameplate is clicked */}
-        <div className={`navLinks-mobile transition-all duration-300 ${mobileView === "dropdown" ? "translate-x-full opacity-0 absolute" : "translate-x-0 opacity-100"}`}>
+        <div className="hamburger-line" />
+        <div className="hamburger-line" />
+        <div className="hamburger-line" />
+      </button>
+
+      {/* Mobile Drawer + Backdrop */}
+<div
+  className={`fixed inset-0 z-[9998] lg:hidden transition-opacity duration-500 ease-in-out
+    ${isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+>
+  {/* Backdrop */}
+  <div
+    className="absolute inset-0 bg-black/50"
+    onClick={() => setIsMenuOpen(false)}
+  />
+
+  {/* Drawer */}
+  <div
+    className={`absolute top-0 left-0 h-full w-3/4 z-[9999] transform transition-transform duration-500 ease-in-out
+      ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}
+      rounded-tr-3xl rounded-br-3xl`}
+    style={{ backgroundColor: navbarBackground[userRole] }}
+  >
+            <div className="h-full flex flex-col items-center">
+              {/* Top Bar */}
+              <div className="flex justify-between items-center w-full px-5 py-6 mt-3 ml-2">
+                {/* Hamburger */}
+
+                <button
+                  className="lg:hidden flex flex-col justify-between w-6 h-5"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setMobileView("navlinks");
+                  }}
+                >
+                  <span className="block h-[3px] w-full bg-white rounded"></span>
+                  <span className="block h-[3px] w-full bg-white rounded"></span>
+                  <span className="block h-[3px] w-full bg-white rounded"></span>
+                </button>
+
+                {/* Logo */}
+                <div className="logo">
+                  <Link href="/browse-pets">
+                    <Image
+                      src="/paltu_logo.svg"
+                      alt="Logo"
+                      width={230} // bigger logo
+                      height={90}
+                    />
+                  </Link>
+                </div>
+
+                <div className="w-8" />
+              </div>
+
+              {/* Main Section */}
+              <div className="flex flex-col justify-center items-center w-full h-full px-4 relative space-y-6">
+                {/* Navlinks */}
+                <div
+                  className={`transition-all duration-500 ease-in-out ${
+                    mobileView === "navlinks"
+                      ? "opacity-100 translate-y-0 pointer-events-auto"
+                      : "opacity-0 -translate-y-6 pointer-events-none"
+                  } mt-32`}
+                >
+                  <div className="space-y-6 text-center">
+                    {links.map((link) => (
+                      <Link key={link.href} href={`/${link.href}`}>
+                        <span className="py-3 block text-white text-lg flex items-center justify-center gap-3">
+                          {link.name}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Nameplate */}
+                <div
+                  className={`transition-all duration-500 ease-in-out ${
+                    mobileView === "dropdown"
+                      ? "-translate-y-[240px]"
+                      : "translate-y-0"
+                  }`}
+                >
+                  {isAuthenticated ? (
+                    <button
+                      className="flex flex-row items-center justify-center gap-4 w-full px-4 py-3"
+                      onClick={() =>
+                        setMobileView(
+                          mobileView === "navlinks" ? "dropdown" : "navlinks"
+                        )
+                      }
+                    >
+                      <Image
+                        src={profileImage}
+                        alt="Profile"
+                        width={40}
+                        height={40}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-white/30"
+                      />
+                      <p className="text-white font-medium">{displayName}</p>
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        className={`text-white transition-transform duration-300 ${
+                          mobileView === "dropdown" ? "rotate-180" : ""
+                        }`}
+                      >
+                        <path
+                          d="M6 9L12 15L18 9"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  ) : (
+                    <Link href="/login">
+                      <button className="w-full text-center text-white font-medium py-2 text-xl">
+                        Login
+                      </button>
+                    </Link>
+                  )}
+                </div>
+
+                {/* Dropdown */}
+                <div
+                  className={`w-full transition-all duration-500 ease-in-out ${
+                    mobileView === "dropdown"
+                      ? "opacity-100 -translate-y-[240px]"
+                      : "opacity-0 -translate-y-4 pointer-events-none"
+                  }`}
+                >
+                  <div className="space-y-4 text-center">
+                    {dropdownItems.map((item) =>
+                      item.isAction ? (
+                        <div
+                          key={item.href}
+                          className="py-3 text-white text-lg cursor-pointer flex items-center justify-center gap-3"
+                          onClick={handleLogout}
+                        >
+                          <i className={`bi ${item.icon} text-xl`} />{" "}
+                          {/* icon added */}
+                          {item.label}
+                        </div>
+                      ) : (
+                        <Link key={item.href} href={item.href}>
+                          <div className="py-3 text-white text-lg cursor-pointer flex items-center justify-center gap-3">
+                            <i className={`bi ${item.icon} text-xl`} />{" "}
+                            {/* icon added */}
+                            {item.label}
+                          </div>
+                        </Link>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+      {/* Rest of the desktop code remains unchanged */}
+      <div className="flex items-center justify-between w-full">
+        {/* Logo */}
+        <div className="logo">
+          <Link href={logoHref || "/browse-pets"}>
+            <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
+          </Link>
+        </div>
+
+        {/* Desktop navigation links */}
+        <div className="navLinks hidden md:flex items-center gap-5">
           {links.map((link) => (
             <Link key={link.href} href={`/${link.href}`}>
               <span
-                className={`mobile-link ${
-                  activeLink === link.href ? "active" : ""
+                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${
+                  activeLink === link.href ? "after:w-full" : "after:w-0"
                 }`}
-                onClick={() => setIsMenuOpen(false)}
+                style={{ cursor: "pointer" }}
+                onClick={() => setActiveLink(link.href)}
               >
                 {link.name}
               </span>
@@ -224,21 +508,95 @@ const Navbar = () => {
           ))}
         </div>
 
-        {/* Nameplate - Slides out when clicked */}
-        <div className={`dropdown-mobile transition-all duration-300 ${mobileView === "dropdown" ? "translate-x-full opacity-0 absolute" : "translate-x-0 opacity-100"}`}>
+  <div className="dropdown relative flex items-center gap-4">
+          {/* Cart */}
+        {!hideCart && (
+          <div
+            className="relative"
+            onMouseEnter={handleCartMouseEnter}
+            onMouseLeave={handleCartMouseLeave}
+          >
+            <button
+              onClick={() => setCartOpen((v) => !v)}
+              className={`flex items-center gap-2 cartBtn p-2 rounded-md bg-white/10 hover:bg-white/20 ${
+                bounce ? "animate-bounce" : ""
+              }`}
+            >
+              <i className="bi bi-cart3 text-white" />
+              <span className="sr-only">Cart</span>
+              {totalCartItems > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs px-2 py-0.5">
+                  {totalCartItems}
+                </span>
+              )}
+            </button>
+
+            {cartOpen && (
+              <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-lg z-30 p-4 text-sm">
+                <div className="flex items-center justify-between font-medium mb-3">
+                  <div>Cart</div>
+                  <div className="text-xs text-gray-500">{totalCartItems} items</div>
+                </div>
+
+                {cartState.loading ? (
+                  <div className="text-gray-500">Loading...</div>
+                ) : cartItemsNav.length === 0 ? (
+                  <div className="text-gray-500">Your cart is empty.</div>
+                ) : (
+                  <div className="divide-y max-h-64 overflow-auto">
+                    {cartItemsNav.map((it) => (
+                      <div key={it.id} className="py-3 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded overflow-hidden bg-gray-100 flex-shrink-0">
+                          <img src={it.image ?? '/placeholder-product.jpg'} alt={it.title ?? 'cart item'} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate font-medium">{it.title}</div>
+                          <div className="text-xs text-gray-500">Code: <span className="text-gray-700">{it.code ?? '-'}</span></div>
+                          <div className="text-xs text-gray-500">Qty: {it.qty}</div>
+                        </div>
+                        <div className="text-sm font-semibold">
+                          PKR {(it.price * it.qty).toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="border-t mt-3 pt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm text-gray-600">Subtotal</div>
+                    <div className="text-sm font-semibold">
+                      PKR {cartItemsNav.reduce((s, i) => s + i.price * i.qty, 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => router.push('/cart')} className="flex-1 bg-primary text-white py-2 rounded-lg font-medium">Go to Cart</button>
+                    <button onClick={() => router.push('/checkout')} className="flex-1 border border-primary text-primary py-2 rounded-lg font-medium">Checkout</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
           {isAuthenticated || session ? (
-            <div className="relative group w-full">
+            <div 
+              className="relative group"
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
               <button
-                className="loginBtn-mobile flex flex-row items-center gap-3 w-full px-4 py-3"
-                onClick={handleNameplateClick}
+                className="flex items-center justify-center gap-2 loginBtn relative overflow-hidden"
+                style={{ minWidth: dropdownWidth }}
               >
+                {/* Profile Image with Badge - Updated nameplate */}
                 <div className="relative">
                   <Image
                     src={profileImage}
                     alt="Profile"
                     width={40}
                     height={40}
-                    className="w-10 h-10 rounded-full object-cover border-2 border-white/30"
+                    className="w-10 h-10 rounded-full object-cover border-2 border-white/30 transition-all duration-300"
                   />
                   {isVerified && (
                     <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
@@ -246,161 +604,134 @@ const Navbar = () => {
                     </div>
                   )}
                 </div>
-                <div className="flex-1 text-left">
-                  <p className="text-white font-medium">{displayName}</p>
-                </div>
-                {isFoundersClub && (
-                  <div className="bg-white/20 p-1.5 rounded-full">
-                    <Image
-                      src="/white_icon.svg"
-                      alt="Founders Club"
-                      width={16}
-                      height={16}
-                    />
-                  </div>
-                )}
-                <Image
-                  src="/arrow-down.svg"
-                  alt="Dropdown"
-                  width={12}
-                  height={12}
-                  className="filter invert"
-                />
-              </button>
-            </div>
-          ) : (
-            <Link href="/login">
-              <button className="loginBtn-mobile">Login</button>
-            </Link>
-          )}
-        </div>
 
-        {/* Dropdown Menu - Slides in when nameplate is clicked */}
-        <div className={`dropdown-content-mobile transition-all duration-300 ${mobileView === "dropdown" ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 absolute"}`}>
-          {/* Back Button */}
-          <button 
-            className="back-button-mobile flex items-center gap-2 text-white mb-4 px-4 py-2"
-            onClick={handleBackClick}
-          >
-            <i className="bi bi-arrow-left"></i>
-            Back
-          </button>
-          
-          {/* Dropdown Items */}
-          <div className="w-full">
-            {dropdownItems.map((item) =>
-              item.isAction ? (
-                <div
-                  key={item.href}
-                  className="dropdown-item-mobile"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    handleLogout();
-                  }}
-                >
-                  {item.label}
+                {/* User Name - shown only on desktop */}
+                <div>
+                  <span className="text-sm font-medium">{displayName}</span>
                 </div>
-              ) : (
-                <Link key={item.href} href={item.href}>
-                  <div
-                    className="dropdown-item-mobile"
-                    onClick={() => setIsMenuOpen(false)}
+
+                {/* Badges */}
+                <div className="flex items-center gap-1">
+                  {isFoundersClub && (
+                    <div className="bg-white/20 p-1.5 rounded-full">
+                      <Image
+                        src="/primary_icon.svg"
+                        alt="Founders Club"
+                        width={16}
+                        height={16}
+                      />
+                    </div>
+                  )}
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`transition-transform duration-200 ${
+                      isDropdownOpen ? "rotate-180" : ""
+                    }`}
                   >
-                    {item.label}
-                  </div>
-                </Link>
-              )
-            )}
-          </div>
-        </div>
-      </div>
-      
-      {/* Rest of the desktop code remains unchanged */}
-      <div className="flex items-center justify-between w-full">
-        {/* Logo */}
-        <div className="logo">
-          <Link href="/browse-pets">
-            <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
-          </Link>
-        </div>
-
-                {/* Desktop navigation links */}
-                <div className="navLinks hidden md:flex items-center gap-5">
-                    {links.map((link) => (
-                        <Link key={link.href} href={`/${link.href}`}>
-                            <span
-                                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${
-                                    activeLink === link.href
-                                        ? "after:w-full"
-                                        : "after:w-0"
-                                }`}
-                                style={{ cursor: "pointer" }}
-                                onClick={() => setActiveLink(link.href)}>
-                                {link.name}
-                            </span>
-                        </Link>
-                    ))}
-                </div>
-
-        <div
-          className="dropdown relative"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-        >
-          {isAuthenticated || session ? (
-            <button
-              className="flex items-center justify-center gap-2 loginBtn relative group overflow-hidden"
-              style={{ minWidth: dropdownWidth }}
-            >
-              {/* Profile Image with Badge - Updated nameplate */}
-              <div className="relative">
-                <Image
-                  src={profileImage}
-                  alt="Profile"
-                  width={40}
-                  height={40}
-                  className="w-10 h-10 rounded-full object-cover border-2 border-white/30 transition-all duration-300"
-                />
-                {isVerified && (
-                  <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
-                    <i className="bi bi-patch-check-fill text-amber-500 text-xs" />
-                  </div>
-                )}
-              </div>
-
-              {/* User Name - shown only on desktop */}
-              <div>
-                <span className="text-sm font-medium">
-                  {displayName}
-                </span>
-              </div>
-
-              {/* Badges */}
-              <div className="flex items-center gap-1">
-                {isFoundersClub && (
-                  <div className="bg-white/20 p-1.5 rounded-full">
-                    <Image
-                      src="/primary_icon.svg"
-                      alt="Founders Club"
-                      width={16}
-                      height={16}
+                    <path
+                      d="M6 9L12 15L18 9"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
-                  </div>
-                )}
-                <svg 
-                  width="12" 
-                  height="12" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
-                  className={`transition-transform duration-200 ${
-                    isDropdownOpen ? "rotate-180" : ""
-                  }`}
+                  </svg>
+                </div>
+              </button>
+              
+              {(isAuthenticated || session) && isDropdownOpen && (
+                <div
+                  className="dropdown-menu absolute right-0 bg-white shadow-lg z-20 rounded-2xl py-2 text-sm font-medium"
+                  style={{
+                    top: "calc(100% + 0.5rem)",
+                    width: dropdownWidth,
+                  }}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
                 >
-                  <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-            </button>
+                  {dropdownOverride && dropdownOverride.length ? (
+                    // Render only overridden items (e.g., Home, Logout) for panels
+                    <div>
+                      { (dropdownOverride as any).map((item: any) => (
+                        item.isAction ? (
+                          <div
+                            key={item.href}
+                            onClick={handleLogout}
+                            className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 cursor-pointer"
+                          >
+                            <i className="bi bi-box-arrow-right"></i> {item.label}
+                          </div>
+                        ) : (
+                          <Link key={item.href} href={item.href}>
+                            <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                              {item.label}
+                            </div>
+                          </Link>
+                        )
+                      ))}
+                    </div>
+                  ) : (
+                    <>
+                      {/* Profile / Panel */}
+                      <Link
+                        href={
+                          userRole === "vet"
+                            ? "/vet-panel"
+                            : userRole === "regular user"
+                            ? "/my-profile"
+                            : userRole === "admin"
+                            ? "/admin-panel"
+                            : "/"
+                        }
+                      >
+                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
+                          <i className="bi bi-person-circle text-gray-600"></i>
+                          {userRole === "vet"
+                            ? "Vet Panel"
+                            : userRole === "regular user"
+                            ? "My Profile"
+                            : userRole === "admin"
+                            ? "Admin Panel"
+                            : "Home"}
+                        </div>
+                      </Link>
+                      <div className="border-t my-1"></div>
+                      <Link href="/my-listings">
+                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                          <i className="bi bi-card-list text-gray-600"></i> My Listings
+                        </div>
+                      </Link>
+                      <Link href="/my-applications">
+                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                          <i className="bi bi-file-earmark-text text-gray-600"></i> My Applications
+                        </div>
+                      </Link>
+                      <Link href="/my-orders">
+                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                          <i className="bi bi-bag text-gray-600"></i> My Orders
+                        </div>
+                      </Link>
+                      <Link href="/notifications">
+                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                          <i className="bi bi-bell text-gray-600"></i> Notifications
+                        </div>
+                      </Link>
+                      <div className="border-t my-1"></div>
+                      <div
+                        onClick={handleLogout}
+                        className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:rounded-b-2xl cursor-pointer"
+                      >
+                        <i className="bi bi-box-arrow-right"></i> Logout
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           ) : (
             <Link href="/login">
               <button
@@ -413,74 +744,6 @@ const Navbar = () => {
               </button>
             </Link>
           )}
-          {(isAuthenticated || session) && isDropdownOpen && (
-            <div
-              className="dropdown-menu absolute right-0 bg-white shadow-lg z-20 rounded-2xl py-2 text-sm font-medium"
-              style={{
-                top: "calc(100% + 0.5rem)",
-                width: dropdownWidth,
-              }}
-            >
-              {/* Profile / Panel */}
-              <Link
-                href={
-                  userRole === "vet"
-                    ? "/vet-panel"
-                    : userRole === "regular user"
-                    ? "/my-profile"
-                    : userRole === "admin"
-                    ? "/admin-panel"
-                    : "/"
-                }
-              >
-                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
-                  <i className="bi bi-person-circle text-gray-600"></i>
-                  {userRole === "vet"
-                    ? "Vet Panel"
-                    : userRole === "regular user"
-                    ? "My Profile"
-                    : userRole === "admin"
-                    ? "Admin Panel"
-                    : "Home"}
-                </div>
-              </Link>
-
-                            {/* Divider */}
-                            <div className="border-t my-1"></div>
-
-                            {/* Other Items */}
-                            <Link href="/my-listings">
-                                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                    <i className="bi bi-card-list text-gray-600"></i>{" "}
-                                    My Listings
-                                </div>
-                            </Link>
-
-                            <Link href="/my-applications">
-                                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                    <i className="bi bi-file-earmark-text text-gray-600"></i>{" "}
-                                    My Applications
-                                </div>
-                            </Link>
-
-                            <Link href="/notifications">
-                                <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                    <i className="bi bi-bell text-gray-600"></i>{" "}
-                                    Notifications
-                                </div>
-                            </Link>
-
-                            {/* Divider */}
-                            <div className="border-t my-1"></div>
-
-                            {/* Logout */}
-                            <div
-                                onClick={handleLogout}
-                                className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:rounded-b-2xl cursor-pointer">
-                                <i className="bi bi-box-arrow-right"></i> Logout
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
         </nav>

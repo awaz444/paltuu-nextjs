@@ -14,7 +14,8 @@ export async function middleware(request: NextRequest) {
     '/admin-approve-vets',
     '/admin-pet',
     '/admin-pet-approval',
-    '/admin-user'
+    '/admin-user',
+    '/bazaar-admin'
   ];
 
   const isAdminPath = adminOnlyPaths.includes(pathname);

@@ -170,7 +170,7 @@ const LostFoundListingPage = () => {
   onClose={() => setShowLoginModal(false)}
   mandatory // Add this prop to make it non-closable
 />
-            <Navbar />
+            
             <div
                 className="fullBody"
                 style={{ maxWidth: "90%", margin: "0 auto" }}

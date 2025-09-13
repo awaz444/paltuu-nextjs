@@ -37,7 +37,6 @@ export interface Pet {
     listing_type: string;
     vaccinated: boolean | null;
     neutered: boolean | null;
-    payment_frequency: string | null;
     city: string;
     profile_image_url: string | null;
     image_id: number | null;
@@ -47,9 +46,10 @@ export interface Pet {
 
 interface PetGridProps {
     pets: Pet[];
+    showCreateButton?: boolean;
 }
 
-const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
+const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }) => {
     const dispatch = useDispatch<AppDispatch>();
     const [showConfirm, setShowConfirm] = useState<{
         pet_id: number | null;
@@ -139,21 +139,23 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            <Link
-                href="/create-listing"
-                className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex  flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    className="bi bi-plus-circle mb-5 plus-sign"
-                    viewBox="0 0 16 16">
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
-                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                </svg>
-                Create new listing
-            </Link>
+            {showCreateButton && (
+                <Link
+                    href="/create-listing"
+                    className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex  flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        className="bi bi-plus-circle mb-5 plus-sign"
+                        viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                    </svg>
+                    Create new listing
+                </Link>
+            )}
             {pets.map((pet) => (
                 <div
                     key={pet.pet_id}
@@ -197,16 +199,9 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                             alt={pet.pet_name}
                             className="w-full h-48 object-cover rounded-2xl"
                         />
-                        {Number(pet.price) > 0 && (
-                            <div className="absolute bottom-2 right-2 bg-primary text-white text-sm font-semibold px-3 py-1 rounded-full">
-                                PKR {pet.price}
-                                {pet.payment_frequency &&
-                                    ` / ${pet.payment_frequency}`}
-                            </div>
-                        )}
                     </div>
                     {/* Pet Details */}
-                    <div className="p-4">
+                    <div className="pt-4 pl-2">
                         <h3 className="font-bold text-2xl mb-1">
                             {pet.pet_name}
                         </h3>
@@ -223,13 +218,14 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                             {pet.city} - {pet.area}
                         </p>
                     </div>
-                    <button
+                    {pet.approved && (<button
                         className="bg-primary text-white px-4 py-2 rounded-xl mt-4"
                         onClick={() =>
                             handleViewApplications(pet.pet_id, pet.listing_type)
                         }>
                         View Applications
-                    </button>
+                    </button>)}
+                    
                 </div>
             ))}
 
@@ -427,33 +423,6 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets }) => {
                             // disabled={editingPet.listing_type === "adoption"}
                         />
                     </div>
-
-                    {/* Payment Frequency Dropdown */}
-                    {editingPet.listing_type === "foster" && (
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700">
-                                Payment Frequency
-                            </label>
-                            <select
-                                className="mt-1 p-3 w-full border rounded-2xl"
-                                value={editingPet.payment_frequency || ""}
-                                onChange={(e) =>
-                                    setEditingPet({
-                                        ...editingPet,
-                                        payment_frequency: e.target.value,
-                                    })
-                                }
-                                required>
-                                <option value="" disabled>
-                                    Select Frequency
-                                </option>
-                                <option value="day">Daily</option>
-                                <option value="week">Weekly</option>
-                                <option value="month">Monthly</option>
-                                <option value="year">Yearly</option>
-                            </select>
-                        </div>
-                    )}
 
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">

@@ -185,7 +185,7 @@ const ShelterProfilePage = () => {
 
     return (
         <div className="bg-gray-50 min-h-screen">
-            <Navbar />
+            
 
             {/* Hero Section */}
             <div className="relative bg-white">

@@ -81,7 +81,7 @@ const AdminUsersPage = () => {
 
     return (
         <>
-            <Navbar />
+            
             <div className="bg-gray-100 min-h-screen px-10 py-8">
                 <div className="container">
                     <h1 className="text-2xl font-semibold mb-4">

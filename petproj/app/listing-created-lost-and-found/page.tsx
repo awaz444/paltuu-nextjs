@@ -6,7 +6,7 @@ import Navbar from "@/components/navbar";
 const ListingCreated = () => {
     return (
         <>
-            <Navbar />
+            
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 py-10 ">
                 <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
                     <h1 className="text-3xl font-semibold text-primary mb-4">Listing Created Successfully!</h1>

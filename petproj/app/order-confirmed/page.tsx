@@ -1,11 +1,10 @@
- 'use client';
-import React, { useEffect, useState } from 'react';
-import { CheckCircle, Package, Truck, Calendar, Download, ArrowLeft, Copy } from 'lucide-react';
+'use client';
+import React, { useEffect, useState, Suspense } from 'react';
+import { CheckCircle, Package, Truck, Calendar, Download, ArrowLeft, Copy, User, Mail, Phone, MapPin } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from "../../context/AuthContext";
 
-
-const OrderConfirmedPage = () => {
+const OrderConfirmedContent  = () => {
   const { isAuthenticated, user } = useAuth();
   const [order, setOrder] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +28,18 @@ const OrderConfirmedPage = () => {
       }
     })();
   }, [searchParams]);
-
+  
+  useEffect(() => {
+    const check = () => {
+      if (!isAuthenticated || !user) {
+        return;
+      }
+      
+      setLoading(false);
+    };
+    const t = setTimeout(check, 100);
+    return () => clearTimeout(t);
+  }, [isAuthenticated, user, router]);
 
   const copyOrderNumber = async () => {
     if (!order?.order_number) return;
@@ -262,13 +272,21 @@ const OrderConfirmedPage = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-white py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {/* Success Animation */}
-          <div className="text-center mb-12">
+        <div className="text-center mb-12">
           <div className="relative inline-block">
-            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-green-500 flex items-center justify-center shadow-lg animate-pulse">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-primary flex items-center justify-center shadow-lg animate-pulse">
               <CheckCircle className="w-12 h-12 text-white" />
             </div>
           </div>
@@ -282,45 +300,74 @@ const OrderConfirmedPage = () => {
         </div>
 
         {/* Order Details Card */}
-        <div className="bg-white border border-gray-200 rounded-lg p-8 mb-8 shadow-sm">
+        <div className="bg-white rounded-2xl p-8 mb-8 shadow-lg border border-primary/10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Order Information</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Calendar className="w-5 h-5 text-primary" />
+                </div>
+                Order Information
+              </h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-600">Order Number:</span>
                   <div className="flex items-center gap-3">
-                    <span className="text-gray-900 font-mono">{order?.order_number ?? '—'}</span>
-                    <button onClick={copyOrderNumber} className="p-2 rounded hover:bg-gray-100" aria-label="Copy order number" title="Copy order number">
-                      <Copy className="w-4 h-4" />
+                    <span className="text-gray-900 font-mono font-semibold">{order?.order_number ?? '—'}</span>
+                    <button onClick={copyOrderNumber} className="p-2 rounded-lg hover:bg-primary/10 transition-colors" aria-label="Copy order number" title="Copy order number">
+                      <Copy className="w-4 h-4 text-primary" />
                     </button>
                   </div>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-600">Order Date:</span>
-                  <span className="text-gray-900">{order?.created_at ? new Date(order.created_at).toLocaleString() : '—'}</span>
+                  <span className="text-gray-900 font-medium">{order?.created_at ? new Date(order.created_at).toLocaleString() : '—'}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-600">Total Amount:</span>
-                  <span className="text-gray-900 font-semibold">{order ? `Rs ${(order.total_amount || 0).toLocaleString()}` : '—'}</span>
+                  <span className="text-primary font-semibold text-lg">{order ? `Rs ${(order.total_amount || 0).toLocaleString()}` : '—'}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-600">Payment Method:</span>
-                  <span className="text-gray-900">{order?.payment_method ?? '—'}</span>
+                  <span className="text-gray-900 font-medium capitalize">{order?.payment_method ?? '—'}</span>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Shipping Address</h3>
-              <div className="text-gray-600 space-y-1">
-                <p className="text-gray-900 font-medium">{order?.customer_name ?? '—'}</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <MapPin className="w-5 h-5 text-primary" />
+                </div>
+                Shipping Details
+              </h3>
+              <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                <div className="flex items-start gap-3">
+                  <User className="w-5 h-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="text-gray-900 font-medium">{order?.customer_name ?? '—'}</p>
+                  </div>
+                </div>
+                {order?.customer_email && (
+                  <div className="flex items-start gap-3">
+                    <Mail className="w-5 h-5 text-primary mt-0.5" />
+                    <p className="text-gray-600">{order.customer_email}</p>
+                  </div>
+                )}
+                {order?.customer_phone && (
+                  <div className="flex items-start gap-3">
+                    <Phone className="w-5 h-5 text-primary mt-0.5" />
+                    <p className="text-gray-600">{order.customer_phone}</p>
+                  </div>
+                )}
                 {order?.shipping_address && (
-                  <>
-                    <p>{order.shipping_address.address || order.shipping_address.line1 || ''}</p>
-                    <p>{order.shipping_address.city || ''} {order.shipping_address.postalCode || ''}</p>
-                    <p>{order.customer_phone || ''}</p>
-                  </>
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-primary mt-0.5" />
+                    <div className="text-gray-600">
+                      <p>{order.shipping_address.address || order.shipping_address.line1 || ''}</p>
+                      <p>{order.shipping_address.city || ''} {order.shipping_address.postalCode || ''}</p>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -329,16 +376,21 @@ const OrderConfirmedPage = () => {
 
         {/* Order Items */}
         {order?.items && Array.isArray(order.items) && (
-          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
-            <h3 className="text-lg font-semibold mb-4">Items</h3>
+          <div className="bg-white rounded-2xl p-6 mb-8 shadow-lg border border-primary/10">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Package className="w-5 h-5 text-primary" />
+              </div>
+              Order Items
+            </h3>
             <div className="space-y-4">
               {order.items.map((it: any) => (
-                <div key={it.order_item_id} className="flex justify-between items-center">
+                <div key={it.order_item_id} className="flex justify-between items-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
                   <div>
-                    <div className="font-medium">{it.product_title}</div>
+                    <div className="font-medium text-gray-900">{it.product_title}</div>
                     <div className="text-sm text-gray-500">{it.variant_title || ''} • Qty {it.quantity}</div>
                   </div>
-                  <div className="text-gray-900 font-medium">Rs {(it.total_price || 0).toLocaleString()}</div>
+                  <div className="text-primary font-semibold">Rs {(it.total_price || 0).toLocaleString()}</div>
                 </div>
               ))}
             </div>
@@ -346,9 +398,10 @@ const OrderConfirmedPage = () => {
         )}
 
         {/* Order Timeline */}
-        <div className="bg-white border border-gray-200 rounded-lg p-8 mb-8 shadow-sm">
+        <div className="bg-white rounded-2xl p-8 mb-8 shadow-lg border border-primary/10">
           <h3 className="text-xl font-semibold text-gray-900 mb-6">Order Timeline</h3>
-          <div className="space-y-6">
+          <div className="space-y-8 relative">
+            <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-primary/20"></div>
             {[
               {
                 icon: CheckCircle,
@@ -379,21 +432,21 @@ const OrderConfirmedPage = () => {
                 status: 'upcoming'
               }
             ].map((item, index) => (
-              <div key={index} className="flex items-center space-x-4">
+              <div key={index} className="flex items-start space-x-4 relative">
                 <div className={`
-                  w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300
+                  w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 z-10
                   ${item.status === 'completed'
-                    ? 'bg-green-500 border-green-500 text-white'
+                    ? 'bg-primary border-primary text-white shadow-lg'
                     : item.status === 'pending'
-                    ? 'bg-blue-500 border-blue-500 text-white animate-pulse'
-                    : 'border-gray-300 text-gray-400 bg-gray-50'}
+                    ? 'bg-primary border-primary text-white shadow-lg animate-pulse'
+                    : 'border-primary/30 text-primary/30 bg-white'}
                 `}>
                   <item.icon className="w-5 h-5" />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 pt-2">
                   <h4 className="text-gray-900 font-medium">{item.title}</h4>
-                  <p className="text-gray-600 text-sm">{item.description}</p>
-                  <p className="text-gray-500 text-xs mt-1">{item.time}</p>
+                  <p className="text-gray-600">{item.description}</p>
+                  <p className="text-primary font-medium text-sm mt-1">{item.time}</p>
                 </div>
               </div>
             ))}
@@ -401,42 +454,45 @@ const OrderConfirmedPage = () => {
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
           <button
             onClick={continueShopping}
-            className="flex items-center px-6 py-3 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200"
+            className="flex items-center px-8 py-3 bg-white text-primary border border-primary rounded-xl hover:bg-primary/5 transition-colors duration-200 font-medium shadow-sm"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-5 h-5 mr-2" />
             Continue Shopping
           </button>
 
-          <button onClick={downloadReceipt} className="flex items-center px-8 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">
-            <Download className="w-4 h-4 mr-2" />
+          <button onClick={downloadReceipt} className="flex items-center px-8 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors duration-200 font-medium shadow-lg">
+            <Download className="w-5 h-5 mr-2" />
             Download Receipt
           </button>
         </div>
+
         {/* Login Prompt (only show if user is not logged in) */}
         {!user && (
-          <div className="mt-12 bg-white border border-gray-200 rounded-lg p-6 shadow-sm text-center">
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          <div className="bg-white rounded-2xl p-8 mb-8 shadow-lg border border-primary/10 text-center">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
               Create an account or log in
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
               Store your order details permanently and unlock all Paltuu features
               like order history, faster checkout, and exclusive offers.
             </p>
             <button
               onClick={() => router.push("/login")}
-              className="px-8 py-3 bg-primary text-white rounded-md font-medium hover:bg-[#891d38] transition-colors duration-200"
+              className="px-8 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors duration-200 shadow-lg"
             >
               Login / Sign Up
             </button>
           </div>
         )}
+
         {/* Contact Support */}
-        <div className="text-center mt-12 p-6 bg-gray-100 rounded-lg">
-          <p className="text-gray-600 mb-2">Need help with your order?</p>
-          <button className="text-blue-600 hover:text-blue-700 transition-colors duration-200 font-medium">
+        <div className="text-center p-8 bg-primary/5 rounded-2xl border border-primary/10">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Need help with your order?</h3>
+          <p className="text-gray-600 mb-4">Our support team is here to help</p>
+          <button className="px-6 py-2 bg-white text-primary border border-primary rounded-lg hover:bg-primary/5 transition-colors duration-200 font-medium">
             Contact Support
           </button>
         </div>
@@ -445,4 +501,14 @@ const OrderConfirmedPage = () => {
   );
 };
 
-export default OrderConfirmedPage;
+export default function OrderConfirmedPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <OrderConfirmedContent />
+    </Suspense>
+  );
+}

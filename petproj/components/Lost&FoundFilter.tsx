@@ -24,7 +24,7 @@ const LostAndFoundFilter: React.FC<LostAndFoundFilterProps> = ({ onSearch }) => 
     const [selectedSpecies, setSelectedSpecies] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    useSetPrimaryColor();
+    
 
     useEffect(() => {
         dispatch(fetchCities());

@@ -87,7 +87,7 @@ const ProfileField: React.FC<ProfileFieldProps> = ({
 };
 
 export default function ProfileContent() {
-  useSetPrimaryColor();
+  
   const [userId, setUserId] = useState<string | null>(null);
   const [data, setData] = useState<UserProfileData | null>(null);
   const [loading, setLoading] = useState(true);

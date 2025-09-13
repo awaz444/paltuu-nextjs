@@ -23,7 +23,7 @@ const VetVerificationPage = () => {
     const [loading, setLoading] = useState<boolean>(true); // Loading state
     const [error, setError] = useState<string | null>(null); // Error state
 
-    useSetPrimaryColor();
+    
 
     // Fetch data from API
     useEffect(() => {

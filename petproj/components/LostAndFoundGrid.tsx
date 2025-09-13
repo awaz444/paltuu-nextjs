@@ -28,7 +28,7 @@ interface LostAndFoundGridProps {
     pets: LostAndFoundPet[];
 }
 const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
-    useSetPrimaryColor();
+    
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedPet, setSelectedPet] = useState<LostAndFoundPet | null>(null);

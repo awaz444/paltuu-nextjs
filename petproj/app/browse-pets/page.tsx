@@ -9,7 +9,7 @@ import "./styles.css";
 import { MoonLoader } from "react-spinners";
 
 export default function BrowsePets() {
-    useSetPrimaryColor();
+    
 
     const [pets, setPets] = useState([]);
     const [loading, setLoading] = useState(true);

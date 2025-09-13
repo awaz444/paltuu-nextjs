@@ -20,7 +20,7 @@ const NotificationsPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  useSetPrimaryColor();
+  
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

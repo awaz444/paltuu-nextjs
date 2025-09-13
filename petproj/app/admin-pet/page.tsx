@@ -45,7 +45,7 @@ const AdminPetInteraction: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { cities } = useSelector((state: RootState) => state.cities); // Get cities from the store
 
-  useSetPrimaryColor();
+  
 
   useEffect(() => {
     const fetchPets = async () => {

@@ -48,7 +48,7 @@ interface Order {
 }
 
 const MyOrdersPage = () => {
-  useSetPrimaryColor();
+  
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

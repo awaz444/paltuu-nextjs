@@ -71,7 +71,7 @@ export default function EidBazaar() {
         fetchAnimals();
     }, []);
 
-    useSetPrimaryColor();
+    
 
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);

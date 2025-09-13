@@ -42,7 +42,7 @@ export type RescuePet = {
 };
 
 export default function RescuePets() {
-    useSetPrimaryColor();
+    
 
     const [pets, setPets] = useState<RescuePet[]>([]);
     const [loading, setLoading] = useState(true);

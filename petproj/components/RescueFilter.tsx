@@ -27,7 +27,7 @@ const RescueFilter: React.FC<RescueFilterProps> = ({ onSearch, onReset }) => {
     const [status, setStatus] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    useSetPrimaryColor();
+    
 
     useEffect(() => {
         dispatch(fetchCities());

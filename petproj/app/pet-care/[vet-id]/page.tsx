@@ -81,7 +81,7 @@ export default function VetDetailsPage({
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [form] = Form.useForm();
     const router = useRouter();
-    useSetPrimaryColor();
+    
 
     // Fetch user ID on mount
     useEffect(() => {

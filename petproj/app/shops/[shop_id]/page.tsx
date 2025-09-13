@@ -40,7 +40,7 @@ const ShopProfilePage: React.FC = () => {
     const [primaryColor, setPrimaryColor] = useState("#000000");
     const [activeTab, setActiveTab] = useState("pets");
 
-    useSetPrimaryColor();
+    
 
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);

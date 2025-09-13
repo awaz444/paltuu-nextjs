@@ -58,7 +58,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
     const [loading, setLoading] = useState(false);
     const [editingPet, setEditingPet] = useState<Pet | null>(null);
     const [successMessage, setSuccessMessage] = useState(false);
-    useSetPrimaryColor();
+    
 
     const router = useRouter(); // Initialize router for navigation
 

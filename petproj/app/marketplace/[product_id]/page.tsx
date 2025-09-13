@@ -91,7 +91,7 @@ interface Product {
 const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
     params,
 }) => {
-    useSetPrimaryColor();
+    
     const dispatch = useDispatch<AppDispatch>();
     const { product_id } = params;
     const [product, setProduct] = useState<Product | null>(null);

@@ -22,7 +22,7 @@ import VetScheduleTab from "../../components/VetScheduleTab";
 import VetReviewsTab from "../../components/VetReviewsTab";
 
 export default function VetPanel() {
-  useSetPrimaryColor();
+  
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);

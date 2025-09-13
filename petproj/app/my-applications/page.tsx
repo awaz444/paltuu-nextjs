@@ -25,7 +25,7 @@ export default function MyApplicationsPage() {
     const [loading, setLoading] = useState<boolean>(true);
     const [primaryColor, setPrimaryColor] = useState("#000000");
 
-    useSetPrimaryColor();
+    
 
     useEffect(() => {
         // Get the computed style of the `--primary-color` CSS variable

@@ -599,7 +599,7 @@ const arrowColor: Record<UserRole, string> = {
                     className="w-10 h-10 rounded-full object-cover border-2 border-white/30 transition-all duration-300"
                   />
                   {isVerified && (
-                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
+                    <div className="absolute -bottom-1 -right-1 rounded-full p-0.5">
                       <i className="bi bi-patch-check-fill text-amber-500 text-xs" />
                     </div>
                   )}

@@ -46,7 +46,7 @@ interface PetGridProps {
 }
 
 const RescuePetGrid: React.FC<PetGridProps> = ({ pets }) => {
-    useSetPrimaryColor();
+    
 
     console.log("Pets in RescuePetGrid:", pets);
 

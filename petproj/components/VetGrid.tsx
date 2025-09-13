@@ -15,7 +15,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedVet, setSelectedVet] = useState<Vet | null>(null);
 
-    useSetPrimaryColor();
+    
 
     const handleWhatsApp = (phone: string) => {
         let formattedPhone = phone.trim();

@@ -67,7 +67,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [primaryColor, setPrimaryColor] = useState("#000000");
 
-    useSetPrimaryColor();
+    
 
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);

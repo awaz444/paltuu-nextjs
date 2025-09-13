@@ -20,7 +20,7 @@ const ShelterProfileContent = dynamic(() => import('../../components/ShelterProf
 import { UploadOutlined, UnorderedListOutlined, UserOutlined, BellOutlined, FileTextOutlined, PlusOutlined, HomeOutlined } from "@ant-design/icons";
 
 export default function RescuePanel() {
-  useSetPrimaryColor();
+  
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);

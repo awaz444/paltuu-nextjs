@@ -26,7 +26,7 @@ const VerificationInfoContent  = () => {
         return null;
     }
 
-    useSetPrimaryColor();
+    
     const router = useRouter();
 
     const handleStartVerification = () => {

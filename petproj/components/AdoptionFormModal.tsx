@@ -26,7 +26,7 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
     const [loading, setLoading] = useState(false);
     const [deliveryMethod, setDeliveryMethod] = useState<"pickup" | "delivery">("pickup");
     
-    useSetPrimaryColor();
+    
 
     const handleFormSubmit = async () => {
         try {

@@ -23,7 +23,7 @@ interface Product {
 }
 
 export default function Marketplace() {
-  useSetPrimaryColor();
+  
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);

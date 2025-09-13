@@ -26,7 +26,7 @@ const ReviewsSummary = () => {
   const [primaryColor, setPrimaryColor] = useState("#A03048");
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  useSetPrimaryColor();
+  
 
   useEffect(() => {
     const rootStyles = getComputedStyle(document.documentElement);

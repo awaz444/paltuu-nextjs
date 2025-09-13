@@ -66,7 +66,7 @@ export default function RescuePetPage({
     const [error, setError] = useState<string | null>(null);
     const [primaryColor, setPrimaryColor] = useState("#3b82f6");
 
-    useSetPrimaryColor();
+    
 
     useEffect(() => {
         const fetchPetData = async () => {

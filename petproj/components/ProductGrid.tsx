@@ -28,7 +28,7 @@ interface ProductGridProps {
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
-  useSetPrimaryColor();
+  
 
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();

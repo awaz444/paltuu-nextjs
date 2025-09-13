@@ -8,7 +8,7 @@ import { useSetPrimaryColor } from '@/app/hooks/useSetPrimaryColor';
 export default function ChatBot() {
   // 🧭 Run hooks in a fixed order every render
   const pathname = usePathname();
-  useSetPrimaryColor(); // <- always called
+   // <- always called
 
   const [isOpen, setIsOpen] = useState(false);
   const [userInput, setUserInput] = useState('');

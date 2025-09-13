@@ -7,7 +7,7 @@ import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 
 export default function ChatBot() {
   
-  useSetPrimaryColor();
+  
 
   const [userInput, setUserInput] = useState('');
   const [chatLog, setChatLog] = useState<{ user: string; ai: string }[]>([]);

@@ -94,7 +94,7 @@ const UserListingsPage = () => {
         }
     }, []);
 
-    useSetPrimaryColor();
+    
 
     useEffect(() => {
         if (!userId) return;

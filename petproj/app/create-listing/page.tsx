@@ -18,7 +18,7 @@ import LoginModal from "@/components/LoginModal";
 const { Panel } = Collapse;
 
 export default function CreatePetListing() {
-    useSetPrimaryColor();
+    
     const router = useRouter();
     const dispatch = useDispatch<AppDispatch>();
     const { cities } = useSelector((state: RootState) => state.cities);

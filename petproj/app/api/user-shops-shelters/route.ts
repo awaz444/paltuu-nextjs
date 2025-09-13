@@ -5,8 +5,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const client = createClient();
 
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('user_id');
+    // Use req.nextUrl instead of new URL(req.url) to avoid dynamic server usage
+    const userId = req.nextUrl.searchParams.get('user_id');
 
     if (!userId) {
       return NextResponse.json(
@@ -82,3 +82,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     await client.end();
   }
 }
+
+// Add this export to prevent static optimization
+export const dynamic = 'force-dynamic';

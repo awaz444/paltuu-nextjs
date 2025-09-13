@@ -29,6 +29,7 @@ const OrderConfirmedContent  = () => {
     })();
   }, [searchParams]);
   
+  
   useEffect(() => {
     const check = () => {
       if (!isAuthenticated || !user) {

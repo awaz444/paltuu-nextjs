@@ -7,8 +7,8 @@
   background-color: #A03048; 
   padding: 2rem 3rem;
   height: 5.5rem;
-  border-bottom-left-radius: 0.75em !important;
-  border-bottom-right-radius: 0.75rem !important;
+  border-bottom-left-radius: 1rem !important;
+  border-bottom-right-radius: 1rem !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -296,3 +296,16 @@
     100% { left: 100%; }
 }
 
+/* Transition classes */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.duration-300 {
+  transition-duration: 300ms;
+}
+
+.ease-in-out {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}

@@ -45,7 +45,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             pets.listing_type, 
             pets.vaccinated, 
             pets.neutered, 
-            pets.payment_frequency, 
             users.user_id, 
             users.username, 
             users.name, 

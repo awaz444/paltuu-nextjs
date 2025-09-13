@@ -9,7 +9,7 @@ import '../globals.css';
 export default function AboutUs() {
     return (
         <>
-            <Navbar />
+            
             <main className="flex flex-col items-center p-8 bg-gray-100">
                 {/* About the Website Section */}
                 <section className="w-full max-w-5xl text-center mb-16">

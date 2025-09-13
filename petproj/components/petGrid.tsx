@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link"; // Import Link from next/link
-import { EnvironmentOutlined } from "@ant-design/icons"; // Import EnvironmentOutlined from ant-design/icons
+import { EnvironmentOutlined, ShoppingOutlined } from "@ant-design/icons"; // Import EnvironmentOutlined from ant-design/icons
 
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 
@@ -31,7 +31,6 @@ interface Pet {
     listing_type: string;
     vaccinated: boolean | null;
     neutered: boolean | null;
-    payment_frequency: string | null;
     city: string;
     profile_image_url: string | null;
     image_id: number | null;
@@ -87,11 +86,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
             {pets.map((pet) => (
                 <Link
                     key={pet.pet_id}
-                    href={
-                        pet.listing_type === "adoption"
-                            ? `/browse-pets/${pet.pet_id}`
-                            : `/foster-pets/${pet.pet_id}`
-                    }
+                    href={`/browse-pets/${pet.pet_id}`}
                     passHref>
                     <div
                         key={pet.pet_id}
@@ -102,17 +97,28 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                                 alt={pet.pet_name}
                                 className="w-full aspect-square object-cover rounded-2xl"
                             />
-                            {/* Overlay badge for "Ready for adoption" or price at the bottom-right */}
-                            {Number(pet.price) > 0 && (
-                                <div className="absolute bottom-2 right-2 bg-primary text-white text-[10px] sm:text-xs font-semibold px-2 sm:px-2 py-1 rounded-full">
-                                    PKR {Math.floor(Number(pet.price))}{" "}
-                                    {/* Remove decimals */}
-                                    {pet.payment_frequency &&
-                                        ` / ${pet.payment_frequency}`}
+                            {/* Overlay badge for price or rescue at the bottom-right */}
+                            {pet.price && (
+                                <div className="absolute bottom-2 right-2 bg-primary text-white text-[10px] sm:text-xs font-semibold px-2 sm:px-2 py-1 rounded-full flex items-center">
+                                    PKR{" "}
+                                    {Math.floor(
+                                        Number(pet.price)
+                                    ).toLocaleString()}
+                                </div>
+                            )}
+                            {pet.listing_type === "rescue" && (
+                                <div className="absolute top-2 right-2 bg-primary text-white text-[10px] sm:text-xs font-semibold px-2 sm:px-2 py-1 rounded-full flex items-center">
+                                    <span className="mr-1">+</span> Rescue
+                                </div>
+                            )}
+                            {pet.listing_type === "shop" && (
+                                <div className="absolute top-2 right-2 bg-primary text-white text-[10px] sm:text-xs font-semibold px-2 sm:px-2 py-1 rounded-full flex items-center">
+                                    <ShoppingOutlined className="text-white mr-1" />{" "}
+                                    Shop
                                 </div>
                             )}
                         </div>
-                        <div className="p-4">
+                        <div className="py-4">
                             <h3 className="font-bold text-2xl mb-1 truncate max-w-[90%]">
                                 {pet.pet_name}
                             </h3>

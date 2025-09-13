@@ -1,7 +1,9 @@
+// page.tsx (updated)
 "use client";
 import React, { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { UploadFile } from "antd";
+import StepZero from "./steps/StepZero_Account";
 import StepOne from "./steps/StepOne_Profile";
 import StepTwo from "./steps/StepTwo_Socials";
 import StepThree from "./steps/StepThree_Verification";
@@ -9,8 +11,20 @@ import StepFour from "./steps/StepFour_Facilities";
 import StepFive from "./steps/StepFive_Emergency";
 import { toast } from "react-hot-toast";
 import { MoonLoader } from "react-spinners";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "../store/store";
+import { fetchCities } from "../store/slices/citiesSlice";
 
 interface FormData {
+    // User account fields
+    email: string;
+    password: string;
+    confirmPassword: string;
+    name: string;
+    phone_number: string;
+    city_id: number | null;
+
+    // Shelter fields
     shelterName: string;
     address: string;
     description: string;
@@ -33,22 +47,30 @@ interface FormData {
     backupPhone: string;
     vetName: string;
     vetPhone: string;
-    userId: string;
     services: string[];
 }
 
 const RescueRegisterContent = () => {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const userId = searchParams.get("user_id");
+    const dispatch = useDispatch<AppDispatch>();
+    const { cities } = useSelector((state: RootState) => state.cities);
 
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState(0); // Start with step 0
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [imageList, setImageList] = useState<UploadFile[]>([]);
     const [services, setServices] = useState<string[]>([]);
     const [primaryColor, setPrimaryColor] = useState("#000000");
 
     const [formData, setFormData] = useState<FormData>({
+        // User account fields
+        email: "",
+        password: "",
+        confirmPassword: "",
+        name: "",
+        phone_number: "",
+        city_id: null,
+
+        // Shelter fields
         shelterName: "",
         address: "",
         description: "",
@@ -71,7 +93,6 @@ const RescueRegisterContent = () => {
         backupPhone: "",
         vetName: "",
         vetPhone: "",
-        userId: userId || "",
         services: [],
     });
 
@@ -81,26 +102,15 @@ const RescueRegisterContent = () => {
         if (color) {
             setPrimaryColor(color);
         }
-    }, []);
 
-    useEffect(() => {
-        if (!userId) {
-            toast.error(
-                "Invalid registration flow. Please start from the beginning."
-            );
-            router.push("/sign-up");
-        }
-    }, [userId, router]);
+        // Fetch cities for the form
+        dispatch(fetchCities());
+    }, [dispatch]);
 
     const next = () => setStep((prev) => Math.min(prev + 1, 5));
-    const back = () => setStep((prev) => Math.max(prev - 1, 1));
+    const back = () => setStep((prev) => Math.max(prev - 1, 0));
 
     const handleCompleteRegistration = async () => {
-        if (!userId) {
-            toast.error("User ID missing. Please start registration again.");
-            return;
-        }
-
         setIsSubmitting(true);
         try {
             // Create FormData object
@@ -110,11 +120,29 @@ const RescueRegisterContent = () => {
             formDataToSend.append(
                 "data",
                 JSON.stringify({
-                    ...formData,
-                    userId,
-                    services,
+                    // User data
+                    email: formData.email,
+                    password: formData.password,
+                    name: formData.name,
+                    phone_number: formData.phone_number,
+                    city_id: formData.city_id,
+                    role: "shelter admin",
+
+                    // Shelter data
+                    shelterName: formData.shelterName,
+                    address: formData.address,
+                    description: formData.description,
+                    accountTitle: formData.accountTitle,
+                    iban: formData.iban,
+                    bankName: formData.bankName,
                     socials: formData.socials,
                     animalTypes: formData.animalTypes,
+                    capacity: formData.capacity,
+                    emergencyPhone: formData.emergencyPhone,
+                    backupPhone: formData.backupPhone,
+                    vetName: formData.vetName,
+                    vetPhone: formData.vetPhone,
+                    services: services,
                 })
             );
 
@@ -139,21 +167,32 @@ const RescueRegisterContent = () => {
                 formDataToSend.append("cnicBack", formData.cnicBack);
             }
 
-            // Make API call
-            const response = await fetch("/api/rescue/shelters", {
-                method: "POST",
-                body: formDataToSend,
-            });
+            console.log("Submitting registration with data:", formDataToSend);
+
+            // Make API call to create both user and shelter
+            const response = await fetch(
+                "/api/rescue/shelters/complete-registration",
+                {
+                    method: "POST",
+                    body: formDataToSend,
+                }
+            );
+
+            console.log("API response status:", response.status);
 
             if (!response.ok) {
-                throw new Error("Failed to submit registration");
+                const errorData = await response.json();
+                throw new Error(
+                    errorData.message || "Failed to submit registration"
+                );
             }
 
             const result = await response.json();
 
             if (result.success) {
-                toast.success("Shelter registration submitted successfully!");
-                router.push("/dashboard");
+                toast.success("Registration completed successfully!");
+                // Redirect to login or dashboard
+                router.push("/login");
             } else {
                 throw new Error(result.error || "Registration failed");
             }
@@ -171,6 +210,24 @@ const RescueRegisterContent = () => {
 
     const renderStep = () => {
         switch (step) {
+            case 0:
+                return (
+                    <StepZero
+                        data={{
+                            email: formData.email,
+                            password: formData.password,
+                            confirmPassword: formData.confirmPassword,
+                            name: formData.name,
+                            phone_number: formData.phone_number,
+                            city_id: formData.city_id,
+                        }}
+                        setData={(updatedData) =>
+                            setFormData((prev) => ({ ...prev, ...updatedData }))
+                        }
+                        next={next}
+                        cities={cities}
+                    />
+                );
             case 1:
                 return (
                     <StepOne
@@ -242,73 +299,58 @@ const RescueRegisterContent = () => {
                 );
             default:
                 return (
-                    <StepOne
+                    <StepZero
                         data={{
-                            shelterName: formData.shelterName,
-                            address: formData.address,
-                            description: formData.description,
-                            logo: formData.logo,
-                            photos: formData.photos,
+                            email: formData.email,
+                            password: formData.password,
+                            confirmPassword: formData.confirmPassword,
+                            name: formData.name,
+                            phone_number: formData.phone_number,
+                            city_id: formData.city_id,
                         }}
                         setData={(updatedData) =>
                             setFormData((prev) => ({ ...prev, ...updatedData }))
                         }
                         next={next}
+                        cities={cities}
                     />
                 );
         }
     };
 
     return (
-        <div className="min-h-screen flex">
-            {/* Left side static */}
-            <div className="lg:w-1/2 lg:h-screen flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none sticky top-0">
+        <div className="min-h-screen flex flex-col lg:flex-row">
+            {/* Left side static - becomes header on mobile */}
+            <div className="w-full lg:w-1/2 flex flex-col justify-center items-center bg-primary p-4 lg:p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none lg:sticky lg:top-0 lg:h-screen">
                 <img
                     src="/paltu_logo.svg"
                     alt="Paltu Logo"
-                    className="mb-6 w-3/4 max-w-md"
+                    className="mb-4 lg:mb-6 w-1/2 lg:w-3/4 max-w-xs lg:max-w-md"
                 />
-                <div className="text-center mt-4">
-                    <h2 className="text-2xl font-bold mb-2">
+                <div className="text-center mt-2 lg:mt-4">
+                    <h2 className="text-xl lg:text-2xl font-bold mb-2">
                         Rescue Shelter Registration
                     </h2>
-                    <p className="text-lg">Step {step} of 5</p>
-                    <div className="w-full bg-gray-400 rounded-full h-2.5 mt-4">
+                    <p className="text-sm lg:text-lg">Step {step + 1} of 6</p>
+                    <div className="w-full bg-gray-400 rounded-full h-2.5 mt-2 lg:mt-4">
                         <div
-                            className="bg-white h-2.5 rounded-full"
-                            style={{ width: `${(step / 5) * 100}%` }}></div>
+                            className="bg-white h-2.5 rounded-full transition-all duration-300"
+                            style={{
+                                width: `${((step + 1) / 6) * 100}%`,
+                            }}></div>
                     </div>
                 </div>
             </div>
 
             {/* Right side dynamic form */}
-            <div className="w-full sm:w-1/2 bg-gray-100 flex items-center justify-center px-4 py-8 sm:px-8 sm:py-12 transition-all duration-300 ease-in-out">
-                {userId ? (
-                    isSubmitting ? (
-                        <div className="flex flex-col items-center justify-center">
-                            <MoonLoader size={30} color={primaryColor} />
-                            <p className="mt-4">
-                                Submitting your registration...
-                            </p>
-                        </div>
-                    ) : (
-                        renderStep()
-                    )
-                ) : (
-                    <div className="text-center">
-                        <h3 className="text-xl font-semibold text-red-600">
-                            Registration Error
-                        </h3>
-                        <p className="mt-2">
-                            Missing user information. Please start your
-                            registration from the beginning.
-                        </p>
-                        <button
-                            onClick={() => router.push("/register")}
-                            className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition">
-                            Go to Registration
-                        </button>
+            <div className="w-full lg:w-1/2 bg-gray-100 flex flex-col items-center justify-start px-4 py-8 lg:px-8 lg:py-12 lg:h-screen lg:overflow-y-auto">
+                {isSubmitting ? (
+                    <div className="flex flex-col items-center justify-center">
+                        <MoonLoader size={30} color={primaryColor} />
+                        <p className="mt-4">Completing your registration...</p>
                     </div>
+                ) : (
+                    renderStep()
                 )}
             </div>
         </div>

@@ -126,7 +126,7 @@ const VetVerificationPage = () => {
 
     return (
         <>
-            <Navbar />
+            
             <div className="min-h-screen">
                 <div style={{ padding: "20px" }}>
                     {vets.map((vet) => (

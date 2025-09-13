@@ -89,7 +89,7 @@ console.log(`Fetched user ID: ${userId}`);
 
     return (
         <>
-            <Navbar />
+            
             <div className="bg-gray-100 min-h-screen px-6 py-8">
                 {/* Personal Info Box */}
                 <div className="bg-white shadow-lg rounded-lg p-6 mb-6 relative border border-gray-200 hover:border-primary">

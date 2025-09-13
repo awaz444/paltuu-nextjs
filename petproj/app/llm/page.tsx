@@ -63,7 +63,7 @@ export default function ChatBot() {
 
   return (
     <div className="h-screen flex flex-col">
-      <Navbar />
+      
       <main className="flex-1 flex items-center justify-center bg-gray-100 p-4">
         {/* Chat Container (Fixed Height) */}
         <div className="w-full max-w-2xl bg-white rounded-xl shadow-md p-6 h-[80vh] flex flex-col">

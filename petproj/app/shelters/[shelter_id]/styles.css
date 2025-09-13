@@ -1,0 +1,62 @@
+/* shelter-styles.css */
+.shelter-profile {
+  padding: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .shelter-profile {
+    padding: 12px;
+  }
+}
+
+/* Button styles */
+button {
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom card styles */
+.bg-white {
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Tab navigation styles */
+.tab-nav {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tab-button {
+  padding: 12px 24px;
+  font-weight: 500;
+  color: #6b7280;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+  color: var(--primary-color);
+}
+
+.tab-button.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+/* Form element styles */
+.input-field {
+  border-radius: 16px;
+  border: 1px solid #d1d5db;
+  transition: all 0.3s ease;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent);
+}

@@ -35,7 +35,7 @@ export default function ProfilePage() {
 
     return (
         <>
-            <Navbar />
+            
             <div className="flex flex-col items-center justify-center min-h-screen py-6 bg-gray-100">
                 <div className="w-full max-w-4xl bg-white p-6 rounded-lg shadow-lg">
                     <h1 className="text-3xl font-semibold text-center text-gray-700">User Profile</h1>

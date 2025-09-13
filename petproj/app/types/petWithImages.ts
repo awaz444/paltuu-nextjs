@@ -1,4 +1,3 @@
-
 export type PetWithImages = {
     pet_id: number;
     owner_id: number;
@@ -23,15 +22,40 @@ export type PetWithImages = {
     email: string;
     phone_number: string;
     sex: string | null;
-    listing_type: string;
+    listing_type: "adoption" | "sell" | "shop" | "rescue";
     vaccinated: boolean | null;
     neutered: boolean | null;
-    payment_frequency: string | null;
     city: string;
     profile_image_url: string | null;
     image_id: number | null;
     image_url: string | null;
-    foster_start_date?: string; // Added property
-    foster_end_date?: string;   // Added property
-    additional_images: string[]; // Array of image URLs, can be between 0 to 5 images
+    additional_images: Array<{ image_url: string }>;
+    images: Array<{
+        image_id: number;
+        image_url: string;
+        order: number;
+    }>;
+    owner?: {
+        user_id: number;
+        name: string;
+        profile_image_url: string | null;
+    };
+    shop?: {
+        shop_id: number;
+        shop_name: string;
+        logo_url: string | null;
+    };
+    shelter?: {
+        shelter_id: number;
+        shelter_name: string;
+        logo_url: string | null;
+    };
+    // Add rescue-specific properties
+    rescue_story?: string | null;
+    special_needs?: string[];
+    medical_conditions?: Array<{
+        condition: string;
+        treatment_cost: string;
+        treated: boolean;
+    }>;
 };

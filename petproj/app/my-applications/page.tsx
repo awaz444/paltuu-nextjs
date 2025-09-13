@@ -142,7 +142,7 @@ export default function MyApplicationsPage() {
 
     return (
         <>
-            <Navbar />
+            
             <div className="max-w-6xl min-h-screen mx-auto py-10 px-4">
                 <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
                     My Applications

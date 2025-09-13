@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/index";
 
+// ... existing imports ...
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     const pet_id = req.nextUrl.pathname.split('/').pop(); 
@@ -18,7 +20,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     try {
         await client.connect();
 
-        const query = `
+        // Main pet query
+        const petQuery = `
         SELECT 
             pets.pet_id, 
             pets.owner_id, 
@@ -29,8 +32,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             pets.area, 
             pets.age, 
             pets.months,
-            pets.foster_start_date,
-            pets.foster_end_date, 
             pets.description, 
             pets.adoption_status, 
             pets.price, 
@@ -46,28 +47,33 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             pets.listing_type, 
             pets.vaccinated, 
             pets.neutered, 
-            pets.payment_frequency, 
+            pets.shelter_id,
+            pets.shop_id,
+            pets.rescue_story,
             users.user_id, 
             users.username, 
             users.name, 
             users.email, 
             users.phone_number, 
             users.profile_image_url, 
-            cities.city_name AS city, 
-            pet_images.image_id, 
-            pet_images.image_url, 
-            pet_images."order" 
+            cities.city_name AS city,
+            rescue_shelters.shelter_id as rescue_shelter_id,
+            rescue_shelters.shelter_name,
+            rescue_shelters.logo_url as shelter_logo,
+            shops.shop_id,
+            shops.shop_name,
+            shops.logo_url as shop_logo
         FROM pets
         JOIN users ON pets.owner_id = users.user_id
         JOIN cities ON pets.city_id = cities.city_id
-        LEFT JOIN pet_images ON pets.pet_id = pet_images.pet_id
-         WHERE pets.pet_id = $1
-        ORDER BY pet_images."order" ASC;
+        LEFT JOIN rescue_shelters ON pets.shelter_id = rescue_shelters.shelter_id
+        LEFT JOIN shops ON pets.shop_id = shops.shop_id
+        WHERE pets.pet_id = $1
         `;
 
-        const result = await client.query(query, [pet_id]);
+        const petResult = await client.query(petQuery, [pet_id]);
 
-        if (result.rows.length === 0) {
+        if (petResult.rows.length === 0) {
             return NextResponse.json(
                 { error: "Pet not found" },
                 {
@@ -77,21 +83,112 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             );
         }
 
-        const petData = result.rows;
-        const pet = petData[0]; // Extract the pet data (first record)
+        const pet = petResult.rows[0];
 
-        const images = petData.map((image: any) => ({
-            image_id: image.image_id,
-            image_url: image.image_url,
-            order: image.order,
-        }));
+        // Images query
+        const imagesQuery = `
+            SELECT image_id, image_url, "order"
+            FROM pet_images
+            WHERE pet_id = $1
+            ORDER BY "order" ASC
+        `;
+        const imagesResult = await client.query(imagesQuery, [pet_id]);
+        const images = imagesResult.rows;
+
+        // Special needs query (only for rescue pets)
+        let specialNeeds = [];
+        if (pet.listing_type === 'rescue') {
+            const specialNeedsQuery = `
+                SELECT special_need
+                FROM rescue_special_needs
+                WHERE pet_id = $1
+            `;
+            const specialNeedsResult = await client.query(specialNeedsQuery, [pet_id]);
+            specialNeeds = specialNeedsResult.rows.map(row => row.special_need);
+        }
+
+        // Medical conditions query (only for rescue pets)
+        let medicalConditions = [];
+        if (pet.listing_type === 'rescue') {
+            const medicalConditionsQuery = `
+                SELECT condition, treatment_cost, treated
+                FROM rescue_medical_conditions
+                WHERE pet_id = $1
+            `;
+            const medicalConditionsResult = await client.query(medicalConditionsQuery, [pet_id]);
+            medicalConditions = medicalConditionsResult.rows;
+        }
+
+        // Base response object
+        const response: any = {
+            pet_id: pet.pet_id,
+            pet_name: pet.pet_name,
+            pet_type: pet.pet_type,
+            pet_breed: pet.pet_breed,
+            city: pet.city,
+            area: pet.area,
+            age: pet.age,
+            months: pet.months,
+            description: pet.description,
+            adoption_status: pet.adoption_status,
+            price: pet.price,
+            min_age_of_children: pet.min_age_of_children,
+            can_live_with_dogs: pet.can_live_with_dogs,
+            can_live_with_cats: pet.can_live_with_cats,
+            must_have_someone_home: pet.must_have_someone_home,
+            energy_level: pet.energy_level,
+            cuddliness_level: pet.cuddliness_level,
+            health_issues: pet.health_issues,
+            created_at: pet.created_at,
+            sex: pet.sex,
+            listing_type: pet.listing_type,
+            vaccinated: pet.vaccinated,
+            neutered: pet.neutered,
+            phone_number: pet.phone_number,
+            images: images,
+        };
+
+        // Add rescue-specific data for rescue pets
+        if (pet.listing_type === 'rescue') {
+            response.rescue_story = pet.rescue_story;
+            response.special_needs = specialNeeds;
+            response.medical_conditions = medicalConditions;
+        }
+
+        // Add appropriate owner/shop/shelter details based on listing type
+        switch (pet.listing_type) {
+            case 'adoption':
+            case 'sell':
+                response.owner = {
+                    user_id: pet.user_id,
+                    username: pet.username,
+                    name: pet.name,
+                    profile_image_url: pet.profile_image_url
+                };
+                break;
+            case 'rescue':
+                if (pet.rescue_shelter_id) {
+                    response.shelter = {
+                        shelter_id: pet.rescue_shelter_id,
+                        shelter_name: pet.shelter_name,
+                        logo_url: pet.shelter_logo
+                    };
+                }
+                break;
+            case 'shop':
+                if (pet.shop_id) {
+                    response.shop = {
+                        shop_id: pet.shop_id,
+                        shop_name: pet.shop_name,
+                        logo_url: pet.shop_logo
+                    };
+                }
+                break;
+        }
 
         // Return the structured response
         return NextResponse.json(
-            {
-                ...pet, // Pet details from the first row
-                additional_images: images, // All images for this pet
-            },
+            response,
             {
                 status: 200,
                 headers: { "Content-Type": "application/json" },
@@ -107,7 +204,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             }
         );
     } finally {
-        await client.end(); // Close the database connection
+        await client.end();
     }
 }
-

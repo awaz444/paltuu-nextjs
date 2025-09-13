@@ -140,7 +140,7 @@ export default function LostFound() {
 
     return (
         <>
-            <Navbar />
+            
             <div
                 className="fullBody lg:w-3/4"
                 style={{ maxWidth: "90%", margin: "0 auto" }}>

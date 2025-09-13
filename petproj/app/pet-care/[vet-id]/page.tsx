@@ -266,7 +266,7 @@ export default function VetDetailsPage({
 
     return (
         <>
-            <Navbar />
+            
             <div className="container mx-auto px-4 py-8">
                 <Card className="shadow-lg rounded-2xl overflow-hidden">
                     {/* Vet Profile Header */}

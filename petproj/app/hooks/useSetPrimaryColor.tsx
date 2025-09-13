@@ -11,11 +11,14 @@ export const useSetPrimaryColor = () => {
       "regular user": "#A03048",
       vet: "#480777",
       admin: "#065758",
+      "shelter admin": "#1d6b34",
+      "shop admin": "#b86b00",
+      "ecommerce admin": "#004a99",
     };
 
-    document.documentElement.style.setProperty(
-      "--primary-color",
-      roleColors[role]
-    );
+    // fallback to guest color if role not in map
+    const color = roleColors[role] || roleColors["guest"];
+
+    document.documentElement.style.setProperty("--primary-color", color);
   }, [role]);
 };

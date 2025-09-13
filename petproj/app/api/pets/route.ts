@@ -47,8 +47,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         area,
         age,
         months,
-        foster_start_date,
-        foster_end_date,
         description,
         adoption_status,
         min_age_of_children,
@@ -63,7 +61,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         vaccinated,
         neutered,
         price,
-        payment_frequency,
     } = await req.json();
 
     const client = createClient();
@@ -77,12 +74,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             client.query(
                 `INSERT INTO pets (
                     owner_id, pet_name, pet_type, pet_breed, city_id, area, age, months, 
-                    foster_start_date, foster_end_date, description, adoption_status, 
+                    description, adoption_status, 
                     min_age_of_children, can_live_with_dogs, can_live_with_cats, 
                     must_have_someone_home, energy_level, cuddliness_level, health_issues, 
-                    sex, listing_type, vaccinated, neutered, price, payment_frequency, created_at
+                    sex, listing_type, vaccinated, neutered, price, created_at
                 ) 
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, CURRENT_TIMESTAMP) 
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, CURRENT_TIMESTAMP) 
                 RETURNING *`,
                 [
                     owner_id,
@@ -93,8 +90,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                     area,
                     age,
                     months,
-                    foster_start_date,
-                    foster_end_date,
                     description,
                     adoption_status,
                     min_age_of_children,
@@ -109,7 +104,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                     vaccinated,
                     neutered,
                     price,
-                    payment_frequency
                 ]
             )
         );
@@ -245,7 +239,6 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         vaccinated,
         neutered,
         price,
-        payment_frequency,
     } = await req.json();
 
     const client = createClient();
@@ -258,7 +251,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
                 age = $7, months = $8, description = $9, adoption_status = $10, min_age_of_children = $11, can_live_with_dogs = $12, 
                 can_live_with_cats = $13, must_have_someone_home = $14, energy_level = $15, cuddliness_level = $16, 
                 health_issues = $17, sex = $18, listing_type = $19, vaccinated = $20, neutered = $21, price = $22, 
-                payment_frequency = $23 WHERE pet_id = $24 RETURNING *`,
+                WHERE pet_id = $23 RETURNING *`,
                 [
                     owner_id,
                     pet_name,
@@ -282,7 +275,6 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
                     vaccinated,
                     neutered,
                     price,
-                    payment_frequency,
                     pet_id, // Moved to $24
                 ]
             )

@@ -152,10 +152,18 @@ const UserListingsPage = () => {
     return (
         <>
             
-            <div className="mt-8 min-h-screen px-4 flex flex-col items-center mb-6">
-                <h1 className="text-3xl font-bold text-gray-800 text-center">
-                    My Listings
-                </h1>
+            <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+                <header className="bg-white text-primary border border-1 border-primary p-8 rounded-2xl shadow-lg mb-10">
+                    <div className="flex flex-col md:flex-row items-center gap-6">
+                        <div className="bg-primary flex-shrink-0 w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center shadow-lg">
+                            <img className="p-3" src="/favicon-dark.png" alt="paltuu logo" />
+                        </div>
+
+                        <div className="text-center md:text-left">
+                            <h1 className="text-3xl text-black md:text-4xl font-bold mb-2">My Listings</h1>
+                        </div>
+                    </div>
+                </header>
                 {/* Conditional rendering based on whether listings exist */}
                 {listings.length === 0 ? (
                     <div className="w-full max-w-4xl mt-8 text-center">

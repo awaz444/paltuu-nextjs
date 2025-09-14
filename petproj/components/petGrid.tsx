@@ -65,24 +65,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                 Add Your Pet
             </Link>
 
-            <Link
-                href="/create-listing"
-                className="fixed bottom-4 left-1/2 transform -translate-x-1/2 sm:hidden z-50 floating-btn">
-                <button className="flex items-center gap-1.5 bg-white text-primary border-2 border-primary p-2 rounded-xl shadow-lg transition-all duration-300 hover:scale-105">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        fill="currentColor"
-                        className="h-3.5 w-3.5"
-                        viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                    </svg>
-                    <span className="text-xs">Add Pet</span>
-                </button>
-            </Link>
-
+          
             {pets.map((pet) => (
                 <Link
                     key={pet.pet_id}
@@ -90,7 +73,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                     passHref>
                     <div
                         key={pet.pet_id}
-                        className="bg-white pt-4 px-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300">
+                        className="bg-white pt-4 px-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 z-39">
                         <div className="relative">
                             <img
                                 src={pet.image_url || "/dog-placeholder.png"} // Fallback image if pet.image_url is null
@@ -141,7 +124,27 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                     </div>
                 </Link>
             ))}
+              <Link
+                href="/create-listing"
+                className="fixed bottom-4 left-1/2 transform -translate-x-1/2 sm:hidden z-49">
+                <button className="flex items-center gap-1.5 bg-white text-primary border-2 border-primary p-2 rounded-xl shadow-lg transition-all duration-300 hover:scale-105">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        className="h-3.5 w-3.5"
+                        viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                    </svg>
+                    <span className="text-xs">Add Pet</span>
+                </button>
+            </Link>
+
         </div>
+
+        
     );
 };
 

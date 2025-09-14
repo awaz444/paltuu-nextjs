@@ -72,7 +72,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
   };
 
   return (
-    <div className="product-grid-container">
+    <div className="product-grid-container mt-4 sm:mt-2 md:mt-0">
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-4">
         {products.map((product) => (
           <Link

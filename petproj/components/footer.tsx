@@ -1,3 +1,4 @@
+
 'use client';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
@@ -44,7 +45,7 @@ const Footer = () => {
             Report a problem?
           </button>
         </div>
-        {showModal && <DynamicReportIssueModal onClose={() => setShowModal(false)} />}
+        {showModal && <DynamicReportIssueModal onClose={() => setShowModal(false)} visible={showModal} />}
       </div>
     </footer>
   );

@@ -9,6 +9,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
 import NavbarWrapper from "@/components/NavbarWrapper";
+import ThemeInitializer from "./ThemeInitializer";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -31,6 +32,24 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon-light.png" id="favicon" />
 
+        {/* ✅ Primary color bootstrapped BEFORE hydration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var user = localStorage.getItem("user");
+                  var parsed = user ? JSON.parse(user) : null;
+                  var color = parsed?.primaryColor || "#A03048";
+                  document.documentElement.style.setProperty("--primary-color", color);
+                } catch (e) {
+                  document.documentElement.style.setProperty("--primary-color", "#A03048");
+                }
+              })();
+            `,
+          }}
+        />
+
         {/* Google AdSense Script */}
         <script
           async
@@ -45,22 +64,22 @@ export default function RootLayout({
         />
         <Script id="google-analytics" strategy="afterInteractive">
           {`
-                        window.dataLayer = window.dataLayer || [];
-                        function gtag(){dataLayer.push(arguments);}
-                        gtag('js', new Date());
-                        gtag('config', 'G-724EM6FN42');
-                    `}
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-724EM6FN42');
+          `}
         </Script>
       </head>
       <body className={`${montserrat.className} flex flex-col min-h-screen`}>
         <AppClientWrapper>
           <ClientProvider>
-            {/* ✅ Wrapped Navbar */}
+            {/* ✅ ThemeInitializer still here to handle dynamic updates */}
+            <ThemeInitializer />
             <NavbarWrapper />
 
             <main className="flex-grow">{children}</main>
 
-            {/* chatbot and analytics stay */}
             <div className="fixed right-2 z-50 bottom-20 sm:bottom-4">
               <ChatBot />
             </div>
@@ -68,7 +87,6 @@ export default function RootLayout({
           </ClientProvider>
         </AppClientWrapper>
 
-        {/* footer at the bottom */}
         <Footer />
         <Toaster />
       </body>

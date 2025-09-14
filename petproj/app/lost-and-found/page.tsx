@@ -28,7 +28,7 @@ interface LostAndFoundPet {
 }
 
 export default function LostFound() {
-    useSetPrimaryColor();
+    
 
     const [pets, setPets] = useState<LostAndFoundPet[]>([]);
     const [loading, setLoading] = useState<boolean>(false);

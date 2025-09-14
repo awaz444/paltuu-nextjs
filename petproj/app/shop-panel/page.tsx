@@ -20,7 +20,7 @@ const ShopProfileContent = dynamic(() => import('../../components/ShopProfileCon
 import { UploadOutlined, UnorderedListOutlined, UserOutlined, BellOutlined, FileTextOutlined, PlusOutlined, ShopOutlined } from "@ant-design/icons";
 
 export default function ShopPanel() {
-  useSetPrimaryColor();
+  
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);

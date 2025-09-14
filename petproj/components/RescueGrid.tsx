@@ -51,7 +51,7 @@ interface RescueGridProps {
 }
 
 const RescueGrid: React.FC<RescueGridProps> = ({ pets }) => {
-    useSetPrimaryColor();
+    
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedPet, setSelectedPet] = useState<RescuePet | null>(null);

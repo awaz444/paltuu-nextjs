@@ -35,7 +35,7 @@ interface CartItem {
 }
 
 const CartPage = () => {
-  useSetPrimaryColor();
+  
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const cartState = useSelector((s: RootState) => s.cart);

@@ -18,7 +18,7 @@ const MarketplaceFilterSection: React.FC<MarketplaceFilterSectionProps> = ({
     const [localFilters, setLocalFilters] = useState(filters);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    useSetPrimaryColor();
+    
 
     const categories = [
         { id: "food", name: "Food" },

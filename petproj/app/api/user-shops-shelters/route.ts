@@ -8,6 +8,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     // Use req.nextUrl instead of new URL(req.url) to avoid dynamic server usage
     const userId = req.nextUrl.searchParams.get('user_id');
 
+    
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },

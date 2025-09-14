@@ -24,7 +24,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
     const [breed, setBreed] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    useSetPrimaryColor();
+    
 
     useEffect(() => {
         dispatch(fetchCities());

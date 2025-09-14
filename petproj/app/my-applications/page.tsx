@@ -25,7 +25,7 @@ export default function MyApplicationsPage() {
     const [loading, setLoading] = useState<boolean>(true);
     const [primaryColor, setPrimaryColor] = useState("#000000");
 
-    useSetPrimaryColor();
+    
 
     useEffect(() => {
         // Get the computed style of the `--primary-color` CSS variable
@@ -143,10 +143,21 @@ export default function MyApplicationsPage() {
     return (
         <>
             
-            <div className="max-w-6xl min-h-screen mx-auto py-10 px-4">
-                <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-                    My Applications
-                </h1>
+            <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+        {/* Updated Header */}
+        <header className="bg-white text-primary border border-1 border-primary p-8 rounded-2xl shadow-lg mb-10">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="bg-primary flex-shrink-0 w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center shadow-lg">
+              <img className="p-3" src="/favicon-dark.png" alt="paltuu logo" />
+            </div>
+
+            <div className="text-center md:text-left">
+              <h1 className="text-3xl text-black md:text-4xl font-bold mb-2">
+                My Applications
+              </h1>
+            </div>
+          </div>
+        </header>
 
                 {applications.length === 0 ? (
                     <div className="bg-white p-8 rounded-2xl shadow-sm text-center">

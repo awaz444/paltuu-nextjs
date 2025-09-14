@@ -13,6 +13,7 @@ const hideNavbarRoutes = [
   "/vet-qualifications",
   "/vet-specialization",
   "/vet-schedule",
+  "/vet-reviews-summary",
   "/vet-get-verified-1",
   "/vet-get-verified-2",
   "/partner-signup",

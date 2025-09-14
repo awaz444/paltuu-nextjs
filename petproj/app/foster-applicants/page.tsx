@@ -36,7 +36,7 @@ const FosterApplications = () => {
     const [applications, setApplications] = useState<FosterApplication[] | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [expandedApplication, setExpandedApplication] = useState<number | null>(null);
-    useSetPrimaryColor();
+    
 
     useEffect(() => {
         if (!petId) return;

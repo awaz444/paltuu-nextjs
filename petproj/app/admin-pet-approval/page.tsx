@@ -31,7 +31,7 @@ type City = {
 };
 
 const AdminPetApproval: React.FC = () => {
-  useSetPrimaryColor();
+  
 
   const [pets, setPets] = useState<Pet[]>([]);
   const [cities, setCities] = useState<City[]>([]); // Replacing Redux state with local state

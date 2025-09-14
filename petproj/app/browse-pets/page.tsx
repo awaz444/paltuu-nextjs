@@ -180,7 +180,7 @@ export default function BrowsePets() {
 
                         <div className="w-full">
                             {/* Commenting out the tab switch UI */}
-                            <div className="tab-switch-container relative">
+                            {/* <div className="tab-switch-container relative"> */}
                                 {/* <div
                                     className="tab-switch-slider absolute w-1/2 h-full transition-transform duration-300 rounded-lg bg-primary"
                                     style={{
@@ -204,7 +204,7 @@ export default function BrowsePets() {
                                     onClick={() => setActiveTab("buy")}>
                                     Buy
                                 </div> */}
-                            </div>
+                            {/* </div> */}
 
                             {loading ? (
                                 <MoonLoader

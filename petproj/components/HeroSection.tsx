@@ -30,7 +30,7 @@ const HeroSection = () => {
         <div className="font-montserrat bg-white">
             {/* Header */}
 
-            <header className="bg-primary text-primary py-4 px-4 md:px-6 lg:px-20 flex items-center justify-between rounded-b-[1rem] rounded-t-none shadow-lg">
+            {/* <header className="bg-primary text-primary py-4 px-4 md:px-6 lg:px-20 flex items-center justify-between rounded-b-[1rem] rounded-t-none shadow-lg">
                 <div className="logo">
                     <Image
                         src="/paltu_logo.svg"
@@ -45,7 +45,7 @@ const HeroSection = () => {
                     className="bg-white text-primary px-6 py-2 rounded-full font-semibold hover:bg-gray-100 transition-colors">
                     Login
                 </a>
-            </header>
+            </header> */}
 
             {/* Section - tight spacing on mobile */}
             <section className="bg-white text-black pt-6 pb-10 px-4 md:py-20 md:px-6 lg:px-20 md:mt-0">

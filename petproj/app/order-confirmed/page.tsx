@@ -10,6 +10,7 @@ const OrderConfirmedContent  = () => {
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   const router = useRouter();
+  
 
   useEffect(() => {
     const orderNumber = searchParams.get('orderNumber');
@@ -29,7 +30,7 @@ const OrderConfirmedContent  = () => {
     })();
   }, [searchParams]);
   
-  
+
   useEffect(() => {
     const check = () => {
       if (!isAuthenticated || !user) {

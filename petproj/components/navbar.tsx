@@ -3,15 +3,16 @@
 import Link from "next/link";
 import "./navbar.css";
 import Image from "next/image";
-import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from 'react-redux';
+import { fetchCart } from "@/app/store/slices/cartSlice";
 import type { RootState, AppDispatch } from '@/app/store/store';
 import { useSession, signOut } from "next-auth/react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { updateCartItem, removeCartItem } from '@/app/store/slices/cartSlice';
+import MobileCartModal from "./MobileCartModal";
 import "bootstrap-icons/font/bootstrap-icons.css";
-
 interface OverrideLink { name: string; href: string }
 interface OverrideDropdownItem { href: string; label: string;icon: string; isAction?: boolean }
 
@@ -32,8 +33,9 @@ const Navbar = ({
   const [mobileView, setMobileView] = useState("navlinks"); // 'navlinks' or 'dropdown'
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
-
+  const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
 
   const handleMouseEnter = () => {  
     if (hideTimeoutRef.current) {
@@ -207,7 +209,10 @@ const arrowColor: Record<UserRole, string> = {
 
   const cartItemsNav = cartState.items ?? [];
   const cartLoading = cartState.loading ?? false;
-
+  // Fetch cart on mount
+  useEffect(() => {
+    dispatch(fetchCart());
+  }, [dispatch]);
   // Bounce animation for cart button
   const [bounce, setBounce] = useState(false);
   const prevTotalRef = useRef(0);
@@ -311,15 +316,45 @@ const arrowColor: Record<UserRole, string> = {
 
   return (
     <nav className="navbar" style={navbarStyle}>
-      {/* Hamburger Menu Button (Mobile Only) */}
-      <button
-        className="hamburger md:hidden"
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
-      >
-        <div className="hamburger-line" />
-        <div className="hamburger-line" />
-        <div className="hamburger-line" />
-      </button>
+  {/* Mobile Navbar Top Row */}
+  <div className="flex items-center justify-between w-full md:hidden px-4 py-3">
+    {/* Left: Hamburger */}
+    <button
+      className="hamburger"
+      onClick={() => setIsMenuOpen(!isMenuOpen)}
+    >
+      <div className="hamburger-line" />
+      <div className="hamburger-line" />
+      <div className="hamburger-line" />
+    </button>
+
+    {/* Center: Logo */}
+    <Link href={logoHref || "/browse-pets"} className="logo">
+      <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
+    </Link>
+
+    {/* Right: Cart */}
+    
+  {!hideCart && (
+    <button
+      onClick={() => setIsCartModalOpen(true)}
+      className={`absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md bg-white/10 hover:bg-white/20 ${
+        bounce ? "animate-bounce" : ""
+      }`}
+    >
+      <i className="bi bi-cart3 text-white text-lg" />
+      {totalCartItems > 0 && (
+        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs px-1.5 py-0.5">
+          {totalCartItems}
+        </span>
+      )}
+    </button>
+  )}
+    
+  </div>
+
+  {/* Mobile Drawer + Backdrop remains unchanged... */}
+
 
       {/* Mobile Drawer + Backdrop */}
 <div
@@ -485,7 +520,7 @@ const arrowColor: Record<UserRole, string> = {
       {/* Rest of the desktop code remains unchanged */}
       <div className="flex items-center justify-between w-full">
         {/* Logo */}
-        <div className="logo">
+        <div className="logo hidden md:block">
           <Link href={logoHref || "/browse-pets"}>
             <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
           </Link>
@@ -746,6 +781,10 @@ const arrowColor: Record<UserRole, string> = {
           )}
                 </div>
             </div>
+            <MobileCartModal
+  isOpen={isCartModalOpen}
+  onClose={() => setIsCartModalOpen(false)}
+/>
         </nav>
     );
 };

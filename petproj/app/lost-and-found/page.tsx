@@ -142,7 +142,7 @@ export default function LostFound() {
         <>
             
             <div
-                className="fullBody lg:w-3/4"
+                className="fullBody"
                 style={{ maxWidth: "90%", margin: "0 auto" }}>
                 <LostAndFoundFilter
                     onSearch={(filters) => {

@@ -50,10 +50,10 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
     };
 
     return (
-        <div className="bg-gray-100 sm:pt-6">
-            <div className="bg-white hidden md:block mx-0 md:mx-8 px-5 py-5 w-700 rounded-2xl">
-                {/* Desktop Layout */}
-                <div className="hidden md:flex flex-wrap gap-4 mb-4 mt-4 items-center">
+        <div className="filter-section bg-gray-100 sm:pt-6">
+            <div className="bg-white hidden md:block mx-0 md:mx-8 px-6 pt-3 pb-5 w-700 rounded-2xl">
+                {/* PC Layout */}
+                <div className=" md:flex flex-wrap gap-4 items-center">
                     <div className="flex-1 min-w-[150px]">
                         <label className="text-xs block mb-1">Qualification</label>
                         <select

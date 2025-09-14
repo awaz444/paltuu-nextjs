@@ -4,17 +4,25 @@ import Link from "next/link";
 import "./navbar.css";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from "react-redux";
 import { fetchCart } from "@/app/store/slices/cartSlice";
-import type { RootState, AppDispatch } from '@/app/store/store';
+import type { RootState, AppDispatch } from "@/app/store/store";
 import { useSession, signOut } from "next-auth/react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { updateCartItem, removeCartItem } from '@/app/store/slices/cartSlice';
+import { updateCartItem, removeCartItem } from "@/app/store/slices/cartSlice";
 import MobileCartModal from "./MobileCartModal";
 import "bootstrap-icons/font/bootstrap-icons.css";
-interface OverrideLink { name: string; href: string }
-interface OverrideDropdownItem { href: string; label: string;icon: string; isAction?: boolean }
+interface OverrideLink {
+  name: string;
+  href: string;
+}
+interface OverrideDropdownItem {
+  href: string;
+  label: string;
+  icon: string;
+  isAction?: boolean;
+}
 
 const Navbar = ({
   linksOverride,
@@ -35,7 +43,6 @@ const Navbar = ({
   const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
 
   const handleMouseEnter = () => {
     if (hideTimeoutRef.current) {
@@ -89,38 +96,37 @@ const Navbar = ({
   const userRole: UserRole =
     (user?.role as UserRole) || (session?.user?.role as UserRole) || "guest";
 
-const navbarBackground: Record<UserRole, string> = {
-  guest: "#A03048",
-  "regular user": "#A03048",
-  vet: "#480777",
-  admin: "#065758",
+  const navbarBackground: Record<UserRole, string> = {
+    guest: "#A03048",
+    "regular user": "#A03048",
+    vet: "#480777",
+    admin: "#065758",
 
-  "shelter admin": "#1d6b34",
-  "shop admin": "#b86b00",
-  "ecommerce admin": "#004a99",
-};
+    "shelter admin": "#1d6b34",
+    "shop admin": "#b86b00",
+    "ecommerce admin": "#004a99",
+  };
 
-const buttonTextColor: Record<UserRole, string> = {
-  guest: "#ffffff",
-  "regular user": "#ffffff",
-  vet: "#ffffff",
-  admin: "#ffffff",
-  "shop admin": "#ffffff",
-  "shelter admin": "#ffffff",
-  "ecommerce admin": "#ffffff",
-};
+  const buttonTextColor: Record<UserRole, string> = {
+    guest: "#ffffff",
+    "regular user": "#ffffff",
+    vet: "#ffffff",
+    admin: "#ffffff",
+    "shop admin": "#ffffff",
+    "shelter admin": "#ffffff",
+    "ecommerce admin": "#ffffff",
+  };
 
-const arrowColor: Record<UserRole, string> = {
-  guest: "#ffd2e3",
-  "regular user": "#ffd2e3",
-  vet: "#e0c3f7",
-  admin: "#7fe1d3",
+  const arrowColor: Record<UserRole, string> = {
+    guest: "#ffd2e3",
+    "regular user": "#ffd2e3",
+    vet: "#e0c3f7",
+    admin: "#7fe1d3",
 
-  "shelter admin": "#8fe4a8",
-  "shop admin": "#ffc266",
-  "ecommerce admin": "#80b3ff",
-};
-
+    "shelter admin": "#8fe4a8",
+    "shop admin": "#ffc266",
+    "ecommerce admin": "#80b3ff",
+  };
 
   // Updated dropdown items with isAction flag
   const defaultDropdownItems = [
@@ -130,20 +136,20 @@ const arrowColor: Record<UserRole, string> = {
           ? "/vet-panel"
           : userRole === "admin"
           ? "/admin-panel"
-                    : userRole === "shop admin"
-                    ? "/shop-panel"
-                    : userRole === "shelter admin"
-                    ? "/rescue-panel"
+          : userRole === "shop admin"
+          ? "/shop-panel"
+          : userRole === "shelter admin"
+          ? "/rescue-panel"
           : "/my-profile",
       label:
         userRole === "vet"
           ? "Vet Panel"
           : userRole === "admin"
           ? "Admin Panel"
-                    : userRole === "shop admin"
-                    ? "Shop Panel"
-                    : userRole === "shelter admin"
-                    ? "Rescue Panel"
+          : userRole === "shop admin"
+          ? "Shop Panel"
+          : userRole === "shelter admin"
+          ? "Rescue Panel"
           : "My Profile",
       icon: "bi-person-circle", // 👈 same as desktop
       isAction: false,
@@ -185,7 +191,7 @@ const arrowColor: Record<UserRole, string> = {
       isAction: true,
     },
   ];
-    const dropdownItems = dropdownOverride || defaultDropdownItems;
+  const dropdownItems = dropdownOverride || defaultDropdownItems;
 
   const navbarStyle = { backgroundColor: navbarBackground[userRole] };
 
@@ -236,7 +242,6 @@ const arrowColor: Record<UserRole, string> = {
     cartHideTimeout.current = setTimeout(() => setCartOpen(false), 350);
   };
 
-
   // Log the auth context props as soon as they are fetched
   useEffect(() => {
     // console.log("AuthContext - User:", user);
@@ -245,15 +250,15 @@ const arrowColor: Record<UserRole, string> = {
     // console.log("NextAuth - Session:", session);
   }, [user, isAuthenticated, session]); // Logs when these values update
 
-    // Navigation Links
-    const defaultLinks = [
-        { name: "Pets", href: "browse-pets" },
-        { name: "Bazaar", href: "marketplace" },
-        { name: "Pet Care", href: "pet-care" },
-        { name: "Lost & Found", href: "lost-and-found" },
-        //{ name: "Paltuu AI", href: "llm" },
-    ];
-    const links = linksOverride || defaultLinks;
+  // Navigation Links
+  const defaultLinks = [
+    { name: "Pets", href: "browse-pets" },
+    { name: "Bazaar", href: "marketplace" },
+    { name: "Pet Care", href: "pet-care" },
+    { name: "Lost & Found", href: "lost-and-found" },
+    //{ name: "Paltuu AI", href: "llm" },
+  ];
+  const links = linksOverride || defaultLinks;
 
   useEffect(() => {
     const fetchVerificationStatus = async () => {
@@ -316,206 +321,223 @@ const arrowColor: Record<UserRole, string> = {
 
   return (
     <nav className="navbar" style={navbarStyle}>
-  {/* Mobile Navbar Top Row */}
-  <div className="flex items-center justify-between w-full md:hidden px-4 py-3">
-    {/* Left: Hamburger */}
-    <button
-      className="hamburger"
-      onClick={() => setIsMenuOpen(!isMenuOpen)}
-    >
-      <div className="hamburger-line" />
-      <div className="hamburger-line" />
-      <div className="hamburger-line" />
-    </button>
+      {/* Mobile Navbar Top Row */}
+      <div className="flex items-center justify-between w-full md:hidden px-4 py-3">
+        {/* Left: Hamburger */}
+        <button
+          className="hamburger"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          <div className="hamburger-line" />
+          <div className="hamburger-line" />
+          <div className="hamburger-line" />
+        </button>
 
-    {/* Center: Logo */}
-    <Link href={logoHref || "/browse-pets"} className="logo">
-      <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
-    </Link>
+        {/* Center: Logo */}
+        <Link href={logoHref || "/browse-pets"} className="logo">
+          <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
+        </Link>
 
-    {/* Right: Cart */}
+        {/* Right: Cart */}
 
-  {!hideCart && (
-    <button
-      onClick={() => setIsCartModalOpen(true)}
-      className={`absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md bg-white/10 hover:bg-white/20 ${
-        bounce ? "animate-bounce" : ""
-      }`}
-    >
-      <i className="bi bi-cart3 text-white text-lg" />
-      {totalCartItems > 0 && (
-        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs px-1.5 py-0.5">
-          {totalCartItems}
-        </span>
-      )}
-    </button>
-  )}
-
-  </div>
-
-  {/* Mobile Drawer + Backdrop remains unchanged... */}
-
+        {!hideCart && (
+          <button
+            onClick={() => setIsCartModalOpen(true)}
+            className={`absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md bg-white/10 hover:bg-white/20 ${
+              bounce ? "animate-bounce" : ""
+            }`}
+          >
+            <i className="bi bi-cart3 text-white text-lg" />
+            {totalCartItems > 0 && (
+              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs px-1.5 py-0.5">
+                {totalCartItems}
+              </span>
+            )}
+          </button>
+        )}
+      </div>
 
       {/* Mobile Drawer + Backdrop */}
-<div
-  className={`fixed inset-0 z-[9998] lg:hidden transition-opacity duration-500 ease-in-out
-    ${isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
->
-  {/* Backdrop */}
-  <div
-    className="absolute inset-0 bg-black/50"
-    onClick={() => setIsMenuOpen(false)}
-  />
+      <div
+        className={`fixed inset-0 z-[9998] lg:hidden transition-opacity duration-500 ease-in-out
+    ${
+      isMenuOpen
+        ? "opacity-100 pointer-events-auto"
+        : "opacity-0 pointer-events-none"
+    }`}
+      >
+        {/* Backdrop */}
+        <div
+          className="absolute inset-0 bg-black/50"
+          onClick={() => setIsMenuOpen(false)}
+        />
 
-  {/* Drawer */}
-  <div
-    className={`absolute top-0 left-0 h-full w-3/4 z-[9999] transform transition-transform duration-500 ease-in-out
+        {/* Drawer */}
+        <div
+          className={`absolute top-0 left-0 h-full w-3/4 z-[9999] transform transition-transform duration-500 ease-in-out
       ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}
       rounded-tr-3xl rounded-br-3xl`}
-    style={{ backgroundColor: navbarBackground[userRole] }}
-  >
-            <div className="h-full flex flex-col items-center">
-              {/* Top Bar */}
-              <div className="flex justify-between items-center w-full px-5 py-6 mt-3 ml-2">
-                {/* Hamburger */}
+          style={{ backgroundColor: navbarBackground[userRole] }}
+        >
+          <div className="h-full flex flex-col items-center">
+            {/* Top Bar */}
+            <div className="flex justify-between items-center w-full px-5 py-6 mt-3 ml-2">
+              {/* Hamburger */}
 
-                <button
-                  className="lg:hidden flex flex-col justify-between w-6 h-5"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    setMobileView("navlinks");
-                  }}
-                >
-                  <span className="block h-[3px] w-full bg-white rounded"></span>
-                  <span className="block h-[3px] w-full bg-white rounded"></span>
-                  <span className="block h-[3px] w-full bg-white rounded"></span>
-                </button>
+              <button
+                className="lg:hidden flex flex-col justify-between w-6 h-5"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setMobileView("navlinks");
+                }}
+              >
+                <span className="block h-[3px] w-full bg-white rounded"></span>
+                <span className="block h-[3px] w-full bg-white rounded"></span>
+                <span className="block h-[3px] w-full bg-white rounded"></span>
+              </button>
 
-                {/* Logo */}
-                <div className="logo">
-                  <Link href="/browse-pets">
-                    <Image
-                      src="/paltu_logo.svg"
-                      alt="Logo"
-                      width={230} // bigger logo
-                      height={90}
-                    />
-                  </Link>
-                </div>
-
-                <div className="w-8" />
+              {/* Logo */}
+              <div className="logo">
+                <Link href="/browse-pets">
+                  <Image
+                    src="/paltu_logo.svg"
+                    alt="Logo"
+                    width={230} // bigger logo
+                    height={90}
+                  />
+                </Link>
               </div>
 
-              {/* Main Section */}
-              <div className="flex flex-col justify-center items-center w-full h-full px-4 relative space-y-6">
-                {/* Navlinks */}
-                <div
-                  className={`transition-all duration-500 ease-in-out ${
-                    mobileView === "navlinks"
-                      ? "opacity-100 translate-y-0 pointer-events-auto"
-                      : "opacity-0 -translate-y-6 pointer-events-none"
-                  } mt-32`}
-                >
-                  <div className="space-y-6 text-center">
-                    {links.map((link) => (
-                      <Link key={link.href} href={`/${link.href}`}>
-                        <span className="py-3 block text-white text-lg flex items-center justify-center gap-3">
-                          {link.name}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
+              <div className="w-8" />
+            </div>
 
-                {/* Nameplate */}
-                <div
-                  className={`transition-all duration-500 ease-in-out ${
-                    mobileView === "dropdown"
-                      ? "-translate-y-[240px]"
-                      : "translate-y-0"
-                  }`}
-                >
-                  {isAuthenticated ? (
-                    <button
-                      className="flex flex-row items-center justify-center gap-4 w-full px-4 py-3"
-                      onClick={() =>
-                        setMobileView(
-                          mobileView === "navlinks" ? "dropdown" : "navlinks"
-                        )
-                      }
+            {/* Main Section */}
+            <div className="flex flex-col justify-center items-center w-full h-full px-4 relative space-y-6">
+              {/* Navlinks */}
+              <div
+                className={`transition-all duration-500 ease-in-out ${
+                  mobileView === "navlinks"
+                    ? "opacity-100 translate-y-0 pointer-events-auto"
+                    : "opacity-0 -translate-y-6 pointer-events-none"
+                } mt-32`}
+              >
+                <div className="space-y-6 text-center">
+                  {links.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={`/${link.href}`}
+                      onClick={() => {
+                        setIsMenuOpen(false); // 👈 close drawer
+                        setMobileView("navlinks"); // reset view
+                      }}
                     >
-                      <Image
-                        src={profileImage}
-                        alt="Profile"
-                        width={40}
-                        height={40}
-                        className="w-10 h-10 rounded-full object-cover border-2 border-white/30"
-                      />
-                      <p className="text-white font-medium">{displayName}</p>
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        className={`text-white transition-transform duration-300 ${
-                          mobileView === "dropdown" ? "rotate-180" : ""
-                        }`}
-                      >
-                        <path
-                          d="M6 9L12 15L18 9"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  ) : (
-                    <Link href="/login">
-                      <button className="w-full text-center text-white font-medium py-2 text-xl">
-                        Login
-                      </button>
+                      <span className="py-3 block text-white text-lg flex items-center justify-center gap-3">
+                        {link.name}
+                      </span>
                     </Link>
-                  )}
+                  ))}
                 </div>
+              </div>
 
-                {/* Dropdown */}
-                <div
-                  className={`w-full transition-all duration-500 ease-in-out ${
-                    mobileView === "dropdown"
-                      ? "opacity-100 -translate-y-[240px]"
-                      : "opacity-0 -translate-y-4 pointer-events-none"
-                  }`}
-                >
-                  <div className="space-y-4 text-center">
-                    {dropdownItems.map((item) =>
-                      item.isAction ? (
-                        <div
-                          key={item.href}
-                          className="py-3 text-white text-lg cursor-pointer flex items-center justify-center gap-3"
-                          onClick={handleLogout}
-                        >
+              {/* Nameplate */}
+              <div
+                className={`transition-all duration-500 ease-in-out ${
+                  mobileView === "dropdown"
+                    ? "-translate-y-[240px]"
+                    : "translate-y-0"
+                }`}
+              >
+                {isAuthenticated ? (
+                  <button
+                    className="flex flex-row items-center justify-center gap-4 w-full px-4 py-3"
+                    onClick={() =>
+                      setMobileView(
+                        mobileView === "navlinks" ? "dropdown" : "navlinks"
+                      )
+                    }
+                  >
+                    <Image
+                      src={profileImage}
+                      alt="Profile"
+                      width={40}
+                      height={40}
+                      className="w-10 h-10 rounded-full object-cover border-2 border-white/30"
+                    />
+                    <p className="text-white font-medium">{displayName}</p>
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className={`text-white transition-transform duration-300 ${
+                        mobileView === "dropdown" ? "rotate-180" : ""
+                      }`}
+                    >
+                      <path
+                        d="M6 9L12 15L18 9"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                ) : (
+                  <Link href="/login">
+                    <button className="w-full text-center text-white font-medium py-2 text-xl">
+                      Login
+                    </button>
+                  </Link>
+                )}
+              </div>
+
+              {/* Dropdown */}
+              <div
+                className={`w-full transition-all duration-500 ease-in-out ${
+                  mobileView === "dropdown"
+                    ? "opacity-100 -translate-y-[240px]"
+                    : "opacity-0 -translate-y-4 pointer-events-none"
+                }`}
+              >
+                <div className="space-y-4 text-center">
+                  {dropdownItems.map((item) =>
+                    item.isAction ? (
+                      <div
+                        key={item.href}
+                        className="py-3 text-white text-lg cursor-pointer flex items-center justify-center gap-3"
+                        onClick={() => {
+                          handleLogout();
+                          setIsMenuOpen(false); // 👈 close drawer
+                          setMobileView("navlinks");
+                        }}
+                      >
+                        <i className={`bi ${item.icon} text-xl`} />{" "}
+                        {/* icon added */}
+                        {item.label}
+                      </div>
+                    ) : (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => {
+                          setIsMenuOpen(false); // 👈 close drawer
+                          setMobileView("navlinks");
+                        }}
+                      >
+                        <div className="py-3 text-white text-lg cursor-pointer flex items-center justify-center gap-3">
                           <i className={`bi ${item.icon} text-xl`} />{" "}
                           {/* icon added */}
                           {item.label}
                         </div>
-                      ) : (
-                        <Link key={item.href} href={item.href}>
-                          <div className="py-3 text-white text-lg cursor-pointer flex items-center justify-center gap-3">
-                            <i className={`bi ${item.icon} text-xl`} />{" "}
-                            {/* icon added */}
-                            {item.label}
-                          </div>
-                        </Link>
-                      )
-                    )}
-                  </div>
+                      </Link>
+                    )
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
-
+      </div>
 
       {/* Rest of the desktop code remains unchanged */}
       <div className="flex items-center justify-between w-full">
@@ -543,92 +565,128 @@ const arrowColor: Record<UserRole, string> = {
           ))}
         </div>
 
-  <div className="dropdown relative flex items-center gap-4">
+        <div className="dropdown relative flex items-center gap-4">
           {/* Cart */}
-        {!hideCart && (
-          <div
-            className="relative"
-            onMouseEnter={handleCartMouseEnter}
-            onMouseLeave={handleCartMouseLeave}
-          >
-            <button
-              onClick={() => setCartOpen((v) => !v)}
-              className={`flex items-center gap-2 cartBtn p-2 rounded-md bg-white/10 hover:bg-white/20 ${
-                bounce ? "animate-bounce" : ""
-              }`}
+          {!hideCart && (
+            <div
+              className="relative"
+              onMouseEnter={handleCartMouseEnter}
+              onMouseLeave={handleCartMouseLeave}
             >
-              <i className="bi bi-cart3 text-white" />
-              <span className="sr-only">Cart</span>
-              {totalCartItems > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs px-2 py-0.5">
-                  {totalCartItems}
-                </span>
-              )}
-            </button>
-
-            {cartOpen && (
-              <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-lg z-30 p-4 text-sm">
-                <div className="flex items-center justify-between font-medium mb-3">
-                  <div>Cart</div>
-                  <div className="text-xs text-gray-500">{totalCartItems} items</div>
-                </div>
-
-                {cartState.loading ? (
-                  <div className="text-gray-500">Loading...</div>
-                ) : cartItemsNav.length === 0 ? (
-                  <div className="text-gray-500">Your cart is empty.</div>
-                ) : (
-                  <div className="divide-y max-h-64 overflow-auto">
-                    {cartItemsNav.map((it) => (
-                      <div key={it.id} className="py-3 flex items-center gap-4">
-                        <div className="w-14 h-14 rounded overflow-hidden bg-gray-100 flex-shrink-0">
-                          <img src={it.image ?? '/placeholder-product.jpg'} alt={it.title ?? 'cart item'} className="w-full h-full object-cover" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="truncate font-medium">{it.title}</div>
-                            {/* Remove button: stops propagation so dropdown stays open */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // dispatch removeCartItem thunk
-                                dispatch(removeCartItem({ cartItemId: it.id }));
-                              }}
-                              aria-label={`Remove ${it.title} from cart`}
-                              title="Remove"
-                              className="ml-2 text-gray-400 hover:text-red-500 focus:outline-none"
-                              style={{ background: 'transparent', border: 'none' }}
-                            >
-                              <i className="bi bi-x-lg" />
-                            </button>
-                          </div>
-                          <div className="text-xs text-gray-500">Code: <span className="text-gray-700">{it.code ?? '-'}</span></div>
-                          <div className="text-xs text-gray-500">Qty: {it.qty}</div>
-                        </div>
-                        <div className="text-sm font-semibold">
-                          PKR {(it.price * it.qty).toLocaleString()}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              <button
+                onClick={() => setCartOpen((v) => !v)}
+                className={`flex items-center gap-2 cartBtn p-2 rounded-md bg-white/10 hover:bg-white/20 ${
+                  bounce ? "animate-bounce" : ""
+                }`}
+              >
+                <i className="bi bi-cart3 text-white" />
+                <span className="sr-only">Cart</span>
+                {totalCartItems > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs px-2 py-0.5">
+                    {totalCartItems}
+                  </span>
                 )}
+              </button>
 
-                <div className="border-t mt-3 pt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm text-gray-600">Subtotal</div>
-                    <div className="text-sm font-semibold">
-                      PKR {cartItemsNav.reduce((s, i) => s + i.price * i.qty, 0).toLocaleString()}
+              {cartOpen && (
+                <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-lg z-30 p-4 text-sm">
+                  <div className="flex items-center justify-between font-medium mb-3">
+                    <div>Cart</div>
+                    <div className="text-xs text-gray-500">
+                      {totalCartItems} items
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => router.push('/cart')} className="flex-1 bg-primary text-white py-2 rounded-lg font-medium">Go to Cart</button>
-                    <button onClick={() => router.push('/checkout')} className="flex-1 border border-primary text-primary py-2 rounded-lg font-medium">Checkout</button>
+
+                  {cartState.loading ? (
+                    <div className="text-gray-500">Loading...</div>
+                  ) : cartItemsNav.length === 0 ? (
+                    <div className="text-gray-500">Your cart is empty.</div>
+                  ) : (
+                    <div className="divide-y max-h-64 overflow-auto">
+                      {cartItemsNav.map((it) => (
+                        <div
+                          key={it.id}
+                          className="py-3 flex items-center gap-4"
+                        >
+                          <div className="w-14 h-14 rounded overflow-hidden bg-gray-100 flex-shrink-0">
+                            <img
+                              src={it.image ?? "/placeholder-product.jpg"}
+                              alt={it.title ?? "cart item"}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="truncate font-medium">
+                                {it.title}
+                              </div>
+                              {/* Remove button: stops propagation so dropdown stays open */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // dispatch removeCartItem thunk
+                                  dispatch(
+                                    removeCartItem({ cartItemId: it.id })
+                                  );
+                                }}
+                                aria-label={`Remove ${it.title} from cart`}
+                                title="Remove"
+                                className="ml-2 text-gray-400 hover:text-red-500 focus:outline-none"
+                                style={{
+                                  background: "transparent",
+                                  border: "none",
+                                }}
+                              >
+                                <i className="bi bi-x-lg" />
+                              </button>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Code:{" "}
+                              <span className="text-gray-700">
+                                {it.code ?? "-"}
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Qty: {it.qty}
+                            </div>
+                          </div>
+                          <div className="text-sm font-semibold">
+                            PKR {(it.price * it.qty).toLocaleString()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="border-t mt-3 pt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-sm text-gray-600">Subtotal</div>
+                      <div className="text-sm font-semibold">
+                        PKR{" "}
+                        {cartItemsNav
+                          .reduce((s, i) => s + i.price * i.qty, 0)
+                          .toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => router.push("/cart")}
+                        className="flex-1 bg-primary text-white py-2 rounded-lg font-medium"
+                      >
+                        Go to Cart
+                      </button>
+                      <button
+                        onClick={() => router.push("/checkout")}
+                        className="flex-1 border border-primary text-primary py-2 rounded-lg font-medium"
+                      >
+                        Checkout
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
 
           {isAuthenticated || session ? (
             <div
@@ -707,14 +765,15 @@ const arrowColor: Record<UserRole, string> = {
                   {dropdownOverride && dropdownOverride.length ? (
                     // Render only overridden items (e.g., Home, Logout) for panels
                     <div>
-                      { (dropdownOverride as any).map((item: any) => (
+                      {(dropdownOverride as any).map((item: any) =>
                         item.isAction ? (
                           <div
                             key={item.href}
                             onClick={handleLogout}
                             className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 cursor-pointer"
                           >
-                            <i className="bi bi-box-arrow-right"></i> {item.label}
+                            <i className="bi bi-box-arrow-right"></i>{" "}
+                            {item.label}
                           </div>
                         ) : (
                           <Link key={item.href} href={item.href}>
@@ -723,7 +782,7 @@ const arrowColor: Record<UserRole, string> = {
                             </div>
                           </Link>
                         )
-                      ))}
+                      )}
                     </div>
                   ) : (
                     <>
@@ -753,12 +812,14 @@ const arrowColor: Record<UserRole, string> = {
                       <div className="border-t my-1"></div>
                       <Link href="/my-listings">
                         <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                          <i className="bi bi-card-list text-gray-600"></i> My Listings
+                          <i className="bi bi-card-list text-gray-600"></i> My
+                          Listings
                         </div>
                       </Link>
                       <Link href="/my-applications">
                         <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                          <i className="bi bi-file-earmark-text text-gray-600"></i> My Applications
+                          <i className="bi bi-file-earmark-text text-gray-600"></i>{" "}
+                          My Applications
                         </div>
                       </Link>
                       <Link href="/my-orders">
@@ -768,7 +829,8 @@ const arrowColor: Record<UserRole, string> = {
                       </Link>
                       <Link href="/notifications">
                         <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                          <i className="bi bi-bell text-gray-600"></i> Notifications
+                          <i className="bi bi-bell text-gray-600"></i>{" "}
+                          Notifications
                         </div>
                       </Link>
                       <div className="border-t my-1"></div>
@@ -795,14 +857,14 @@ const arrowColor: Record<UserRole, string> = {
               </button>
             </Link>
           )}
-                </div>
-            </div>
-            <MobileCartModal
-  isOpen={isCartModalOpen}
-  onClose={() => setIsCartModalOpen(false)}
-/>
-        </nav>
-    );
+        </div>
+      </div>
+      <MobileCartModal
+        isOpen={isCartModalOpen}
+        onClose={() => setIsCartModalOpen(false)}
+      />
+    </nav>
+  );
 };
 
 export default Navbar;

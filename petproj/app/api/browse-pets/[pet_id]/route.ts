@@ -3,6 +3,20 @@ import { createClient } from "../../../../db/index";
 
 // ... existing imports ...
 
+const petTypeMap: Record<number, string> = {
+    1: "Dog",
+    2: "Cat",
+    3: "Bird",
+    4: "Fish",
+    5: "Rabbit",
+    6: "Hamster",
+    7: "Guinea Pig",
+    8: "Turtle",
+    11: "Horse",
+    15: "Mouse",
+    49: "Other"
+};
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     const pet_id = req.nextUrl.pathname.split('/').pop(); 
@@ -123,7 +137,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         const response: any = {
             pet_id: pet.pet_id,
             pet_name: pet.pet_name,
-            pet_type: pet.pet_type,
+            pet_type: petTypeMap[pet.pet_type] || "Unknown", 
             pet_breed: pet.pet_breed,
             city: pet.city,
             area: pet.area,

@@ -142,18 +142,40 @@ const NotificationsPage = () => {
   return (
     <>
       
-      <div className="container min-h-screen mx-auto p-4 mb-60 max-w-3xl">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-          {notifications.some(n => !n.is_read) && (
-            <button 
-              onClick={handleMarkAllAsRead}
-              className="text-primary-600 hover:text-primary-800 text-sm font-medium transition-colors"
-            >
-              Mark all as read
-            </button>
-          )}
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+  {/* Notifications Header */}
+  <header className="bg-white text-primary border border-1 border-primary p-8 rounded-2xl shadow-lg mb-10">
+    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row items-center gap-6">
+        <div className="bg-primary flex-shrink-0 w-16 h-16 rounded-xl flex items-center justify-center shadow-lg">
+          <img className="p-3" src="/favicon-dark.png" alt="paltuu logo" />
         </div>
+
+        <div className="text-center md:text-left">
+          <h1 className="text-3xl text-black md:text-4xl font-bold mb-2">
+            Notifications
+          </h1>
+          <p className="text-black text-lg">
+            Stay updated with your latest activities and alerts
+          </p>
+        </div>
+      </div>
+      
+      {notifications.some(n => !n.is_read) && (
+        <button 
+          onClick={handleMarkAllAsRead}
+          className="px-5 py-2.5 bg-primary text-white rounded-full hover:bg-primary/90 transition-all flex items-center gap-2 font-small shadow-md whitespace-nowrap"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          Mark all as read
+        </button>
+      )}
+    </div>
+  </header>
+
+
 
         {loading ? (
           <div className="space-y-3">

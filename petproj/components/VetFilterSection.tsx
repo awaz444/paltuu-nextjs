@@ -162,7 +162,7 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
             )}
 
             {/* Floating Filter Button for Mobile */}
-            <div className="fixed bottom-4 left-4 md:hidden z-40">
+            <div className="fixed bottom-4 left-4 md:hidden z-10">
                 <button
                     onClick={() => setIsModalOpen(true)}
                     className="bg-white text-primary p-2 rounded-xl shadow-lg border-2 border-transparent border-primary hover:scale-105 transition-all duration-300 flex items-center justify-center">

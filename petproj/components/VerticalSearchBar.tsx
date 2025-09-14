@@ -30,7 +30,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
     onSearchAction,
 }) => {
 
-    useSetPrimaryColor();
+    
 
     const [selectedSex, setSelectedSex] = useState("");
     const [minAge, setMinAge] = useState("");

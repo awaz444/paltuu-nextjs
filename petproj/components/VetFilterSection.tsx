@@ -23,7 +23,7 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
     const { qualifications } = useSelector((state: RootState) => state.qualifications);
     const { categories } = useSelector((state: RootState) => state.categories);
 
-    useSetPrimaryColor();
+    
 
     // Set default city to Karachi (assuming city_id for Karachi is "1")
     const [selectedCity, setSelectedCity] = useState("1");

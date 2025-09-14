@@ -74,7 +74,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     const [llmSummary, setLlmSummary] = useState<string | null>(null);
     const [summaryLoading, setSummaryLoading] = useState(false);
 
-    useSetPrimaryColor();
+    
 
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);

@@ -12,9 +12,12 @@ import {
   BadgePercent,
 } from "lucide-react";
 import Navbar from "@/components/navbar";
+import { useDispatch } from "react-redux";
+import { clearCart } from "@/app/store/slices/cartSlice";
 import { useRouter } from "next/navigation";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
 import { FaUniversity } from "react-icons/fa";
+import { useCartProtection } from "@/hooks/useCartProtection";
 
 interface CartItem {
   id: number;
@@ -35,6 +38,13 @@ const CheckoutPage = () => {
   const [promoError, setPromoError] = useState("");
   const [placing, setPlacing] = useState(false);
   const router = useRouter();
+  const dispatch = useDispatch();
+
+  // Cart protection - redirect if cart is empty
+  const { isChecking, hasItems } = useCartProtection({
+    redirectTo: '/cart',
+    showMessage: true
+  });
 
   // Customer / Shipping form state
   const [email, setEmail] = useState("");
@@ -79,9 +89,23 @@ const CheckoutPage = () => {
     setPromoError("");
   };
 
+  // Show loading while checking cart
+  if (isChecking) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Don't render if cart is empty (user will be redirected)
+  if (!hasItems) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      
+
       <div className="bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen py-10 px-4 md:px-12 lg:px-20">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
@@ -434,6 +458,17 @@ const CheckoutPage = () => {
                     }
 
                     const order = data.order;
+                    // clear client-side cart (server already clears cart_items) so UI updates immediately
+                    try {
+                      dispatch(clearCart() as any);
+                    } catch (e) {
+                      // ignore dispatch errors in case redux isn't wired in this context
+                      console.warn('Failed to clear client cart', e);
+                    }
+                    // also clear local cart state used on this page
+                    setCart(null);
+                    setCartItems([]);
+
                     // redirect to order confirmed with order number
                     router.push(`/order-confirmed?orderNumber=${encodeURIComponent(order.order_number)}`);
                   } catch (err) {

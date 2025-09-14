@@ -3,15 +3,16 @@
 import Link from "next/link";
 import "./navbar.css";
 import Image from "next/image";
-import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from 'react-redux';
+import { fetchCart } from "@/app/store/slices/cartSlice";
 import type { RootState, AppDispatch } from '@/app/store/store';
 import { useSession, signOut } from "next-auth/react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { updateCartItem, removeCartItem } from '@/app/store/slices/cartSlice';
+import MobileCartModal from "./MobileCartModal";
 import "bootstrap-icons/font/bootstrap-icons.css";
-
 interface OverrideLink { name: string; href: string }
 interface OverrideDropdownItem { href: string; label: string;icon: string; isAction?: boolean }
 
@@ -32,10 +33,11 @@ const Navbar = ({
   const [mobileView, setMobileView] = useState("navlinks"); // 'navlinks' or 'dropdown'
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
-
+  const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleMouseEnter = () => {  
+
+  const handleMouseEnter = () => {
     if (hideTimeoutRef.current) {
       clearTimeout(hideTimeoutRef.current);
       hideTimeoutRef.current = null;
@@ -55,7 +57,7 @@ const Navbar = ({
       }
     };
   }, []);
-  
+
   // Use next-auth's useSession hook for Google login
   const { data: session, status } = useSession();
 
@@ -207,7 +209,10 @@ const arrowColor: Record<UserRole, string> = {
 
   const cartItemsNav = cartState.items ?? [];
   const cartLoading = cartState.loading ?? false;
-
+  // Fetch cart on mount
+  useEffect(() => {
+    dispatch(fetchCart());
+  }, [dispatch]);
   // Bounce animation for cart button
   const [bounce, setBounce] = useState(false);
   const prevTotalRef = useRef(0);
@@ -311,15 +316,45 @@ const arrowColor: Record<UserRole, string> = {
 
   return (
     <nav className="navbar" style={navbarStyle}>
-      {/* Hamburger Menu Button (Mobile Only) */}
-      <button
-        className="hamburger md:hidden"
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
-      >
-        <div className="hamburger-line" />
-        <div className="hamburger-line" />
-        <div className="hamburger-line" />
-      </button>
+  {/* Mobile Navbar Top Row */}
+  <div className="flex items-center justify-between w-full md:hidden px-4 py-3">
+    {/* Left: Hamburger */}
+    <button
+      className="hamburger"
+      onClick={() => setIsMenuOpen(!isMenuOpen)}
+    >
+      <div className="hamburger-line" />
+      <div className="hamburger-line" />
+      <div className="hamburger-line" />
+    </button>
+
+    {/* Center: Logo */}
+    <Link href={logoHref || "/browse-pets"} className="logo">
+      <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
+    </Link>
+
+    {/* Right: Cart */}
+
+  {!hideCart && (
+    <button
+      onClick={() => setIsCartModalOpen(true)}
+      className={`absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md bg-white/10 hover:bg-white/20 ${
+        bounce ? "animate-bounce" : ""
+      }`}
+    >
+      <i className="bi bi-cart3 text-white text-lg" />
+      {totalCartItems > 0 && (
+        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs px-1.5 py-0.5">
+          {totalCartItems}
+        </span>
+      )}
+    </button>
+  )}
+
+  </div>
+
+  {/* Mobile Drawer + Backdrop remains unchanged... */}
+
 
       {/* Mobile Drawer + Backdrop */}
 <div
@@ -485,7 +520,7 @@ const arrowColor: Record<UserRole, string> = {
       {/* Rest of the desktop code remains unchanged */}
       <div className="flex items-center justify-between w-full">
         {/* Logo */}
-        <div className="logo">
+        <div className="logo hidden md:block">
           <Link href={logoHref || "/browse-pets"}>
             <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
           </Link>
@@ -550,7 +585,23 @@ const arrowColor: Record<UserRole, string> = {
                           <img src={it.image ?? '/placeholder-product.jpg'} alt={it.title ?? 'cart item'} className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="truncate font-medium">{it.title}</div>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="truncate font-medium">{it.title}</div>
+                            {/* Remove button: stops propagation so dropdown stays open */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // dispatch removeCartItem thunk
+                                dispatch(removeCartItem({ cartItemId: it.id }));
+                              }}
+                              aria-label={`Remove ${it.title} from cart`}
+                              title="Remove"
+                              className="ml-2 text-gray-400 hover:text-red-500 focus:outline-none"
+                              style={{ background: 'transparent', border: 'none' }}
+                            >
+                              <i className="bi bi-x-lg" />
+                            </button>
+                          </div>
                           <div className="text-xs text-gray-500">Code: <span className="text-gray-700">{it.code ?? '-'}</span></div>
                           <div className="text-xs text-gray-500">Qty: {it.qty}</div>
                         </div>
@@ -580,7 +631,7 @@ const arrowColor: Record<UserRole, string> = {
         )}
 
           {isAuthenticated || session ? (
-            <div 
+            <div
               className="relative group"
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
@@ -599,7 +650,7 @@ const arrowColor: Record<UserRole, string> = {
                     className="w-10 h-10 rounded-full object-cover border-2 border-white/30 transition-all duration-300"
                   />
                   {isVerified && (
-                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
+                    <div className="absolute -bottom-1 -right-1 rounded-full p-0.5">
                       <i className="bi bi-patch-check-fill text-amber-500 text-xs" />
                     </div>
                   )}
@@ -642,7 +693,7 @@ const arrowColor: Record<UserRole, string> = {
                   </svg>
                 </div>
               </button>
-              
+
               {(isAuthenticated || session) && isDropdownOpen && (
                 <div
                   className="dropdown-menu absolute right-0 bg-white shadow-lg z-20 rounded-2xl py-2 text-sm font-medium"
@@ -746,6 +797,10 @@ const arrowColor: Record<UserRole, string> = {
           )}
                 </div>
             </div>
+            <MobileCartModal
+  isOpen={isCartModalOpen}
+  onClose={() => setIsCartModalOpen(false)}
+/>
         </nav>
     );
 };

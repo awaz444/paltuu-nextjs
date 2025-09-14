@@ -11,7 +11,7 @@ import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 
 const VetSpecializationsForm: React.FC = () => {
 
-  useSetPrimaryColor();
+  
 
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const router = useRouter();

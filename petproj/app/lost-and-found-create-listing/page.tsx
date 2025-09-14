@@ -19,7 +19,7 @@ const LostFoundListingPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
-    useSetPrimaryColor();
+    
     const router = useRouter();
     // **Retrieve user ID from localStorage**
     useEffect(() => {

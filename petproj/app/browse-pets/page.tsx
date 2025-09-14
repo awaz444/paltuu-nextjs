@@ -9,7 +9,7 @@ import "./styles.css";
 import { MoonLoader } from "react-spinners";
 
 export default function BrowsePets() {
-    useSetPrimaryColor();
+    
 
     const [pets, setPets] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -142,9 +142,9 @@ export default function BrowsePets() {
     });
 
     // Commenting out the tab toggle function
-    const handleTabToggle = (tab: "adopt" | "buy") => {
-        setActiveTab(tab);
-    };
+    // const handleTabToggle = (tab: "adopt" | "buy") => {
+    //     setActiveTab(tab);
+    // };
 
     const [primaryColor, setPrimaryColor] = useState("#A00000");
 
@@ -181,7 +181,7 @@ export default function BrowsePets() {
                         <div className="w-full">
                             {/* Commenting out the tab switch UI */}
                             <div className="tab-switch-container relative">
-                                <div
+                                {/* <div
                                     className="tab-switch-slider absolute w-1/2 h-full transition-transform duration-300 rounded-lg bg-primary"
                                     style={{
                                         transform:
@@ -189,8 +189,8 @@ export default function BrowsePets() {
                                                 ? "translateX(0)"
                                                 : "translateX(100%)",
                                     }}
-                                />
-                                <div
+                                /> */}
+                                {/* <div
                                     className={`tab ${
                                         activeTab === "adopt" ? "active" : ""
                                     }`}
@@ -203,7 +203,7 @@ export default function BrowsePets() {
                                     }`}
                                     onClick={() => setActiveTab("buy")}>
                                     Buy
-                                </div>
+                                </div> */}
                             </div>
 
                             {loading ? (

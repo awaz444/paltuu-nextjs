@@ -10,7 +10,7 @@ const AdminUsersPage = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
 
-    useSetPrimaryColor();
+    
 
     // Fetch all users
     useEffect(() => {

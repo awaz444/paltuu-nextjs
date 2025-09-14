@@ -31,7 +31,7 @@ const getBase64 = (file: File): Promise<string> =>
   });
 
 function CreatePetList() {
-  useSetPrimaryColor();
+  
 
   const router = useRouter();
   const searchParams = useSearchParams();

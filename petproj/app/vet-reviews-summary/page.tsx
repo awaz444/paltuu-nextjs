@@ -1,320 +1,302 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/navbar";
-import { Spin, message } from "antd";
+import { message } from "antd";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import MoonLoader from "react-spinners/MoonLoader";
-
-import "./page.css";
+import { Check, X, Star, ThumbsUp, Clock } from "lucide-react";
 
 type Review = {
-    review_id: number;
-    user_id: number;
-    user_name: string;
-    user_image_url: string;
-    rating: number;
-    review_content: string;
-    review_date: string;
+  review_id: number;
+  user_id: number;
+  user_name: string;
+  user_image_url: string;
+  rating: number;
+  review_content: string;
+  review_date: string;
 };
 
 const ReviewsSummary = () => {
-    const [approvedReviews, setApprovedReviews] = useState<Review[]>([]);
-    const [pendingReviews, setPendingReviews] = useState<Review[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-    const [vetId, setVetId] = useState<number | null>(null);
+  const [approvedReviews, setApprovedReviews] = useState<Review[]>([]);
+  const [pendingReviews, setPendingReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [vetId, setVetId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<"approved" | "pending">("approved");
+  const [primaryColor, setPrimaryColor] = useState("#A03048");
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-    useSetPrimaryColor();
+  
 
-    useEffect(() => {
-        const fetchVetIdAndReviews = async () => {
-            setLoading(true);
-            try {
-                // Fetch userId from localStorage
-                const userString = localStorage.getItem("user");
-                if (!userString) {
-                    throw new Error("User data not found in local storage");
-                }
+  useEffect(() => {
+    const rootStyles = getComputedStyle(document.documentElement);
+    const color = rootStyles.getPropertyValue("--primary-color").trim();
+    if (color) setPrimaryColor(color);
+  }, []);
 
-                const user = JSON.parse(userString);
-                const userId = user?.id;
-                if (!userId) {
-                    throw new Error("User ID is missing from the user object");
-                }
+  useEffect(() => {
+    const fetchVetIdAndReviews = async () => {
+      setLoading(true);
+      try {
+        const userString = localStorage.getItem("user");
+        if (!userString) throw new Error("User data not found in local storage");
 
-                // Fetch vetId using the userId
-                const vetResponse = await fetch(`/api/get-vet-id?user_id=${userId}`);
-                if (!vetResponse.ok) {
-                    throw new Error(
-                        `Failed to fetch vet ID. Status: ${vetResponse.status}`
-                    );
-                }
+        const user = JSON.parse(userString);
+        const userId = user?.id;
+        if (!userId) throw new Error("User ID is missing");
 
-                const { vet_id } = await vetResponse.json();
-                if (!vet_id) {
-                    throw new Error("Vet ID not found for the user");
-                }
-                // console.log(vet_id);
-                setVetId(vet_id);
+        const vetResponse = await fetch(`/api/get-vet-id?user_id=${userId}`);
+        if (!vetResponse.ok) throw new Error("Failed to fetch vet ID");
 
-                // Fetch approved and pending reviews
-                const approvedResponse = await fetch(
-                    `/api/vet-reviews/approved-reviews/${vet_id}`
-                );
-                if (!approvedResponse.ok) {
-                    throw new Error("Failed to fetch approved reviews");
-                }
-                const approvedData = await approvedResponse.json();
-                setApprovedReviews(approvedData);
+        const { vet_id } = await vetResponse.json();
+        setVetId(vet_id);
 
-                const pendingResponse = await fetch(
-                    `/api/vet-reviews/pending-reviews/${vet_id}`
-                );
-                if (!pendingResponse.ok) {
-                    throw new Error("Failed to fetch pending reviews");
-                }
-                const pendingData = await pendingResponse.json();
-                setPendingReviews(pendingData);
-            } catch (error: unknown) {
-                if (error instanceof Error) {
-                    setError(error.message);
-                    message.error(error.message);
-                } else {
-                    setError("An unknown error occurred");
-                    message.error("An unknown error occurred");
-                }
-            } finally {
-                setLoading(false);
-            }
-        };
+        const approvedResponse = await fetch(`/api/vet-reviews/approved-reviews/${vet_id}`);
+        if (!approvedResponse.ok) throw new Error("Failed to fetch approved reviews");
+        setApprovedReviews(await approvedResponse.json());
 
-        fetchVetIdAndReviews();
-    }, []);
-
-    const acceptReview = async (review_id: number) => {
-        try {
-            const response = await fetch(
-                `/api/vet-approve-review/${review_id}`,
-                { method: "POST" }
-            );
-
-            if (response.ok) {
-                message.success("Review approved successfully!");
-                setPendingReviews((prev) =>
-                    prev.filter((review) => review.review_id !== review_id)
-                );
-                const approvedReview = pendingReviews.find(
-                    (review) => review.review_id === review_id
-                );
-                if (approvedReview) {
-                    setApprovedReviews((prev) => [...prev, approvedReview]);
-                }
-            } else {
-                const data = await response.json();
-                throw new Error(data.error || "Failed to approve review");
-            }
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                message.error("Error approving review: " + error.message);
-            } else {
-                message.error("An unknown error occurred");
-            }
+        const pendingResponse = await fetch(`/api/vet-reviews/pending-reviews/${vet_id}`);
+        if (!pendingResponse.ok) throw new Error("Failed to fetch pending reviews");
+        setPendingReviews(await pendingResponse.json());
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setError(error.message);
+          message.error(error.message);
         }
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const rejectReview = async (review_id: number) => {
-        try {
-            const response = await fetch(
-                `/api/vet-reject-review/${review_id}`,
-                { method: "DELETE" }
-            );
+    fetchVetIdAndReviews();
+  }, []);
 
-            if (response.ok) {
-                message.success("Review rejected and deleted successfully!");
-                setPendingReviews((prev) =>
-                    prev.filter((review) => review.review_id !== review_id)
-                );
-            } else {
-                const data = await response.json();
-                throw new Error(data.error || "Failed to reject review");
-            }
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                message.error("Error rejecting review: " + error.message);
-            } else {
-                message.error("An unknown error occurred");
-            }
-        }
-    };
+  const acceptReview = async (review_id: number) => {
+    try {
+      const response = await fetch(`/api/vet-approve-review/${review_id}`, { method: "POST" });
 
-    const renderStars = (rating: number) =>
-        Array(rating)
-            .fill(null)
-            .map((_, idx) => (
-                <svg
-                    key={idx}
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="w-5 h-5 text-[#cc8800] inline-block"
-                >
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                </svg>
-            ));
+      if (response.ok) {
+        message.success("Review approved successfully!");
+        setPendingReviews((prev) => prev.filter((review) => review.review_id !== review_id));
+        const approvedReview = pendingReviews.find((review) => review.review_id === review_id);
+        if (approvedReview) setApprovedReviews((prev) => [...prev, approvedReview]);
+      } else {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to approve review");
+      }
+    } catch (error: unknown) {
+      message.error("Error approving review");
+    }
+  };
 
-    const renderReviewCard = (review: Review, isPending: boolean = false) => (
-        <div
-            key={review.review_id}
-            className="flex items-start relative bg-white p-6 mb-6 rounded-2xl shadow-sm border border-gray-200 hover:border-primary w-4/5 max-w-3xl"
-        >
-            {/* User Image - Always Visible */}
-            <img
-                src={review.user_image_url || "/placeholder.jpg"}
-                alt={review.user_name}
-                className="w-16 h-16 object-cover rounded-full mr-4"
-            />
+  const rejectReview = async (review_id: number) => {
+    try {
+      const response = await fetch(`/api/vet-reject-review/${review_id}`, { method: "DELETE" });
 
-            <div className="flex-grow">
-                <div className="flex items-center justify-between">
-                    {/* User Name - Always Visible */}
-                    <span className="font-bold text-lg text-primary mr-2">
-                        {review.user_name}
-                        {isPending && (
-                            <span className="text-sm text-gray-500 ml-2">
-                                (Pending Approval)
-                            </span>
-                        )}
-                    </span>
+      if (response.ok) {
+        message.success("Review rejected and deleted!");
+        setPendingReviews((prev) => prev.filter((review) => review.review_id !== review_id));
+      } else {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to reject review");
+      }
+    } catch (error: unknown) {
+      message.error("Error rejecting review");
+    }
+  };
 
-                    {/* Action Buttons - Always Visible */}
-                    {isPending && (
-                        <div className="flex items-center space-x-2">
-                            <button
-                                onClick={() => acceptReview(review.review_id)}
-                                className="hover:opacity-75"
-                                aria-label="Accept Review"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                    className="w-6 h-6 text-primary"
-                                >
-                                    <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 22 6 20.6 4.6z" />
-                                </svg>
-                            </button>
-                            <button
-                                onClick={() => rejectReview(review.review_id)}
-                                className="hover:opacity-75"
-                                aria-label="Reject Review"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                    className="w-6 h-6 text-primary"
-                                >
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13l-1.41 1.41L12 13.41 8.41 16.41 7 15l3.59-3.59L7 8.41 8.41 7l3.59 3.59L15.59 7 17 8.41l-3.59 3.59L17 15z" />
-                                </svg>
-                            </button>
-                        </div>
-                    )}
-                </div>
+  const renderStars = (rating: number) =>
+    Array(5)
+      .fill(null)
+      .map((_, idx) => (
+        <Star
+          key={idx}
+          className={`w-5 h-5 ${idx < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
+        />
+      ));
 
-                {/* Blurred Content for Pending Reviews */}
-                <div
-                    className={isPending ? "filter blur-sm transition-all" : ""}
-                    style={isPending ? { userSelect: "none" } : {}}
-                >
-                    {/* Rating Stars */}
-                    <div className="stars" style={isPending ? { userSelect: "none" } : {}}>
-                        {renderStars(isPending ? 5 : review.rating)}
-                    </div>
+  const renderReviewCard = (review: Review, isPending: boolean = false) => (
+    <div
+      key={review.review_id}
+      className="flex items-start bg-white p-6 mb-6 rounded-2xl shadow-sm border border-gray-200 hover:border-primary/30 transition-all duration-200"
+    >
+      <img
+        src={review.user_image_url || "/placeholder.jpg"}
+        alt={review.user_name}
+        className="w-16 h-16 object-cover rounded-full mr-4 border-2 border-primary/20"
+      />
 
-                    {/* Review Content */}
-                    <p className="text-gray-600 mb-2" style={isPending ? { userSelect: "none" } : {}}>
-                        "{review.review_content}"
-                    </p>
+      <div className="flex-grow">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-gray-900">
+              {review.user_name}
+            </span>
+            {isPending && (
+              <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                Pending
+              </span>
+            )}
+            {!isPending && (
+              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                <ThumbsUp className="w-3 h-3" />
+                Approved
+              </span>
+            )}
+          </div>
 
-                    {/* Review Date */}
-                    <p className="text-sm text-gray-400" style={isPending ? { userSelect: "none" } : {}}>
-                        {new Date(review.review_date).toLocaleDateString()}
-                    </p>
-                </div>
-
-                {/* Semi-transparent overlay for pending reviews */}
-                {isPending && (
-                    <div className="absolute inset-0 bg-white bg-opacity-40 pointer-events-none" style={{ userSelect: "none" }} />
-                )}
-
+          {isPending && (
+            <div className="flex items-center space-x-2">
+              <button 
+                onClick={() => acceptReview(review.review_id)} 
+                className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              >
+                <Check className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => rejectReview(review.review_id)} 
+                className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
+          )}
         </div>
-    );
 
-    const [primaryColor, setPrimaryColor] = useState("#A03048");
-    useEffect(() => {
-        const rootStyles = getComputedStyle(document.documentElement);
-        const color = rootStyles.getPropertyValue("--primary-color").trim();
-        if (color) {
-            setPrimaryColor(color);
-        }
-    }, []);
+        <div className={isPending ? "filter blur-sm select-none" : ""}>
+          <div className="flex items-center gap-1 mb-2">
+            {renderStars(isPending ? 5 : review.rating)}
+            <span className="text-sm text-gray-500 ml-2">
+              {isPending ? "Rating hidden" : `${review.rating}/5`}
+            </span>
+          </div>
+          <p className="text-gray-700 mb-2 italic">"{review.review_content}"</p>
+          <p className="text-sm text-gray-500">
+            {new Date(review.review_date).toLocaleDateString()}
+          </p>
+        </div>
 
-    return (
-        <div>
-            
-            <div className="flex flex-col min-h-screen items-center mt-5 mx-3">
-                <h2 className="text-2xl font-bold mb-4 text-primary">Reviews Summary</h2>
-                {loading ? (
-                    <div className="flex justify-center items-center h-screen">
-                        <MoonLoader size={30} color={primaryColor} />
-                    </div>
-                ) : (
-                    <div className="w-full max-w-4xl">
-                        <div>
-                            <h3 className="text-xl font-semibold mb-3 text-center text-primary">
-                                Approved Reviews
-                            </h3>
-                            <div className="flex flex-col items-center">
-                                {approvedReviews.length > 0 ? (
-                                    approvedReviews.map((review) =>
-                                        renderReviewCard(review)
-                                    )
-                                ) : (
-                                    <p className="text-primary">
-                                        No approved reviews found.
-                                    </p>
-                                )}
-                            </div>
-                        </div>
+        {isPending && (
+          <div className="mt-3 p-2 bg-amber-50 rounded-lg text-xs text-amber-800">
+            Approve if you recall this client availing your services
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
-                        <div className="mt-8">
-                            <h3 className="text-xl font-semibold mb-1 text-center text-primary">
-                                Pending Reviews
-                            </h3>
-                            <h5 className="text-sm font-semibold text-center text-primary">
-                                Approve if you recall them availing your services.
-                            </h5>
-                            <h6 className="text-sm font-semibold mb-3 text-center text-primary">
-                                Once approved, the review will stay on your profile.
-                            </h6>
-                            <div className="flex flex-col items-center">
-                                {pendingReviews.length > 0 ? (
-                                    pendingReviews.map((review) =>
-                                        renderReviewCard(review, true)
-                                    )
-                                ) : (
-                                    <p className="text-primary mb-4">
-                                        No pending reviews found.
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <Navbar
+        linksOverride={[{ name: "Vet Panel", href: "vet-panel" }]}
+        dropdownOverride={[
+          { href: "/", label: "Home", icon: "bi bi-house-fill" },
+          { href: "/logout", label: "Logout", icon: "bi bi-box-arrow-right", isAction: true },
+        ]}
+        logoHref="/vet-panel"
+        hideCart
+      />
+
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+        <header className="bg-white border border-2 border-primary text-black p-8 rounded-2xl shadow-lg mb-10">
+          <div className="flex text-primary items-center gap-4">
+            <div className="bg-primary flex-shrink-0 w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center shadow-lg">
+              <img className="p-3" src="/favicon-dark.png" alt="paltuu logo" />
             </div>
-        </div>
-    );
+            <div>
+              <h1 className="text-black text-3xl font-bold">Reviews Summary</h1>
+              <p className="text-black mt-1">
+                Manage and approve reviews from your clients
+              </p>
+            </div>
+          </div>
+        </header>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <MoonLoader size={30} color={primaryColor} />
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl p-6 shadow-md">
+            {/* Enhanced Tab Switch with Smooth Transition */}
+            <div className="relative flex mb-8 bg-gray-100 p-1 rounded-full w-fit mx-auto">
+              {/* Sliding background indicator */}
+              <div 
+                className="absolute top-1 bottom-1 bg-primary rounded-full transition-all duration-300 ease-out"
+                style={{
+                  left: activeTab === 'approved' ? '2px' : '50%',
+                  width: 'calc(50% - 4px)',
+                }}
+              />
+              
+              <button
+                ref={el => { tabRefs.current[0] = el; }}
+                onClick={() => setActiveTab("approved")}
+                className={`relative z-10 px-6 py-3 rounded-full font-medium transition-colors duration-300 ${
+                  activeTab === "approved"
+                    ? "text-white"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Approved Reviews ({approvedReviews.length})
+              </button>
+              <button
+                ref={el => { tabRefs.current[0] = el; }}
+                onClick={() => setActiveTab("pending")}
+                className={`relative z-10 px-6 py-3 rounded-full font-medium transition-colors duration-300 ${
+                  activeTab === "pending"
+                    ? "text-white"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Pending Reviews ({pendingReviews.length})
+              </button>
+            </div>
+
+            {/* Content based on active tab */}
+            <div className="transition-opacity duration-300 ease-in-out">
+              {activeTab === "approved" ? (
+                <div>
+                  <h2 className="text-xl font-semibold text-center mb-6 text-gray-800">Approved Reviews</h2>
+                  {approvedReviews.length > 0 ? (
+                    <div className="space-y-4">
+                      {approvedReviews.map((review) => renderReviewCard(review))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 text-gray-500">
+                      <ThumbsUp className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                      <p>No approved reviews yet</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <h2 className="text-xl font-semibold text-center mb-6 text-gray-800">Pending Reviews</h2>
+                  <div className="bg-amber-50 p-4 rounded-lg mb-6 border border-amber-200">
+                    <p className="text-amber-800 text-sm text-center">
+                      Approve reviews only if you recall the client availing your services. 
+                      Once approved, the review will stay on your profile permanently.
+                    </p>
+                  </div>
+                  {pendingReviews.length > 0 ? (
+                    <div className="space-y-4">
+                      {pendingReviews.map((review) => renderReviewCard(review, true))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 text-gray-500">
+                      <Clock className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                      <p>No pending reviews at this time</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default ReviewsSummary;

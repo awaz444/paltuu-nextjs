@@ -21,7 +21,7 @@ const VerificationInfoContent  = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   const router = useRouter();
-  useSetPrimaryColor();
+  
 
   const searchParams = useSearchParams();
   const vetId = searchParams.get("vet_id");

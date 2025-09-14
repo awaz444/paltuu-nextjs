@@ -17,9 +17,9 @@ interface UserProfileData {
 }
 
 const AdminPanel = () => {
-    useSetPrimaryColor();
+    
 
-    useSetPrimaryColor();
+    
     const [userId, setUserId] = useState<string | null>(null);
     const [data, setData] = useState<UserProfileData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);

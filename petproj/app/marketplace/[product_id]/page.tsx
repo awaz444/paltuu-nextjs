@@ -91,7 +91,6 @@ interface Product {
 const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
     params,
 }) => {
-    
     const dispatch = useDispatch<AppDispatch>();
     const { product_id } = params;
     const [product, setProduct] = useState<Product | null>(null);
@@ -211,58 +210,35 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
         }
     }, []);
 
+    const handleAddToCart = async () => {
+        if (!product) return;
+        try {
+            setAddingToCart(true);
 
+            const sessionId = getOrCreateGuestSessionId();
 
-
-
-
-const handleAddToCart = async () => {
-  if (!product) return;
-  try {
-    setAddingToCart(true);
-
-    const sessionId = getOrCreateGuestSessionId();
-
-    await dispatch(
-      addToCartThunk({
-        sessionId,
-        productId: product.id,
-        variantId: selectedVariant?.variant_id ?? null,
-        quantity: quantity,
-        title: product.name,
-        price: selectedVariant?.price_override ?? product.price,
-        image: product.images[0] ?? null,
-      })
-    ).unwrap();
-
-    message.success({
-      content: `${product.name} added to cart!`,
-      icon: <CheckOutlined className="text-green-500" />,
-      className: "custom-message",
-    });
-  } catch (err: any) {
-    console.error("Add to cart error", err);
-    message.error(err?.message || "Failed to add to cart");
-  } finally {
-    setAddingToCart(false);
-  }
-};
-
-    const shareProduct = () => {
-        if (navigator.share) {
-            navigator
-                .share({
-                    title: product?.name,
-                    text: product?.description,
-                    url: window.location.href,
+            await dispatch(
+                addToCartThunk({
+                    sessionId,
+                    productId: product.id,
+                    variantId: selectedVariant?.variant_id ?? null,
+                    quantity: quantity,
+                    title: product.name,
+                    price: selectedVariant?.price_override ?? product.price,
+                    image: product.images[0] ?? null,
                 })
-                .catch(() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    message.success("Product link copied to clipboard!");
-                });
-        } else {
-            navigator.clipboard.writeText(window.location.href);
-            message.success("Product link copied to clipboard!");
+            ).unwrap();
+
+            message.success({
+                content: `${product.name} added to cart!`,
+                icon: <CheckOutlined className="text-green-500" />,
+                className: "custom-message",
+            });
+        } catch (err: any) {
+            console.error("Add to cart error", err);
+            message.error(err?.message || "Failed to add to cart");
+        } finally {
+            setAddingToCart(false);
         }
     };
 
@@ -297,7 +273,6 @@ const handleAddToCart = async () => {
     if (error) {
         return (
             <div className="min-h-screen bg-gray-50">
-                
                 <div className="text-center mt-20 px-4">
                     <div className="max-w-md mx-auto">
                         <div className="mb-6 text-6xl">😞</div>
@@ -327,7 +302,6 @@ const handleAddToCart = async () => {
     if (!product) {
         return (
             <div className="text-center mt-10 bg-gray-50 min-h-screen">
-                
                 <Title level={2} className="text-gray-700 pt-20">
                     Product not found
                 </Title>
@@ -343,7 +317,6 @@ const handleAddToCart = async () => {
 
     return (
         <>
-            
             <div className="product-details min-h-screen bg-gray-50 py-8 px-4 md:px-8">
                 <div className="mx-auto max-w-6xl">
                     {/* Back Button */}
@@ -554,46 +527,46 @@ const handleAddToCart = async () => {
                                             </div>
                                         )}
 
-                                    {/* Quantity Selector */}
-                                    <div className="flex items-center space-x-4 mt-4">
-                                        <span className="text-gray-700 font-medium">
-                                            Quantity:
-                                        </span>
-                                        <div className="flex items-center border border-gray-300 rounded-lg">
-                                            <button
-                                                onClick={() =>
-                                                    handleQuantityChange(
-                                                        quantity - 1
-                                                    )
-                                                }
-                                                className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-l-lg transition-colors"
-                                                disabled={quantity <= 1}>
-                                                -
-                                            </button>
-                                            <span className="px-4 py-2 font-medium border-x border-gray-300">
-                                                {quantity}
-                                            </span>
-                                            <button
-                                                onClick={() =>
-                                                    handleQuantityChange(
-                                                        quantity + 1
-                                                    )
-                                                }
-                                                className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-r-lg transition-colors"
-                                                disabled={
-                                                    quantity >=
-                                                    (selectedVariant?.stock ??
-                                                        product?.stock ??
-                                                        0)
-                                                }>
-                                                +
-                                            </button>
-                                        </div>
-                                    </div>
+                                   {/* Quantity Selector - Moved down */}
+<div className="flex items-center space-x-4 mt-6">
+    <span className="text-gray-700 font-medium">
+        Quantity:
+    </span>
+    <div className="flex items-center border border-gray-300 rounded-lg">
+        <button
+            onClick={() =>
+                handleQuantityChange(
+                    quantity - 1
+                )
+            }
+            className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-l-lg transition-colors"
+            disabled={quantity <= 1}>
+            -
+        </button>
+        <span className="px-4 py-2 font-medium border-x border-gray-300">
+            {quantity}
+        </span>
+        <button
+            onClick={() =>
+                handleQuantityChange(
+                    quantity + 1
+                )
+            }
+            className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-r-lg transition-colors"
+            disabled={
+                quantity >=
+                (selectedVariant?.stock ??
+                    product?.stock ??
+                    0)
+            }>
+            +
+        </button>
+    </div>
+</div>
                                 </div>
 
                                 {/* Action Buttons - Fixed at bottom */}
-                                <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                                <div className="flex flex-col sm:flex-row gap-4 mt-4">
                                     <button
                                         onClick={handleAddToCart}
                                         disabled={
@@ -625,11 +598,6 @@ const handleAddToCart = async () => {
                                             </>
                                         )}
                                     </button>
-
-                                    <button className="py-3 px-6 border-2 border-primary text-primary rounded-xl font-semibold text-lg hover:bg-primary hover:text-white transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-lg">
-                                        <DollarOutlined className="mr-2" />
-                                        Buy Now
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -659,63 +627,75 @@ const handleAddToCart = async () => {
                             </h2>
 
                             <div className="space-y-6 mb-8">
-  {product.reviews.length > 0 ? (
-    product.reviews.map((review) => (
-      <div
-        key={review.id}
-        className="p-6 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
-      >
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex items-center">
-            {review.user_avatar ? (
-              <img
-                src={review.user_avatar}
-                alt={review.user_name}
-                className="w-10 h-10 rounded-full mr-3"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                <span className="text-primary font-semibold">
-                  {review.user_name?.charAt(0) || 'U'}
-                </span>
-              </div>
-            )}
-            <div>
-              <h4 className="font-semibold text-gray-900">
-                {review.user_name}
-              </h4>
-              <div className="flex items-center mt-1">
-                <Rate
-                  disabled
-                  defaultValue={review.rating}
-                  className="text-yellow-400 text-sm"
-                />
-                {review.title && (
-                  <span className="ml-2 text-sm font-medium text-gray-700">
-                    {review.title}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          <span className="text-sm text-gray-500">
-            {formatListingDate(review.created_at)}
-          </span>
-        </div>
-        <p className="text-gray-700">{review.comment}</p>
-      </div>
-    ))
-  ) : (
-    <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-      <StarOutlined className="text-4xl text-gray-300 mb-3" />
-      <p className="text-gray-600">
-        No reviews yet. Be the first to review this product!
-      </p>
-    </div>
-  )}
-</div>
-
-                        
+                                {product.reviews.length > 0 ? (
+                                    product.reviews.map((review) => (
+                                        <div
+                                            key={review.id}
+                                            className="p-6 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className="flex items-center">
+                                                    {review.user_avatar ? (
+                                                        <img
+                                                            src={
+                                                                review.user_avatar
+                                                            }
+                                                            alt={
+                                                                review.user_name
+                                                            }
+                                                            className="w-10 h-10 rounded-full mr-3"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                                                            <span className="text-primary font-semibold">
+                                                                {review.user_name?.charAt(
+                                                                    0
+                                                                ) || "U"}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <h4 className="font-semibold text-gray-900">
+                                                            {review.user_name}
+                                                        </h4>
+                                                        <div className="flex items-center mt-1">
+                                                            <Rate
+                                                                disabled
+                                                                defaultValue={
+                                                                    review.rating
+                                                                }
+                                                                className="text-yellow-400 text-sm"
+                                                            />
+                                                            {review.title && (
+                                                                <span className="ml-2 text-sm font-medium text-gray-700">
+                                                                    {
+                                                                        review.title
+                                                                    }
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <span className="text-sm text-gray-500">
+                                                    {formatListingDate(
+                                                        review.created_at
+                                                    )}
+                                                </span>
+                                            </div>
+                                            <p className="text-gray-700">
+                                                {review.comment}
+                                            </p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        <StarOutlined className="text-4xl text-gray-300 mb-3" />
+                                        <p className="text-gray-600">
+                                            No reviews yet. Be the first to
+                                            review this product!
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

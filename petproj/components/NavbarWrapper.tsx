@@ -4,7 +4,6 @@ import { usePathname } from "next/navigation";
 import Navbar from "@/components/navbar";
 
 const hideNavbarRoutes = [
-  "/",
   "/login",
   "/success",
   "/sign-up",

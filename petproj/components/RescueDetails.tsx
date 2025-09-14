@@ -38,7 +38,7 @@ const RescueDetails: React.FC<RescueDetailsProps> = ({
 
             {/* Rescue Story */}
             {rescue_story && (
-                <Card className="mb-6 border-l-4 border-l-red-500 rounded-lg">
+                <Card className="mb-6 h-full shadow-lg rounded-full overflow-hidden">
                     <Title level={4} className="text-gray-800 mb-3">
                         Rescue Story
                     </Title>
@@ -52,7 +52,7 @@ const RescueDetails: React.FC<RescueDetailsProps> = ({
                 {/* Special Needs */}
                 {special_needs && special_needs.length > 0 && (
                     <Col xs={24} md={12}>
-                        <Card className="h-full border-l-4 border-l-orange-500 rounded-lg">
+                        <Card className="h-full shadow-lg rounded-full overflow-hidden">
                             <Title level={4} className="text-gray-800 mb-3 flex items-center">
                                 <MedicineBoxOutlined className="mr-2 text-orange-500" />
                                 Special Needs
@@ -72,7 +72,7 @@ const RescueDetails: React.FC<RescueDetailsProps> = ({
                 {/* Medical Conditions */}
                 {medical_conditions && medical_conditions.length > 0 && (
                     <Col xs={24} md={12}>
-                        <Card className="h-full border-l-4 border-l-purple-500 rounded-lg">
+                        <Card className="h-full shadow-lg rounded-full overflow-hidden">
                             <Title level={4} className="text-gray-800 mb-3 flex items-center">
                                 <MedicineBoxOutlined className="mr-2 text-purple-500" />
                                 Medical Conditions

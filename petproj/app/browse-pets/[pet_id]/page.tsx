@@ -6,7 +6,7 @@ import AdoptionFormModal from "../../../components/AdoptionFormModal";
 import LoginModal from "../../../components/LoginModal";
 import RescueDetails from "../../../components/RescueDetails";
 import { formatDistanceToNow } from "date-fns";
-import { formatAiResponse } from '@/utils/formatAiResponse';
+import { formatAiResponse } from "@/utils/formatAiResponse";
 
 import {
     Spin,
@@ -20,7 +20,6 @@ import {
     Row,
     Col,
     Image,
-
     Typography,
     Badge,
     Avatar,
@@ -73,8 +72,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     const [primaryColor, setPrimaryColor] = useState("#000000");
     const [llmSummary, setLlmSummary] = useState<string | null>(null);
     const [summaryLoading, setSummaryLoading] = useState(false);
-
-    
+    const [summaryRequested, setSummaryRequested] = useState(false); // New state
 
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);
@@ -100,72 +98,66 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
         }
     }, []);
 
-    useEffect(() => {
-    const fetchPetDetails = async () => {
+    const handleGenerateSummary = async () => {
+        if (!pet || summaryLoading) return;
+
+        setSummaryRequested(true);
+        setSummaryLoading(true);
+
         try {
-            setLoading(true);
-            
-            const res = await fetch(`/api/browse-pets/${pet_id}`);
-            if (!res.ok) throw new Error("Pet not found");
-            
-            const petData = await res.json();
-            setPet(petData);
-            
-            // Handle images
-            if (petData.images && petData.images.length > 0) {
-                const sortedImages = [...petData.images].sort(
-                    (a, b) => a.order - b.order
-                );
-                const imageUrls = sortedImages.map((img) => img.image_url);
-                setCarouselImages(imageUrls);
+            const response = await fetch("/api/summary-llm", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    petData: pet,
+                }),
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch pet summary");
+
+            const data = await response.json();
+            if (data.success) {
+                setLlmSummary(data.data);
             }
-            
-        } catch (err) {
-            console.error(err);
-            setError("Failed to load pet details");
+        } catch (error) {
+            console.error("Error fetching pet summary:", error);
+            message.error("Failed to generate summary");
         } finally {
-            setLoading(false);
+            setSummaryLoading(false);
         }
     };
 
-    fetchPetDetails();
-}, [pet_id]);
+    useEffect(() => {
+        const fetchPetDetails = async () => {
+            try {
+                setLoading(true);
 
-// Add this useEffect to handle the LLM summary AFTER pet data is loaded
-useEffect(() => {
-    if (pet && !summaryLoading && !llmSummary) {
-        fetchPetSummary(pet);
-    }
-}, [pet]); // Only run when pet data changes
+                const res = await fetch(`/api/browse-pets/${pet_id}`);
+                if (!res.ok) throw new Error("Pet not found");
 
-    const fetchPetSummary = async (petData: PetWithImages) => {
-    // Prevent duplicate calls
-    if (summaryLoading || llmSummary) return;
-    
-    setSummaryLoading(true);
-    try {
-        const response = await fetch('/api/llm', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                petData: petData
-            }),
-        });
-        
-        if (!response.ok) throw new Error('Failed to fetch pet summary');
-        
-        const data = await response.json();
-        if (data.success) {
-            setLlmSummary(data.data);
-        }
-    } catch (error) {
-        console.error('Error fetching pet summary:', error);
-    } finally {
-        setSummaryLoading(false);
-    }
-};
+                const petData = await res.json();
+                setPet(petData);
+
+                // Handle images
+                if (petData.images && petData.images.length > 0) {
+                    const sortedImages = [...petData.images].sort(
+                        (a, b) => a.order - b.order
+                    );
+                    const imageUrls = sortedImages.map((img) => img.image_url);
+                    setCarouselImages(imageUrls);
+                }
+            } catch (err) {
+                console.error(err);
+                setError("Failed to load pet details");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPetDetails();
+    }, [pet_id]);
 
     const hasValue = (value: any) => {
         return (
@@ -410,7 +402,6 @@ useEffect(() => {
     if (error || !pet) {
         return (
             <div className="text-center mt-10">
-
                 <div className="flex flex-col items-center justify-center min-h-[50vh]">
                     <Title level={2} className="text-gray-700">
                         {error || "Pet details not available"}
@@ -471,7 +462,6 @@ useEffect(() => {
                 </div>
             </Modal>
 
-
             <div className="pet-details min-h-screen bg-gray-50 py-8 px-4 md:px-8">
                 <div className="mx-auto max-w-6xl">
                     {/* Breadcrumb */}
@@ -495,7 +485,7 @@ useEffect(() => {
                         </Button>
                     </div>
 
-                    <Card className="shadow-xl rounded-2xl overflow-hidden border-none">
+                    <Card className="shadow-lg rounded-full overflow-hidden border-none">
                         <div className="flex flex-col lg:flex-row gap-8">
                             {/* Image Gallery */}
                             <div className="lg:w-1/2">
@@ -505,11 +495,12 @@ useEffect(() => {
                                             <img
                                                 src={
                                                     carouselImages[
-                                                    currentImageIndex
+                                                        currentImageIndex
                                                     ]
                                                 }
-                                                alt={`${pet.pet_name}-image-${currentImageIndex + 1
-                                                    }`}
+                                                alt={`${pet.pet_name}-image-${
+                                                    currentImageIndex + 1
+                                                }`}
                                                 className="w-full h-full object-cover rounded-xl"
                                             />
                                         </div>
@@ -562,11 +553,12 @@ useEffect(() => {
                                                             index
                                                         )
                                                     }
-                                                    className={`w-3 h-3 rounded-full ${index ===
-                                                            currentImageIndex
+                                                    className={`w-3 h-3 rounded-full ${
+                                                        index ===
+                                                        currentImageIndex
                                                             ? "bg-primary"
                                                             : "bg-gray-300"
-                                                        }`}
+                                                    }`}
                                                 />
                                             ))}
                                         </div>
@@ -599,17 +591,19 @@ useEffect(() => {
                                                 <span>•</span>
                                                 <span>
                                                     {pet.age > 0 &&
-                                                        `${pet.age} ${pet.age > 1
-                                                            ? "years"
-                                                            : "year"
+                                                        `${pet.age} ${
+                                                            pet.age > 1
+                                                                ? "years"
+                                                                : "year"
                                                         }`}
                                                     {pet.age > 0 &&
                                                         pet.months > 0 &&
                                                         ", "}
                                                     {pet.months > 0 &&
-                                                        `${pet.months} ${pet.months > 1
-                                                            ? "months"
-                                                            : "month"
+                                                        `${pet.months} ${
+                                                            pet.months > 1
+                                                                ? "months"
+                                                                : "month"
                                                         } old`}
                                                     {pet.age === 0 &&
                                                         pet.months === 0 &&
@@ -676,7 +670,7 @@ useEffect(() => {
                                                     <div>
                                                         <Text className="text-sm font-semibold text-gray-500 block mb-1">
                                                             {pet.listing_type ===
-                                                                "sell"
+                                                            "sell"
                                                                 ? "Price"
                                                                 : "Adoption Fee"}
                                                         </Text>
@@ -716,10 +710,11 @@ useEffect(() => {
                                 {/* Action Buttons - Fixed at bottom */}
                                 <div className="flex flex-col sm:flex-row gap-4 mt-6">
                                     <button
-                                        className={`flex-1 h-14 min-h-14 text-lg font-semibold rounded-xl flex items-center justify-center gap-2 ${isAvailable
+                                        className={`flex-1 h-14 min-h-14 text-lg font-semibold rounded-xl flex items-center justify-center gap-2 ${
+                                            isAvailable
                                                 ? "bg-primary text-white hover:bg-primary/90 transition-colors"
                                                 : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                            }`}
+                                        }`}
                                         onClick={handleAdoptClick}
                                         disabled={!isAvailable}>
                                         <HeartOutlined />
@@ -727,10 +722,11 @@ useEffect(() => {
                                     </button>
 
                                     <button
-                                        className={`flex-1 h-14 min-h-14 text-lg font-semibold rounded-xl flex items-center justify-center gap-2 ${isAvailable
+                                        className={`flex-1 h-14 min-h-14 text-lg font-semibold rounded-xl flex items-center justify-center gap-2 ${
+                                            isAvailable
                                                 ? "border-2 border-primary text-primary hover:bg-primary/5 transition-colors"
                                                 : "border-2 border-gray-200 text-gray-500 cursor-not-allowed"
-                                            }`}
+                                        }`}
                                         onClick={handleContactClick}
                                         disabled={!isAvailable}>
                                         <PhoneOutlined />
@@ -761,274 +757,297 @@ useEffect(() => {
 
                             {(hasValue(pet.energy_level) ||
                                 hasValue(pet.cuddliness_level)) && (
+                                <div className="p-5 rounded-lg border border-gray-200">
+                                    <Title
+                                        level={3}
+                                        className="text-gray-800 mb-4 flex items-center">
+                                        Personality Traits
+                                    </Title>
+
+                                    <div className="space-y-5">
+                                        {hasValue(pet.energy_level) && (
+                                            <div>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <Text className="font-medium text-gray-700">
+                                                        Energy Level
+                                                    </Text>
+                                                    <Text className="font-semibold text-gray-800">
+                                                        {pet.energy_level}/5
+                                                    </Text>
+                                                </div>
+                                                <input
+                                                    type="range"
+                                                    min="1"
+                                                    max="5"
+                                                    value={pet.energy_level}
+                                                    disabled
+                                                    className="w-full"
+                                                />
+                                                <div className="flex justify-between mt-1 text-xs text-gray-600">
+                                                    <span>Calm</span>
+                                                    <span>Energetic</span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {hasValue(pet.cuddliness_level) && (
+                                            <div>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <Text className="font-medium text-gray-700">
+                                                        Cuddliness Level
+                                                    </Text>
+                                                    <Text className="font-semibold text-gray-800">
+                                                        {pet.cuddliness_level}/5
+                                                    </Text>
+                                                </div>
+                                                <input
+                                                    type="range"
+                                                    min="1"
+                                                    max="5"
+                                                    value={pet.cuddliness_level}
+                                                    disabled
+                                                    className="w-full"
+                                                />
+                                                <div className="flex justify-between mt-1 text-xs text-gray-600">
+                                                    <span>Independent</span>
+                                                    <span>Affectionate</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="grid md:grid-cols-2 gap-4">
+                                {(hasValue(pet.vaccinated) ||
+                                    hasValue(pet.neutered) ||
+                                    hasValue(pet.health_issues)) && (
                                     <div className="p-5 rounded-lg border border-gray-200">
                                         <Title
                                             level={3}
-                                            className="text-gray-800 mb-4 flex items-center">
-                                            Personality Traits
+                                            className="text-gray-800 mb-3 flex items-center">
+                                            <SafetyCertificateOutlined className="mr-2" />{" "}
+                                            Health & Care
                                         </Title>
-
-                                        <div className="space-y-5">
-                                            {hasValue(pet.energy_level) && (
-                                                <div>
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <Text className="font-medium text-gray-700">
-                                                            Energy Level
-                                                        </Text>
-                                                        <Text className="font-semibold text-gray-800">
-                                                            {pet.energy_level}/5
-                                                        </Text>
-                                                    </div>
-                                                    <input
-                                                        type="range"
-                                                        min="1"
-                                                        max="5"
-                                                        value={pet.energy_level}
-                                                        disabled
-                                                        className="w-full"
-                                                    />
-                                                    <div className="flex justify-between mt-1 text-xs text-gray-600">
-                                                        <span>Calm</span>
-                                                        <span>Energetic</span>
-                                                    </div>
+                                        <div className="space-y-2">
+                                            {hasValue(pet.vaccinated) && (
+                                                <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                                    <span className="font-medium">
+                                                        Vaccinated
+                                                    </span>
+                                                    <span className="font-semibold">
+                                                        {pet.vaccinated
+                                                            ? "Yes"
+                                                            : "No"}
+                                                    </span>
                                                 </div>
                                             )}
-
-                                            {hasValue(pet.cuddliness_level) && (
-                                                <div>
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <Text className="font-medium text-gray-700">
-                                                            Cuddliness Level
-                                                        </Text>
-                                                        <Text className="font-semibold text-gray-800">
-                                                            {pet.cuddliness_level}/5
-                                                        </Text>
-                                                    </div>
-                                                    <input
-                                                        type="range"
-                                                        min="1"
-                                                        max="5"
-                                                        value={pet.cuddliness_level}
-                                                        disabled
-                                                        className="w-full"
-                                                    />
-                                                    <div className="flex justify-between mt-1 text-xs text-gray-600">
-                                                        <span>Independent</span>
-                                                        <span>Affectionate</span>
-                                                    </div>
+                                            {hasValue(pet.neutered) && (
+                                                <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                                    <span className="font-medium">
+                                                        Neutered/Spayed
+                                                    </span>
+                                                    <span className="font-semibold">
+                                                        {pet.neutered
+                                                            ? "Yes"
+                                                            : "No"}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {hasValue(pet.health_issues) && (
+                                                <div className="p-2 bg-gray-50 rounded">
+                                                    <span className="font-medium block mb-1">
+                                                        Health Notes
+                                                    </span>
+                                                    <span className="text-gray-700">
+                                                        {pet.health_issues}
+                                                    </span>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                 )}
 
-                            <div className="grid md:grid-cols-2 gap-4">
-                                {(hasValue(pet.vaccinated) ||
-                                    hasValue(pet.neutered) ||
-                                    hasValue(pet.health_issues)) && (
-                                        <div className="p-5 rounded-lg border border-gray-200">
-                                            <Title
-                                                level={3}
-                                                className="text-gray-800 mb-3 flex items-center">
-                                                <SafetyCertificateOutlined className="mr-2" />{" "}
-                                                Health & Care
-                                            </Title>
-                                            <div className="space-y-2">
-                                                {hasValue(pet.vaccinated) && (
-                                                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                                        <span className="font-medium">
-                                                            Vaccinated
-                                                        </span>
-                                                        <span className="font-semibold">
-                                                            {pet.vaccinated
-                                                                ? "Yes"
-                                                                : "No"}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {hasValue(pet.neutered) && (
-                                                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                                        <span className="font-medium">
-                                                            Neutered/Spayed
-                                                        </span>
-                                                        <span className="font-semibold">
-                                                            {pet.neutered
-                                                                ? "Yes"
-                                                                : "No"}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {hasValue(pet.health_issues) && (
-                                                    <div className="p-2 bg-gray-50 rounded">
-                                                        <span className="font-medium block mb-1">
-                                                            Health Notes
-                                                        </span>
-                                                        <span className="text-gray-700">
-                                                            {pet.health_issues}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-
                                 {(hasValue(pet.can_live_with_dogs) ||
                                     hasValue(pet.can_live_with_cats) ||
                                     hasValue(pet.must_have_someone_home)) && (
-                                        <div className="p-5 rounded-lg border border-gray-200">
-                                            <Title
-                                                level={3}
-                                                className="text-gray-800 mb-3 flex items-center">
-                                                <HomeOutlined className="mr-2" />{" "}
-                                                Living Preferences
-                                            </Title>
-                                            <div className="space-y-2">
-                                                {hasValue(
-                                                    pet.can_live_with_dogs
-                                                ) && (
-                                                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                                            <span className="font-medium">
-                                                                Good with Dogs
-                                                            </span>
-                                                            <span className="font-semibold">
-                                                                {pet.can_live_with_dogs
-                                                                    ? "Yes"
-                                                                    : "No"}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                {hasValue(
-                                                    pet.can_live_with_cats
-                                                ) && (
-                                                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                                            <span className="font-medium">
-                                                                Good with Cats
-                                                            </span>
-                                                            <span className="font-semibold">
-                                                                {pet.can_live_with_cats
-                                                                    ? "Yes"
-                                                                    : "No"}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                {hasValue(
-                                                    pet.must_have_someone_home
-                                                ) && (
-                                                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                                            <span className="font-medium">
-                                                                Needs Company
-                                                            </span>
-                                                            <span className="font-semibold">
-                                                                {pet.must_have_someone_home
-                                                                    ? "Yes"
-                                                                    : "No"}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                            </div>
+                                    <div className="p-5 rounded-lg border border-gray-200">
+                                        <Title
+                                            level={3}
+                                            className="text-gray-800 mb-3 flex items-center">
+                                            <HomeOutlined className="mr-2" />{" "}
+                                            Living Preferences
+                                        </Title>
+                                        <div className="space-y-2">
+                                            {hasValue(
+                                                pet.can_live_with_dogs
+                                            ) && (
+                                                <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                                    <span className="font-medium">
+                                                        Good with Dogs
+                                                    </span>
+                                                    <span className="font-semibold">
+                                                        {pet.can_live_with_dogs
+                                                            ? "Yes"
+                                                            : "No"}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {hasValue(
+                                                pet.can_live_with_cats
+                                            ) && (
+                                                <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                                    <span className="font-medium">
+                                                        Good with Cats
+                                                    </span>
+                                                    <span className="font-semibold">
+                                                        {pet.can_live_with_cats
+                                                            ? "Yes"
+                                                            : "No"}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {hasValue(
+                                                pet.must_have_someone_home
+                                            ) && (
+                                                <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                                    <span className="font-medium">
+                                                        Needs Company
+                                                    </span>
+                                                    <span className="font-semibold">
+                                                        {pet.must_have_someone_home
+                                                            ? "Yes"
+                                                            : "No"}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </Card>
-{/* Enhanced LLM Generated Summary Section */}
-<div className="p-5 rounded-lg border border-gray-200 mt-6 bg-white shadow-sm">
-    <Title level={3} className="text-gray-800 mb-4 flex items-center">
-        {pet.listing_type === "adoption" || pet.listing_type === "rescue" ? (
-            <>
-                <SafetyCertificateOutlined className="mr-2 text-primary" />
-                Adoption Preparation Guide
-            </>
-        ) : pet.listing_type === "sell" || pet.listing_type === "shop" ? (
-            <>
-                <DollarOutlined className="mr-2 text-green-600" />
-                Purchase Information
-            </>
-        ) : (
-            <>
-                <InfoCircleOutlined className="mr-2 text-blue-600" />
-                Pet Details Summary
-            </>
-        )}
-    </Title>
+                    <Card className="shadow-xl rounded-full overflow-hidden border-none mt-8">
+                        <Title
+                            level={3}
+                            className="text-gray-800 mb-4 flex items-center">
+                            {pet.listing_type === "adoption" ||
+                            pet.listing_type === "rescue" ? (
+                                <>
+                                    <SafetyCertificateOutlined className="mr-2 text-primary" />
+                                    Adoption Preparation Guide
+                                </>
+                            ) : pet.listing_type === "sell" ||
+                              pet.listing_type === "shop" ? (
+                                <>
+                                    <DollarOutlined className="mr-2 text-green-600" />
+                                    Purchase Information
+                                </>
+                            ) : (
+                                <>
+                                    <InfoCircleOutlined className="mr-2 text-blue-600" />
+                                    Pet Details Summary
+                                </>
+                            )}
+                        </Title>
 
-    {summaryLoading ? (
-        <div className="flex flex-col items-center justify-center py-8 bg-gray-50 rounded-lg">
-            <MoonLoader size={24} color={primaryColor} />
-            <span className="ml-3 text-gray-600 mt-3">
-                {pet.listing_type === "adoption" || pet.listing_type === "rescue" 
-                    ? "Generating adoption guidance..." 
-                    : pet.listing_type === "sell" || pet.listing_type === "shop"
-                    ? "Generating purchase information..."
-                    : "Generating pet summary..."
-                }
-            </span>
-        </div>
-    ) : llmSummary ? (
-    <div className={`
-        rounded-lg p-6
-        ${pet.listing_type === "adoption" || pet.listing_type === "rescue" 
-            ? "bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200" 
-            : pet.listing_type === "sell" || pet.listing_type === "shop"
-            ? "bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200"
-            : "bg-gray-50 border border-gray-200"
-        }
-    `}>
-        <div className="flex items-start mb-4">
-            <div className={`
-                rounded-full p-2 mr-3 flex-shrink-0
-                ${pet.listing_type === "adoption" || pet.listing_type === "rescue" 
-                    ? "bg-primary" 
-                    : pet.listing_type === "sell" || pet.listing_type === "shop"
-                    ? "bg-green-600"
-                    : "bg-blue-600"
-                }
-            `}>
-                {pet.listing_type === "adoption" || pet.listing_type === "rescue" ? (
-                    <HeartOutlined className="text-white text-lg" />
-                ) : pet.listing_type === "sell" || pet.listing_type === "shop" ? (
-                    <DollarOutlined className="text-white text-lg" />
-                ) : (
-                    <InfoCircleOutlined className="text-white text-lg" />
-                )}
-            </div>
-            <div className="text-gray-800 text-base leading-relaxed">
-                <div 
-                    dangerouslySetInnerHTML={{ 
-                        __html: formatAiResponse(llmSummary) 
-                    }}
-                    className="ai-formatted-content"
-                />
-            </div>
-        </div>
-        <div className="mt-4 p-3 bg-white rounded border border-gray-100">
-            <div className="flex items-center text-xs text-gray-500">
-                <InfoCircleOutlined className="mr-2" />
-                <span>
-                    {pet.listing_type === "adoption" || pet.listing_type === "rescue" 
-                        ? "This AI-generated guidance helps prepare for adoption. Always verify details with the owner or veterinarian."
-                        : pet.listing_type === "sell" || pet.listing_type === "shop"
-                        ? "This AI-generated information provides purchase guidance. Contact the seller for exact details and pricing."
-                        : "This AI-generated summary provides general information about the pet."
+                        {!summaryRequested ? (
+                            <div className="text-center py-8 bg-gray-50 rounded-lg">
+                                <InfoCircleOutlined className="text-3xl mb-3 text-gray-400" />
+                                <p className="text-gray-500 mb-4">
+                                    {pet.listing_type === "adoption" ||
+                                    pet.listing_type === "rescue"
+                                        ? `Want to know if ${pet.pet_name} is the right fit for your home?`
+                                        : pet.listing_type === "sell" ||
+                                          pet.listing_type === "shop"
+                                        ? `Considering buying ${pet.pet_name}? Get detailed information.`
+                                        : `Want to know more about ${pet.pet_name}?`}
+                                </p>
+                                <Button
+                                    type="primary"
+                                    size="large"
+                                    onClick={handleGenerateSummary}
+                                    icon={<InfoCircleOutlined />}
+                                    className="bg-primary hover:bg-primary/90">
+                                    Generate AI Summary
+                                </Button>
+                            </div>
+                        ) : summaryLoading ? (
+                            <div className="flex flex-col items-center justify-center py-8 bg-gray-50 rounded-lg">
+                                <MoonLoader size={24} color={primaryColor} />
+                                <span className="ml-3 text-gray-600 mt-3">
+                                    {pet.listing_type === "adoption" ||
+                                    pet.listing_type === "rescue"
+                                        ? "Generating adoption guidance..."
+                                        : pet.listing_type === "sell" ||
+                                          pet.listing_type === "shop"
+                                        ? "Generating purchase information..."
+                                        : "Generating pet summary..."}
+                                </span>
+                            </div>
+                        ) : llmSummary ? (
+                            <div
+                                className={`
+                    rounded-lg p-6
+                    ${
+                        pet.listing_type === "adoption" ||
+                        pet.listing_type === "rescue"
+                            ? "bg-white border border-primary"
+                            : pet.listing_type === "sell" ||
+                              pet.listing_type === "shop"
+                            ? "bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200"
+                            : "bg-gray-50 border border-gray-200"
                     }
-                </span>
-            </div>
-        </div>
-    </div>
-    ) : (
-        <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <InfoCircleOutlined className="text-3xl mb-3 text-gray-400" />
-            <p className="text-gray-500 mb-2">
-                {pet.listing_type === "adoption" || pet.listing_type === "rescue" 
-                    ? "Could not generate adoption guidance"
-                    : pet.listing_type === "sell" || pet.listing_type === "shop"
-                    ? "Could not generate purchase information"
-                    : "Could not generate pet summary"
-                }
-            </p>
-        </div>
-    )}
-</div>
+                `}>
+                                <div className="flex items-start mb-4">
+                              
+                                    <div className="text-gray-800 text-base leading-relaxed">
+                                        <div
+                                            dangerouslySetInnerHTML={{
+                                                __html: formatAiResponse(
+                                                    llmSummary
+                                                ),
+                                            }}
+                                            className="ai-formatted-content"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="mt-4 p-3 bg-white rounded border border-gray-100">
+                                    <div className="flex items-center text-xs text-gray-500">
+                                        <InfoCircleOutlined className="mr-2" />
+                                        <span>
+                                            {pet.listing_type === "adoption" ||
+                                            pet.listing_type === "rescue"
+                                                ? "This AI-generated guidance helps prepare for adoption. Always verify details with the owner or veterinarian."
+                                                : pet.listing_type === "sell" ||
+                                                  pet.listing_type === "shop"
+                                                ? "This AI-generated information provides purchase guidance. Contact the seller for exact details and pricing."
+                                                : "This AI-generated summary provides general information about the pet."}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 bg-gray-50 rounded-lg">
+                                <InfoCircleOutlined className="text-3xl mb-3 text-gray-400" />
+                                <p className="text-gray-500 mb-2">
+                                    {pet.listing_type === "adoption" ||
+                                    pet.listing_type === "rescue"
+                                        ? "Could not generate adoption guidance"
+                                        : pet.listing_type === "sell" ||
+                                          pet.listing_type === "shop"
+                                        ? "Could not generate purchase information"
+                                        : "Could not generate pet summary"}
+                                </p>
+                                <Button
+                                    type="primary"
+                                    onClick={handleGenerateSummary}
+                                    className="mt-2">
+                                    Try Again
+                                </Button>
+                            </div>
+                        )}
+                    </Card>
 
                     {/* Add Rescue Details for rescue pets */}
                     {pet.listing_type === "rescue" && (

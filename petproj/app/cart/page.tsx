@@ -131,7 +131,7 @@ const removeItem = async (itemId: string | number) => {
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Your Shopping Cart 🛒</h1>
+          <h1 className="text-3xl font-bold text-gray-800">Your Shopping Cart</h1>
           <button
             className="flex items-center text-primary hover:text-primary-dark font-medium"
             onClick={() => router.push('/marketplace')}

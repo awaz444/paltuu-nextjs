@@ -58,10 +58,10 @@ const MarketplaceFilterSection: React.FC<MarketplaceFilterSectionProps> = ({
     };
 
     return (
-        <div className="filter-section bg-gray-100 pt-6">
-            <div className="bg-white mx-0 md:mx-8 px-6 pt-3 pb-5 w-700 rounded-2xl">
+        <div className="filter-section bg-gray-100 sm:pt-6">
+            <div className="bg-white hidden md:block mx-0 md:mx-8 px-6 pt-3 pb-5 w-700 rounded-2xl">
                 {/* PC Layout */}
-                <div className="hidden md:flex flex-wrap gap-4 items-center">
+                <div className="md:flex flex-wrap gap-4 items-center">
                     <div className="flex-1 min-w-[150px]">
                         <label className="text-xs">Category</label>
                         <select
@@ -114,37 +114,6 @@ const MarketplaceFilterSection: React.FC<MarketplaceFilterSectionProps> = ({
                         </button>
                     </div>
                 </div>
-
-                {/* Mobile Layout */}
-                <div className="md:hidden flex flex-col gap-4">
-                    <div>
-                        <label className="text-xs">Category</label>
-                        <select
-                            className="w-full p-3 border rounded-xl"
-                            value={localFilters.category}
-                            onChange={(e) => handleFilterChange("category", e.target.value)}
-                        >
-                            <option value="">All Categories</option>
-                            {categories.map((category) => (
-                                <option key={category.id} value={category.id}>
-                                    {category.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="flex gap-4 w-full">
-                        <button className="text-white bg-primary text-sm p-3 rounded-2xl flex-1" onClick={handleSearch}>
-                            Search
-                        </button>
-                        <button
-                            className="border-2 border-primary text-sm text-primary bg-white p-3 rounded-2xl flex-1 whitespace-nowrap"
-                            onClick={() => setIsModalOpen(true)}
-                        >
-                            More Filters
-                        </button>
-                    </div>
-                </div>
             </div>
 
             {/* More Filters Modal */}
@@ -158,7 +127,7 @@ const MarketplaceFilterSection: React.FC<MarketplaceFilterSectionProps> = ({
                             &times;
                         </button>
 
-                        <h2 className="text-lg font-semibold mb-4">More Filters</h2>
+                        <h2 className="text-lg font-semibold mb-4">Filters</h2>
 
                         <div className="mb-4">
                             <label className="text-xs">Category</label>
@@ -214,6 +183,25 @@ const MarketplaceFilterSection: React.FC<MarketplaceFilterSectionProps> = ({
                     </div>
                 </div>
             )}
+
+            {/* Floating Filter Button for Mobile */}
+            <div className="fixed bottom-4 left-4 md:hidden z-40">
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="bg-white text-primary p-2 rounded-xl shadow-lg border-2 border-transparent border-primary hover:scale-105 transition-all duration-300 flex items-center justify-center">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="10"
+                        height="10"
+                        fill="currentColor"
+                        className="h-4 w-4"
+                        viewBox="0 0 16 16">
+                        <path d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6A.5.5 0 0 1 3 8zm0-2.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5z" />
+                        <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 0a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2z" />
+                    </svg>
+                    <span className="text-xs ml-1">Filters</span>
+                </button>
+            </div>
         </div>
     );
 };

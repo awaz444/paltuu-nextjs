@@ -35,9 +35,9 @@ const Navbar = ({
   const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
 
-  const handleMouseEnter = () => {  
+
+  const handleMouseEnter = () => {
     if (hideTimeoutRef.current) {
       clearTimeout(hideTimeoutRef.current);
       hideTimeoutRef.current = null;
@@ -57,7 +57,7 @@ const Navbar = ({
       }
     };
   }, []);
-  
+
   // Use next-auth's useSession hook for Google login
   const { data: session, status } = useSession();
 
@@ -334,7 +334,7 @@ const arrowColor: Record<UserRole, string> = {
     </Link>
 
     {/* Right: Cart */}
-    
+
   {!hideCart && (
     <button
       onClick={() => setIsCartModalOpen(true)}
@@ -350,7 +350,7 @@ const arrowColor: Record<UserRole, string> = {
       )}
     </button>
   )}
-    
+
   </div>
 
   {/* Mobile Drawer + Backdrop remains unchanged... */}
@@ -585,7 +585,23 @@ const arrowColor: Record<UserRole, string> = {
                           <img src={it.image ?? '/placeholder-product.jpg'} alt={it.title ?? 'cart item'} className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="truncate font-medium">{it.title}</div>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="truncate font-medium">{it.title}</div>
+                            {/* Remove button: stops propagation so dropdown stays open */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // dispatch removeCartItem thunk
+                                dispatch(removeCartItem({ cartItemId: it.id }));
+                              }}
+                              aria-label={`Remove ${it.title} from cart`}
+                              title="Remove"
+                              className="ml-2 text-gray-400 hover:text-red-500 focus:outline-none"
+                              style={{ background: 'transparent', border: 'none' }}
+                            >
+                              <i className="bi bi-x-lg" />
+                            </button>
+                          </div>
                           <div className="text-xs text-gray-500">Code: <span className="text-gray-700">{it.code ?? '-'}</span></div>
                           <div className="text-xs text-gray-500">Qty: {it.qty}</div>
                         </div>
@@ -615,7 +631,7 @@ const arrowColor: Record<UserRole, string> = {
         )}
 
           {isAuthenticated || session ? (
-            <div 
+            <div
               className="relative group"
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
@@ -677,7 +693,7 @@ const arrowColor: Record<UserRole, string> = {
                   </svg>
                 </div>
               </button>
-              
+
               {(isAuthenticated || session) && isDropdownOpen && (
                 <div
                   className="dropdown-menu absolute right-0 bg-white shadow-lg z-20 rounded-2xl py-2 text-sm font-medium"

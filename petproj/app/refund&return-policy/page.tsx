@@ -31,7 +31,7 @@ export default function ReturnRefundPolicyPage(): JSX.Element {
                   Return & Refund Policy
                 </h1>
                 <p className="text-black text-lg">
-                  Paltuu.pk — transparent policies to protect buyers, sellers, and pets.
+                  Paltuu.pk has transparent policies to protect buyers, sellers, and pets.
                 </p>
               </div>
             </div>
@@ -167,12 +167,12 @@ export default function ReturnRefundPolicyPage(): JSX.Element {
                   <p className="text-gray-700">For return and refund support:</p>
                   <ul className="list-disc pl-5 space-y-2 text-gray-700">
                     <li>
-                      <strong>Email:</strong>{" "}
+                      <strong>Whatsapp Us:</strong>{" "}
                       <a
-                        href="mailto:support@paltuu.pk"
+                        href="https://wa.me/+923394022568"
                         className="text-primary hover:underline"
                       >
-                        support@paltuu.pk
+                        +923394022568
                       </a>
                     </li>
                     <li>

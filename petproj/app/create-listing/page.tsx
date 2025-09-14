@@ -470,7 +470,7 @@ export default function CreatePetListing() {
                             </div>
 
                             {/* Price */}
-                            <div className="mb-4">
+                            {/* <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700">
                                     Price
                                 </label>
@@ -484,7 +484,7 @@ export default function CreatePetListing() {
                                 <p className="text-xs text-gray-500 mt-1">
                                     Leave empty for adoption listings
                                 </p>
-                            </div>
+                            </div> */}
 
                             {price && (
                                 <div className="mb-4">

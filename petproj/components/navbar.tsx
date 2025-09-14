@@ -328,9 +328,9 @@ const Navbar = ({
           className="hamburger"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
-          <div className="hamburger-line" />
-          <div className="hamburger-line" />
-          <div className="hamburger-line" />
+          <div className="hamburger-line z-40" />
+          <div className="hamburger-line z-40" />
+          <div className="hamburger-line z-40" />
         </button>
 
         {/* Center: Logo */}

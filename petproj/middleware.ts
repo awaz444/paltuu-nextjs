@@ -71,6 +71,8 @@ export const config = {
     '/admin-approve-vets',
     '/admin-pet',
     '/admin-pet-approval',
-    '/admin-user'
+    '/admin-user',
+    '/checkout',
+    '/order-confirmed'
   ]
 };

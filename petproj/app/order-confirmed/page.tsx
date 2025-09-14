@@ -3,6 +3,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { CheckCircle, Package, Truck, Calendar, Download, ArrowLeft, Copy, User, Mail, Phone, MapPin } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from "../../context/AuthContext";
+import { useOrderProtection } from "@/hooks/useOrderProtection";
 
 const OrderConfirmedContent  = () => {
   const { isAuthenticated, user } = useAuth();
@@ -10,6 +11,12 @@ const OrderConfirmedContent  = () => {
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // Order protection - redirect if no valid order
+  const { isChecking, isValidOrder } = useOrderProtection({
+    redirectTo: '/marketplace',
+    showMessage: true
+  });
 
   useEffect(() => {
     const orderNumber = searchParams.get('orderNumber');
@@ -272,6 +279,20 @@ const OrderConfirmedContent  = () => {
       alert('Failed to generate receipt PDF: ' + (e as Error).message);
     }
   };
+
+  // Show loading while checking order validity
+  if (isChecking) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Don't render if no valid order (user will be redirected)
+  if (!isValidOrder) {
+    return null;
+  }
 
   if (loading) {
     return (

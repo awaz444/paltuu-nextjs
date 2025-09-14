@@ -17,6 +17,7 @@ import { clearCart } from "@/app/store/slices/cartSlice";
 import { useRouter } from "next/navigation";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
 import { FaUniversity } from "react-icons/fa";
+import { useCartProtection } from "@/hooks/useCartProtection";
 
 interface CartItem {
   id: number;
@@ -38,6 +39,12 @@ const CheckoutPage = () => {
   const [placing, setPlacing] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();
+
+  // Cart protection - redirect if cart is empty
+  const { isChecking, hasItems } = useCartProtection({
+    redirectTo: '/cart',
+    showMessage: true
+  });
 
   // Customer / Shipping form state
   const [email, setEmail] = useState("");
@@ -81,6 +88,20 @@ const CheckoutPage = () => {
     setPromoApplied(false);
     setPromoError("");
   };
+
+  // Show loading while checking cart
+  if (isChecking) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Don't render if cart is empty (user will be redirected)
+  if (!hasItems) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">

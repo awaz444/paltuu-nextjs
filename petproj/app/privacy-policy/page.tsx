@@ -36,7 +36,7 @@ export default function PrivacyPolicyPage() {
                   Privacy Policy
                 </h1>
                 <p className="text-gray-700 text-xs sm:text-sm md:text-base lg:text-lg mt-1">
-                  Paltuu.pk — keeping pets and people safe, informed, and
+                  Paltuu.pk - keeping pets and people safe, informed, and
                   connected.
                 </p>
               </div>

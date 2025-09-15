@@ -4,7 +4,7 @@ import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-primary text-white px-6 md:px-16 py-10 rounded-t-3xl">
+    <footer className="bg-primary text-white px-6 md:px-16 py-10 rounded-t-3xl mt-4">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
         {/* Left - Logo & About */}
         <div>
@@ -16,18 +16,18 @@ export default function Footer() {
 
           {/* Social Media Icons */}
           <div className="flex gap-4 mt-5">
-            <Link href="https://facebook.com" target="_blank">
+            {/* <Link href="https://facebook.com" target="_blank">
               <Facebook className="w-5 h-5 hover:text-gray-300 transition" />
-            </Link>
-            <Link href="https://instagram.com" target="_blank">
+            </Link> */}
+            <Link href="https://instagram.com/paltuupk" target="_blank">
               <Instagram className="w-5 h-5 hover:text-gray-300 transition" />
             </Link>
-            <Link href="https://twitter.com" target="_blank">
+            <Link href="https://twitter.com/paltuupk" target="_blank">
               <Twitter className="w-5 h-5 hover:text-gray-300 transition" />
             </Link>
-            <Link href="https://youtube.com" target="_blank">
+            {/* <Link href="https://youtube.com" target="_blank">
               <Youtube className="w-5 h-5 hover:text-gray-300 transition" />
-            </Link>
+            </Link> */}
           </div>
         </div>
 

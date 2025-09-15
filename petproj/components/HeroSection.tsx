@@ -489,33 +489,7 @@ const HeroSection = () => {
                 </div>
             </section> */}
 
-            <footer className="text-white p-6 rounded-t-[3rem] rounded-b-none bg-primary">
-                <div className="container mx-auto text-center">
-                    <div className="mb-4">
-                        <Image
-                            src="/paltu_logo.svg"
-                            alt="Logo"
-                            className="mx-auto"
-                            width={250}
-                            height={100}
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <p>Follow us on Instagram</p>
-                        <a
-                            href="https://instagram.com/paltuu.pk"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-white hover:underline">
-                            @paltuu.pk
-                        </a>
-                    </div>
-                    <div className="mb-4">{/* for about us */}</div>
-                    <p className="text-sm">
-                        &copy; {currentYear} Paltuu. All rights reserved.
-                    </p>
-                </div>
-            </footer>
+            
         </div>
     );
 };

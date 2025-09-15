@@ -611,12 +611,6 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                                 </span>
                                             </div>
                                         </div>
-                                        <Tag
-                                            color="#a03048"
-                                            className="rounded-full px-3 py-1 mt-2">
-                                            Listed{" "}
-                                            {formatListingDate(pet.created_at)}
-                                        </Tag>
                                     </div>
 
                                     {/* Listing Type Tag */}

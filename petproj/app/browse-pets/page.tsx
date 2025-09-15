@@ -159,7 +159,6 @@ export default function BrowsePets() {
 
     return (
         <>
-            
             <div
                 className="fullBody"
                 style={{ maxWidth: "90%", margin: "0 auto" }}>

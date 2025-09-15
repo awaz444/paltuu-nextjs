@@ -1,54 +1,94 @@
+"use client";
+import Link from "next/link";
+import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 
-'use client';
-import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
-import { usePathname } from 'next/navigation';
-
-const DynamicReportIssueModal = dynamic(() => import('./ReportIssueModal'), { ssr: false });
-
-const Footer = () => {
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [showModal, setShowModal] = useState(false);
-  const hideFooterRoutes = ["/login", "/success", "/sign-up", "/vet-register", "/rescue-register", "/vet-qualifications", "/vet-specialization" , "/vet-schedule", "/vet-get-verified-1", "/vet-get-verified-2", '/', '/partner-signup'];
-  const pathName = usePathname();
-
-  useEffect(() => {
-    setCurrentYear(new Date().getFullYear());
-  }, []);
-
-  const isHideFooter = hideFooterRoutes.includes(pathName);
-
-  if (isHideFooter) {
-    return null;
-  }
-
+export default function Footer() {
   return (
-    <footer className="text-white py-3 px-4 rounded-t-[2rem] rounded-b-none bg-primary mt-8">
-      <div className="container mx-auto text-center">
-        <div className="mb-2">
-          <Image src="/paltu_logo.svg" alt="Logo" className="mx-auto" width={180} height={70} />
+    <footer className="bg-primary text-white px-6 md:px-16 py-10 rounded-t-3xl">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+        {/* Left - Logo & About */}
+        <div>
+          <img src="paltu_logo.svg" alt="paltuu logo" width={200} height={120} />
+          <p className="mt-4 text-sm text-gray-200">
+            Paltuu is your trusted pet marketplace. We connect pet lovers with
+            the right companions and ensure a safe, loving adoption experience.
+          </p>
+
+          {/* Social Media Icons */}
+          <div className="flex gap-4 mt-5">
+            <Link href="https://facebook.com" target="_blank">
+              <Facebook className="w-5 h-5 hover:text-gray-300 transition" />
+            </Link>
+            <Link href="https://instagram.com" target="_blank">
+              <Instagram className="w-5 h-5 hover:text-gray-300 transition" />
+            </Link>
+            <Link href="https://twitter.com" target="_blank">
+              <Twitter className="w-5 h-5 hover:text-gray-300 transition" />
+            </Link>
+            <Link href="https://youtube.com" target="_blank">
+              <Youtube className="w-5 h-5 hover:text-gray-300 transition" />
+            </Link>
+          </div>
         </div>
-        <div className="mb-2">
-          <p className="text-sm">Follow us on Instagram</p>
-          <a href="https://instagram.com/paltuupk" target="_blank" rel="noopener noreferrer" className="text-white hover:underline text-sm">
-            @paltuupk
-          </a>
+
+        {/* Middle - Quick Links */}
+        <div className="flex flex-col items-center md:items-start">
+          <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+          <ul className="space-y-2 text-sm">
+            <li>
+              <Link href="/about" className="hover:text-gray-300">
+                About Us
+              </Link>
+            </li>
+            <li>
+              <Link href="/contact" className="hover:text-gray-300">
+                Contact
+              </Link>
+            </li>
+            <li>
+              <Link href="/shipping-policy" className="hover:text-gray-300">
+                Shipping Policy
+              </Link>
+            </li>
+            <li>
+              <Link href="/return-policy" className="hover:text-gray-300">
+                Return Policy
+              </Link>
+            </li>
+            <li>
+              <Link href="/terms-and-conditions" className="hover:text-gray-300">
+                Terms & Conditions
+              </Link>
+            </li>
+          </ul>
         </div>
-        <p className="text-xs">&copy; {currentYear} Paltuu. All rights reserved.</p>
-        <div className="mt-2">
-          <button
-            onClick={() => setShowModal(true)}
-            className="text-sm underline"
-            aria-label="Report a problem"
-          >
-            Report a problem?
-          </button>
+
+        {/* Right - Newsletter */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Newsletter</h3>
+          <p className="text-sm text-gray-200 mb-3">
+            Subscribe to stay updated on the latest pets and offers.
+          </p>
+          <form className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-white"
+            />
+            <button
+              type="submit"
+              className="bg-white text-primary font-semibold px-4 py-2 rounded-lg hover:bg-gray-200 transition"
+            >
+              Subscribe
+            </button>
+          </form>
         </div>
-        {showModal && <DynamicReportIssueModal onClose={() => setShowModal(false)} visible={showModal} />}
+      </div>
+
+      {/* Bottom bar */}
+      <div className="border-t border-gray-400 mt-10 pt-6 text-center text-sm text-gray-200">
+        © {new Date().getFullYear()} Paltuu. All rights reserved.
       </div>
     </footer>
   );
-};
-
-export default Footer;
+}

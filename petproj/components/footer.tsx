@@ -30,6 +30,7 @@ export default function Footer() {
             </Link> */}
           </div>
         </div>
+        
 
         {/* Middle - Quick Links */}
         <div className="flex flex-col items-center md:items-start">

@@ -28,7 +28,7 @@ interface ProductGridProps {
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
-  
+
 
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
@@ -85,6 +85,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
                 <img
                   src={product.image_url || "/product-placeholder.png"}
                   alt={product.name}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full aspect-square object-cover rounded-2xl"
                 />
                 {product.inStock === false && (

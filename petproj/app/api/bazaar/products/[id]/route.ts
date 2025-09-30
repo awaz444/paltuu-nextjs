@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '../../../../../db/ecom';
+import { safeRedis } from '../../../../../utils/redis';
+
+// Helper to invalidate product cache keys
+async function invalidateProductCache() {
+  try {
+    const keys = await safeRedis.keys('products:*');
+    if (keys.length > 0) {
+      await safeRedis.del(...keys);
+      console.info(`[Cache] Invalidated ${keys.length} product cache keys`);
+    }
+  } catch (e) {
+    console.warn('[Cache] Failed to invalidate cache (non-fatal):', e);
+  }
+}
 
 export async function GET(req: NextRequest, { params }: any) {
   const client = createClient();
@@ -112,6 +126,10 @@ export async function PUT(req: NextRequest, { params }: any) {
     }
 
     const final = await client.query('SELECT * FROM bazaar_products WHERE product_id = $1', [id]);
+
+    // Invalidate product cache since we updated a product
+    await invalidateProductCache();
+
     // Return product with variants to allow front-end to upload images per variant (same as POST route)
     const out = { ...final.rows[0], variants: insertedVariants };
     return NextResponse.json(out, { status: 200 });
@@ -127,6 +145,10 @@ export async function DELETE(req: NextRequest, { params }: any) {
     const id = params.id;
     await client.connect();
     await client.query('DELETE FROM bazaar_products WHERE product_id = $1', [id]);
+
+    // Invalidate product cache since we deleted a product
+    await invalidateProductCache();
+
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
     console.error(err);

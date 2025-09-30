@@ -80,8 +80,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
             href={`/marketplace/${product.product_id}`}
             passHref
           >
-            <div className="bg-white pt-4 px-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300">
-              <div className="relative">
+            <div className="bg-white pt-4 px-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 h-full flex flex-col">
+              <div className="relative flex-shrink-0">
                 <img
                   src={product.image_url || "/product-placeholder.png"}
                   alt={product.name}
@@ -93,8 +93,10 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
                   </div>
                 )}
               </div>
-              <div className="py-4">
-                <h3 className="font-bold text-lg mb-1 truncate max-w-[90%]">
+              
+              <div className="py-4 flex flex-col flex-grow">
+                {/* Title with 2-line clamp */}
+                <h3 className="font-bold text-lg mb-2 line-clamp-2 min-h-[2.8rem] leading-snug">
                   {product.name}
                 </h3>
 
@@ -110,35 +112,30 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
                   </div>
                 )}
 
-                {product.original_price ? (
-                  <div className="space-y-1">
-                    <p className="text-gray-500 line-through text-sm">
-                      PKR {parseInt(product.original_price).toLocaleString()}
-                    </p>
+                {/* Price moved to bottom section */}
+                <div className="mt-auto pt-2 border-t border-gray-100">
+                  {product.original_price ? (
+                    <div className="space-y-1">
+                      <p className="text-gray-500 line-through text-sm">
+                        PKR {parseInt(product.original_price).toLocaleString()}
+                      </p>
+                      <p className="text-primary font-semibold text-xl">
+                        PKR {parseInt(product.price).toLocaleString()}
+                      </p>
+                    </div>
+                  ) : (
                     <p className="text-primary font-semibold text-xl">
                       PKR {parseInt(product.price).toLocaleString()}
                     </p>
-                  </div>
-                ) : (
-                  <p className="text-primary font-semibold text-xl mb-3">
-                    PKR {parseInt(product.price).toLocaleString()}
-                  </p>
-                )}
+                  )}
 
-                {/* <button
-                  className={`w-full py-2 rounded-xl flex items-center justify-center gap-2 ${
-                    product.inStock !== false
-                      ? "bg-primary text-white hover:bg-primary-dark"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  } transition-colors`}
-                  onClick={(e) =>
-                    product.inStock !== false && handleAddToCart(e, product)
-                  }
-                  disabled={product.inStock === false}
-                >
-                  <ShoppingCartOutlined />
-                  {product.inStock !== false ? "Add to Cart" : "Out of Stock"}
-                </button> */}
+                  {/* Stock status */}
+                  {product.inStock !== undefined && (
+                    <div className={`text-xs font-medium mt-1 ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
+                      {product.inStock ? 'In stock' : 'Out of stock'}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </Link>

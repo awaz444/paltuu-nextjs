@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/ecom";
+import { safeRedis } from "../../../../utils/redis";
 
 export const revalidate = 0;
+
+// Redis cache TTL for product listings
+const CACHE_TTL_SEC = 30; // 30 seconds for better performance
+
+// Helper to invalidate product cache keys
+async function invalidateProductCache() {
+  try {
+    // Get all keys matching the pattern
+    const keys = await safeRedis.keys('products:*');
+    if (keys.length > 0) {
+      await safeRedis.del(...keys);
+      console.info(`[Cache] Invalidated ${keys.length} product cache keys`);
+    }
+  } catch (e) {
+    console.warn('[Cache] Failed to invalidate cache (non-fatal):', e);
+  }
+}
 
 export interface CreateBazaarProductDto {
   title: string;
@@ -202,6 +220,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Invalidate product cache since we added a new product
+    await invalidateProductCache();
+
     // return product with variants to allow front-end to upload images per variant
     const out = { ...product, variants: insertedVariants };
     return NextResponse.json(out, { status: 201 });
@@ -226,6 +247,25 @@ export async function GET(req: NextRequest) {
     // Get query parameters
     const { searchParams } = new URL(req.url);
     const adminView = searchParams.get("admin") === "true";
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(100, Math.max(8, parseInt(searchParams.get("limit") || "24", 10)));
+    const offset = (page - 1) * limit;
+
+    // Dynamic cache key including query params (best practice)
+    const cacheKey = `products:admin=${adminView}:page=${page}:limit=${limit}`;
+
+    // Try Redis cache first
+    try {
+      const cachedData = await safeRedis.get(cacheKey);
+      if (cachedData) {
+        const parsed = JSON.parse(cachedData);
+        console.info(`[Cache] Redis hit for ${cacheKey}`);
+        return NextResponse.json(parsed, { status: 200 });
+      }
+    } catch (e) {
+      console.warn('[Cache] Redis GET failed (non-fatal):', e);
+      // Continue to DB query if Redis fails
+    }
 
     // Check if media table has variant_id column (schema may vary)
     const colCheck = await client.query("SELECT 1 FROM information_schema.columns WHERE table_name = 'bazaar_product_media' AND column_name = 'variant_id' LIMIT 1");
@@ -252,10 +292,27 @@ export async function GET(req: NextRequest) {
       query += ` WHERE (p.status = 'published' OR p.status IS NULL)`;
     }
 
-    query += ` ORDER BY p.created_at DESC`;
+    query += ` ORDER BY p.created_at DESC LIMIT $1 OFFSET $2`;
 
-    const result = await client.query(query);
-    return NextResponse.json(result.rows, { status: 200 });
+    // Also fetch total count for pagination
+    const countQuery = `SELECT COUNT(*) AS total FROM bazaar_products p ${!adminView ? "WHERE (p.status = 'published' OR p.status IS NULL)" : ""}`;
+    const countRes = await client.query(countQuery);
+    const total = parseInt(countRes.rows[0]?.total || '0', 10);
+
+    const result = await client.query(query, [limit, offset]);
+    const out = { rows: result.rows, meta: { total, page, limit } };
+
+    // Store in Redis cache with expiry (best practice)
+    try {
+      const success = await safeRedis.set(cacheKey, JSON.stringify(out), 'EX', CACHE_TTL_SEC);
+      if (success) {
+        console.info(`[Cache] Stored ${cacheKey} in Redis for ${CACHE_TTL_SEC}s`);
+      }
+    } catch (e) {
+      console.warn('[Cache] Redis SET failed (non-fatal):', e);
+    }
+
+    return NextResponse.json(out, { status: 200 });
   } catch (err) {
     console.error(err);
     return NextResponse.json(

@@ -38,6 +38,7 @@
     "glob": "^11.0.0",
     "google-auth-library": "^9.15.0",
     "heroicons": "^2.2.0",
+    "ioredis": "^5.8.0",
     "jsonwebtoken": "^9.0.2",
     "lru-cache": "^11.0.2",
     "lucide-react": "^0.542.0",

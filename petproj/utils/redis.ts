@@ -1,107 +1,115 @@
-import Redis from "ioredis";
+import RedisIoredis, { Redis as IORedisClient } from "ioredis";
+import { Redis as UpstashRedis } from "@upstash/redis";
 
-// Check if Redis is enabled via environment variable
+// Upstash detection: support both env var names used by different examples
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REST_URL || "";
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REST_TOKEN || "";
+const USE_UPSTASH = !!UPSTASH_URL && !!UPSTASH_TOKEN;
+
+// If Upstash is configured, use its HTTP client (serverless-friendly). Otherwise fall back to ioredis if enabled.
+let upstash: UpstashRedis | null = null;
+if (USE_UPSTASH) {
+  try {
+    upstash = new UpstashRedis({ url: UPSTASH_URL, token: UPSTASH_TOKEN });
+    console.info('[redis] Using Upstash Redis (HTTP)');
+  } catch (e) {
+    console.warn('[redis] Failed to initialize Upstash client', e);
+    upstash = null;
+  }
+}
+
+// Local ioredis (optional)
 const REDIS_ENABLED = process.env.REDIS_ENABLED !== 'false';
-
-// Create a resilient Redis client but avoid crashing the process when Redis is down.
-// Use lazyConnect so the client doesn't attempt to connect at import time in some environments,
-// and limit retries so an unreachable Redis doesn't flood logs.
-const redis = REDIS_ENABLED ? new Redis({
-  host: process.env.REDIS_HOST || "127.0.0.1",
-  port: Number(process.env.REDIS_PORT) || 6379,
-  password: process.env.REDIS_PASSWORD || undefined,
-  // reduce retries and keep reasonable reconnect behavior
-  maxRetriesPerRequest: 2,
-  retryStrategy: (times: number) => {
-    // Stop trying after 3 attempts to avoid flooding logs
-    if (times > 3) return null;
-    return Math.min(times * 100, 1000);
-  },
-  // do not queue commands forever when Redis is down; let callers handle failures
-  enableOfflineQueue: false,
-  // don't automatically connect on import — connect on first command
-  lazyConnect: true,
-  // Add connection timeout
-  connectTimeout: 5000,
-  commandTimeout: 3000,
-}) : null;
-
-// Attach handlers so errors don't become unhandled and crash Node.
-if (redis) {
-  redis.on("error", (err) => {
-    // Keep it non-fatal: log a warning and allow application to continue using fallback caches.
-    // Only log unique errors to avoid spam
-    const errorKey = (err as any).code || err.message?.substring(0, 50) || 'unknown';
-    if (!(redis as any)._lastErrorKey || (redis as any)._lastErrorKey !== errorKey) {
-      console.warn("[ioredis] Redis error (non-fatal):", errorKey);
-      (redis as any)._lastErrorKey = errorKey;
-    }
+let ioredis: IORedisClient | null = null;
+if (!USE_UPSTASH && REDIS_ENABLED) {
+  ioredis = new RedisIoredis({
+    host: process.env.REDIS_HOST || "127.0.0.1",
+    port: Number(process.env.REDIS_PORT) || 6379,
+    password: process.env.REDIS_PASSWORD || undefined,
+    lazyConnect: true,
+    enableOfflineQueue: false,
+    maxRetriesPerRequest: 2,
+    connectTimeout: 5000,
   });
 
-  redis.on("connect", () => {
-    console.info("[ioredis] connecting to Redis...");
-    (redis as any)._lastErrorKey = null; // Reset error tracking
-  });
-
-  redis.on("ready", () => {
-    console.info("[ioredis] connected and ready");
-  });
-
-  redis.on("close", () => {
-    console.info("[ioredis] connection closed");
-  });
-
-  redis.on("reconnecting", () => {
-    console.info("[ioredis] attempting to reconnect");
+  ioredis.on('error', (err: any) => {
+    console.warn('[ioredis] error (non-fatal):', (err as any)?.message || err);
   });
 }
 
-// Safe Redis wrapper that handles null redis instance
+// Safe Redis wrapper used by the application
 export const safeRedis = {
   async get(key: string): Promise<string | null> {
-    if (!redis) return null;
     try {
-      return await redis.get(key);
+      if (upstash) {
+        return (await upstash.get(key)) as string | null;
+      }
+      if (ioredis) {
+        return await ioredis.get(key);
+      }
+      return null;
     } catch (e) {
-      console.warn("[ioredis] GET failed:", e instanceof Error ? e.message : e);
+      console.warn('[safeRedis] GET failed:', e instanceof Error ? e.message : e);
       return null;
     }
   },
 
-  async set(key: string, value: string, mode?: string, duration?: number): Promise<boolean> {
-    if (!redis) return false;
+  async set(key: string, value: string, mode?: 'EX', duration?: number): Promise<boolean> {
     try {
-      if (mode === 'EX' && duration) {
-        await redis.set(key, value, 'EX', duration);
-      } else {
-        await redis.set(key, value);
+      if (upstash) {
+        if (mode === 'EX' && duration) {
+          await upstash.set(key, value, { ex: duration });
+        } else {
+          await upstash.set(key, value);
+        }
+        return true;
       }
-      return true;
+      if (ioredis) {
+        if (mode === 'EX' && duration) {
+          await ioredis.set(key, value, 'EX', duration);
+        } else {
+          await ioredis.set(key, value);
+        }
+        return true;
+      }
+      return false;
     } catch (e) {
-      console.warn("[ioredis] SET failed:", e instanceof Error ? e.message : e);
+      console.warn('[safeRedis] SET failed:', e instanceof Error ? e.message : e);
       return false;
     }
   },
 
   async del(...keys: string[]): Promise<number> {
-    if (!redis || keys.length === 0) return 0;
     try {
-      return await redis.del(...keys);
+      if (!keys || keys.length === 0) return 0;
+      if (upstash) {
+        return (await upstash.del(...keys)) as number;
+      }
+      if (ioredis) {
+        return await ioredis.del(...keys);
+      }
+      return 0;
     } catch (e) {
-      console.warn("[ioredis] DEL failed:", e instanceof Error ? e.message : e);
+      console.warn('[safeRedis] DEL failed:', e instanceof Error ? e.message : e);
       return 0;
     }
   },
 
   async keys(pattern: string): Promise<string[]> {
-    if (!redis) return [];
     try {
-      return await redis.keys(pattern);
+      if (upstash) {
+        return (await upstash.keys(pattern)) as string[];
+      }
+      if (ioredis) {
+        return await ioredis.keys(pattern);
+      }
+      return [];
     } catch (e) {
-      console.warn("[ioredis] KEYS failed:", e instanceof Error ? e.message : e);
+      console.warn('[safeRedis] KEYS failed:', e instanceof Error ? e.message : e);
       return [];
     }
   }
 };
 
-export default redis;
+// For backward compatibility (some modules import default), export default the active client
+export default (upstash as any) || (ioredis as any) || null;

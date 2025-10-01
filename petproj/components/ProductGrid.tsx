@@ -54,6 +54,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
       console.error("Error adding to cart:", err);
     }
   };
+  
 
   // Helper to render stars
   const renderStars = (rating: number = 0) => {
@@ -135,7 +136,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
                                     PKR {parseInt(product.price).toLocaleString()}
                                 </p>
                             )}
-                            
+
 
                             {/* <button
               className={`w-full py-2 rounded-xl flex items-center justify-center gap-2 ${

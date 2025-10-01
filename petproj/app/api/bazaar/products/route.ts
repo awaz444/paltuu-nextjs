@@ -4,13 +4,26 @@ import { safeRedis } from "../../../../utils/redis";
 
 export const revalidate = 0;
 
-// Redis cache TTL for product listings
-const CACHE_TTL_SEC = 30; // 30 seconds for better performance
+const CACHE_TTL_SEC = 300; // 5 minutes
 
-// Helper to invalidate product cache keys
+// Clear any existing product cache on startup to prevent corruption issues
+let startupCacheCleared = false;
+async function clearStartupCache() {
+  if (startupCacheCleared) return;
+  startupCacheCleared = true;
+  try {
+    const keys = await safeRedis.keys('products:*');
+    if (keys.length > 0) {
+      await safeRedis.del(...keys);
+      console.info(`[Cache] Cleared ${keys.length} existing product cache keys on startup`);
+    }
+  } catch (e) {
+    console.warn('[Cache] Failed to clear startup cache (non-fatal):', e);
+  }
+}
+
 async function invalidateProductCache() {
   try {
-    // Get all keys matching the pattern
     const keys = await safeRedis.keys('products:*');
     if (keys.length > 0) {
       await safeRedis.del(...keys);
@@ -242,25 +255,43 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const client = createClient();
   try {
+    // Clear any existing corrupted cache on first request
+    await clearStartupCache();
+
     await client.connect();
 
     // Get query parameters
     const { searchParams } = new URL(req.url);
-    const adminView = searchParams.get("admin") === "true";
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-    const limit = Math.min(100, Math.max(8, parseInt(searchParams.get("limit") || "24", 10)));
+  const adminView = searchParams.get("admin") === "true";
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit = Math.min(100, Math.max(8, parseInt(searchParams.get("limit") || "24", 10)));
     const offset = (page - 1) * limit;
 
-    // Dynamic cache key including query params (best practice)
-    const cacheKey = `products:admin=${adminView}:page=${page}:limit=${limit}`;
+  // Read filters from query params (server-side filtering)
+  const filterCategory = searchParams.get('category');
+  const filterCollection = searchParams.get('collection');
+  const filterKeyword = searchParams.get('keyword');
+
+  // Dynamic cache key including query params and filters (best practice)
+  // Normalize filter values for consistent caching - always use strings for cache keys
+  const normalizedCategory = filterCategory || '';
+  const normalizedCollection = filterCollection || '';
+  const normalizedKeyword = filterKeyword || '';
+  const cacheKey = `products:admin=${adminView}:page=${page}:limit=${limit}:cat=${normalizedCategory}:col=${normalizedCollection}:kw=${normalizedKeyword}`;
 
     // Try Redis cache first
     try {
       const cachedData = await safeRedis.get(cacheKey);
       if (cachedData) {
-        const parsed = JSON.parse(cachedData);
-        console.info(`[Cache] Redis hit for ${cacheKey}`);
-        return NextResponse.json(parsed, { status: 200 });
+        try {
+          const parsed = JSON.parse(cachedData);
+          console.info(`[Cache] Redis hit for ${cacheKey}`);
+          return NextResponse.json(parsed, { status: 200 });
+        } catch (parseErr) {
+          // Malformed value in cache — delete the bad key and continue to DB
+          console.warn('[Cache] Invalid JSON in cache, deleting key:', cacheKey);
+          await safeRedis.del(cacheKey);
+        }
       }
     } catch (e) {
       console.warn('[Cache] Redis GET failed (non-fatal):', e);
@@ -281,35 +312,92 @@ export async function GET(req: NextRequest) {
      p.currency, p.sku, p.shipping_weight, p.featured,
      COALESCE((SELECT SUM(stock) FROM bazaar_product_variants v2 WHERE v2.product_id = p.product_id), 0) AS stock_total,
      p.collection_id, p.status, p.created_at,
+     COALESCE(bc.name, 'General') AS collection_name,
     COALESCE((SELECT json_agg(url ORDER BY ordering) FROM bazaar_product_media m WHERE m.product_id = p.product_id), '[]'::json) AS images,
     COALESCE((SELECT json_agg(json_build_object('category_id', c.category_id, 'name', c.name)) FROM bazaar_categories c JOIN bazaar_product_categories bpc ON c.category_id = bpc.category_id WHERE bpc.product_id = p.product_id), '[]'::json) AS categories,
   COALESCE(${variantsSubquery}, '[]'::json) AS variants
       FROM bazaar_products p
+      LEFT JOIN bazaar_collections bc ON p.collection_id = bc.collection_id
     `;
 
-    // If not admin view, only show published products
-    if (!adminView) {
-      query += ` WHERE (p.status = 'published' OR p.status IS NULL)`;
+    // Build WHERE clauses (including filters) using parameterized values
+    const whereClauses: string[] = [];
+    const whereValues: any[] = [];
+    if (!adminView) whereClauses.push("(p.status = 'published' OR p.status IS NULL)");
+
+    if (filterKeyword) {
+      whereValues.push(`%${filterKeyword}%`);
+      const idx = whereValues.length;
+      whereClauses.push(`(p.title ILIKE $${idx} OR p.description ILIKE $${idx})`);
     }
 
-    query += ` ORDER BY p.created_at DESC LIMIT $1 OFFSET $2`;
+    if (filterCollection) {
+      // Handle both ID and name for collections
+      if (!isNaN(Number(filterCollection))) {
+        // If it's a number, treat as collection_id
+        whereValues.push(Number(filterCollection));
+        const idx = whereValues.length;
+        whereClauses.push(`p.collection_id = $${idx}`);
+      } else {
+        // If it's a string, match by collection name
+        whereValues.push(filterCollection);
+        const idx = whereValues.length;
+        whereClauses.push(`bc.name ILIKE $${idx}`);
+      }
+    }
 
-    // Also fetch total count for pagination
-    const countQuery = `SELECT COUNT(*) AS total FROM bazaar_products p ${!adminView ? "WHERE (p.status = 'published' OR p.status IS NULL)" : ""}`;
-    const countRes = await client.query(countQuery);
+    if (filterCategory) {
+      // Handle both ID and name for categories
+      if (!isNaN(Number(filterCategory))) {
+        // If it's a number, treat as category_id
+        whereValues.push(Number(filterCategory));
+        const idx = whereValues.length;
+        whereClauses.push(`EXISTS (SELECT 1 FROM bazaar_product_categories bpc WHERE bpc.product_id = p.product_id AND bpc.category_id = $${idx})`);
+      } else {
+        // If it's a string, match by category name
+        whereValues.push(filterCategory);
+        const idx = whereValues.length;
+        whereClauses.push(`EXISTS (SELECT 1 FROM bazaar_product_categories bpc JOIN bazaar_categories bc_filter ON bpc.category_id = bc_filter.category_id WHERE bpc.product_id = p.product_id AND bc_filter.name ILIKE $${idx})`);
+      }
+    }
+
+    if (whereClauses.length > 0) {
+      query += ` WHERE ${whereClauses.join(' AND ')}`;
+    }
+
+    // push limit and offset placeholders after where values
+    const limitIdx = whereValues.length + 1;
+    const offsetIdx = whereValues.length + 2;
+    query += ` ORDER BY p.created_at DESC LIMIT $${limitIdx} OFFSET $${offsetIdx}`;
+
+    // Also fetch total count for pagination with same WHERE conditions and JOINs
+    let countQuery = `
+      SELECT COUNT(DISTINCT p.product_id) AS total
+      FROM bazaar_products p
+      LEFT JOIN bazaar_collections bc ON p.collection_id = bc.collection_id
+    `;
+
+    if (whereClauses.length > 0) {
+      countQuery += ` WHERE ${whereClauses.join(' AND ')}`;
+    }
+
+    const countRes = await client.query(countQuery, whereValues);
     const total = parseInt(countRes.rows[0]?.total || '0', 10);
 
-    const result = await client.query(query, [limit, offset]);
-    const out = { rows: result.rows, meta: { total, page, limit } };
+  const result = await client.query(query, [...whereValues, limit, offset]);
+
+  const out = { rows: result.rows, meta: { total, page, limit } };
 
     // Store in Redis cache with expiry (best practice)
     try {
-      const success = await safeRedis.set(cacheKey, JSON.stringify(out), 'EX', CACHE_TTL_SEC);
+      const serialized = JSON.stringify(out);
+      const success = await safeRedis.set(cacheKey, serialized, 'EX', CACHE_TTL_SEC);
       if (success) {
         console.info(`[Cache] Stored ${cacheKey} in Redis for ${CACHE_TTL_SEC}s`);
       }
     } catch (e) {
-      console.warn('[Cache] Redis SET failed (non-fatal):', e);
+      console.warn('[Cache] Redis SET failed (non-fatal):', e instanceof Error ? e.message : e);
+      // Don't let cache failures break the API response
     }
 
     return NextResponse.json(out, { status: 200 });

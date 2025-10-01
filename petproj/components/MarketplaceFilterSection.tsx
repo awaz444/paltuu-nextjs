@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 
 interface MarketplaceFilterSectionProps {
@@ -12,30 +12,59 @@ interface MarketplaceFilterSectionProps {
     onReset: () => void;
 }
 
-const MarketplaceFilterSection: React.FC<MarketplaceFilterSectionProps> = ({ 
-    filters, onSearch, onReset 
+interface Category {
+    category_id: number;
+    name: string;
+    slug?: string;
+}
+
+interface Collection {
+    collection_id: number;
+    name: string;
+    slug?: string;
+}
+
+const MarketplaceFilterSection: React.FC<MarketplaceFilterSectionProps> = ({
+    filters, onSearch, onReset
 }) => {
     const [localFilters, setLocalFilters] = useState(filters);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [collections, setCollections] = useState<Collection[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    
+    // Load categories and collections from API
+    useEffect(() => {
+        const loadFilterData = async () => {
+            try {
+                const [categoriesRes, collectionsRes] = await Promise.all([
+                    fetch('/api/bazaar/categories'),
+                    fetch('/api/bazaar/collections')
+                ]);
 
-    const categories = [
-        { id: "food", name: "Food" },
-        { id: "accessories", name: "Accessories" },
-        { id: "toys", name: "Toys" },
-        { id: "grooming", name: "Grooming" },
-        { id: "health", name: "Health" },
-        { id: "beds", name: "Beds & Furniture" },
-    ];
+                if (categoriesRes.ok) {
+                    const categoriesData = await categoriesRes.json();
+                    setCategories(categoriesData);
+                }
 
-    const collections = [
-        { id: "dogs", name: "For Dogs" },
-        { id: "cats", name: "For Cats" },
-        { id: "birds", name: "For Birds" },
-        { id: "fish", name: "For Fish" },
-        { id: "small", name: "For Small Animals" },
-    ];
+                if (collectionsRes.ok) {
+                    const collectionsData = await collectionsRes.json();
+                    setCollections(collectionsData);
+                }
+            } catch (error) {
+                console.error('Failed to load filter data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadFilterData();
+    }, []);
+
+    // Update local filters when props change
+    useEffect(() => {
+        setLocalFilters(filters);
+    }, [filters]);
 
     const handleFilterChange = (key: string, value: string) => {
         const updatedFilters = { ...localFilters, [key]: value };
@@ -63,15 +92,17 @@ const MarketplaceFilterSection: React.FC<MarketplaceFilterSectionProps> = ({
                 {/* PC Layout */}
                 <div className="md:flex flex-wrap gap-4 items-center">
                     <div className="flex-1 min-w-[150px]">
-                        <label className="text-xs">Category</label>
+                        <label className="text-xs" htmlFor="category-select">Category</label>
                         <select
+                            id="category-select"
                             className="w-full p-3 border rounded-xl"
                             value={localFilters.category}
                             onChange={(e) => handleFilterChange("category", e.target.value)}
+                            disabled={loading}
                         >
                             <option value="">All Categories</option>
                             {categories.map((category) => (
-                                <option key={category.id} value={category.id}>
+                                <option key={category.category_id} value={category.category_id}>
                                     {category.name}
                                 </option>
                             ))}
@@ -79,15 +110,17 @@ const MarketplaceFilterSection: React.FC<MarketplaceFilterSectionProps> = ({
                     </div>
 
                     <div className="flex-1 min-w-[150px]">
-                        <label className="text-xs">Collection</label>
+                        <label className="text-xs" htmlFor="collection-select">Collection</label>
                         <select
+                            id="collection-select"
                             className="w-full p-3 border rounded-xl"
                             value={localFilters.collection}
                             onChange={(e) => handleFilterChange("collection", e.target.value)}
+                            disabled={loading}
                         >
                             <option value="">All Collections</option>
                             {collections.map((collection) => (
-                                <option key={collection.id} value={collection.id}>
+                                <option key={collection.collection_id} value={collection.collection_id}>
                                     {collection.name}
                                 </option>
                             ))}
@@ -95,8 +128,9 @@ const MarketplaceFilterSection: React.FC<MarketplaceFilterSectionProps> = ({
                     </div>
 
                     <div className="flex-1 min-w-[150px]">
-                        <label className="text-xs">Keyword</label>
+                        <label className="text-xs" htmlFor="keyword-input">Keyword</label>
                         <input
+                            id="keyword-input"
                             type="text"
                             className="w-full p-3 border rounded-xl"
                             value={localFilters.keyword}
@@ -130,15 +164,17 @@ const MarketplaceFilterSection: React.FC<MarketplaceFilterSectionProps> = ({
                         <h2 className="text-lg font-semibold mb-4">Filters</h2>
 
                         <div className="mb-4">
-                            <label className="text-xs">Category</label>
+                            <label className="text-xs" htmlFor="modal-category-select">Category</label>
                             <select
+                                id="modal-category-select"
                                 className="w-full p-3 border rounded-xl"
                                 value={localFilters.category}
                                 onChange={(e) => handleFilterChange("category", e.target.value)}
+                                disabled={loading}
                             >
                                 <option value="">All Categories</option>
                                 {categories.map((category) => (
-                                    <option key={category.id} value={category.id}>
+                                    <option key={category.category_id} value={category.category_id}>
                                         {category.name}
                                     </option>
                                 ))}
@@ -146,15 +182,17 @@ const MarketplaceFilterSection: React.FC<MarketplaceFilterSectionProps> = ({
                         </div>
 
                         <div className="mb-4">
-                            <label className="text-xs">Collection</label>
+                            <label className="text-xs" htmlFor="modal-collection-select">Collection</label>
                             <select
+                                id="modal-collection-select"
                                 className="w-full p-3 border rounded-xl"
                                 value={localFilters.collection}
                                 onChange={(e) => handleFilterChange("collection", e.target.value)}
+                                disabled={loading}
                             >
                                 <option value="">All Collections</option>
                                 {collections.map((collection) => (
-                                    <option key={collection.id} value={collection.id}>
+                                    <option key={collection.collection_id} value={collection.collection_id}>
                                         {collection.name}
                                     </option>
                                 ))}
@@ -162,8 +200,9 @@ const MarketplaceFilterSection: React.FC<MarketplaceFilterSectionProps> = ({
                         </div>
 
                         <div className="mb-4">
-                            <label className="text-xs">Keyword</label>
+                            <label className="text-xs" htmlFor="modal-keyword-input">Keyword</label>
                             <input
+                                id="modal-keyword-input"
                                 type="text"
                                 className="w-full p-3 border rounded-xl"
                                 value={localFilters.keyword}

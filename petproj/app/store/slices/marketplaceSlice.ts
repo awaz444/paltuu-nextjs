@@ -1,5 +1,5 @@
 // store/slices/marketplaceSlice.ts
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 
 interface Product {
   product_id: number;
@@ -18,12 +18,52 @@ interface Product {
 interface MarketplaceState {
   products: Product[];
   lastFetched: number | null; // optional, to track freshness
+  meta: { total: number; page: number; limit: number } | null;
+  loading: boolean;
+  error: string | null;
+  lastFilters: string | null;
+  hasMore: boolean;
+  currentPage: number;
 }
 
 const initialState: MarketplaceState = {
   products: [],
   lastFetched: null,
+  meta: null,
+  loading: false,
+  error: null,
+  lastFilters: null,
+  hasMore: true,
+  currentPage: 0,
 };
+
+// Async thunk to fetch products with optional filters + pagination
+export const fetchProducts = createAsyncThunk(
+  'marketplace/fetchProducts',
+  async (opts: { page?: number; limit?: number; filters?: any; append?: boolean }, { rejectWithValue }) => {
+    try {
+      const page = opts.page ?? 1;
+      const limit = opts.limit ?? 24;
+      const filters = opts.filters ?? {};
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('limit', String(limit));
+      if (filters.category) params.set('category', String(filters.category));
+      if (filters.collection) params.set('collection', String(filters.collection));
+      if (filters.keyword) params.set('keyword', String(filters.keyword));
+
+      const res = await fetch(`/api/bazaar/products?${params.toString()}`);
+      if (!res.ok) {
+        const text = await res.text();
+        return rejectWithValue(text || 'Failed to fetch products');
+      }
+      const data = await res.json();
+      return { data, append: !!opts.append, page };
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Network error');
+    }
+  }
+);
 
 const marketplaceSlice = createSlice({
   name: "marketplace",
@@ -36,8 +76,66 @@ const marketplaceSlice = createSlice({
     clearProducts(state) {
       state.products = [];
       state.lastFetched = null;
+      state.meta = null;
+      state.lastFilters = null;
+      state.hasMore = true;
+      state.currentPage = 0;
     },
   },
+  extraReducers: (builder) => {
+    builder.addCase(fetchProducts.pending, (state, _action) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(fetchProducts.fulfilled, (state, action) => {
+      state.loading = false;
+      const { data, append, page } = action.payload as any;
+      const rows = Array.isArray(data.rows) ? data.rows : data;
+      const transformed = (rows as any[]).map((product) => {
+        const firstVariant = product.variants?.[0];
+        const displayPrice = firstVariant?.price_override ?? product.price ?? 0;
+        return {
+          ...product,
+          product_id: product.product_id,
+          name: product.title || product.name,
+          category: product.categories?.[0]?.name || 'Uncategorized',
+          collection: product.collection_name || 'General',
+          image_url: product.images?.[0] || '/placeholder-product.jpg',
+          price: String(displayPrice),
+          original_price: firstVariant?.compare_at_price ? String(firstVariant.compare_at_price) : undefined,
+          inStock: product.variants?.some((v: any) => v.stock > 0) || false,
+          rating: 0,
+          ratingCount: 0,
+        } as Product;
+      });
+
+      if (append) {
+        state.products = [...state.products, ...transformed];
+      } else {
+        state.products = transformed;
+      }
+
+      state.meta = data.meta ?? { total: transformed.length, page, limit: 24 };
+      state.currentPage = page;
+      state.lastFetched = Date.now();
+
+      // Update hasMore based on loaded products vs total
+      if (state.meta) {
+        const loadedCount = append ? state.products.length : transformed.length;
+        state.hasMore = loadedCount < state.meta.total;
+      } else {
+        // Fallback: if no meta, check if we got less than requested limit
+        state.hasMore = transformed.length >= (data.limit || 24);
+      }
+
+      // store lastFilters for simple TTL-based dedupe in UI
+      // We don't read filters here; the caller should set lastFilters via action if needed
+    });
+    builder.addCase(fetchProducts.rejected, (state, action) => {
+      state.loading = false;
+      state.error = (action.payload as string) || action.error.message || 'Failed to fetch products';
+    });
+  }
 });
 
 export const { setProducts, clearProducts } = marketplaceSlice.actions;

@@ -6,6 +6,9 @@ import MarketplaceFilterSection from "@/components/MarketplaceFilterSection";
 import ProductGrid from "@/components/ProductGrid";
 import "./styles.css";
 import { MoonLoader } from "react-spinners";
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '@/app/store/store';
+import { fetchProducts, clearProducts } from '@/app/store/slices/marketplaceSlice';
 
 // Product interface - matching ProductGrid expectations
 interface Product {
@@ -25,12 +28,11 @@ interface Product {
 export default function Marketplace() {
 
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
+  const productsState = useSelector((s: RootState) => s.marketplace);
+  const { products, loading, error, meta, hasMore, currentPage } = productsState;
   const [collections, setCollections] = useState<Array<{ collection_id: number; name: string }>>([]);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
   const [filters, setFilters] = useState({
@@ -39,107 +41,24 @@ export default function Marketplace() {
     keyword: "",
   });
 
+  // initial load: fetch products and collections
   useEffect(() => {
-    const fetchData = async () => {
+    // load first page with current filters
+    dispatch(fetchProducts({ page: 1, limit: 24, filters }));
+
+    // load collections (small dataset) - keep as before
+    (async () => {
       try {
-        setLoading(true);
-
-        // Fetch both products and collections
-        // Fetch products (paginated) and collections
-        const [productsResponse, collectionsResponse] = await Promise.all([
-          fetch(`/api/bazaar/products?page=${page}&limit=24`),
-          fetch('/api/bazaar/collections')
-        ]);
-
-        if (!productsResponse.ok) {
-          throw new Error(`Failed to fetch products: ${productsResponse.status}`);
-        }
-
-  const apiProductsRaw = await productsResponse.json();
-  const apiProducts = Array.isArray(apiProductsRaw.rows) ? apiProductsRaw.rows : apiProductsRaw;
-  const total = apiProductsRaw.meta?.total ?? null;
-        let collectionsData = [];
-
-        if (collectionsResponse.ok) {
-          collectionsData = await collectionsResponse.json();
+        const res = await fetch('/api/bazaar/collections');
+        if (res.ok) {
+          const collectionsData = await res.json();
           setCollections(collectionsData);
         }
-
-        // Transform API data to match UI expectations
-        const transformedProducts: Product[] = apiProducts
-          .filter((product: any) => product.status === 'published' || product.status === null) // Only show published products
-          .map((product: any) => {
-            // Get the first variant for pricing
-            const firstVariant = product.variants?.[0];
-            const displayPrice = firstVariant?.price_override || product.price || 0;
-
-            // Map collection IDs to names
-            const getCollectionName = (product: any) => {
-              if (product.collection_ids && product.collection_ids.length > 0) {
-                const collection = collectionsData.find((c: any) =>
-                  product.collection_ids.includes(c.collection_id)
-                );
-                return collection?.name || 'General';
-              }
-              return 'General';
-            };
-
-            return {
-              ...product,
-              name: product.title, // Map title to name for UI compatibility
-              category: product.categories?.[0]?.name || 'Uncategorized',
-              collection: getCollectionName(product),
-              image_url: product.images?.[0] || '/placeholder-product.jpg',
-              price: displayPrice.toString(),
-              original_price: firstVariant?.compare_at_price ? String(firstVariant.compare_at_price) : undefined,
-              inStock: product.variants?.some((v: any) => v.stock > 0) || false,
-              // rating & ratingCount will be populated from the reviews API below
-              rating: 0,
-              ratingCount: 0,
-            };
-          });
-          // Fetch review summaries for each product in parallel and attach avg rating + count
-        try {
-          const productsWithReviews = await Promise.all(
-            transformedProducts.map(async (p: any) => {
-              try {
-                const resp = await fetch(`/api/bazaar/reviews?product_id=${encodeURIComponent(p.product_id)}`);
-                if (!resp.ok) return { ...p, rating: 0, ratingCount: 0 };
-                const reviews = await resp.json();
-                const list = Array.isArray(reviews) ? reviews : [];
-                const ratingCount = list.length;
-                const avg = ratingCount > 0 ? list.reduce((s: number, r: any) => s + (r.rating || 0), 0) / ratingCount : 0;
-                return { ...p, rating: Math.round(avg * 10) / 10, ratingCount };
-              } catch (e) {
-                return { ...p, rating: 0, ratingCount: 0 };
-              }
-            })
-          );
-
-          // Append new page results
-          setProducts((prev) => [...prev, ...productsWithReviews]);
-          if (total !== null) {
-            const loaded = (page - 1) * 24 + productsWithReviews.length;
-            setHasMore(loaded < total);
-          } else {
-            setHasMore(productsWithReviews.length >= 24);
-          }
-        } catch (err) {
-          // If reviews fetch fails, fall back to the transformed list without ratings
-          console.warn('Failed to fetch review summaries:', err);
-          setProducts((prev) => [...prev, ...transformedProducts]);
-          setHasMore(transformedProducts.length >= 24);
-        }
-      } catch (err: any) {
-        console.error('Error fetching data:', err);
-        setError(err.message || 'Failed to load products');
-      } finally {
-        setLoading(false);
+      } catch (e) {
+        console.warn('Failed to load collections', e);
       }
-    };
-
-    fetchData();
-  }, []);
+    })();
+  }, [dispatch]); // Only depend on dispatch to avoid refetching on filter changes
 
   // intersection observer to load next page
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
@@ -159,98 +78,35 @@ export default function Marketplace() {
   // refetch when page changes
   useEffect(() => {
     if (page === 1) return; // initial load already handled
-    const fetchNext = async () => {
-      setLoading(true);
-      try {
-        const productsResponse = await fetch(`/api/bazaar/products?page=${page}&limit=24`);
-        const apiProductsRaw = await productsResponse.json();
-        const apiProducts = Array.isArray(apiProductsRaw.rows) ? apiProductsRaw.rows : apiProductsRaw;
-        const transformedProducts: Product[] = apiProducts
-          .filter((product: any) => product.status === 'published' || product.status === null)
-          .map((product: any) => {
-            const firstVariant = product.variants?.[0];
-            const displayPrice = firstVariant?.price_override || product.price || 0;
-            const getCollectionName = (product: any) => {
-              if (product.collection_ids && product.collection_ids.length > 0) {
-                const collection = collections.find((c: any) => product.collection_ids.includes(c.collection_id));
-                return collection?.name || 'General';
-              }
-              return 'General';
-            };
-            return {
-              ...product,
-              name: product.title,
-              category: product.categories?.[0]?.name || 'Uncategorized',
-              collection: getCollectionName(product),
-              image_url: product.images?.[0] || '/placeholder-product.jpg',
-              price: displayPrice.toString(),
-              original_price: firstVariant?.compare_at_price ? String(firstVariant.compare_at_price) : undefined,
-              inStock: product.variants?.some((v: any) => v.stock > 0) || false,
-              rating: 0,
-              ratingCount: 0,
-            };
-          });
-
-        // attach reviews (best-effort, but don't block)
-        const productsWithReviews = await Promise.all(
-          transformedProducts.map(async (p: any) => {
-            try {
-              const resp = await fetch(`/api/bazaar/reviews?product_id=${encodeURIComponent(p.product_id)}`);
-              if (!resp.ok) return { ...p, rating: 0, ratingCount: 0 };
-              const reviews = await resp.json();
-              const list = Array.isArray(reviews) ? reviews : [];
-              const ratingCount = list.length;
-              const avg = ratingCount > 0 ? list.reduce((s: number, r: any) => s + (r.rating || 0), 0) / ratingCount : 0;
-              return { ...p, rating: Math.round(avg * 10) / 10, ratingCount };
-            } catch (e) {
-              return { ...p, rating: 0, ratingCount: 0 };
-            }
-          })
-        );
-
-        setProducts((prev) => [...prev, ...productsWithReviews]);
-        const total = apiProductsRaw.meta?.total ?? null;
-        if (total !== null) {
-          const loaded = (page - 1) * 24 + productsWithReviews.length;
-          setHasMore(loaded < total);
-        } else {
-          setHasMore(productsWithReviews.length >= 24);
-        }
-      } catch (err) {
-        console.error('Error fetching page:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchNext();
-  }, [page]);
+    if (page <= currentPage) return; // avoid duplicate requests
+    if (!hasMore) return; // no more products to load
+    // fetch next page and append
+    dispatch(fetchProducts({ page, limit: 24, filters, append: true }));
+  }, [page, currentPage, hasMore, filters, dispatch]);
 
   const handleReset = () => {
-    setFilters({
+    const newFilters = {
       category: "",
       collection: "",
       keyword: "",
-    });
+    };
+    setFilters(newFilters);
+    // clear store and reload
+    dispatch(clearProducts());
+    setPage(1);
+    dispatch(fetchProducts({ page: 1, limit: 24, filters: newFilters }));
   };
 
   const handleSearch = (newFilters: any) => {
     setFilters(newFilters);
+    // reload from server with new filters
+    dispatch(clearProducts());
+    setPage(1);
+    dispatch(fetchProducts({ page: 1, limit: 24, filters: newFilters }));
   };
 
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory = filters.category
-      ? product.category === filters.category
-      : true;
-    const matchesCollection = filters.collection
-      ? product.collection === filters.collection
-      : true;
-    const matchesKeyword = filters.keyword
-      ? product.name.toLowerCase().includes(filters.keyword.toLowerCase()) ||
-        product.description.toLowerCase().includes(filters.keyword.toLowerCase())
-      : true;
-
-    return matchesCategory && matchesCollection && matchesKeyword;
-  });
+  // since filtering is done on the backend now, we just use products from store
+  const filteredProducts = products;
 
   return (
     <>
@@ -273,7 +129,12 @@ export default function Marketplace() {
           </div>
         )}
         {/* sentinel for infinite scroll */}
-        <div ref={loaderRef} />
+        {hasMore && <div ref={loaderRef} />}
+        {!hasMore && products.length > 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <p>You've reached the end of the products!</p>
+          </div>
+        )}
       </div>
     </>
   );

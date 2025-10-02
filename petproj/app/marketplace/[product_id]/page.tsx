@@ -417,6 +417,7 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                                             </span>
                                         </div>
                                     </div>
+                                    
 
 
                                     {/* Short Description */}

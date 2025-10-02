@@ -154,6 +154,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
         const result = await model.generateContent(combinedPrompt);
         const text = await result.response.text();
+        
 
         return NextResponse.json({
             success: true,

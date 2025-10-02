@@ -151,7 +151,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         const userPrompt = prompt || "Ask me anything related to pets.";
         const combinedPrompt = `${systemPrompt} The user asks: "${userPrompt}"`;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
         const result = await model.generateContent(combinedPrompt);
         const text = await result.response.text();
 

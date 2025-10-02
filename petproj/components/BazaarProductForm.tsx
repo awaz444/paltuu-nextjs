@@ -26,7 +26,7 @@ interface BazaarProductFormProps {
 const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
   onSubmit,
   onCancel,
-  initialValues = {},
+  initialValues,
   mode = "create",
 }) => {
   const [form] = Form.useForm();
@@ -51,7 +51,7 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
     Array<{ value: number | string; label: string }>
   >([]);
 
-  const [variants, setVariants] = useState<any[]>(initialValues.variants || []);
+  const [variants, setVariants] = useState<any[]>((initialValues?.variants) || []);
   // attributes define variant axes (e.g., Color, Size)
   const [attributes, setAttributes] = useState<
     Array<{ key: string; values: string[] }>
@@ -67,7 +67,9 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
       ];
     }
   );
-  const [status, setStatus] = useState<string>(initialValues.status || "draft");
+  const [status, setStatus] = useState<string>(initialValues?.status || "draft");
+  const [generating, setGenerating] = useState(false);
+  const [titleValue, setTitleValue] = useState<string>(initialValues?.title || '');
 
   useEffect(() => {
     // load categories/collections from server-side endpoints
@@ -98,30 +100,30 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
   useEffect(() => {
     // map initial values into form
     const vals: any = {
-      title: initialValues.title,
-      short_description: initialValues.short_description,
-      description: initialValues.description,
-      featured: initialValues.featured || false,
-      currency: initialValues.currency || "PKR",
-      status: initialValues.status || "draft",
+      title: initialValues?.title || undefined,
+      short_description: initialValues?.short_description || undefined,
+      description: initialValues?.description || undefined,
+      featured: initialValues?.featured || false,
+      currency: initialValues?.currency || "PKR",
+      status: initialValues?.status || "draft",
     };
 
-    if (Array.isArray(initialValues.categories)) {
+    if (Array.isArray(initialValues?.categories)) {
       vals.category_ids = initialValues.categories.map(
         (c: any) => c.category_id
       );
-    } else if (initialValues.category_ids) {
+    } else if (initialValues?.category_ids) {
       vals.category_ids = initialValues.category_ids;
     }
 
-    if (initialValues.collection_id) {
+    if (initialValues?.collection_id) {
       vals.collection_ids = [initialValues.collection_id];
-    } else if (initialValues.collection_ids) {
+    } else if (initialValues?.collection_ids) {
       vals.collection_ids = initialValues.collection_ids;
     }
 
     form.setFieldsValue(vals);
-    if (Array.isArray(initialValues.variants)) {
+    if (Array.isArray(initialValues?.variants)) {
       setVariants(
         initialValues.variants.map((v: any) => ({
           price_override: v.price_override,
@@ -135,7 +137,7 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
 
       // populate preview uploads from initial variant images (array of URLs)
       const previews: Record<number, Array<{ url?: string; publicUrl?: string; path?: string; name?: string }>> = {};
-      initialValues.variants.forEach((v: any, idx: number) => {
+      (initialValues?.variants || []).forEach((v: any, idx: number) => {
         if (v.images && Array.isArray(v.images) && v.images.length > 0) {
           previews[idx] = v.images.map((imgUrl: string, i: number) => ({ url: imgUrl, publicUrl: imgUrl, name: imgUrl.split('/').pop() || `img_${i}` }));
         }
@@ -549,7 +551,6 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
           currency: "PKR",
           featured: false,
           status: initialValues?.status || "draft",
-          ...initialValues,
         }}
         className="space-y-4"
       >
@@ -559,7 +560,16 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
             label="Product Title"
             rules={[{ required: true, message: "Please enter product title" }]}
           >
-            <Input placeholder="e.g. Premium Dog Food 5kg" />
+            <Input
+              placeholder="e.g. Premium Dog Food 5kg"
+              value={titleValue}
+              onChange={(e) => {
+                const v = e.target.value;
+                setTitleValue(v);
+                // keep form in sync
+                form.setFieldsValue({ title: v });
+              }}
+            />
           </Form.Item>
 
           {/* SKU removed: variant SKUs will be auto-generated on server */}
@@ -575,12 +585,54 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
           <Input placeholder="Brief product summary for listing cards" />
         </Form.Item>
 
-        <Form.Item name="description" label="Full Description">
-          <TextArea
-            rows={4}
-            placeholder="Detailed product description, ingredients, benefits, etc."
-          />
-        </Form.Item>
+        <div className="space-y-2">
+          <Form.Item name="description" label="Full Description" className="mb-2">
+            <TextArea
+              rows={4}
+              placeholder="Detailed product description, ingredients, benefits, etc."
+            />
+          </Form.Item>
+          <div className="flex justify-end">
+            <Button
+              onClick={async () => {
+                const title = (form.getFieldValue('title') || '').toString().trim();
+                if (!title) {
+                  return message.info('Please enter a product title first');
+                }
+                setGenerating(true);
+                try {
+                  const res = await fetch('/api/llm/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productName: title })
+                  });
+                  const json = await res.json();
+                  console.log('LLM API Response:', json);
+                  if (res.ok && json?.text) {
+                    console.log('Setting description field to:', json.text);
+                    form.setFieldsValue({ description: json.text });
+                    console.log('Form field value after setting:', form.getFieldValue('description'));
+                    message.success('Description generated');
+                  } else {
+                    console.error('LLM API Error:', json);
+                    message.error(json?.error || 'LLM generation failed');
+                  }
+                } catch (e) {
+                  message.error('LLM request failed');
+                } finally {
+                  setGenerating(false);
+                }
+              }}
+              loading={generating}
+              disabled={!String(form.getFieldValue('title') || '').trim()}
+              type="primary"
+              ghost
+              size="small"
+            >
+              Generate Description
+            </Button>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Form.Item

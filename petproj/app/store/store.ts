@@ -13,6 +13,7 @@ import vetSpecializationSlice from '../store/slices/vetSpecializationSlice';
 import vetScheduleSlice from './slices/vetScheduleSlice';
 import cartReducer from './slices/cartSlice';
 import marketplaceReducer from "./slices/marketplaceSlice";
+import bazaarProductsReducer from './slices/bazaarProductsSlice';
 
 
 export const store = configureStore({
@@ -31,6 +32,7 @@ export const store = configureStore({
     vetSchedule: vetScheduleSlice,
     cart: cartReducer,
     marketplace: marketplaceReducer,
+    bazaarProducts: bazaarProductsReducer,
   },
 });
 

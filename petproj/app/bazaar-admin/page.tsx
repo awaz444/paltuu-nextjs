@@ -7,6 +7,9 @@ import AdminProductList from '../../components/AdminProductList';
 import { Modal, message, Select, Input, Button, Spin } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useAuth } from '../../context/AuthContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '@/app/store/store';
+import { fetchBazaarProducts, setProducts, addProduct, updateProduct, removeProduct } from '@/app/store/slices/bazaarProductsSlice';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -14,7 +17,8 @@ const { Option } = Select;
 export default function BazaarAdminPage() {
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
-  const [products, setProducts] = useState<any[]>([]);
+  const dispatch = useDispatch<AppDispatch>();
+  const products = useSelector((state: RootState) => state.bazaarProducts?.products || []);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [createVisible, setCreateVisible] = useState(false);
@@ -26,19 +30,20 @@ export default function BazaarAdminPage() {
 
   // Fetch products on mount; route is protected by middleware
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    // populate products via redux
+    (async () => {
+      setLoading(true);
+      await dispatch(fetchBazaarProducts({ admin: true }));
+      setLoading(false);
+    })();
+  }, [dispatch]);
 
+  // Keep a small helper to refresh products (uses redux)
   const fetchProducts = async () => {
-
     setLoading(true);
     try {
-      const res = await fetch('/api/bazaar/products?admin=true');
-      const data = await res.json();
-      setProducts(data || []);
-      setFilteredProducts(data || []);
-    } catch (err) {
-      console.error('Error fetching products:', err);
+      await dispatch(fetchBazaarProducts({ admin: true }));
+    } catch (e) {
       message.error('Failed to fetch products');
     } finally {
       setLoading(false);
@@ -47,7 +52,7 @@ export default function BazaarAdminPage() {
 
   // Filter products based on search and filters
   useEffect(() => {
-    let filtered = products;
+  let filtered = Array.isArray(products) ? products : [];
 
     // Search filter
     if (searchTerm) {
@@ -81,10 +86,12 @@ export default function BazaarAdminPage() {
 
       if (!res.ok) throw new Error('Create failed');
 
-      const data = await res.json();
+  const data = await res.json();
       message.success('Product created successfully!');
       setCreateVisible(false);
-      fetchProducts();
+  // Optimistically add new product to redux store for snappy UI
+  dispatch(addProduct(data));
+  fetchProducts();
 
       // Return the full response including variants for image upload
       return {
@@ -109,11 +116,13 @@ export default function BazaarAdminPage() {
 
       if (!res.ok) throw new Error('Update failed');
 
-      const data = await res.json();
+  const data = await res.json();
       message.success('Product updated successfully!');
       setEditVisible(false);
       setEditingProduct(null);
-      fetchProducts();
+  // Update redux store immediately for snappy UI
+  dispatch(updateProduct(data));
+  fetchProducts();
 
       // Return the full response including variants for image upload (same as create)
       return {
@@ -132,21 +141,24 @@ export default function BazaarAdminPage() {
   };
 
   const handleDelete = (productId: string) => {
-    setProducts(prev => prev.filter(p => p.product_id !== productId));
+    // remove locally from redux store for instant feedback
+    dispatch(removeProduct(productId));
   };
 
+  // Protect against products being non-array (defensive). fetchProducts now normalizes, but keep safety here.
+  const productsArr = Array.isArray(products) ? products : [];
   const stats = {
-    total: products.length,
-    published: products.filter(p => (p.status || 'draft') === 'published').length,
-    draft: products.filter(p => (p.status || 'draft') === 'draft').length,
-    outOfStock: products.filter(p => ((p.stock_total ?? (Array.isArray(p.variants) ? p.variants.reduce((s:any,v:any)=>s+(v.stock||0),0) : 0)) || 0) === 0).length,
+    total: productsArr.length,
+    published: productsArr.filter(p => (p.status || 'draft') === 'published').length,
+    draft: productsArr.filter(p => (p.status || 'draft') === 'draft').length,
+    outOfStock: productsArr.filter(p => ((p.stock_total ?? (Array.isArray(p.variants) ? p.variants.reduce((s:any,v:any)=>s+(v.stock||0),0) : 0)) || 0) === 0).length,
   };
 
   // Rely on middleware for route protection; render immediately
 
   return (
     <div>
-      
+
       <div className="p-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">

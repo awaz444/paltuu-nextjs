@@ -35,13 +35,13 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
   const [variantFiles, setVariantFiles] = useState<
     Record<number, File[]>
   >({});
+  // store preview uploads (existing images from DB) per variant: { url, name, publicUrl, path }
+  const [variantPreviewUploads, setVariantPreviewUploads] = useState<
+    Record<number, Array<{ url?: string; publicUrl?: string; path?: string; name?: string }>>
+  >({});
   // track upload state per variant
   const [variantUploading, setVariantUploading] = useState<
     Record<number, boolean>
-  >({});
-  // store preview uploads (storage path/url) per variant
-  const [variantPreviewUploads, setVariantPreviewUploads] = useState<
-    Record<number, Array<{ path: string; publicUrl: string; name: string }>>
   >({});
 
   const [categories, setCategories] = useState<
@@ -121,7 +121,7 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
     }
 
     form.setFieldsValue(vals);
-    if (Array.isArray(initialValues.variants))
+    if (Array.isArray(initialValues.variants)) {
       setVariants(
         initialValues.variants.map((v: any) => ({
           price_override: v.price_override,
@@ -132,6 +132,16 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
           is_default: v.is_default || false,
         }))
       );
+
+      // populate preview uploads from initial variant images (array of URLs)
+      const previews: Record<number, Array<{ url?: string; publicUrl?: string; path?: string; name?: string }>> = {};
+      initialValues.variants.forEach((v: any, idx: number) => {
+        if (v.images && Array.isArray(v.images) && v.images.length > 0) {
+          previews[idx] = v.images.map((imgUrl: string, i: number) => ({ url: imgUrl, publicUrl: imgUrl, name: imgUrl.split('/').pop() || `img_${i}` }));
+        }
+      });
+      setVariantPreviewUploads(previews);
+    }
   }, [initialValues, form]);
 
   // If initial values include attribute axes, populate attributes state
@@ -251,12 +261,21 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
     },
     onRemove: (uploadFile) => {
       console.log(`=== REMOVING FILE FROM VARIANT ${idx} ===`);
-      console.log(`Removing file from variant ${idx}:`, uploadFile.name);
+      console.log(`Removing file from variant ${idx}:`, uploadFile.name, uploadFile.uid);
+      // If uid indicates a preview item, remove from preview uploads
+      if (String(uploadFile.uid || '').startsWith('preview-')) {
+        setVariantPreviewUploads(prev => {
+          const updated = { ...prev };
+          updated[idx] = (updated[idx] || []).filter(p => `preview-${(updated[idx] || []).indexOf(p)}-${(p.name || p.publicUrl || p.url)}` !== uploadFile.uid);
+          return updated;
+        });
+        return true;
+      }
+      // Otherwise it's a local file; remove from variantFiles
       setVariantFiles(prev => {
         const updated = {
           ...prev,
           [idx]: (prev[idx] || []).filter(f => {
-            // Create consistent UID for comparison
             const fileUid = `${f.name}-${f.size}`;
             return fileUid !== uploadFile.uid;
           })
@@ -265,13 +284,26 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
         console.log(`Remaining files count for variant ${idx}:`, updated[idx]?.length);
         return updated;
       });
+      return true;
     },
-    fileList: (variantFiles[idx] || []).map((file, fileIndex) => ({
-      uid: `${file.name}-${file.size}`,
-      name: file.name,
-      status: 'done' as const,
-      originFileObj: file as any,
-    })),
+    fileList: [
+      // existing preview images (from DB)
+      ...(variantPreviewUploads[idx] || []).map((p, i) => ({
+        uid: `preview-${i}-${(p.name || p.publicUrl || p.url)}`,
+        name: p.name || p.publicUrl?.split('/').pop() || `img_${i}`,
+        status: 'done' as const,
+        url: p.publicUrl || p.url,
+        originFileObj: undefined,
+        isPreview: true,
+      })),
+      // newly selected local files
+      ...(variantFiles[idx] || []).map((file, fileIndex) => ({
+        uid: `${file.name}-${file.size}`,
+        name: file.name,
+        status: 'done' as const,
+        originFileObj: file as any,
+      }))
+    ],
     accept: "image/*",
     showUploadList: {
       showPreviewIcon: true,
@@ -383,10 +415,43 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
         console.log('No variants found in response or variants is not an array:', res?.variants);
       }
 
+      // Re-attach preserved preview images (existing images from DB) to newly created/updated variants
+      try {
+        const attachments: any[] = [];
+        if (res?.variants && Array.isArray(res.variants)) {
+          res.variants.forEach((variant: any, idx: number) => {
+            const previews = variantPreviewUploads[idx] || [];
+            if (previews.length > 0) {
+              previews.forEach(p => {
+                // only include items that have a publicUrl or url
+                if (p.publicUrl || p.url) {
+                  attachments.push({ product_id: productId, variant_id: variant.variant_id, path: p.path || undefined, publicUrl: p.publicUrl || p.url, url: p.url });
+                }
+              });
+            }
+          });
+        }
+        if (attachments.length > 0) {
+          const attachRes = await fetch('/api/bazaar/images', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ attachments })
+          });
+          const attachJson = await attachRes.json();
+          console.log('Attach-by-path result:', attachJson);
+          if (!attachRes.ok) {
+            message.warning('Attaching existing images to variants failed');
+          }
+        }
+      } catch (e) {
+        console.error('Failed to reattach preview images', e);
+      }
+
       message.success("Product saved with images");
       form.resetFields();
       setVariants([]);
       setVariantFiles({});
+  setVariantPreviewUploads({});
       onCancel();
     } catch (err: any) {
       message.error(err?.message || "Failed to save product");

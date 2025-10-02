@@ -418,6 +418,7 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                                         </div>
                                     </div>
 
+
                                     {/* Short Description */}
                                     {/* <Paragraph className="text-gray-700 text-base leading-relaxed border-l-4 border-primary pl-4 py-1 bg-gray-50 rounded-r">
                                         {product.description.length > 150

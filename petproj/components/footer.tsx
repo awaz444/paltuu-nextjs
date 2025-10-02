@@ -2,8 +2,50 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Facebook, Instagram, Twitter } from "lucide-react";
+import { useState } from "react";
 
 export default function Footer() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email) {
+      setStatus("error");
+      setMessage("Please enter your email address");
+      return;
+    }
+
+    setStatus("loading");
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setStatus("success");
+        setMessage(data.message || "Successfully subscribed to newsletter!");
+        setEmail("");
+      } else {
+        setStatus("error");
+        setMessage(data.error || "Failed to subscribe. Please try again.");
+      }
+    } catch (error) {
+      setStatus("error");
+      setMessage("Network error. Please try again.");
+    }
+  };
+
   return (
     <footer className="bg-primary text-white px-6 md:px-16 py-10 rounded-t-3xl mt-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -16,10 +58,6 @@ export default function Footer() {
             height={100}
             className="mx-auto md:mx-0"
           />
-          {/* <p className="mt-4 text-sm text-gray-200 max-w-sm mx-auto md:mx-0">
-            Paltuu is your trusted pet marketplace. We connect pet lovers with
-            the right companions and ensure a safe, loving adoption experience.
-          </p> */}
 
           {/* Address */}
           <p className="mt-3 text-sm text-gray-300">
@@ -76,18 +114,40 @@ export default function Footer() {
           <p className="text-sm text-gray-200 mb-3">
             Subscribe to stay updated on the latest pets and offers.
           </p>
-          <form className="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto md:mx-0">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-white"
-            />
-            <button
-              type="submit"
-              className="bg-white text-primary font-semibold px-4 py-2 rounded-lg hover:bg-gray-200 transition"
-            >
-              Subscribe
-            </button>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3 max-w-sm mx-auto md:mx-0">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={status === "loading"}
+                className="w-full px-4 py-2 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-white disabled:opacity-50"
+                required
+              />
+              <button
+                type="submit"
+                disabled={status === "loading"}
+                className="bg-white text-primary font-semibold px-4 py-2 rounded-lg hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                {status === "loading" ? "Subscribing..." : "Subscribe"}
+              </button>
+            </div>
+            
+            {/* Status Message */}
+            {message && (
+              <p 
+                className={`text-sm ${
+                  status === "success" 
+                    ? "text-green-300" 
+                    : status === "error" 
+                    ? "text-red-300" 
+                    : "text-gray-300"
+                }`}
+              >
+                {message}
+              </p>
+            )}
           </form>
         </div>
       </div>

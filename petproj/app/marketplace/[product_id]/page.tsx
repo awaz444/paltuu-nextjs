@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown"; // Add this import
 import { addToCart as addToCartThunk } from "../../store/slices/cartSlice";
 import type { AppDispatch } from "@/app/store/store";
 import { useSelector, useDispatch } from "react-redux";
@@ -418,14 +419,14 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                                     </div>
 
                                     {/* Short Description */}
-                                    <Paragraph className="text-gray-700 text-base leading-relaxed border-l-4 border-primary pl-4 py-1 bg-gray-50 rounded-r">
+                                    {/* <Paragraph className="text-gray-700 text-base leading-relaxed border-l-4 border-primary pl-4 py-1 bg-gray-50 rounded-r">
                                         {product.description.length > 150
                                             ? `${product.description.substring(
                                                   0,
                                                   150
                                               )}...`
                                             : product.description}
-                                    </Paragraph>
+                                    </Paragraph> */}
 
                                     {/* Price and Stock Information */}
                                     <div className="grid grid-cols-1 gap-4">
@@ -527,42 +528,42 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                                             </div>
                                         )}
 
-                                   {/* Quantity Selector - Moved down */}
-<div className="flex items-center space-x-4 mt-6">
-    <span className="text-gray-700 font-medium">
-        Quantity:
-    </span>
-    <div className="flex items-center border border-gray-300 rounded-lg">
-        <button
-            onClick={() =>
-                handleQuantityChange(
-                    quantity - 1
-                )
-            }
-            className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-l-lg transition-colors"
-            disabled={quantity <= 1}>
-            -
-        </button>
-        <span className="px-4 py-2 font-medium border-x border-gray-300">
-            {quantity}
-        </span>
-        <button
-            onClick={() =>
-                handleQuantityChange(
-                    quantity + 1
-                )
-            }
-            className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-r-lg transition-colors"
-            disabled={
-                quantity >=
-                (selectedVariant?.stock ??
-                    product?.stock ??
-                    0)
-            }>
-            +
-        </button>
-    </div>
-</div>
+                                    {/* Quantity Selector - Moved down */}
+                                    <div className="flex items-center space-x-4 mt-6">
+                                        <span className="text-gray-700 font-medium">
+                                            Quantity:
+                                        </span>
+                                        <div className="flex items-center border border-gray-300 rounded-lg">
+                                            <button
+                                                onClick={() =>
+                                                    handleQuantityChange(
+                                                        quantity - 1
+                                                    )
+                                                }
+                                                className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-l-lg transition-colors"
+                                                disabled={quantity <= 1}>
+                                                -
+                                            </button>
+                                            <span className="px-4 py-2 font-medium border-x border-gray-300">
+                                                {quantity}
+                                            </span>
+                                            <button
+                                                onClick={() =>
+                                                    handleQuantityChange(
+                                                        quantity + 1
+                                                    )
+                                                }
+                                                className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-r-lg transition-colors"
+                                                disabled={
+                                                    quantity >=
+                                                    (selectedVariant?.stock ??
+                                                        product?.stock ??
+                                                        0)
+                                                }>
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Action Buttons - Fixed at bottom */}
@@ -604,15 +605,17 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
 
                         <Divider className="my-8 border-gray-200" />
 
-                        {/* Full Description */}
+                        {/* Full Description with ReactMarkdown */}
                         {product.description.length > 150 && (
                             <div className="mb-8">
                                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
                                     Product Description
                                 </h2>
-                                <Paragraph className="text-gray-700 leading-relaxed">
-                                    {product.description}
-                                </Paragraph>
+                                <div className="prose prose-gray max-w-none text-gray-700 leading-relaxed">
+                                    <ReactMarkdown>
+                                        {product.description}
+                                    </ReactMarkdown>
+                                </div>
                             </div>
                         )}
 
@@ -711,6 +714,99 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                 }
                 .ant-tag {
                     margin-right: 0;
+                }
+
+                /* Custom styles for markdown content */
+                .prose {
+                    color: inherit;
+                }
+                .prose h1,
+                .prose h2,
+                .prose h3,
+                .prose h4,
+                .prose h5,
+                .prose h6 {
+                    color: #1f2937;
+                    font-weight: 600;
+                    margin-top: 1.5em;
+                    margin-bottom: 0.5em;
+                }
+                .prose h1 {
+                    font-size: 1.5em;
+                }
+                .prose h2 {
+                    font-size: 1.25em;
+                }
+                .prose h3 {
+                    font-size: 1.125em;
+                }
+                .prose p {
+                    margin-bottom: 1em;
+                }
+                .prose ul,
+                .prose ol {
+                    padding-left: 1.5em;
+                    margin-bottom: 1em;
+                }
+                .prose li {
+                    margin-bottom: 0.5em;
+                }
+                .prose ul {
+                    list-style-type: disc;
+                }
+                .prose ol {
+                    list-style-type: decimal;
+                }
+                .prose strong {
+                    font-weight: 600;
+                    color: #1f2937;
+                }
+                .prose em {
+                    font-style: italic;
+                }
+                .prose code {
+                    background-color: #f3f4f6;
+                    padding: 0.125rem 0.25rem;
+                    border-radius: 0.25rem;
+                    font-size: 0.875em;
+                    color: #dc2626;
+                }
+                .prose pre {
+                    background-color: #1f2937;
+                    color: #f9fafb;
+                    padding: 1rem;
+                    border-radius: 0.5rem;
+                    overflow-x: auto;
+                    margin-bottom: 1em;
+                }
+                .prose blockquote {
+                    border-left: 4px solid #d1d5db;
+                    padding-left: 1rem;
+                    margin-left: 0;
+                    font-style: italic;
+                    color: #6b7280;
+                }
+                .prose a {
+                    color: #a03048;
+                    text-decoration: underline;
+                }
+                .prose a:hover {
+                    color: #802939;
+                }
+                .prose table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 1em;
+                }
+                .prose th,
+                .prose td {
+                    border: 1px solid #d1d5db;
+                    padding: 0.5rem;
+                    text-align: left;
+                }
+                .prose th {
+                    background-color: #f9fafb;
+                    font-weight: 600;
                 }
             `}</style>
         </>

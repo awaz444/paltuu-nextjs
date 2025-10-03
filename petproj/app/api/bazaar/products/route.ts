@@ -38,7 +38,6 @@ export interface CreateBazaarProductDto {
   title: string;
   slug?: string;
   description?: string;
-  short_description?: string;
   price?: number | null; // optional when variants provided
   compare_at_price?: number | null;
   currency?: string;
@@ -69,7 +68,6 @@ export async function POST(req: NextRequest) {
       title,
       slug = null,
       description = null,
-      short_description = null,
       price = null,
       compare_at_price = null,
       currency = "PKR",
@@ -156,16 +154,15 @@ export async function POST(req: NextRequest) {
 
     const insertProductQuery = `
       INSERT INTO bazaar_products (
-        title, slug, description, short_description, price,
+        title, slug, description, price,
         currency, sku, shipping_weight, featured, has_variants, variant_attributes, status, created_at, updated_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW()) RETURNING *;
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW(),NOW()) RETURNING *;
     `;
 
     const productValues: any[] = [
       title,
       slug,
       description,
-      short_description,
       productPrice,
       currency,
       finalSku,
@@ -308,7 +305,7 @@ export async function GET(req: NextRequest) {
       : `(SELECT json_agg(json_build_object('variant_id', v.variant_id, 'title', v.title, 'sku', v.sku, 'price_override', v.price_override, 'compare_at_price', v.compare_at_price, 'stock', v.stock, 'attributes', v.attributes, 'images', '[]'::json)) FROM bazaar_product_variants v WHERE v.product_id = p.product_id)`;
 
     let query = `
-  SELECT p.product_id, p.title, p.slug, p.short_description, p.description, p.price,
+  SELECT p.product_id, p.title, p.slug, p.description, p.price,
      p.currency, p.sku, p.shipping_weight, p.featured,
      COALESCE((SELECT SUM(stock) FROM bazaar_product_variants v2 WHERE v2.product_id = p.product_id), 0) AS stock_total,
      p.collection_id, p.status, p.created_at,

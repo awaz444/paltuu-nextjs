@@ -45,9 +45,9 @@ const BazaarProductList: React.FC<Props> = ({ products }) => {
                   {formatPrice(selectedProduct.price)}
                 </div>
               </div>
-              {selectedProduct.short_description && (
+              {/* {selectedProduct.short_description && (
                 <p className="text-white/80 mt-1">{selectedProduct.short_description}</p>
-              )}
+              )} */}
             </div>
 
             <div className="flex flex-col md:flex-row">

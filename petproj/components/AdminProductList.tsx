@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { Modal, message, Popconfirm, Button } from 'antd';
 import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import { updateProduct } from '@/app/store/slices/bazaarProductsSlice';
 
 interface Props {
   products: any[];
@@ -12,13 +14,14 @@ interface Props {
 const AdminProductList: React.FC<Props> = ({ products, onEdit, onDelete, onRefresh }) => {
   const [viewingProduct, setViewingProduct] = useState<any>(null);
 
+  const dispatch = useDispatch();
+
   const handleDelete = async (productId: string) => {
     try {
       const res = await fetch(`/api/bazaar/products/${productId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
       message.success('Product deleted successfully');
       onDelete(productId);
-      onRefresh();
     } catch (err) {
       message.error('Failed to delete product');
     }
@@ -32,11 +35,12 @@ const AdminProductList: React.FC<Props> = ({ products, onEdit, onDelete, onRefre
         body: JSON.stringify({ status }),
       });
       if (!res.ok) throw new Error('Failed to update status');
+      const updated = await res.json();
+      // update redux store directly to avoid re-fetching the list
+      dispatch(updateProduct(updated));
       message.success(`Product marked ${status}`);
-      onRefresh();
       // refresh viewingProduct if open
       if (viewingProduct && viewingProduct.product_id === productId) {
-        const updated = await res.json();
         setViewingProduct((prev: any) => ({ ...prev, status }));
       }
     } catch (err) {
@@ -63,9 +67,11 @@ const AdminProductList: React.FC<Props> = ({ products, onEdit, onDelete, onRefre
       });
 
       if (!res.ok) throw new Error('Failed to mark out of stock');
+      const updated = await res.json();
+      // update redux
+      dispatch(updateProduct(updated));
       message.success('Product marked out of stock (all variants set to 0)');
-      onRefresh();
-      setViewingProduct((prev: any) => ({ ...prev, variants: variantsPayload }));
+      setViewingProduct((prev: any) => ({ ...prev, variants: updated.variants || variantsPayload }));
     } catch (err) {
       console.error(err);
       message.error('Failed to mark product out of stock');
@@ -157,7 +163,7 @@ const AdminProductList: React.FC<Props> = ({ products, onEdit, onDelete, onRefre
 
             <div className="p-4">
               <h3 className="font-bold text-xl mb-1 truncate">{p.title}</h3>
-              <p className="text-gray-600 mb-2 text-sm truncate">{p.short_description}</p>
+              {/* <p className="text-gray-600 mb-2 text-sm truncate">{p.short_description}</p> */}
               <div className="flex gap-2 flex-wrap mt-2">
                 {(p.categories || []).slice(0,3).map((c: any) => (
                   <span key={c.category_id} className="text-xs px-2 py-1 bg-gray-100 rounded">{c.name}</span>
@@ -186,7 +192,7 @@ const AdminProductList: React.FC<Props> = ({ products, onEdit, onDelete, onRefre
             <div className="flex justify-between items-start">
               <div>
                 <h2 className="text-2xl font-bold">{viewingProduct.title}</h2>
-                <p className="text-gray-600">{viewingProduct.short_description}</p>
+                {/* <p className="text-gray-600">{viewingProduct.short_description}</p> */}
               </div>
               <div className="flex gap-2">
                 <Button type="default" onClick={() => updateProductStatus(viewingProduct.product_id, 'draft')}>Mark Draft</Button>

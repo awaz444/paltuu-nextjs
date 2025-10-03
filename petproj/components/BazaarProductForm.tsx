@@ -101,7 +101,7 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
     // map initial values into form
     const vals: any = {
       title: initialValues?.title || undefined,
-      short_description: initialValues?.short_description || undefined,
+      // short_description: initialValues?.short_description || undefined,
       description: initialValues?.description || undefined,
       featured: initialValues?.featured || false,
       currency: initialValues?.currency || "PKR",
@@ -330,7 +330,7 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
         title: values.title,
         slug: values.slug || values.title?.toLowerCase().replace(/\s+/g, "-"),
         description: values.description,
-        short_description: values.short_description,
+        // short_description: values.short_description,
         compare_at_price: values.compare_at_price ?? null,
         currency: values.currency || "PKR",
         sku: values.sku || null,
@@ -575,15 +575,15 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
           {/* SKU removed: variant SKUs will be auto-generated on server */}
         </div>
 
-        <Form.Item
+        {/* <Form.Item
           name="short_description"
           label="Short Description"
           rules={[
             { required: true, message: "Please enter short description" },
           ]}
-        >
-          <Input placeholder="Brief product summary for listing cards" />
-        </Form.Item>
+        > */}
+          {/* <Input placeholder="Brief product summary for listing cards" />
+        </Form.Item> */}
 
         <div className="space-y-2">
           <Form.Item name="description" label="Full Description" className="mb-2">

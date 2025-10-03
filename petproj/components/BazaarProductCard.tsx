@@ -20,7 +20,7 @@ const BazaarProductCard: React.FC<Props> = ({ product }) => {
 
       <div className="p-4">
         <h3 className="font-bold text-2xl mb-1 truncate max-w-[90%]">{product.title}</h3>
-        <p className="text-gray-600 mb-1 truncate max-w-[90%]">{product.short_description}</p>
+        {/* <p className="text-gray-600 mb-1 truncate max-w-[90%]">{product.short_description}</p> */}
       </div>
     </div>
   );

@@ -63,7 +63,7 @@ export async function PUT(req: NextRequest, { params }: any) {
       return candidate;
     }
     // Allowed fields for direct product update
-  const updatable = ['title','slug','description','short_description','price','currency','sku','shipping_weight','featured','status','seo_title','seo_description','has_variants','variant_attributes'];
+  const updatable = ['title','slug','description','price','currency','sku','shipping_weight','featured','status','seo_title','seo_description','has_variants','variant_attributes'];
 
     const fields: string[] = [];
     const values: any[] = [];

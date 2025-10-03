@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '../../components/navbar';
 import BazaarProductForm from '../../components/BazaarProductForm';
@@ -9,7 +9,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { useAuth } from '../../context/AuthContext';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/app/store/store';
-import { fetchBazaarProducts, setProducts, addProduct, updateProduct, removeProduct } from '@/app/store/slices/bazaarProductsSlice';
+import { setProducts, addProduct, updateProduct, removeProduct } from '@/app/store/slices/bazaarProductsSlice';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -21,32 +21,94 @@ export default function BazaarAdminPage() {
   const products = useSelector((state: RootState) => state.bazaarProducts?.products || []);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [createVisible, setCreateVisible] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [page, setPage] = useState<number>(1);
+  const limit = 24;
+  const [hasMore, setHasMore] = useState(true);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   // Fetch products on mount; route is protected by middleware
+  // Fetch first page and whenever filters/search change
   useEffect(() => {
-    // populate products via redux
+    setPage(1);
+    setHasMore(true);
     (async () => {
       setLoading(true);
-      await dispatch(fetchBazaarProducts({ admin: true }));
-      setLoading(false);
+      try {
+        await fetchProductsPage(1, false);
+      } catch (e) {
+        // fetchProductsPage handles messages
+      } finally {
+        setLoading(false);
+      }
     })();
-  }, [dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, searchTerm, statusFilter, categoryFilter]);
 
   // Keep a small helper to refresh products (uses redux)
+  // Backwards-compatible helper used by child components to refresh the list
   const fetchProducts = async () => {
+    setPage(1);
+    setHasMore(true);
     setLoading(true);
     try {
-      await dispatch(fetchBazaarProducts({ admin: true }));
-    } catch (e) {
-      message.error('Failed to fetch products');
+      await fetchProductsPage(1, false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch a specific page from the API and optionally append to redux
+  const fetchProductsPage = async (pageToLoad: number, append: boolean) => {
+    if (!hasMore && append) return;
+    try {
+      if (append) setLoadingMore(true);
+      const params = new URLSearchParams();
+      params.set('page', String(pageToLoad));
+      params.set('limit', String(limit));
+      if (categoryFilter && categoryFilter !== 'all') params.set('category', categoryFilter);
+      if (searchTerm) params.set('keyword', searchTerm);
+      if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
+      if (true) params.set('admin', 'true');
+
+      const res = await fetch(`/api/bazaar/products?${params.toString()}`);
+      if (!res.ok) {
+        const text = await res.text();
+        message.error(text || 'Failed to fetch products');
+        return;
+      }
+      const data = await res.json();
+      const rows = Array.isArray(data.rows) ? data.rows : Array.isArray(data) ? data : Array.isArray(data.products) ? data.products : [];
+
+      if (append) {
+        // Append to current redux products
+        const current = Array.isArray(products) ? products : [];
+        dispatch(setProducts([...current, ...rows]));
+      } else {
+        dispatch(setProducts(rows));
+      }
+
+      // Determine hasMore
+      const total = data?.meta?.total ?? data?.total ?? null;
+      if (total != null) {
+        const loadedCount = append ? (products.length + rows.length) : rows.length;
+        setHasMore(loadedCount < total);
+      } else {
+        // If no total provided, assume there is more only if we received a full page
+        setHasMore(rows.length === limit);
+      }
+
+      setPage(pageToLoad);
+    } catch (err: any) {
+      message.error(err.message || 'Network error');
+    } finally {
+      if (append) setLoadingMore(false);
     }
   };
 
@@ -58,8 +120,7 @@ export default function BazaarAdminPage() {
     if (searchTerm) {
       filtered = filtered.filter(p =>
         p.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.short_description?.toLowerCase().includes(searchTerm.toLowerCase())
+        p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -76,6 +137,23 @@ export default function BazaarAdminPage() {
     setFilteredProducts(filtered);
   }, [products, searchTerm, statusFilter, categoryFilter]);
 
+  // IntersectionObserver: load next page when sentinel visible
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+    const el = sentinelRef.current;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && hasMore && !loadingMore && !loading) {
+          fetchProductsPage(page + 1, true);
+        }
+      });
+    }, { root: null, rootMargin: '400px', threshold: 0.1 });
+
+    io.observe(el);
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sentinelRef.current, page, hasMore, loadingMore, loading]);
+
   const handleCreateSubmit = async (values: any) => {
     try {
       const res = await fetch('/api/bazaar/products', {
@@ -91,6 +169,7 @@ export default function BazaarAdminPage() {
       setCreateVisible(false);
   // Optimistically add new product to redux store for snappy UI
   dispatch(addProduct(data));
+  // refresh paginated listing
   fetchProducts();
 
       // Return the full response including variants for image upload
@@ -144,6 +223,7 @@ export default function BazaarAdminPage() {
     // remove locally from redux store for instant feedback
     dispatch(removeProduct(productId));
   };
+
 
   // Protect against products being non-array (defensive). fetchProducts now normalizes, but keep safety here.
   const productsArr = Array.isArray(products) ? products : [];
@@ -269,6 +349,16 @@ export default function BazaarAdminPage() {
             onDelete={handleDelete}
             onRefresh={fetchProducts}
           />
+        )}
+
+        {/* Sentinel for infinite scroll */}
+        <div ref={sentinelRef} />
+
+        {loadingMore && (
+          <div className="flex justify-center items-center py-6">
+            <Spin />
+            <div className="ml-3 text-gray-500">Loading more products...</div>
+          </div>
         )}
 
         {/* Create Product Modal */}

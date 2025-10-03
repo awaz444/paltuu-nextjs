@@ -41,7 +41,6 @@ interface ApiProduct {
     product_id: number;
     title: string;
     description: string;
-    short_description?: string;
     price?: number;
     compare_at_price?: number;
     currency: string;
@@ -148,7 +147,6 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                         ) || 0,
                     description:
                         apiProduct.description ||
-                        apiProduct.short_description ||
                         "No description available",
                     created_at:
                         apiProduct.created_at || new Date().toISOString(),
@@ -417,7 +415,7 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                                             </span>
                                         </div>
                                     </div>
-                                    
+
 
 
                                     {/* Short Description */}

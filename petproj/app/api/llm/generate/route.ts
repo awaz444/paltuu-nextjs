@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       model: "gemini-2.5-flash",
       systemInstruction: `You are a product description generator for pet products. Generate clear, factual Markdown descriptions.
 
+      
 STRUCTURE:
 - Product Title (H1)
 - **Description** (2-3 paragraphs about benefits and features)

@@ -615,9 +615,15 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
                     message.success('Description generated');
                   } else {
                     console.error('LLM API Error:', json);
-                    message.error(json?.error || 'LLM generation failed');
+                    // Provide a bit more context to the user
+                    const details = [] as string[];
+                    if (json?.error) details.push(json.error);
+                    if (json?.message) details.push(json.message);
+                    if (json?.durationMs) details.push(`took ${json.durationMs}ms`);
+                    message.error(details.join(' — ') || 'LLM generation failed');
                   }
                 } catch (e) {
+                  console.error('LLM fetch failed', e);
                   message.error('LLM request failed');
                 } finally {
                   setGenerating(false);

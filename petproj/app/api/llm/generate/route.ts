@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
 export async function POST(req: NextRequest) {
+  const start = Date.now();
   try {
     const body = await req.json();
     const { productName } = body || {};
@@ -13,76 +14,102 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get API key from environment
     const apiKey = process.env.BAZAAR_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        {
-          error:
-            "Missing API key on server. Set BAZAAR_API_KEY in environment.",
-        },
+        { error: "Missing API key on server. Set BAZAAR_API_KEY in environment." },
         { status: 400 }
       );
     }
 
-    
-    // Initialize Google Generative AI
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-pro",
-      systemInstruction: `You are a factual product-content generator for pet products. Generate a comprehensive Markdown product description based on the product name provided.
+      model: "gemini-2.5-flash",
+      systemInstruction: `You are a product description generator for pet products. Generate clear, factual Markdown descriptions.
 
-REQUIREMENTS:
-1. Search the web for accurate information about the specific product when possible
-2. Create detailed descriptions (3-4 paragraphs) covering benefits, features, and usage
-3. Use proper Markdown formatting with **bold headings** for each section
-4. Include accurate nutritional information when available
-5. Display nutritional information in a clean, readable format without tables
-6. Keep content factual and avoid exaggerated marketing claims
+STRUCTURE:
+- Product Title (H1)
+- **Description** (2-3 paragraphs about benefits and features)
+- **Ingredients** (if applicable)
+- **Nutritional Information** (if applicable)
 
-STRUCTURE (use **bold** for all section headings):
-- Product Title (H1 with #)
-- **Description** (2-3 detailed paragraphs about the product, its benefits, target pets, and key features)
-- **Ingredients** (bullet list if available, note allergens in parentheses)
-- **Nutritional Information** (formatted as clean list with serving size note)
-
-NUTRITIONAL INFORMATION FORMAT:
-Display nutritional values like this:
-**Nutritional Analysis (per 100g):**
-- **Protein:** 24g
-- **Fat:** 12g
-- **Carbohydrates:** 32g
-- **Fiber:** 3g
-- **Calcium:** 1.5%
-- **Phosphorus:** 1%
-
-*Serving size: 1 cup (100g)*
-
-FORMATTING RULES:
-- Use # for main title, **text** for section headings
-- Use bullet points with bold nutrient names for nutritional info
-- Always include serving size note in italics
-- Keep nutritional values accurate to real product data when possible
-- Include allergen information where relevant
-- Make descriptions comprehensive and informative (not just 2-3 sentences)`,
+Keep it concise and factual.`,
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 1500,
+        maxOutputTokens: process.env.LLM_MAX_TOKENS ? Number(process.env.LLM_MAX_TOKENS) : 2048,
       },
+      safetySettings: [
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+      ],
     });
 
-    // Generate description from product name
-    const prompt = `Generate a comprehensive product description for: ${productName}. Please include detailed information about ingredients, nutritional content, benefits for pets, and usage instructions. Format with proper markdown headings using **bold** for section headers.`;
-    const result = await model.generateContent(prompt);
-    const text = await result.response.text();
+    const prompt = `Generate a product description for: ${productName}`;
+    const TIMEOUT_MS = process.env.LLM_TIMEOUT_MS ? Number(process.env.LLM_TIMEOUT_MS) : 25000;
 
-    return NextResponse.json({ text: text.trim() }, { status: 200 });
+    const generateAndRead = async () => {
+      const result = await model.generateContent(prompt);
+
+      // Check for blocks
+      if (result.response.promptFeedback?.blockReason) {
+        throw new Error(`Content blocked: ${result.response.promptFeedback.blockReason}`);
+      }
+
+      const candidate = result.response.candidates?.[0];
+      if (candidate?.finishReason === 'SAFETY') {
+        throw new Error('Content blocked by safety filters');
+      }
+
+      if (candidate?.finishReason === 'MAX_TOKENS') {
+        console.warn('[LLM] Hit max tokens limit - increase LLM_MAX_TOKENS env var');
+      }
+
+      const text = await result.response.text();
+      if (!text?.trim()) {
+        throw new Error(`Empty response. FinishReason: ${candidate?.finishReason || 'unknown'}`);
+      }
+
+      return text.trim();
+    };
+
+    let text: string;
+    try {
+      text = await Promise.race([
+        generateAndRead(),
+        new Promise<string>((_, reject) =>
+          setTimeout(() => reject(new Error('LLM_TIMEOUT')), TIMEOUT_MS)
+        )
+      ]);
+    } catch (e: any) {
+      const isTimeout = String(e?.message).includes('LLM_TIMEOUT');
+      return NextResponse.json({
+        error: isTimeout ? 'LLM request timed out' : 'Failed to generate description',
+        message: e?.message,
+        durationMs: Date.now() - start
+      }, { status: isTimeout ? 504 : 500 });
+    }
+
+    return NextResponse.json({ text, durationMs: Date.now() - start }, { status: 200 });
   } catch (e: any) {
-    console.error("LLM proxy error", e);
     return NextResponse.json(
       {
         error: "Failed to generate description",
         message: e?.message,
+        durationMs: Date.now() - start,
       },
       { status: 500 }
     );

@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    
     // Initialize Google Generative AI
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({

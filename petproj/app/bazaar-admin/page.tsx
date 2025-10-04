@@ -48,6 +48,7 @@ export default function BazaarAdminPage() {
         setLoading(false);
       }
     })();
+    
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, searchTerm, statusFilter, categoryFilter]);
 

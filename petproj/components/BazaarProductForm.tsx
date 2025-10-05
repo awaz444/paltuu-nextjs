@@ -332,6 +332,8 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
         title: values.title,
         slug: values.slug || values.title?.toLowerCase().replace(/\s+/g, "-"),
         description: values.description,
+        seo_title: values.seo_title || null,
+        seo_description: values.seo_description || null,
         // short_description: values.short_description,
         compare_at_price: values.compare_at_price ?? null,
         currency: values.currency || "PKR",

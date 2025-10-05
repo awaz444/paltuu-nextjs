@@ -38,6 +38,8 @@ export interface CreateBazaarProductDto {
   title: string;
   slug?: string;
   description?: string;
+  seo_title?: string;
+  seo_description?: string;
   price?: number | null; // optional when variants provided
   compare_at_price?: number | null;
   currency?: string;
@@ -68,6 +70,8 @@ export async function POST(req: NextRequest) {
       title,
       slug = null,
       description = null,
+      seo_title = null,
+      seo_description = null,
       price = null,
       compare_at_price = null,
       currency = "PKR",
@@ -154,15 +158,17 @@ export async function POST(req: NextRequest) {
 
     const insertProductQuery = `
       INSERT INTO bazaar_products (
-        title, slug, description, price,
+        title, slug, description, seo_title, seo_description, price,
         currency, sku, shipping_weight, featured, has_variants, variant_attributes, status, created_at, updated_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW(),NOW()) RETURNING *;
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,NOW(),NOW()) RETURNING *;
     `;
 
     const productValues: any[] = [
       title,
       slug,
       description,
+      seo_title,
+      seo_description,
       productPrice,
       currency,
       finalSku,

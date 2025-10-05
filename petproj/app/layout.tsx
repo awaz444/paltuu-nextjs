@@ -18,8 +18,11 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Paltuu",
-  description: "Pakistan's First Pet Adoption Platform",
+  title: {
+    default: "Paltuu - Pakistan's First Pet Adoption Platform",
+    template: "%s | Paltuu" // This will be overridden by page titles
+  },
+  description: "Pakistan's First Pet Adoption Platform - Find pets, products, and everything for your furry friends",
 };
 
 export default function RootLayout({

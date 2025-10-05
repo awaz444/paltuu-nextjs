@@ -106,6 +106,8 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
       featured: initialValues?.featured || false,
       currency: initialValues?.currency || "PKR",
       status: initialValues?.status || "draft",
+      seo_title: initialValues?.seo_title || undefined,
+      seo_description: initialValues?.seo_description || undefined,
     };
 
     if (Array.isArray(initialValues?.categories)) {
@@ -693,6 +695,37 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
           </Form.Item>
           <div />
           <div />
+        </div>
+
+        {/* SEO Section */}
+        <div className="border p-4 rounded mb-4 bg-gray-50">
+          <h4 className="font-medium mb-3 text-gray-700">SEO Settings (Optional)</h4>
+          <div className="grid grid-cols-1 gap-4">
+            <Form.Item
+              name="seo_title"
+              label="SEO Title"
+              tooltip="Optimized title for search engines (recommended: 50-60 characters)"
+            >
+              <Input
+                placeholder="e.g. Buy Premium Dog Food 5kg - High Quality Nutrition"
+                maxLength={100}
+                showCount
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="seo_description"
+              label="SEO Description"
+              tooltip="Meta description for search engines (recommended: 150-160 characters)"
+            >
+              <TextArea
+                rows={3}
+                placeholder="e.g. Premium quality dog food with natural ingredients. Perfect nutrition for your pet's health and wellness. Free shipping on orders over 2000 PKR."
+                maxLength={300}
+                showCount
+              />
+            </Form.Item>
+          </div>
         </div>
 
         {/* Attribute Builder */}

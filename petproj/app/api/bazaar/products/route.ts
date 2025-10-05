@@ -311,7 +311,7 @@ export async function GET(req: NextRequest) {
       : `(SELECT json_agg(json_build_object('variant_id', v.variant_id, 'title', v.title, 'sku', v.sku, 'price_override', v.price_override, 'compare_at_price', v.compare_at_price, 'stock', v.stock, 'attributes', v.attributes, 'images', '[]'::json)) FROM bazaar_product_variants v WHERE v.product_id = p.product_id)`;
 
     let query = `
-  SELECT p.product_id, p.title, p.slug, p.description, p.price,
+  SELECT p.product_id, p.title, p.slug, p.description, p.seo_title, p.seo_description, p.price,
      p.currency, p.sku, p.shipping_weight, p.featured,
      COALESCE((SELECT SUM(stock) FROM bazaar_product_variants v2 WHERE v2.product_id = p.product_id), 0) AS stock_total,
      p.collection_id, p.status, p.created_at,

@@ -42,7 +42,9 @@ export const safeRedis = {
   async get(key: string): Promise<string | null> {
     try {
       if (upstash) {
-        return (await upstash.get(key)) as string | null;
+        const data = await upstash.get(key);
+        // Upstash returns parsed data, we need to stringify it for consistency
+        return data ? JSON.stringify(data) : null;
       }
       if (ioredis) {
         return await ioredis.get(key);

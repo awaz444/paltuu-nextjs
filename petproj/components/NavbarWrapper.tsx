@@ -19,16 +19,21 @@ const hideNavbarRoutes = [
   "/vet-panel",
   "/shop-panel",
   "/rescue-panel",
-
+  
 ];
 
 export default function NavbarWrapper() {
   const pathname = usePathname();
+  const isBazaarPage = pathname === "/bazaar";
 
   // only render navbar if not in hide list
   if (hideNavbarRoutes.includes(pathname)) {
     return null;
   }
 
-  return <Navbar />;
+  return (
+    <div className={isBazaarPage ? "no-navbar-radius" : ""}>
+      <Navbar />
+    </div>
+  );
 }

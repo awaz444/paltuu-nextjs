@@ -12,33 +12,34 @@ import NavbarWrapper from "@/components/NavbarWrapper";
 import ThemeInitializer from "./ThemeInitializer";
 
 const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-  style: ["normal", "italic"],
+    subsets: ["latin"],
+    weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+    style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
-  title: {
-    default: "Paltuu - Pakistan's First Pet Adoption Platform",
-    template: "%s | Paltuu" // This will be overridden by page titles
-  },
-  description: "Pakistan's First Pet Adoption Platform - Find pets, products, and everything for your furry friends",
+    title: {
+        default: "Paltuu - Pakistan's First Pet Adoption Platform",
+        template: "%s | Paltuu", // This will be overridden by page titles
+    },
+    description:
+        "Buy pet products online in Pakistan at Paltuu.pk. Shop food, accessories & grooming essentials, plus adopt or foster pets and connect with vets in Karachi, Lahore & Islamabad.",
 };
 
 export default function RootLayout({
-  children,
+    children,
 }: {
-  children: React.ReactNode;
+    children: React.ReactNode;
 }) {
-  return (
-    <html lang="en">
-      <head>
-        <link rel="icon" href="/favicon-maroon.png" id="favicon" />
+    return (
+        <html lang="en">
+            <head>
+                <link rel="icon" href="/favicon-maroon.png" id="favicon" />
 
-        {/* ✅ Primary color bootstrapped BEFORE hydration */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
+                {/* ✅ Primary color bootstrapped BEFORE hydration */}
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `
               (function() {
                 try {
                   var user = localStorage.getItem("user");
@@ -50,49 +51,49 @@ export default function RootLayout({
                 }
               })();
             `,
-          }}
-        />
+                    }}
+                />
 
-        {/* Google AdSense Script */}
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1403927121021328"
-          crossOrigin="anonymous"
-        ></script>
+                {/* Google AdSense Script */}
+                <script
+                    async
+                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1403927121021328"
+                    crossOrigin="anonymous"></script>
 
-        {/* Google Analytics Script */}
-        <Script
-          strategy="afterInteractive"
-          src="https://www.googletagmanager.com/gtag/js?id=G-724EM6FN42"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
+                {/* Google Analytics Script */}
+                <Script
+                    strategy="afterInteractive"
+                    src="https://www.googletagmanager.com/gtag/js?id=G-724EM6FN42"
+                />
+                <Script id="google-analytics" strategy="afterInteractive">
+                    {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'G-724EM6FN42');
           `}
-        </Script>
-      </head>
-      <body className={`${montserrat.className} flex flex-col min-h-screen`}>
-        <AppClientWrapper>
-          <ClientProvider>
-            {/* ✅ ThemeInitializer still here to handle dynamic updates */}
-            <ThemeInitializer />
-            <NavbarWrapper />
+                </Script>
+            </head>
+            <body
+                className={`${montserrat.className} flex flex-col min-h-screen`}>
+                <AppClientWrapper>
+                    <ClientProvider>
+                        {/* ✅ ThemeInitializer still here to handle dynamic updates */}
+                        <ThemeInitializer />
+                        <NavbarWrapper />
 
-            <main className="flex-grow">{children}</main>
+                        <main className="flex-grow">{children}</main>
 
-            <div className="fixed right-2 z-[999] bottom-20 sm:bottom-4">
-              <ChatBot />
-            </div>
-            <Analytics />
-          </ClientProvider>
-        </AppClientWrapper>
+                        <div className="fixed right-2 z-[999] bottom-20 sm:bottom-4">
+                            <ChatBot />
+                        </div>
+                        <Analytics />
+                    </ClientProvider>
+                </AppClientWrapper>
 
-        <Footer />
-        <Toaster />
-      </body>
-    </html>
-  );
+                <Footer />
+                <Toaster />
+            </body>
+        </html>
+    );
 }

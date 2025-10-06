@@ -104,16 +104,31 @@ export default function BazaarPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* 🐾 Hero Section */}
-      <section className="bg-gradient-to-r from-primary to-primary/80 py-16 text-center text-white">
-        <h1 className="text-4xl font-bold mb-3">Pet Paradise Bazaar</h1>
-        <p className="text-lg opacity-90 max-w-2xl mx-auto">
-          Discover everything your furry friends need - from premium food to fun toys and essential accessories
-        </p>
-      </section>
+  {/* 🐾 Hero Section */}
+  <section className="relative w-full h-[80vh] sm:h-[85vh] md:h-[90vh] lg:h-[95vh] overflow-hidden">
+    {/* Desktop Banner */}
+    <Image
+      src="/banner_web.webp"
+      alt="Bazaar Banner"
+      fill
+      priority
+      className="object-cover hidden md:block"
+    />
 
-      {/* 🛍️ Category Sections */}
-      <main className="flex-grow pb-20">
+    {/* Mobile Banner */}
+    <Image
+      src="/banner_phone.webp"
+      alt="Bazaar Banner Mobile"
+      fill
+      priority
+      className="object-cover block md:hidden"
+    />
+  </section>
+
+
+
+     {/* 🛍️ Category Sections */}
+      <main className="flex-grow mt-12 pb-20">
         <div className="max-w-7xl mx-auto px-6 space-y-16">
           {categories.map((cat) => {
             const IconComponent = cat.icon;

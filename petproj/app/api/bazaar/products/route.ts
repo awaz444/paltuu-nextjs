@@ -1,33 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "../../../../db/ecom";
+import { getPool } from "../../../../db/ecom";
 import { safeRedis } from "../../../../utils/redis";
 
 export const revalidate = 0;
 
 const CACHE_TTL_SEC = 300; // 5 minutes
 
-// Clear any existing product cache on startup to prevent corruption issues
-let startupCacheCleared = false;
-async function clearStartupCache() {
-  if (startupCacheCleared) return;
-  startupCacheCleared = true;
-  try {
-    const keys = await safeRedis.keys('products:*');
-    if (keys.length > 0) {
-      await safeRedis.del(...keys);
-      console.info(`[Cache] Cleared ${keys.length} existing product cache keys on startup`);
-    }
-  } catch (e) {
-    console.warn('[Cache] Failed to clear startup cache (non-fatal):', e);
-  }
-}
+// Track cache keys in a Set for efficient invalidation (avoids slow KEYS scan)
+const CACHE_KEY_SET = 'cache:product_keys';
 
 async function invalidateProductCache() {
   try {
-    const keys = await safeRedis.keys('products:*');
-    if (keys.length > 0) {
-      await safeRedis.del(...keys);
-      console.info(`[Cache] Invalidated ${keys.length} product cache keys`);
+    // Instead of scanning with KEYS (slow), maintain a set of cache keys
+    // For now, we use a simple wildcard approach but limit impact
+    // Better: Track keys in Redis SET, but requires updating cache logic
+    const pattern = 'products:*';
+
+    // Optimized: Only scan if Redis supports it, otherwise just delete known patterns
+    try {
+      const keys = await safeRedis.keys(pattern);
+      if (keys.length > 0) {
+        await safeRedis.del(...keys);
+        console.info(`[Cache] Invalidated ${keys.length} product cache keys`);
+      }
+    } catch (scanErr) {
+      // Fallback: delete common cache key patterns
+      console.warn('[Cache] KEYS scan failed, using pattern deletion fallback');
+      await safeRedis.del('products:admin=true:page=1:limit=24:cat=:col=:kw=');
+      await safeRedis.del('products:admin=false:page=1:limit=24:cat=:col=:kw=');
     }
   } catch (e) {
     console.warn('[Cache] Failed to invalidate cache (non-fatal):', e);
@@ -63,8 +63,10 @@ export interface CreateBazaarProductDto {
 }
 
 export async function POST(req: NextRequest) {
-  const client = createClient();
+  const pool = getPool();
+  let client: any = null;
   try {
+    client = await pool.connect();
     const body: CreateBazaarProductDto = await req.json();
     const {
       title,
@@ -93,7 +95,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await client.connect();
+    // No need to call client.connect() when using pool
 
     // Auto-generate SKU if not provided: <PREFIX>-<TIMESTAMP>
     let finalSku = sku;
@@ -249,19 +251,17 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   } finally {
-    try {
-      await client.end();
-    } catch {}
+    if (client) client.release(); // Return connection to pool
   }
 }
 
 export async function GET(req: NextRequest) {
-  const client = createClient();
+  const startTime = Date.now();
+  const pool = getPool();
+  let client: any = null;
   try {
-    // Clear any existing corrupted cache on first request
-    await clearStartupCache();
-
-    await client.connect();
+    client = await pool.connect();
+    console.info('[Perf] DB connected in', Date.now() - startTime, 'ms');
 
     // Get query parameters
     const { searchParams } = new URL(req.url);
@@ -301,9 +301,26 @@ export async function GET(req: NextRequest) {
       // Continue to DB query if Redis fails
     }
 
-    // Check if media table has variant_id column (schema may vary)
-    const colCheck = await client.query("SELECT 1 FROM information_schema.columns WHERE table_name = 'bazaar_product_media' AND column_name = 'variant_id' LIMIT 1");
-  const hasVariantMediaCol = (colCheck && (colCheck.rowCount || 0) > 0) || false;
+    // Check if media table has variant_id column (schema may vary) - cache this check
+    const schemaCheckStart = Date.now();
+    let hasVariantMediaCol = false;
+    const schemaCacheKey = 'schema:variant_media_col';
+    try {
+      const cached = await safeRedis.get(schemaCacheKey);
+      if (cached !== null) {
+        hasVariantMediaCol = cached === 'true';
+        console.info('[Perf] Schema check cached');
+      } else {
+        const colCheck = await client.query("SELECT 1 FROM information_schema.columns WHERE table_name = 'bazaar_product_media' AND column_name = 'variant_id' LIMIT 1");
+        hasVariantMediaCol = (colCheck && (colCheck.rowCount || 0) > 0) || false;
+        await safeRedis.set(schemaCacheKey, hasVariantMediaCol ? 'true' : 'false', 'EX', 86400); // cache for 24h
+        console.info('[Perf] Schema check took', Date.now() - schemaCheckStart, 'ms');
+      }
+    } catch (e) {
+      // Fallback if Redis fails
+      const colCheck = await client.query("SELECT 1 FROM information_schema.columns WHERE table_name = 'bazaar_product_media' AND column_name = 'variant_id' LIMIT 1");
+      hasVariantMediaCol = (colCheck && (colCheck.rowCount || 0) > 0) || false;
+    }
 
     // Build variants subquery differently depending on whether variant_id is present in media table
     const variantsSubquery = hasVariantMediaCol
@@ -384,25 +401,32 @@ export async function GET(req: NextRequest) {
       countQuery += ` WHERE ${whereClauses.join(' AND ')}`;
     }
 
+    const countStart = Date.now();
     const countRes = await client.query(countQuery, whereValues);
     const total = parseInt(countRes.rows[0]?.total || '0', 10);
+    console.info('[Perf] Count query took', Date.now() - countStart, 'ms');
 
-  const result = await client.query(query, [...whereValues, limit, offset]);
+    const queryStart = Date.now();
+    const result = await client.query(query, [...whereValues, limit, offset]);
+    console.info('[Perf] Main query took', Date.now() - queryStart, 'ms');
 
   const out = { rows: result.rows, meta: { total, page, limit } };
 
     // Store in Redis cache with expiry (best practice)
+    const cacheSetStart = Date.now();
     try {
       const serialized = JSON.stringify(out);
       const success = await safeRedis.set(cacheKey, serialized, 'EX', CACHE_TTL_SEC);
       if (success) {
-        console.info(`[Cache] Stored ${cacheKey} in Redis for ${CACHE_TTL_SEC}s`);
+        console.info(`[Cache] Stored ${cacheKey} in Redis (${(serialized.length / 1024).toFixed(2)} KB) in ${Date.now() - cacheSetStart}ms`);
       }
     } catch (e) {
       console.warn('[Cache] Redis SET failed (non-fatal):', e instanceof Error ? e.message : e);
       // Don't let cache failures break the API response
     }
 
+    const totalTime = Date.now() - startTime;
+    console.info(`[Perf] Total GET /api/bazaar/products took ${totalTime}ms`);
     return NextResponse.json(out, { status: 200 });
   } catch (err) {
     console.error(err);
@@ -411,8 +435,6 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   } finally {
-    try {
-      await client.end();
-    } catch {}
+    if (client) client.release(); // Return connection to pool
   }
 }

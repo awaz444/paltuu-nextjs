@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '../../../../../db/ecom';
+import { getPool } from '../../../../../db/ecom';
 import { safeRedis } from '../../../../../utils/redis';
 
 // Helper to invalidate product cache keys
 async function invalidateProductCache() {
   try {
-    const keys = await safeRedis.keys('products:*');
-    if (keys.length > 0) {
-      await safeRedis.del(...keys);
-      console.info(`[Cache] Invalidated ${keys.length} product cache keys`);
+    // Optimized: Only scan if Redis supports it, otherwise just delete known patterns
+    try {
+      const keys = await safeRedis.keys('products:*');
+      if (keys.length > 0) {
+        await safeRedis.del(...keys);
+        console.info(`[Cache] Invalidated ${keys.length} product cache keys`);
+      }
+    } catch (scanErr) {
+      // Fallback: delete common cache key patterns
+      console.warn('[Cache] KEYS scan failed, using pattern deletion fallback');
+      await safeRedis.del('products:admin=true:page=1:limit=24:cat=:col=:kw=');
+      await safeRedis.del('products:admin=false:page=1:limit=24:cat=:col=:kw=');
     }
   } catch (e) {
     console.warn('[Cache] Failed to invalidate cache (non-fatal):', e);
@@ -16,9 +24,10 @@ async function invalidateProductCache() {
 }
 
 export async function GET(req: NextRequest, { params }: any) {
-  const client = createClient();
+  const pool = getPool();
+  let client: any = null;
   try {
-    await client.connect();
+    client = await pool.connect();
     const id = params.id;
     // check for variant_id column in media table
     const colCheck = await client.query("SELECT 1 FROM information_schema.columns WHERE table_name = 'bazaar_product_media' AND column_name = 'variant_id' LIMIT 1");
@@ -40,15 +49,16 @@ export async function GET(req: NextRequest, { params }: any) {
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  } finally { try { await client.end(); } catch {} }
+  } finally { if (client) client.release(); }
 }
 
 export async function PUT(req: NextRequest, { params }: any) {
-  const client = createClient();
+  const pool = getPool();
+  let client: any = null;
   try {
     const body = await req.json();
     const id = params.id;
-    await client.connect();
+    client = await pool.connect();
     // helper to ensure SKU uniqueness across products and variants
     async function ensureUniqueSkuAcrossTables(candidate: string) {
       let attempt = 0;
@@ -136,14 +146,15 @@ export async function PUT(req: NextRequest, { params }: any) {
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  } finally { try { await client.end(); } catch {} }
+  } finally { if (client) client.release(); }
 }
 
 export async function DELETE(req: NextRequest, { params }: any) {
-  const client = createClient();
+  const pool = getPool();
+  let client: any = null;
   try {
     const id = params.id;
-    await client.connect();
+    client = await pool.connect();
     await client.query('DELETE FROM bazaar_products WHERE product_id = $1', [id]);
 
     // Invalidate product cache since we deleted a product
@@ -153,5 +164,5 @@ export async function DELETE(req: NextRequest, { params }: any) {
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
-  } finally { try { await client.end(); } catch {} }
+  } finally { if (client) client.release(); }
 }

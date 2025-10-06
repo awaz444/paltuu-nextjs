@@ -2,12 +2,18 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/app/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/app/store/store";
 import { ChevronRight, ShoppingCart, Zap, Clock, Tag, TrendingUp, Star } from "lucide-react";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
 import { fetchCart, addToCart } from "@/app/store/slices/cartSlice";
 import { useRouter } from "next/navigation";
+import {
+  fetchAllBazaarCategories,
+  fetchCategoryProducts,
+  isCategoryFresh,
+  type Product
+} from "@/app/store/slices/bazaarSlice";
 
 // Category definitions matching database
 const categories = [
@@ -16,111 +22,96 @@ const categories = [
     icon: TrendingUp,
     slug: null,
     sortBy: 'trending',
-    type: 'special'
+    type: 'special',
+    featuredKey: 'trending' as const,
   },
   {
     title: "Most Discounted",
     icon: Tag,
     slug: null,
     sortBy: 'discount',
-    type: 'special'
+    type: 'special',
+    featuredKey: 'discount' as const,
   },
   {
     title: "Cat Food",
     icon: null,
     slug: 'food',
     categoryId: 1,
-    subFilter: 'cat'
+    subFilter: 'cat',
+    featuredKey: 'catFood' as const,
   },
   {
     title: "Dog Food",
     icon: null,
     slug: 'food',
     categoryId: 1,
-    subFilter: 'dog'
+    subFilter: 'dog',
+    featuredKey: 'dogFood' as const,
   },
   {
     title: "Accessories & Grooming",
     icon: null,
     slug: 'accessories',
     categoryId: 2,
-    multiCategory: ['accessories', 'grooming']
+    multiCategory: ['accessories', 'grooming'],
+    featuredKey: 'accessoriesGrooming' as const,
   },
   {
     title: "Healthcare",
     icon: null,
     slug: 'healthcare',
-    categoryId: 4
+    categoryId: 4,
+    featuredKey: 'healthcare' as const,
   },
 ];
 
-interface Product {
-  product_id: number;
-  title: string;
-  slug: string;
-  price: string;
-  original_price?: string;
-  image: string;
-  collection_name: string;
-  featured?: boolean;
-  variants?: any[];
-}
+// Remove the Product interface since it's now imported from Redux slice
 
 export default function BazaarPage() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const [categoryProducts, setCategoryProducts] = useState<Record<string, Product[]>>({});
-  const [loading, setLoading] = useState(true);
+
+  // Get bazaar state from Redux
+  const { categories: bazaarCategories, globalLoading, cacheExpiry } = useSelector((state: RootState) => state.bazaar);
+
+  // Track if initial load is complete
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Manual refresh function
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await dispatch(fetchAllBazaarCategories(true)); // true = force refresh
+    } catch (error) {
+      console.error('Error refreshing bazaar data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    // Fetch products for each category
-    const fetchAllCategories = async () => {
-      setLoading(true);
-      const results: Record<string, Product[]> = {};
+    // Fetch all categories with caching
+    const loadBazaarData = async () => {
+      try {
+        // Check if we need to fetch any data
+        const needsFetch = Object.values(bazaarCategories).some(category =>
+          !isCategoryFresh(category, cacheExpiry) || category.products.length === 0
+        );
 
-      for (const cat of categories) {
-        try {
-          const params = new URLSearchParams();
-          params.set('page', '1');
-          params.set('limit', '10'); // Only 10 products per category
-
-          if (cat.slug) {
-            params.set('categorySlug', cat.slug);
-          }
-
-          if (cat.sortBy) {
-            params.set('sortBy', cat.sortBy);
-          }
-
-          // Add keyword filter for cat/dog food
-          if (cat.subFilter) {
-            params.set('keyword', cat.subFilter);
-          }
-
-          const res = await fetch(`/api/bazaar/products-optimized?${params.toString()}`);
-          if (res.ok) {
-            const data = await res.json();
-            // Map compare_at_price to original_price for consistency
-            const mappedProducts = (data.rows || []).map((p: any) => ({
-              ...p,
-              original_price: p.compare_at_price,
-            }));
-            results[cat.title] = mappedProducts;
-          } else {
-            results[cat.title] = [];
-          }
-        } catch (err) {
-          console.error(`Error fetching ${cat.title}:`, err);
-          results[cat.title] = [];
+        if (needsFetch || !initialLoadComplete) {
+          await dispatch(fetchAllBazaarCategories(false)); // false = use cache if available
         }
+      } catch (error) {
+        console.error('Error loading bazaar data:', error);
+      } finally {
+        setInitialLoadComplete(true);
       }
-
-      setCategoryProducts(results);
-      setLoading(false);
     };
 
-    fetchAllCategories();
-  }, []);
+    loadBazaarData();
+  }, [dispatch, bazaarCategories, cacheExpiry, initialLoadComplete]);
 
   // 🛒 Add to cart handler
   const handleAddToCart = async (e: React.MouseEvent, product: Product) => {
@@ -151,16 +142,18 @@ export default function BazaarPage() {
   const handleViewAll = (cat: typeof categories[0]) => {
     const params = new URLSearchParams();
 
-    if (cat.slug) {
-      params.set('categorySlug', cat.slug);
-    }
+    if (cat.sortBy === 'discount') {
+      params.set('sortBy', 'discount');
+    } else if (cat.sortBy === 'trending') {
+      params.set('sortBy', 'trending');
+    } else {
+      if (cat.slug) {
+        params.set('categorySlug', cat.slug);
+      }
 
-    if (cat.sortBy) {
-      params.set('sortBy', cat.sortBy);
-    }
-
-    if (cat.subFilter) {
-      params.set('keyword', cat.subFilter);
+      if (cat.subFilter) {
+        params.set('keyword', cat.subFilter);
+      }
     }
 
     router.push(`/marketplace?${params.toString()}`);
@@ -187,6 +180,19 @@ export default function BazaarPage() {
       priority
       className="object-cover block md:hidden"
     />
+
+    {/* Refresh Button - Development Only */}
+    {process.env.NODE_ENV === 'development' && (
+      <div className="absolute top-4 right-4 z-10">
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg text-sm font-medium hover:bg-white transition-colors disabled:opacity-50"
+        >
+          {refreshing ? '🔄 Refreshing...' : '🔄 Refresh Data'}
+        </button>
+      </div>
+    )}
   </section>
 
 
@@ -196,7 +202,9 @@ export default function BazaarPage() {
         <div className="max-w-7xl mx-auto px-6 space-y-16">
           {categories.map((cat) => {
             const IconComponent = cat.icon;
-            const filteredProducts = categoryProducts[cat.title] || [];
+            const categorySection = bazaarCategories[cat.title];
+            const filteredProducts = categorySection?.products || [];
+            const isLoading = categorySection?.loading || globalLoading;
 
             return (
               <section key={cat.title}>
@@ -219,16 +227,24 @@ export default function BazaarPage() {
                 {/* Product Slider */}
                 <div className="relative">
                   <div className="flex gap-5 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory">
-                    {loading ? (
-                      <div className="text-gray-400 text-sm italic py-6 px-2">
-                        Loading products...
-                      </div>
+                    {isLoading ? (
+                      // Loading skeleton
+                      [...Array(4)].map((_, i) => (
+                        <div key={i} className="w-[280px] flex-shrink-0 bg-white rounded-2xl shadow-sm border animate-pulse">
+                          <div className="w-full h-[200px] bg-gray-200 rounded-t-2xl"></div>
+                          <div className="p-4 space-y-3">
+                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                            <div className="h-8 bg-gray-200 rounded"></div>
+                          </div>
+                        </div>
+                      ))
                     ) : filteredProducts.length > 0 ? (
-                      filteredProducts.map((prod) => (
+                      filteredProducts.map((prod: Product) => (
                         <Link
                           href={`/marketplace/${prod.product_id}`}
                           key={`${cat.title}-${prod.product_id}`}
-                          className="w-[280px] flex-shrink-0 bg-white rounded-2xl border-2 border-transparent hover:border-primary shadow-sm hover:shadow-lg transition-all duration-300 snap-start group flex flex-col h-[380px] overflow-hidden relative"
+                          className="w-[280px] flex-shrink-0 bg-white rounded-2xl border-2 border-transparent hover:border-primary shadow-sm hover:shadow-lg transition-all duration-300 snap-start group flex flex-col h-[420px] overflow-hidden relative"
                         >
                           {/* Special Badges */}
                           {cat.sortBy === "discount" && prod.original_price && (
@@ -262,6 +278,46 @@ export default function BazaarPage() {
                             <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2 leading-tight text-sm min-h-[2.5rem]">
                               {prod.title}
                             </h3>
+
+                            {/* Rating */}
+                            {prod.rating !== undefined && prod.rating !== null && prod.rating > 0 ? (
+                              <div className="flex items-center gap-1 mb-2">
+                                <div className="flex text-yellow-400">
+                                  {[...Array(5)].map((_, i) => {
+                                    const filled = i < Math.floor(prod.rating!);
+                                    const halfFilled = i === Math.floor(prod.rating!) && prod.rating! % 1 >= 0.5;
+                                    return (
+                                      <Star
+                                        key={i}
+                                        size={14}
+                                        className={
+                                          filled || halfFilled
+                                            ? "fill-yellow-400 text-yellow-400"
+                                            : "fill-gray-200 text-gray-200"
+                                        }
+                                      />
+                                    );
+                                  })}
+                                </div>
+                                <span className="text-xs font-medium text-gray-700 ml-1">
+                                  {prod.rating.toFixed(1)}
+                                </span>
+                                {prod.reviewCount !== undefined && prod.reviewCount > 0 && (
+                                  <span className="text-xs text-gray-500">
+                                    ({prod.reviewCount} review{prod.reviewCount > 1 ? 's' : ''})
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1 mb-2">
+                                <div className="flex text-gray-200">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star key={i} size={14} className="fill-gray-200 text-gray-200" />
+                                  ))}
+                                </div>
+                                <span className="text-xs text-gray-400 ml-1">No reviews yet</span>
+                              </div>
+                            )}
 
                             {/* Price Section */}
                             <div className="mt-auto">
@@ -305,8 +361,18 @@ export default function BazaarPage() {
                         </Link>
                       ))
                     ) : (
-                      <div className="text-gray-400 text-sm italic py-6 px-2">
-                        No products found in this category.
+                      <div className="text-gray-400 text-sm italic py-6 px-2 flex items-center gap-2">
+                        {categorySection?.error ? (
+                          <>
+                            <span className="text-red-500">⚠️</span>
+                            Error loading products: {categorySection.error}
+                          </>
+                        ) : (
+                          <>
+                            <span>📭</span>
+                            No products found in this category.
+                          </>
+                        )}
                       </div>
                     )}
                   </div>

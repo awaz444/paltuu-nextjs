@@ -14,6 +14,7 @@ import vetScheduleSlice from './slices/vetScheduleSlice';
 import cartReducer from './slices/cartSlice';
 import marketplaceReducer from "./slices/marketplaceSlice";
 import bazaarProductsReducer from './slices/bazaarProductsSlice';
+import bazaarReducer from './slices/bazaarSlice';
 
 
 export const store = configureStore({
@@ -33,6 +34,7 @@ export const store = configureStore({
     cart: cartReducer,
     marketplace: marketplaceReducer,
     bazaarProducts: bazaarProductsReducer,
+    bazaar: bazaarReducer,
   },
 });
 

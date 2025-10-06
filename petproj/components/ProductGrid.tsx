@@ -29,7 +29,6 @@ interface ProductGridProps {
 
 const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
 
-
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
@@ -81,14 +80,14 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
                     href={`/marketplace/${product.product_id}`}
                     passHref>
                     <div className="bg-white pt-4 px-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300">
-                        <div className="relative">
+                        <div className="relative bg-white rounded-2xl p-2"> {/* Added white background and padding */}
                             <img
                                 src={
                                     product.image_url ||
                                     "/product-placeholder.png"
                                 }
                                 alt={product.name}
-                                className="w-full aspect-square object-cover rounded-2xl"
+                                className="w-full aspect-square object-contain rounded-xl" /* Changed to object-contain */
                             />
                             {product.inStock === false && (
                                 <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center rounded-2xl">

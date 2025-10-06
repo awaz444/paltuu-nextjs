@@ -1,0 +1,469 @@
+app
+├── ClientProvider.tsx
+├── ThemeInitializer.tsx
+├── about-us
+│   ├── about-us.css
+│   └── page.tsx
+├── admin-approve-vets
+│   └── page.tsx
+├── admin-panel
+│   ├── page.tsx
+│   └── whatsapp-data
+│       └── page.tsx
+├── admin-pet
+│   └── page.tsx
+├── admin-pet-approval
+│   └── page.tsx
+├── admin-user
+│   └── page.tsx
+├── adoption-applicants
+│   └── page.tsx
+├── api
+│   ├── accept-adoption-application
+│   │   └── [adoption_id]
+│   │       └── route.ts
+│   ├── accept-foster-application
+│   │   └── [foster_id]
+│   │       └── route.ts
+│   ├── admin
+│   │   └── whatsapp
+│   │       ├── delivery-requests
+│   │       │   └── route.ts
+│   │       ├── lost-found
+│   │       │   └── route.ts
+│   │       ├── new-home
+│   │       │   └── route.ts
+│   │       └── payment-proofs
+│   │           └── route.ts
+│   ├── admin-reject-vet
+│   │   └── route.ts
+│   ├── admin-verify-vet
+│   │   └── route.ts
+│   ├── adoption_application
+│   │   ├── [pet_id]
+│   │   │   └── route.ts
+│   │   └── route.ts
+│   ├── auth
+│   │   ├── [...nextauth]
+│   │   │   ├── options.ts
+│   │   │   └── route.ts
+│   │   ├── callback
+│   │   │   └── google.ts
+│   │   ├── forgot-password
+│   │   │   └── route.ts
+│   │   └── reset-password
+│   │       └── route.ts
+│   ├── bazaar
+│   │   ├── cart
+│   │   │   └── route.ts
+│   │   ├── categories
+│   │   │   └── route.ts
+│   │   ├── collections
+│   │   │   └── route.ts
+│   │   ├── images
+│   │   │   └── route.ts
+│   │   ├── orders
+│   │   │   ├── [id]
+│   │   │   │   └── route.ts
+│   │   │   └── route.ts
+│   │   ├── products
+│   │   │   ├── [id]
+│   │   │   │   └── route.ts
+│   │   │   └── route.ts
+│   │   ├── products-optimized
+│   │   │   └── route.ts
+│   │   └── reviews
+│   │       └── route.ts
+│   ├── browse-pets
+│   │   ├── [pet_id]
+│   │   │   └── route.ts
+│   │   └── route.ts
+│   ├── cities
+│   │   └── route.ts
+│   ├── clear-cache
+│   │   └── route.ts
+│   ├── delete-application
+│   │   └── [id]
+│   │       └── route.ts
+│   ├── foster-pets
+│   │   ├── [pet_id]
+│   │   │   └── route.ts
+│   │   └── route.ts
+│   ├── foster_application
+│   │   ├── [pet_id]
+│   │   │   └── route.ts
+│   │   └── route.ts
+│   ├── founders-club
+│   │   └── route.ts
+│   ├── get-my-applications
+│   │   └── [user_id]
+│   │       └── route.ts
+│   ├── get-notifications-by-id
+│   │   └── [user_id]
+│   │       └── route.ts
+│   ├── get-user-id
+│   │   └── route.ts
+│   ├── get-user-id-by-vet-id
+│   │   └── route.ts
+│   ├── get-vet-id
+│   │   └── route.ts
+│   ├── has-vet-applied
+│   │   └── [user-id]
+│   │       └── route.ts
+│   ├── health
+│   │   └── route.ts
+│   ├── is-verified-by-user-id
+│   │   └── [user_id]
+│   │       └── route.ts
+│   ├── issues
+│   │   └── route.ts
+│   ├── listing-approvals
+│   │   └── route.ts
+│   ├── llm
+│   │   ├── generate
+│   │   │   └── route.ts
+│   │   └── route.ts
+│   ├── lost-and-found
+│   │   ├── [pet_id]
+│   │   │   └── route.ts
+│   │   └── route.ts
+│   ├── mark-notification-read
+│   │   └── [notification_id]
+│   │       └── route.ts
+│   ├── my-listings
+│   │   └── [user-id]
+│   │       └── route.ts
+│   ├── my-profile
+│   │   └── [user-id]
+│   │       └── route.ts
+│   ├── newsletter
+│   │   └── route.ts
+│   ├── orders
+│   │   └── [user_id]
+│   │       └── route.ts
+│   ├── pet-categories
+│   │   └── route.ts
+│   ├── pet-favourite-things
+│   │   └── route.ts
+│   ├── pet-medical-conditions
+│   │   └── route.ts
+│   ├── pet-special-needs
+│   │   └── route.ts
+│   ├── pets
+│   │   ├── bulk-upload
+│   │   │   └── route.ts
+│   │   ├── route.ts
+│   │   └── testing.txt
+│   ├── qualifications
+│   │   └── route.ts
+│   ├── qurbani-animals
+│   │   ├── [id]
+│   │   │   └── route.ts
+│   │   ├── images
+│   │   │   └── route.ts
+│   │   ├── route.ts
+│   │   └── user
+│   │       └── [user_id]
+│   │           └── route.ts
+│   ├── reject-adoption-application
+│   │   └── [adoption_id]
+│   │       └── route.ts
+│   ├── reject-foster-application
+│   │   └── [foster_id]
+│   │       └── route.ts
+│   ├── rescue
+│   │   ├── pets
+│   │   │   ├── [rescue_id]
+│   │   │   │   └── route.ts
+│   │   │   └── route.ts
+│   │   └── shelters
+│   │       ├── [shelter_id]
+│   │       │   ├── pets
+│   │       │   │   └── route.ts
+│   │       │   └── route.ts
+│   │       ├── complete-registration
+│   │       │   └── route.ts
+│   │       ├── route.segment.config.ts
+│   │       └── route.ts
+│   ├── send-otp
+│   │   └── route.ts
+│   ├── shops
+│   │   ├── [shop_id]
+│   │   │   └── route.ts
+│   │   └── complete-registration
+│   │       └── route.ts
+│   ├── summary-llm
+│   │   └── route.ts
+│   ├── update-profile-image
+│   │   └── [user-id]
+│   │       └── route.ts
+│   ├── upload-image
+│   │   └── route.ts
+│   ├── upload-lost-found-image
+│   │   └── route.ts
+│   ├── upload-verification-images
+│   │   └── route.ts
+│   ├── upload-vet-image
+│   │   └── route.ts
+│   ├── user-shops-shelters
+│   │   └── route.ts
+│   ├── users
+│   │   ├── login
+│   │   │   └── route.ts
+│   │   ├── logout
+│   │   │   └── route.ts
+│   │   ├── me
+│   │   │   └── route.ts
+│   │   ├── route.ts
+│   │   ├── sign-up
+│   │   │   └── route.ts
+│   │   ├── testing.txt
+│   │   └── vet-signup
+│   │       └── route.ts
+│   ├── verify-otp
+│   │   └── route.ts
+│   ├── vet-approve-review
+│   │   └── [review_id]
+│   │       └── route.ts
+│   ├── vet-get-qualifications
+│   │   └── [user_id]
+│   │       └── route.ts
+│   ├── vet-panel
+│   │   ├── [vet-id]
+│   │   │   └── route.ts
+│   │   ├── clinic-details
+│   │   │   └── [vet-id]
+│   │   │       └── route.ts
+│   │   ├── qualifications
+│   │   │   └── [vet-id]
+│   │   │       └── route.ts
+│   │   ├── reviews
+│   │   │   └── [vet-id]
+│   │   │       └── route.ts
+│   │   ├── schedule
+│   │   │   └── [vet-id]
+│   │   │       └── route.ts
+│   │   └── specialization
+│   │       └── [vet-id]
+│   │           └── route.ts
+│   ├── vet-qualification
+│   │   └── route.ts
+│   ├── vet-reject-review
+│   │   └── [review_id]
+│   │       └── route.ts
+│   ├── vet-reviews
+│   │   ├── approved-reviews
+│   │   │   └── [vet_id]
+│   │   │       └── route.ts
+│   │   └── pending-reviews
+│   │       └── [vet_id]
+│   │           └── route.ts
+│   ├── vet-reviews-stats
+│   │   └── route.ts
+│   ├── vet-schedule
+│   │   └── route.ts
+│   ├── vet-specialization
+│   │   └── route.ts
+│   ├── vet-step-zero
+│   │   └── route.ts
+│   ├── vets
+│   │   ├── [vet-id]
+│   │   │   └── route.ts
+│   │   ├── route.ts
+│   │   └── texting.txt
+│   └── vets-applied-for-verification
+│       └── route.ts
+├── bazaar
+│   ├── page.tsx
+│   └── style.css
+├── bazaar-admin
+│   └── page.tsx
+├── bazaar-products 
+│   └── [product_id]
+├── browse-pets
+│   ├── [pet_id]
+│   │   ├── page.tsx
+│   │   └── styles.css
+│   ├── page.tsx
+│   └── styles.css
+├── bulk-upload-pets
+│   └── page.tsx
+├── cart
+│   └── page.tsx
+├── checkout
+│   └── page.tsx
+├── create-listing
+│   ├── page.tsx
+│   └── styles.css
+├── eid-bazaar
+│   ├── page.tsx
+│   └── styles.css
+├── forgot-password
+│   └── page.tsx
+├── foster-applicants
+│   └── page.tsx
+├── founders-club
+│   └── page.tsx
+├── globals.css
+├── hooks
+│   └── useSetPrimaryColor.tsx
+├── layout.tsx
+├── listing-created
+│   └── page.tsx
+├── listing-created-lost-and-found
+│   └── page.tsx
+├── llm
+│   └── page.tsx
+├── login
+│   ├── page.tsx
+│   └── style.css
+├── lost-and-found
+│   ├── page.tsx
+│   └── styles.css
+├── lost-and-found-create-listing
+│   ├── page.tsx
+│   └── styles.css
+├── lost-and-found-images
+│   └── page.tsx
+├── marketplace
+│   ├── [product_id]
+│   │   ├── ProductDetailsClient.tsx
+│   │   ├── page.tsx
+│   │   └── variant-list.tsx
+│   ├── page.tsx
+│   └── styles.css
+├── my-applications
+│   ├── page.tsx
+│   └── styles.css
+├── my-listings
+│   ├── page.tsx
+│   └── styles.css
+├── my-orders
+│   └── page.tsx
+├── my-profile
+│   ├── page.tsx
+│   └── styles.css
+├── notifications
+│   ├── page.tsx
+│   └── styles.css
+├── order-confirmed
+│   └── page.tsx
+├── orders
+│   └── page.tsx
+├── page.tsx
+├── paltuu-bazaar
+├── partner-signup
+│   └── page.tsx
+├── pet-care
+│   ├── [vet-id]
+│   │   ├── page.tsx
+│   │   └── styles.css
+│   └── page.tsx
+├── privacy-policy
+│   └── page.tsx
+├── profile
+│   └── page.tsx
+├── refund&return-policy
+│   └── page.tsx
+├── rescue-panel
+│   └── page.tsx
+├── rescue-pets
+│   ├── [rescue_id]
+│   │   ├── page.tsx
+│   │   └── styles.css
+│   ├── page.tsx
+│   └── styles.css
+├── rescue-profile
+│   └── [shelter_id]
+│       ├── page.tsx
+│       └── styles.css
+├── rescue-register
+│   ├── page.tsx
+│   └── steps
+│       ├── StepFive_Emergency.tsx
+│       ├── StepFour_Facilities.tsx
+│       ├── StepOne_Profile.tsx
+│       ├── StepThree_Verification.tsx
+│       ├── StepTwo_Socials.tsx
+│       └── StepZero_Account.tsx
+├── reset-password
+│   └── page.tsx
+├── shelters
+│   └── [shelter_id]
+│       ├── page.tsx
+│       └── styles.css
+├── shipping-policy
+│   └── page.tsx
+├── shop-panel
+│   └── page.tsx
+├── shop-register
+│   ├── page.tsx
+│   └── steps
+│       ├── StepOne_Profile.tsx
+│       ├── StepThree_Review.tsx
+│       ├── StepTwo_Socials.tsx
+│       └── StepZero_Account.tsx
+├── shops
+│   └── [shop_id]
+│       ├── page.tsx
+│       └── styles.css
+├── sign-up
+│   ├── page.tsx
+│   └── styles.css
+├── store
+│   ├── slices
+│   │   ├── adoptionPetsSlice.ts
+│   │   ├── bazaarProductsSlice.ts
+│   │   ├── cartSlice.ts
+│   │   ├── citiesSlice.ts
+│   │   ├── fosterPetsSlice.ts
+│   │   ├── marketplaceSlice.ts
+│   │   ├── petCategoriesSlice.ts
+│   │   ├── petFavoriteThingsSlice.ts
+│   │   ├── petSlice.ts
+│   │   ├── qualificationsSlice.ts
+│   │   ├── userSlice.ts
+│   │   ├── vetQualificationsSlice.ts
+│   │   ├── vetScheduleSlice.ts
+│   │   ├── vetSlice.ts
+│   │   └── vetSpecializationSlice.ts
+│   └── store.ts
+├── success
+│   └── page.tsx
+├── terms-and-conditions
+│   └── page.tsx
+├── types
+│   ├── next-auth.d.ts
+│   ├── petWithImages.ts
+│   ├── rescuePet.ts
+│   ├── user.ts
+│   ├── vet.ts
+│   └── vetPanelData.ts
+├── upload-images
+│   ├── page.tsx
+│   └── styles.css
+├── vet-get-verified-1
+│   ├── page.tsx
+│   └── styles.css
+├── vet-get-verified-2
+│   └── page.tsx
+├── vet-panel
+│   ├── page.tsx
+│   └── styles.css
+├── vet-process-complete
+│   └── page.tsx
+├── vet-qualifications
+│   └── page.tsx
+├── vet-register
+│   └── page.tsx
+├── vet-reviews-summary
+│   ├── page.css
+│   └── page.tsx
+├── vet-schedule
+│   └── page.tsx
+├── vet-specialization
+│   └── page.tsx
+└── vet-step-zero
+    └── page.tsx
+
+222 directories, 245 files

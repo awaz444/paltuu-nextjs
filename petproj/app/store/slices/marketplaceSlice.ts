@@ -49,9 +49,17 @@ export const fetchProducts = createAsyncThunk(
       const params = new URLSearchParams();
       params.set('page', String(page));
       params.set('limit', String(limit));
+
+      // Handle new filter parameters
+      if (filters.categorySlug) params.set('categorySlug', String(filters.categorySlug));
+      if (filters.keyword) params.set('keyword', String(filters.keyword));
+      if (filters.minPrice) params.set('minPrice', String(filters.minPrice));
+      if (filters.maxPrice) params.set('maxPrice', String(filters.maxPrice));
+      if (filters.sortBy) params.set('sortBy', String(filters.sortBy));
+
+      // Legacy support for old filter format
       if (filters.category) params.set('category', String(filters.category));
       if (filters.collection) params.set('collection', String(filters.collection));
-      if (filters.keyword) params.set('keyword', String(filters.keyword));
 
       // Request variants only when needed (for stock checking)
       params.set('variants', 'true');
@@ -117,6 +125,7 @@ const marketplaceSlice = createSlice({
         // Handle variants if present
         const firstVariant = product.variants?.[0];
         const displayPrice = firstVariant?.price_override ?? product.price ?? 0;
+        const originalPrice = product.compare_at_price || firstVariant?.compare_at_price;
         const hasStock = product.variants ?
           product.variants.some((v: any) => v.stock > 0) :
           true; // Assume in stock if no variants
@@ -129,7 +138,7 @@ const marketplaceSlice = createSlice({
           collection: product.collection_name || 'General',
           image_url: imageUrl,
           price: String(displayPrice),
-          original_price: firstVariant?.compare_at_price ? String(firstVariant.compare_at_price) : undefined,
+          original_price: originalPrice ? String(originalPrice) : undefined,
           inStock: hasStock,
           rating: 0,
           ratingCount: 0,

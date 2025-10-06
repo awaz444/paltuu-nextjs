@@ -33,10 +33,14 @@ export async function GET(req: NextRequest) {
     const filterCategory = searchParams.get('category') || '';
     const filterCollection = searchParams.get('collection') || '';
     const filterKeyword = searchParams.get('keyword') || '';
+    const categorySlug = searchParams.get('categorySlug') || ''; // For category-based filtering
+    const sortBy = searchParams.get('sortBy') || ''; // trending, discount, new
+    const minPrice = searchParams.get('minPrice') || '';
+    const maxPrice = searchParams.get('maxPrice') || '';
     const includeVariants = searchParams.get('variants') === 'true'; // Only load variants if needed
 
     // Cache key
-    const cacheKey = `products:v2:admin=${adminView}:page=${page}:limit=${limit}:cat=${filterCategory}:col=${filterCollection}:kw=${filterKeyword}:var=${includeVariants}`;
+    const cacheKey = `products:v3:admin=${adminView}:page=${page}:limit=${limit}:cat=${filterCategory}:slug=${categorySlug}:col=${filterCollection}:kw=${filterKeyword}:sort=${sortBy}:minP=${minPrice}:maxP=${maxPrice}:var=${includeVariants}`;
 
     // Try cache first
     try {
@@ -75,6 +79,16 @@ export async function GET(req: NextRequest) {
       whereClauses.push(`(p.title ILIKE $${idx} OR p.description ILIKE $${idx})`);
     }
 
+    // Category filtering by slug (for landing page categories)
+    if (categorySlug) {
+      whereValues.push(categorySlug);
+      whereClauses.push(`EXISTS (
+        SELECT 1 FROM bazaar_product_categories bpc
+        JOIN bazaar_categories bc_slug ON bpc.category_id = bc_slug.category_id
+        WHERE bpc.product_id = p.product_id AND bc_slug.slug = $${whereValues.length}
+      )`);
+    }
+
     if (filterCollection) {
       if (!isNaN(Number(filterCollection))) {
         whereValues.push(Number(filterCollection));
@@ -95,7 +109,36 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Price range filters
+    if (minPrice) {
+      whereValues.push(Number(minPrice));
+      whereClauses.push(`CAST(p.price AS DECIMAL) >= $${whereValues.length}`);
+    }
+
+    if (maxPrice) {
+      whereValues.push(Number(maxPrice));
+      whereClauses.push(`CAST(p.price AS DECIMAL) <= $${whereValues.length}`);
+    }
+
     const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+    // Determine ORDER BY based on sortBy parameter
+    let orderByClause = 'ORDER BY p.created_at DESC'; // Default: newest first
+
+    if (sortBy === 'trending') {
+      // You can customize this - for now using featured + newest
+      orderByClause = 'ORDER BY p.featured DESC NULLS LAST, p.created_at DESC';
+    } else if (sortBy === 'discount') {
+      // Sort by discount percentage - will be handled after fetching variants
+      // For now, just sort by featured and newest
+      orderByClause = 'ORDER BY p.featured DESC NULLS LAST, p.created_at DESC';
+    } else if (sortBy === 'new') {
+      orderByClause = 'ORDER BY p.created_at DESC';
+    } else if (sortBy === 'price_asc') {
+      orderByClause = 'ORDER BY CAST(p.price AS DECIMAL) ASC';
+    } else if (sortBy === 'price_desc') {
+      orderByClause = 'ORDER BY CAST(p.price AS DECIMAL) DESC';
+    }
 
     // OPTIMIZED: Fetch only essential fields first
     const productsQuery = `
@@ -110,11 +153,12 @@ export async function GET(req: NextRequest) {
         p.collection_id,
         p.status,
         p.created_at,
+        p.has_variants,
         COALESCE(bc.name, 'General') AS collection_name
       FROM bazaar_products p
       LEFT JOIN bazaar_collections bc ON p.collection_id = bc.collection_id
       ${whereClause}
-      ORDER BY p.created_at DESC
+      ${orderByClause}
       LIMIT $${whereValues.length + 1}
       OFFSET $${whereValues.length + 2}
     `;
@@ -168,10 +212,11 @@ export async function GET(req: NextRequest) {
           title,
           sku,
           price_override,
+          compare_at_price,
           stock
         FROM bazaar_product_variants
         WHERE product_id = ANY($1)
-        ORDER BY product_id, variant_id
+        ORDER BY product_id, is_default DESC NULLS LAST, variant_id
       `;
       const variantsResult = await client.query(variantsQuery, [productIds]);
       variantsResult.rows.forEach(variant => {
@@ -183,12 +228,32 @@ export async function GET(req: NextRequest) {
       console.info('[Perf] Variants query took', Date.now() - variantsStart, 'ms');
     }
 
-    // Assemble response
-    const rows = products.map(p => ({
-      ...p,
-      image: imagesMap.get(p.product_id) || null,
-      variants: includeVariants ? (variantsMap.get(p.product_id) || []) : undefined
-    }));
+    // Assemble response with compare_at_price from variants
+    const rows = products.map(p => {
+      const variants = includeVariants ? (variantsMap.get(p.product_id) || []) : undefined;
+      const firstVariant = variants && variants.length > 0 ? variants[0] : null;
+
+      return {
+        ...p,
+        image: imagesMap.get(p.product_id) || null,
+        variants,
+        // Add compare_at_price from first variant if available
+        compare_at_price: firstVariant?.compare_at_price || null,
+      };
+    });
+
+    // If sorting by discount, re-sort the results
+    if (sortBy === 'discount') {
+      rows.sort((a, b) => {
+        const discountA = a.compare_at_price && a.compare_at_price > 0
+          ? ((a.compare_at_price - parseFloat(a.price)) / a.compare_at_price) * 100
+          : 0;
+        const discountB = b.compare_at_price && b.compare_at_price > 0
+          ? ((b.compare_at_price - parseFloat(b.price)) / b.compare_at_price) * 100
+          : 0;
+        return discountB - discountA; // Highest discount first
+      });
+    }
 
     const out = { rows, meta: { total, page, limit } };
 

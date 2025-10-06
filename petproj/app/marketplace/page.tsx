@@ -2,13 +2,14 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import Navbar from "../../components/navbar";
-import MarketplaceFilterSection from "@/components/MarketplaceFilterSection";
+import ProductFilterSection from "@/components/ProductFilterSection";
 import ProductGrid from "@/components/ProductGrid";
 import "./styles.css";
 import { MoonLoader } from "react-spinners";
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/app/store/store';
 import { fetchProducts, clearProducts } from '@/app/store/slices/marketplaceSlice';
+import { useSearchParams } from 'next/navigation';
 
 // Product interface - matching ProductGrid expectations
 interface Product {
@@ -26,39 +27,32 @@ interface Product {
 }
 
 export default function Marketplace() {
-
+  const searchParams = useSearchParams();
 
   const dispatch = useDispatch<AppDispatch>();
   const productsState = useSelector((s: RootState) => s.marketplace);
   const { products, loading, error, meta, hasMore, currentPage } = productsState;
-  const [collections, setCollections] = useState<Array<{ collection_id: number; name: string }>>([]);
   const [page, setPage] = useState(1);
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
+  // Get initial filters from URL params
+  const initialCategorySlug = searchParams.get('categorySlug') || '';
+  const initialSortBy = searchParams.get('sortBy') || '';
+  const initialKeyword = searchParams.get('keyword') || '';
+
   const [filters, setFilters] = useState({
-    category: "",
-    collection: "",
-    keyword: "",
+    keyword: initialKeyword,
+    minPrice: "",
+    maxPrice: "",
+    sortBy: initialSortBy,
+    categorySlug: initialCategorySlug,
   });
 
-  // initial load: fetch products and collections
+  // initial load: fetch products with URL params
   useEffect(() => {
-    // load first page with current filters
+    // load first page with current filters (from URL)
     dispatch(fetchProducts({ page: 1, limit: 24, filters }));
-
-    // load collections (small dataset) - keep as before
-    (async () => {
-      try {
-        const res = await fetch('/api/bazaar/collections');
-        if (res.ok) {
-          const collectionsData = await res.json();
-          setCollections(collectionsData);
-        }
-      } catch (e) {
-        console.warn('Failed to load collections', e);
-      }
-    })();
-  }, [dispatch]); // Only depend on dispatch to avoid refetching on filter changes
+  }, [dispatch]); // Only run on mount
 
   // intersection observer to load next page
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
@@ -86,9 +80,11 @@ export default function Marketplace() {
 
   const handleReset = () => {
     const newFilters = {
-      category: "",
-      collection: "",
       keyword: "",
+      minPrice: "",
+      maxPrice: "",
+      sortBy: "",
+      categorySlug: "", // Reset category filter too
     };
     setFilters(newFilters);
     // clear store and reload
@@ -112,7 +108,7 @@ export default function Marketplace() {
     <>
 
       <div className="fullBody">
-        <MarketplaceFilterSection
+        <ProductFilterSection
           filters={filters}
           onSearch={handleSearch}
           onReset={handleReset}

@@ -1,72 +1,133 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState, AppDispatch } from "@/app/store/store";
-import { fetchProducts } from "@/app/store/slices/marketplaceSlice";
-import { ChevronRight, ShoppingCart, Star, Zap, Clock, Tag, Crown } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/app/store/store";
+import { ChevronRight, ShoppingCart, Zap, Clock, Tag, TrendingUp, Star } from "lucide-react";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
 import { fetchCart, addToCart } from "@/app/store/slices/cartSlice";
 import { useRouter } from "next/navigation";
 
+// Category definitions matching database
 const categories = [
-  { title: "Cat Food" },
-  { title: "Dog Food" },
-  { 
-    title: "Accessories",
-    subcategories: ["Collars", "Leashes", "Bowls", "Tags", "Carriers"]
+  {
+    title: "Trending",
+    icon: TrendingUp,
+    slug: null,
+    sortBy: 'trending',
+    type: 'special'
   },
-  { 
-    title: "Toys",
-    subcategories: ["Chew Toys", "Interactive Toys", "Plush Toys", "Scratchers"]
+  {
+    title: "Most Discounted",
+    icon: Tag,
+    slug: null,
+    sortBy: 'discount',
+    type: 'special'
   },
-  { 
-    title: "Grooming",
-    subcategories: ["Shampoos", "Brushes", "Clippers", "Towels"]
+  {
+    title: "Cat Food",
+    icon: null,
+    slug: 'food',
+    categoryId: 1,
+    subFilter: 'cat'
   },
-  { 
-    title: "Health",
-    subcategories: ["Supplements", "Vitamins", "Flea/Tick Control"]
+  {
+    title: "Dog Food",
+    icon: null,
+    slug: 'food',
+    categoryId: 1,
+    subFilter: 'dog'
   },
-  { title: "Trending Now", icon: Zap, type: "trending" },
-  { title: "New Arrivals", icon: Clock, type: "new" },
-  { title: "Deals & Discounts", icon: Tag, type: "deals" },
-  { title: "Featured Brands", icon: Crown, type: "brands" }
+  {
+    title: "Accessories & Grooming",
+    icon: null,
+    slug: 'accessories',
+    categoryId: 2,
+    multiCategory: ['accessories', 'grooming']
+  },
+  {
+    title: "Healthcare",
+    icon: null,
+    slug: 'healthcare',
+    categoryId: 4
+  },
 ];
+
+interface Product {
+  product_id: number;
+  title: string;
+  slug: string;
+  price: string;
+  original_price?: string;
+  image: string;
+  collection_name: string;
+  featured?: boolean;
+  variants?: any[];
+}
 
 export default function BazaarPage() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const { products, loading } = useSelector((s: RootState) => s.marketplace);
+  const [categoryProducts, setCategoryProducts] = useState<Record<string, Product[]>>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    dispatch(fetchProducts({ page: 1, limit: 50, filters: {} }));
-  }, [dispatch]);
+    // Fetch products for each category
+    const fetchAllCategories = async () => {
+      setLoading(true);
+      const results: Record<string, Product[]> = {};
 
-  // ⭐ Render stars helper
-  const renderStars = (rating: number = 0) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <span
-          key={i}
-          className={i <= rating ? "text-yellow-500" : "text-gray-300"}
-        >
-          ★
-        </span>
-      );
-    }
-    return stars;
-  };
+      for (const cat of categories) {
+        try {
+          const params = new URLSearchParams();
+          params.set('page', '1');
+          params.set('limit', '10'); // Only 10 products per category
+
+          if (cat.slug) {
+            params.set('categorySlug', cat.slug);
+          }
+
+          if (cat.sortBy) {
+            params.set('sortBy', cat.sortBy);
+          }
+
+          // Add keyword filter for cat/dog food
+          if (cat.subFilter) {
+            params.set('keyword', cat.subFilter);
+          }
+
+          const res = await fetch(`/api/bazaar/products-optimized?${params.toString()}`);
+          if (res.ok) {
+            const data = await res.json();
+            // Map compare_at_price to original_price for consistency
+            const mappedProducts = (data.rows || []).map((p: any) => ({
+              ...p,
+              original_price: p.compare_at_price,
+            }));
+            results[cat.title] = mappedProducts;
+          } else {
+            results[cat.title] = [];
+          }
+        } catch (err) {
+          console.error(`Error fetching ${cat.title}:`, err);
+          results[cat.title] = [];
+        }
+      }
+
+      setCategoryProducts(results);
+      setLoading(false);
+    };
+
+    fetchAllCategories();
+  }, []);
 
   // 🛒 Add to cart handler
-  const handleAddToCart = async (e: React.MouseEvent, product: any) => {
+  const handleAddToCart = async (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
     try {
-      const hasVariants =
-        product?.hasVariants || product?.variants?.length > 0 || false;
+      const hasVariants = (product?.variants && product.variants.length > 0) || false;
       if (hasVariants) {
         router.push(`/marketplace/${product.product_id}`);
         return;
@@ -86,20 +147,23 @@ export default function BazaarPage() {
     }
   };
 
-  // Filter products for special sections (you can replace with actual filtering logic)
-  const getFilteredProducts = (category: any) => {
-    switch (category.type) {
-      case "trending":
-        return products.filter((_, index) => index % 3 === 0); // Mock trending filter
-      case "new":
-        return products.filter((_, index) => index % 4 === 0); // Mock new arrivals
-      case "deals":
-        return products.filter(p => p.original_price && parseInt(p.original_price) > parseInt(p.price)); // Actual discount filter
-      case "brands":
-        return products.filter((_, index) => index % 5 === 0); // Mock brands filter
-      default:
-        return products;
+  // Navigate to marketplace with category filter
+  const handleViewAll = (cat: typeof categories[0]) => {
+    const params = new URLSearchParams();
+
+    if (cat.slug) {
+      params.set('categorySlug', cat.slug);
     }
+
+    if (cat.sortBy) {
+      params.set('sortBy', cat.sortBy);
+    }
+
+    if (cat.subFilter) {
+      params.set('keyword', cat.subFilter);
+    }
+
+    router.push(`/marketplace?${params.toString()}`);
   };
 
   return (
@@ -132,8 +196,8 @@ export default function BazaarPage() {
         <div className="max-w-7xl mx-auto px-6 space-y-16">
           {categories.map((cat) => {
             const IconComponent = cat.icon;
-            const filteredProducts = getFilteredProducts(cat);
-            
+            const filteredProducts = categoryProducts[cat.title] || [];
+
             return (
               <section key={cat.title}>
                 {/* Header */}
@@ -143,25 +207,13 @@ export default function BazaarPage() {
                     <h2 className="text-2xl font-bold text-gray-900">
                       {cat.title}
                     </h2>
-                    {cat.subcategories && (
-                      <div className="hidden md:flex items-center gap-2 ml-4">
-                        {cat.subcategories.map((sub, index) => (
-                          <span
-                            key={sub}
-                            className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full"
-                          >
-                            {sub}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
-                  <Link
-                    href="#"
-                    className="text-primary text-sm font-medium hover:underline flex items-center gap-1"
+                  <button
+                    onClick={() => handleViewAll(cat)}
+                    className="text-primary text-sm font-medium hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     View All <ChevronRight size={16} />
-                  </Link>
+                  </button>
                 </div>
 
                 {/* Product Slider */}
@@ -176,27 +228,20 @@ export default function BazaarPage() {
                         <Link
                           href={`/marketplace/${prod.product_id}`}
                           key={`${cat.title}-${prod.product_id}`}
-                          className="w-[280px] flex-shrink-0 bg-white rounded-2xl border-2 border-transparent hover:border-primary shadow-sm hover:shadow-lg transition-all duration-300 snap-start group flex flex-col h-[420px] overflow-hidden relative"
+                          className="w-[280px] flex-shrink-0 bg-white rounded-2xl border-2 border-transparent hover:border-primary shadow-sm hover:shadow-lg transition-all duration-300 snap-start group flex flex-col h-[380px] overflow-hidden relative"
                         >
                           {/* Special Badges */}
-                          {cat.type === "deals" && (
+                          {cat.sortBy === "discount" && prod.original_price && (
                             <div className="absolute top-3 left-3 z-10">
                               <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                                HOT DEAL
+                                -{Math.round(((parseInt(prod.original_price) - parseInt(prod.price)) / parseInt(prod.original_price)) * 100)}%
                               </span>
                             </div>
                           )}
-                          {cat.type === "new" && (
+                          {cat.sortBy === "trending" && (
                             <div className="absolute top-3 left-3 z-10">
-                              <span className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                                NEW
-                              </span>
-                            </div>
-                          )}
-                          {cat.type === "trending" && (
-                            <div className="absolute top-3 left-3 z-10">
-                              <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                                TRENDING
+                              <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                <TrendingUp size={12} /> TRENDING
                               </span>
                             </div>
                           )}
@@ -204,40 +249,19 @@ export default function BazaarPage() {
                           {/* Image Container */}
                           <div className="relative w-full h-[200px] bg-gray-100 overflow-hidden">
                             <Image
-                              src={prod.image_url || "/product-placeholder.png"}
-                              alt={prod.name}
+                              src={prod.image || "/product-placeholder.png"}
+                              alt={prod.title}
                               fill
                               className="object-cover transition-transform duration-300 group-hover:scale-105"
                             />
-                            {prod.inStock === false && (
-                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                <span className="text-white font-bold text-sm">
-                                  Out of Stock
-                                </span>
-                              </div>
-                            )}
                           </div>
 
                           {/* Content Container - Fixed Height */}
                           <div className="p-4 flex flex-col flex-grow">
                             {/* Product Name */}
                             <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2 leading-tight text-sm min-h-[2.5rem]">
-                              {prod.name}
+                              {prod.title}
                             </h3>
-
-                            {/* Rating */}
-                            {prod.rating !== undefined && (
-                              <div className="flex items-center gap-1 mb-2">
-                                <div className="flex text-sm">
-                                  {renderStars(prod.rating)}
-                                </div>
-                                {prod.ratingCount !== undefined && (
-                                  <span className="text-xs text-gray-500 ml-1">
-                                    ({prod.ratingCount})
-                                  </span>
-                                )}
-                              </div>
-                            )}
 
                             {/* Price Section */}
                             <div className="mt-auto">
@@ -270,20 +294,11 @@ export default function BazaarPage() {
 
                               {/* Add to Cart Button */}
                               <button
-                                className={`w-full mt-3 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm font-medium ${
-                                  prod.inStock !== false
-                                    ? "bg-primary text-white hover:bg-primary/90 active:scale-95"
-                                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                }`}
-                                onClick={(e) =>
-                                  prod.inStock !== false && handleAddToCart(e, prod)
-                                }
-                                disabled={prod.inStock === false}
+                                className="w-full mt-3 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm font-medium bg-primary text-white hover:bg-primary/90 active:scale-95"
+                                onClick={(e) => handleAddToCart(e, prod)}
                               >
                                 <ShoppingCart size={16} />
-                                {prod.inStock !== false
-                                  ? "Add to Cart"
-                                  : "Out of Stock"}
+                                Add to Cart
                               </button>
                             </div>
                           </div>
@@ -296,17 +311,6 @@ export default function BazaarPage() {
                     )}
                   </div>
                 </div>
-
-                {/* View All Button */}
-                {/* <div className="text-center mt-8">
-                  <Link
-                    href="#"
-                    className="inline-flex items-center px-6 py-3 rounded-full bg-primary text-white font-medium hover:bg-primary/90 transition-colors shadow-sm"
-                  >
-                    View All {cat.title}
-                    <ChevronRight size={16} className="ml-1" />
-                  </Link>
-                </div> */}
               </section>
             );
           })}

@@ -194,9 +194,6 @@ export default function BazaarPage() {
       </div>
     )}
   </section>
-
-
-
      {/* 🛍️ Category Sections */}
       <main className="flex-grow mt-12 pb-20">
         <div className="max-w-7xl mx-auto px-6 space-y-16">

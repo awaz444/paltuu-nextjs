@@ -15,6 +15,11 @@
   position: relative; /* Ensure child elements are positioned relative to this */
 }
 
+.no-navbar-radius .navbar {
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
 @keyframes pulse-slow {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.02); }

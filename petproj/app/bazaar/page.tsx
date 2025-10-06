@@ -104,28 +104,28 @@ export default function BazaarPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* 🐾 Hero Section */}
-      {/* 🐾 Hero Section */}
-{/* 🐾 Hero Section */}
-<section className="relative w-full h-[700px] sm:h-[650px] md:h-[450px] overflow-hidden">
-  {/* Desktop Banner */}
-  <Image
-    src="/banner_web.webp"
-    alt="Bazaar Banner"
-    fill
-    priority
-    className="object-cover hidden md:block"
-  />
+  {/* 🐾 Hero Section */}
+  <section className="relative w-full h-[80vh] sm:h-[85vh] md:h-[90vh] lg:h-[95vh] overflow-hidden">
+    {/* Desktop Banner */}
+    <Image
+      src="/banner_web.webp"
+      alt="Bazaar Banner"
+      fill
+      priority
+      className="object-cover hidden md:block"
+    />
 
-  {/* Mobile Banner */}
-  <Image
-    src="/banner_phone.webp"
-    alt="Bazaar Banner Mobile"
-    fill
-    priority
-    className="object-cover block md:hidden"
-  />
-</section>
+    {/* Mobile Banner */}
+    <Image
+      src="/banner_phone.webp"
+      alt="Bazaar Banner Mobile"
+      fill
+      priority
+      className="object-cover block md:hidden"
+    />
+  </section>
+
+
 
      {/* 🛍️ Category Sections */}
       <main className="flex-grow mt-12 pb-20">

@@ -13,10 +13,15 @@ import {
     faStarHalfAlt,
     faGift,
     faCat,
-    faHeart, faBullseye, faEye
+    faHeart,
+    faBullseye,
+    faEye,
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
-{/* Add this to your global CSS */}
+{
+    /* Add this to your global CSS */
+}
+import "./HeroSection.css";
 
 const HeroSection = () => {
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -62,7 +67,10 @@ const HeroSection = () => {
                                 className="w-12 md:w-20 -rotate-12"
                             />
                             <p className="text-xs md:text-sm text-primary italic tracking-wide relative top-[-6px] md:top-[-10px] left-[-4px] md:left-[-9px]">
-                                Available in Karachi, Lahore and Islamabad
+                                Available in{" "}
+                                <span className="font-bold">Karachi,</span>{" "}
+                                <span className="font-bold">Lahore</span> and{" "}
+                                <span className="font-bold">Islamabad</span>
                             </p>
                         </div>
 
@@ -75,7 +83,7 @@ const HeroSection = () => {
                                 {/* Removed mb on mobile */}
                                 PAKISTAN'S
                             </h1>
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl leading-tight mb-0 md:mb-1">
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-0 md:mb-1">
                                 {" "}
                                 {/* Removed mb on mobile */}
                                 <span className="text-primary">FIRST EVER</span>
@@ -86,20 +94,26 @@ const HeroSection = () => {
                                 PAW PORTAL
                             </h1>
                             {/* Tagline */}
-                            <h3 className="text-xl md:text-2xl lg:text-3xl font-medium mb-0 md:mb-1">
+                            <h3 className="text-xl md:text-xl lg:text-2xl font-medium mb-0 md:mb-1">
                                 {" "}
                                 {/* Removed mb on mobile */}
                                 Find Your New Best Friend
                             </h3>
-                            {/* Description */}
-                            <p className="text-base md:text-lg text-gray-700 mb-6 md:mb-8 max-w-lg">
-                                {" "}
-                                {/* Reduced mb on mobile */}
-                                Paltuu is your go-to for everything{" "}
-                                <span className="text-primary font-bold">
-                                    pawsome
-                                </span>
-                                .
+                            <p className="text-base md:text-md text-gray-700 mb-6 mt-2 md:mb-8 max-w-lg">
+                                <span className="font-bold">Paltuu.pk</span> is
+                                Pakistan’s first pet adoption and pet care
+                                platform, helping you adopt dogs and cats,
+                                connect with vets, and shop pet products online.
+                                {/* Hidden SEO links */}
+                                <a href="/browse-pets" className="sr-only">
+                                    Pet Adoption in Pakistan
+                                </a>
+                                <a href="/vets" className="sr-only">
+                                    Connect with Vets in Pakistan
+                                </a>
+                                <a href="/bazaar" className="sr-only">
+                                    Buy Pet Products Online in Pakistan
+                                </a>
                             </p>
                         </div>
                     </div>
@@ -141,39 +155,49 @@ const HeroSection = () => {
                             </div>
 
                             {/* Heading with primary_icon.svg */}
-                            <h4 className="text-xl md:text-2xl font-semibold text-primary mb-6 flex justify-center items-center gap-3 relative z-10">
-                                Why choose Paltuu?
+                            <h4 className="text-xl md:text-2xl font-semibold text-primary flex justify-center items-center gap-3 relative z-10">
+                                Why choose
+                                <img
+                                    src="/paltuu.png"
+                                    alt="Paltuu"
+                                    className="h-16 md:h-24 inline-block relative md:-top-2 md:-left-2 -top-1 -left-2"
+                                />
                             </h4>
 
                             {/* Perks List */}
-                            <ul className="text-base md:text-lg text-gray-800 text-left space-y-4 mb-8 relative z-10">
-                                <li className="flex items-start gap-3">
-                                    <FontAwesomeIcon
-                                        icon={faPaw}
-                                        className="text-primary mt-1"
-                                    />
-                                    Largest network of adoptable pets
+                            <ul className="list-disc list-inside text-gray-700 space-y-2 mb-5">
+                                <li>
+                                    Largest network of adoptable pets in
+                                    Pakistan
+                                    <a href="/browse-pets" className="sr-only">
+                                        Adopt cats and dogs in Pakistan
+                                    </a>
                                 </li>
-                                <li className="flex items-start gap-3">
-                                    <FontAwesomeIcon
-                                        icon={faUsers}
-                                        className="text-primary mt-1"
-                                    />
-                                    Verified shelters & breeders
+                                <li>
+                                    Trusted shelters and adoption centers
+                                    nationwide
+                                    <a href="/browse-pets" className="sr-only">
+                                        Pet adoption in Karachi Lahore Islamabad
+                                    </a>
                                 </li>
-                                <li className="flex items-start gap-3">
-                                    <FontAwesomeIcon
-                                        icon={faStar}
-                                        className="text-primary mt-1"
-                                    />
-                                    24/7 veterinary support
+                                <li>
+                                    Shop pet food, accessories & grooming
+                                    products online
+                                    <a href="/bazaar" className="sr-only">
+                                        Buy pet products online in Pakistan
+                                    </a>
                                 </li>
-                                <li className="flex items-start gap-3">
-                                    <FontAwesomeIcon
-                                        icon={faMapMarkerAlt}
-                                        className="text-primary mt-1"
-                                    />
-                                    Location-based services
+                                <li>
+                                    24/7 veterinary guidance & pet care support
+                                    <a href="/vets" className="sr-only">
+                                        Find vets in Pakistan online
+                                    </a>
+                                </li>
+                                <li>
+                                    Location-based pet adoption and services
+                                    <a href="/browse-pets" className="sr-only">
+                                        Adopt pets near you in Pakistan
+                                    </a>
                                 </li>
                             </ul>
 
@@ -194,105 +218,117 @@ const HeroSection = () => {
                 </div>
             </section>
 
-
-
             {/* NEW: Mission & Vision Sections - Theme Matched */}
-<section className="py-12 px-6 lg:px-20 bg-white relative">
-    <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Mission Card */}
-        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden">
-            {/* Decorative paw in background */}
-            <div className="absolute -bottom-4 -right-4 w-24 h-24 opacity-10">
-                <FontAwesomeIcon icon={faPaw} className="text-primary w-full h-full" />
-            </div>
-            <div className="flex items-center gap-4 mb-4">
-                <div className="bg-primary/10 p-3 rounded-full">
-                    <FontAwesomeIcon
-                        icon={faBullseye}
-                        className="text-primary text-xl"
-                    />
-                </div>
-                <h3 className="text-xl md:text-2xl font-bold text-primary">Our Mission</h3>
-            </div>
-            <p className="text-gray-700 pl-1">
-                To revolutionize pet care in Pakistan by connecting every animal with loving homes
-                through our innovative digital platform that makes adoption and pet care accessible to all.
-            </p>
-        </div>
+            <section className="py-12 px-6 lg:px-20 bg-white relative">
+                <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Mission Card */}
+                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden">
+                        {/* Decorative paw in background */}
+                        <div className="absolute -bottom-4 -right-4 w-24 h-24 opacity-10">
+                            <FontAwesomeIcon
+                                icon={faPaw}
+                                className="text-primary w-full h-full"
+                            />
+                        </div>
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="bg-primary/10 p-3 rounded-full">
+                                <FontAwesomeIcon
+                                    icon={faBullseye}
+                                    className="text-primary text-xl"
+                                />
+                            </div>
+                            <h3 className="text-xl md:text-2xl font-bold text-primary">
+                                Our Mission
+                            </h3>
+                        </div>
+                        <p className="text-gray-700 pl-1">
+                            To revolutionize pet care in Pakistan by connecting
+                            every animal with loving homes through our
+                            innovative digital platform that makes adoption and
+                            pet care accessible to all.
+                        </p>
+                    </div>
 
-        {/* Vision Card */}
-        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden">
-            {/* Decorative heart in background */}
-            <div className="absolute -top-4 -left-4 w-24 h-24 opacity-10">
-                <FontAwesomeIcon icon={faHeart} className="text-primary w-full h-full" />
-            </div>
-            <div className="flex items-center gap-4 mb-4">
-                <div className="bg-primary/10 p-3 rounded-full">
-                    <FontAwesomeIcon
-                        icon={faEye}
-                        className="text-primary text-xl"
-                    />
+                    {/* Vision Card */}
+                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden">
+                        {/* Decorative heart in background */}
+                        <div className="absolute -top-4 -left-4 w-24 h-24 opacity-10">
+                            <FontAwesomeIcon
+                                icon={faHeart}
+                                className="text-primary w-full h-full"
+                            />
+                        </div>
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="bg-primary/10 p-3 rounded-full">
+                                <FontAwesomeIcon
+                                    icon={faEye}
+                                    className="text-primary text-xl"
+                                />
+                            </div>
+                            <h3 className="text-xl md:text-2xl font-bold text-primary">
+                                Our Vision
+                            </h3>
+                        </div>
+                        <p className="text-gray-700 pl-1">
+                            A future where no pet is left behind, creating a
+                            compassionate Pakistan where every animal has a
+                            loving home and every pet owner has access to
+                            trusted resources and support.
+                        </p>
+                    </div>
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold text-primary">Our Vision</h3>
-            </div>
-            <p className="text-gray-700 pl-1">
-                A future where no pet is left behind, creating a compassionate Pakistan where every animal
-                has a loving home and every pet owner has access to trusted resources and support.
-            </p>
-        </div>
-    </div>
-</section>
-
+            </section>
 
             {/* Enhanced Features Grid */}
-<section className="py-16 px-6 lg:px-20 bg-primary">
-    <div className="max-w-6xl mx-auto">
-        {/* Section Header */}
-        <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Everything You Need For Your Pet
-            </h2>
-            <p className="text-lg text-white/80 max-w-2xl mx-auto">
-                Paltuu provides complete pet care solutions in one place
-            </p>
-        </div>
+            <section className="py-16 px-6 lg:px-20 bg-primary">
+                <div className="max-w-6xl mx-auto">
+                    {/* Section Header */}
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                            Everything You Need For Your Pet
+                        </h2>
+                        <p className="text-lg text-white/80 max-w-2xl mx-auto">
+                            Paltuu provides complete pet care solutions in one
+                            place
+                        </p>
+                    </div>
 
-        {/* Features Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-                {
-                    icon: faDog,
-                    title: "Adopt & Foster",
-                    text: "Browse pets looking for loving homes",
-                    delay: "100"
-                },
-                {
-                    icon: faStethoscope,
-                    title: "Find Vets",
-                    text: "Connect with trusted veterinary professionals",
-                    delay: "200"
-                },
-                {
-                    icon: faSearch,
-                    title: "Lost & Found",
-                    text: "Help reunite pets with their families",
-                    delay: "300"
-                },
-                {
-                    icon: faMapMarkerAlt,
-                    title: "City Services",
-                    text: "Explore pet services in your location",
-                    delay: "400"
-                },
-            ].map((feature, index) => (
-                <div
-                    key={index}
-                    className="relative overflow-hidden group rounded-xl p-8 text-center
+                    {/* Features Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[
+                            {
+                                icon: faDog,
+                                title: "Adopt & Foster",
+                                text: "Browse pets looking for loving homes",
+                                delay: "100",
+                            },
+                            {
+                                icon: faStethoscope,
+                                title: "Find Vets",
+                                text: "Connect with trusted veterinary professionals",
+                                delay: "200",
+                            },
+                            {
+                                icon: faSearch,
+                                title: "Lost & Found",
+                                text: "Help reunite pets with their families",
+                                delay: "300",
+                            },
+                            {
+                                icon: faMapMarkerAlt,
+                                title: "City Services",
+                                text: "Explore pet services in your location",
+                                delay: "400",
+                            },
+                        ].map((feature, index) => (
+                            <div
+                                key={index}
+                                className="relative overflow-hidden group rounded-xl p-8 text-center
                     bg-gradient-to-b from-gray-100 to-white shadow-lg
-                    transition-all duration-500 hover:-translate-y-2 hover:shadow-xl"
-                >
-                    {/* Half-circle Element (Expands on hover) */}
-                    <div className={`
+                    transition-all duration-500 hover:-translate-y-2 hover:shadow-xl">
+                                {/* Half-circle Element (Expands on hover) */}
+                                <div
+                                    className={`
                         absolute -bottom-20 -right-20 w-40 h-40
                         bg-red-500/10  /* Red with 10% opacity */
                         group-hover:bg-red-500/20  /* Slightly more visible on hover */
@@ -306,35 +342,37 @@ const HeroSection = () => {
                         before:scale-50 before:opacity-100
                     `}></div>
 
-                    {/* Icon Container */}
-                    <div className="relative z-10 mb-6">
-                        <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center
+                                {/* Icon Container */}
+                                <div className="relative z-10 mb-6">
+                                    <div
+                                        className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center
                         group-hover:bg-primary/20 transition-colors duration-300">
-                            <FontAwesomeIcon
-                                icon={feature.icon}
-                                className="text-3xl text-primary"
-                            />
-                        </div>
-                    </div>
+                                        <FontAwesomeIcon
+                                            icon={feature.icon}
+                                            className="text-3xl text-primary"
+                                        />
+                                    </div>
+                                </div>
 
-                    {/* Content */}
-                    <div className="relative z-10">
-                        <h3 className="text-xl font-bold text-gray-800 mb-3">
-                            {feature.title}
-                        </h3>
-                        <p className="text-gray-600 mb-4">
-                            {feature.text}
-                        </p>
-                        <button className="text-sm font-semibold bg-primary text-white px-4 py-2 rounded-full
+                                {/* Content */}
+                                <div className="relative z-10">
+                                    <h3 className="text-xl font-bold text-gray-800 mb-3">
+                                        {feature.title}
+                                    </h3>
+                                    <p className="text-gray-600 mb-4">
+                                        {feature.text}
+                                    </p>
+                                    <button
+                                        className="text-sm font-semibold bg-primary text-white px-4 py-2 rounded-full
                         hover:bg-primary/90 transition-colors duration-300 shadow-sm">
-                            Learn More
-                        </button>
+                                        Learn More
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
-            ))}
-        </div>
-    </div>
-</section>
+            </section>
             {/* Featured Pet Section */}
             <section className="py-16 px-6 lg:px-20 bg-primary/5">
                 <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -344,20 +382,29 @@ const HeroSection = () => {
                             Meet Cheeto - Your New Best Friend
                         </h2>
                         <p className="text-lg text-gray-700 mb-8 max-w-lg mx-auto lg:mx-0">
-                            This calm and cuddly boy is looking for his forever home in Lahore.
-                            Perfect for families who can give him lots of love and attention.
+                            This calm and cuddly boy is looking for his forever
+                            home in Lahore. Perfect for families who can give
+                            him lots of love and attention.
                         </p>
 
                         <div className="space-y-6 mb-8">
                             <div className="flex items-start gap-4">
                                 <div className="bg-primary/10 p-2 rounded-full mt-1">
-                                    <FontAwesomeIcon icon={faHeart} className="text-primary" />
+                                    <FontAwesomeIcon
+                                        icon={faHeart}
+                                        className="text-primary"
+                                    />
                                 </div>
                                 <div>
-                                    <h4 className="font-semibold text-lg">Perfect For You If:</h4>
+                                    <h4 className="font-semibold text-lg">
+                                        Perfect For You If:
+                                    </h4>
                                     <ul className="text-gray-600 list-disc pl-5 space-y-1">
                                         <li>You want a low-energy companion</li>
-                                        <li>You work from home or are often around</li>
+                                        <li>
+                                            You work from home or are often
+                                            around
+                                        </li>
                                         <li>You love cuddly pets</li>
                                     </ul>
                                 </div>
@@ -365,11 +412,19 @@ const HeroSection = () => {
 
                             <div className="flex items-start gap-4">
                                 <div className="bg-primary/10 p-2 rounded-full mt-1">
-                                    <FontAwesomeIcon icon={faStar} className="text-primary" />
+                                    <FontAwesomeIcon
+                                        icon={faStar}
+                                        className="text-primary"
+                                    />
                                 </div>
                                 <div>
-                                    <h4 className="font-semibold text-lg">Special Needs:</h4>
-                                    <p className="text-gray-600">Needs sun protection (sensitive to sunlight)</p>
+                                    <h4 className="font-semibold text-lg">
+                                        Special Needs:
+                                    </h4>
+                                    <p className="text-gray-600">
+                                        Needs sun protection (sensitive to
+                                        sunlight)
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -378,15 +433,13 @@ const HeroSection = () => {
                             <a
                                 href="/browse-pets/279"
                                 className="bg-primary text-white px-6 py-3 rounded-full font-bold text-center
-                    hover:scale-105 transition-transform duration-300 shadow-lg"
-                            >
+                    hover:scale-105 transition-transform duration-300 shadow-lg">
                                 Adopt Cheeto
                             </a>
                             <a
                                 href="/browse-pets"
                                 className="bg-white text-primary border border-primary px-6 py-3 rounded-full font-bold text-center
-                    hover:scale-105 transition-transform duration-300 shadow-lg"
-                            >
+                    hover:scale-105 transition-transform duration-300 shadow-lg">
                                 Browse Other Pets
                             </a>
                         </div>
@@ -420,25 +473,40 @@ const HeroSection = () => {
                                 </p>
 
                                 <div className="flex items-center gap-2 text-gray-600 mb-3">
-                                    <FontAwesomeIcon icon={faMapMarkerAlt} className="text-primary" />
+                                    <FontAwesomeIcon
+                                        icon={faMapMarkerAlt}
+                                        className="text-primary"
+                                    />
                                     <span>Lahore, Gulberg</span>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 text-sm mb-4">
                                     <div className="flex items-center gap-2">
-                                        <FontAwesomeIcon icon={faStar} className="text-yellow-400" />
+                                        <FontAwesomeIcon
+                                            icon={faStar}
+                                            className="text-yellow-400"
+                                        />
                                         <span>Energy: 4/5</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <FontAwesomeIcon icon={faHeart} className="text-red-400" />
+                                        <FontAwesomeIcon
+                                            icon={faHeart}
+                                            className="text-red-400"
+                                        />
                                         <span>Cuddly: 5/5</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <FontAwesomeIcon icon={faDog} className="text-blue-400" />
+                                        <FontAwesomeIcon
+                                            icon={faDog}
+                                            className="text-blue-400"
+                                        />
                                         <span>Gets with dogs</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <FontAwesomeIcon icon={faCat} className="text-purple-400" />
+                                        <FontAwesomeIcon
+                                            icon={faCat}
+                                            className="text-purple-400"
+                                        />
                                         <span>Gets with cats</span>
                                     </div>
                                 </div>
@@ -459,7 +527,6 @@ const HeroSection = () => {
                     </div>
                 </div>
             </section>
-
 
             {/* Testimonials */}
             {/* <section className="py-16 px-6 lg:px-20 bg-gray-50">
@@ -488,8 +555,6 @@ const HeroSection = () => {
                     ))}
                 </div>
             </section> */}
-
-            
         </div>
     );
 };

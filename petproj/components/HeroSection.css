@@ -1,0 +1,8 @@
+.hidden-link {
+    text-decoration: none;
+    color: inherit;
+}
+.hidden-link:hover {
+    color: #a03048; /* optional hover effect */
+    text-decoration: underline;
+}

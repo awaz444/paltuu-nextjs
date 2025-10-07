@@ -52,11 +52,11 @@ export default function Footer() {
         {/* Left - Logo, About & Address */}
         <div className="text-center md:text-left">
           <img
-            src="paltu_logo.svg"
+            src="paltuu bilkul tight.svg"
             alt="paltuu logo"
-            width={180}
+            width={90}
             height={100}
-            className="mx-auto md:mx-0"
+            className="mx-auto md:mx-0 text-white brightness-0 invert"
           />
 
           {/* Address */}

@@ -334,7 +334,7 @@ const Navbar = ({
         </button>
 
         {/* Center: Logo */}
-        <Link href={logoHref || "/browse-pets"} className="logo">
+        <Link href={logoHref || "/"} className="logo">
           <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
         </Link>
 
@@ -398,7 +398,7 @@ const Navbar = ({
 
               {/* Logo */}
               <div className="logo">
-                <Link href="/browse-pets">
+                <Link href="/">
                   <Image
                     src="/paltu_logo.svg"
                     alt="Logo"
@@ -543,7 +543,7 @@ const Navbar = ({
       <div className="flex items-center justify-between w-full">
         {/* Logo */}
         <div className="logo hidden md:block">
-          <Link href={logoHref || "/browse-pets"}>
+          <Link href={logoHref || "/"}>
             <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
           </Link>
         </div>

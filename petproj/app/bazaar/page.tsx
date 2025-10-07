@@ -162,24 +162,50 @@ export default function BazaarPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
   {/* 🐾 Hero Section */}
-  <section className="relative w-full h-[80vh] sm:h-[85vh] md:h-[90vh] lg:h-[95vh] overflow-hidden">
-    {/* Desktop Banner */}
+<section className="relative w-full overflow-hidden bazaar-banner">
+  {/* Desktop & Tablet Banner */}
+  <div className="hidden sm:block w-full">
     <Image
       src="/banner_web.webp"
       alt="Bazaar Banner"
-      fill
+      width={1920}
+      height={1080}
       priority
-      className="object-cover hidden md:block"
+      className="w-full h-auto object-contain bg-[#A03048]"
     />
+  </div>
 
-    {/* Mobile Banner */}
+  {/* Mobile Banner */}
+  <div className="block sm:hidden w-full">
     <Image
       src="/banner_phone.webp"
       alt="Bazaar Banner Mobile"
-      fill
+      width={1080}
+      height={1920}
       priority
-      className="object-cover block md:hidden"
+      className="w-full h-auto object-contain bg-[#A03048]"
     />
+  </div>
+
+  <style jsx>{`
+    .bazaar-banner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #a03048;
+      width: 100vw;
+      height: auto;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+  `}</style>
 
     {/* Refresh Button - Development Only */}
     {process.env.NODE_ENV === 'development' && (

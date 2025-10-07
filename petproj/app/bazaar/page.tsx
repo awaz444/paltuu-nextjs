@@ -186,6 +186,7 @@ export default function BazaarPage() {
       className="w-full h-auto object-contain bg-[#A03048]"
     />
   </div>
+  
 
   <style jsx>{`
     .bazaar-banner {

@@ -108,7 +108,7 @@ const HeroSection = () => {
                                 <a href="/browse-pets" className="sr-only">
                                     Pet Adoption in Pakistan
                                 </a>
-                                <a href="/vets" className="sr-only">
+                                <a href="/pet-care" className="sr-only">
                                     Connect with Vets in Pakistan
                                 </a>
                                 <a href="/bazaar" className="sr-only">
@@ -189,7 +189,7 @@ const HeroSection = () => {
                                 </li>
                                 <li>
                                     24/7 veterinary guidance & pet care support
-                                    <a href="/vets" className="sr-only">
+                                    <a href="/pet-care" className="sr-only">
                                         Find vets in Pakistan online
                                     </a>
                                 </li>

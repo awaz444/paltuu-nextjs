@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, Suspense } from "react";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import Navbar from "../../components/navbar";
 import ProductFilterSection from "@/components/ProductFilterSection";
@@ -26,9 +26,9 @@ interface Product {
   ratingCount?: number;
 }
 
-export default function Marketplace() {
+// Create a client component that uses useSearchParams
+function MarketplaceClient() {
   const searchParams = useSearchParams();
-
   const dispatch = useDispatch<AppDispatch>();
   const productsState = useSelector((s: RootState) => s.marketplace);
   const { products, loading, error, meta, hasMore, currentPage } = productsState;
@@ -106,7 +106,6 @@ export default function Marketplace() {
 
   return (
     <>
-
       <div className="fullBody">
         <ProductFilterSection
           filters={filters}
@@ -133,5 +132,20 @@ export default function Marketplace() {
         )}
       </div>
     </>
+  );
+}
+
+// Create the main page component that uses Suspense
+export default function Marketplace() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="flex justify-center items-center min-h-screen">
+          <MoonLoader size={30} color="#a03048" />
+        </div>
+      }
+    >
+      <MarketplaceClient />
+    </Suspense>
   );
 }

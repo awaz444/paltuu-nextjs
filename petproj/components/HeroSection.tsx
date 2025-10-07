@@ -16,6 +16,7 @@ import {
     faHeart,
     faBullseye,
     faEye,
+    faShoppingCart,
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 {
@@ -222,6 +223,7 @@ const HeroSection = () => {
             <section className="py-12 px-6 lg:px-20 bg-white relative">
                 <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Mission Card */}
+                    {/* Mission Card */}
                     <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden">
                         {/* Decorative paw in background */}
                         <div className="absolute -bottom-4 -right-4 w-24 h-24 opacity-10">
@@ -242,10 +244,26 @@ const HeroSection = () => {
                             </h3>
                         </div>
                         <p className="text-gray-700 pl-1">
-                            To revolutionize pet care in Pakistan by connecting
-                            every animal with loving homes through our
-                            innovative digital platform that makes adoption and
-                            pet care accessible to all.
+                            To revolutionize pet care in Pakistan by making{" "}
+                            <strong>
+                                pet adoption, veterinary care, and pet products
+                            </strong>{" "}
+                            easily accessible. Paltuu.pk connects pet lovers in{" "}
+                            Karachi, Lahore, Islamabad and beyond with trusted{" "}
+                            <strong>
+                                adoptable pets, online pet stores, and vet
+                                services
+                            </strong>
+                            .
+                            <a href="/browse-pets" className="sr-only">
+                                Adopt pets in Pakistan
+                            </a>
+                            <a href="/bazaar" className="sr-only">
+                                Buy pet food and accessories online in Pakistan
+                            </a>
+                            <a href="/vets" className="sr-only">
+                                Find vets in Karachi Lahore Islamabad
+                            </a>
                         </p>
                     </div>
 
@@ -270,10 +288,22 @@ const HeroSection = () => {
                             </h3>
                         </div>
                         <p className="text-gray-700 pl-1">
-                            A future where no pet is left behind, creating a
-                            compassionate Pakistan where every animal has a
-                            loving home and every pet owner has access to
-                            trusted resources and support.
+                            We envision a compassionate Pakistan where{" "}
+                            <strong>every pet finds a loving home</strong> and{" "}
+                            <strong>
+                                pet owners can access food, grooming, and
+                                healthcare
+                            </strong>
+                            through trusted platforms. From{" "}
+                            <strong>adopting dogs and cats</strong> to shopping
+                            for <strong>pet supplies online</strong>, Paltuu.pk
+                            makes pet care simple and reliable.
+                            <a href="/lost-and-found" className="sr-only">
+                                Lost and found pets in Pakistan
+                            </a>
+                            <a href="/bazaar" className="sr-only">
+                                Pet grooming and accessories store Pakistan
+                            </a>
                         </p>
                     </div>
                 </div>
@@ -288,8 +318,12 @@ const HeroSection = () => {
                             Everything You Need For Your Pet
                         </h2>
                         <p className="text-lg text-white/80 max-w-2xl mx-auto">
-                            Paltuu provides complete pet care solutions in one
-                            place
+                            Paltuu.pk provides complete pet care solutions in
+                            one place – from <strong>pet adoption</strong> to{" "}
+                            <strong>
+                                pet products and veterinary services
+                            </strong>
+                            .
                         </p>
                     </div>
 
@@ -298,55 +332,52 @@ const HeroSection = () => {
                         {[
                             {
                                 icon: faDog,
-                                title: "Adopt & Foster",
-                                text: "Browse pets looking for loving homes",
+                                title: "Adopt Pets",
+                                text: "Find cats, dogs & more looking for loving homes",
+                                link: "/browse-pets",
                                 delay: "100",
+                            },
+                            {
+                                icon: faShoppingCart,
+                                title: "Pet Products",
+                                text: "Shop food, grooming & accessories online in Pakistan",
+                                link: "/bazaar",
+                                delay: "150",
                             },
                             {
                                 icon: faStethoscope,
                                 title: "Find Vets",
-                                text: "Connect with trusted veterinary professionals",
+                                text: "Connect with trusted veterinary professionals near you",
+                                link: "/vets",
                                 delay: "200",
                             },
                             {
                                 icon: faSearch,
                                 title: "Lost & Found",
-                                text: "Help reunite pets with their families",
+                                text: "Help reunite missing pets with their families",
+                                link: "/lost-and-found",
                                 delay: "300",
-                            },
-                            {
-                                icon: faMapMarkerAlt,
-                                title: "City Services",
-                                text: "Explore pet services in your location",
-                                delay: "400",
                             },
                         ].map((feature, index) => (
                             <div
                                 key={index}
                                 className="relative overflow-hidden group rounded-xl p-8 text-center
-                    bg-gradient-to-b from-gray-100 to-white shadow-lg
-                    transition-all duration-500 hover:-translate-y-2 hover:shadow-xl">
-                                {/* Half-circle Element (Expands on hover) */}
+          bg-gradient-to-b from-gray-100 to-white shadow-lg
+          transition-all duration-500 hover:-translate-y-2 hover:shadow-xl">
+                                {/* Decorative circle */}
                                 <div
                                     className={`
-                        absolute -bottom-20 -right-20 w-40 h-40
-                        bg-red-500/10  /* Red with 10% opacity */
-                        group-hover:bg-red-500/20  /* Slightly more visible on hover */
-                        rounded-full
-                        group-hover:scale-[2.5]
-                        transition-all duration-700
-                        delay-${feature.delay}
-                        /* Tailwind-based clip-path for half circle */
-                        before:absolute before:inset-0 before:bg-inherit
-                        before:rounded-full before:origin-bottom-right
-                        before:scale-50 before:opacity-100
-                    `}></div>
+            absolute -bottom-20 -right-20 w-40 h-40
+            bg-red-500/10 group-hover:bg-red-500/20
+            rounded-full group-hover:scale-[2.5]
+            transition-all duration-700 delay-${feature.delay}
+          `}></div>
 
-                                {/* Icon Container */}
+                                {/* Icon */}
                                 <div className="relative z-10 mb-6">
                                     <div
                                         className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center
-                        group-hover:bg-primary/20 transition-colors duration-300">
+            group-hover:bg-primary/20 transition-colors duration-300">
                                         <FontAwesomeIcon
                                             icon={feature.icon}
                                             className="text-3xl text-primary"
@@ -364,68 +395,61 @@ const HeroSection = () => {
                                     </p>
                                     <button
                                         className="text-sm font-semibold bg-primary text-white px-4 py-2 rounded-full
-                        hover:bg-primary/90 transition-colors duration-300 shadow-sm">
+            hover:bg-primary/90 transition-colors duration-300 shadow-sm">
                                         Learn More
                                     </button>
                                 </div>
+
+                                {/* Hidden SEO link */}
+                                <a href={feature.link} className="sr-only">
+                                    {feature.title} on Paltuu.pk
+                                </a>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
+
             {/* Featured Pet Section */}
             <section className="py-16 px-6 lg:px-20 bg-primary/5">
                 <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     {/* Left Column - Text Content */}
                     <div className="text-center lg:text-left">
                         <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6">
-                            Meet Cheeto - Your New Best Friend
+                            Adopt Cheeto – Dog Adoption in Lahore
                         </h2>
                         <p className="text-lg text-gray-700 mb-8 max-w-lg mx-auto lg:mx-0">
-                            This calm and cuddly boy is looking for his forever
-                            home in Lahore. Perfect for families who can give
-                            him lots of love and attention.
+                            Meet <strong>Cheeto</strong>, a calm and cuddly
+                            one-year-old stray dog available for{" "}
+                            <strong>adoption in Lahore</strong>. Perfect for
+                            families looking for a loving companion, he comes
+                            vaccinated and neutered, ready to join his forever
+                            home at an affordable adoption fee of PKR 2000.
                         </p>
 
                         <div className="space-y-6 mb-8">
-                            <div className="flex items-start gap-4">
-                                <div className="bg-primary/10 p-2 rounded-full mt-1">
-                                    <FontAwesomeIcon
-                                        icon={faHeart}
-                                        className="text-primary"
-                                    />
-                                </div>
-                                <div>
-                                    <h4 className="font-semibold text-lg">
-                                        Perfect For You If:
-                                    </h4>
-                                    <ul className="text-gray-600 list-disc pl-5 space-y-1">
-                                        <li>You want a low-energy companion</li>
-                                        <li>
-                                            You work from home or are often
-                                            around
-                                        </li>
-                                        <li>You love cuddly pets</li>
-                                    </ul>
-                                </div>
+                            <div>
+                                <h4 className="font-semibold text-lg">
+                                    Perfect For You If:
+                                </h4>
+                                <ul className="text-gray-600 list-disc pl-5 space-y-1">
+                                    <li>You want a low-energy companion</li>
+                                    <li>
+                                        You work from home or spend lots of time
+                                        at home
+                                    </li>
+                                    <li>You love affectionate, cuddly pets</li>
+                                </ul>
                             </div>
 
-                            <div className="flex items-start gap-4">
-                                <div className="bg-primary/10 p-2 rounded-full mt-1">
-                                    <FontAwesomeIcon
-                                        icon={faStar}
-                                        className="text-primary"
-                                    />
-                                </div>
-                                <div>
-                                    <h4 className="font-semibold text-lg">
-                                        Special Needs:
-                                    </h4>
-                                    <p className="text-gray-600">
-                                        Needs sun protection (sensitive to
-                                        sunlight)
-                                    </p>
-                                </div>
+                            <div>
+                                <h4 className="font-semibold text-lg">
+                                    Special Needs:
+                                </h4>
+                                <p className="text-gray-600">
+                                    Requires sun protection due to light
+                                    sensitivity
+                                </p>
                             </div>
                         </div>
 
@@ -433,16 +457,27 @@ const HeroSection = () => {
                             <a
                                 href="/browse-pets/279"
                                 className="bg-primary text-white px-6 py-3 rounded-full font-bold text-center
-                    hover:scale-105 transition-transform duration-300 shadow-lg">
+          hover:scale-105 transition-transform duration-300 shadow-lg">
                                 Adopt Cheeto
                             </a>
                             <a
                                 href="/browse-pets"
                                 className="bg-white text-primary border border-primary px-6 py-3 rounded-full font-bold text-center
-                    hover:scale-105 transition-transform duration-300 shadow-lg">
+          hover:scale-105 transition-transform duration-300 shadow-lg">
                                 Browse Other Pets
                             </a>
                         </div>
+
+                        {/* Hidden SEO Links */}
+                        <a href="/browse-pets" className="sr-only">
+                            Dog adoption in Pakistan
+                        </a>
+                        <a href="/browse-pets?city=lahore" className="sr-only">
+                            Adopt a dog in Lahore
+                        </a>
+                        <a href="/pet-care" className="sr-only">
+                            Pet care services in Pakistan
+                        </a>
                     </div>
 
                     {/* Right Column - Featured Pet Card */}
@@ -451,7 +486,7 @@ const HeroSection = () => {
                             <div className="relative">
                                 <img
                                     src="https://res.cloudinary.com/dfwykqn1d/image/upload/v1744815787/vocg0o0zbnqxowcutgft.jpg"
-                                    alt="Cheeto"
+                                    alt="Cheeto – adoptable dog in Lahore"
                                     className="w-full aspect-square object-cover rounded-2xl"
                                 />
                                 <div className="absolute bottom-2 right-2 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full">
@@ -500,14 +535,14 @@ const HeroSection = () => {
                                             icon={faDog}
                                             className="text-blue-400"
                                         />
-                                        <span>Gets with dogs</span>
+                                        <span>Good with dogs</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <FontAwesomeIcon
                                             icon={faCat}
                                             className="text-purple-400"
                                         />
-                                        <span>Gets with cats</span>
+                                        <span>Good with cats</span>
                                     </div>
                                 </div>
 

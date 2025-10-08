@@ -6,7 +6,8 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Define public paths that don't require authentication
-  const isPublicPath = ['/login', '/sign-up', '/browse-pets', '/foster-pets', '/pet-care', '/llm', '/forgot-password', '/reset-password'].includes(pathname);
+  // Allow guest checkout and order confirmation without login
+  const isPublicPath = ['/login', '/sign-up', '/browse-pets', '/foster-pets', '/pet-care', '/llm', '/forgot-password', '/reset-password', '/checkout', '/order-confirmed'].includes(pathname);
 
   // Define admin-only paths
   const adminOnlyPaths = [

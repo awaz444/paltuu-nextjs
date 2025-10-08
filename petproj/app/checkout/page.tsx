@@ -353,6 +353,7 @@ const CheckoutPage = () => {
                       type="radio"
                       name="payment"
                       className="h-4 w-4 text-primary"
+                      
                       checked={paymentMethod === 'card'}
                       onChange={() => setPaymentMethod('card')}
                     />

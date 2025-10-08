@@ -48,8 +48,10 @@ const CheckoutPage = () => {
 
   // Customer / Shipping form state
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [address, setAddress] = useState("");
@@ -61,8 +63,71 @@ const CheckoutPage = () => {
     0
   );
   const shipping = 200;
-  // const tax = subtotal * 0.05; // 5% tax
   const total = subtotal + shipping - discount;
+
+  // Email validation function
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Phone validation function
+  const validatePhone = (phone: string) => {
+    // Remove any non-digit characters except the +92 prefix
+    const cleaned = phone.replace(/\D/g, '');
+    // Check if it starts with 92 and has exactly 12 digits total (+92 + 10 digits)
+    return cleaned.startsWith('92') && cleaned.length === 12;
+  };
+
+  // Format phone number as user types
+  const handlePhoneChange = (value: string) => {
+    // Remove all non-digit characters
+    const digitsOnly = value.replace(/\D/g, '');
+    
+    // If empty, set to +92
+    if (digitsOnly === '') {
+      setPhone('+92');
+      setPhoneError('');
+      return;
+    }
+
+    // Ensure it starts with 92
+    let formatted = digitsOnly;
+    if (!digitsOnly.startsWith('92')) {
+      formatted = '92' + digitsOnly.replace(/^92/, '');
+    }
+
+    // Limit to 12 digits total (92 + 10 digits)
+    formatted = formatted.slice(0, 12);
+
+    // Format as +92 XXX XXXXXXX
+    let displayValue = '+' + formatted;
+    if (formatted.length > 3) {
+      displayValue = '+' + formatted.slice(0, 3) + ' ' + formatted.slice(3);
+    }
+    if (formatted.length > 6) {
+      displayValue = '+' + formatted.slice(0, 3) + ' ' + formatted.slice(3, 6) + ' ' + formatted.slice(6);
+    }
+
+    setPhone(displayValue);
+    
+    // Validate and show error if incomplete
+    if (formatted.length < 12) {
+      setPhoneError('Phone number must be 10 digits after +92');
+    } else {
+      setPhoneError('');
+    }
+  };
+
+  // Email change handler with validation
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    if (value && !validateEmail(value)) {
+      setEmailError('Please enter a valid email address');
+    } else {
+      setEmailError('');
+    }
+  };
 
   const applyPromoCode = () => {
     setPromoError("");
@@ -88,6 +153,46 @@ const CheckoutPage = () => {
     setPromoApplied(false);
     setPromoError("");
   };
+
+  // Validate form before submission
+  const validateForm = () => {
+    let isValid = true;
+
+    // Email validation
+    if (!email) {
+      setEmailError('Email is required');
+      isValid = false;
+    } else if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address');
+      isValid = false;
+    }
+
+    // Phone validation
+    if (!phone) {
+      setPhoneError('Phone number is required');
+      isValid = false;
+    } else if (!validatePhone(phone)) {
+      setPhoneError('Phone number must be 10 digits after +92');
+      isValid = false;
+    }
+
+    // Other required fields
+    if (!fullName) {
+      alert('Full name is required');
+      isValid = false;
+    }
+    if (!address) {
+      alert('Address is required');
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
+  // Initialize phone with +92 on component mount
+  useEffect(() => {
+    setPhone('+92');
+  }, []);
 
   // Show loading while checking cart
   if (isChecking) {
@@ -129,19 +234,24 @@ const CheckoutPage = () => {
                 <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email Address
+                      Email Address *
                     </label>
                     <input
                       type="email"
                       placeholder="Enter email address"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                      onChange={(e) => handleEmailChange(e.target.value)}
+                      className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition ${
+                        emailError ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     />
+                    {emailError && (
+                      <p className="text-red-500 text-sm mt-1">{emailError}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Full Name
+                      Full Name *
                     </label>
                     <input
                       type="text"
@@ -153,15 +263,23 @@ const CheckoutPage = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone Number
+                      Phone Number *
                     </label>
                     <input
-                      type="text"
-                      placeholder="Enter phone number"
+                      type="tel"
+                      placeholder="+92 300 1234567"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                      onChange={(e) => handlePhoneChange(e.target.value)}
+                      className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition ${
+                        phoneError ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     />
+                    {phoneError && (
+                      <p className="text-red-500 text-sm mt-1">{phoneError}</p>
+                    )}
+                    {/* <p className="text-xs text-gray-500 mt-1">
+                      Format: +92 followed by 10 digits (e.g., +92 300 1234567)
+                    </p> */}
                   </div>
 
                   <div>
@@ -171,6 +289,8 @@ const CheckoutPage = () => {
                     <input
                       type="text"
                       placeholder="Enter your city"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
                       className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     />
                   </div>
@@ -181,12 +301,14 @@ const CheckoutPage = () => {
                     <input
                       type="text"
                       placeholder="Enter postal code"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
                       className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                     />
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Complete Address
+                      Complete Address *
                     </label>
                     <textarea
                       placeholder="Enter your complete address"
@@ -226,7 +348,7 @@ const CheckoutPage = () => {
                     </div>
                   </label>
                   {/* Credit / Debit Card */}
-                  <label className="flex items-center gap-4 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                  {/* <label className="flex items-center gap-4 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
                     <input
                       type="radio"
                       name="payment"
@@ -263,7 +385,7 @@ const CheckoutPage = () => {
                         Pay securely with your card
                       </p>
                     </div>
-                  </label>
+                  </label> */}
 
                   {/* Bank Transfer */}
                   <label className="flex items-center gap-4 p-4 border rounded-xl cursor-pointer hover:border-primary transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
@@ -376,7 +498,7 @@ const CheckoutPage = () => {
                   <p className="text-red-500 text-sm mt-2">{promoError}</p>
                 )}
 
-                <div className="mt-3 text-xs text-gray-500">
+                {/* <div className="mt-3 text-xs text-gray-500">
                   Try:{" "}
                   <span className="font-mono bg-gray-100 px-1 py-0.5 rounded">
                     WELCOME10
@@ -389,7 +511,7 @@ const CheckoutPage = () => {
                   <span className="font-mono bg-gray-100 px-1 py-0.5 rounded mx-1">
                     FREESHIP
                   </span>
-                </div>
+                </div> */}
               </div>
 
               {/* Order Totals */}
@@ -429,15 +551,28 @@ const CheckoutPage = () => {
                 disabled={placing}
                 onClick={async () => {
                   if (!cart || cart.items?.length === 0) return alert('Cart is empty');
-                  if (!email || !fullName || !phone || !address) return alert('Please fill required shipping information');
+                  
+                  // Validate form before proceeding
+                  if (!validateForm()) {
+                    return;
+                  }
+
                   setPlacing(true);
                   try {
                     const sessionId = getOrCreateGuestSessionId();
+                    
+                    // Clean phone number for API (remove spaces)
+                    const cleanPhone = phone.replace(/\s/g, '');
+                    
                     const body = {
                       userId: null,
                       sessionId,
                       cartId: cart.cart_id,
-                      customerInfo: { email, phone, name: fullName },
+                      customerInfo: { 
+                        email, 
+                        phone: cleanPhone, 
+                        name: fullName 
+                      },
                       shippingAddress: { city, postalCode, address },
                       billingAddress: null,
                       paymentMethod,

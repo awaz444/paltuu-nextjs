@@ -424,7 +424,7 @@ const HeroSection = () => {
                             <strong>adoption in Lahore</strong>. Perfect for
                             families looking for a loving companion, he comes
                             vaccinated and neutered, ready to join his forever
-                            home at an affordable adoption fee of PKR 2000.
+                            home.
                         </p>
 
                         <div className="space-y-6 mb-8">
@@ -489,9 +489,7 @@ const HeroSection = () => {
                                     alt="Cheeto – adoptable dog in Lahore"
                                     className="w-full aspect-square object-cover rounded-2xl"
                                 />
-                                <div className="absolute bottom-2 right-2 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full">
-                                    PKR 2000
-                                </div>
+                               
                             </div>
                             <div className="p-4">
                                 <div className="flex justify-between items-start">

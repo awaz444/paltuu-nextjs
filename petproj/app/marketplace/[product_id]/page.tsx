@@ -36,6 +36,22 @@ export async function generateMetadata({ params }: { params: { product_id: strin
   };
 }
 
-export default function ProductPage({ params }: { params: { product_id: string } }) {
-  return <ProductDetailsClient params={params} />;
+export default async function ProductPage({ params }: { params: { product_id: string } }) {
+  // Fetch product data once on the server
+  const product = await getProduct(params.product_id);
+  
+  // Fetch reviews on the server as well
+  let reviews = [];
+  if (product) {
+    try {
+      const revRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bazaar/reviews?product_id=${product.product_id}`);
+      if (revRes.ok) {
+        reviews = await revRes.json();
+      }
+    } catch (e) {
+      console.error("Error fetching reviews:", e);
+    }
+  }
+
+  return <ProductDetailsClient params={params} initialProduct={product} initialReviews={reviews} />;
 }

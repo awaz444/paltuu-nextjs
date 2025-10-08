@@ -33,7 +33,7 @@ import {
 import VariantList from "./variant-list";
 import { MoonLoader } from "react-spinners";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
-import Head  from "next/head";
+import Head from "next/head";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -95,8 +95,16 @@ interface Product {
     seo_description?: string;
 }
 
-const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
+interface ProductDetailsPageProps {
+    params: { product_id: string };
+    initialProduct?: ApiProduct | null;
+    initialReviews?: Review[];
+}
+
+const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     params,
+    initialProduct = null,
+    initialReviews = [],
 }) => {
     const dispatch = useDispatch<AppDispatch>();
     const { product_id } = params;
@@ -114,13 +122,24 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
     const [quantity, setQuantity] = useState(1);
 
     useEffect(() => {
+        // If we have initial data from server, use it immediately
+        if (initialProduct) {
+            const transformedProduct = transformApiProductToUI(initialProduct);
+            setProduct({ ...transformedProduct, reviews: initialReviews });
+            setVariantsData(initialProduct.variants || []);
+            setSelectedVariant(initialProduct.variants?.[0] || null);
+            setLoading(false);
+            return;
+        }
+
+        // Only fetch if no initial data (client-side navigation)
         const fetchProduct = async () => {
             try {
                 setLoading(true);
                 const response = await fetch(
                     `/api/bazaar/products/${product_id}`
                 );
-    
+
                 if (!response.ok) {
                     if (response.status === 404) {
                         setError("Product not found");
@@ -131,58 +150,15 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                     }
                     return;
                 }
-    
+
                 const apiProduct: ApiProduct = await response.json();
-                console.log("Fetched product:", apiProduct);
-    
-                // Transform API data to UI-compatible format - Fixed compare_at_price parsing
-                const transformedProduct: Product = {
-                    id: apiProduct.product_id,
-                    name: apiProduct.title,
-                    brand: apiProduct.categories?.[0]?.name || "Unknown Brand",
-                    category:
-                        apiProduct.categories?.[0]?.name || "Uncategorized",
-                    price:
-                        apiProduct.variants?.[0]?.price_override ||
-                        apiProduct.price ||
-                        0,
-                    compare_at_price: Number(apiProduct.compare_at_price) || 0,
-                    stock:
-                        apiProduct.variants?.reduce(
-                            (total, variant) => total + variant.stock,
-                            0
-                        ) || 0,
-                    description:
-                        apiProduct.description ||
-                        "No description available",
-                    created_at:
-                        apiProduct.created_at || new Date().toISOString(),
-                    images:
-                        apiProduct.images.length > 0
-                            ? apiProduct.images
-                            : ["/placeholder-product.jpg"],
-                    reviews: [],
-                    // ✅ CRITICAL: Add SEO fields from API response
-                    seo_title: apiProduct.seo_title,
-                    seo_description: apiProduct.seo_description,
-                };
-    
-                console.log("Transformed product with SEO:", {
-                    seo_title: transformedProduct.seo_title,
-                    seo_description: transformedProduct.seo_description
-                });
-    
+                const transformedProduct = transformApiProductToUI(apiProduct);
+
                 setProduct(transformedProduct);
                 setVariantsData(apiProduct.variants || []);
-                
-                // If variants exist, set default selected variant (first)
-                const defaultVariant =
-                    apiProduct.variants && apiProduct.variants.length > 0
-                        ? apiProduct.variants[0]
-                        : null;
-                setSelectedVariant(defaultVariant);
-    
-                // Fetch reviews from the new reviews API
+                setSelectedVariant(apiProduct.variants?.[0] || null);
+
+                // Fetch reviews only if we didn't have initial data
                 try {
                     const revRes = await fetch(
                         `/api/bazaar/reviews?product_id=${apiProduct.product_id}`
@@ -190,11 +166,6 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                     if (revRes.ok) {
                         const revs = await revRes.json();
                         setProduct((p) => (p ? { ...p, reviews: revs } : p));
-                    } else {
-                        console.debug(
-                            "No reviews or failed to fetch reviews",
-                            revRes.status
-                        );
                     }
                 } catch (e) {
                     console.error("Error fetching reviews:", e);
@@ -206,9 +177,28 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                 setLoading(false);
             }
         };
-    
+
         fetchProduct();
-    }, [product_id]);
+    }, [product_id, initialProduct, initialReviews]);
+
+    const transformApiProductToUI = (apiProduct: ApiProduct): Product => {
+        return {
+          id: apiProduct.product_id,
+          name: apiProduct.title,
+          brand: apiProduct.categories?.[0]?.name || "Unknown Brand",
+          category: apiProduct.categories?.[0]?.name || "Uncategorized",
+          price: apiProduct.variants?.[0]?.price_override || apiProduct.price || 0,
+          compare_at_price: Number(apiProduct.compare_at_price) || 0,
+          stock: apiProduct.variants?.reduce((total, variant) => total + variant.stock, 0) || 0,
+          description: apiProduct.description || "No description available",
+          created_at: apiProduct.created_at || new Date().toISOString(),
+          images: apiProduct.images.length > 0 ? apiProduct.images : ["/placeholder-product.jpg"],
+          reviews: initialReviews, // Use initial reviews or empty array
+          seo_title: apiProduct.seo_title,
+          seo_description: apiProduct.seo_description,
+        };
+      };
+    
 
     const formatListingDate = (dateString: string) => {
         return formatDistanceToNow(new Date(dateString), { addSuffix: true });
@@ -333,36 +323,55 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
     return (
         <>
             <Head>
-                <title>{product.seo_title || product.name || "Product Details"}</title>
-                <meta 
-                    name="description" 
-                    content={product.seo_description || product.description || ''} 
+                <title>
+                    {product.seo_title || product.name || "Product Details"}
+                </title>
+                <meta
+                    name="description"
+                    content={
+                        product.seo_description || product.description || ""
+                    }
                 />
-                <meta 
-                    property="og:title" 
-                    content={product.seo_title || product.name || "Product Details"} 
+                <meta
+                    property="og:title"
+                    content={
+                        product.seo_title || product.name || "Product Details"
+                    }
                 />
-                <meta 
-                    property="og:description" 
-                    content={product.seo_description || product.description || ''} 
+                <meta
+                    property="og:description"
+                    content={
+                        product.seo_description || product.description || ""
+                    }
                 />
-                <meta 
-                    property="og:image" 
-                    content={product?.images?.[0] || ''} 
+                <meta
+                    property="og:image"
+                    content={product?.images?.[0] || ""}
                 />
-                <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
+                <meta
+                    property="og:url"
+                    content={
+                        typeof window !== "undefined"
+                            ? window.location.href
+                            : ""
+                    }
+                />
                 <meta property="og:type" content="product" />
-                <meta 
-                    name="twitter:title" 
-                    content={product.seo_title || product.name || "Product Details"} 
+                <meta
+                    name="twitter:title"
+                    content={
+                        product.seo_title || product.name || "Product Details"
+                    }
                 />
-                <meta 
-                    name="twitter:description" 
-                    content={product.seo_description || product.description || ''} 
+                <meta
+                    name="twitter:description"
+                    content={
+                        product.seo_description || product.description || ""
+                    }
                 />
-                <meta 
-                    name="twitter:image" 
-                    content={product?.images?.[0] || ''} 
+                <meta
+                    name="twitter:image"
+                    content={product?.images?.[0] || ""}
                 />
             </Head>
             <div className="product-details min-h-screen bg-gray-50 py-8 px-4 md:px-8">
@@ -464,8 +473,6 @@ const ProductDetailsPage: React.FC<{ params: { product_id: string } }> = ({
                                             </span>
                                         </div>
                                     </div>
-
-
 
                                     {/* Short Description */}
                                     {/* <Paragraph className="text-gray-700 text-base leading-relaxed border-l-4 border-primary pl-4 py-1 bg-gray-50 rounded-r">

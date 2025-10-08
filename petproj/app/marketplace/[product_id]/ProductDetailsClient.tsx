@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import ReactMarkdown from "react-markdown"; // Add this import
+import ReactMarkdown from "react-markdown";
 import { addToCart as addToCartThunk } from "../../store/slices/cartSlice";
 import type { AppDispatch } from "@/app/store/store";
 import { useSelector, useDispatch } from "react-redux";
@@ -29,11 +29,13 @@ import {
     HeartFilled,
     ShareAltOutlined,
     CheckOutlined,
+    ArrowRightOutlined,
 } from "@ant-design/icons";
 import VariantList from "./variant-list";
 import { MoonLoader } from "react-spinners";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
 import Head from "next/head";
+import { useRouter } from "next/navigation";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -107,7 +109,10 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     initialReviews = [],
 }) => {
     const dispatch = useDispatch<AppDispatch>();
+    const router = useRouter();
     const { product_id } = params;
+    
+    // All state declarations at the top
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -120,7 +125,10 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     const [imageLoading, setImageLoading] = useState(true);
     const [addingToCart, setAddingToCart] = useState(false);
     const [quantity, setQuantity] = useState(1);
+    const [isAddedToCart, setIsAddedToCart] = useState(false);
+    const [primaryColor, setPrimaryColor] = useState("#000000");
 
+    // All useEffect hooks at the top, before any conditional returns
     useEffect(() => {
         // If we have initial data from server, use it immediately
         if (initialProduct) {
@@ -181,6 +189,23 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         fetchProduct();
     }, [product_id, initialProduct, initialReviews]);
 
+    useEffect(() => {
+        // Get the computed style of the `--primary-color` CSS variable
+        const rootStyles = getComputedStyle(document.documentElement);
+        const color = rootStyles.getPropertyValue("--primary-color").trim();
+        if (color) {
+            setPrimaryColor(color);
+        }
+    }, []);
+
+    useEffect(() => {
+        // Reset added to cart state when variant changes
+        if (isAddedToCart) {
+            setIsAddedToCart(false);
+        }
+    }, [selectedVariant]);
+
+    // All function definitions
     const transformApiProductToUI = (apiProduct: ApiProduct): Product => {
         return {
           id: apiProduct.product_id,
@@ -193,27 +218,19 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
           description: apiProduct.description || "No description available",
           created_at: apiProduct.created_at || new Date().toISOString(),
           images: apiProduct.images.length > 0 ? apiProduct.images : ["/placeholder-product.jpg"],
-          reviews: initialReviews, // Use initial reviews or empty array
+          reviews: initialReviews,
           seo_title: apiProduct.seo_title,
           seo_description: apiProduct.seo_description,
         };
-      };
-    
+    };
+
+    const handleGoToCart = () => {
+        router.push("/cart");
+    };
 
     const formatListingDate = (dateString: string) => {
         return formatDistanceToNow(new Date(dateString), { addSuffix: true });
     };
-
-    const [primaryColor, setPrimaryColor] = useState("#000000"); // Default fallback color
-
-    useEffect(() => {
-        // Get the computed style of the `--primary-color` CSS variable
-        const rootStyles = getComputedStyle(document.documentElement);
-        const color = rootStyles.getPropertyValue("--primary-color").trim();
-        if (color) {
-            setPrimaryColor(color);
-        }
-    }, []);
 
     const handleAddToCart = async () => {
         if (!product) return;
@@ -234,6 +251,9 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 })
             ).unwrap();
 
+            // Set the added to cart state to true
+            setIsAddedToCart(true);
+            
             message.success({
                 content: `${product.name} added to cart!`,
                 icon: <CheckOutlined className="text-green-500" />,
@@ -247,7 +267,6 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         }
     };
 
-    // Fixed: Improved discount calculation with proper type handling
     const calculateDiscountPercentage = (
         price: number,
         compareAtPrice: number
@@ -257,6 +276,22 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         return Math.round(discount);
     };
 
+    const handleQuantityChange = (newQuantity: number) => {
+        const maxStock = selectedVariant?.stock ?? product?.stock ?? 0;
+        const minOrder = 1;
+        const clampedQuantity = Math.max(
+            minOrder,
+            Math.min(newQuantity, maxStock)
+        );
+        setQuantity(clampedQuantity);
+        
+        // Reset the added to cart state when quantity changes
+        if (isAddedToCart) {
+            setIsAddedToCart(false);
+        }
+    };
+
+    // Now all conditional returns come after all hooks
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen">
@@ -264,16 +299,6 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
             </div>
         );
     }
-
-    const handleQuantityChange = (newQuantity: number) => {
-        const maxStock = selectedVariant?.stock ?? product?.stock ?? 0;
-        const minOrder = 1; // Minimum order quantity
-        const clampedQuantity = Math.max(
-            minOrder,
-            Math.min(newQuantity, maxStock)
-        );
-        setQuantity(clampedQuantity);
-    };
 
     if (error) {
         return (
@@ -417,8 +442,6 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                                                 setImageLoading(false)
                                             }
                                         />
-
-                                        {/* Wishlist and Share Buttons */}
                                     </div>
 
                                     <div className="flex mt-6 space-x-3 overflow-x-auto pb-2">
@@ -473,16 +496,6 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                                             </span>
                                         </div>
                                     </div>
-
-                                    {/* Short Description */}
-                                    {/* <Paragraph className="text-gray-700 text-base leading-relaxed border-l-4 border-primary pl-4 py-1 bg-gray-50 rounded-r">
-                                        {product.description.length > 150
-                                            ? `${product.description.substring(
-                                                  0,
-                                                  150
-                                              )}...`
-                                            : product.description}
-                                    </Paragraph> */}
 
                                     {/* Price and Stock Information */}
                                     <div className="grid grid-cols-1 gap-4">
@@ -624,37 +637,49 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
                                 {/* Action Buttons - Fixed at bottom */}
                                 <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                                    <button
-                                        onClick={handleAddToCart}
-                                        disabled={
-                                            ((selectedVariant
-                                                ? selectedVariant.stock
-                                                : product.stock) || 0) === 0 ||
-                                            addingToCart
-                                        }
-                                        className={`flex-1 py-3 px-6 rounded-xl font-semibold text-lg flex items-center justify-center transition-all duration-300 ${
-                                            ((selectedVariant
-                                                ? selectedVariant.stock
-                                                : product.stock) || 0) > 0
-                                                ? "bg-primary text-white shadow-md hover:shadow-lg hover:bg-primary-dark"
-                                                : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                        }`}>
-                                        {addingToCart ? (
-                                            <MoonLoader
-                                                size={20}
-                                                color="#ffffff"
-                                            />
-                                        ) : (
-                                            <>
-                                                <ShoppingCartOutlined className="mr-2" />
-                                                {((selectedVariant
+                                    {isAddedToCart ? (
+                                        // Go to Cart Button - White background with primary border
+                                        <button
+                                            onClick={handleGoToCart}
+                                            className="flex-1 py-3 px-6 rounded-xl font-semibold text-lg flex items-center justify-center transition-all duration-300 bg-white text-primary border-2 border-primary shadow-md hover:shadow-lg hover:bg-gray-50"
+                                        >
+                                            <ArrowRightOutlined className="mr-2" />
+                                            Go to Cart
+                                        </button>
+                                    ) : (
+                                        // Add to Cart Button - Original styling
+                                        <button
+                                            onClick={handleAddToCart}
+                                            disabled={
+                                                ((selectedVariant
+                                                    ? selectedVariant.stock
+                                                    : product.stock) || 0) === 0 ||
+                                                addingToCart
+                                            }
+                                            className={`flex-1 py-3 px-6 rounded-xl font-semibold text-lg flex items-center justify-center transition-all duration-300 ${
+                                                ((selectedVariant
                                                     ? selectedVariant.stock
                                                     : product.stock) || 0) > 0
-                                                    ? `Add to Cart`
-                                                    : `Out of Stock`}
-                                            </>
-                                        )}
-                                    </button>
+                                                    ? "bg-primary text-white shadow-md hover:shadow-lg hover:bg-primary-dark"
+                                                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                            }`}>
+                                            {addingToCart ? (
+                                                <MoonLoader
+                                                    size={20}
+                                                    color="#ffffff"
+                                                />
+                                            ) : (
+                                                <>
+                                                    <ShoppingCartOutlined className="mr-2" />
+                                                    {((selectedVariant
+                                                        ? selectedVariant.stock
+                                                        : product.stock) || 0) > 0
+                                                        ? `Add to Cart`
+                                                        : `Out of Stock`}
+                                                </>
+                                            )}
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -60,6 +60,9 @@ const OrderConfirmedContent  = () => {
   };
 
   const generateReceiptHtml = (o: any) => {
+    const logoUrl = (typeof window !== 'undefined' && (window as any).location)
+      ? `${(window as any).location.origin}/paltuu.png`
+      : '/paltuu.png';
     const itemsHtml = (o?.items || [])
       .map((it: any) => `
         <tr style="border-bottom: 1px solid #dee2e6;">
@@ -90,10 +93,9 @@ const OrderConfirmedContent  = () => {
     return `
       <div style="font-family: Arial, sans-serif; color: #000000; padding: 20px; background: #ffffff; max-width: 750px; margin: 0 auto; border: 1px solid #e0e0e0;">
         <!-- Header with Logo and Title -->
-        <div style="display: flex; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #0ea5a4; padding-bottom: 20px;">
-          <img src="/paltu_logo.svg" alt="Paltuu" style="height: 60px; margin-right: 20px;" />
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #a03048; padding-bottom: 20px;">
           <div>
-            <h1 style="margin: 0; font-size: 28px; color: #0ea5a4; font-weight: bold;">RECEIPT</h1>
+            <h1 style="margin: 0; font-size: 28px; color: #a03048; font-weight: bold;">RECEIPT</h1>
             <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">Order #${escapeHtml(o?.order_number || '')}</p>
             <p style="margin: 0; font-size: 12px; color: #666;">${new Date(o?.created_at || Date.now()).toLocaleDateString('en-US', {
               year: 'numeric',
@@ -103,6 +105,7 @@ const OrderConfirmedContent  = () => {
               minute: '2-digit'
             })}</p>
           </div>
+          <img src="${logoUrl}" alt="Paltuu" style="height: 140px; margin-left: 20px; margin-bottom: 50px;" />
         </div>
 
         <!-- Customer Information -->
@@ -170,9 +173,9 @@ const OrderConfirmedContent  = () => {
                 <td style="padding: 8px 0; text-align: right; color: #28a745;">-Rs ${Number(discount).toLocaleString()}</td>
               </tr>
               ` : ''}
-              <tr style="border-top: 2px solid #0ea5a4;">
+              <tr style="border-top: 2px solid #a03048;">
                 <td style="padding: 12px 0 8px 0; text-align: left; font-size: 16px; font-weight: bold;">TOTAL:</td>
-                <td style="padding: 12px 0 8px 0; text-align: right; font-size: 16px; font-weight: bold; color: #0ea5a4;">Rs ${Number(total).toLocaleString()}</td>
+                <td style="padding: 12px 0 8px 0; text-align: right; font-size: 16px; font-weight: bold; color: #a03048;">Rs ${Number(total).toLocaleString()}</td>
               </tr>
             </table>
           </div>
@@ -189,7 +192,7 @@ const OrderConfirmedContent  = () => {
         <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
           <p style="margin: 0; font-size: 12px; color: #666; line-height: 1.5;">
             Thank you for choosing Paltuu!<br/>
-            For support, visit <strong>paltuu.com</strong> or contact us at support@paltuu.com
+            For support, visit <a href="https://www.paltuu.pk" style="color: #a03048; text-decoration: none; font-weight: bold;">paltuu.pk</a> or contact us at support@paltuu.pk
           </p>
           <p style="margin: 10px 0 0 0; font-size: 10px; color: #999;">
             This is a computer-generated receipt. No signature required.

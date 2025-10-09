@@ -66,7 +66,7 @@ const categories = [
     featuredKey: "accessoriesGrooming" as const,
   },
   {
-    title: "Healthcare & Housing",
+    title: "Healthcare",
     icon: null,
     slug: "healthcare",
     categoryId: 4,

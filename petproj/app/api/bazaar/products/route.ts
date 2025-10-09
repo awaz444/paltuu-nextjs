@@ -267,7 +267,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
   const adminView = searchParams.get("admin") === "true";
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-  const limit = Math.min(100, Math.max(8, parseInt(searchParams.get("limit") || "24", 10)));
+  const limit = Math.min(100, Math.max(8, parseInt(searchParams.get("limit") || "25", 10)));
     const offset = (page - 1) * limit;
 
   // Read filters from query params (server-side filtering)

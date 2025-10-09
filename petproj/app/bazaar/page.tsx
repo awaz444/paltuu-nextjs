@@ -66,7 +66,7 @@ const categories = [
     featuredKey: "accessoriesGrooming" as const,
   },
   {
-    title: "Healthcare",
+    title: "Healthcare & Housing",
     icon: null,
     slug: "healthcare",
     categoryId: 4,
@@ -176,19 +176,20 @@ export default function BazaarPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* 🐾 Hero Section */}
-      <section className="relative w-full overflow-hidden bazaar-banner">
-        {/* Desktop & Tablet Banner */}
-        <div className="hidden sm:block w-full">
-          <Image
-            src="/bazaarweb.png"
-            alt="Bazaar Banner"
-            width={1920}
-            height={1080}
-            priority
-            className="w-full h-auto object-contain bg-[#A03048]"
-          />
-        </div>
+  {/* 🐾 Hero Section */}
+<section className="relative w-full overflow-hidden bazaar-banner">
+  {/* Desktop & Tablet Banner */}
+  <div className="hidden sm:block w-full">
+    <Image
+      src="/bazaarweb.png"
+      alt="Bazaar Banner"
+      width={1920}
+      height={1080}
+      priority
+      className="w-full h-auto object-contain bg-[#A03048]"
+    />
+  </div>
+
 
         {/* Mobile Banner */}
         <div className="block sm:hidden w-full">

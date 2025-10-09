@@ -22,16 +22,16 @@ export const featuredProducts = {
   discount: [] as number[], // Keep empty for automatic discount calculation
 
   // Cat Food section - manually selected cat food products
-  catFood: [22, 29, 35, 47, 58, 69, 76, 88] as number[],
+  catFood: [25, 78, 38, 73, 210, 146, 43, 18, 123] as number[],
 
   // Dog Food section - manually selected dog food products
   dogFood: [63, 82, 61] as number[],
 
   // Accessories & Grooming section - manually selected accessories
-  accessoriesGrooming: [21, 28, 36, 43, 51, 64, 72, 85, 93] as number[],
+  accessoriesGrooming: [191, 184, 175, 169, 173, 66, 168, 180] as number[],
 
   // Healthcare section - manually selected healthcare products
-  healthcare: [26, 33, 40, 48, 55, 62, 71, 79, 87, 96] as number[],
+  healthcare: [186, 176, 164, 48, 55, 62, 71, 79, 87, 96] as number[],
 };
 
 /**

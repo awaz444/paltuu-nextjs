@@ -12,6 +12,7 @@ import {
   Tag,
   TrendingUp,
   Star,
+  Flame
 } from "lucide-react";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
 import { fetchCart, addToCart } from "@/app/store/slices/cartSlice";
@@ -194,7 +195,7 @@ export default function BazaarPage() {
         {/* Mobile Banner */}
         <div className="block sm:hidden w-full">
           <Image
-            src="/banner_phone.webp"
+            src="/bazaar-mobile.png"
             alt="Bazaar Banner Mobile"
             width={1080}
             height={1920}
@@ -307,7 +308,7 @@ export default function BazaarPage() {
                               <img
                                 src={prod.image || "/product-placeholder.png"}
                                 alt={prod.title}
-                                className="w-full aspect-square object-contain rounded-xl transition-transform duration-300 group-hover:scale-105"
+                                className="w-full aspect-square object-contain rounded-xl transition-transform duration-300"
                               />
                               {/* Badges */}
                               {cat.sortBy === "discount" &&
@@ -327,8 +328,8 @@ export default function BazaarPage() {
                                 )}
                               {cat.sortBy === "trending" && (
                                 <div className="absolute top-3 left-3 z-10">
-                                  <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                                    <TrendingUp size={12} /> TRENDING
+                                  <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 py-2">
+                                    <Flame size={12} />
                                   </span>
                                 </div>
                               )}

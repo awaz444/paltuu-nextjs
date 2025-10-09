@@ -119,12 +119,12 @@ const MobileCartModal = ({ isOpen, onClose }: MobileCartModalProps) => {
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 z-50 md:hidden"
+        className="fixed inset-0 bg-black/50 z-50 lg:hidden"
         onClick={onClose}
       />
       
       {/* Modal */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-[9998] md:hidden transform transition-transform duration-300 max-h-[70vh] overflow-hidden flex flex-col">
+      <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-[9998] lg:hidden transform transition-transform duration-300 max-h-[70vh] overflow-hidden flex flex-col">
         {/* Drag handle */}
         <div className="flex justify-center py-3">
           <div className="w-12 h-1 bg-gray-300 rounded-full" />

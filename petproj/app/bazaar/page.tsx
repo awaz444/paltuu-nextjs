@@ -174,6 +174,7 @@ export default function BazaarPage() {
       className="w-full h-auto object-contain bg-[#A03048]"
     />
   </div>
+  
 
   {/* Mobile Banner */}
   <div className="block sm:hidden w-full">

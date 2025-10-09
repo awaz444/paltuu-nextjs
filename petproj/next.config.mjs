@@ -2,7 +2,14 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-  domains: ["res.cloudinary.com","lh3.googleusercontent.com","media.istockphoto.com","lfiwvlicdkdheqynvjxb.supabase.co"],
+    domains: [
+      "res.cloudinary.com",
+      "lh3.googleusercontent.com",
+      "media.istockphoto.com",
+      "qufdjlaxzyarnrsiimfw.supabase.co",
+      "lfiwvlicdkdheqynvjxb.supabase.co",
+      // add more supabase project URLs as needed
+    ],
   },
 };
 

@@ -166,7 +166,7 @@ export default function BazaarPage() {
   {/* Desktop & Tablet Banner */}
   <div className="hidden sm:block w-full">
     <Image
-      src="/banner_web.webp"
+      src="/bazaarweb.png"
       alt="Bazaar Banner"
       width={1920}
       height={1080}

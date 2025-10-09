@@ -253,7 +253,7 @@ const Navbar = ({
   // Navigation Links
   const defaultLinks = [
     { name: "Pets", href: "browse-pets" },
-    { name: "Bazaar", href: "marketplace" },
+    { name: "Bazaar", href: "bazaar" },
     { name: "Pet Care", href: "pet-care" },
     { name: "Lost & Found", href: "lost-and-found" },
     //{ name: "Paltuu AI", href: "llm" },

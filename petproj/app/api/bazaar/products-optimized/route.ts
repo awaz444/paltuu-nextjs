@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const adminView = searchParams.get("admin") === "true";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-    const limit = Math.min(100, Math.max(8, parseInt(searchParams.get("limit") || "24", 10)));
+    const limit = Math.min(100, Math.max(8, parseInt(searchParams.get("limit") || "25", 10)));
     const offset = (page - 1) * limit;
 
     // Filters
@@ -163,8 +163,9 @@ export async function GET(req: NextRequest) {
         orderByClause = `ORDER BY CASE p.product_id ${caseStatements} ELSE ${idsArray.length} END`;
       }
     } else if (sortBy === 'trending') {
-      // You can customize this - for now using featured + newest
-      orderByClause = 'ORDER BY p.featured DESC NULLS LAST, p.created_at DESC';
+      // Filter for featured products first, then sort by newest
+      whereClauses.push("p.featured = true");
+      orderByClause = 'ORDER BY p.created_at DESC';
     } else if (sortBy === 'discount') {
       // Sort by discount percentage - use SQL to calculate from variants table for accuracy
       orderByClause = `ORDER BY (

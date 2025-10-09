@@ -31,7 +31,7 @@ export const featuredProducts = {
   accessoriesGrooming: [191, 184, 175, 169, 173, 66, 168, 180] as number[],
 
   // Healthcare section - manually selected healthcare products
-  healthcare: [186, 176, 164, 48, 55, 62, 71, 79, 87, 96] as number[],
+  healthcare: [202, 186, 164, 152, 193, 125, 37, 25, 136] as number[],
 };
 
 /**

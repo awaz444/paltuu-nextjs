@@ -52,10 +52,21 @@ export const fetchProducts = createAsyncThunk(
 
       // Handle new filter parameters
       if (filters.categorySlug) params.set('categorySlug', String(filters.categorySlug));
-      if (filters.keyword) params.set('keyword', String(filters.keyword));
-      if (filters.minPrice) params.set('minPrice', String(filters.minPrice));
-      if (filters.maxPrice) params.set('maxPrice', String(filters.maxPrice));
       if (filters.sortBy) params.set('sortBy', String(filters.sortBy));
+
+      // Combine keyword and petType into a single search term
+      let searchKeyword = '';
+      if (filters.keyword && filters.petType) {
+        searchKeyword = `${filters.keyword} ${filters.petType}`;
+      } else if (filters.keyword) {
+        searchKeyword = filters.keyword;
+      } else if (filters.petType) {
+        searchKeyword = filters.petType;
+      }
+
+      if (searchKeyword) {
+        params.set('keyword', searchKeyword);
+      }
 
       // Legacy support for old filter format
       if (filters.category) params.set('category', String(filters.category));

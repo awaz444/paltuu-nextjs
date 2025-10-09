@@ -38,14 +38,14 @@ function MarketplaceClient() {
   const initialCategorySlug = searchParams.get("categorySlug") || "";
   const initialSortBy = searchParams.get("sortBy") || "";
   const initialKeyword = searchParams.get("keyword") || "";
+  const initialPetType = searchParams.get("petType") || "";
 
   const [page, setPage] = useState(initialPage);
   const [filters, setFilters] = useState({
     keyword: initialKeyword,
-    minPrice: "",
-    maxPrice: "",
     sortBy: initialSortBy,
     categorySlug: initialCategorySlug,
+    petType: initialPetType,
   });
 
   // ✅ Save scroll before navigating to product detail
@@ -58,13 +58,14 @@ function MarketplaceClient() {
   // ✅ Fetch products whenever filters/page change
   useEffect(() => {
     dispatch(clearProducts());
-    dispatch(fetchProducts({ page, limit: 24, filters }));
+    dispatch(fetchProducts({ page, limit: 25, filters }));
 
     const params = new URLSearchParams({
       page: page.toString(),
       ...(filters.keyword && { keyword: filters.keyword }),
       ...(filters.categorySlug && { categorySlug: filters.categorySlug }),
       ...(filters.sortBy && { sortBy: filters.sortBy }),
+      ...(filters.petType && { petType: filters.petType }),
     });
     router.replace(`?${params.toString()}`, { scroll: false });
   }, [page, filters, dispatch]);
@@ -114,10 +115,9 @@ function MarketplaceClient() {
   const handleReset = () => {
     const newFilters = {
       keyword: "",
-      minPrice: "",
-      maxPrice: "",
       sortBy: "",
       categorySlug: "",
+      petType: "",
     };
     setFilters(newFilters);
     setPage(1);

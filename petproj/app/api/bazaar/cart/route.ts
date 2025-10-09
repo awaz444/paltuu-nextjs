@@ -225,16 +225,25 @@ export async function DELETE(req: NextRequest) {
 
     await client.connect();
 
-  // coerce numeric ids to number when possible
-  const param = typeof cartItemId === 'string' && /^\d+$/.test(cartItemId) ? Number(cartItemId) : cartItemId;
-  console.debug('Deleting cart item', { cartItemId: param });
-  const deleteQuery = `DELETE FROM bazaar_cart_items WHERE cart_item_id = $1 RETURNING *`;
-  const deleteResult = await client.query(deleteQuery, [param]);
+    // coerce numeric ids to number when possible
+    const param = typeof cartItemId === 'string' && /^\d+$/.test(cartItemId) ? Number(cartItemId) : cartItemId;
+    console.log('Deleting cart item', { cartItemId: param });
+
+    const deleteQuery = `DELETE FROM bazaar_cart_items WHERE cart_item_id = $1 RETURNING *`;
+    const deleteResult = await client.query(deleteQuery, [param]);
 
     if (deleteResult.rows.length === 0) {
-      return NextResponse.json({ error: 'Cart item not found' }, { status: 404 });
+      // Item was already deleted or doesn't exist - this is actually a success case
+      // since the desired end state (item not in cart) is achieved
+      console.log(`Cart item ${param} was already deleted or doesn't exist - treating as success`);
+      return NextResponse.json({
+        deleted: true,
+        item: null,
+        message: 'Item was already removed from cart'
+      });
     }
 
+    console.log(`Successfully deleted cart item ${param}`);
     return NextResponse.json({ deleted: true, item: deleteResult.rows[0] });
 
   } catch (err) {

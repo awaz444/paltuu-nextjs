@@ -25,7 +25,7 @@ export const featuredProducts = {
   catFood: [22, 29, 35, 47, 58, 69, 76, 88] as number[],
 
   // Dog Food section - manually selected dog food products
-  dogFood: [24, 31, 38, 45, 52, 67, 74, 82, 95] as number[],
+  dogFood: [63, 82, 61] as number[],
 
   // Accessories & Grooming section - manually selected accessories
   accessoriesGrooming: [21, 28, 36, 43, 51, 64, 72, 85, 93] as number[],

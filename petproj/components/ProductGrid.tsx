@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { ShoppingCartOutlined } from "@ant-design/icons";
@@ -6,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { fetchCart, addToCart } from "@/app/store/slices/cartSlice";
 import type { AppDispatch } from "@/app/store/store";
-import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import "./ProductGrid.css";
 
 interface Product {
@@ -25,32 +26,17 @@ interface Product {
 
 interface ProductGridProps {
   products: Product[];
-  onProductClick?: (id: number) => void; // ✅ Added this to allow external handler if needed
+  onProductClick?: (id: number) => void;
 }
 
-const ProductGrid: React.FC<ProductGridProps> = ({
-  products,
-  onProductClick,
-}) => {
+const ProductGrid: React.FC<ProductGridProps> = ({ products, onProductClick }) => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-
-  // ✅ Save scroll + page before navigating to product detail
-  const handleClick = (productId: number) => {
-    const currentPage =
-      new URLSearchParams(window.location.search).get("page") || "1";
-    sessionStorage.setItem("marketplace-scroll", window.scrollY.toString());
-  sessionStorage.setItem("marketplace-from-product", "true");
-  // delay router push slightly
-  setTimeout(() => {
-    if (onProductClick) onProductClick(productId);
-    else router.push(`/marketplace/${productId}`);
-  }, 0);
-  };
 
   const handleAddToCart = async (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
+
     try {
       const hasVariants =
         (product as any).hasVariants ||
@@ -58,7 +44,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({
         false;
 
       if (hasVariants) {
-        handleClick(product.product_id);
+        if (onProductClick) onProductClick(product.product_id);
+        else router.push(`/marketplace/${product.product_id}`);
         return;
       }
 
@@ -76,7 +63,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({
     }
   };
 
-  // ⭐ Rating renderer
   const renderStars = (rating: number = 0) => {
     return Array.from({ length: 5 }, (_, i) => (
       <span
@@ -88,14 +74,24 @@ const ProductGrid: React.FC<ProductGridProps> = ({
     ));
   };
 
+  const handleCardClick = (productId: number) => {
+    const currentPage =
+      new URLSearchParams(window.location.search).get("page") || "1";
+    sessionStorage.setItem("marketplace-scroll", window.scrollY.toString());
+    sessionStorage.setItem("marketplace-from-product", "true");
+
+    if (onProductClick) onProductClick(productId);
+  };
+
   return (
     <div className="product-grid-container mt-4 sm:mt-2 md:mt-0">
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-4">
         {products.map((product) => (
-          <div
+          <Link
             key={product.product_id}
-            className="bg-white pt-4 px-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 cursor-pointer"
-            onClick={() => handleClick(product.product_id)} // ✅ uses click handler
+            href={`/marketplace/${product.product_id}`}
+            onClick={() => handleCardClick(product.product_id)}
+            className="bg-white pt-4 px-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 cursor-pointer block"
           >
             <div className="relative bg-white rounded-2xl p-2">
               <img
@@ -153,7 +149,9 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                 </p>
               )}
             </div>
-          </div>
+
+            
+          </Link>
         ))}
       </div>
 

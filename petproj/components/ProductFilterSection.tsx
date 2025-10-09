@@ -2,13 +2,19 @@
 import { useState, useEffect } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 
+interface Category {
+    category_id: number;
+    name: string;
+    slug: string;
+    description?: string;
+}
+
 interface ProductFilterSectionProps {
     filters: {
         keyword: string;
-        minPrice: string;
-        maxPrice: string;
         sortBy: string;
         categorySlug?: string;
+        petType?: string;
     };
     onSearch: (filters: any) => void;
     onReset: () => void;
@@ -19,6 +25,38 @@ const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({
 }) => {
     const [localFilters, setLocalFilters] = useState(filters);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [loadingCategories, setLoadingCategories] = useState(false);
+
+    // Pet type options
+    const petTypes = [
+        { value: "", label: "All Pets" },
+        { value: "cat", label: "Cat" },
+        { value: "dog", label: "Dog" },
+        { value: "bird", label: "Bird" },
+        { value: "fish", label: "Fish" },
+        { value: "other", label: "Other" }
+    ];
+
+    // Fetch categories on component mount
+    useEffect(() => {
+        const fetchCategories = async () => {
+            setLoadingCategories(true);
+            try {
+                const response = await fetch('/api/bazaar/categories');
+                if (response.ok) {
+                    const data = await response.json();
+                    setCategories(data || []);
+                }
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            } finally {
+                setLoadingCategories(false);
+            }
+        };
+
+        fetchCategories();
+    }, []);
 
     // Update local filters when props change
     useEffect(() => {
@@ -38,10 +76,9 @@ const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({
     const handleReset = () => {
         const resetFilters = {
             keyword: "",
-            minPrice: "",
-            maxPrice: "",
             sortBy: "",
-            categorySlug: localFilters.categorySlug || "", // Preserve category filter
+            categorySlug: "",
+            petType: "",
         };
         setLocalFilters(resetFilters);
         onReset();
@@ -66,34 +103,42 @@ const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({
                         />
                     </div>
 
-                    <div className="flex-1 min-w-[120px]">
-                        <label className="text-xs font-medium text-gray-700" htmlFor="min-price">
-                            Min Price
+                    <div className="flex-1 min-w-[150px]">
+                        <label className="text-xs font-medium text-gray-700" htmlFor="category-select">
+                            Category
                         </label>
-                        <input
-                            id="min-price"
-                            type="number"
+                        <select
+                            id="category-select"
                             className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
-                            value={localFilters.minPrice}
-                            onChange={(e) => handleFilterChange("minPrice", e.target.value)}
-                            placeholder="₨ 0"
-                            min="0"
-                        />
+                            value={localFilters.categorySlug || ""}
+                            onChange={(e) => handleFilterChange("categorySlug", e.target.value)}
+                            disabled={loadingCategories}
+                        >
+                            <option value="">All Categories</option>
+                            {categories.map((category) => (
+                                <option key={category.category_id} value={category.slug}>
+                                    {category.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="flex-1 min-w-[120px]">
-                        <label className="text-xs font-medium text-gray-700" htmlFor="max-price">
-                            Max Price
+                        <label className="text-xs font-medium text-gray-700" htmlFor="pet-type-select">
+                            Pet Type
                         </label>
-                        <input
-                            id="max-price"
-                            type="number"
+                        <select
+                            id="pet-type-select"
                             className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
-                            value={localFilters.maxPrice}
-                            onChange={(e) => handleFilterChange("maxPrice", e.target.value)}
-                            placeholder="₨ 10000"
-                            min="0"
-                        />
+                            value={localFilters.petType || ""}
+                            onChange={(e) => handleFilterChange("petType", e.target.value)}
+                        >
+                            {petTypes.map((type) => (
+                                <option key={type.value} value={type.value}>
+                                    {type.label}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="flex-1 min-w-[150px]">
@@ -166,33 +211,41 @@ const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium text-gray-700 mb-1 block" htmlFor="modal-min-price">
-                                        Min Price
+                                    <label className="text-sm font-medium text-gray-700 mb-1 block" htmlFor="modal-category-select">
+                                        Category
                                     </label>
-                                    <input
-                                        id="modal-min-price"
-                                        type="number"
+                                    <select
+                                        id="modal-category-select"
                                         className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
-                                        value={localFilters.minPrice}
-                                        onChange={(e) => handleFilterChange("minPrice", e.target.value)}
-                                        placeholder="₨ 0"
-                                        min="0"
-                                    />
+                                        value={localFilters.categorySlug || ""}
+                                        onChange={(e) => handleFilterChange("categorySlug", e.target.value)}
+                                        disabled={loadingCategories}
+                                    >
+                                        <option value="">All Categories</option>
+                                        {categories.map((category) => (
+                                            <option key={category.category_id} value={category.slug}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 <div>
-                                    <label className="text-sm font-medium text-gray-700 mb-1 block" htmlFor="modal-max-price">
-                                        Max Price
+                                    <label className="text-sm font-medium text-gray-700 mb-1 block" htmlFor="modal-pet-type-select">
+                                        Pet Type
                                     </label>
-                                    <input
-                                        id="modal-max-price"
-                                        type="number"
+                                    <select
+                                        id="modal-pet-type-select"
                                         className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
-                                        value={localFilters.maxPrice}
-                                        onChange={(e) => handleFilterChange("maxPrice", e.target.value)}
-                                        placeholder="₨ 10000"
-                                        min="0"
-                                    />
+                                        value={localFilters.petType || ""}
+                                        onChange={(e) => handleFilterChange("petType", e.target.value)}
+                                    >
+                                        {petTypes.map((type) => (
+                                            <option key={type.value} value={type.value}>
+                                                {type.label}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
 

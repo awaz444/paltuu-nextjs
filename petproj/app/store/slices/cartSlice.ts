@@ -152,15 +152,24 @@ export const removeCartItem = createAsyncThunk<
   async (payload, { getState, rejectWithValue, dispatch }) => {
     const prevItems = getState().cart.items;
     try {
+      console.log('Deleting cart item', { cartItemId: payload.cartItemId });
       const res = await fetch(
         `/api/bazaar/cart?cartItemId=${payload.cartItemId}`,
         {
           method: "DELETE",
         }
       );
-      if (!res.ok) throw new Error("Failed to remove cart item");
 
-      // Update Redux only after success
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${res.status}: Failed to remove cart item`);
+      }
+
+      const responseData = await res.json();
+      console.log('Cart item deletion response:', responseData);
+
+      // Update Redux regardless of whether item was found or not
+      // since the end result is the same (item not in cart)
       const updatedItems = prevItems.filter(
         (item) => item.id !== payload.cartItemId
       );
@@ -168,6 +177,7 @@ export const removeCartItem = createAsyncThunk<
 
       return true;
     } catch (err: any) {
+      console.error('Remove cart item error:', err);
       toast.error(err.message || "Failed to remove cart item");
       return rejectWithValue(err.message || "Failed to remove cart item");
     }

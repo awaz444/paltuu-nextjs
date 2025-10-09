@@ -240,7 +240,7 @@
 
 
 /* Responsive Styles */
-@media (max-width: 1044px) {
+@media (max-width: 1023px) {
   .hamburger {
     display: flex; /* Show hamburger on small screens */
   }
@@ -249,13 +249,15 @@
   .dropdown {
     display: none; /* Hide desktop links and dropdown on small screens */
   }
+
   .logo {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 1000; /* Ensure logo is above other elements */
+    z-index: 1000;
   }
 }
+
 
 /* Founders Club Shine Effect */
 .shine-effect {

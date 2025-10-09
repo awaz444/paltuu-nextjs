@@ -322,7 +322,7 @@ const Navbar = ({
   return (
     <nav className="navbar" style={navbarStyle}>
       {/* Mobile Navbar Top Row */}
-      <div className="flex items-center justify-between w-full md:hidden px-4 py-3">
+      <div className="flex items-center justify-between w-full lg:hidden px-4 py-3">
         {/* Left: Hamburger */}
         <button
           className="hamburger"
@@ -542,14 +542,14 @@ const Navbar = ({
       {/* Rest of the desktop code remains unchanged */}
       <div className="flex items-center justify-between w-full">
         {/* Logo */}
-        <div className="logo hidden md:block">
+        <div className="logo hidden lg:block">
           <Link href={logoHref || "/"}>
             <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
           </Link>
         </div>
 
         {/* Desktop navigation links */}
-        <div className="navLinks hidden md:flex items-center gap-5">
+        <div className="navLinks hidden lg:flex items-center gap-5">
           {links.map((link) => (
             <Link key={link.href} href={`/${link.href}`}>
               <span

@@ -124,7 +124,7 @@ const removeItem = async (itemId: string | number) => {
         <div className="flex items-center text-sm text-gray-500 mb-6">
           <span>Home</span>
           <span className="mx-2">/</span>
-          <span>Marketplace</span>
+          <span>Bazaar</span>
           <span className="mx-2">/</span>
           <span className="text-primary">Cart</span>
         </div>

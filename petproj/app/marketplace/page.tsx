@@ -1,12 +1,17 @@
 "use client";
 import { useEffect, useState, Suspense } from "react";
 import { MoonLoader } from "react-spinners";
+import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/app/store/store";
-import { fetchProducts, clearProducts } from "@/app/store/slices/marketplaceSlice";
+import {
+  fetchProducts,
+  clearProducts,
+} from "@/app/store/slices/marketplaceSlice";
 import { useSearchParams, useRouter } from "next/navigation";
 import ProductFilterSection from "@/components/ProductFilterSection";
 import ProductGrid from "@/components/ProductGrid";
+import { ArrowLeft } from "lucide-react";
 import "./styles.css";
 
 // Disable Next.js automatic scroll reset
@@ -32,7 +37,9 @@ function MarketplaceClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const { products, loading, error, meta } = useSelector((s: RootState) => s.marketplace);
+  const { products, loading, error, meta } = useSelector(
+    (s: RootState) => s.marketplace
+  );
 
   const initialPage = parseInt(searchParams.get("page") || "1", 10);
   const initialCategorySlug = searchParams.get("categorySlug") || "";
@@ -133,7 +140,19 @@ function MarketplaceClient() {
 
   return (
     <div className="fullBody">
-      <ProductFilterSection filters={filters} onSearch={handleSearch} onReset={handleReset} />
+      <Link
+        href="/bazaar"
+        className="inline-flex items-center mt-2 gap-2 text-primary font-medium hover:text-blue-800 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Go Back to Bazaar
+      </Link>
+
+      <ProductFilterSection
+        filters={filters}
+        onSearch={handleSearch}
+        onReset={handleReset}
+      />
 
       {/* ✅ Pass click handler for scroll memory */}
       <ProductGrid products={products} onProductClick={handleProductClick} />

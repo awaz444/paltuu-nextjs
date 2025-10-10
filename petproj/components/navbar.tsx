@@ -10,7 +10,11 @@ import type { RootState, AppDispatch } from "@/app/store/store";
 import { useSession, signOut } from "next-auth/react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { updateCartItem, removeCartItem } from "@/app/store/slices/cartSlice";
+import {
+  updateCartItem,
+  removeCartItem,
+  setCartItems,
+} from "@/app/store/slices/cartSlice";
 import MobileCartModal from "./MobileCartModal";
 import "bootstrap-icons/font/bootstrap-icons.css";
 interface OverrideLink {
@@ -603,58 +607,99 @@ const Navbar = ({
                     <div className="text-gray-500">Your cart is empty.</div>
                   ) : (
                     <div className="divide-y max-h-64 overflow-auto">
-                      {cartItemsNav.map((it) => (
-                        <div
-                          key={it.id}
-                          className="py-3 flex items-center gap-4"
-                        >
-                          <div className="w-14 h-14 rounded overflow-hidden bg-gray-100 flex-shrink-0">
-                            <img
-                              src={it.image ?? "/placeholder-product.jpg"}
-                              alt={it.title ?? "cart item"}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="truncate font-medium">
-                                {it.title}
+                      {cartItemsNav.map((it, index) => {
+                        const uniqueKey = `${it.id}-${
+                          it.variantTitle ?? ""
+                        }-${JSON.stringify(it.attributes ?? [])}-${index}`;
+
+                        return (
+                          <div
+                            key={uniqueKey}
+                            className="py-3 flex items-center gap-4"
+                          >
+                            {/* Image */}
+                            <div className="w-14 h-14 rounded overflow-hidden bg-gray-100 flex-shrink-0">
+                              <img
+                                src={it.image ?? "/placeholder-product.jpg"}
+                                alt={it.title ?? "cart item"}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+
+                            {/* Details */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="font-medium break-words">
+                                  {it.title}
+                                </div>
+
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+
+                                    // Generate unique key for frontend filtering (for variant differentiation)
+                                    const cartItemUniqueKey = `${it.id}-${
+                                      it.variantTitle ?? ""
+                                    }-${JSON.stringify(it.attributes ?? [])}`;
+
+                                    // 🔹 Dispatch backend delete using the real id
+                                    dispatch(
+                                      removeCartItem({ cartItemId: it.id })
+                                    );
+
+                                    // 🔹 Remove visually from Redux store using your variant-aware key
+                                    dispatch(
+                                      setCartItems(
+                                        cartItemsNav.filter((item) => {
+                                          const itemKey = `${item.id}-${
+                                            item.variantTitle ?? ""
+                                          }-${JSON.stringify(
+                                            item.attributes ?? []
+                                          )}`;
+                                          return itemKey !== cartItemUniqueKey;
+                                        })
+                                      )
+                                    );
+                                  }}
+                                  aria-label={`Remove ${it.title} from cart`}
+                                  title="Remove"
+                                  className="ml-2 text-gray-400 hover:text-red-500 focus:outline-none bg-transparent border-none"
+                                >
+                                  <i className="bi bi-trash text-lg"></i>
+                                </button>
                               </div>
-                              {/* Remove button: stops propagation so dropdown stays open */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // dispatch removeCartItem thunk
-                                  dispatch(
-                                    removeCartItem({ cartItemId: it.id })
-                                  );
-                                }}
-                                aria-label={`Remove ${it.title} from cart`}
-                                title="Remove"
-                                className="ml-2 text-gray-400 hover:text-red-500 focus:outline-none"
-                                style={{
-                                  background: "transparent",
-                                  border: "none",
-                                }}
-                              >
-                                <i className="bi bi-x-lg" />
-                              </button>
+
+                              {/* Variant */}
+                              {it.variantTitle && (
+                                <div className="text-xs text-gray-500">
+                                  Variant:{" "}
+                                  <span className="text-gray-700">
+                                    {it.variantTitle}
+                                  </span>
+                                </div>
+                              )}
+
+                              {it.attributes && (
+                                <div className="text-xs text-gray-500">
+                                  {Object.entries(it.attributes)
+                                    .map(([key, val]) => `${key}: ${val}`)
+                                    .join(", ")}
+                                </div>
+                              )}
+
+                              {/* Quantity */}
+                              <div className="text-xs text-gray-500">
+                                Qty: {it.qty}
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-500">
-                              Code:{" "}
-                              <span className="text-gray-700">
-                                {it.code ?? "-"}
-                              </span>
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              Qty: {it.qty}
+
+                            {/* Price */}
+                            <div className="text-sm font-semibold">
+                              PKR {(it.price * it.qty).toLocaleString()}
                             </div>
                           </div>
-                          <div className="text-sm font-semibold">
-                            PKR {(it.price * it.qty).toLocaleString()}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
 
@@ -664,10 +709,11 @@ const Navbar = ({
                       <div className="text-sm font-semibold">
                         PKR{" "}
                         {cartItemsNav
-                          .reduce((s, i) => s + i.price * i.qty, 0)
+                          .reduce((sum, i) => sum + i.price * i.qty, 0)
                           .toLocaleString()}
                       </div>
                     </div>
+
                     <div className="flex gap-2">
                       <button
                         onClick={() => router.push("/cart")}
@@ -677,7 +723,12 @@ const Navbar = ({
                       </button>
                       <button
                         onClick={() => router.push("/checkout")}
-                        className="flex-1 border border-primary text-primary py-2 rounded-lg font-medium"
+                        disabled={cartItemsNav.length === 0}
+                        className={`flex-1 border border-primary py-2 rounded-lg font-medium ${
+                          cartItemsNav.length === 0
+                            ? "text-gray-400 border-gray-300 cursor-not-allowed bg-gray-100"
+                            : "text-primary hover:bg-primary hover:text-white transition"
+                        }`}
                       >
                         Checkout
                       </button>

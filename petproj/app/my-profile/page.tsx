@@ -169,13 +169,27 @@ const MyProfile = () => {
       if (!parsedUser?.id) return;
 
       setUserId(parsedUser.id);
+      console.log("🔍 Profile page - localStorage user data:", parsedUser);
+      
       try {
         // Fetch user profile data
         const res = await fetch(`/api/my-profile/${parsedUser.id}`);
+        console.log("🔍 Profile page - API response status:", res.status);
+        
         if (!res.ok) throw new Error("Failed to fetch profile");
         const profileData = await res.json();
-        setData(profileData);
-        setUpdatedData(profileData);
+        console.log("🔍 Profile page - Database profile data:", profileData);
+        
+        // For Google users, use Google profile data as fallback if database data is missing or empty
+        const finalProfileData = {
+          ...profileData,
+          name: (profileData.name && profileData.name.trim()) || parsedUser.name || "User",
+          profile_image_url: (profileData.profile_image_url && profileData.profile_image_url.trim()) || parsedUser.profile_image_url || "/default-avatar.png",
+        };
+        
+        console.log("🔍 Profile page - Final profile data:", finalProfileData);
+        setData(finalProfileData);
+        setUpdatedData(finalProfileData);
 
         // Fetch cities data
         const citiesRes = await fetch("/api/cities");
@@ -184,6 +198,23 @@ const MyProfile = () => {
         setCities(citiesData);
       } catch (error) {
         console.error("Error loading data:", error);
+        console.log("🔍 Profile page - Using fallback data from localStorage");
+        
+        // If database fetch fails, use localStorage data as fallback
+        const fallbackData = {
+          user_id: parsedUser.id,
+          name: parsedUser.name || "User",
+          dob: "",
+          email: parsedUser.email || "",
+          profile_image_url: parsedUser.profile_image_url || "/default-avatar.png",
+          phone_number: "",
+          city: "",
+          created_at: new Date().toISOString(),
+        };
+        
+        console.log("🔍 Profile page - Fallback data:", fallbackData);
+        setData(fallbackData);
+        setUpdatedData(fallbackData);
       } finally {
         setLoading(false);
       }

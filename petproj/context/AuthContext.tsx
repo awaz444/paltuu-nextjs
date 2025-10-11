@@ -76,13 +76,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const response = await fetch(`/api/my-profile/${googleUserId}`);
           if (response.ok) {
             const dbProfile = await response.json();
-            // Use database profile data if available
+            // Use database profile data if available, but fallback to Google data if empty
             const userWithDbData: User = {
               id: googleUserId,
-              name: dbProfile.name,
+              name: (dbProfile.name && dbProfile.name.trim()) || session.user.name || undefined,
               email: session.user.email || "",
               role: (session.user as any).role || "guest",
-              profile_image_url: dbProfile.profile_image_url,
+              profile_image_url: (dbProfile.profile_image_url && dbProfile.profile_image_url.trim()) || session.user.image || undefined,
               method: "google",
             };
             
@@ -91,6 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setIsAuthenticated(true);
             
             console.log("✅ Using database profile data for Google user:", userWithDbData);
+            console.log("🔍 AuthContext - Database profile_image_url:", dbProfile.profile_image_url);
             return userWithDbData;
           }
         } catch (error) {
@@ -112,6 +113,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsAuthenticated(true);
         
         console.log("✅ Using Google profile data:", googleUser);
+        console.log("🔍 AuthContext - Google profile_image_url:", session.user.image);
         return googleUser;
       };
       

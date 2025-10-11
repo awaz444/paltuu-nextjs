@@ -125,15 +125,22 @@ export async function GET(req: NextRequest) {
 
       params.set('variants', 'true');
 
-      // Use internal server URL for faster requests (no external round-trip)
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-      const url = `${baseUrl}/api/bazaar/products-optimized?${params.toString()}`;
+      // Use relative URL for internal API calls (works in both dev and production)
+      const url = `/api/bazaar/products-optimized?${params.toString()}`;
+
+      // Get the request URL to build absolute URL for fetch
+      const protocol = req.nextUrl.protocol;
+      const host = req.nextUrl.host;
+      const absoluteUrl = `${protocol}//${host}${url}`;
 
       try {
-        const res = await fetch(url, {
+        const res = await fetch(absoluteUrl, {
           cache: 'no-store',
           next: { revalidate: 0 },
-          headers: { 'X-Internal-Request': 'true' }
+          headers: {
+            'X-Internal-Request': 'true',
+            'Content-Type': 'application/json'
+          }
         });        if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }

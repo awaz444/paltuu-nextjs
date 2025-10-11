@@ -91,6 +91,19 @@ export default function BazaarPage() {
   // Track if initial load is complete
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Prefetch batch endpoint on mount for faster subsequent loads
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = '/api/bazaar/categories-batch';
+    document.head.appendChild(link);
+
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, []);
 
   // Manual refresh function
   const handleRefresh = async () => {
@@ -105,28 +118,32 @@ export default function BazaarPage() {
   };
 
   useEffect(() => {
-    // Fetch all categories with caching
+    // Check if we already have products loaded in Redux
+    const hasLoadedProducts = Object.values(bazaarCategories).some(
+      (category) => category.products.length > 0
+    );
+
+    if (hasLoadedProducts) {
+      // Products already loaded in Redux, no need to fetch
+      setInitialLoadComplete(true);
+      return;
+    }
+
+    // Fetch all categories with caching - using batch endpoint
     const loadBazaarData = async () => {
       try {
-        // Check if we need to fetch any data
-        const needsFetch = Object.values(bazaarCategories).some(
-          (category) =>
-            !isCategoryFresh(category, cacheExpiry) ||
-            category.products.length === 0
-        );
-
-        if (needsFetch || !initialLoadComplete) {
-          await dispatch(fetchAllBazaarCategories(false)); // false = use cache if available
-        }
+        setLoadError(null);
+        await dispatch(fetchAllBazaarCategories(false)); // false = use cache if available
       } catch (error) {
         console.error("Error loading bazaar data:", error);
+        setLoadError(error instanceof Error ? error.message : "Failed to load products");
       } finally {
         setInitialLoadComplete(true);
       }
     };
 
     loadBazaarData();
-  }, [dispatch, bazaarCategories, cacheExpiry, initialLoadComplete]);
+  }, [dispatch, bazaarCategories]);
 
   // 🛒 Add to cart handler
   const handleAddToCart = async (e: React.MouseEvent, product: Product) => {
@@ -239,8 +256,26 @@ export default function BazaarPage() {
 
       {/* 🛍️ Category Sections */}
       <main className="flex-grow mt-12 pb-20">
-        <div className="max-w-7xl mx-auto px-6 space-y-16">
-          {categories.map((cat) => {
+        {/* Global Error State */}
+        {loadError && !globalLoading && (
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="text-red-500 text-6xl mb-4">⚠️</div>
+              <p className="text-gray-800 font-semibold text-lg mb-2">Oops! Something went wrong</p>
+              <p className="text-gray-600 mb-6">{loadError}</p>
+              <button
+                onClick={handleRefresh}
+                className="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Categories Grid - Always Show (with skeleton on first load) */}
+        {!loadError && (
+        <div className="max-w-7xl mx-auto px-6 space-y-16">{categories.map((cat) => {
             const IconComponent = cat.icon;
             const categorySection = bazaarCategories[cat.title];
             const filteredProducts = categorySection?.products || [];
@@ -270,16 +305,17 @@ export default function BazaarPage() {
                 <div className="relative">
                   <div className="flex gap-5 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory">
                     {isLoading ? (
-                      [...Array(4)].map((_, i) => (
+                      [...Array(8)].map((_, i) => (
                         <div
                           key={i}
-                          className="w-[280px] flex-shrink-0 bg-white rounded-3xl shadow-sm border animate-pulse"
+                          className="w-[240px] flex-shrink-0 bg-white rounded-3xl shadow-sm border animate-pulse"
                         >
-                          <div className="w-full h-[200px] bg-gray-200 rounded-t-2xl"></div>
+                          <div className="w-full h-[240px] bg-gray-200 rounded-t-2xl"></div>
                           <div className="p-4 space-y-3">
                             <div className="h-4 bg-gray-200 rounded w-3/4"></div>
                             <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                            <div className="h-8 bg-gray-200 rounded"></div>
+                            <div className="h-6 bg-gray-200 rounded w-2/3 mt-2"></div>
+                            <div className="h-10 bg-gray-200 rounded mt-3"></div>
                           </div>
                         </div>
                       ))
@@ -423,20 +459,27 @@ export default function BazaarPage() {
                           </Link>
                         );
                       })
-                    ) : (
+                    ) : categorySection?.error ? (
                       <div className="text-gray-400 text-sm italic py-6 px-2 flex items-center gap-2">
-                        {categorySection?.error ? (
-                          <>
-                            <span className="text-red-500">⚠️</span>
-                            Error loading products: {categorySection.error}
-                          </>
-                        ) : (
-                          <>
-                            <span>📭</span>
-                            No products found in this category.
-                          </>
-                        )}
+                        <span className="text-red-500">⚠️</span>
+                        Error loading products: {categorySection.error}
                       </div>
+                    ) : (
+                      // Show skeleton loading when no products yet
+                      [...Array(8)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-[240px] flex-shrink-0 bg-white rounded-3xl shadow-sm border animate-pulse"
+                        >
+                          <div className="w-full h-[240px] bg-gray-200 rounded-t-2xl"></div>
+                          <div className="p-4 space-y-3">
+                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                            <div className="h-6 bg-gray-200 rounded w-2/3 mt-2"></div>
+                            <div className="h-10 bg-gray-200 rounded mt-3"></div>
+                          </div>
+                        </div>
+                      ))
                     )}
                   </div>
                 </div>
@@ -444,6 +487,7 @@ export default function BazaarPage() {
             );
           })}
         </div>
+        )}
       </main>
     </div>
   );

@@ -3,6 +3,7 @@ import { getPool } from "../../../../db/ecom";
 import { safeRedis } from "../../../../utils/redis";
 
 export const revalidate = 0;
+export const dynamic = 'force-dynamic'; // Ensure fresh data for each request
 
 const CACHE_TTL_SEC = 300; // 5 minutes
 

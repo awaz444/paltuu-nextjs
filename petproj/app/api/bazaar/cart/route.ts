@@ -17,17 +17,20 @@ export async function GET(req: NextRequest) {
 
     await client.connect();
 
+    // ✅ ALWAYS prioritize userId over sessionId if both are provided
+    const useUserId = userId ? true : false;
+
     // Find or create cart
     let cartQuery = `
       SELECT cart_id, user_id, session_id, created_at, updated_at, expires_at
       FROM bazaar_carts
-      WHERE ${userId ? 'user_id = $1' : 'session_id = $1'}
+      WHERE ${useUserId ? 'user_id = $1' : 'session_id = $1'}
       AND expires_at > NOW()
       ORDER BY created_at DESC
       LIMIT 1
     `;
 
-    const cartResult = await client.query(cartQuery, [userId || sessionId]);
+    const cartResult = await client.query(cartQuery, [useUserId ? userId : sessionId]);
 
     if (cartResult.rows.length === 0) {
       // Create new cart
@@ -102,16 +105,19 @@ export async function POST(req: NextRequest) {
 
     await client.connect();
 
+    // ✅ ALWAYS prioritize userId over sessionId if both are provided
+    const useUserId = userId ? true : false;
+
     // Find or create cart
     let cartQuery = `
       SELECT cart_id FROM bazaar_carts
-      WHERE ${userId ? 'user_id = $1' : 'session_id = $1'}
+      WHERE ${useUserId ? 'user_id = $1' : 'session_id = $1'}
       AND expires_at > NOW()
       ORDER BY created_at DESC
       LIMIT 1
     `;
 
-    let cartResult = await client.query(cartQuery, [userId || sessionId]);
+    let cartResult = await client.query(cartQuery, [useUserId ? userId : sessionId]);
 
     let cartId;
     if (cartResult.rows.length === 0) {

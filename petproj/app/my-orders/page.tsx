@@ -2,12 +2,12 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
-import { 
-  Check, 
-  Package, 
-  Truck, 
-  Clock, 
-  AlertCircle, 
+import {
+  Check,
+  Package,
+  Truck,
+  Clock,
+  AlertCircle,
   Star,
   ChevronDown,
   ChevronUp,
@@ -48,7 +48,7 @@ interface Order {
 }
 
 const MyOrdersPage = () => {
-  
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,9 +81,9 @@ const MyOrdersPage = () => {
       try {
         setLoading(true);
         const res = await fetch(`/api/orders/${userId}`);
-        
+
         if (!res.ok) throw new Error("Failed to fetch orders");
-        
+
         const ordersData = await res.json();
         setOrders(ordersData);
       } catch (err) {
@@ -109,9 +109,11 @@ const MyOrdersPage = () => {
     switch (status) {
       case "delivered":
         return <Check className="w-5 h-5 text-green-500" />;
+      case "dispatched":
       case "shipped":
         return <Truck className="w-5 h-5 text-blue-500" />;
       case "processing":
+      case "confirmed":
         return <Package className="w-5 h-5 text-orange-500" />;
       case "pending":
         return <Clock className="w-5 h-5 text-yellow-500" />;
@@ -126,8 +128,10 @@ const MyOrdersPage = () => {
     switch (status) {
       case "delivered":
         return "bg-green-100 text-green-800";
+      case "dispatched":
       case "shipped":
         return "bg-blue-100 text-blue-800";
+      case "confirmed":
       case "processing":
         return "bg-orange-100 text-orange-800";
       case "pending":
@@ -185,8 +189,8 @@ const MyOrdersPage = () => {
       // Update the local state to mark the item as reviewed
       setOrders(orders.map(order => ({
         ...order,
-        items: order.items.map(item => 
-          item.order_item_id === currentReviewItem.order_item_id 
+        items: order.items.map(item =>
+          item.order_item_id === currentReviewItem.order_item_id
             ? { ...item, is_reviewed: true }
             : item
         )
@@ -204,7 +208,7 @@ const MyOrdersPage = () => {
   if (loading) {
     return (
       <main className="min-h-screen bg-gradient-to-b from-primary/5 to-white">
-        
+
         <div className="max-w-6xl mx-auto px-4 py-10">
           <div className="flex justify-center items-center h-64">
             <div className="animate-pulse text-gray-500">Loading your orders...</div>
@@ -217,12 +221,12 @@ const MyOrdersPage = () => {
   if (error) {
     return (
       <main className="min-h-screen bg-gradient-to-b from-primary/5 to-white">
-        
+
         <div className="max-w-6xl mx-auto px-4 py-10">
           <div className="flex flex-col items-center justify-center h-64">
             <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
             <p className="text-gray-700 mb-4">{error}</p>
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition"
             >
@@ -236,12 +240,12 @@ const MyOrdersPage = () => {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-primary/5 to-white">
-      
+
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Breadcrumb */}
         <div className="flex items-center text-sm text-gray-500 mb-6">
-          <button 
+          <button
             onClick={() => router.back()}
             className="flex items-center text-primary hover:text-primary-dark mr-4"
           >
@@ -293,7 +297,7 @@ const MyOrdersPage = () => {
             {orders.map((order) => (
               <div key={order.order_id} className="bg-white rounded-2xl shadow-md overflow-hidden">
                 {/* Order Header */}
-                <div 
+                <div
                   className="p-6 cursor-pointer flex justify-between items-center"
                   onClick={() => toggleOrderExpanded(order.order_id)}
                 >
@@ -309,7 +313,7 @@ const MyOrdersPage = () => {
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center space-x-6">
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
                       {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -362,13 +366,13 @@ const MyOrdersPage = () => {
                           Payment Status
                         </h4>
                         <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                          order.payment_status === 'paid' 
-                            ? 'bg-green-100 text-green-800' 
+                          order.payment_status === 'paid'
+                            ? 'bg-green-100 text-green-800'
                             : 'bg-yellow-100 text-yellow-800'
                         }`}>
                           {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
                         </div>
-                        
+
                         {order.tracking_number && (
                           <div className="mt-4">
                             <h4 className="font-medium text-gray-700 mb-2">
@@ -386,13 +390,13 @@ const MyOrdersPage = () => {
                       {order.items.map((item) => (
                         <div key={item.order_item_id} className="flex items-center border-b border-gray-100 pb-4 last:border-0 last:pb-0">
                           <div className="w-16 h-16 rounded-lg overflow-hidden border mr-4 flex-shrink-0">
-                            <img 
-                              src={item.image_url || "https://via.placeholder.com/150?text=No+Image"} 
+                            <img
+                              src={item.image_url || "https://via.placeholder.com/150?text=No+Image"}
                               alt={item.product_title}
                               className="w-full h-full object-cover"
                             />
                           </div>
-                          
+
                           <div className="flex-1">
                             <h5 className="font-medium text-gray-800">{item.product_title}</h5>
                             {item.variant_title && (
@@ -400,7 +404,7 @@ const MyOrdersPage = () => {
                             )}
                             <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                           </div>
-                          
+
                           <div className="text-right">
                             <p className="font-medium text-gray-800">
                               PKR {item.total_price.toLocaleString()}
@@ -408,7 +412,7 @@ const MyOrdersPage = () => {
                             <p className="text-sm text-gray-500">
                               PKR {item.unit_price.toLocaleString()} each
                             </p>
-                            
+
                             {order.status === 'delivered' && (
                               <button
                                 onClick={() => openReviewModal(item)}
@@ -452,11 +456,11 @@ const MyOrdersPage = () => {
                 <X size={24} />
               </button>
             </div>
-            
+
             <div className="flex items-center mb-6">
               <div className="w-16 h-16 rounded-lg overflow-hidden border mr-4">
-                <img 
-                  src={currentReviewItem.image_url || "https://via.placeholder.com/150?text=No+Image"} 
+                <img
+                  src={currentReviewItem.image_url || "https://via.placeholder.com/150?text=No+Image"}
                   alt={currentReviewItem.product_title}
                   className="w-full h-full object-cover"
                 />
@@ -468,7 +472,7 @@ const MyOrdersPage = () => {
                 )}
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -491,7 +495,7 @@ const MyOrdersPage = () => {
                   ))}
                 </div>
               </div>
-              
+
               <div>
                 <label htmlFor="review-title" className="block text-sm font-medium text-gray-700 mb-2">
                   Review Title (Optional)
@@ -505,7 +509,7 @@ const MyOrdersPage = () => {
                   placeholder="Summarize your experience"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="review-body" className="block text-sm font-medium text-gray-700 mb-2">
                   Review (Optional)
@@ -519,7 +523,7 @@ const MyOrdersPage = () => {
                   placeholder="Share details of your experience with this product"
                 />
               </div>
-              
+
               <button
                 onClick={submitReview}
                 disabled={reviewRating === 0 || submittingReview}
@@ -534,7 +538,7 @@ const MyOrdersPage = () => {
             </div>
           </div>
         </div>
-        
+
       )}
 
     </main>

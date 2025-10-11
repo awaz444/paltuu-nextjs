@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
 import { FaUniversity } from "react-icons/fa";
 import { useCartProtection } from "@/hooks/useCartProtection";
+import { useAuth } from "@/context/AuthContext";
 
 interface CartItem {
   id: number;
@@ -30,6 +31,7 @@ interface CartItem {
 }
 
 const CheckoutPage = () => {
+  const { user } = useAuth();
   const [cart, setCart] = useState<any | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loadingCart, setLoadingCart] = useState(true);
@@ -64,10 +66,16 @@ const CheckoutPage = () => {
     (async () => {
       setLoadingCart(true);
       try {
-        const sessionId = getOrCreateGuestSessionId();
-        const res = await fetch(
-          `/api/bazaar/cart?sessionId=${encodeURIComponent(sessionId)}`
-        );
+        // ✅ Prioritize userId if user is logged in
+        const params = new URLSearchParams();
+        if (user?.id) {
+          params.append("userId", user.id.toString());
+        } else {
+          const sessionId = getOrCreateGuestSessionId();
+          params.append("sessionId", sessionId);
+        }
+
+        const res = await fetch(`/api/bazaar/cart?${params.toString()}`);
         if (!res.ok) return;
         const json = await res.json();
         if (!mounted) return;
@@ -93,7 +101,7 @@ const CheckoutPage = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [user]);
 
   const subtotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -398,7 +406,7 @@ const CheckoutPage = () => {
                       type="radio"
                       name="payment"
                       className="h-4 w-4 text-primary"
-                      
+
                       checked={paymentMethod === 'card'}
                       onChange={() => setPaymentMethod('card')}
                     />
@@ -645,6 +653,39 @@ const CheckoutPage = () => {
                     return;
                   }
 
+                  // For bank transfer: redirect to payment-confirmation page
+                  if (paymentMethod === 'bank') {
+                    const sessionId = getOrCreateGuestSessionId();
+                    const cleanPhone = phone.replace(/\s/g, "");
+
+                    // Prepare cart data to pass to payment-confirmation
+                    const cartData = {
+                      userId: user?.id || null,
+                      sessionId,
+                      cartId: cart.cart_id,
+                      customerInfo: {
+                        email,
+                        phone: cleanPhone,
+                        name: fullName,
+                      },
+                      shippingAddress: { city, postalCode, address },
+                      billingAddress: null,
+                      paymentMethod: 'bank_transfer',
+                      notes: "",
+                      subtotal: subtotal,
+                      shippingAmount: shipping,
+                      discountAmount: discount,
+                      totalAmount: total,
+                      items: cartItems
+                    };
+
+                    // Redirect to payment-confirmation with cart data
+                    const cartDataEncoded = encodeURIComponent(JSON.stringify(cartData));
+                    router.push(`/payment-confirmation?cartData=${cartDataEncoded}`);
+                    return;
+                  }
+
+                  // For COD and other payment methods: create order immediately
                   setPlacing(true);
                   try {
                     const sessionId = getOrCreateGuestSessionId();
@@ -653,7 +694,7 @@ const CheckoutPage = () => {
                     const cleanPhone = phone.replace(/\s/g, "");
 
                     const body = {
-                      userId: null,
+                      userId: user?.id || null, // ✅ Pass userId if logged in
                       sessionId,
                       cartId: cart.cart_id,
                       customerInfo: {
@@ -709,7 +750,7 @@ const CheckoutPage = () => {
                 }}
                 className="w-full mt-6 bg-primary hover:bg-primary-dark text-white font-semibold py-3.5 rounded-xl shadow-md transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.99] disabled:opacity-60"
               >
-                {placing ? "Placing order..." : "Place Order"}
+                {placing ? "Placing order..." : paymentMethod === 'bank' ? "Continue to Payment" : "Place Order"}
               </button>
             </div>
           </div>

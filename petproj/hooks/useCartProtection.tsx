@@ -20,11 +20,32 @@ export const useCartProtection = (options: CartProtectionOptions = {}) => {
     const checkCart = async () => {
       // Prevent multiple redirects
       if (hasRedirected) return;
-      
+
       try {
-        const sessionId = getOrCreateGuestSessionId();
-        const response = await fetch(`/api/bazaar/cart?sessionId=${encodeURIComponent(sessionId)}`);
-        
+        // ✅ Prioritize userId if user is logged in
+        let userId: string | null = null;
+        if (typeof window !== 'undefined') {
+          const userString = localStorage.getItem('user');
+          if (userString) {
+            try {
+              const user = JSON.parse(userString);
+              userId = user?.id || user?.user_id || null;
+            } catch (e) {
+              console.error('Failed to parse user:', e);
+            }
+          }
+        }
+
+        const params = new URLSearchParams();
+        if (userId) {
+          params.append('userId', userId);
+        } else {
+          const sessionId = getOrCreateGuestSessionId();
+          params.append('sessionId', sessionId);
+        }
+
+        const response = await fetch(`/api/bazaar/cart?${params.toString()}`);
+
         if (!response.ok) {
           // If cart API fails, redirect to cart page
           setHasRedirected(true);
@@ -34,7 +55,7 @@ export const useCartProtection = (options: CartProtectionOptions = {}) => {
 
         const data = await response.json();
         const cartItems = data?.items || data || [];
-        
+
         if (!Array.isArray(cartItems) || cartItems.length === 0) {
           // Cart is empty, redirect
           if (showMessage) {

@@ -286,6 +286,7 @@ const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({
                     </div>
                 </div>
             )}
+            
 
             {/* Floating Filter Button for Mobile */}
             <div className="fixed bottom-4 left-4 md:hidden z-40">

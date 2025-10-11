@@ -670,14 +670,14 @@ const Navbar = ({
                               </div>
 
                               {/* Variant */}
-                              {it.variantTitle && (
+                              {/* {it.variantTitle && (
                                 <div className="text-xs text-gray-500">
                                   Variant:{" "}
                                   <span className="text-gray-700">
                                     {it.variantTitle}
                                   </span>
                                 </div>
-                              )}
+                              )} */}
 
                               {it.attributes && (
                                 <div className="text-xs text-gray-500">

@@ -1,53 +1,82 @@
 'use client';
 import React, { useEffect, useState, Suspense } from 'react';
-import { CheckCircle, Package, Truck, Calendar, Download, ArrowLeft, Copy, User, Mail, Phone, MapPin } from 'lucide-react';
+import { CheckCircle, Package, Truck, Calendar, Download, ArrowLeft, Copy, User, Mail, Phone, MapPin, AlertCircle, Search } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from "../../context/AuthContext";
-import { useOrderProtection } from "@/hooks/useOrderProtection";
 
 const OrderConfirmedContent  = () => {
   const { isAuthenticated, user } = useAuth();
   const [order, setOrder] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [manualOrderNumber, setManualOrderNumber] = useState('');
+  const [searchError, setSearchError] = useState('');
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Order protection - redirect if no valid order
-  const { isChecking, isValidOrder } = useOrderProtection({
-    redirectTo: '/marketplace',
-    showMessage: true
-  });
+  // Fetch order function that can be called from URL or manual search
+  const fetchOrderByNumber = async (orderNumber: string) => {
+    if (!orderNumber) {
+      setLoading(false);
+      return;
+    }
 
-  useEffect(() => {
-    const orderNumber = searchParams.get('orderNumber');
-    if (!orderNumber) return setLoading(false);
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/bazaar/orders?orderNumber=${encodeURIComponent(orderNumber)}`);
-        if (!res.ok) throw new Error('Order fetch failed');
-        const list = await res.json();
-        setOrder(Array.isArray(list) ? list[0] : list);
-      } catch (e) {
-        console.warn('Failed to fetch order', e);
-      } finally {
+    try {
+      setLoading(true);
+      setSearchError('');
+
+      const res = await fetch(`/api/bazaar/orders?orderNumber=${encodeURIComponent(orderNumber)}`);
+
+      if (!res.ok) {
+        if (res.status === 404) {
+          setSearchError('Order not found. Please check your order number and try again.');
+        } else {
+          setSearchError('Failed to fetch order. Please try again.');
+        }
+        setOrder(null);
         setLoading(false);
-      }
-    })();
-  }, [searchParams]);
-  
-  
-  useEffect(() => {
-    const check = () => {
-      if (!isAuthenticated || !user) {
         return;
       }
-      
+
+      const list = await res.json();
+      const fetchedOrder = Array.isArray(list) ? list[0] : list;
+
+      if (!fetchedOrder) {
+        setSearchError('Order not found. Please check your order number and try again.');
+        setOrder(null);
+        setLoading(false);
+        return;
+      }
+
+      setOrder(fetchedOrder);
+      setSearchError('');
+
+    } catch (e) {
+      console.warn('Failed to fetch order', e);
+      setSearchError('An error occurred while fetching the order. Please try again.');
+      setOrder(null);
+    } finally {
       setLoading(false);
-    };
-    const t = setTimeout(check, 100);
-    return () => clearTimeout(t);
-  }, [isAuthenticated, user, router]);
+    }
+  };
+
+  // Load order from URL on mount
+  useEffect(() => {
+    const orderNumber = searchParams.get('orderNumber');
+    if (orderNumber) {
+      fetchOrderByNumber(orderNumber);
+    } else {
+      setLoading(false);
+    }
+  }, [searchParams]);
+
+  const handleManualSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualOrderNumber.trim()) {
+      setSearchError('Please enter an order number');
+      return;
+    }
+    fetchOrderByNumber(manualOrderNumber.trim());
+  };
 
   const copyOrderNumber = async () => {
     if (!order?.order_number) return;
@@ -283,8 +312,7 @@ const OrderConfirmedContent  = () => {
     }
   };
 
-  // Show loading while checking order validity
-  if (isChecking) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -292,15 +320,114 @@ const OrderConfirmedContent  = () => {
     );
   }
 
-  // Don't render if no valid order (user will be redirected)
-  if (!isValidOrder) {
-    return null;
+  // Show manual search form if no order number in URL and no order loaded
+  if (!order && !searchParams.get('orderNumber')) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/5 to-white py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-8">
+            <Package className="w-20 h-20 text-primary mx-auto mb-4" />
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Track Your Order</h1>
+            <p className="text-lg text-gray-600">
+              Enter your order number to view order details and track your shipment
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-8 shadow-lg border border-primary/10">
+            <form onSubmit={handleManualSearch} className="space-y-6">
+              <div>
+                <label htmlFor="orderNumber" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Order Number
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="orderNumber"
+                    value={manualOrderNumber}
+                    onChange={(e) => setManualOrderNumber(e.target.value)}
+                    placeholder="e.g., paltuu-ABC123XYZ"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-lg"
+                    required
+                  />
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                </div>
+                <p className="mt-2 text-sm text-gray-500">
+                  Your order number was sent to your email address
+                </p>
+              </div>
+
+              {searchError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-800">{searchError}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full bg-primary text-white py-3 px-6 rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+              >
+                <Search className="w-5 h-5" />
+                Find My Order
+              </button>
+            </form>
+
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-sm text-gray-600 text-center mb-4">
+                Need help finding your order?
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => router.push('/marketplace')}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-center"
+                >
+                  Continue Shopping
+                </button>
+                <a
+                  href="mailto:support@paltuu.pk"
+                  className="flex-1 px-4 py-2 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors text-center"
+                >
+                  Contact Support
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  if (loading) {
+  // Show error message if order number was in URL but order not found
+  if (!order && searchParams.get('orderNumber')) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-gradient-to-b from-primary/5 to-white py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl p-8 shadow-lg border border-primary/10 text-center">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Order Not Found</h2>
+            <p className="text-gray-600 mb-6">
+              {searchError || "We couldn't find an order with this number. Please check the order number and try again."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => {
+                  setManualOrderNumber('');
+                  setSearchError('');
+                  router.push('/order-confirmed');
+                }}
+                className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                Try Another Order Number
+              </button>
+              <button
+                onClick={() => router.push('/marketplace')}
+                className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Back to Marketplace
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -422,60 +549,124 @@ const OrderConfirmedContent  = () => {
           </div>
         )}
 
+        {/* Bank Transfer Payment Section */}
+        {/* Removed - Payment proof now handled in payment-confirmation page before order creation */}
+
         {/* Order Timeline */}
         <div className="bg-white rounded-2xl p-8 mb-8 shadow-lg border border-primary/10">
           <h3 className="text-xl font-semibold text-gray-900 mb-6">Order Timeline</h3>
           <div className="space-y-8 relative">
             <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-primary/20"></div>
-            {[
-              {
-                icon: CheckCircle,
-                title: 'Order Confirmed',
-                description: 'Your order has been received and is being processed',
-                time: 'Just now',
-                status: 'completed'
-              },
-              {
-                icon: Package,
-                title: 'Preparing for Shipment',
-                description: 'Your items are being picked and packed',
-                time: 'Within 2-4 hours',
-                status: 'pending'
-              },
-              {
-                icon: Truck,
-                title: 'Shipped',
-                description: 'Your order is on its way to you',
-                time: '1-2 business days',
-                status: 'upcoming'
-              },
-              {
-                icon: Calendar,
-                title: 'Delivered',
-                description: 'Your order will be delivered to your address',
-                time: '3-5 business days',
-                status: 'upcoming'
-              }
-            ].map((item, index) => (
-              <div key={index} className="flex items-start space-x-4 relative">
-                <div className={`
-                  w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 z-10
-                  ${item.status === 'completed'
-                    ? 'bg-primary border-primary text-white shadow-lg'
-                    : item.status === 'pending'
-                    ? 'bg-primary border-primary text-white shadow-lg animate-pulse'
-                    : 'border-primary/30 text-primary/30 bg-white'}
-                `}>
-                  <item.icon className="w-5 h-5" />
-                </div>
-                <div className="flex-1 pt-2">
-                  <h4 className="text-gray-900 font-medium">{item.title}</h4>
-                  <p className="text-gray-600">{item.description}</p>
-                  <p className="text-primary font-medium text-sm mt-1">{item.time}</p>
+            {(() => {
+              const currentStatus = order?.status || 'pending';
+              const statusOrder = ['pending', 'confirmed', 'dispatched', 'delivered'];
+              const currentIndex = statusOrder.indexOf(currentStatus);
+
+              const timeline = [
+                {
+                  icon: CheckCircle,
+                  title: 'Order Placed',
+                  description: 'Your order has been received and is being processed',
+                  time: order?.created_at ? new Date(order.created_at).toLocaleString() : 'Just now',
+                  status: 'pending',
+                  dbStatus: 'pending'
+                },
+                {
+                  icon: Package,
+                  title: 'Order Confirmed',
+                  description: order?.payment_method === 'bank_transfer'
+                    ? 'Payment verified and order confirmed'
+                    : 'Your order has been confirmed and is being prepared',
+                  time: order?.updated_at && currentIndex >= 1
+                    ? new Date(order.updated_at).toLocaleString()
+                    : 'Pending confirmation',
+                  status: 'confirmed',
+                  dbStatus: 'confirmed'
+                },
+                {
+                  icon: Truck,
+                  title: 'Dispatched',
+                  description: 'Your order is on its way to you',
+                  time: order?.shipped_at
+                    ? new Date(order.shipped_at).toLocaleString()
+                    : currentIndex >= 2 ? new Date(order.updated_at).toLocaleString() : '1-2 business days',
+                  status: 'dispatched',
+                  dbStatus: 'dispatched'
+                },
+                {
+                  icon: Calendar,
+                  title: 'Delivered',
+                  description: 'Your order has been delivered to your address',
+                  time: order?.delivered_at
+                    ? new Date(order.delivered_at).toLocaleString()
+                    : currentIndex >= 3 ? new Date(order.updated_at).toLocaleString() : '3-5 business days',
+                  status: 'delivered',
+                  dbStatus: 'delivered'
+                }
+              ];
+
+              return timeline.map((item, index) => {
+                const itemIndex = statusOrder.indexOf(item.dbStatus);
+                let itemStatus: 'completed' | 'pending' | 'upcoming';
+
+                if (itemIndex < currentIndex) {
+                  itemStatus = 'completed';
+                } else if (itemIndex === currentIndex) {
+                  itemStatus = 'pending';
+                } else {
+                  itemStatus = 'upcoming';
+                }
+
+                // Special case: if order is cancelled or refunded
+                if (currentStatus === 'cancelled' || currentStatus === 'refunded') {
+                  itemStatus = itemIndex === 0 ? 'completed' : 'upcoming';
+                }
+
+                return (
+                  <div key={index} className="flex items-start space-x-4 relative">
+                    <div className={`
+                      w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 z-10
+                      ${itemStatus === 'completed'
+                        ? 'bg-primary border-primary text-white shadow-lg'
+                        : itemStatus === 'pending'
+                        ? 'bg-primary border-primary text-white shadow-lg animate-pulse'
+                        : 'border-primary/30 text-primary/30 bg-white'}
+                    `}>
+                      <item.icon className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 pt-2">
+                      <h4 className={`font-medium ${itemStatus === 'upcoming' ? 'text-gray-400' : 'text-gray-900'}`}>
+                        {item.title}
+                      </h4>
+                      <p className={itemStatus === 'upcoming' ? 'text-gray-400' : 'text-gray-600'}>
+                        {item.description}
+                      </p>
+                      <p className={`font-medium text-sm mt-1 ${itemStatus === 'upcoming' ? 'text-gray-400' : 'text-primary'}`}>
+                        {item.time}
+                      </p>
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+
+          {/* Show cancellation/refund status if applicable */}
+          {(order?.status === 'cancelled' || order?.status === 'refunded') && (
+            <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+                <div>
+                  <p className="font-semibold text-red-900">
+                    Order {order.status === 'cancelled' ? 'Cancelled' : 'Refunded'}
+                  </p>
+                  {order.admin_notes && (
+                    <p className="text-sm text-red-700 mt-1">{order.admin_notes}</p>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Actions */}

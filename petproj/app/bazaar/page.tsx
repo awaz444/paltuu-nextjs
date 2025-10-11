@@ -13,6 +13,12 @@ import {
     TrendingUp,
     Star,
     Flame,
+    Heart,
+    PawPrint,
+    Bone,
+    Scissors,
+    Home,
+    Search,
 } from "lucide-react";
 import { MoonLoader } from "react-spinners";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
@@ -45,7 +51,7 @@ const categories = [
     },
     {
         title: "Cat Food",
-        icon: null,
+        icon: PawPrint,
         slug: "food",
         categoryId: 1,
         subFilter: "cat",
@@ -53,7 +59,7 @@ const categories = [
     },
     {
         title: "Dog Food",
-        icon: null,
+        icon: Bone,
         slug: "food",
         categoryId: 1,
         subFilter: "dog",
@@ -61,7 +67,7 @@ const categories = [
     },
     {
         title: "Accessories & Grooming",
-        icon: null,
+        icon: Scissors,
         slug: "accessories",
         categoryId: 2,
         multiCategory: ["accessories", "grooming"],
@@ -69,14 +75,12 @@ const categories = [
     },
     {
         title: "Healthcare",
-        icon: null,
+        icon: Home,
         slug: "healthcare",
         categoryId: 4,
         featuredKey: "healthcare" as const,
     },
 ];
-
-// Remove the Product interface since it's now imported from Redux slice
 
 export default function BazaarPage() {
     const dispatch = useDispatch<AppDispatch>();
@@ -96,6 +100,7 @@ export default function BazaarPage() {
     const [loadingProductId, setLoadingProductId] = useState<number | null>(
         null
     );
+    const [searchTerm, setSearchTerm] = useState("");
 
     // Prefetch batch endpoint on mount for faster subsequent loads
     useEffect(() => {
@@ -118,6 +123,14 @@ export default function BazaarPage() {
             console.error("Error refreshing bazaar data:", error);
         } finally {
             setRefreshing(false);
+        }
+    };
+
+    // Search function
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchTerm.trim()) {
+            router.push(`/marketplace?page=1&keyword=${encodeURIComponent(searchTerm.trim())}`);
         }
     };
 
@@ -212,7 +225,7 @@ export default function BazaarPage() {
                         width={1920}
                         height={1080}
                         priority
-                        className="w-full h-auto object-contain bg-[#A03048]"
+                        className="w-full h-auto object-contain bg-gray-50"
                     />
                 </div>
 
@@ -248,12 +261,41 @@ export default function BazaarPage() {
                 `}</style>
             </section>
 
+            {/* 🔍 Search Bar Section */}
+            <section className="bg-gray-50 py-6">
+                <div className="max-w-7xl mx-auto px-6">
+                    <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
+                        <div className="relative">
+                            <Search 
+                                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" 
+                            />
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Look for your favorite product..."
+                                className="w-full pl-12 pr-24 py-4 rounded-2xl border-2 border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-lg bg-gray-50 hover:bg-white"
+                            />
+                            <button
+                                type="submit"
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary text-white px-6 py-2 rounded-xl font-medium hover:bg-primary-dark transition-colors duration-200"
+                            >
+                                Search
+                            </button>
+                        </div>
+                        <p className="text-center text-gray-500 text-sm mt-3">
+                            Discover amazing pet products for your furry friend 🐾
+                        </p>
+                    </form>
+                </div>
+            </section>
+
             {/* 🛍️ Category Sections */}
-            <main className="flex-grow mt-6 pb-10">
+            <main className="flex-grow mt-4 pb-8">
                 {/* Global Error State */}
                 {loadError && !globalLoading && (
                     <div className="max-w-7xl mx-auto px-6">
-                        <div className="flex flex-col items-center justify-center py-20">
+                        <div className="flex flex-col items-center justify-center py-12">
                             <div className="text-red-500 text-6xl mb-4">⚠️</div>
                             <p className="text-gray-800 font-semibold text-lg mb-2">
                                 Oops! Something went wrong
@@ -270,7 +312,7 @@ export default function BazaarPage() {
 
                 {/* Categories Grid - Always Show (with skeleton on first load) */}
                 {!loadError && (
-                    <div className="max-w-7xl mx-auto px-6 space-y-16">
+                    <div className="max-w-7xl mx-auto px-6 space-y-10">
                         {categories.map((cat) => {
                             const IconComponent = cat.icon;
                             const categorySection = bazaarCategories[cat.title];
@@ -280,16 +322,14 @@ export default function BazaarPage() {
                                 categorySection?.loading || globalLoading;
 
                             return (
-                                <section key={cat.title}>
+                                <section key={cat.title} className="mb-2">
                                     {/* Header */}
-                                    <div className="flex justify-between items-center mb-6">
+                                    <div className="flex justify-between items-center mb-4">
                                         <div className="flex items-center gap-3">
-                                            {IconComponent && (
-                                                <IconComponent
-                                                    size={24}
-                                                    className="text-primary"
-                                                />
-                                            )}
+                                            <IconComponent
+                                                size={24}
+                                                className="text-primary"
+                                            />
                                             <h2 className="text-2xl font-bold text-gray-900">
                                                 {cat.title}
                                             </h2>
@@ -303,7 +343,7 @@ export default function BazaarPage() {
 
                                     {/* Product Slider */}
                                     <div className="relative">
-                                        <div className="flex gap-5 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory">
+                                        <div className="flex gap-5 overflow-x-auto scrollbar-hide pb-3 snap-x snap-mandatory">
                                             {isLoading ? (
                                                 [...Array(8)].map((_, i) => (
                                                     <div
@@ -469,7 +509,6 @@ export default function BazaarPage() {
                                                                                     1
                                                                                         ? "s"
                                                                                         : ""}
-                                                                                    )
                                                                                 </span>
                                                                             )}
                                                                         </div>
@@ -541,14 +580,6 @@ export default function BazaarPage() {
                                                                             </span>
                                                                         )}
                                                                     </div>
-
-                                                                    {/* Add to Cart */}
-                                                                    {/* <button
-                                  onClick={(e) => handleAddToCart(e, prod)}
-                                  className="w-full mt-3 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm font-medium bg-primary text-white hover:bg-primary/90 active:scale-95"
-                                >
-                                  <ShoppingCart size={16} /> Add to Cart
-                                </button> */}
                                                                 </div>
                                                             </Link>
                                                         );

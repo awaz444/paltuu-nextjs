@@ -116,8 +116,9 @@ export async function GET(req: NextRequest) {
           if (categoryConfig.slug) {
             params.set('categorySlug', categoryConfig.slug);
           }
+          // Use petType filter for pet-specific categories (not keyword search)
           if (categoryConfig.subFilter) {
-            params.set('keyword', categoryConfig.subFilter);
+            params.set('petType', categoryConfig.subFilter);
           }
         }
       }

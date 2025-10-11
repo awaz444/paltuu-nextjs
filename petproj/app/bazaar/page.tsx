@@ -239,19 +239,6 @@ export default function BazaarPage() {
             overflow-x: hidden;
           }
         `}</style>
-
-        {/* Refresh Button - Development Only */}
-        {process.env.NODE_ENV === "development" && (
-          <div className="absolute top-4 right-4 z-10">
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg text-sm font-medium hover:bg-white transition-colors disabled:opacity-50"
-            >
-              {refreshing ? "🔄 Refreshing..." : "🔄 Refresh Data"}
-            </button>
-          </div>
-        )}
       </section>
 
       {/* 🛍️ Category Sections */}

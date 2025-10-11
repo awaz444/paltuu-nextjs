@@ -269,7 +269,6 @@ const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({
                             </div>
                         </div>
 
-
                         <div className="flex gap-3 mt-6 sticky bottom-0 bg-white pt-4 border-t">
                             <button
                                 className="flex-1 border-2 border-primary text-primary bg-white p-3 rounded-xl font-medium"

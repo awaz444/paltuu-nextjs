@@ -46,6 +46,7 @@ function MarketplaceClient() {
   const initialSortBy = searchParams.get("sortBy") || "";
   const initialKeyword = searchParams.get("keyword") || "";
   const initialPetType = searchParams.get("petType") || "";
+const [loadingProductId, setLoadingProductId] = useState<number | null>(null);
 
   const [page, setPage] = useState(initialPage);
   const [filters, setFilters] = useState({
@@ -56,11 +57,13 @@ function MarketplaceClient() {
   });
 
   // ✅ Save scroll before navigating to product detail
-  const handleProductClick = (productId: number) => {
-    sessionStorage.setItem("marketplace-scroll", window.scrollY.toString());
-    sessionStorage.setItem("marketplace-from-product", "true");
-    router.push(`/marketplace/${productId}`);
-  };
+const handleProductClick = (productId: number) => {
+  sessionStorage.setItem("marketplace-scroll", window.scrollY.toString());
+  sessionStorage.setItem("marketplace-from-product", "true");
+  setLoadingProductId(productId); // show loader for this product
+  router.push(`/marketplace/${productId}`);
+};
+
 
   // ✅ Fetch products whenever filters/page change
   useEffect(() => {

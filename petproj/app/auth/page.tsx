@@ -1,12 +1,13 @@
 // app/auth/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
 
-export default function AuthPage() {
+// Create a client component that uses useSearchParams
+function AuthPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialMode = searchParams.get("mode") as "login" | "signup" | null;
@@ -78,5 +79,20 @@ export default function AuthPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Create the main page component with Suspense
+export default function AuthPage() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+          <div className="animate-pulse text-primary">Loading...</div>
+        </div>
+      }
+    >
+      <AuthPageClient />
+    </Suspense>
   );
 }

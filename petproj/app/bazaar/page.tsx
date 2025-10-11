@@ -383,7 +383,7 @@ export default function BazaarPage() {
                                                                         "true"
                                                                     );
                                                                 }}
-                                                                className="w-[240px] flex-shrink-0 bg-white rounded-3xl border-2 border-transparent hover:border-primary shadow-sm hover:shadow-lg hover:scale-102 transition-all duration-300 snap-start flex flex-col overflow-hidden cursor-pointer group relative">
+                                                                className="w-[240px] flex-shrink-0 bg-white rounded-3xl border-2 border-transparent hover:border-primary shadow-sm hover:shadow-md hover:scale-102 transition-all duration-300 snap-start flex flex-col overflow-hidden cursor-pointer group relative">
                                                                 {/* Modern Loader Overlay with MoonLoader */}
                                                                 {loadingProductId ===
                                                                     prod.product_id && (

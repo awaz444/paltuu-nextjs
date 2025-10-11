@@ -19,8 +19,6 @@ import {
   ArrowLeft,
   Check,
 } from "lucide-react";
-import Navbar from "@/components/navbar";
-import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import { useRouter } from "next/navigation";
 
 interface CartItem {
@@ -35,7 +33,6 @@ interface CartItem {
 }
 
 const CartPage = () => {
-  
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const cartState = useSelector((s: RootState) => s.cart);
@@ -47,7 +44,7 @@ const CartPage = () => {
     price: it.price,
     image: it.image,
     code: it.code ?? it.product_id ?? null,
-    variantTitle: it.variantTitle ?? (it.variant?.title ?? null),
+    variantTitle: it.variantTitle ?? it.variant?.title ?? null,
     attributes: it.attributes ?? it.variant?.attributes ?? [],
   }));
 
@@ -56,69 +53,80 @@ const CartPage = () => {
   const [loadingItems, setLoadingItems] = useState<{ [key: string]: boolean }>(
     {}
   );
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   // Fetch cart only on first load
   useEffect(() => {
+  if (!cartState.lastFetched) {
     dispatch(fetchCart());
-  }, [dispatch]);
+  }
+}, [dispatch, cartState.lastFetched]);
 
-  const updateQuantity = async (itemId: string | number, newQuantity: number) => {
-  if (newQuantity < 1 || loadingItems[itemId]) return;
 
-  setLoadingItems((prev) => ({ ...prev, [itemId]: true }));
+  const updateQuantity = async (
+    itemId: string | number,
+    newQuantity: number
+  ) => {
+    if (newQuantity < 1 || loadingItems[itemId]) return;
 
-  try {
-    // Wait for API confirmation
-    await dispatch(updateCartItem({ cartItemId: itemId, quantity: newQuantity }) as any);
+    setLoadingItems((prev) => ({ ...prev, [itemId]: true }));
 
-    // Only update Redux after success
-    dispatch(
-      setCartItems(
-        cartItems.map((item) =>
-          item.id === itemId ? { ...item, qty: newQuantity } : item
+    try {
+      // Wait for API confirmation
+      await dispatch(
+        updateCartItem({ cartItemId: itemId, quantity: newQuantity }) as any
+      );
+
+      // Only update Redux after success
+      dispatch(
+        setCartItems(
+          cartItems.map((item) =>
+            item.id === itemId ? { ...item, qty: newQuantity } : item
+          )
         )
-      )
-    );
+      );
 
-    // Show checkmark animation
-    setUpdatedItems((prev) => [...prev, String(itemId)]);
-    setTimeout(
-      () => setUpdatedItems((prev) => prev.filter((id) => id !== String(itemId))),
-      2000
-    );
-  } catch (err) {
-    console.error("Failed to update quantity:", err);
-    toast.error("Failed to update quantity. Please try again.");
-  } finally {
-    setLoadingItems((prev) => ({ ...prev, [itemId]: false }));
-  }
-};
+      // Show checkmark animation
+      setUpdatedItems((prev) => [...prev, String(itemId)]);
+      setTimeout(
+        () =>
+          setUpdatedItems((prev) => prev.filter((id) => id !== String(itemId))),
+        2000
+      );
+    } catch (err) {
+      console.error("Failed to update quantity:", err);
+      toast.error("Failed to update quantity. Please try again.");
+    } finally {
+      setLoadingItems((prev) => ({ ...prev, [itemId]: false }));
+    }
+  };
 
-const removeItem = async (itemId: string | number) => {
-  if (loadingItems[itemId]) return;
+  const removeItem = async (itemId: string | number) => {
+    if (loadingItems[itemId]) return;
 
-  setLoadingItems((prev) => ({ ...prev, [itemId]: true }));
+    setLoadingItems((prev) => ({ ...prev, [itemId]: true }));
 
-  try {
-    // Wait for API confirmation
-    await dispatch(removeCartItem({ cartItemId: itemId }) as any);
+    try {
+      // Wait for API confirmation
+      await dispatch(removeCartItem({ cartItemId: itemId }) as any);
 
-    // Only update Redux after success
-    dispatch(setCartItems(cartItems.filter((item) => item.id !== itemId)));
-  } catch (err) {
-    console.error("Failed to remove item:", err);
-    toast.error("Failed to remove item. Please try again.");
-  } finally {
-    setLoadingItems((prev) => ({ ...prev, [itemId]: false }));
-  }
-};
+      // Only update Redux after success
+      dispatch(setCartItems(cartItems.filter((item) => item.id !== itemId)));
+    } catch (err) {
+      console.error("Failed to remove item:", err);
+      toast.error("Failed to remove item. Please try again.");
+    } finally {
+      setLoadingItems((prev) => ({ ...prev, [itemId]: false }));
+    }
+  };
 
-
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.price * item.qty,
+    0
+  );
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-primary/5 to-white">
-      
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Breadcrumb */}
         <div className="flex items-center text-sm text-gray-500 mb-6">
@@ -131,10 +139,12 @@ const removeItem = async (itemId: string | number) => {
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Your Shopping Cart</h1>
+          <h1 className="text-3xl font-bold text-gray-800">
+            Your Shopping Cart
+          </h1>
           <button
             className="flex items-center text-primary hover:text-primary-dark font-medium"
-            onClick={() => router.push('/marketplace')}
+            onClick={() => router.push("/marketplace")}
           >
             <ArrowLeft size={18} className="mr-1" />
             Continue Shopping
@@ -154,10 +164,12 @@ const removeItem = async (itemId: string | number) => {
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">
                   Your cart is empty
                 </h3>
-                <p className="text-gray-500 mb-4">Add some items to get started!</p>
+                <p className="text-gray-500 mb-4">
+                  Add some items to get started!
+                </p>
                 <button
                   className="bg-primary text-white px-6 py-2 rounded-xl hover:bg-primary-dark transition"
-                  onClick={() => router.push('/marketplace')}
+                  onClick={() => router.push("/marketplace")}
                 >
                   Browse Products
                 </button>
@@ -170,7 +182,7 @@ const removeItem = async (itemId: string | number) => {
                   onUpdate={updateQuantity}
                   onRemove={removeItem}
                   updated={updatedItems.includes(String(item.id))}
-                  //loading={!!loadingItems[item.id]}
+                  
                 />
               ))
             )}
@@ -193,9 +205,21 @@ const removeItem = async (itemId: string | number) => {
                   value={subtotal}
                 />
               </div>
-
-              <button onClick={() => router.push('/checkout')} className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-xl transition shadow-md">
-                Proceed to Checkout
+              <button
+                disabled={checkoutLoading}
+                onClick={() => {
+                  if (checkoutLoading) return;
+                  setCheckoutLoading(true);
+                  router.push("/checkout");
+                }}
+                className={`w-full py-3 rounded-xl font-semibold text-white shadow-md transition 
+        ${
+          checkoutLoading
+            ? "bg-primary/60 cursor-not-allowed"
+            : "bg-primary hover:bg-primary-dark"
+        }`}
+              >
+                {checkoutLoading ? "Processing..." : "Proceed to Checkout"}
               </button>
 
               <div className="text-center">

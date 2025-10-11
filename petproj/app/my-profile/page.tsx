@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
+import { useAuth } from "@/context/AuthContext";
 import {
   CameraOutlined,
   LoadingOutlined,
@@ -96,6 +97,7 @@ const ProfileField: React.FC<ProfileFieldProps> = ({
 };
 
 const MyProfile = () => {
+  const { refreshUser } = useAuth();
   const [userId, setUserId] = useState<string | null>(null);
   const [data, setData] = useState<UserProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -210,6 +212,9 @@ const MyProfile = () => {
         prev ? { ...prev, profile_image_url: url } : null
       );
       setData((prev) => (prev ? { ...prev, profile_image_url: url } : null));
+      
+      // Refresh the AuthContext to update navbar
+      await refreshUser();
     } catch (error) {
       Modal.error({
         title: "Upload Failed",
@@ -236,6 +241,9 @@ const MyProfile = () => {
       setData(result.user);
       setUpdatedData(result.user);
       setEditing(false);
+
+      // Refresh the AuthContext to update navbar
+      await refreshUser();
 
       message.success({
         content: "Profile updated successfully",

@@ -44,8 +44,7 @@ export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
                 const { id, name, email, role } = response.data.user;
                 const userDetails = { id, name, email, role };
 
-                localStorage.setItem("user", JSON.stringify(userDetails));
-                login(userDetails);
+                await login(userDetails);
                 toast.success("Login successful!");
                 onSuccess();
             }

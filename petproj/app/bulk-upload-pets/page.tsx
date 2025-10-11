@@ -20,7 +20,7 @@ export default function BulkUploadPets() {
       if (!isAuthenticated || !user) {
         console.log('Not authenticated, redirecting to login');
         message.warning('Please login to access this page');
-        router.push('/login');
+        router.push('/auth');
         return;
       }
 

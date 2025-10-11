@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
@@ -92,6 +92,7 @@ export default function BazaarPage() {
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const hasAttemptedLoad = useRef(false);
 
   // Prefetch batch endpoint on mount for faster subsequent loads
   useEffect(() => {
@@ -108,16 +109,23 @@ export default function BazaarPage() {
   // Manual refresh function
   const handleRefresh = async () => {
     setRefreshing(true);
+    hasAttemptedLoad.current = false; // Reset the flag for refresh
     try {
       await dispatch(fetchAllBazaarCategories(true)); // true = force refresh
     } catch (error) {
       console.error("Error refreshing bazaar data:", error);
     } finally {
       setRefreshing(false);
+      hasAttemptedLoad.current = true; // Set it back
     }
   };
 
   useEffect(() => {
+    // Prevent multiple loads
+    if (hasAttemptedLoad.current) {
+      return;
+    }
+
     // Check if we already have products loaded in Redux
     const hasLoadedProducts = Object.values(bazaarCategories).some(
       (category) => category.products.length > 0
@@ -126,8 +134,12 @@ export default function BazaarPage() {
     if (hasLoadedProducts) {
       // Products already loaded in Redux, no need to fetch
       setInitialLoadComplete(true);
+      hasAttemptedLoad.current = true;
       return;
     }
+
+    // Mark that we're attempting to load
+    hasAttemptedLoad.current = true;
 
     // Fetch all categories with caching - using batch endpoint
     const loadBazaarData = async () => {
@@ -143,7 +155,7 @@ export default function BazaarPage() {
     };
 
     loadBazaarData();
-  }, [dispatch, bazaarCategories]);
+  }, [dispatch]);
 
   // 🛒 Add to cart handler
   const handleAddToCart = async (e: React.MouseEvent, product: Product) => {

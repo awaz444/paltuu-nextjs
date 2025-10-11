@@ -39,12 +39,39 @@ export const fetchCart = createAsyncThunk<
   { rejectValue: string }
 >("cart/fetchCart", async (_, { rejectWithValue }) => {
   try {
-    const guestToken =
-      typeof window !== "undefined"
-        ? localStorage.getItem("guest_session_id")
-        : null;
+    // ✅ Prioritize userId from localStorage if user is logged in
+    let userId: string | null = null;
+    let guestToken: string | null = null;
 
-    const res = await fetch(`/api/bazaar/cart?sessionId=${guestToken ?? ""}`);
+    if (typeof window !== "undefined") {
+      const userString = localStorage.getItem("user");
+      if (userString) {
+        try {
+          const user = JSON.parse(userString);
+          userId = user?.id || user?.user_id || null;
+        } catch (e) {
+          console.error("Failed to parse user from localStorage:", e);
+        }
+      }
+
+      // Only use guest session if user is NOT logged in
+      if (!userId) {
+        guestToken = localStorage.getItem("guest_session_id");
+      }
+    }
+
+    // Build query params - prefer userId over sessionId
+    const params = new URLSearchParams();
+    if (userId) {
+      params.append("userId", userId);
+    } else if (guestToken) {
+      params.append("sessionId", guestToken);
+    } else {
+      // Neither userId nor sessionId available - return empty cart
+      return [];
+    }
+
+    const res = await fetch(`/api/bazaar/cart?${params.toString()}`);
     if (!res.ok) {
       const text = await res.text();
       throw new Error(text || "Failed to fetch cart");
@@ -95,10 +122,34 @@ export const addToCart = createAsyncThunk<
   { state: { cart: CartState }; rejectValue: string }
 >("cart/addToCart", async (payload, { dispatch, rejectWithValue }) => {
   try {
+    // ✅ Check for logged-in user first, prioritize userId over sessionId
+    let userId: string | null = null;
+    let sessionId = payload.sessionId;
+
+    if (typeof window !== "undefined") {
+      const userString = localStorage.getItem("user");
+      if (userString) {
+        try {
+          const user = JSON.parse(userString);
+          userId = user?.id || user?.user_id || null;
+        } catch (e) {
+          console.error("Failed to parse user from localStorage:", e);
+        }
+      }
+    }
+
+    // Build request body - prefer userId over sessionId
+    const requestBody = {
+      productId: payload.productId,
+      quantity: payload.quantity ?? 1,
+      variantId: payload.variantId ?? null,
+      ...(userId ? { userId } : { sessionId }), // ✅ Send userId if logged in, otherwise sessionId
+    };
+
     const res = await fetch("/api/bazaar/cart", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(requestBody),
     });
 
     if (!res.ok) {

@@ -83,7 +83,7 @@ const Navbar = ({
     } catch (error) {
       console.error("Logout error:", error);
       // Force redirect as fallback
-      window.location.href = "/login";
+      window.location.href = "/auth";
     }
   };
 
@@ -487,7 +487,7 @@ const Navbar = ({
                     </svg>
                   </button>
                 ) : (
-                  <Link href="/login">
+                  <Link href="/auth">
                     <button className="w-full text-center text-white font-medium py-2 text-xl">
                       Login
                     </button>
@@ -724,10 +724,10 @@ const Navbar = ({
                       <button
                         onClick={() => router.push("/checkout")}
                         disabled={cartItemsNav.length === 0}
-                        className={`flex-1 border border-primary py-2 rounded-lg font-medium ${
+                        className={`flex-1 py-2 rounded-lg font-medium ${
                           cartItemsNav.length === 0
-                            ? "text-gray-400 border-gray-300 cursor-not-allowed bg-gray-100"
-                            : "text-primary hover:bg-primary hover:text-white transition"
+                            ? "text-gray-400 border border-gray-300 cursor-not-allowed bg-gray-100"
+                            : "text-primary border border-primary hover:bg-primary hover:text-white transition"
                         }`}
                       >
                         Checkout
@@ -738,6 +738,7 @@ const Navbar = ({
               )}
             </div>
           )}
+          
 
           {isAuthenticated || session ? (
             <div
@@ -897,7 +898,7 @@ const Navbar = ({
               )}
             </div>
           ) : (
-            <Link href="/login">
+            <Link href="/auth">
               <button
                 className="flex items-center justify-center gap-2 loginBtn"
                 style={{

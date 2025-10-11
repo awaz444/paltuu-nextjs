@@ -30,7 +30,7 @@ interface BazaarState {
   cacheExpiry: number; // Cache TTL in milliseconds
 }
 
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+const CACHE_TTL = 30 * 1000; // 30 seconds cache - Redis does the heavy caching
 const INITIAL_SECTIONS = [
   'Trending',
   'Most Discounted',
@@ -172,7 +172,7 @@ export const fetchCategoryProducts = createAsyncThunk(
   }
 );
 
-// Async thunk to fetch all categories at once
+// Async thunk to fetch all categories at once using batch endpoint
 export const fetchAllBazaarCategories = createAsyncThunk(
   'bazaar/fetchAllCategories',
   async (forceRefresh: boolean = false, { getState, dispatch }) => {
@@ -184,17 +184,23 @@ export const fetchAllBazaarCategories = createAsyncThunk(
 
     if (!forceRefresh && !cacheExpired && state.bazaar.lastGlobalFetch > 0) {
       // Return cached data if still valid
-      return { cached: true, timestamp: now };
+      return { cached: true, timestamp: now, categories: null };
     }
 
-    // Fetch all categories in parallel
-    const categoryPromises = categoryConfigs.map(cat =>
-      dispatch(fetchCategoryProducts(cat.title))
-    );
+    // Use batch endpoint for faster loading
+    const res = await fetch('/api/bazaar/categories-batch');
 
-    await Promise.allSettled(categoryPromises);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch categories: ${res.status}`);
+    }
 
-    return { cached: false, timestamp: now };
+    const data = await res.json();
+
+    return {
+      cached: false,
+      timestamp: data.timestamp || now,
+      categories: data.categories
+    };
   }
 );
 
@@ -266,6 +272,16 @@ const bazaarSlice = createSlice({
         state.globalLoading = false;
         if (!action.payload.cached) {
           state.lastGlobalFetch = action.payload.timestamp;
+
+          // Update all categories with batch data
+          if (action.payload.categories) {
+            Object.keys(action.payload.categories).forEach(categoryTitle => {
+              const categoryData = action.payload.categories![categoryTitle];
+              if (state.categories[categoryTitle]) {
+                state.categories[categoryTitle] = categoryData;
+              }
+            });
+          }
         }
       })
       .addCase(fetchAllBazaarCategories.rejected, (state) => {

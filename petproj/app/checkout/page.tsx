@@ -25,6 +25,8 @@ interface CartItem {
   price: number;
   image: string;
   quantity: number;
+  variant?: string; // new
+  attribute?: string; // new
 }
 
 const CheckoutPage = () => {
@@ -42,8 +44,8 @@ const CheckoutPage = () => {
 
   // Cart protection - redirect if cart is empty
   const { isChecking, hasItems } = useCartProtection({
-    redirectTo: '/cart',
-    showMessage: true
+    redirectTo: "/cart",
+    showMessage: true,
   });
 
   // Customer / Shipping form state
@@ -56,7 +58,42 @@ const CheckoutPage = () => {
   const [postalCode, setPostalCode] = useState("");
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cod");
-  useLoadCart(setCart, setCartItems, setLoadingCart);
+  // Inside CheckoutPage
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoadingCart(true);
+      try {
+        const sessionId = getOrCreateGuestSessionId();
+        const res = await fetch(
+          `/api/bazaar/cart?sessionId=${encodeURIComponent(sessionId)}`
+        );
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!mounted) return;
+
+        setCart(json.cart);
+        setCartItems(
+          (json.items || []).map((it: any) => ({
+            id: it.cart_item_id,
+            name: it.product_title || "",
+            price: Number(it.effective_price || 0),
+            image: it.image_url || "/placeholder-product.jpg",
+            quantity: it.quantity,
+            variant: it.variant_title || "",
+            attribute: it.attribute_title || "",
+          }))
+        );
+      } catch (e) {
+        console.warn("Failed to load cart", e);
+      } finally {
+        setLoadingCart(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const subtotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -74,48 +111,54 @@ const CheckoutPage = () => {
   // Phone validation function
   const validatePhone = (phone: string) => {
     // Remove any non-digit characters except the +92 prefix
-    const cleaned = phone.replace(/\D/g, '');
+    const cleaned = phone.replace(/\D/g, "");
     // Check if it starts with 92 and has exactly 12 digits total (+92 + 10 digits)
-    return cleaned.startsWith('92') && cleaned.length === 12;
+    return cleaned.startsWith("92") && cleaned.length === 12;
   };
 
   // Format phone number as user types
   const handlePhoneChange = (value: string) => {
     // Remove all non-digit characters
-    const digitsOnly = value.replace(/\D/g, '');
-    
+    const digitsOnly = value.replace(/\D/g, "");
+
     // If empty, set to +92
-    if (digitsOnly === '') {
-      setPhone('+92');
-      setPhoneError('');
+    if (digitsOnly === "") {
+      setPhone("+92");
+      setPhoneError("");
       return;
     }
 
     // Ensure it starts with 92
     let formatted = digitsOnly;
-    if (!digitsOnly.startsWith('92')) {
-      formatted = '92' + digitsOnly.replace(/^92/, '');
+    if (!digitsOnly.startsWith("92")) {
+      formatted = "92" + digitsOnly.replace(/^92/, "");
     }
 
     // Limit to 12 digits total (92 + 10 digits)
     formatted = formatted.slice(0, 12);
 
     // Format as +92 XXX XXXXXXX
-    let displayValue = '+' + formatted;
+    let displayValue = "+" + formatted;
     if (formatted.length > 3) {
-      displayValue = '+' + formatted.slice(0, 3) + ' ' + formatted.slice(3);
+      displayValue = "+" + formatted.slice(0, 3) + " " + formatted.slice(3);
     }
     if (formatted.length > 6) {
-      displayValue = '+' + formatted.slice(0, 3) + ' ' + formatted.slice(3, 6) + ' ' + formatted.slice(6);
+      displayValue =
+        "+" +
+        formatted.slice(0, 3) +
+        " " +
+        formatted.slice(3, 6) +
+        " " +
+        formatted.slice(6);
     }
 
     setPhone(displayValue);
-    
+
     // Validate and show error if incomplete
     if (formatted.length < 12) {
-      setPhoneError('Phone number must be 10 digits after +92');
+      setPhoneError("Phone number must be 10 digits after +92");
     } else {
-      setPhoneError('');
+      setPhoneError("");
     }
   };
 
@@ -123,9 +166,9 @@ const CheckoutPage = () => {
   const handleEmailChange = (value: string) => {
     setEmail(value);
     if (value && !validateEmail(value)) {
-      setEmailError('Please enter a valid email address');
+      setEmailError("Please enter a valid email address");
     } else {
-      setEmailError('');
+      setEmailError("");
     }
   };
 
@@ -160,29 +203,29 @@ const CheckoutPage = () => {
 
     // Email validation
     if (!email) {
-      setEmailError('Email is required');
+      setEmailError("Email is required");
       isValid = false;
     } else if (!validateEmail(email)) {
-      setEmailError('Please enter a valid email address');
+      setEmailError("Please enter a valid email address");
       isValid = false;
     }
 
     // Phone validation
     if (!phone) {
-      setPhoneError('Phone number is required');
+      setPhoneError("Phone number is required");
       isValid = false;
     } else if (!validatePhone(phone)) {
-      setPhoneError('Phone number must be 10 digits after +92');
+      setPhoneError("Phone number must be 10 digits after +92");
       isValid = false;
     }
 
     // Other required fields
     if (!fullName) {
-      alert('Full name is required');
+      alert("Full name is required");
       isValid = false;
     }
     if (!address) {
-      alert('Address is required');
+      alert("Address is required");
       isValid = false;
     }
 
@@ -191,7 +234,7 @@ const CheckoutPage = () => {
 
   // Initialize phone with +92 on component mount
   useEffect(() => {
-    setPhone('+92');
+    setPhone("+92");
   }, []);
 
   // Show loading while checking cart
@@ -210,12 +253,14 @@ const CheckoutPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-
       <div className="bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen py-10 px-4 md:px-12 lg:px-20">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8 flex items-center">
-            <button onClick={() => router.push('/cart')} className="flex items-center text-gray-600 hover:text-primary transition-colors mr-4">
+            <button
+              onClick={() => router.push("/cart")}
+              className="flex items-center text-gray-600 hover:text-primary transition-colors mr-4"
+            >
               <ArrowLeft size={20} className="mr-2" />
               Back to Cart
             </button>
@@ -242,7 +287,7 @@ const CheckoutPage = () => {
                       value={email}
                       onChange={(e) => handleEmailChange(e.target.value)}
                       className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition ${
-                        emailError ? 'border-red-500' : 'border-gray-300'
+                        emailError ? "border-red-500" : "border-gray-300"
                       }`}
                     />
                     {emailError && (
@@ -271,7 +316,7 @@ const CheckoutPage = () => {
                       value={phone}
                       onChange={(e) => handlePhoneChange(e.target.value)}
                       className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition ${
-                        phoneError ? 'border-red-500' : 'border-gray-300'
+                        phoneError ? "border-red-500" : "border-gray-300"
                       }`}
                     />
                     {phoneError && (
@@ -334,8 +379,8 @@ const CheckoutPage = () => {
                       type="radio"
                       name="payment"
                       className="h-4 w-4 text-primary"
-                      checked={paymentMethod === 'cod'}
-                      onChange={() => setPaymentMethod('cod')}
+                      checked={paymentMethod === "cod"}
+                      onChange={() => setPaymentMethod("cod")}
                     />
                     <Banknote size={20} className="text-green-600" />
                     <div>
@@ -394,8 +439,8 @@ const CheckoutPage = () => {
                       type="radio"
                       name="payment"
                       className="h-4 w-4 text-primary"
-                      checked={paymentMethod === 'bank'}
-                      onChange={() => setPaymentMethod('bank')}
+                      checked={paymentMethod === "bank"}
+                      onChange={() => setPaymentMethod("bank")}
                     />
                     <FaUniversity size={22} className="text-indigo-600" />
                     <div>
@@ -418,29 +463,70 @@ const CheckoutPage = () => {
               </h2>
 
               {/* Items List */}
-              <div className="space-y-4 mb-6">
+              <div className="space-y-3 mb-6">
                 {cartItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-4 pb-4 border-b last:border-none"
+                    className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-gradient-to-r from-white to-gray-50/30 rounded-2xl shadow-sm border border-gray-100/80 hover:shadow-lg hover:border-blue-100/50 transition-all duration-300 backdrop-blur-sm"
                   >
-                    <div className="relative h-16 w-16 overflow-hidden rounded-xl bg-gray-100">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        className="object-cover"
-                      />
+                    {/* Product Image with Quantity Badge */}
+                    <div className="relative h-24 w-24 flex-shrink-0">
+                      {/* Image container with rounded corners and overflow-hidden */}
+                      <div className="h-full w-full overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 shadow-inner">
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          className="object-cover transition-transform duration-500 hover:scale-105"
+                          sizes="96px"
+                        />
+                      </div>
+
+                      {/* Quantity Badge */}
+                      <div className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg border border-white/20">
+                        {item.quantity}
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-gray-800 font-medium">{item.name}</h3>
-                      <p className="text-sm text-gray-500">
-                        Qty: {item.quantity}
+
+                    {/* Product Info */}
+                    <div className="flex-1 flex flex-col justify-center gap-2 min-w-0">
+                      <h3 className="text-primary text-sm leading-tight tracking-tight">
+                        {item.name}
+                      </h3>
+
+                      {/* Variant & Attribute Chips */}
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {item.variant && (
+                          <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-blue-50/80 border border-blue-200/60 text-blue-700 text-sm font-medium backdrop-blur-sm">
+                            <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2"></span>
+                            {item.variant}
+                          </span>
+                        )}
+                        {item.attribute && (
+                          <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-emerald-50/80 border border-emerald-200/60 text-emerald-700 text-sm font-medium backdrop-blur-sm">
+                            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-2"></span>
+                            {item.attribute}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Price */}
+                    <div className="flex flex-col items-end justify-center gap-1 flex-shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
+                      <p className="text-gray-600 text-sm tracking-tight">
+                        Rs {item.price.toLocaleString()}
+                      </p>
+                      {item.quantity > 1 && (
+                        <p className="text-sm text-gray-500 font-medium">
+                          {item.quantity} × Rs {item.price.toLocaleString()}
+                        </p>
+                      )}
+                      <div className="h-px w-12 bg-gradient-to-r from-transparent via-gray-300 to-transparent my-1"></div>
+                      <p className="text-sm text-gray-600 font-semibold">
+                        Total: Rs{" "}
+                        {(item.price * item.quantity).toLocaleString()}
                       </p>
                     </div>
-                    <p className="font-semibold text-gray-800">
-                      Rs {item.price.toLocaleString()}
-                    </p>
                   </div>
                 ))}
               </div>
@@ -516,10 +602,10 @@ const CheckoutPage = () => {
               </div>
 
               {/* Order Totals */}
-        <div className="space-y-3 text-gray-700 border-t pt-4">
+              <div className="space-y-3 text-gray-700 border-t pt-4">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-          <span>Rs {subtotal.toLocaleString()}</span>
+                  <span>Rs {subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
@@ -551,8 +637,9 @@ const CheckoutPage = () => {
               <button
                 disabled={placing}
                 onClick={async () => {
-                  if (!cart || cart.items?.length === 0) return alert('Cart is empty');
-                  
+                  if (!cart || cart.items?.length === 0)
+                    return alert("Cart is empty");
+
                   // Validate form before proceeding
                   if (!validateForm()) {
                     return;
@@ -561,34 +648,36 @@ const CheckoutPage = () => {
                   setPlacing(true);
                   try {
                     const sessionId = getOrCreateGuestSessionId();
-                    
+
                     // Clean phone number for API (remove spaces)
-                    const cleanPhone = phone.replace(/\s/g, '');
-                    
+                    const cleanPhone = phone.replace(/\s/g, "");
+
                     const body = {
                       userId: null,
                       sessionId,
                       cartId: cart.cart_id,
-                      customerInfo: { 
-                        email, 
-                        phone: cleanPhone, 
-                        name: fullName 
+                      customerInfo: {
+                        email,
+                        phone: cleanPhone,
+                        name: fullName,
                       },
                       shippingAddress: { city, postalCode, address },
                       billingAddress: null,
                       paymentMethod,
-                      notes: ''
+                      notes: "",
                     };
 
-                    const res = await fetch('/api/bazaar/orders', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
+                    const res = await fetch("/api/bazaar/orders", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
                       body: JSON.stringify(body),
                     });
 
                     const data = await res.json();
                     if (!res.ok) {
-                      alert(data.message || data.error || 'Failed to place order');
+                      alert(
+                        data.message || data.error || "Failed to place order"
+                      );
                       setPlacing(false);
                       return;
                     }
@@ -599,24 +688,28 @@ const CheckoutPage = () => {
                       dispatch(clearCart() as any);
                     } catch (e) {
                       // ignore dispatch errors in case redux isn't wired in this context
-                      console.warn('Failed to clear client cart', e);
+                      console.warn("Failed to clear client cart", e);
                     }
                     // also clear local cart state used on this page
                     setCart(null);
                     setCartItems([]);
 
                     // redirect to order confirmed with order number
-                    router.push(`/order-confirmed?orderNumber=${encodeURIComponent(order.order_number)}`);
+                    router.push(
+                      `/order-confirmed?orderNumber=${encodeURIComponent(
+                        order.order_number
+                      )}`
+                    );
                   } catch (err) {
-                    console.error('Place order failed', err);
-                    alert('Failed to place order');
+                    console.error("Place order failed", err);
+                    alert("Failed to place order");
                   } finally {
                     setPlacing(false);
                   }
                 }}
                 className="w-full mt-6 bg-primary hover:bg-primary-dark text-white font-semibold py-3.5 rounded-xl shadow-md transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.99] disabled:opacity-60"
               >
-                {placing ? 'Placing order...' : 'Place Order'}
+                {placing ? "Placing order..." : "Place Order"}
               </button>
             </div>
           </div>
@@ -627,27 +720,3 @@ const CheckoutPage = () => {
 };
 
 export default CheckoutPage;
-
-// fetch cart on mount
-function useLoadCart(setCart: any, setCartItems: any, setLoadingCart: any) {
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoadingCart(true);
-      try {
-        const sessionId = getOrCreateGuestSessionId();
-        const res = await fetch(`/api/bazaar/cart?sessionId=${encodeURIComponent(sessionId)}`);
-        if (!res.ok) return;
-        const json = await res.json();
-        if (!mounted) return;
-        setCart(json.cart);
-        setCartItems((json.items || []).map((it: any) => ({ id: it.cart_item_id, name: it.product_title || '', price: Number(it.effective_price || 0), image: it.image_url || '/placeholder-product.jpg', quantity: it.quantity })));
-      } catch (e) {
-        console.warn('Failed to load cart', e);
-      } finally {
-        setLoadingCart(false);
-      }
-    })();
-    return () => { mounted = false; };
-  }, []);
-}

@@ -455,12 +455,12 @@ const [loadingProductId, setLoadingProductId] = useState<number | null>(null);
                                 </div>
 
                                 {/* Add to Cart */}
-                                <button
+                                {/* <button
                                   onClick={(e) => handleAddToCart(e, prod)}
                                   className="w-full mt-3 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm font-medium bg-primary text-white hover:bg-primary/90 active:scale-95"
                                 >
                                   <ShoppingCart size={16} /> Add to Cart
-                                </button>
+                                </button> */}
                               </div>
                             </Link>
                           );

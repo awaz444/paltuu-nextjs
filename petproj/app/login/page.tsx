@@ -74,11 +74,8 @@ export default function Login() {
                         profile_image_url || "/default-avatar.png", // ✅ use correct key
                 };
 
-                // Save to localStorage
-                localStorage.setItem("user", JSON.stringify(userDetails));
-
-                // Update AuthContext
-                login(userDetails);
+                // Update AuthContext (now handles localStorage automatically)
+                await login(userDetails);
 
                 toast.success("Login successful!");
                 if (userDetails.role === "vet") router.push("/vet-panel");

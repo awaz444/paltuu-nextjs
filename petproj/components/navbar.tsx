@@ -200,10 +200,10 @@ const Navbar = ({
   const navbarStyle = { backgroundColor: navbarBackground[userRole] };
 
   const displayName =
-    session?.user?.name ||
-    session?.user?.email ||
     user?.name ||
     user?.email ||
+    session?.user?.name ||
+    session?.user?.email ||
     "User";
 
   const profileImage =

@@ -25,6 +25,7 @@ interface AuthContextProps {
     profile_image_url?: string;
   }) => void;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -65,42 +66,113 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   if (status === "authenticated" && session?.user) {
-    const googleUser: User = {
-      id: (session.user as any).user_id || (session.user as any).id,
-      // user_id: (session.user as any).user_id || (session.user as any).id,
-      name: session.user.name || undefined,
-      email: session.user.email || "",
-      role: (session.user as any).role || "guest",
-      profile_image_url: session.user.image || undefined,
-      method: "google",
-    };
+    const googleUserId = (session.user as any).user_id || (session.user as any).id;
+    
+    // Only update if we don't have a user yet, or if this is a fresh Google login
+    if (!user || user.method !== "google") {
+      // First, try to fetch the user's database profile
+      const fetchDatabaseProfile = async () => {
+        try {
+          const response = await fetch(`/api/my-profile/${googleUserId}`);
+          if (response.ok) {
+            const dbProfile = await response.json();
+            // Use database profile data if available
+            const userWithDbData: User = {
+              id: googleUserId,
+              name: dbProfile.name,
+              email: session.user.email || "",
+              role: (session.user as any).role || "guest",
+              profile_image_url: dbProfile.profile_image_url,
+              method: "google",
+            };
+            
+            localStorage.setItem("user", JSON.stringify(userWithDbData));
+            setUser(userWithDbData);
+            setIsAuthenticated(true);
+            
+            console.log("✅ Using database profile data for Google user:", userWithDbData);
+            return userWithDbData;
+          }
+        } catch (error) {
+          console.log("No database profile found, using Google data");
+        }
+        
+        // Fallback to Google data if no database profile exists
+        const googleUser: User = {
+          id: googleUserId,
+          name: session.user.name || undefined,
+          email: session.user.email || "",
+          role: (session.user as any).role || "guest",
+          profile_image_url: session.user.image || undefined,
+          method: "google",
+        };
+        
+        localStorage.setItem("user", JSON.stringify(googleUser));
+        setUser(googleUser);
+        setIsAuthenticated(true);
+        
+        console.log("✅ Using Google profile data:", googleUser);
+        return googleUser;
+      };
+      
+      fetchDatabaseProfile().then((finalUser) => {
+        localStorage.removeItem("guest_session_id");
 
-    localStorage.setItem("user", JSON.stringify(googleUser));
-    setUser(googleUser);
-    setIsAuthenticated(true);
-
-    localStorage.removeItem("guest_session_id");
-
-    // Redirect shop/shelter to panels after Google login
-    try {
-      const role = googleUser.role;
-      if (role === "shop admin") router.push("/shop-panel");
-      if (role === "shelter admin") router.push("/rescue-panel");
-    } catch {}
+        // Redirect shop/shelter to panels after login
+        try {
+          const role = finalUser.role;
+          if (role === "shop admin") router.push("/shop-panel");
+          if (role === "shelter admin") router.push("/rescue-panel");
+        } catch {}
+      });
+    }
   }
 }, [status, session]);
 
 
-const login = (userData: {
+const login = async (userData: {
   id: string;
   name: string;
   email: string;
   role: string;
   profile_image_url?: string; // backend field
 }) => {
+  // Try to fetch the user's database profile first
+  try {
+    const response = await fetch(`/api/my-profile/${userData.id}`);
+    if (response.ok) {
+      const dbProfile = await response.json();
+      // Use database profile data if available
+      const userWithDbData: User = {
+        id: userData.id,
+        name: dbProfile.name,
+        email: userData.email,
+        role: userData.role,
+        profile_image_url: dbProfile.profile_image_url || "/default-avatar.png",
+        method: "api",
+      };
+      
+      setUser(userWithDbData);
+      setIsAuthenticated(true);
+      localStorage.setItem("user", JSON.stringify(userWithDbData));
+      localStorage.removeItem("guest_session_id");
+      
+      console.log("✅ Using database profile data for API user:", userWithDbData);
+      
+      // Redirect on API login success
+      try {
+        if (userWithDbData.role === "shop admin") router.push("/shop-panel");
+        if (userWithDbData.role === "shelter admin") router.push("/rescue-panel");
+      } catch {}
+      return;
+    }
+  } catch (error) {
+    console.log("No database profile found, using login response data");
+  }
+  
+  // Fallback to login response data if no database profile exists
   const userWithMethod: User = {
     id: userData.id,
-    // user_id: userData.id, // For backward compatibility
     name: userData.name,
     email: userData.email,
     role: userData.role,
@@ -113,6 +185,8 @@ const login = (userData: {
   localStorage.setItem("user", JSON.stringify(userWithMethod));
   localStorage.removeItem("guest_session_id");
 
+  console.log("✅ Using login response data for API user:", userWithMethod);
+
   // Redirect on API login success
   try {
     if (userWithMethod.role === "shop admin") router.push("/shop-panel");
@@ -120,6 +194,31 @@ const login = (userData: {
   } catch {}
 };
 
+
+  const refreshUser = async () => {
+    if (!user?.id) return;
+
+    try {
+      const response = await fetch(`/api/my-profile/${user.id}`);
+      if (!response.ok) throw new Error("Failed to fetch updated profile");
+      
+      const updatedProfile = await response.json();
+      
+      const updatedUser: User = {
+        ...user,
+        name: updatedProfile.name,
+        profile_image_url: updatedProfile.profile_image_url,
+        // Keep other fields from current user (including method, role, etc.)
+      };
+
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      
+      console.log("✅ User data refreshed:", updatedUser);
+    } catch (error) {
+      console.error("Failed to refresh user data:", error);
+    }
+  };
 
   const logout = async () => {
     console.log("Logout started, user method:", user?.method);
@@ -186,7 +285,7 @@ const login = (userData: {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -54,18 +54,14 @@ export const fetchProducts = createAsyncThunk(
       if (filters.categorySlug) params.set('categorySlug', String(filters.categorySlug));
       if (filters.sortBy) params.set('sortBy', String(filters.sortBy));
 
-      // Combine keyword and petType into a single search term
-      let searchKeyword = '';
-      if (filters.keyword && filters.petType) {
-        searchKeyword = `${filters.keyword} ${filters.petType}`;
-      } else if (filters.keyword) {
-        searchKeyword = filters.keyword;
-      } else if (filters.petType) {
-        searchKeyword = filters.petType;
+      // Send keyword only for text search (searches title and description)
+      if (filters.keyword) {
+        params.set('keyword', String(filters.keyword));
       }
 
-      if (searchKeyword) {
-        params.set('keyword', searchKeyword);
+      // Send petType as separate parameter (filters by category, NOT description)
+      if (filters.petType) {
+        params.set('petType', String(filters.petType));
       }
 
       // Legacy support for old filter format

@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
     const filterCollection = searchParams.get('collection') || '';
     const filterKeyword = searchParams.get('keyword') || '';
     const categorySlug = searchParams.get('categorySlug') || ''; // For category-based filtering
+    const petType = searchParams.get('petType') || ''; // For pet type filtering (cat, dog, fish, bird)
     const sortBy = searchParams.get('sortBy') || ''; // trending, discount, new
     const minPrice = searchParams.get('minPrice') || '';
     const maxPrice = searchParams.get('maxPrice') || '';
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
     const includeVariants = searchParams.get('variants') === 'true'; // Only load variants if needed
 
     // Cache key
-    const cacheKey = `products:v5:admin=${adminView}:page=${page}:limit=${limit}:cat=${filterCategory}:slug=${categorySlug}:col=${filterCollection}:kw=${filterKeyword}:sort=${sortBy}:minP=${minPrice}:maxP=${maxPrice}:ids=${filterProductIds}:feat=${featuredIds}:var=${includeVariants}`;
+    const cacheKey = `products:v6:admin=${adminView}:page=${page}:limit=${limit}:cat=${filterCategory}:slug=${categorySlug}:col=${filterCollection}:kw=${filterKeyword}:pet=${petType}:sort=${sortBy}:minP=${minPrice}:maxP=${maxPrice}:ids=${filterProductIds}:feat=${featuredIds}:var=${includeVariants}`;
 
     // Try cache first
     try {
@@ -108,6 +109,17 @@ export async function GET(req: NextRequest) {
           SELECT 1 FROM bazaar_product_categories bpc
           JOIN bazaar_categories bc_slug ON bpc.category_id = bc_slug.category_id
           WHERE bpc.product_id = p.product_id AND bc_slug.slug = $${whereValues.length}
+        )`);
+      }
+
+      // Pet type filtering (cat, dog, fish, bird, etc.)
+      // This filters by collection (pet type), NOT by searching description
+      if (petType) {
+        whereValues.push(`%${petType.toLowerCase()}%`);
+        whereClauses.push(`EXISTS (
+          SELECT 1 FROM bazaar_collections bc_pet
+          WHERE bc_pet.collection_id = p.collection_id
+          AND (LOWER(bc_pet.name) LIKE $${whereValues.length} OR LOWER(bc_pet.slug) LIKE $${whereValues.length})
         )`);
       }
 

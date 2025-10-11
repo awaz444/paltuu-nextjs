@@ -62,6 +62,17 @@ const CartPage = () => {
   }
 }, [dispatch, cartState.lastFetched]);
 
+  // ✅ Refetch cart when auth state might have changed (on mount/focus)
+  useEffect(() => {
+    const handleFocus = () => {
+      // Refetch cart when user returns to tab (might have logged in/out in another tab)
+      dispatch(fetchCart());
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [dispatch]);
+
 
   const updateQuantity = async (
     itemId: string | number,
@@ -182,7 +193,7 @@ const CartPage = () => {
                   onUpdate={updateQuantity}
                   onRemove={removeItem}
                   updated={updatedItems.includes(String(item.id))}
-                  
+
                 />
               ))
             )}
@@ -212,7 +223,7 @@ const CartPage = () => {
                   setCheckoutLoading(true);
                   router.push("/checkout");
                 }}
-                className={`w-full py-3 rounded-xl font-semibold text-white shadow-md transition 
+                className={`w-full py-3 rounded-xl font-semibold text-white shadow-md transition
         ${
           checkoutLoading
             ? "bg-primary/60 cursor-not-allowed"

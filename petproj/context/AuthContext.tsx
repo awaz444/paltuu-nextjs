@@ -79,6 +79,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(googleUser);
     setIsAuthenticated(true);
 
+    localStorage.removeItem("guest_session_id");
+
     // Redirect shop/shelter to panels after Google login
     try {
       const role = googleUser.role;
@@ -109,6 +111,7 @@ const login = (userData: {
   setUser(userWithMethod);
   setIsAuthenticated(true);
   localStorage.setItem("user", JSON.stringify(userWithMethod));
+  localStorage.removeItem("guest_session_id");
 
   // Redirect on API login success
   try {
@@ -126,6 +129,10 @@ const login = (userData: {
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       sessionStorage.clear();
+
+      // ✅ Clear guest session to prevent cart conflicts after logout
+      // This will force a new guest session to be created on next cart action
+      localStorage.removeItem("guest_session_id");
 
       // For Google users, handle NextAuth signOut correctly
       if (user?.method === "google") {

@@ -1,12 +1,13 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Upload, AlertCircle, Copy, CheckCircle, ArrowLeft, CreditCard } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from "../../context/AuthContext";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
 import { createClient } from "@supabase/supabase-js";
 
-export default function PaymentConfirmationPage() {
+// Client Component that uses useSearchParams
+function PaymentConfirmationClient() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -374,5 +375,20 @@ export default function PaymentConfirmationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Main component with Suspense wrapper
+export default function PaymentConfirmationPage() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      }
+    >
+      <PaymentConfirmationClient />
+    </Suspense>
   );
 }

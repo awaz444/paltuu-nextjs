@@ -19,7 +19,8 @@ const hideNavbarRoutes = [
   "/vet-panel",
   "/shop-panel",
   "/rescue-panel",
-  
+  "/auth",
+  "/forgot-password",
 ];
 
 export default function NavbarWrapper() {

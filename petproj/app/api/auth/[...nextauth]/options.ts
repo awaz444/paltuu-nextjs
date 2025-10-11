@@ -106,7 +106,7 @@ export const authoptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: "/login",
+    signIn: "/auth",
     error: "/error",
     newUser: "/browse-pets",
   },

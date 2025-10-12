@@ -84,7 +84,7 @@ export default function RootLayout({
 
                         <main className="flex-grow">{children}</main>
 
-                        <div className="fixed right-2 z-[999] bottom-20 sm:bottom-4">
+                        <div className="fixed right-2 z-[998] bottom-20 sm:bottom-4">
                             <ChatBot />
                         </div>
                         <Analytics />

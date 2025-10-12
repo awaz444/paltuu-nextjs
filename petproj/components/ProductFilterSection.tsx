@@ -198,7 +198,7 @@ const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({
 
       {/* Mobile Filter Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-end z-50 md:hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-end z-[9996] md:hidden">
           <div className="bg-white p-6 rounded-t-3xl w-full max-h-[90vh] overflow-y-auto relative animate-slide-up">
             <button
               className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"

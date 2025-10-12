@@ -237,7 +237,7 @@ export default function BazaarPage() {
                         width={1080}
                         height={1920}
                         priority
-                        className="w-full h-auto object-contain bg-[#A03048]"
+                        className="w-full h-auto object-contain"
                     />
                 </div>
 
@@ -247,7 +247,7 @@ export default function BazaarPage() {
                         justify-content: center;
                         align-items: center;
                         background-color: #a03048;
-                        width: 100vw;
+                        width: 98.9vw;
                         height: auto;
                         margin: 0;
                         padding: 0;
@@ -262,33 +262,35 @@ export default function BazaarPage() {
             </section>
 
             {/* 🔍 Search Bar Section */}
-            <section className="bg-gray-50 py-6">
-                <div className="max-w-7xl mx-auto px-6">
-                    <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
-                        <div className="relative">
-                            <Search 
-                                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" 
-                            />
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Look for your favorite product..."
-                                className="w-full pl-12 pr-24 py-4 rounded-2xl border-2 border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 text-lg bg-gray-50 hover:bg-white"
-                            />
-                            <button
-                                type="submit"
-                                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary text-white px-6 py-2 rounded-xl font-medium hover:bg-primary-dark transition-colors duration-200"
-                            >
-                                Search
-                            </button>
-                        </div>
-                        <p className="text-center text-gray-500 text-sm mt-3">
-                            Discover amazing pet products for your furry friend 🐾
-                        </p>
-                    </form>
-                </div>
-            </section>
+<section className="bg-gray-50 py-6">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6">
+    <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
+      <div className="relative">
+        <Search
+          className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5"
+        />
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Look for your favorite products"
+          className="w-full pl-10 sm:pl-12 pr-24 py-2.5 sm:py-4 rounded-2xl border-2 border-gray-200 focus:border-primary focus:outline-none focus:shadow-none transition-all duration-200 text-sm sm:text-lg bg-gray-50 hover:bg-white [outline:none!important] [box-shadow:none!important]"
+        />
+        <button
+          type="submit"
+          className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 bg-primary text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-medium hover:bg-[color-mix(in srgb, var(--primary) 90%, black 10%)] transition-colors duration-200 text-sm sm:text-base"
+        >
+          Search
+        </button>
+      </div>
+      <p className="text-center text-gray-500 text-xs sm:text-sm mt-3">
+        Discover amazing pet products for your furry friend
+      </p>
+    </form>
+  </div>
+</section>
+
+
 
             {/* 🛍️ Category Sections */}
             <main className="flex-grow mt-4 pb-8">
@@ -343,7 +345,7 @@ export default function BazaarPage() {
 
                                     {/* Product Slider */}
                                     <div className="relative">
-                                        <div className="flex gap-5 overflow-x-auto scrollbar-hide pb-3 snap-x snap-mandatory">
+                                        <div className="flex gap-5 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-primary scrollbar-track-gray-100 pb-3 snap-x snap-mandatory">
                                             {isLoading ? (
                                                 [...Array(8)].map((_, i) => (
                                                     <div

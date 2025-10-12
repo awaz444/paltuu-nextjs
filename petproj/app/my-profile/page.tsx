@@ -519,8 +519,10 @@ const MyProfile = () => {
                     </div>
                   ) : (
                     <p className="text-gray-900 font-medium">
-                      +92{updatedData?.phone_number || "Not provided"}
-                    </p>
+                    {updatedData?.phone_number
+                      ? `+92${updatedData.phone_number}`
+                      : "Not provided"}
+                  </p>
                   )}
                 </div>
 

@@ -100,7 +100,7 @@ const LostAndFoundFilter: React.FC<LostAndFoundFilterProps> = ({ onSearch }) => 
 
             {/* More Filters Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9996]">
                     <div className="bg-white p-6 rounded-2xl w-11/12 max-w-md relative">
                         {/* Close Button */}
                         <button

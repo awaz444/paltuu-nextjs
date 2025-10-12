@@ -590,7 +590,7 @@ const Navbar = ({
                     ))}
                 </div>
 
-                <div className="flex items-center gap-4 mr-16">
+                <div className="hidden lg:flex items-center gap-4 mr-16">
                     {/* Cart */}
                     {!hideCart && (
                         <div

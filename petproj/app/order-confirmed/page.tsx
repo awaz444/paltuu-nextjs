@@ -437,7 +437,7 @@ const OrderConfirmedContent  = () => {
       <div className="max-w-4xl mx-auto">
         {/* Success Animation */}
         <div className="text-center mb-12">
-          <div className="relative inline-block">
+          <div className="relative inline-block">c
             <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-primary flex items-center justify-center shadow-lg">
               <CheckCircle className="w-12 h-12 text-white" />
             </div>
@@ -450,6 +450,7 @@ const OrderConfirmedContent  = () => {
             Thank you for your purchase. Your order has been successfully placed.
           </p>
         </div>
+        
 
         {/* Order Details Card */}
         <div className="bg-white rounded-2xl p-8 mb-8 shadow-lg border border-primary/10">

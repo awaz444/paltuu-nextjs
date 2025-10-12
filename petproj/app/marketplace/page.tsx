@@ -145,7 +145,7 @@ const handleProductClick = (productId: number) => {
     <div className="fullBody">
       <Link
         href="/bazaar"
-        className="inline-flex items-center mt-2 gap-2 text-primary font-medium hover:text-blue-800 transition-colors"
+        className="inline-flex items-center ml-8 gap-2 mt-3 text-primary font-medium"
       >
         <ArrowLeft className="w-4 h-4" />
         Go Back to Bazaar

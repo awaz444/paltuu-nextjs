@@ -237,7 +237,7 @@ export default function BazaarPage() {
                         width={1080}
                         height={1920}
                         priority
-                        className="w-full h-auto object-contain"
+                        className="w-full h-auto"
                     />
                 </div>
 
@@ -246,7 +246,6 @@ export default function BazaarPage() {
                         display: flex;
                         justify-content: center;
                         align-items: center;
-                        background-color: #a03048;
                         width: 98.9vw;
                         height: auto;
                         margin: 0;

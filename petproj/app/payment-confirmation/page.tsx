@@ -94,8 +94,6 @@ function PaymentConfirmationClient() {
       const imageUrl = urlData.publicUrl;
       setPaymentProofUrl(imageUrl);
 
-      alert('Payment proof uploaded successfully! Now click "Confirm Order" to complete your purchase.');
-
     } catch (error: any) {
       console.error('Upload error:', error);
       alert('Failed to upload payment proof: ' + error.message);
@@ -167,8 +165,8 @@ function PaymentConfirmationClient() {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-blue-100 flex items-center justify-center">
-            <CreditCard className="w-10 h-10 text-blue-600" />
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#a03048]/10 flex items-center justify-center">
+            <CreditCard className="w-10 h-10 text-[#a03048]" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Complete Your Payment</h1>
           <p className="text-lg text-gray-600">
@@ -205,9 +203,9 @@ function PaymentConfirmationClient() {
         <div className="bg-white rounded-2xl p-8 mb-6 shadow-lg border border-primary/10">
           <h3 className="text-xl font-semibold text-gray-900 mb-6">Bank Transfer Details</h3>
 
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-6 border border-blue-200">
+          <div className="bg-[#a03048]/10 rounded-xl p-6 mb-6 border border-[#a03048]/60">
             <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-blue-600" />
+              <AlertCircle className="w-5 h-5 text-[#a03048]/80" />
               Transfer Exact Amount: <span className="text-primary text-xl">Rs {cartData.totalAmount.toLocaleString()}</span>
             </h4>
 
@@ -271,6 +269,7 @@ function PaymentConfirmationClient() {
                   <li>Upload the payment proof below to confirm your order</li>
                   <li>Your order will be created immediately after uploading proof</li>
                   <li>Our team will verify payment within 24 hours</li>
+                  <li>Incase of any issue uploading, text +923394022468 on Whatsapp and type '7'</li>
                 </ul>
               </div>
             </div>

@@ -8,6 +8,9 @@ import {
   CameraOutlined,
   LoadingOutlined,
   LockOutlined,
+  EditOutlined,
+  CheckOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import { format } from "date-fns";
 import { Modal, Input, Form, message } from "antd";
@@ -65,7 +68,7 @@ const ProfileField: React.FC<ProfileFieldProps> = ({
           <select
             value={value || ""}
             onChange={(e) => handleChange(e.target.value)}
-            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
           >
             <option value="">Select City</option>
             {cities.map((city) => (
@@ -79,12 +82,12 @@ const ProfileField: React.FC<ProfileFieldProps> = ({
             type={type}
             value={value || ""}
             onChange={(e) => handleChange(e.target.value)}
-            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
             disabled={!editable}
           />
         )
       ) : (
-        <p className="p-2 bg-gray-50 rounded-lg">
+        <p className="p-2 bg-gray-50 rounded-lg text-sm lg:text-base">
           {name === "city"
             ? cities.find((city) => city.city_name === value)?.city_name ||
               value ||
@@ -170,23 +173,30 @@ const MyProfile = () => {
 
       setUserId(parsedUser.id);
       console.log("🔍 Profile page - localStorage user data:", parsedUser);
-      
+
       try {
         // Fetch user profile data
         const res = await fetch(`/api/my-profile/${parsedUser.id}`);
         console.log("🔍 Profile page - API response status:", res.status);
-        
+
         if (!res.ok) throw new Error("Failed to fetch profile");
         const profileData = await res.json();
         console.log("🔍 Profile page - Database profile data:", profileData);
-        
+
         // For Google users, use Google profile data as fallback if database data is missing or empty
         const finalProfileData = {
           ...profileData,
-          name: (profileData.name && profileData.name.trim()) || parsedUser.name || "User",
-          profile_image_url: (profileData.profile_image_url && profileData.profile_image_url.trim()) || parsedUser.profile_image_url || "/default-avatar.png",
+          name:
+            (profileData.name && profileData.name.trim()) ||
+            parsedUser.name ||
+            "User",
+          profile_image_url:
+            (profileData.profile_image_url &&
+              profileData.profile_image_url.trim()) ||
+            parsedUser.profile_image_url ||
+            "/default-avatar.png",
         };
-        
+
         console.log("🔍 Profile page - Final profile data:", finalProfileData);
         setData(finalProfileData);
         setUpdatedData(finalProfileData);
@@ -199,19 +209,20 @@ const MyProfile = () => {
       } catch (error) {
         console.error("Error loading data:", error);
         console.log("🔍 Profile page - Using fallback data from localStorage");
-        
+
         // If database fetch fails, use localStorage data as fallback
         const fallbackData = {
           user_id: parsedUser.id,
           name: parsedUser.name || "User",
           dob: "",
           email: parsedUser.email || "",
-          profile_image_url: parsedUser.profile_image_url || "/default-avatar.png",
+          profile_image_url:
+            parsedUser.profile_image_url || "/default-avatar.png",
           phone_number: "",
           city: "",
           created_at: new Date().toISOString(),
         };
-        
+
         console.log("🔍 Profile page - Fallback data:", fallbackData);
         setData(fallbackData);
         setUpdatedData(fallbackData);
@@ -243,7 +254,7 @@ const MyProfile = () => {
         prev ? { ...prev, profile_image_url: url } : null
       );
       setData((prev) => (prev ? { ...prev, profile_image_url: url } : null));
-      
+
       // Refresh the AuthContext to update navbar
       await refreshUser();
     } catch (error) {
@@ -308,37 +319,45 @@ const MyProfile = () => {
       </div>
     );
   }
-
   return (
     <>
       {/* Page Container */}
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
         {/* Updated Header */}
-        <header className="bg-white text-primary border border-1 border-primary p-8 rounded-2xl shadow-lg mb-10">
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="bg-primary flex-shrink-0 w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center shadow-lg">
-              <img className="p-3" src="/favicon-dark.png" alt="paltuu logo" />
+        <header className="bg-white text-primary border border-primary p-3 sm:p-4 md:p-6 lg:p-8 rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg mb-4 sm:mb-6 md:mb-8 lg:mb-10">
+          <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
+            {/* Logo - Much more compact on mobile */}
+            <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-lg sm:rounded-xl bg-primary flex items-center justify-center shadow-sm sm:shadow-md">
+              <img
+                className="p-1 sm:p-1.5 md:p-2 lg:p-2.5 w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 object-contain"
+                src="/favicon-dark.png"
+                alt="paltuu logo"
+              />
             </div>
 
-            <div className="text-center md:text-left">
-              <h1 className="text-3xl text-black md:text-4xl font-bold mb-2">
+            {/* Text Section - Better mobile typography */}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl text-black font-bold mb-0.5 sm:mb-1 md:mb-2 leading-tight">
                 My Profile
               </h1>
-              <p className="text-black text-lg">
+              <p className="text-xs sm:text-sm md:text-base lg:text-lg text-black/80 leading-relaxed">
                 Manage your personal information and security settings
               </p>
             </div>
           </div>
         </header>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+        <div className="bg-white rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg lg:shadow-xl p-4 sm:p-6 lg:p-8 border border-gray-100">
           {/* Profile Content Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b border-gray-100">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900">{data.name}</h2>
-              <p className="text-gray-500 mt-2 flex items-center">
+          <div className="flex flex-wrap justify-between items-center gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8 pb-4 sm:pb-6 border-b border-gray-100">
+            {/* Left Side: Name & Info */}
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 truncate">
+                {data.name}
+              </h2>
+              <p className="text-gray-500 mt-1 sm:mt-2 flex items-center text-xs sm:text-sm lg:text-base">
                 <svg
-                  className="w-4 h-4 mr-2 text-primary"
+                  className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-primary flex-shrink-0"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -351,78 +370,44 @@ const MyProfile = () => {
                 Member since {format(new Date(data.created_at), "MMM yyyy")}
               </p>
             </div>
-            <div className="flex gap-3 mt-4 md:mt-0">
+
+            {/* Right Side: Buttons */}
+            <div className="flex flex-nowrap gap-2 sm:gap-3 justify-end">
               {editing ? (
                 <>
                   <button
                     onClick={handleCancel}
-                    className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all flex items-center gap-2 font-medium"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1 sm:gap-2 font-medium text-sm sm:text-base"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                    Cancel
+                    <CloseOutlined className="text-xs sm:text-sm" />
+                    <span className="hidden xs:inline">Cancel</span>
                   </button>
                   <button
                     onClick={handleSaveChanges}
-                    className="px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all flex items-center gap-2 font-medium shadow-md"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all flex items-center gap-1 sm:gap-2 font-medium text-sm sm:text-base shadow-md"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    Save Changes
+                    <CheckOutlined className="text-xs sm:text-sm" />
+                    <span className="hidden xs:inline">Save</span>
                   </button>
                 </>
               ) : (
                 <button
                   onClick={() => setEditing(true)}
-                  className="px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all flex items-center gap-2 font-medium shadow-md"
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all flex items-center gap-1 sm:gap-2 font-medium text-sm sm:text-base shadow-md"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
-                  Edit Profile
+                  <EditOutlined className="text-xs sm:text-sm" />
+                  <span>Edit Profile</span>
                 </button>
               )}
             </div>
           </div>
 
           {/* Profile Content */}
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Profile Picture Section */}
-            <div className="md:col-span-1 flex flex-col items-center">
-              <div className="relative group mb-4">
-                <div className="w-40 h-40 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 p-1">
+            <div className="lg:col-span-1 flex flex-col items-center">
+              <div className="relative group mb-3 sm:mb-4">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 xl:w-40 xl:h-40 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 p-1">
                   <img
                     className="w-full h-full rounded-full object-cover border-4 border-white shadow-lg"
                     src={data.profile_image_url || "/placeholder.jpg"}
@@ -446,10 +431,10 @@ const MyProfile = () => {
                       className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-all duration-300"
                     >
                       {imageLoading ? (
-                        <LoadingOutlined className="text-2xl text-white" />
+                        <LoadingOutlined className="text-lg sm:text-xl lg:text-2xl text-white" />
                       ) : (
-                        <div className="bg-primary p-3 rounded-full">
-                          <CameraOutlined className="text-xl text-white" />
+                        <div className="bg-primary p-2 sm:p-3 rounded-full">
+                          <CameraOutlined className="text-base sm:text-lg lg:text-xl text-white" />
                         </div>
                       )}
                     </label>
@@ -457,17 +442,17 @@ const MyProfile = () => {
                 )}
               </div>
               {editing && (
-                <p className="text-sm text-gray-500 text-center mt-2">
+                <p className="text-xs sm:text-sm text-gray-500 text-center mt-1 sm:mt-2">
                   Click image to update
                 </p>
               )}
             </div>
 
             {/* Profile Details */}
-            <div className="md:col-span-2 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <label className="text-sm font-medium text-gray-600 mb-2 block">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg sm:rounded-xl">
+                  <label className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2 block">
                     Full Name
                   </label>
                   {editing ? (
@@ -477,31 +462,31 @@ const MyProfile = () => {
                       onChange={(e) =>
                         handlePersonalInfoChange("name", e.target.value)
                       }
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
+                      className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors text-sm sm:text-base"
                     />
                   ) : (
-                    <p className="text-gray-900 font-medium">
+                    <p className="text-gray-900 font-medium text-sm sm:text-base">
                       {updatedData?.name || "Not provided"}
                     </p>
                   )}
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <label className="text-sm font-medium text-gray-600 mb-2 block">
+                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg sm:rounded-xl">
+                  <label className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2 block">
                     Email Address
                   </label>
-                  <p className="text-gray-900 font-medium">
+                  <p className="text-gray-900 font-medium text-sm sm:text-base">
                     {updatedData?.email || "Not provided"}
                   </p>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <label className="text-sm font-medium text-gray-600 mb-2 block">
+                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg sm:rounded-xl">
+                  <label className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2 block">
                     Phone Number
                   </label>
                   {editing ? (
                     <div className="flex space-x-2">
-                      <div className="flex items-center px-3 bg-gray-100 rounded-lg text-gray-600 border border-gray-300">
+                      <div className="flex items-center px-2 sm:px-3 bg-gray-100 rounded-lg text-gray-600 border border-gray-300 text-sm sm:text-base">
                         +92
                       </div>
                       <input
@@ -514,20 +499,20 @@ const MyProfile = () => {
                           )
                         }
                         placeholder="3338888666"
-                        className="flex-1 p-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
+                        className="flex-1 p-2 sm:p-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors text-sm sm:text-base"
                       />
                     </div>
                   ) : (
-                    <p className="text-gray-900 font-medium">
-                    {updatedData?.phone_number
-                      ? `+92${updatedData.phone_number}`
-                      : "Not provided"}
-                  </p>
+                    <p className="text-gray-900 font-medium text-sm sm:text-base">
+                      {updatedData?.phone_number
+                        ? `+92${updatedData.phone_number}`
+                        : "Not provided"}
+                    </p>
                   )}
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <label className="text-sm font-medium text-gray-600 mb-2 block">
+                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg sm:rounded-xl">
+                  <label className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2 block">
                     City
                   </label>
                   {editing ? (
@@ -536,7 +521,7 @@ const MyProfile = () => {
                       onChange={(e) =>
                         handlePersonalInfoChange("city", e.target.value)
                       }
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
+                      className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors text-sm sm:text-base"
                     >
                       <option value="">Select City</option>
                       {cities.map((city) => (
@@ -546,7 +531,7 @@ const MyProfile = () => {
                       ))}
                     </select>
                   ) : (
-                    <p className="text-gray-900 font-medium">
+                    <p className="text-gray-900 font-medium text-sm sm:text-base">
                       {cities.find(
                         (city) => city.city_name === updatedData?.city
                       )?.city_name ||
@@ -558,10 +543,10 @@ const MyProfile = () => {
               </div>
 
               {/* Security Section */}
-              <div className="border-t border-gray-100 pt-6">
-                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <div className="border-t border-gray-100 pt-4 sm:pt-6">
+                <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
                   <svg
-                    className="w-6 h-6 text-primary"
+                    className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-primary"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -577,7 +562,7 @@ const MyProfile = () => {
                 </h3>
                 <button
                   onClick={() => setPasswordModalVisible(true)}
-                  className="px-5 py-2.5 bg-primary/10 text-primary rounded-xl hover:bg-primary/20 transition-all flex items-center gap-2 font-medium"
+                  className="px-3 py-2 sm:px-4 sm:py-2 lg:px-5 lg:py-2.5 bg-primary/10 text-primary rounded-lg sm:rounded-xl hover:bg-primary/20 transition-all flex items-center gap-2 font-medium text-sm sm:text-base w-full sm:w-auto justify-center"
                 >
                   <LockOutlined />
                   Change Password
@@ -590,7 +575,7 @@ const MyProfile = () => {
         {/* Password Change Modal */}
         <Modal
           title={
-            <div className="text-xl font-semibold text-gray-900">
+            <div className="text-lg sm:text-xl font-semibold text-gray-900">
               Change Password
             </div>
           }
@@ -598,14 +583,17 @@ const MyProfile = () => {
           onCancel={() => setPasswordModalVisible(false)}
           footer={null}
           destroyOnClose
-          width={500}
+          width={400}
           className="custom-modal"
+          styles={{
+            body: { padding: "16px 20px" },
+          }}
         >
           <Form
             form={passwordForm}
             layout="vertical"
             onFinish={handlePasswordChange}
-            className="mt-6"
+            className="mt-4 sm:mt-6"
           >
             <Form.Item
               label="Current Password"
@@ -620,7 +608,7 @@ const MyProfile = () => {
               <Input.Password
                 placeholder="Enter current password"
                 size="large"
-                className="rounded-lg"
+                className="rounded-lg text-sm sm:text-base"
               />
             </Form.Item>
 
@@ -646,7 +634,7 @@ const MyProfile = () => {
               <Input.Password
                 placeholder="Enter new password"
                 size="large"
-                className="rounded-lg"
+                className="rounded-lg text-sm sm:text-base"
               />
             </Form.Item>
 
@@ -672,14 +660,14 @@ const MyProfile = () => {
               <Input.Password
                 placeholder="Confirm new password"
                 size="large"
-                className="rounded-lg"
+                className="rounded-lg text-sm sm:text-base"
               />
             </Form.Item>
 
             <Form.Item>
               <button
                 type="submit"
-                className="w-full px-4 py-3 bg-primary text-white rounded-xl transition-all flex items-center justify-center gap-2 font-medium text-base"
+                className="w-full px-4 py-3 bg-primary text-white rounded-xl transition-all flex items-center justify-center gap-2 font-medium text-sm sm:text-base"
               >
                 Change Password
               </button>

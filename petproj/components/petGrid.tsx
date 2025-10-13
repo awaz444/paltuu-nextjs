@@ -82,6 +82,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                 setInlineError("Failed to fetch your profile.");
                 return;
             }
+            
 
             const data = await res.json();
             const missingCity = !data.city;

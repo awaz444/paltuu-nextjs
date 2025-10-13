@@ -208,6 +208,25 @@ console.log(`Fetched user ID: ${userId}`);
                         {/* Content for Verification Applications */}
                     </div>
                     </Link>
+
+                    {/* Orders */}
+                    <Link href="/orders">
+                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
+                        <button
+                            className="absolute top-4 right-4 w-6 h-6"
+                            title="Edit Orders">
+                            <img
+                                src="/arrow-right.svg"
+                                alt="Details"
+                                className="hover:text-primary"
+                            />
+                        </button>
+                        <h4 className="text-lg font-bold text-primary mb-4">
+                            Go to Orders
+                        </h4>
+                        {/* Content for Orders */}
+                    </div>
+                    </Link>
                 </div>
             </div>
         </>

@@ -168,11 +168,7 @@ const HeroSection = () => {
                             {/* Perks List */}
                             <ul className="list-disc list-inside text-gray-700 space-y-2 mb-5">
                                 <li>
-                                    Largest network of adoptable pets in
-                                    Pakistan
-                                    <a href="/browse-pets" className="sr-only">
-                                        Adopt cats and dogs in Pakistan
-                                    </a>
+                                    Best place to <a href="/browse-pets" className="text-inherit no-underline ">adopt pets in Pakistan</a>
                                 </li>
                                 <li>
                                     Trusted shelters and adoption centers

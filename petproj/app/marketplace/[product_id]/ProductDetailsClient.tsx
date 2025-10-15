@@ -447,7 +447,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 <div className="space-y-4 flex-grow">
                   {/* Name + Listing Date */}
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <h1 className="text-3xl font-bold text-gray-900 leading-tight break-words">
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight break-words">
                       {product.name}
                     </h1>
                   </div>
@@ -466,58 +466,65 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     </div>
                   </div>
 
-                  {/* Price and Stock Information */}
+                  {/* 💰 Price and Stock Information */}
                   <div className="grid grid-cols-1 gap-4">
-                    <div className="bg-white bg-opacity-5 p-4 rounded-xl border border-primary border-opacity-20">
-                      <div className="flex justify-between items-center">
-                        <div>
+                    <div className="bg-white bg-opacity-5 p-4 sm:p-5 rounded-xl border border-primary border-opacity-20">
+                      <div className="flex flex-nowrap justify-between items-center gap-3 sm:gap-4">
+                        {/* 💸 Price + Discount */}
+                        <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-600 mb-1 flex items-center">
                             <DollarOutlined className="mr-1 text-primary" />
                             Price
                           </p>
-                          <div className="flex items-center gap-2">
-                            <p className="text-xl font-bold text-primary">
-                              PKR{" "}
-                              {(
-                                selectedVariant?.price_override ?? product.price
-                              ).toLocaleString()}
-                            </p>
-                            {(selectedVariant?.compare_at_price ??
-                              product.compare_at_price) > 0 &&
-                              (selectedVariant?.compare_at_price ??
-                                product.compare_at_price) >
-                                (selectedVariant?.price_override ??
-                                  product.price) && (
-                                <p className="text-sm text-gray-500 line-through">
+
+                          {/* Pricing Details */}
+                          {(selectedVariant?.compare_at_price ??
+                            product.compare_at_price) >
+                          (selectedVariant?.price_override ?? product.price) ? (
+                            <>
+                              {/* Old price + discount */}
+                              <div className="flex flex-wrap items-center gap-2 text-sm sm:text-base text-gray-600">
+                                <span className="line-through">
                                   PKR{" "}
                                   {(
                                     selectedVariant?.compare_at_price ??
                                     product.compare_at_price
                                   ).toLocaleString()}
-                                </p>
-                              )}
-                          </div>
-                          {(selectedVariant?.compare_at_price ??
-                            product.compare_at_price) >
-                            (selectedVariant?.price_override ??
-                              product.price) && (
-                            <div className="mt-1">
-                              <Tag color="green" className="text-xs">
-                                Save{" "}
-                                {calculateDiscountPercentage(
+                                </span>
+                                <span className="text-green-600 font-semibold">
+                                  Save{" "}
+                                  {calculateDiscountPercentage(
+                                    selectedVariant?.price_override ??
+                                      product.price,
+                                    selectedVariant?.compare_at_price ??
+                                      product.compare_at_price
+                                  )}
+                                  %
+                                </span>
+                              </div>
+
+                              {/* New price */}
+                              <p className="text-lg sm:text-xl font-bold text-primary mt-1">
+                                PKR{" "}
+                                {(
                                   selectedVariant?.price_override ??
-                                    product.price,
-                                  selectedVariant?.compare_at_price ??
-                                    product.compare_at_price
-                                )}
-                                %
-                              </Tag>
-                            </div>
+                                  product.price
+                                ).toLocaleString()}
+                              </p>
+                            </>
+                          ) : (
+                            // No discount — just show regular price
+                            <p className="text-lg sm:text-xl font-bold text-primary">
+                              PKR{" "}
+                              {(
+                                selectedVariant?.price_override ?? product.price
+                              ).toLocaleString()}
+                            </p>
                           )}
                         </div>
 
-                        {/* Stock Availability Badge */}
-                        <div>
+                        {/* 📦 Stock Availability */}
+                        <div className="flex-shrink-0 flex items-center justify-center">
                           <Tag
                             color={
                               (selectedVariant
@@ -526,7 +533,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                                 ? "green"
                                 : "red"
                             }
-                            className="rounded-full"
+                            className="rounded-full text-center text-xs sm:text-sm px-3 py-1"
                           >
                             {(selectedVariant
                               ? selectedVariant.stock

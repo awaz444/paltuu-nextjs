@@ -170,7 +170,6 @@ const HeroSection = () => {
                                 <li>
                                     Best place to <a href="/browse-pets" className="text-inherit no-underline ">adopt pets in Pakistan</a>
                                 </li>
-                                
                                 <li>
                                     Trusted shelters and adoption centers
                                     nationwide

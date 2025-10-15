@@ -329,7 +329,7 @@ const MyProfile = () => {
             {/* Logo - Much more compact on mobile */}
             <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-lg sm:rounded-xl bg-primary flex items-center justify-center shadow-sm sm:shadow-md">
               <img
-                className="p-1 sm:p-1.5 md:p-2 lg:p-2.5 w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 object-contain"
+                className="p-1 sm:p-1.5 md:p-0 w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 object-contain"
                 src="/favicon-dark.png"
                 alt="paltuu logo"
               />

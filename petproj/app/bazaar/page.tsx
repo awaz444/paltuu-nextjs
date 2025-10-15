@@ -19,6 +19,7 @@ import {
     Scissors,
     Home,
     Search,
+    Store,
 } from "lucide-react";
 import { MoonLoader } from "react-spinners";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
@@ -79,6 +80,38 @@ const categories = [
         slug: "healthcare",
         categoryId: 4,
         featuredKey: "healthcare" as const,
+    },
+];
+
+// Brand definitions for Shop by Brands section
+const brands = [
+    {
+        name: "Felicia",
+        slug: "felicia",
+        image: "https://lfiwvlicdkdheqynvjxb.supabase.co/storage/v1/object/public/product-imgs/products/41/variants/150/1759407491636-0-felicah40-640x640-copy.webp",
+        description: "Premium pet nutrition",
+        longDescription: "Felicia offers premium pet nutrition solutions crafted with the finest ingredients to ensure your pets receive optimal health and vitality. Our scientifically formulated products support healthy growth, strong immunity, and overall well-being for pets of all ages and breeds.",
+    },
+    {
+        name: "Prochoice",
+        slug: "prochoice",
+        image: "https://lfiwvlicdkdheqynvjxb.supabase.co/storage/v1/object/public/product-imgs/products/25/variants/104/1759177431814-0-PROCHOICE_Pro32_15kg.webp",
+        description: "Quality pet food",
+        longDescription: "Prochoice delivers high-quality pet food made from natural ingredients and balanced nutrition. Our range includes specialized formulas for different life stages, dietary needs, and health conditions, ensuring every pet gets the nutrition they deserve for a happy, healthy life.",
+    },
+    {
+        name: "Homie",
+        slug: "homie",
+        image: "https://lfiwvlicdkdheqynvjxb.supabase.co/storage/v1/object/public/product-imgs/products/210/variants/429/1759923573843-0-Homie-Premium-Adult-Dry-Cat-Food-Chicken.webp",
+        description: "Comfort for pets",
+        longDescription: "Homie specializes in creating comfortable and cozy products that make your pets feel at home. From plush beds and blankets to toys and accessories, our products are designed to provide maximum comfort and happiness for your beloved companions.",
+    },
+    {
+        name: "Petline",
+        slug: "petline",
+        image: "https://lfiwvlicdkdheqynvjxb.supabase.co/storage/v1/object/public/product-imgs/products/120/variants/256/1759503126375-0-delicate.jpeg",
+        description: "Complete pet care",
+        longDescription: "Petline provides comprehensive pet care solutions including grooming supplies, health supplements, training aids, and wellness products. Our complete range ensures that every aspect of your pet's care is covered with professional-grade quality and reliability.",
     },
 ];
 
@@ -261,10 +294,10 @@ export default function BazaarPage() {
             </section>
 
             {/* 🔍 Search Bar Section */}
-<section className="bg-gray-50 py-6">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6">
-    <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
-      <div className="relative">
+        <section className="bg-gray-50 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
+            <div className="relative">
         <Search
           className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5"
         />
@@ -315,7 +348,7 @@ export default function BazaarPage() {
                 {/* Categories Grid - Always Show (with skeleton on first load) */}
                 {!loadError && (
                     <div className="max-w-7xl mx-auto px-6 space-y-10">
-                        {categories.map((cat) => {
+                        {categories.map((cat, index) => {
                             const IconComponent = cat.icon;
                             const categorySection = bazaarCategories[cat.title];
                             const filteredProducts =
@@ -324,102 +357,247 @@ export default function BazaarPage() {
                                 categorySection?.loading || globalLoading;
 
                             return (
-                                <section key={cat.title} className="mb-2">
-                                    {/* Header */}
-                                    <div className="flex justify-between items-center mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <IconComponent
-                                                size={24}
-                                                className="text-primary"
-                                            />
-                                            <h2 className="text-2xl font-bold text-gray-900">
-                                                {cat.title}
-                                            </h2>
+                                <div key={cat.title}>
+                                    <section className="mb-2">
+                                        {/* Header */}
+                                        <div className="flex justify-between items-center mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <IconComponent
+                                                    size={24}
+                                                    className="text-primary"
+                                                />
+                                                <h2 className="text-2xl font-bold text-gray-900">
+                                                    {cat.title}
+                                                </h2>
+                                            </div>
+                                            <button
+                                                onClick={() => handleViewAll(cat)}
+                                                className="text-primary text-sm font-medium hover:underline flex items-center gap-1 cursor-pointer">
+                                                View All <ChevronRight size={16} />
+                                            </button>
                                         </div>
-                                        <button
-                                            onClick={() => handleViewAll(cat)}
-                                            className="text-primary text-sm font-medium hover:underline flex items-center gap-1 cursor-pointer">
-                                            View All <ChevronRight size={16} />
-                                        </button>
-                                    </div>
 
-                                    {/* Product Slider */}
-                                    <div className="relative">
-                                        <div className="flex gap-5 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-primary scrollbar-track-gray-100 pb-3 snap-x snap-mandatory">
-                                            {isLoading ? (
-                                                [...Array(8)].map((_, i) => (
-                                                    <div
-                                                        key={i}
-                                                        className="w-[240px] flex-shrink-0 bg-white rounded-3xl shadow-sm border animate-pulse">
-                                                        <div className="w-full h-[240px] bg-gray-200 rounded-t-2xl"></div>
-                                                        <div className="p-4 space-y-3">
-                                                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                                                            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                                                            <div className="h-6 bg-gray-200 rounded w-2/3 mt-2"></div>
-                                                            <div className="h-10 bg-gray-200 rounded mt-3"></div>
+                                        {/* Product Slider */}
+                                        <div className="relative">
+                                            <div className="flex gap-5 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-primary scrollbar-track-gray-100 pb-3 snap-x snap-mandatory">
+                                                {isLoading ? (
+                                                    [...Array(8)].map((_, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className="w-[240px] flex-shrink-0 bg-white rounded-3xl shadow-sm border animate-pulse">
+                                                            <div className="w-full h-[240px] bg-gray-200 rounded-t-2xl"></div>
+                                                            <div className="p-4 space-y-3">
+                                                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                                                <div className="h-6 bg-gray-200 rounded w-2/3 mt-2"></div>
+                                                                <div className="h-10 bg-gray-200 rounded mt-3"></div>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ))
-                                            ) : filteredProducts.length > 0 ? (
-                                                filteredProducts.map(
-                                                    (prod: Product) => {
-                                                        const rating =
-                                                            prod.rating ?? 0;
-                                                        const reviewCount =
-                                                            prod.reviewCount ??
-                                                            0;
-                                                        return (
-                                                            <Link
-                                                                href={`/marketplace/${prod.product_id}`}
-                                                                key={`${cat.title}-${prod.product_id}`}
-                                                                onClick={() => {
-                                                                    setLoadingProductId(
-                                                                        prod.product_id
-                                                                    );
-                                                                    sessionStorage.setItem(
-                                                                        "marketplace-scroll",
-                                                                        window.scrollY.toString()
-                                                                    );
-                                                                    sessionStorage.setItem(
-                                                                        "marketplace-from-product",
-                                                                        "true"
-                                                                    );
-                                                                }}
-                                                                className="w-[240px] flex-shrink-0 bg-white rounded-3xl border-2 border-transparent hover:border-primary shadow-sm hover:shadow-md hover:scale-102 transition-all duration-300 snap-start flex flex-col overflow-hidden cursor-pointer group relative">
-                                                                {/* Modern Loader Overlay with MoonLoader */}
-                                                                {loadingProductId ===
-                                                                    prod.product_id && (
-                                                                    <div className="absolute inset-0 z-20 bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center rounded-3xl">
-                                                                        <MoonLoader
-                                                                            color="#A03048" // primary color
-                                                                            size={
-                                                                                40
-                                                                            } // size of the loader
-                                                                            speedMultiplier={
-                                                                                1.2
-                                                                            }
-                                                                        />
-                                                                    </div>
-                                                                )}
+                                                    ))
+                                                ) : filteredProducts.length > 0 ? (
+                                                    filteredProducts.map(
+                                                        (prod: Product) => {
+                                                            const rating =
+                                                                prod.rating ?? 0;
+                                                            const reviewCount =
+                                                                prod.reviewCount ??
+                                                                0;
+                                                            return (
+                                                                <Link
+                                                                    href={`/marketplace/${prod.product_id}`}
+                                                                    key={`${cat.title}-${prod.product_id}`}
+                                                                    onClick={() => {
+                                                                        setLoadingProductId(
+                                                                            prod.product_id
+                                                                        );
+                                                                        sessionStorage.setItem(
+                                                                            "marketplace-scroll",
+                                                                            window.scrollY.toString()
+                                                                        );
+                                                                        sessionStorage.setItem(
+                                                                            "marketplace-from-product",
+                                                                            "true"
+                                                                        );
+                                                                    }}
+                                                                    className="w-[240px] flex-shrink-0 bg-white rounded-3xl border-2 border-transparent hover:border-primary shadow-sm hover:shadow-md hover:scale-102 transition-all duration-300 snap-start flex flex-col overflow-hidden cursor-pointer group relative">
+                                                                    {/* Modern Loader Overlay with MoonLoader */}
+                                                                    {loadingProductId ===
+                                                                        prod.product_id && (
+                                                                        <div className="absolute inset-0 z-20 bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center rounded-3xl">
+                                                                            <MoonLoader
+                                                                                color="#A03048" // primary color
+                                                                                size={
+                                                                                    40
+                                                                                } // size of the loader
+                                                                                speedMultiplier={
+                                                                                    1.2
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                    )}
 
-                                                                {/* Image */}
-                                                                <div className="relative bg-white rounded-2xl p-2">
-                                                                    <img
-                                                                        src={
-                                                                            prod.image ||
-                                                                            "/product-placeholder.png"
-                                                                        }
-                                                                        alt={
-                                                                            prod.title
-                                                                        }
-                                                                        className="w-full aspect-square object-contain rounded-xl transition-transform duration-300"
-                                                                    />
-                                                                    {/* Badges */}
-                                                                    {cat.sortBy ===
-                                                                        "discount" &&
-                                                                        prod.original_price && (
+                                                                    {/* Image */}
+                                                                    <div className="relative bg-white rounded-2xl p-2">
+                                                                        <img
+                                                                            src={
+                                                                                prod.image ||
+                                                                                "/product-placeholder.png"
+                                                                            }
+                                                                            alt={
+                                                                                prod.title
+                                                                            }
+                                                                            className="w-full aspect-square object-contain rounded-xl transition-transform duration-300"
+                                                                        />
+                                                                        {/* Badges */}
+                                                                        {cat.sortBy ===
+                                                                            "discount" &&
+                                                                            prod.original_price && (
+                                                                                <div className="absolute top-3 left-3 z-10">
+                                                                                    <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                                                                        -
+                                                                                        {Math.round(
+                                                                                            ((parseInt(
+                                                                                                prod.original_price
+                                                                                            ) -
+                                                                                                parseInt(
+                                                                                                    prod.price
+                                                                                                )) /
+                                                                                                parseInt(
+                                                                                                    prod.original_price
+                                                                                                )) *
+                                                                                                100
+                                                                                        )}
+
+                                                                                        %
+                                                                                    </span>
+                                                                                </div>
+                                                                            )}
+                                                                        {cat.sortBy ===
+                                                                            "trending" && (
                                                                             <div className="absolute top-3 left-3 z-10">
-                                                                                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                                                                <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 py-2">
+                                                                                    <Flame
+                                                                                        size={
+                                                                                            12
+                                                                                        }
+                                                                                    />
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {/* Content */}
+                                                                    <div className="p-3 flex flex-col flex-grow">
+                                                                        {/* Title */}
+                                                                        <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2 leading-snug text-sm min-h-[2.5rem]">
+                                                                            {
+                                                                                prod.title
+                                                                            }
+                                                                        </h3>
+
+                                                                        {/* Rating */}
+                                                                        {rating >
+                                                                        0 ? (
+                                                                            <div className="flex items-center gap-1 mb-2">
+                                                                                <div className="flex text-yellow-400">
+                                                                                    {[
+                                                                                        ...Array(
+                                                                                            5
+                                                                                        ),
+                                                                                    ].map(
+                                                                                        (
+                                                                                            _,
+                                                                                            i
+                                                                                        ) => (
+                                                                                            <Star
+                                                                                                key={
+                                                                                                    i
+                                                                                                }
+                                                                                                size={
+                                                                                                    14
+                                                                                                }
+                                                                                                className={
+                                                                                                    i <
+                                                                                                    Math.floor(
+                                                                                                        rating
+                                                                                                    )
+                                                                                                        ? "fill-yellow-400"
+                                                                                                        : "fill-gray-200"
+                                                                                                }
+                                                                                            />
+                                                                                        )
+                                                                                    )}
+                                                                                </div>
+                                                                                <span className="text-xs font-medium text-gray-700 ml-1">
+                                                                                    {rating.toFixed(
+                                                                                        1
+                                                                                    )}
+                                                                                </span>
+                                                                                {reviewCount >
+                                                                                    0 && (
+                                                                                    <span className="text-xs text-gray-500">
+                                                                                        (
+                                                                                        {
+                                                                                            reviewCount
+                                                                                        }{" "}
+                                                                                        review
+                                                                                        {reviewCount >
+                                                                                        1
+                                                                                            ? "s"
+                                                                                            : ""}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="flex items-center gap-1 mb-2">
+                                                                                <div className="flex text-gray-200">
+                                                                                    {[
+                                                                                        ...Array(
+                                                                                            5
+                                                                                        ),
+                                                                                    ].map(
+                                                                                        (
+                                                                                            _,
+                                                                                            i
+                                                                                        ) => (
+                                                                                            <Star
+                                                                                                key={
+                                                                                                    i
+                                                                                                }
+                                                                                                size={
+                                                                                                    14
+                                                                                                }
+                                                                                                className="fill-gray-200"
+                                                                                            />
+                                                                                        )
+                                                                                    )}
+                                                                                </div>
+                                                                                <span className="text-xs text-gray-400 ml-1">
+                                                                                    No
+                                                                                    reviews
+                                                                                    yet
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* Price */}
+                                                                        <div className="mt-auto flex items-center gap-2">
+                                                                            <p className="text-primary font-bold text-sm">
+                                                                                ₨{" "}
+                                                                                {parseInt(
+                                                                                    prod.price
+                                                                                ).toLocaleString()}
+                                                                            </p>
+                                                                            {prod.original_price && (
+                                                                                <p className="text-gray-400 line-through text-xs">
+                                                                                    ₨{" "}
+                                                                                    {parseInt(
+                                                                                        prod.original_price
+                                                                                    ).toLocaleString()}
+                                                                                </p>
+                                                                            )}
+                                                                            {prod.original_price && (
+                                                                                <span className="text-green-600 text-xs font-medium bg-green-50 px-1 py-0.5 rounded">
                                                                                     -
                                                                                     {Math.round(
                                                                                         ((parseInt(
@@ -436,184 +614,95 @@ export default function BazaarPage() {
 
                                                                                     %
                                                                                 </span>
-                                                                            </div>
-                                                                        )}
-                                                                    {cat.sortBy ===
-                                                                        "trending" && (
-                                                                        <div className="absolute top-3 left-3 z-10">
-                                                                            <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 py-2">
-                                                                                <Flame
-                                                                                    size={
-                                                                                        12
-                                                                                    }
-                                                                                />
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-
-                                                                {/* Content */}
-                                                                <div className="p-3 flex flex-col flex-grow">
-                                                                    {/* Title */}
-                                                                    <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2 leading-snug text-sm min-h-[2.5rem]">
-                                                                        {
-                                                                            prod.title
-                                                                        }
-                                                                    </h3>
-
-                                                                    {/* Rating */}
-                                                                    {rating >
-                                                                    0 ? (
-                                                                        <div className="flex items-center gap-1 mb-2">
-                                                                            <div className="flex text-yellow-400">
-                                                                                {[
-                                                                                    ...Array(
-                                                                                        5
-                                                                                    ),
-                                                                                ].map(
-                                                                                    (
-                                                                                        _,
-                                                                                        i
-                                                                                    ) => (
-                                                                                        <Star
-                                                                                            key={
-                                                                                                i
-                                                                                            }
-                                                                                            size={
-                                                                                                14
-                                                                                            }
-                                                                                            className={
-                                                                                                i <
-                                                                                                Math.floor(
-                                                                                                    rating
-                                                                                                )
-                                                                                                    ? "fill-yellow-400"
-                                                                                                    : "fill-gray-200"
-                                                                                            }
-                                                                                        />
-                                                                                    )
-                                                                                )}
-                                                                            </div>
-                                                                            <span className="text-xs font-medium text-gray-700 ml-1">
-                                                                                {rating.toFixed(
-                                                                                    1
-                                                                                )}
-                                                                            </span>
-                                                                            {reviewCount >
-                                                                                0 && (
-                                                                                <span className="text-xs text-gray-500">
-                                                                                    (
-                                                                                    {
-                                                                                        reviewCount
-                                                                                    }{" "}
-                                                                                    review
-                                                                                    {reviewCount >
-                                                                                    1
-                                                                                        ? "s"
-                                                                                        : ""}
-                                                                                </span>
                                                                             )}
                                                                         </div>
-                                                                    ) : (
-                                                                        <div className="flex items-center gap-1 mb-2">
-                                                                            <div className="flex text-gray-200">
-                                                                                {[
-                                                                                    ...Array(
-                                                                                        5
-                                                                                    ),
-                                                                                ].map(
-                                                                                    (
-                                                                                        _,
-                                                                                        i
-                                                                                    ) => (
-                                                                                        <Star
-                                                                                            key={
-                                                                                                i
-                                                                                            }
-                                                                                            size={
-                                                                                                14
-                                                                                            }
-                                                                                            className="fill-gray-200"
-                                                                                        />
-                                                                                    )
-                                                                                )}
-                                                                            </div>
-                                                                            <span className="text-xs text-gray-400 ml-1">
-                                                                                No
-                                                                                reviews
-                                                                                yet
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {/* Price */}
-                                                                    <div className="mt-auto flex items-center gap-2">
-                                                                        <p className="text-primary font-bold text-sm">
-                                                                            ₨{" "}
-                                                                            {parseInt(
-                                                                                prod.price
-                                                                            ).toLocaleString()}
-                                                                        </p>
-                                                                        {prod.original_price && (
-                                                                            <p className="text-gray-400 line-through text-xs">
-                                                                                ₨{" "}
-                                                                                {parseInt(
-                                                                                    prod.original_price
-                                                                                ).toLocaleString()}
-                                                                            </p>
-                                                                        )}
-                                                                        {prod.original_price && (
-                                                                            <span className="text-green-600 text-xs font-medium bg-green-50 px-1 py-0.5 rounded">
-                                                                                -
-                                                                                {Math.round(
-                                                                                    ((parseInt(
-                                                                                        prod.original_price
-                                                                                    ) -
-                                                                                        parseInt(
-                                                                                            prod.price
-                                                                                        )) /
-                                                                                        parseInt(
-                                                                                            prod.original_price
-                                                                                        )) *
-                                                                                        100
-                                                                                )}
-
-                                                                                %
-                                                                            </span>
-                                                                        )}
                                                                     </div>
-                                                                </div>
-                                                            </Link>
-                                                        );
-                                                    }
-                                                )
-                                            ) : categorySection?.error ? (
-                                                <div className="text-gray-400 text-sm italic py-6 px-2 flex items-center gap-2">
-                                                    <span className="text-red-500">
-                                                        ⚠️
-                                                    </span>
-                                                    Error loading products:{" "}
-                                                    {categorySection.error}
-                                                </div>
-                                            ) : (
-                                                // Show skeleton loading when no products yet
-                                                [...Array(8)].map((_, i) => (
-                                                    <div
-                                                        key={i}
-                                                        className="w-[240px] flex-shrink-0 bg-white rounded-3xl shadow-sm border animate-pulse">
-                                                        <div className="w-full h-[240px] bg-gray-200 rounded-t-2xl"></div>
-                                                        <div className="p-4 space-y-3">
-                                                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                                                            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                                                            <div className="h-6 bg-gray-200 rounded w-2/3 mt-2"></div>
-                                                            <div className="h-10 bg-gray-200 rounded mt-3"></div>
-                                                        </div>
+                                                                </Link>
+                                                            );
+                                                        }
+                                                    )
+                                                ) : categorySection?.error ? (
+                                                    <div className="text-gray-400 text-sm italic py-6 px-2 flex items-center gap-2">
+                                                        <span className="text-red-500">
+                                                            ⚠️
+                                                        </span>
+                                                        Error loading products:{" "}
+                                                        {categorySection.error}
                                                     </div>
-                                                ))
-                                            )}
+                                                ) : (
+                                                    // Show skeleton loading when no products yet
+                                                    [...Array(8)].map((_, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className="w-[240px] flex-shrink-0 bg-white rounded-3xl shadow-sm border animate-pulse">
+                                                            <div className="w-full h-[240px] bg-gray-200 rounded-t-2xl"></div>
+                                                            <div className="p-4 space-y-3">
+                                                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                                                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                                                <div className="h-6 bg-gray-200 rounded w-2/3 mt-2"></div>
+                                                                <div className="h-10 bg-gray-200 rounded mt-3"></div>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                </section>
+                                    </section>
+
+                                    {/* Shop by Brands section - Insert after "Most Discounted" */}
+                                    {cat.title === "Most Discounted" && (
+                                        <section className="mb-2 mt-10">
+                                            {/* Header */}
+                                            <div className="flex justify-between items-center mb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <Store
+                                                        size={24}
+                                                        className="text-primary"
+                                                    />
+                                                    <h2 className="text-2xl font-bold text-gray-900">
+                                                        Shop by Brands
+                                                    </h2>
+                                                </div>
+                                                <Link
+                                                    href="/marketplace/brands"
+                                                    className="text-primary text-sm font-medium hover:underline flex items-center gap-1 cursor-pointer">
+                                                    View All <ChevronRight size={16} />
+                                                </Link>
+                                            </div>
+
+                                            {/* Brand Cards */}
+                                            <div className="relative">
+                                                <div className="flex gap-5 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-primary scrollbar-track-gray-100 pb-3 snap-x snap-mandatory">
+                                                    {brands.map((brand) => (
+                                                        <Link
+                                                            href={`/marketplace/brands/${brand.slug}`}
+                                                            key={brand.slug}
+                                                            className="w-[240px] flex-shrink-0 bg-white rounded-3xl border-2 border-transparent hover:border-primary shadow-sm hover:shadow-md hover:scale-102 transition-all duration-300 snap-start flex flex-col overflow-hidden cursor-pointer group">
+                                                            {/* Brand Image */}
+                                                            <div className="relative bg-white rounded-2xl p-4">
+                                                                <img
+                                                                    src={brand.image}
+                                                                    alt={brand.name}
+                                                                    className="w-full aspect-square object-contain rounded-xl transition-transform duration-300"
+                                                                />
+                                                            </div>
+
+                                                            {/* Brand Info */}
+                                                            <div className="p-4 flex flex-col items-center text-center">
+                                                                <h3 className="font-bold text-gray-900 text-lg mb-1">
+                                                                    {brand.name}
+                                                                </h3>
+                                                                <p className="text-gray-600 text-sm">
+                                                                    {brand.description}
+                                                                </p>
+                                                            </div>
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </section>
+                                    )}
+                                </div>
                             );
                         })}
                     </div>

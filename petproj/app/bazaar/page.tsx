@@ -277,9 +277,10 @@ export default function BazaarPage() {
         />
         <button
           type="submit"
-          className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 bg-primary text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-medium hover:bg-[color-mix(in srgb, var(--primary) 90%, black 10%)] transition-colors duration-200 text-sm sm:text-base"
+          className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 bg-primary text-white px-3 sm:px-4 py-2 sm:py-2 rounded-lg sm:rounded-xl font-medium hover:bg-[color-mix(in srgb, var(--primary) 90%, black 10%)] transition-colors duration-200"
+          aria-label="Search"
         >
-          Search
+          <Search size={16} className="sm:w-5 sm:h-5" />
         </button>
       </div>
       <p className="text-center text-gray-500 text-xs sm:text-sm mt-3">

@@ -143,13 +143,6 @@ const handleProductClick = (productId: number) => {
 
   return (
     <div className="fullBody">
-      <Link
-        href="/bazaar"
-        className="inline-flex items-center ml-8 gap-2 mt-3 text-primary font-medium"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Go Back to Bazaar
-      </Link>
 
       <ProductFilterSection
         filters={filters}

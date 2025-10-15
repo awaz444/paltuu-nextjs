@@ -171,12 +171,6 @@ const Navbar = ({
       isAction: false,
     },
     {
-      href: "/notifications",
-      label: "Notifications",
-      icon: "bi-bell",
-      isAction: false,
-    },
-    {
       href: "/my-orders",
       label: "My Orders",
       icon: "bi-bag",

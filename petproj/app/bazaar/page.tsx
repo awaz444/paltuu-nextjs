@@ -337,12 +337,13 @@ export default function BazaarPage() {
                     />
                 </div>
 
+
                 <style jsx>{`
                     .bazaar-banner {
                         display: flex;
                         justify-content: center;
                         align-items: center;
-                        width: 98.9vw;
+                        width: 100vw;
                         height: auto;
                         margin: 0;
                         padding: 0;

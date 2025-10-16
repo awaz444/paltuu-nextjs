@@ -95,14 +95,19 @@ export default function WhiskasBrandPage() {
                         <span>Back to All Brands</span>
                     </Link>
 
+                    {/* Centered Brand Heading and Slug */}
+                    <div className="text-center mb-8">
+                        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                            {displayName}
+                        </h1>
+                        <p className="text-primary font-medium text-lg">whiskas</p>
+                    </div>
+
                     <div className="flex items-center gap-4 mb-6">
                         <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center">
                             <Store size={32} className="text-primary" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                {displayName}
-                            </h1>
                             <p className="text-primary font-medium">Complete cat nutrition</p>
                         </div>
                     </div>

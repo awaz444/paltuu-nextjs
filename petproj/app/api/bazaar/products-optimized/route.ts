@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "../../../../db/ecom";
 import { safeRedis } from "../../../../utils/redis";
+import pluralize from 'pluralize';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic'; // Ensure fresh data for each request
@@ -33,7 +34,18 @@ export async function GET(req: NextRequest) {
     // Filters
     const filterCategory = searchParams.get('category') || '';
     const filterCollection = searchParams.get('collection') || '';
-    const filterKeyword = searchParams.get('keyword') || '';
+    const rawFilterKeyword = searchParams.get('keyword') || '';
+    // Normalize keyword: split into words, strip punctuation, singularize and lowercase
+    const filterKeyword = (() => {
+      const raw = String(rawFilterKeyword || '').trim();
+      if (!raw) return '';
+      const words = raw
+        .split(/\s+/)
+        .map((w) => w.replace(/[^\p{L}\p{N}]/gu, '')) // remove punctuation
+        .filter(Boolean)
+        .map((w) => pluralize.singular(w.toLowerCase()));
+      return words.join(' ');
+    })();
     const categorySlug = searchParams.get('categorySlug') || ''; // For category-based filtering
     const petType = searchParams.get('petType') || ''; // For pet type filtering (cat, dog, fish, bird)
     const sortBy = searchParams.get('sortBy') || ''; // trending, discount, new
@@ -44,7 +56,7 @@ export async function GET(req: NextRequest) {
     const includeVariants = searchParams.get('variants') === 'true'; // Only load variants if needed
 
     // Cache key
-    const cacheKey = `products:v6:admin=${adminView}:page=${page}:limit=${limit}:cat=${filterCategory}:slug=${categorySlug}:col=${filterCollection}:kw=${filterKeyword}:pet=${petType}:sort=${sortBy}:minP=${minPrice}:maxP=${maxPrice}:ids=${filterProductIds}:feat=${featuredIds}:var=${includeVariants}`;
+  const cacheKey = `products:v6:admin=${adminView}:page=${page}:limit=${limit}:cat=${filterCategory}:slug=${categorySlug}:col=${filterCollection}:kw=${filterKeyword}:pet=${petType}:sort=${sortBy}:minP=${minPrice}:maxP=${maxPrice}:ids=${filterProductIds}:feat=${featuredIds}:var=${includeVariants}`;
 
     // Try cache first
     try {
@@ -97,9 +109,14 @@ export async function GET(req: NextRequest) {
     } else {
       // Only apply these filters when NOT using curated product IDs
       if (filterKeyword) {
-        whereValues.push(`%${filterKeyword}%`);
-        const idx = whereValues.length;
-        whereClauses.push(`(p.title ILIKE $${idx} OR p.description ILIKE $${idx})`);
+        // Split processed keyword into words and require each word to appear in title only (AND semantics)
+        const words = filterKeyword.split(/\s+/).filter(Boolean);
+        words.forEach((w) => {
+          whereValues.push(`%${w}%`);
+          const idx = whereValues.length;
+          // Only search within the product title to avoid matches from description
+          whereClauses.push(`p.title ILIKE $${idx}`);
+        });
       }
 
       // Category filtering by slug (for landing page categories)

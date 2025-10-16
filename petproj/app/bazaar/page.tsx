@@ -372,6 +372,7 @@ export default function BazaarPage() {
           placeholder="Look for your favorite products"
           className="w-full pl-10 sm:pl-12 pr-24 py-2.5 sm:py-4 rounded-2xl border-2 border-gray-200 focus:border-primary focus:outline-none focus:shadow-none transition-all duration-200 text-sm sm:text-lg bg-gray-50 hover:bg-white [outline:none!important] [box-shadow:none!important]"
         />
+        
         <button
           type="submit"
           className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 bg-primary text-white px-3 sm:px-4 py-2 sm:py-2 rounded-lg sm:rounded-xl font-medium hover:bg-[color-mix(in srgb, var(--primary) 90%, black 10%)] transition-colors duration-200"

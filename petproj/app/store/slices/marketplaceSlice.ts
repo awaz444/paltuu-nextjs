@@ -1,5 +1,6 @@
 // store/slices/marketplaceSlice.ts
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
+import pluralize from 'pluralize';
 
 interface Product {
   product_id: number;
@@ -56,7 +57,18 @@ export const fetchProducts = createAsyncThunk(
 
       // Send keyword only for text search (searches title and description)
       if (filters.keyword) {
-        params.set('keyword', String(filters.keyword));
+        // Normalize: split into words, singularize each, remove empty parts
+        const raw = String(filters.keyword || '').trim();
+        if (raw.length > 0) {
+          const words = raw
+            .split(/\s+/)
+            .map((w) => w.replace(/[^\p{L}\p{N}]/gu, '')) // strip punctuation
+            .filter(Boolean)
+            .map((w) => pluralize.singular(w.toLowerCase()));
+
+          const processed = words.join(' ');
+          if (processed.length > 0) params.set('keyword', processed);
+        }
       }
 
       // Send petType as separate parameter (filters by category, NOT description)

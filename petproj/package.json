@@ -50,6 +50,7 @@
     "node-mailjet": "^6.0.8",
     "nodemailer": "^6.9.16",
     "pg": "^8.13.1",
+    "pluralize": "^8.0.0",
     "prisma": "^5.22.0",
     "react": "^18",
     "react-confetti": "^6.4.0",

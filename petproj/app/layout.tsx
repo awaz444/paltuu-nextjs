@@ -36,8 +36,6 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" href="/favicon-maroon.png" id="favicon" />
-
-        {/* ✅ Primary color bootstrapped BEFORE hydration */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -54,15 +52,11 @@ export default function RootLayout({
             `,
           }}
         />
-
-        {/* Google AdSense Script */}
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1403927121021328"
           crossOrigin="anonymous"
         ></script>
-
-        {/* Google Analytics Script */}
         <Script
           strategy="afterInteractive"
           src="https://www.googletagmanager.com/gtag/js?id=G-724EM6FN42"
@@ -82,12 +76,12 @@ export default function RootLayout({
             <ThemeInitializer />
             <NavbarWrapper />
 
-            {/* ✅ Page transition only for main content */}
             <main className="flex-grow overflow-hidden">
-              {children}
+              <PageTransition>
+                {children}
+              </PageTransition>
             </main>
 
-            {/* ✅ Keep rest static */}
             <div className="fixed right-2 z-[998] bottom-20 sm:bottom-4">
               <ChatBot />
             </div>

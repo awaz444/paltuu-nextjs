@@ -34,6 +34,69 @@ const brands = [
         description: "Complete pet care",
         longDescription: "Petline provides comprehensive pet care solutions including grooming supplies, health supplements, training aids, and wellness products. Our complete range ensures that every aspect of your pet's care is covered with professional-grade quality and reliability.",
     },
+    {
+        name: "La Mito",
+        slug: "la-mito",
+        image: "/images/brands/la-mito.png",
+        description: "Natural pet wellness",
+        longDescription: "La Mito focuses on natural pet wellness products made from organic and sustainably sourced ingredients. Our holistic approach to pet health includes natural supplements, organic treats, and eco-friendly care products that promote overall wellness while respecting the environment.",
+    },
+    {
+        name: "Pedigree",
+        slug: "pedigree",
+        image: "/images/brands/pedigree.png",
+        description: "Trusted dog nutrition",
+        longDescription: "Pedigree has been a trusted name in dog nutrition for decades, providing complete and balanced meals for dogs of all sizes and life stages. Our scientifically developed recipes include essential nutrients, vitamins, and minerals to support healthy growth, strong bones, and vibrant coats.",
+    },
+    {
+        name: "Gourmet",
+        slug: "gourmet",
+        image: "/images/brands/gourmet.png",
+        description: "Premium cat cuisine",
+        longDescription: "Gourmet delivers exquisite culinary experiences for cats with premium ingredients and sophisticated flavors. Our range includes gourmet wet foods, treats, and specialized nutrition designed to satisfy even the most discerning feline palates.",
+    },
+    {
+        name: "Brit Care",
+        slug: "brit-care",
+        image: "/images/brands/brit-care.png",
+        description: "Premium pet nutrition",
+        longDescription: "Brit Care provides premium nutrition solutions for dogs and cats with scientifically formulated recipes. Our comprehensive range includes specialized diets for different life stages, health conditions, and dietary preferences, ensuring optimal nutrition for every pet.",
+    },
+    {
+        name: "Royal Canin",
+        slug: "royal-canin",
+        image: "/images/brands/royal-canin.png",
+        description: "Veterinary nutrition leader",
+        longDescription: "Royal Canin is the global leader in veterinary nutrition, offering scientifically formulated diets for dogs and cats. With over 50 years of expertise, we provide breed-specific, size-specific, and health-focused nutrition solutions backed by veterinary research and nutritional science.",
+    },
+    {
+        name: "Whiskas",
+        slug: "whiskas",
+        image: "/images/brands/whiskas.png",
+        description: "Complete cat nutrition",
+        longDescription: "Whiskas provides complete and balanced nutrition for cats at every life stage. From kitten to senior, our range includes wet and dry foods, treats, and specialized diets formulated with essential nutrients to keep cats healthy, happy, and thriving throughout their lives.",
+    },
+    {
+        name: "Fluff'n Bluff",
+        slug: "fluff-n-bluff",
+        image: "/images/brands/fluff-n-bluff.png",
+        description: "Premium pet grooming",
+        longDescription: "Fluff'n Bluff specializes in premium pet grooming products and accessories designed to keep your pets looking and feeling their best. Our comprehensive range includes shampoos, conditioners, brushes, nail care tools, and styling accessories for professional-quality grooming at home.",
+    },
+    {
+        name: "Nourvet",
+        slug: "nourvet",
+        image: "/images/brands/nourvet.png",
+        description: "Veterinary nutrition & supplements",
+        longDescription: "Nourvet provides veterinary-grade nutrition and supplements designed to support optimal pet health. Our scientifically formulated products include therapeutic diets, nutritional supplements, vitamins, and specialized health solutions developed in collaboration with veterinary professionals.",
+    },
+    {
+        name: "Jungle",
+        slug: "jungle",
+        image: "/images/brands/jungle.png",
+        description: "Wild-inspired pet products",
+        longDescription: "Jungle brings the wild into your pet's life with nature-inspired products and accessories. Our collection includes natural toys, organic treats, eco-friendly bedding, and adventure gear designed to satisfy your pet's natural instincts while promoting environmental sustainability.",
+    },
 ];
 
 export default function AllBrandsPage() {
@@ -66,12 +129,12 @@ export default function AllBrandsPage() {
                         >
                             <div className="flex flex-col sm:flex-row">
                                 {/* Brand Image */}
-                                <div className="sm:w-1/3 bg-gray-50 p-6 flex items-center justify-center">
-                                    <div className="w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center bg-white rounded-lg shadow-sm">
+                                <div className="sm:w-1/3 bg-white flex items-center justify-center">
+                                    <div className="w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center bg-white rounded-lg">
                                         <img
                                             src={brand.image}
                                             alt={brand.name}
-                                            className="w-20 h-20 sm:w-28 sm:h-28 object-contain"
+                                            className="object-contain"
                                         />
                                     </div>
                                 </div>

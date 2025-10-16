@@ -1,4 +1,4 @@
-import { Client, Pool } from 'pg';
+import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
 // Load environment variables from .env file
@@ -8,13 +8,13 @@ dotenv.config();
 const connectionStringRaw = process.env.ECOM_DATABASE_URL;
 
 if (!connectionStringRaw) {
-    throw new Error("DATABASE_URL environment variable is not set.");
+    throw new Error("ECOM_DATABASE_URL environment variable is not set.");
 }
 
 // narrow to string for TypeScript
 const connectionString: string = connectionStringRaw;
 
-console.log("ECOM DB string: ", connectionString);
+console.log("ECOM DB string: ", connectionString ? '[REDACTED]' : null);
 
 // Connection pool configuration for better performance
 const forceSsl = process.env.SUPABASE_DB_SSL === 'true' ||
@@ -33,44 +33,23 @@ if (forceSsl) {
 }
 
 // Create a connection pool (recommended for serverless/API routes)
-let pool: Pool | null = null;
+const pool = new Pool(poolConfig);
+
+pool.on('error', (err) => {
+    console.error('[Pool] Unexpected error on idle client', err);
+});
+
+pool.on('connect', () => {
+    console.log('[Pool] New client connected');
+});
+
+console.log('[Pool] Connection pool created');
 
 export function getPool(): Pool {
-    if (!pool) {
-        pool = new Pool(poolConfig);
-
-        pool.on('error', (err) => {
-            console.error('[Pool] Unexpected error on idle client', err);
-        });
-
-        pool.on('connect', () => {
-            console.log('[Pool] New client connected');
-        });
-
-        console.log('[Pool] Connection pool created');
-    }
     return pool;
 }
 
-// For backward compatibility - but prefer using getPool() for API routes
-export function createClient(): Client {
-    // Configure SSL when connecting to Supabase (or when explicitly requested).
-    // Supabase Postgres requires TLS; Node's TLS validation may fail in some envs,
-    // so we set `rejectUnauthorized: false` by default for supabase.co hosts.
-    const clientConfig: any = { connectionString };
-
-    if (forceSsl) {
-        clientConfig.ssl = { rejectUnauthorized: false };
-    }
-
-    return new Client(clientConfig);
+// Convenience helper to run queries directly
+export async function query(text: string, params?: any[]) {
+    return pool.query(text, params);
 }
-
-export const db: Client = createClient();
-
-db.connect()
-    .then(() => console.log("Connected to the database successfully"))
-    .catch((err) => {
-        console.error("Error connecting to the database:", err);
-        throw err;
-    });

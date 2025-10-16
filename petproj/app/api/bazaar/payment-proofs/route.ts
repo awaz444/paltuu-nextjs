@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/db/ecom';
+import { getPool } from '@/db/ecom';
 
 export const revalidate = 0;
 
 // POST - Upload payment proof
 export async function POST(req: NextRequest) {
-  const client = createClient();
+  const pool = getPool();
   try {
     const body = await req.json();
     const { orderId, orderNumber, userId, sessionId, imageUrl } = body;
@@ -18,15 +18,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Order ID or Order Number is required' }, { status: 400 });
     }
 
-    await client.connect();
-
     // Find order
     let order;
     if (orderId) {
-      const res = await client.query('SELECT * FROM bazaar_orders WHERE order_id = $1', [orderId]);
+      const res = await pool.query('SELECT * FROM bazaar_orders WHERE order_id = $1', [orderId]);
       order = res.rows[0];
     } else if (orderNumber) {
-      const res = await client.query('SELECT * FROM bazaar_orders WHERE order_number = $1', [orderNumber]);
+      const res = await pool.query('SELECT * FROM bazaar_orders WHERE order_number = $1', [orderNumber]);
       order = res.rows[0];
     }
 
@@ -43,7 +41,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if payment proof already exists
-    const existingProof = await client.query(
+    const existingProof = await pool.query(
       'SELECT * FROM bazaar_payment_proofs WHERE order_id = $1',
       [order.order_id]
     );
@@ -57,7 +55,7 @@ export async function POST(req: NextRequest) {
         WHERE order_id = $2
         RETURNING *
       `;
-      const result = await client.query(updateQuery, [imageUrl, order.order_id]);
+  const result = await pool.query(updateQuery, [imageUrl, order.order_id]);
       proof = result.rows[0];
     } else {
       // Insert new proof
@@ -66,7 +64,7 @@ export async function POST(req: NextRequest) {
         VALUES ($1, $2, $3, $4)
         RETURNING *
       `;
-      const result = await client.query(insertQuery, [
+      const result = await pool.query(insertQuery, [
         order.order_id,
         userId || null,
         sessionId || null,
@@ -76,7 +74,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Update order payment_reference with proof URL
-    await client.query(
+    await pool.query(
       'UPDATE bazaar_orders SET payment_reference = $1, updated_at = CURRENT_TIMESTAMP WHERE order_id = $2',
       [imageUrl, order.order_id]
     );
@@ -91,13 +89,13 @@ export async function POST(req: NextRequest) {
     console.error('Payment proof upload error:', err);
     return NextResponse.json({ error: 'Failed to upload payment proof' }, { status: 500 });
   } finally {
-    try { await client.end(); } catch { }
+    // pooled connections - nothing to close here
   }
 }
 
 // GET - Get payment proof for an order
 export async function GET(req: NextRequest) {
-  const client = createClient();
+  const pool = getPool();
   try {
     const { searchParams } = new URL(req.url);
     const orderId = searchParams.get('orderId');
@@ -106,8 +104,6 @@ export async function GET(req: NextRequest) {
     if (!orderId && !orderNumber) {
       return NextResponse.json({ error: 'Order ID or Order Number is required' }, { status: 400 });
     }
-
-    await client.connect();
 
     let query = `
       SELECT pp.*, o.order_number, o.customer_name, o.customer_email
@@ -125,7 +121,7 @@ export async function GET(req: NextRequest) {
       params = [orderNumber];
     }
 
-    const result = await client.query(query, params);
+  const result = await pool.query(query, params);
 
     if (result.rows.length === 0) {
       return NextResponse.json({ proof: null, message: 'No payment proof found' });
@@ -137,13 +133,13 @@ export async function GET(req: NextRequest) {
     console.error('Get payment proof error:', err);
     return NextResponse.json({ error: 'Failed to get payment proof' }, { status: 500 });
   } finally {
-    try { await client.end(); } catch { }
+    // pooled connections - nothing to close
   }
 }
 
 // PATCH - Admin verify payment proof
 export async function PATCH(req: NextRequest) {
-  const client = createClient();
+  const pool = getPool();
   try {
     const body = await req.json();
     const { proofId, orderId, status, adminNotes, adminUserId } = body;
@@ -156,8 +152,6 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Valid status (approved/rejected) is required' }, { status: 400 });
     }
 
-    await client.connect();
-
     let updateQuery = `
       UPDATE bazaar_payment_proofs
       SET
@@ -169,7 +163,7 @@ export async function PATCH(req: NextRequest) {
       RETURNING *
     `;
 
-    const result = await client.query(updateQuery, [
+    const result = await pool.query(updateQuery, [
       status,
       adminUserId || null,
       adminNotes || null,
@@ -184,7 +178,7 @@ export async function PATCH(req: NextRequest) {
 
     // If approved, update order payment status to 'paid' and status to 'confirmed'
     if (status === 'approved') {
-      await client.query(
+      await pool.query(
         `UPDATE bazaar_orders
          SET payment_status = 'paid',
              status = CASE WHEN status = 'pending' THEN 'confirmed' ELSE status END,
@@ -204,6 +198,6 @@ export async function PATCH(req: NextRequest) {
     console.error('Verify payment proof error:', err);
     return NextResponse.json({ error: 'Failed to verify payment proof' }, { status: 500 });
   } finally {
-    try { await client.end(); } catch { }
+    // pooled connections - nothing to close
   }
 }

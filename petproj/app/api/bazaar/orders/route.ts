@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '../../../../db/ecom';
+import { getPool } from '../../../../db/ecom';
 
 // Helper: send order confirmation email. Prefers SMTP (nodemailer) when SMTP env vars are set,
 // otherwise falls back to Brevo HTTP transactional API.
@@ -240,7 +240,7 @@ export const revalidate = 0;
 
 // GET orders (with optional filtering)
 export async function GET(req: NextRequest) {
-  const client = createClient();
+  const pool = getPool();
   try {
   const { searchParams } = new URL(req.url);
   const userId = searchParams.get('userId');
@@ -250,7 +250,7 @@ export async function GET(req: NextRequest) {
   const orderNumber = searchParams.get('orderNumber');
   const adminView = searchParams.get('admin') === 'true';
 
-    await client.connect();
+  // using pool for queries
 
     let query = `
       SELECT
@@ -338,20 +338,18 @@ export async function GET(req: NextRequest) {
 
     query += ` ORDER BY o.created_at DESC`;
 
-    const result = await client.query(query, params);
+  const result = await pool.query(query, params);
     return NextResponse.json(result.rows);
 
   } catch (err) {
     console.error('Orders fetch error:', err);
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
-  } finally {
-    try { await client.end(); } catch { }
   }
 }
 
 // POST - Create new order
 export async function POST(req: NextRequest) {
-  const client = createClient();
+  const pool = getPool();
   try {
     const body = await req.json();
     const {
@@ -369,10 +367,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required order information' }, { status: 400 });
     }
 
-    await client.connect();
-    await client.query('BEGIN');
-
+    const conn = await pool.connect();
     try {
+      await conn.query('BEGIN');
+      try {
       // Get cart items with pricing
       const cartItemsQuery = `
         SELECT
@@ -394,7 +392,7 @@ export async function POST(req: NextRequest) {
         WHERE ci.cart_id = $1
       `;
 
-      const cartItems = await client.query(cartItemsQuery, [cartId]);
+  const cartItems = await conn.query(cartItemsQuery, [cartId]);
 
       if (cartItems.rows.length === 0) {
         throw new Error('Cart is empty');
@@ -447,8 +445,8 @@ export async function POST(req: NextRequest) {
         notes
       ];
 
-      const orderResult = await client.query(orderQuery, orderValues);
-      const order = orderResult.rows[0];
+  const orderResult = await conn.query(orderQuery, orderValues);
+  const order = orderResult.rows[0];
 
       // Create order items (stock management disabled - sufficient inventory maintained)
       for (const item of cartItems.rows) {
@@ -462,7 +460,7 @@ export async function POST(req: NextRequest) {
         const itemUnitPrice = parseFloat(item.effective_price);
         const itemTotalPrice = itemUnitPrice * item.quantity;
 
-        await client.query(orderItemQuery, [
+        await conn.query(orderItemQuery, [
           order.order_id,
           item.product_id,
           item.variant_id,
@@ -479,9 +477,8 @@ export async function POST(req: NextRequest) {
       }
 
   // Clear cart after successful order creation
-  await client.query('DELETE FROM bazaar_cart_items WHERE cart_id = $1', [cartId]);
-
-      await client.query('COMMIT');
+  await conn.query('DELETE FROM bazaar_cart_items WHERE cart_id = $1', [cartId]);
+  await conn.query('COMMIT');
 
       // Fetch enriched order with items for the email payload
       try {
@@ -509,43 +506,36 @@ export async function POST(req: NextRequest) {
           WHERE o.order_id = $1
           LIMIT 1
         `;
-        const enrichedRes = await client.query(orderFetchQuery, [order.order_id]);
+  const enrichedRes = await conn.query(orderFetchQuery, [order.order_id]);
         const enrichedOrder = enrichedRes.rows[0] || order;
 
         // fire-and-forget: send confirmation email (non-blocking)
-        try {
-          sendOrderConfirmationEmail(enrichedOrder).catch((err: any) => console.warn('Email send failed', err));
-        } catch (e) {
-          console.warn('Email send scheduling failed', e);
-        }
+          try {
+            sendOrderConfirmationEmail(enrichedOrder).catch((err: any) => console.warn('Email send failed', err));
+          } catch (e) {
+            console.warn('Email send scheduling failed', e);
+          }
       } catch (fetchErr) {
         console.warn('Failed to fetch enriched order for email', fetchErr);
       }
 
-      return NextResponse.json({
-        order,
-        message: 'Order created successfully'
-      }, { status: 201 });
-
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
+      return NextResponse.json({ order, message: 'Order created successfully' }, { status: 201 });
+      } catch (err) {
+        await conn.query('ROLLBACK');
+        throw err;
+      }
+    } finally {
+      conn.release();
     }
-
   } catch (err) {
     console.error('Create order error:', err);
-    return NextResponse.json({
-      error: 'Failed to create order',
-      message: (err as Error).message
-    }, { status: 500 });
-  } finally {
-    try { await client.end(); } catch { }
+    return NextResponse.json({ error: 'Failed to create order', message: (err as Error).message }, { status: 500 });
   }
 }
 
 // PATCH - Admin updates to orders (mark delivered, update payment status, tracking, admin notes)
 export async function PATCH(req: NextRequest) {
-  const client = createClient();
+  const pool = getPool();
   try {
     const body = await req.json();
     const { orderId, orderNumber, updates } = body; // updates: { status, payment_status, tracking_number, admin_notes, shipped_at, delivered_at }
@@ -570,8 +560,6 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
     }
 
-    await client.connect();
-
     // Add identifying param
     const whereIdx = ++idx;
     if (orderId) {
@@ -584,7 +572,7 @@ export async function PATCH(req: NextRequest) {
 
     const updateQuery = `UPDATE bazaar_orders SET ${setClauses.join(', ')}, updated_at = NOW() WHERE ${whereClause} RETURNING *`;
 
-    const res = await client.query(updateQuery, params);
+    const res = await pool.query(updateQuery, params);
     if (res.rows.length === 0) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
@@ -641,7 +629,7 @@ export async function PATCH(req: NextRequest) {
       WHERE o.order_id = $1
     `;
 
-    const fullRes = await client.query(fullQuery, [updated.order_id]);
+    const fullRes = await pool.query(fullQuery, [updated.order_id]);
     const full = fullRes.rows[0] || updated;
 
     return NextResponse.json({ order: full });
@@ -649,7 +637,5 @@ export async function PATCH(req: NextRequest) {
   } catch (err) {
     console.error('Orders update error:', err);
     return NextResponse.json({ error: 'Failed to update order', message: (err as Error).message }, { status: 500 });
-  } finally {
-    try { await client.end(); } catch { }
   }
 }

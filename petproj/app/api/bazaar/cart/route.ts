@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '../../../../db/ecom';
+import { getPool, query as dbQuery } from '../../../../db/ecom';
 
 export const revalidate = 0;
 
 // GET cart for user or session
 export async function GET(req: NextRequest) {
-  const client = createClient();
+  const pool = getPool();
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'User ID or Session ID is required' }, { status: 400 });
     }
 
-    await client.connect();
+  // using pool; no explicit connect required
 
     // ✅ ALWAYS prioritize userId over sessionId if both are provided
     const useUserId = userId ? true : false;
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       LIMIT 1
     `;
 
-    const cartResult = await client.query(cartQuery, [useUserId ? userId : sessionId]);
+  const cartResult = await pool.query(cartQuery, [useUserId ? userId : sessionId]);
 
     if (cartResult.rows.length === 0) {
       // Create new cart
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
         VALUES ($1, $2, NOW(), NOW(), NOW() + INTERVAL '30 days')
         RETURNING *
       `;
-      const newCartResult = await client.query(createCartQuery, [userId || null, sessionId || null]);
+  const newCartResult = await pool.query(createCartQuery, [userId || null, sessionId || null]);
       const cart = newCartResult.rows[0];
 
       return NextResponse.json({
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
       ORDER BY ci.added_at DESC
     `;
 
-    const itemsResult = await client.query(itemsQuery, [cart.cart_id]);
+  const itemsResult = await pool.query(itemsQuery, [cart.cart_id]);
 
     return NextResponse.json({
       cart,
@@ -88,13 +88,13 @@ export async function GET(req: NextRequest) {
     console.error('Cart fetch error:', err);
     return NextResponse.json({ error: 'Failed to fetch cart' }, { status: 500 });
   } finally {
-    try { await client.end(); } catch { }
+    // no client.end() when using pooled connections
   }
 }
 
 // POST - Add item to cart
 export async function POST(req: NextRequest) {
-  const client = createClient();
+  const pool = getPool();
   try {
     const body = await req.json();
     const { userId, sessionId, productId, variantId, quantity = 1 } = body;
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    await client.connect();
+  // using pool; no explicit connect required
 
     // ✅ ALWAYS prioritize userId over sessionId if both are provided
     const useUserId = userId ? true : false;
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
       LIMIT 1
     `;
 
-    let cartResult = await client.query(cartQuery, [useUserId ? userId : sessionId]);
+  let cartResult = await pool.query(cartQuery, [useUserId ? userId : sessionId]);
 
     let cartId;
     if (cartResult.rows.length === 0) {
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
         VALUES ($1, $2, NOW(), NOW(), NOW() + INTERVAL '30 days')
         RETURNING cart_id
       `;
-      const newCartResult = await client.query(createCartQuery, [userId || null, sessionId || null]);
+  const newCartResult = await pool.query(createCartQuery, [userId || null, sessionId || null]);
       cartId = newCartResult.rows[0].cart_id;
     } else {
       cartId = cartResult.rows[0].cart_id;
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
       SELECT cart_item_id, quantity FROM bazaar_cart_items
       WHERE cart_id = $1 AND product_id = $2 AND ($3::int IS NULL AND variant_id IS NULL OR variant_id = $3)
     `;
-    const existingItemResult = await client.query(existingItemQuery, [cartId, productId, variantId]);
+  const existingItemResult = await pool.query(existingItemQuery, [cartId, productId, variantId]);
 
     if (existingItemResult.rows.length > 0) {
       // Update quantity
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
         WHERE cart_item_id = $2
         RETURNING *
       `;
-      const updateResult = await client.query(updateQuery, [quantity, existingItemResult.rows[0].cart_item_id]);
+  const updateResult = await pool.query(updateQuery, [quantity, existingItemResult.rows[0].cart_item_id]);
       return NextResponse.json(updateResult.rows[0]);
     } else {
       // Add new item
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
         VALUES ($1, $2, $3, $4, NOW(), NOW())
         RETURNING *
       `;
-      const insertResult = await client.query(insertQuery, [cartId, productId, variantId, quantity]);
+  const insertResult = await pool.query(insertQuery, [cartId, productId, variantId, quantity]);
       return NextResponse.json(insertResult.rows[0]);
     }
 
@@ -164,13 +164,13 @@ export async function POST(req: NextRequest) {
     console.error('Add to cart error:', err);
     return NextResponse.json({ error: 'Failed to add item to cart' }, { status: 500 });
   } finally {
-    try { await client.end(); } catch { }
+    // no client.end() when using pooled connections
   }
 }
 
 // PUT - Update cart item quantity
 export async function PUT(req: NextRequest) {
-  const client = createClient();
+  const pool = getPool();
   try {
     const body = await req.json();
     const { cartItemId, quantity } = body;
@@ -179,12 +179,12 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    await client.connect();
+  // using pool; no explicit connect required
 
     if (quantity <= 0) {
       // Remove item if quantity is 0 or negative
       const deleteQuery = `DELETE FROM bazaar_cart_items WHERE cart_item_id = $1 RETURNING *`;
-      const deleteResult = await client.query(deleteQuery, [cartItemId]);
+  const deleteResult = await pool.query(deleteQuery, [cartItemId]);
       return NextResponse.json({ deleted: true, item: deleteResult.rows[0] });
     } else {
       // Update quantity
@@ -194,7 +194,7 @@ export async function PUT(req: NextRequest) {
         WHERE cart_item_id = $2
         RETURNING *
       `;
-      const updateResult = await client.query(updateQuery, [quantity, cartItemId]);
+  const updateResult = await pool.query(updateQuery, [quantity, cartItemId]);
       return NextResponse.json(updateResult.rows[0]);
     }
 
@@ -202,13 +202,13 @@ export async function PUT(req: NextRequest) {
     console.error('Update cart error:', err);
     return NextResponse.json({ error: 'Failed to update cart item' }, { status: 500 });
   } finally {
-    try { await client.end(); } catch { }
+    // no client.end() when using pooled connections
   }
 }
 
 // DELETE - Remove item from cart
 export async function DELETE(req: NextRequest) {
-  const client = createClient();
+  const pool = getPool();
   try {
     const { searchParams } = new URL(req.url);
     let cartItemId = searchParams.get('cartItemId');
@@ -229,14 +229,14 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Cart item ID is required' }, { status: 400 });
     }
 
-    await client.connect();
+  // using pool; no explicit connect required
 
     // coerce numeric ids to number when possible
     const param = typeof cartItemId === 'string' && /^\d+$/.test(cartItemId) ? Number(cartItemId) : cartItemId;
     console.log('Deleting cart item', { cartItemId: param });
 
     const deleteQuery = `DELETE FROM bazaar_cart_items WHERE cart_item_id = $1 RETURNING *`;
-    const deleteResult = await client.query(deleteQuery, [param]);
+  const deleteResult = await pool.query(deleteQuery, [param]);
 
     if (deleteResult.rows.length === 0) {
       // Item was already deleted or doesn't exist - this is actually a success case
@@ -256,6 +256,6 @@ export async function DELETE(req: NextRequest) {
     console.error('Delete cart item error:', err);
     return NextResponse.json({ error: 'Failed to delete cart item' }, { status: 500 });
   } finally {
-    try { await client.end(); } catch { }
+    // no client.end() when using pooled connections
   }
 }

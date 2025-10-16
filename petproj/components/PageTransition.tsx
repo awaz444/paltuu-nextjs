@@ -1,34 +1,47 @@
-"use client";
-import { motion, AnimatePresence } from "framer-motion";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+'use client';
 
-export default function PageTransition({ children }: { children: React.ReactNode }) {
+import { motion } from 'framer-motion';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+export default function PageTransition({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
-  const [isExiting, setIsExiting] = useState(false);
+  const [displayChildren, setDisplayChildren] = useState(children);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
-    const handleStart = () => {
-      setIsExiting(true);
-      setTimeout(() => setIsExiting(false), 400); // match animation duration
-    };
+    // If route changes and we're not already animating
+    if (children !== displayChildren && !isAnimating) {
+      setIsAnimating(true);
+      
+      // Wait for exit animation to complete before updating content
+      const timer = setTimeout(() => {
+        setDisplayChildren(children);
+        setIsAnimating(false);
+      }, 300); // Match this with your exit animation duration
 
-    window.addEventListener("pageTransitionStart", handleStart);
-    return () => window.removeEventListener("pageTransitionStart", handleStart);
-  }, []);
+      return () => clearTimeout(timer);
+    }
+  }, [children, displayChildren, isAnimating]);
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={pathname}
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -15 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="min-h-full"
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      key={pathname}
+      initial={{ opacity: 0, x: 100 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      transition={{
+        type: 'tween',
+        ease: 'easeInOut',
+        duration: 0.3
+      }}
+      className="w-full"
+    >
+      {displayChildren}
+    </motion.div>
   );
 }

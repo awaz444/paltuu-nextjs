@@ -1,6 +1,6 @@
 // app/api/orders/[user_id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '../../../../db/ecom';
+import { getPool } from '../../../../db/ecom';
 
 export const revalidate = 0;
 
@@ -9,7 +9,6 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { user_id: string } }
 ) {
-  const client = createClient();
   try {
     const userId = params.user_id;
 
@@ -17,11 +16,9 @@ export async function GET(
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    await client.connect();
-
     // Get all orders for the user
     const ordersQuery = `
-      SELECT 
+      SELECT
         o.order_id,
         o.order_number,
         o.status,
@@ -37,7 +34,8 @@ export async function GET(
       ORDER BY o.created_at DESC
     `;
 
-    const ordersResult = await client.query(ordersQuery, [userId]);
+  const pool = getPool();
+  const ordersResult = await pool.query(ordersQuery, [userId]);
 
     if (ordersResult.rows.length === 0) {
       return NextResponse.json([]);
@@ -60,12 +58,12 @@ export async function GET(
             oi.total_price,
             oi.is_reviewed,
             COALESCE(
-              (SELECT url FROM bazaar_product_media 
-               WHERE product_id = oi.product_id 
-               AND (is_primary = true OR ordering = 0) 
+              (SELECT url FROM bazaar_product_media
+               WHERE product_id = oi.product_id
+               AND (is_primary = true OR ordering = 0)
                LIMIT 1),
-              (SELECT url FROM bazaar_product_media 
-               WHERE product_id = oi.product_id 
+              (SELECT url FROM bazaar_product_media
+               WHERE product_id = oi.product_id
                LIMIT 1)
             ) as image_url
           FROM bazaar_order_items oi
@@ -73,7 +71,7 @@ export async function GET(
           ORDER BY oi.order_item_id
         `;
 
-        const itemsResult = await client.query(itemsQuery, [order.order_id]);
+  const itemsResult = await pool.query(itemsQuery, [order.order_id]);
 
         return {
           order_id: order.order_id,
@@ -101,6 +99,7 @@ export async function GET(
     console.error('Orders fetch error:', err);
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
   } finally {
-    try { await client.end(); } catch { }
+    // using pooled connections; nothing to explicitly close here
   }
+
 }

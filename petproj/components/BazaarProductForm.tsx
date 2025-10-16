@@ -118,7 +118,11 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
       vals.category_ids = initialValues.category_ids;
     }
 
-    if (initialValues?.collection_id) {
+    if (Array.isArray(initialValues?.collections)) {
+      vals.collection_ids = initialValues.collections.map(
+        (c: any) => c.collection_id
+      );
+    } else if (initialValues?.collection_id) {
       vals.collection_ids = [initialValues.collection_id];
     } else if (initialValues?.collection_ids) {
       vals.collection_ids = initialValues.collection_ids;
@@ -128,6 +132,9 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
     if (Array.isArray(initialValues?.variants)) {
       setVariants(
         initialValues.variants.map((v: any) => ({
+          variant_id: v.variant_id, // IMPORTANT: Include variant_id to prevent duplicates
+          title: v.title,
+          sku: v.sku,
           price_override: v.price_override,
           compare_at_price: v.compare_at_price ?? null,
           stock: v.stock,

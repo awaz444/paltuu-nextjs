@@ -113,12 +113,13 @@ export async function GET(req: NextRequest) {
       }
 
       // Pet type filtering (cat, dog, fish, bird, etc.)
-      // This filters by collection (pet type), NOT by searching description
+      // This filters by collection (pet type) using junction table
       if (petType) {
         whereValues.push(`%${petType.toLowerCase()}%`);
         whereClauses.push(`EXISTS (
-          SELECT 1 FROM bazaar_collections bc_pet
-          WHERE bc_pet.collection_id = p.collection_id
+          SELECT 1 FROM bazaar_product_collections bpcol
+          JOIN bazaar_collections bc_pet ON bpcol.collection_id = bc_pet.collection_id
+          WHERE bpcol.product_id = p.product_id
           AND (LOWER(bc_pet.name) LIKE $${whereValues.length} OR LOWER(bc_pet.slug) LIKE $${whereValues.length})
         )`);
       }
@@ -126,10 +127,10 @@ export async function GET(req: NextRequest) {
       if (filterCollection) {
         if (!isNaN(Number(filterCollection))) {
           whereValues.push(Number(filterCollection));
-          whereClauses.push(`p.collection_id = $${whereValues.length}`);
+          whereClauses.push(`EXISTS (SELECT 1 FROM bazaar_product_collections bpcol WHERE bpcol.product_id = p.product_id AND bpcol.collection_id = $${whereValues.length})`);
         } else {
           whereValues.push(filterCollection);
-          whereClauses.push(`bc.name ILIKE $${whereValues.length}`);
+          whereClauses.push(`EXISTS (SELECT 1 FROM bazaar_product_collections bpcol JOIN bazaar_collections bc_filter ON bpcol.collection_id = bc_filter.collection_id WHERE bpcol.product_id = p.product_id AND bc_filter.name ILIKE $${whereValues.length})`);
         }
       }
 
@@ -210,13 +211,11 @@ export async function GET(req: NextRequest) {
         p.currency,
         p.sku,
         p.featured,
-        p.collection_id,
         p.status,
         p.created_at,
         p.has_variants,
-        COALESCE(bc.name, 'General') AS collection_name
+        COALESCE((SELECT json_agg(json_build_object('collection_id', col.collection_id, 'name', col.name)) FROM bazaar_collections col JOIN bazaar_product_collections bpcol ON col.collection_id = bpcol.collection_id WHERE bpcol.product_id = p.product_id), '[]'::json) AS collections
       FROM bazaar_products p
-      LEFT JOIN bazaar_collections bc ON p.collection_id = bc.collection_id
       ${whereClause}
       ${orderByClause}
       LIMIT $${whereValues.length + 1}
@@ -235,7 +234,6 @@ export async function GET(req: NextRequest) {
     const countQuery = `
       SELECT COUNT(DISTINCT p.product_id) AS total
       FROM bazaar_products p
-      LEFT JOIN bazaar_collections bc ON p.collection_id = bc.collection_id
       ${whereClause}
     `;
     const countResult = await client.query(countQuery, whereValues);

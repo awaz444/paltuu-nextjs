@@ -195,15 +195,15 @@ export async function POST(req: NextRequest) {
       await Promise.all(catInsertPromises);
     }
 
-    // Link collections (pet types) using collection_id in products table for backward compatibility we will store first collection
+    // Link collections (pet types) using junction table - supports multiple collections
     if (collection_ids && collection_ids.length > 0) {
-      // If your schema has a dedicated collections table, link the first one.
-      const firstCollection = collection_ids[0];
-      await client.query(
-        "UPDATE bazaar_products SET collection_id = $1 WHERE product_id = $2",
-        [firstCollection, product.product_id]
-      );
-      // Optionally you can create a product_collections join table; omitted for brevity.
+      const collectionInsertPromises = collection_ids.map((collectionId) => {
+        return client.query(
+          `INSERT INTO bazaar_product_collections (product_id, collection_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          [product.product_id, collectionId]
+        );
+      });
+      await Promise.all(collectionInsertPromises);
     }
 
     // Create variants if provided and collect inserted rows
@@ -331,13 +331,12 @@ export async function GET(req: NextRequest) {
   SELECT p.product_id, p.title, p.slug, p.description, p.seo_title, p.seo_description, p.price,
      p.currency, p.sku, p.shipping_weight, p.featured,
      COALESCE((SELECT SUM(stock) FROM bazaar_product_variants v2 WHERE v2.product_id = p.product_id), 0) AS stock_total,
-     p.collection_id, p.status, p.created_at,
-     COALESCE(bc.name, 'General') AS collection_name,
+     p.status, p.created_at,
     COALESCE((SELECT json_agg(url ORDER BY ordering) FROM bazaar_product_media m WHERE m.product_id = p.product_id), '[]'::json) AS images,
     COALESCE((SELECT json_agg(json_build_object('category_id', c.category_id, 'name', c.name)) FROM bazaar_categories c JOIN bazaar_product_categories bpc ON c.category_id = bpc.category_id WHERE bpc.product_id = p.product_id), '[]'::json) AS categories,
+    COALESCE((SELECT json_agg(json_build_object('collection_id', col.collection_id, 'name', col.name)) FROM bazaar_collections col JOIN bazaar_product_collections bpcol ON col.collection_id = bpcol.collection_id WHERE bpcol.product_id = p.product_id), '[]'::json) AS collections,
   COALESCE(${variantsSubquery}, '[]'::json) AS variants
       FROM bazaar_products p
-      LEFT JOIN bazaar_collections bc ON p.collection_id = bc.collection_id
     `;
 
     // Build WHERE clauses (including filters) using parameterized values
@@ -352,17 +351,17 @@ export async function GET(req: NextRequest) {
     }
 
     if (filterCollection) {
-      // Handle both ID and name for collections
+      // Handle both ID and name for collections using junction table
       if (!isNaN(Number(filterCollection))) {
         // If it's a number, treat as collection_id
         whereValues.push(Number(filterCollection));
         const idx = whereValues.length;
-        whereClauses.push(`p.collection_id = $${idx}`);
+        whereClauses.push(`EXISTS (SELECT 1 FROM bazaar_product_collections bpcol WHERE bpcol.product_id = p.product_id AND bpcol.collection_id = $${idx})`);
       } else {
         // If it's a string, match by collection name
         whereValues.push(filterCollection);
         const idx = whereValues.length;
-        whereClauses.push(`bc.name ILIKE $${idx}`);
+        whereClauses.push(`EXISTS (SELECT 1 FROM bazaar_product_collections bpcol JOIN bazaar_collections bc_filter ON bpcol.collection_id = bc_filter.collection_id WHERE bpcol.product_id = p.product_id AND bc_filter.name ILIKE $${idx})`);
       }
     }
 
@@ -390,11 +389,10 @@ export async function GET(req: NextRequest) {
     const offsetIdx = whereValues.length + 2;
     query += ` ORDER BY p.created_at DESC LIMIT $${limitIdx} OFFSET $${offsetIdx}`;
 
-    // Also fetch total count for pagination with same WHERE conditions and JOINs
+    // Also fetch total count for pagination with same WHERE conditions
     let countQuery = `
       SELECT COUNT(DISTINCT p.product_id) AS total
       FROM bazaar_products p
-      LEFT JOIN bazaar_collections bc ON p.collection_id = bc.collection_id
     `;
 
     if (whereClauses.length > 0) {

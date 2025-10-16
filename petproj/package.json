@@ -34,7 +34,7 @@
     "express": "^4.21.1",
     "formidable": "^3.5.4",
     "fortawesome": "^0.0.1-security",
-    "framer-motion": "^12.6.2",
+    "framer-motion": "^12.23.24",
     "gauge": "^5.0.2",
     "glob": "^11.0.0",
     "google-auth-library": "^9.15.0",

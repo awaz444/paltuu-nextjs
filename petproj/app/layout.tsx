@@ -10,7 +10,7 @@ import { Toaster } from "react-hot-toast";
 import Script from "next/script";
 import NavbarWrapper from "@/components/NavbarWrapper";
 import ThemeInitializer from "./ThemeInitializer";
-import PageTransition from "@/components/PageTransition"; // ✅ import your transition
+import PageTransition from "@/components/PageTransition";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -84,7 +84,7 @@ export default function RootLayout({
 
             {/* ✅ Page transition only for main content */}
             <main className="flex-grow overflow-hidden">
-              <PageTransition>{children}</PageTransition>
+              {children}
             </main>
 
             {/* ✅ Keep rest static */}

@@ -136,6 +136,7 @@ export default function AllBrandsPage() {
                                             alt={brand.name}
                                             className="object-contain"
                                         />
+                                        
                                     </div>
                                 </div>
 

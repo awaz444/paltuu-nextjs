@@ -1,15 +1,30 @@
-'use client';
-import React, { useEffect, useState, Suspense } from 'react';
-import { CheckCircle, Package, Truck, Calendar, Download, ArrowLeft, Copy, User, Mail, Phone, MapPin, AlertCircle, Search } from 'lucide-react';
-import { useSearchParams, useRouter } from 'next/navigation';
+"use client";
+import React, { useEffect, useState, Suspense } from "react";
+import {
+  CheckCircle,
+  Package,
+  Truck,
+  Calendar,
+  Download,
+  ArrowLeft,
+  Copy,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  AlertCircle,
+  Search,
+} from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
+import Link from "next/link";
 
-const OrderConfirmedContent  = () => {
+const OrderConfirmedContent = () => {
   const { isAuthenticated, user } = useAuth();
   const [order, setOrder] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const [manualOrderNumber, setManualOrderNumber] = useState('');
-  const [searchError, setSearchError] = useState('');
+  const [manualOrderNumber, setManualOrderNumber] = useState("");
+  const [searchError, setSearchError] = useState("");
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -22,15 +37,19 @@ const OrderConfirmedContent  = () => {
 
     try {
       setLoading(true);
-      setSearchError('');
+      setSearchError("");
 
-      const res = await fetch(`/api/bazaar/orders?orderNumber=${encodeURIComponent(orderNumber)}`);
+      const res = await fetch(
+        `/api/bazaar/orders?orderNumber=${encodeURIComponent(orderNumber)}`
+      );
 
       if (!res.ok) {
         if (res.status === 404) {
-          setSearchError('Order not found. Please check your order number and try again.');
+          setSearchError(
+            "Order not found. Please check your order number and try again."
+          );
         } else {
-          setSearchError('Failed to fetch order. Please try again.');
+          setSearchError("Failed to fetch order. Please try again.");
         }
         setOrder(null);
         setLoading(false);
@@ -41,18 +60,21 @@ const OrderConfirmedContent  = () => {
       const fetchedOrder = Array.isArray(list) ? list[0] : list;
 
       if (!fetchedOrder) {
-        setSearchError('Order not found. Please check your order number and try again.');
+        setSearchError(
+          "Order not found. Please check your order number and try again."
+        );
         setOrder(null);
         setLoading(false);
         return;
       }
 
       setOrder(fetchedOrder);
-      setSearchError('');
-
+      setSearchError("");
     } catch (e) {
-      console.warn('Failed to fetch order', e);
-      setSearchError('An error occurred while fetching the order. Please try again.');
+      console.warn("Failed to fetch order", e);
+      setSearchError(
+        "An error occurred while fetching the order. Please try again."
+      );
       setOrder(null);
     } finally {
       setLoading(false);
@@ -61,7 +83,7 @@ const OrderConfirmedContent  = () => {
 
   // Load order from URL on mount
   useEffect(() => {
-    const orderNumber = searchParams.get('orderNumber');
+    const orderNumber = searchParams.get("orderNumber");
     if (orderNumber) {
       fetchOrderByNumber(orderNumber);
     } else {
@@ -72,7 +94,7 @@ const OrderConfirmedContent  = () => {
   const handleManualSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!manualOrderNumber.trim()) {
-      setSearchError('Please enter an order number');
+      setSearchError("Please enter an order number");
       return;
     }
     fetchOrderByNumber(manualOrderNumber.trim());
@@ -81,25 +103,27 @@ const OrderConfirmedContent  = () => {
   const copyOrderNumber = async () => {
     if (!order?.order_number) return;
     await navigator.clipboard.writeText(order.order_number);
-    alert('Order number copied');
+    alert("Order number copied");
   };
 
   const continueShopping = () => {
-    router.push('/marketplace');
+    router.push("/marketplace");
   };
 
   const generateReceiptHtml = (o: any) => {
-    const logoUrl = (typeof window !== 'undefined' && (window as any).location)
-      ? `${(window as any).location.origin}/paltuu.png`
-      : '/paltuu.png';
+    const logoUrl =
+      typeof window !== "undefined" && (window as any).location
+        ? `${(window as any).location.origin}/paltuu.png`
+        : "/paltuu.png";
     const itemsHtml = (o?.items || [])
-      .map((it: any) => `
+      .map(
+        (it: any) => `
         <tr style="border-bottom: 1px solid #dee2e6;">
           <td style="padding: 12px 8px; border: 1px solid #dee2e6; vertical-align: top;">
-            <strong>${escapeHtml(it.product_title || 'N/A')}</strong>
+            <strong>${escapeHtml(it.product_title || "N/A")}</strong>
           </td>
           <td style="padding: 12px 8px; border: 1px solid #dee2e6; vertical-align: top;">
-            ${escapeHtml(it.variant_title || 'Standard')}
+            ${escapeHtml(it.variant_title || "Standard")}
           </td>
           <td style="padding: 12px 8px; border: 1px solid #dee2e6; text-align: center; vertical-align: top;">
             ${Number(it.quantity || 0)}
@@ -111,8 +135,9 @@ const OrderConfirmedContent  = () => {
             Rs ${Number(it.total_price || 0).toLocaleString()}
           </td>
         </tr>
-      `)
-      .join('');
+      `
+      )
+      .join("");
 
     const shipping = o?.shipping_amount || 0;
     const discount = o?.discount_amount || 0;
@@ -125,13 +150,17 @@ const OrderConfirmedContent  = () => {
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #a03048; padding-bottom: 20px;">
           <div>
             <h1 style="margin: 0; font-size: 28px; color: #a03048; font-weight: bold;">RECEIPT</h1>
-            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">Order #${escapeHtml(o?.order_number || '')}</p>
-            <p style="margin: 0; font-size: 12px; color: #666;">${new Date(o?.created_at || Date.now()).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
+            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">Order #${escapeHtml(
+              o?.order_number || ""
+            )}</p>
+            <p style="margin: 0; font-size: 12px; color: #666;">${new Date(
+              o?.created_at || Date.now()
+            ).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
             })}</p>
           </div>
           <img src="${logoUrl}" alt="Paltuu" style="height: 140px; margin-left: 20px; margin-bottom: 50px;" />
@@ -143,15 +172,21 @@ const OrderConfirmedContent  = () => {
           <table style="width: 100%; font-size: 14px;">
             <tr>
               <td style="padding: 3px 0; font-weight: bold; width: 100px;">Name:</td>
-              <td style="padding: 3px 0;">${escapeHtml(o?.customer_name || 'N/A')}</td>
+              <td style="padding: 3px 0;">${escapeHtml(
+                o?.customer_name || "N/A"
+              )}</td>
             </tr>
             <tr>
               <td style="padding: 3px 0; font-weight: bold;">Email:</td>
-              <td style="padding: 3px 0;">${escapeHtml(o?.customer_email || 'N/A')}</td>
+              <td style="padding: 3px 0;">${escapeHtml(
+                o?.customer_email || "N/A"
+              )}</td>
             </tr>
             <tr>
               <td style="padding: 3px 0; font-weight: bold;">Phone:</td>
-              <td style="padding: 3px 0;">${escapeHtml(o?.customer_phone || 'N/A')}</td>
+              <td style="padding: 3px 0;">${escapeHtml(
+                o?.customer_phone || "N/A"
+              )}</td>
             </tr>
           </table>
         </div>
@@ -160,8 +195,16 @@ const OrderConfirmedContent  = () => {
         <div style="margin-bottom: 25px;">
           <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #333; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Shipping Address</h3>
           <div style="font-size: 14px; line-height: 1.4;">
-            ${escapeHtml((o?.shipping_address && (o.shipping_address.address || o.shipping_address.line1)) || 'N/A')}<br/>
-            ${escapeHtml((o?.shipping_address && (o.shipping_address.city || '')) || '')} ${escapeHtml((o?.shipping_address && o.shipping_address.postalCode) || '')}
+            ${escapeHtml(
+              (o?.shipping_address &&
+                (o.shipping_address.address || o.shipping_address.line1)) ||
+                "N/A"
+            )}<br/>
+            ${escapeHtml(
+              (o?.shipping_address && (o.shipping_address.city || "")) || ""
+            )} ${escapeHtml(
+      (o?.shipping_address && o.shipping_address.postalCode) || ""
+    )}
           </div>
         </div>
 
@@ -190,21 +233,33 @@ const OrderConfirmedContent  = () => {
             <table style="width: 100%; font-size: 14px;">
               <tr>
                 <td style="padding: 8px 0; text-align: left;">Subtotal:</td>
-                <td style="padding: 8px 0; text-align: right; font-weight: bold;">Rs ${Number(o?.subtotal || 0).toLocaleString()}</td>
+                <td style="padding: 8px 0; text-align: right; font-weight: bold;">Rs ${Number(
+                  o?.subtotal || 0
+                ).toLocaleString()}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; text-align: left;">Shipping:</td>
-                <td style="padding: 8px 0; text-align: right;">Rs ${Number(shipping).toLocaleString()}</td>
+                <td style="padding: 8px 0; text-align: right;">Rs ${Number(
+                  shipping
+                ).toLocaleString()}</td>
               </tr>
-              ${discount > 0 ? `
+              ${
+                discount > 0
+                  ? `
               <tr>
                 <td style="padding: 8px 0; text-align: left; color: #28a745;">Discount:</td>
-                <td style="padding: 8px 0; text-align: right; color: #28a745;">-Rs ${Number(discount).toLocaleString()}</td>
+                <td style="padding: 8px 0; text-align: right; color: #28a745;">-Rs ${Number(
+                  discount
+                ).toLocaleString()}</td>
               </tr>
-              ` : ''}
+              `
+                  : ""
+              }
               <tr style="border-top: 2px solid #a03048;">
                 <td style="padding: 12px 0 8px 0; text-align: left; font-size: 16px; font-weight: bold;">TOTAL:</td>
-                <td style="padding: 12px 0 8px 0; text-align: right; font-size: 16px; font-weight: bold; color: #a03048;">Rs ${Number(total).toLocaleString()}</td>
+                <td style="padding: 12px 0 8px 0; text-align: right; font-size: 16px; font-weight: bold; color: #a03048;">Rs ${Number(
+                  total
+                ).toLocaleString()}</td>
               </tr>
             </table>
           </div>
@@ -213,7 +268,9 @@ const OrderConfirmedContent  = () => {
         <!-- Payment Information -->
         <div style="margin-bottom: 25px;">
           <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #333; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Payment Information</h3>
-          <p style="margin: 0; font-size: 14px;">Payment Method: <strong>${escapeHtml(o?.payment_method?.toUpperCase() || 'COD')}</strong></p>
+          <p style="margin: 0; font-size: 14px;">Payment Method: <strong>${escapeHtml(
+            o?.payment_method?.toUpperCase() || "COD"
+          )}</strong></p>
           <p style="margin: 5px 0 0 0; font-size: 14px;">Status: <strong style="color: #28a745;">CONFIRMED</strong></p>
         </div>
 
@@ -238,50 +295,56 @@ const OrderConfirmedContent  = () => {
   };
 
   const escapeHtml = (str: any) => {
-    if (str === null || str === undefined) return '';
+    if (str === null || str === undefined) return "";
     return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   };
 
   const waitForImages = (root: HTMLElement) => {
-    const imgs = Array.from(root.querySelectorAll('img')) as HTMLImageElement[];
-    return Promise.all(imgs.map(img => {
-      if (img.complete) return Promise.resolve(true);
-      return new Promise((res) => { img.onload = img.onerror = () => res(true); });
-    }));
+    const imgs = Array.from(root.querySelectorAll("img")) as HTMLImageElement[];
+    return Promise.all(
+      imgs.map((img) => {
+        if (img.complete) return Promise.resolve(true);
+        return new Promise((res) => {
+          img.onload = img.onerror = () => res(true);
+        });
+      })
+    );
   };
 
-  const loadHtml2Pdf = () => new Promise((resolve, reject) => {
-    const win = window as any;
-    if (win.html2pdf) return resolve(win.html2pdf);
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js';
-    s.onload = () => resolve((window as any).html2pdf);
-    s.onerror = (e) => reject(e);
-    document.body.appendChild(s);
-  });
+  const loadHtml2Pdf = () =>
+    new Promise((resolve, reject) => {
+      const win = window as any;
+      if (win.html2pdf) return resolve(win.html2pdf);
+      const s = document.createElement("script");
+      s.src =
+        "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js";
+      s.onload = () => resolve((window as any).html2pdf);
+      s.onerror = (e) => reject(e);
+      document.body.appendChild(s);
+    });
 
   const downloadReceipt = async () => {
-    if (!order) return alert('Order not loaded');
+    if (!order) return alert("Order not loaded");
     try {
       // load html2pdf first
       await loadHtml2Pdf();
 
       // create visible container temporarily
-      const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.left = '0';
-      container.style.top = '0';
-      container.style.width = '800px';
-      container.style.background = '#ffffff';
-      container.style.padding = '20px';
-      container.style.fontFamily = 'Arial, sans-serif';
-      container.style.color = '#000000';
-      container.style.zIndex = '-1000';
+      const container = document.createElement("div");
+      container.style.position = "absolute";
+      container.style.left = "0";
+      container.style.top = "0";
+      container.style.width = "800px";
+      container.style.background = "#ffffff";
+      container.style.padding = "20px";
+      container.style.fontFamily = "Arial, sans-serif";
+      container.style.color = "#000000";
+      container.style.zIndex = "-1000";
       container.innerHTML = generateReceiptHtml(order);
       document.body.appendChild(container);
 
@@ -289,44 +352,61 @@ const OrderConfirmedContent  = () => {
       await waitForImages(container);
 
       // small delay to ensure rendering
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const opt = {
         margin: [10, 10, 10, 10],
-        filename: `paltuu-receipt-${(order.order_number || 'receipt').replace(/[^a-zA-Z0-9-_]/g, '_')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
+        filename: `paltuu-receipt-${(order.order_number || "receipt").replace(
+          /[^a-zA-Z0-9-_]/g,
+          "_"
+        )}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
         enableLinks: true,
         html2canvas: {
           scale: 2,
           useCORS: true,
           allowTaint: true,
-          backgroundColor: '#ffffff',
+          backgroundColor: "#ffffff",
           width: 800,
-          height: container.scrollHeight
+          height: container.scrollHeight,
         },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
       };
 
       // Build PDF and add explicit link annotations so links are clickable
       // @ts-ignore
-      const worker = (window as any).html2pdf().set(opt).from(container).toPdf();
+      const worker = (window as any)
+        .html2pdf()
+        .set(opt)
+        .from(container)
+        .toPdf();
       // @ts-ignore
-      const pdf: any = await worker.get('pdf');
+      const pdf: any = await worker.get("pdf");
 
       // Calculate px->mm conversion based on usable page width
       const pageWidthMm = pdf.internal.pageSize.getWidth();
       const pageHeightMm = pdf.internal.pageSize.getHeight();
-      const marginTopMm = Array.isArray(opt.margin) ? opt.margin[0] : (opt.margin as any) || 0;
-      const marginLeftMm = Array.isArray(opt.margin) ? opt.margin[1] : (opt.margin as any) || 0;
-      const marginBottomMm = Array.isArray(opt.margin) ? opt.margin[2] : (opt.margin as any) || 0;
-      const marginRightMm = Array.isArray(opt.margin) ? opt.margin[3] : (opt.margin as any) || 0;
+      const marginTopMm = Array.isArray(opt.margin)
+        ? opt.margin[0]
+        : (opt.margin as any) || 0;
+      const marginLeftMm = Array.isArray(opt.margin)
+        ? opt.margin[1]
+        : (opt.margin as any) || 0;
+      const marginBottomMm = Array.isArray(opt.margin)
+        ? opt.margin[2]
+        : (opt.margin as any) || 0;
+      const marginRightMm = Array.isArray(opt.margin)
+        ? opt.margin[3]
+        : (opt.margin as any) || 0;
       const usableWidthMm = pageWidthMm - marginLeftMm - marginRightMm;
       const usableHeightMm = pageHeightMm - marginTopMm - marginBottomMm;
       const renderWidthPx = (opt as any).html2canvas.width || 800;
       const pxToMm = usableWidthMm / renderWidthPx;
 
       const containerRect = container.getBoundingClientRect();
-      const anchors = Array.from(container.querySelectorAll('a')) as HTMLAnchorElement[];
+      const anchors = Array.from(
+        container.querySelectorAll("a")
+      ) as HTMLAnchorElement[];
 
       anchors.forEach((a) => {
         const rect = a.getBoundingClientRect();
@@ -343,11 +423,12 @@ const OrderConfirmedContent  = () => {
 
         // Determine page index for multi-page PDFs
         const pageIndex = Math.floor((yTotalMm - marginTopMm) / usableHeightMm);
-        const yOnPageMm = marginTopMm + ((yTotalMm - marginTopMm) % usableHeightMm);
+        const yOnPageMm =
+          marginTopMm + ((yTotalMm - marginTopMm) % usableHeightMm);
 
         // Guard values
         const targetPage = Math.max(1, pageIndex + 1);
-        if (typeof pdf.setPage === 'function') {
+        if (typeof pdf.setPage === "function") {
           pdf.setPage(targetPage);
         }
 
@@ -365,10 +446,9 @@ const OrderConfirmedContent  = () => {
 
       // cleanup
       container.remove();
-
     } catch (e) {
-      console.error('Failed to generate receipt PDF', e);
-      alert('Failed to generate receipt PDF: ' + (e as Error).message);
+      console.error("Failed to generate receipt PDF", e);
+      alert("Failed to generate receipt PDF: " + (e as Error).message);
     }
   };
 
@@ -381,22 +461,28 @@ const OrderConfirmedContent  = () => {
   }
 
   // Show manual search form if no order number in URL and no order loaded
-  if (!order && !searchParams.get('orderNumber')) {
+  if (!order && !searchParams.get("orderNumber")) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/5 to-white py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
             <Package className="w-20 h-20 text-primary mx-auto mb-4" />
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Track Your Order</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Track Your Order
+            </h1>
             <p className="text-lg text-gray-600">
-              Enter your order number to view order details and track your shipment
+              Enter your order number to view order details and track your
+              shipment
             </p>
           </div>
 
           <div className="bg-white rounded-2xl p-8 shadow-lg border border-primary/10">
             <form onSubmit={handleManualSearch} className="space-y-6">
               <div>
-                <label htmlFor="orderNumber" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="orderNumber"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   Order Number
                 </label>
                 <div className="relative">
@@ -438,7 +524,7 @@ const OrderConfirmedContent  = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={() => router.push('/marketplace')}
+                  onClick={() => router.push("/marketplace")}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-center"
                 >
                   Continue Shopping
@@ -458,29 +544,32 @@ const OrderConfirmedContent  = () => {
   }
 
   // Show error message if order number was in URL but order not found
-  if (!order && searchParams.get('orderNumber')) {
+  if (!order && searchParams.get("orderNumber")) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/5 to-white py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-2xl p-8 shadow-lg border border-primary/10 text-center">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Order Not Found</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Order Not Found
+            </h2>
             <p className="text-gray-600 mb-6">
-              {searchError || "We couldn't find an order with this number. Please check the order number and try again."}
+              {searchError ||
+                "We couldn't find an order with this number. Please check the order number and try again."}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={() => {
-                  setManualOrderNumber('');
-                  setSearchError('');
-                  router.push('/order-confirmed');
+                  setManualOrderNumber("");
+                  setSearchError("");
+                  router.push("/order-confirmed");
                 }}
                 className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Try Another Order Number
               </button>
               <button
-                onClick={() => router.push('/marketplace')}
+                onClick={() => router.push("/marketplace")}
                 className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 Back to Marketplace
@@ -507,10 +596,10 @@ const OrderConfirmedContent  = () => {
             Order Placed!
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Thank you for your purchase. Your order has been successfully placed.
+            Thank you for your purchase. Your order has been successfully
+            placed.
           </p>
         </div>
-        
 
         {/* Order Details Card */}
         <div className="bg-white rounded-2xl p-8 mb-8 shadow-lg border border-primary/10">
@@ -526,23 +615,40 @@ const OrderConfirmedContent  = () => {
                 <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-600">Order Number:</span>
                   <div className="flex items-center gap-3">
-                    <span className="text-gray-900 font-mono font-semibold">{order?.order_number ?? '—'}</span>
-                    <button onClick={copyOrderNumber} className="p-2 rounded-lg hover:bg-primary/10 transition-colors" aria-label="Copy order number" title="Copy order number">
+                    <span className="text-gray-900 font-mono font-semibold">
+                      {order?.order_number ?? "—"}
+                    </span>
+                    <button
+                      onClick={copyOrderNumber}
+                      className="p-2 rounded-lg hover:bg-primary/10 transition-colors"
+                      aria-label="Copy order number"
+                      title="Copy order number"
+                    >
                       <Copy className="w-4 h-4 text-primary" />
                     </button>
                   </div>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-600">Order Date:</span>
-                  <span className="text-gray-900 font-medium">{order?.created_at ? new Date(order.created_at).toLocaleString() : '—'}</span>
+                  <span className="text-gray-900 font-medium">
+                    {order?.created_at
+                      ? new Date(order.created_at).toLocaleString()
+                      : "—"}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-600">Total Amount:</span>
-                  <span className="text-primary font-semibold text-lg">{order ? `Rs ${(order.total_amount || 0).toLocaleString()}` : '—'}</span>
+                  <span className="text-primary font-semibold text-lg">
+                    {order
+                      ? `Rs ${(order.total_amount || 0).toLocaleString()}`
+                      : "—"}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-600">Payment Method:</span>
-                  <span className="text-gray-900 font-medium capitalize">{order?.payment_method ?? '—'}</span>
+                  <span className="text-gray-900 font-medium capitalize">
+                    {order?.payment_method ?? "—"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -558,7 +664,9 @@ const OrderConfirmedContent  = () => {
                 <div className="flex items-start gap-3">
                   <User className="w-5 h-5 text-primary mt-0.5" />
                   <div>
-                    <p className="text-gray-900 font-medium">{order?.customer_name ?? '—'}</p>
+                    <p className="text-gray-900 font-medium">
+                      {order?.customer_name ?? "—"}
+                    </p>
                   </div>
                 </div>
                 {order?.customer_email && (
@@ -577,8 +685,15 @@ const OrderConfirmedContent  = () => {
                   <div className="flex items-start gap-3">
                     <MapPin className="w-5 h-5 text-primary mt-0.5" />
                     <div className="text-gray-600">
-                      <p>{order.shipping_address.address || order.shipping_address.line1 || ''}</p>
-                      <p>{order.shipping_address.city || ''} {order.shipping_address.postalCode || ''}</p>
+                      <p>
+                        {order.shipping_address.address ||
+                          order.shipping_address.line1 ||
+                          ""}
+                      </p>
+                      <p>
+                        {order.shipping_address.city || ""}{" "}
+                        {order.shipping_address.postalCode || ""}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -598,12 +713,21 @@ const OrderConfirmedContent  = () => {
             </h3>
             <div className="space-y-4">
               {order.items.map((it: any) => (
-                <div key={it.order_item_id} className="flex justify-between items-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                <div
+                  key={it.order_item_id}
+                  className="flex justify-between items-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+                >
                   <div>
-                    <div className="font-medium text-gray-900">{it.product_title}</div>
-                    <div className="text-sm text-gray-500">{it.variant_title || ''} • Qty {it.quantity}</div>
+                    <div className="font-medium text-gray-900">
+                      {it.product_title}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {it.variant_title || ""} • Qty {it.quantity}
+                    </div>
                   </div>
-                  <div className="text-primary font-semibold">Rs {(it.total_price || 0).toLocaleString()}</div>
+                  <div className="text-primary font-semibold">
+                    Rs {(it.total_price || 0).toLocaleString()}
+                  </div>
                 </div>
               ))}
             </div>
@@ -615,94 +739,138 @@ const OrderConfirmedContent  = () => {
 
         {/* Order Timeline */}
         <div className="bg-white rounded-2xl p-8 mb-8 shadow-lg border border-primary/10">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6">Order Timeline</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-6">
+            Order Timeline
+          </h3>
           <div className="space-y-8 relative">
             <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-primary/20"></div>
             {(() => {
-              const currentStatus = order?.status || 'pending';
-              const statusOrder = ['pending', 'confirmed', 'dispatched', 'delivered'];
+              const currentStatus = order?.status || "pending";
+              const statusOrder = [
+                "pending",
+                "confirmed",
+                "dispatched",
+                "delivered",
+              ];
               const currentIndex = statusOrder.indexOf(currentStatus);
 
               const timeline = [
                 {
                   icon: CheckCircle,
-                  title: 'Order Placed',
-                  description: 'Your order has been received and is being processed',
-                  time: order?.created_at ? new Date(order.created_at).toLocaleString() : 'Just now',
-                  status: 'pending',
-                  dbStatus: 'pending'
+                  title: "Order Placed",
+                  description:
+                    "Your order has been received and is being processed",
+                  time: order?.created_at
+                    ? new Date(order.created_at).toLocaleString()
+                    : "Just now",
+                  status: "pending",
+                  dbStatus: "pending",
                 },
                 {
                   icon: Package,
-                  title: 'Order Confirmed',
-                  description: order?.payment_method === 'bank_transfer'
-                    ? 'Payment verified and order confirmed'
-                    : 'Your order has been confirmed and is being prepared',
-                  time: order?.updated_at && currentIndex >= 1
-                    ? new Date(order.updated_at).toLocaleString()
-                    : 'Pending confirmation',
-                  status: 'confirmed',
-                  dbStatus: 'confirmed'
+                  title: "Order Confirmed",
+                  description:
+                    order?.payment_method === "bank_transfer"
+                      ? "Payment verified and order confirmed"
+                      : "Your order has been confirmed and is being prepared",
+                  time:
+                    order?.updated_at && currentIndex >= 1
+                      ? new Date(order.updated_at).toLocaleString()
+                      : "Pending confirmation",
+                  status: "confirmed",
+                  dbStatus: "confirmed",
                 },
                 {
                   icon: Truck,
-                  title: 'Dispatched',
-                  description: 'Your order is on its way to you',
+                  title: "Dispatched",
+                  description: "Your order is on its way to you",
                   time: order?.shipped_at
                     ? new Date(order.shipped_at).toLocaleString()
-                    : currentIndex >= 2 ? new Date(order.updated_at).toLocaleString() : '1-2 business days',
-                  status: 'dispatched',
-                  dbStatus: 'dispatched'
+                    : currentIndex >= 2
+                    ? new Date(order.updated_at).toLocaleString()
+                    : "1-2 business days",
+                  status: "dispatched",
+                  dbStatus: "dispatched",
                 },
                 {
                   icon: Calendar,
-                  title: 'Delivered',
-                  description: 'Your order has been delivered to your address',
+                  title: "Delivered",
+                  description: "Your order has been delivered to your address",
                   time: order?.delivered_at
                     ? new Date(order.delivered_at).toLocaleString()
-                    : currentIndex >= 3 ? new Date(order.updated_at).toLocaleString() : '3-5 business days',
-                  status: 'delivered',
-                  dbStatus: 'delivered'
-                }
+                    : currentIndex >= 3
+                    ? new Date(order.updated_at).toLocaleString()
+                    : "3-5 business days",
+                  status: "delivered",
+                  dbStatus: "delivered",
+                },
               ];
 
               return timeline.map((item, index) => {
                 const itemIndex = statusOrder.indexOf(item.dbStatus);
-                let itemStatus: 'completed' | 'pending' | 'upcoming';
+                let itemStatus: "completed" | "pending" | "upcoming";
 
                 if (itemIndex < currentIndex) {
-                  itemStatus = 'completed';
+                  itemStatus = "completed";
                 } else if (itemIndex === currentIndex) {
-                  itemStatus = 'pending';
+                  itemStatus = "pending";
                 } else {
-                  itemStatus = 'upcoming';
+                  itemStatus = "upcoming";
                 }
 
                 // Special case: if order is cancelled or refunded
-                if (currentStatus === 'cancelled' || currentStatus === 'refunded') {
-                  itemStatus = itemIndex === 0 ? 'completed' : 'upcoming';
+                if (
+                  currentStatus === "cancelled" ||
+                  currentStatus === "refunded"
+                ) {
+                  itemStatus = itemIndex === 0 ? "completed" : "upcoming";
                 }
 
                 return (
-                  <div key={index} className="flex items-start space-x-4 relative">
-                    <div className={`
+                  <div
+                    key={index}
+                    className="flex items-start space-x-4 relative"
+                  >
+                    <div
+                      className={`
                       w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 z-10
-                      ${itemStatus === 'completed'
-                        ? 'bg-primary border-primary text-white shadow-lg'
-                        : itemStatus === 'pending'
-                        ? 'bg-primary border-primary text-white shadow-lg animate-pulse'
-                        : 'border-primary/30 text-primary/30 bg-white'}
-                    `}>
+                      ${
+                        itemStatus === "completed"
+                          ? "bg-primary border-primary text-white shadow-lg"
+                          : itemStatus === "pending"
+                          ? "bg-primary border-primary text-white shadow-lg animate-pulse"
+                          : "border-primary/30 text-primary/30 bg-white"
+                      }
+                    `}
+                    >
                       <item.icon className="w-5 h-5" />
                     </div>
                     <div className="flex-1 pt-2">
-                      <h4 className={`font-medium ${itemStatus === 'upcoming' ? 'text-gray-400' : 'text-gray-900'}`}>
+                      <h4
+                        className={`font-medium ${
+                          itemStatus === "upcoming"
+                            ? "text-gray-400"
+                            : "text-gray-900"
+                        }`}
+                      >
                         {item.title}
                       </h4>
-                      <p className={itemStatus === 'upcoming' ? 'text-gray-400' : 'text-gray-600'}>
+                      <p
+                        className={
+                          itemStatus === "upcoming"
+                            ? "text-gray-400"
+                            : "text-gray-600"
+                        }
+                      >
                         {item.description}
                       </p>
-                      <p className={`font-medium text-sm mt-1 ${itemStatus === 'upcoming' ? 'text-gray-400' : 'text-primary'}`}>
+                      <p
+                        className={`font-medium text-sm mt-1 ${
+                          itemStatus === "upcoming"
+                            ? "text-gray-400"
+                            : "text-primary"
+                        }`}
+                      >
                         {item.time}
                       </p>
                     </div>
@@ -713,25 +881,54 @@ const OrderConfirmedContent  = () => {
           </div>
 
           {/* Show cancellation/refund status if applicable */}
-          {(order?.status === 'cancelled' || order?.status === 'refunded') && (
+          {(order?.status === "cancelled" || order?.status === "refunded") && (
             <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-red-600" />
                 <div>
                   <p className="font-semibold text-red-900">
-                    Order {order.status === 'cancelled' ? 'Cancelled' : 'Refunded'}
+                    Order{" "}
+                    {order.status === "cancelled" ? "Cancelled" : "Refunded"}
                   </p>
                   {order.admin_notes && (
-                    <p className="text-sm text-red-700 mt-1">{order.admin_notes}</p>
+                    <p className="text-sm text-red-700 mt-1">
+                      {order.admin_notes}
+                    </p>
                   )}
                 </div>
               </div>
             </div>
           )}
         </div>
-
+{/* Review Policies Section */}
+        <div className="text-center mt-8 text-sm text-gray-500">
+          <p>
+            All orders are processed in accordance with our{" "}
+            <Link
+              href="/shipping-policy"
+              className="text-primary hover:underline transition-colors"
+            >
+              Shipping Policy
+            </Link>
+            ,{" "}
+            <Link
+              href="/refund&return-policy"
+              className="text-primary hover:underline transition-colors"
+            >
+              Refund & Return Policy
+            </Link>
+            , and{" "}
+            <Link
+              href="/terms-and-conditions"
+              className="text-primary hover:underline transition-colors"
+            >
+              Terms & Conditions
+            </Link>{" "}
+            for more information.
+          </p>
+        </div>
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-6 mb-12">
           <button
             onClick={continueShopping}
             className="flex items-center px-8 py-3 bg-white text-primary border border-primary rounded-xl hover:bg-primary/5 transition-colors duration-200 font-medium shadow-sm"
@@ -740,7 +937,10 @@ const OrderConfirmedContent  = () => {
             Continue Shopping
           </button>
 
-          <button onClick={downloadReceipt} className="flex items-center px-8 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors duration-200 font-medium shadow-lg">
+          <button
+            onClick={downloadReceipt}
+            className="flex items-center px-8 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors duration-200 font-medium shadow-lg"
+          >
             <Download className="w-5 h-5 mr-2" />
             Download Receipt
           </button>
@@ -753,8 +953,9 @@ const OrderConfirmedContent  = () => {
               Create an account or log in
             </h3>
             <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              Store your order details permanently and unlock all Paltuu features
-              like order history, faster checkout, and exclusive offers.
+              Store your order details permanently and unlock all Paltuu
+              features like order history, faster checkout, and exclusive
+              offers.
             </p>
             <button
               onClick={() => router.push("/login")}
@@ -767,7 +968,9 @@ const OrderConfirmedContent  = () => {
 
         {/* Contact Support */}
         <div className="text-center p-8 bg-primary/5 rounded-2xl border border-primary/10">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Need help with your order?</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Need help with your order?
+          </h3>
           <p className="text-gray-600 mb-4">Our support team is here to help</p>
           <button className="px-6 py-2 bg-white text-primary border border-primary rounded-lg hover:bg-primary/5 transition-colors duration-200 font-medium">
             Contact Support
@@ -780,11 +983,13 @@ const OrderConfirmedContent  = () => {
 
 export default function OrderConfirmedPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      }
+    >
       <OrderConfirmedContent />
     </Suspense>
   );

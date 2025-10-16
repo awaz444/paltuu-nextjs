@@ -142,12 +142,12 @@ export default function AllBrandsPage() {
 
                                 {/* Brand Content */}
                                 <div className="sm:w-2/3 p-6 flex flex-col justify-between">
+                                
                                     <div>
                                         <div className="flex items-center justify-between mb-3">
                                             <h2 className="text-2xl font-bold text-gray-900 group-hover:text-primary transition-colors">
                                                 {brand.name}
                                             </h2>
-                                            
                                             <ArrowRight 
                                                 size={20} 
                                                 className="text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200" 

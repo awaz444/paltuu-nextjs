@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createEcomClient } from "../../../../db/ecom";
+import { getPool } from "../../../../db/ecom";
 
 export const revalidate = 0;
 
 // GET - Retrieve saved shipping info for a user
 export async function GET(request: NextRequest) {
-  const ecomClient = createEcomClient();
+  const pool = getPool();
 
   try {
     const { searchParams } = new URL(request.url);
@@ -18,9 +18,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    await ecomClient.connect();
-
-    const result = await ecomClient.query(
+    const result = await pool.query(
       `SELECT
         shipping_info_id,
         email,
@@ -56,16 +54,12 @@ export async function GET(request: NextRequest) {
       { error: "Failed to fetch shipping information" },
       { status: 500 }
     );
-  } finally {
-    try {
-      await ecomClient.end();
-    } catch {}
   }
 }
 
 // POST - Save or update shipping info for a user
 export async function POST(request: NextRequest) {
-  const ecomClient = createEcomClient();
+  const pool = getPool();
 
   try {
     const body = await request.json();
@@ -79,10 +73,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await ecomClient.connect();
-
     // Check if user already has shipping info
-    const existingInfo = await ecomClient.query(
+    const existingInfo = await pool.query(
       `SELECT shipping_info_id FROM bazaar_user_shipping_info WHERE user_id = $1 LIMIT 1`,
       [userId]
     );
@@ -90,7 +82,7 @@ export async function POST(request: NextRequest) {
     let result;
     if (existingInfo.rows.length > 0) {
       // Update existing shipping info
-      result = await ecomClient.query(
+      result = await pool.query(
         `UPDATE bazaar_user_shipping_info
          SET email = $1,
              full_name = $2,
@@ -105,7 +97,7 @@ export async function POST(request: NextRequest) {
       );
     } else {
       // Insert new shipping info
-      result = await ecomClient.query(
+      result = await pool.query(
         `INSERT INTO bazaar_user_shipping_info
          (user_id, email, full_name, phone, city, postal_code, address, is_default)
          VALUES ($1, $2, $3, $4, $5, $6, $7, true)
@@ -127,9 +119,5 @@ export async function POST(request: NextRequest) {
       { error: "Failed to save shipping information" },
       { status: 500 }
     );
-  } finally {
-    try {
-      await ecomClient.end();
-    } catch {}
   }
 }

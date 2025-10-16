@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '../../../../../db/ecom';
+import { getPool } from '../../../../../db/ecom';
 
 export const revalidate = 0;
 
 // GET specific order
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const client = createClient();
+  const pool = getPool();
   try {
     const orderId = params.id;
-
-    await client.connect();
 
     const query = `
       SELECT
@@ -36,7 +34,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       WHERE o.order_id = $1
     `;
 
-    const result = await client.query(query, [orderId]);
+    const result = await pool.query(query, [orderId]);
 
     if (result.rows.length === 0) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
@@ -47,20 +45,16 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   } catch (err) {
     console.error('Order fetch error:', err);
     return NextResponse.json({ error: 'Failed to fetch order' }, { status: 500 });
-  } finally {
-    try { await client.end(); } catch { }
   }
 }
 
 // PUT - Update order status
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const client = createClient();
+  const pool = getPool();
   try {
     const orderId = params.id;
     const body = await req.json();
     const { status, payment_status, tracking_number, admin_notes } = body;
-
-    await client.connect();
 
     let updateFields = [];
     let values = [];
@@ -119,7 +113,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       RETURNING *
     `;
 
-    const result = await client.query(query, values);
+    const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
@@ -130,7 +124,5 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   } catch (err) {
     console.error('Order update error:', err);
     return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });
-  } finally {
-    try { await client.end(); } catch { }
   }
 }

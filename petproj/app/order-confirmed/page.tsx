@@ -221,7 +221,13 @@ const OrderConfirmedContent  = () => {
         <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
           <p style="margin: 0; font-size: 12px; color: #666; line-height: 1.5;">
             Thank you for choosing Paltuu!<br/>
-            For support, visit <a href="https://www.paltuu.pk" style="color: #a03048; text-decoration: none; font-weight: bold;">paltuu.pk</a> or contact us at support@paltuu.pk
+            For support, visit <a href="https://www.paltuu.pk" style="color: #a03048; text-decoration: none; font-weight: bold;">paltuu.pk</a> or contact us at notifypaltuu@gmail.com
+          </p>
+          <p style="margin: 8px 0 0 0; font-size: 12px; color: #666; line-height: 1.5;">
+            Policies: 
+            <a href="https://www.paltuu.pk/refund&return-policy" style="color: #a03048; text-decoration: none; font-weight: bold;">Return & Refund Policy</a>
+            ·
+            <a href="https://www.paltuu.pk/shipping-policy" style="color: #a03048; text-decoration: none; font-weight: bold;">Shipping & Service Policy</a>
           </p>
           <p style="margin: 10px 0 0 0; font-size: 10px; color: #999;">
             This is a computer-generated receipt. No signature required.
@@ -289,6 +295,7 @@ const OrderConfirmedContent  = () => {
         margin: [10, 10, 10, 10],
         filename: `paltuu-receipt-${(order.order_number || 'receipt').replace(/[^a-zA-Z0-9-_]/g, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
+        enableLinks: true,
         html2canvas: {
           scale: 2,
           useCORS: true,
@@ -300,8 +307,61 @@ const OrderConfirmedContent  = () => {
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
+      // Build PDF and add explicit link annotations so links are clickable
       // @ts-ignore
-      await (window as any).html2pdf().set(opt).from(container).save();
+      const worker = (window as any).html2pdf().set(opt).from(container).toPdf();
+      // @ts-ignore
+      const pdf: any = await worker.get('pdf');
+
+      // Calculate px->mm conversion based on usable page width
+      const pageWidthMm = pdf.internal.pageSize.getWidth();
+      const pageHeightMm = pdf.internal.pageSize.getHeight();
+      const marginTopMm = Array.isArray(opt.margin) ? opt.margin[0] : (opt.margin as any) || 0;
+      const marginLeftMm = Array.isArray(opt.margin) ? opt.margin[1] : (opt.margin as any) || 0;
+      const marginBottomMm = Array.isArray(opt.margin) ? opt.margin[2] : (opt.margin as any) || 0;
+      const marginRightMm = Array.isArray(opt.margin) ? opt.margin[3] : (opt.margin as any) || 0;
+      const usableWidthMm = pageWidthMm - marginLeftMm - marginRightMm;
+      const usableHeightMm = pageHeightMm - marginTopMm - marginBottomMm;
+      const renderWidthPx = (opt as any).html2canvas.width || 800;
+      const pxToMm = usableWidthMm / renderWidthPx;
+
+      const containerRect = container.getBoundingClientRect();
+      const anchors = Array.from(container.querySelectorAll('a')) as HTMLAnchorElement[];
+
+      anchors.forEach((a) => {
+        const rect = a.getBoundingClientRect();
+        const xPx = rect.left - containerRect.left;
+        const yPx = rect.top - containerRect.top;
+        const wPx = rect.width;
+        const hPx = rect.height;
+
+        // Convert to mm within the PDF coordinate system
+        const xMm = marginLeftMm + xPx * pxToMm;
+        const yTotalMm = marginTopMm + yPx * pxToMm; // same scale factor for x/y
+        const wMm = Math.max(0.1, wPx * pxToMm);
+        const hMm = Math.max(0.1, hPx * pxToMm);
+
+        // Determine page index for multi-page PDFs
+        const pageIndex = Math.floor((yTotalMm - marginTopMm) / usableHeightMm);
+        const yOnPageMm = marginTopMm + ((yTotalMm - marginTopMm) % usableHeightMm);
+
+        // Guard values
+        const targetPage = Math.max(1, pageIndex + 1);
+        if (typeof pdf.setPage === 'function') {
+          pdf.setPage(targetPage);
+        }
+
+        // Add link annotation
+        try {
+          pdf.link(xMm, yOnPageMm, wMm, hMm, { url: a.href });
+        } catch (_) {
+          // ignore annotation failures
+        }
+      });
+
+      // Finally save
+      // @ts-ignore
+      await worker.save();
 
       // cleanup
       container.remove();

@@ -35,6 +35,7 @@ const CheckoutPage = () => {
   const [cart, setCart] = useState<any | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loadingCart, setLoadingCart] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
@@ -60,7 +61,25 @@ const CheckoutPage = () => {
   const [postalCode, setPostalCode] = useState("");
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cod");
-  // Inside CheckoutPage
+  const [loadingShippingInfo, setLoadingShippingInfo] = useState(false);
+  const [shippingInfoLoaded, setShippingInfoLoaded] = useState(false);
+
+  // Get user ID from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          setCurrentUserId(userData.user_id || userData.id || null);
+        } catch (e) {
+          console.warn("Failed to parse user from localStorage", e);
+        }
+      }
+    }
+  }, []);
+
+  // Load cart items
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -102,6 +121,42 @@ const CheckoutPage = () => {
       mounted = false;
     };
   }, [user]);
+
+  // Load saved shipping info for logged-in users
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    let mounted = true;
+    (async () => {
+      setLoadingShippingInfo(true);
+      try {
+        const res = await fetch(`/api/bazaar/shipping-info?userId=${currentUserId}`);
+        if (!res.ok) return;
+
+        const json = await res.json();
+        if (!mounted) return;
+
+        if (json.shippingInfo) {
+          const info = json.shippingInfo;
+          setEmail(info.email || "");
+          setFullName(info.full_name || "");
+          setPhone(info.phone || "+92");
+          setCity(info.city || "");
+          setPostalCode(info.postal_code || "");
+          setAddress(info.address || "");
+          setShippingInfoLoaded(true);
+        }
+      } catch (e) {
+        console.warn("Failed to load shipping info", e);
+      } finally {
+        setLoadingShippingInfo(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [currentUserId]);
 
   const subtotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -205,6 +260,31 @@ const CheckoutPage = () => {
     setPromoError("");
   };
 
+  // Save shipping info for logged-in users
+  const saveShippingInfo = async () => {
+    if (!currentUserId) return;
+
+    try {
+      const cleanPhone = phone.replace(/\s/g, "");
+
+      await fetch("/api/bazaar/shipping-info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentUserId,
+          email,
+          fullName,
+          phone: cleanPhone,
+          city,
+          postalCode,
+          address,
+        }),
+      });
+    } catch (error) {
+      console.warn("Failed to save shipping info:", error);
+    }
+  };
+
   // Validate form before submission
   const validateForm = () => {
     let isValid = true;
@@ -278,6 +358,60 @@ const CheckoutPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Section - Shipping & Payment */}
             <div className="lg:col-span-2 space-y-6">
+              {/* Login Teaser for Guest Users */}
+              {!currentUserId && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6 shadow-sm">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        Save time on future orders!
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Log in to save your shipping details and enjoy faster checkout next time.
+                      </p>
+                      <button
+                        onClick={() => router.push("/login?redirect=/checkout")}
+                        className="px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors font-medium"
+                      >
+                        Log In
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Saved Info Indicator for Logged-in Users */}
+              {currentUserId && shippingInfoLoaded && (
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="text-green-600" size={24} />
+                    <div>
+                      <p className="text-green-900 font-medium">
+                        Shipping details loaded from your account
+                      </p>
+                      <p className="text-green-700 text-sm">
+                        Your information will be automatically saved when you place this order
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Shipping Info */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
                 <h2 className="text-xl font-semibold mb-6 text-gray-900 flex items-center">
@@ -658,6 +792,11 @@ const CheckoutPage = () => {
                     const sessionId = getOrCreateGuestSessionId();
                     const cleanPhone = phone.replace(/\s/g, "");
 
+                    // Save shipping info for logged-in users
+                    if (currentUserId) {
+                      await saveShippingInfo();
+                    }
+
                     // Prepare cart data to pass to payment-confirmation
                     const cartData = {
                       userId: user?.id || null,
@@ -692,6 +831,11 @@ const CheckoutPage = () => {
 
                     // Clean phone number for API (remove spaces)
                     const cleanPhone = phone.replace(/\s/g, "");
+
+                    // Save shipping info for logged-in users
+                    if (currentUserId) {
+                      await saveShippingInfo();
+                    }
 
                     const body = {
                       userId: user?.id || null, // ✅ Pass userId if logged in

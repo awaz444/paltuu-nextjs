@@ -226,7 +226,7 @@ const CartPage = () => {
                 className={`w-full py-3 rounded-xl font-semibold text-white shadow-md transition
         ${
           checkoutLoading
-            ? "bg-primary/60 cursor-not-allowed"
+            ? "bg-primary cursor-not-allowed"
             : "bg-primary hover:bg-primary-dark"
         }`}
               >

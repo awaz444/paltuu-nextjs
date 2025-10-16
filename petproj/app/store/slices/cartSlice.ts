@@ -118,11 +118,12 @@ export const addToCart = createAsyncThunk<
     image?: string;
     sessionId: string;
     variantId?: number | null;
+    variantTitle?: string | null;
+    attributes?: Array<{ name?: string; value?: string }> | null;
   },
   { state: { cart: CartState }; rejectValue: string }
 >("cart/addToCart", async (payload, { dispatch, rejectWithValue }) => {
   try {
-    // ✅ Check for logged-in user first, prioritize userId over sessionId
     let userId: string | null = null;
     let sessionId = payload.sessionId;
 
@@ -138,14 +139,27 @@ export const addToCart = createAsyncThunk<
       }
     }
 
-    // Build request body - prefer userId over sessionId
     const requestBody = {
       productId: payload.productId,
       quantity: payload.quantity ?? 1,
       variantId: payload.variantId ?? null,
-      ...(userId ? { userId } : { sessionId }), // ✅ Send userId if logged in, otherwise sessionId
+      ...(userId ? { userId } : { sessionId }),
     };
 
+    // 🔹 1. Optimistically update Redux store instantly
+    dispatch(
+      addItem({
+        id: payload.productId,
+        title: payload.title ?? "Untitled",
+        qty: payload.quantity ?? 1,
+        price: payload.price ?? 0,
+        image: payload.image ?? null,
+        variantTitle: payload.variantTitle ?? null,
+        attributes: payload.attributes ?? null,
+      })
+    );
+
+    // 🔹 2. Perform real backend add
     const res = await fetch("/api/bazaar/cart", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -157,15 +171,10 @@ export const addToCart = createAsyncThunk<
       throw new Error(data.error || "Failed to add to cart");
     }
 
-    dispatch(
-      addItem({
-        id: payload.productId,
-        title: payload.title ?? "Untitled",
-        qty: payload.quantity ?? 1,
-        price: payload.price ?? 0,
-        image: payload.image ?? null,
-      })
-    );
+    // 🔹 3. Silent sync to ensure variant merging/accurate quantities
+    setTimeout(() => {
+      dispatch(fetchCart());
+    }, 300); // small delay for backend consistency
 
     return true;
   } catch (err: any) {
@@ -173,6 +182,7 @@ export const addToCart = createAsyncThunk<
     return rejectWithValue(err.message || "Failed to add to cart");
   }
 });
+
 
 //
 // 🔹 Update Cart Item

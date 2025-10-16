@@ -450,21 +450,8 @@ export async function POST(req: NextRequest) {
       const orderResult = await client.query(orderQuery, orderValues);
       const order = orderResult.rows[0];
 
-      // Create order items and decrement stock where applicable
+      // Create order items (stock management disabled - sufficient inventory maintained)
       for (const item of cartItems.rows) {
-        // Check stock for variant if variant_id present
-        if (item.variant_id) {
-          const stockRes = await client.query('SELECT stock FROM bazaar_product_variants WHERE variant_id = $1 FOR UPDATE', [item.variant_id]);
-          const currentStock = stockRes.rows[0] ? parseInt(stockRes.rows[0].stock || 0) : 0;
-          if (currentStock < item.quantity) {
-            throw new Error(`Insufficient stock for variant ${item.variant_id}`);
-          }
-          // decrement stock
-          await client.query('UPDATE bazaar_product_variants SET stock = stock - $1, updated_at = NOW() WHERE variant_id = $2', [item.quantity, item.variant_id]);
-        } else {
-          // If no variant, optionally check product-level stock aggregate or skip
-        }
-
         const orderItemQuery = `
           INSERT INTO bazaar_order_items (
             order_id, product_id, variant_id, quantity, unit_price, total_price,

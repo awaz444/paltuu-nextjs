@@ -19,6 +19,7 @@ import { getOrCreateGuestSessionId } from "@/utils/guest";
 import { FaUniversity } from "react-icons/fa";
 import { useCartProtection } from "@/hooks/useCartProtection";
 import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
 
 interface CartItem {
   id: number;
@@ -130,7 +131,9 @@ const CheckoutPage = () => {
     (async () => {
       setLoadingShippingInfo(true);
       try {
-        const res = await fetch(`/api/bazaar/shipping-info?userId=${currentUserId}`);
+        const res = await fetch(
+          `/api/bazaar/shipping-info?userId=${currentUserId}`
+        );
         if (!res.ok) return;
 
         const json = await res.json();
@@ -382,7 +385,8 @@ const CheckoutPage = () => {
                         Save time on future orders!
                       </h3>
                       <p className="text-gray-600 mb-4">
-                        Log in to save your shipping details and enjoy faster checkout next time.
+                        Log in to save your shipping details and enjoy faster
+                        checkout next time.
                       </p>
                       <button
                         onClick={() => router.push("/login?redirect=/checkout")}
@@ -405,7 +409,8 @@ const CheckoutPage = () => {
                         Shipping details loaded from your account
                       </p>
                       <p className="text-green-700 text-sm">
-                        Your information will be automatically saved when you place this order
+                        Your information will be automatically saved when you
+                        place this order
                       </p>
                     </div>
                   </div>
@@ -788,7 +793,7 @@ const CheckoutPage = () => {
                   }
 
                   // For bank transfer: redirect to payment-confirmation page
-                  if (paymentMethod === 'bank') {
+                  if (paymentMethod === "bank") {
                     const sessionId = getOrCreateGuestSessionId();
                     const cleanPhone = phone.replace(/\s/g, "");
 
@@ -809,18 +814,22 @@ const CheckoutPage = () => {
                       },
                       shippingAddress: { city, postalCode, address },
                       billingAddress: null,
-                      paymentMethod: 'bank_transfer',
+                      paymentMethod: "bank_transfer",
                       notes: "",
                       subtotal: subtotal,
                       shippingAmount: shipping,
                       discountAmount: discount,
                       totalAmount: total,
-                      items: cartItems
+                      items: cartItems,
                     };
 
                     // Redirect to payment-confirmation with cart data
-                    const cartDataEncoded = encodeURIComponent(JSON.stringify(cartData));
-                    router.push(`/payment-confirmation?cartData=${cartDataEncoded}`);
+                    const cartDataEncoded = encodeURIComponent(
+                      JSON.stringify(cartData)
+                    );
+                    router.push(
+                      `/payment-confirmation?cartData=${cartDataEncoded}`
+                    );
                     return;
                   }
 
@@ -894,8 +903,21 @@ const CheckoutPage = () => {
                 }}
                 className="w-full mt-6 bg-primary hover:bg-primary-dark text-white font-semibold py-3.5 rounded-xl shadow-md transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.99] disabled:opacity-60"
               >
-                {placing ? "Placing order..." : paymentMethod === 'bank' ? "Continue to Payment" : "Place Order"}
+                {placing
+                  ? "Placing order..."
+                  : paymentMethod === "bank"
+                  ? "Continue to Payment"
+                  : "Place Order"}
               </button>
+
+              {/* Terms Note */}
+              <p className="text-xs text-gray-500 text-center mt-3">
+  By proceeding, you agree to our{" "}
+  <Link href="/terms-and-conditions" className="text-primary hover:underline">Terms & Conditions</Link>,{" "}
+  <Link href="/shipping-policy" className="text-primary hover:underline">Shipping Policy</Link>, and{" "}
+  <Link href="/refund&return-policy" className="text-primary hover:underline">Return & Refund Policy</Link>.
+</p>
+
             </div>
           </div>
         </div>

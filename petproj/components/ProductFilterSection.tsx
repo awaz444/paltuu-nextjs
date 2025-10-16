@@ -1,89 +1,73 @@
-"use client";
-import { useState, useEffect } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
+﻿"use client";
+import { useState, useEffect, useRef } from "react";
+import { SlidersHorizontal, X, Search } from "lucide-react";
 
 interface Category {
   category_id: number;
   name: string;
   slug: string;
-  description?: string;
 }
 
 interface ProductFilterSectionProps {
-  filters: {
-    keyword: string;
-    sortBy: string;
-    categorySlug?: string;
-    petType?: string;
-  };
+  filters: { keyword: string; sortBy: string; categorySlug?: string; petType?: string };
   onSearch: (filters: any) => void;
   onReset: () => void;
 }
 
-const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({
-  filters,
-  onSearch,
-  onReset,
-}) => {
+const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({ filters, onSearch, onReset }) => {
   const [localFilters, setLocalFilters] = useState(filters);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const isInitialMount = useRef(true);
 
-  // Pet type options
   const petTypes = [
     { value: "", label: "All Pets" },
-    { value: "cat", label: "Cat" },
-    { value: "dog", label: "Dog" },
-    { value: "bird", label: "Bird" },
+    { value: "cat", label: "Cats" },
+    { value: "dog", label: "Dogs" },
+    { value: "bird", label: "Birds" },
     { value: "fish", label: "Fish" },
-    { value: "other", label: "Other" },
   ];
 
-  // Fetch categories on component mount
   useEffect(() => {
-    const fetchCategories = async () => {
-      setLoadingCategories(true);
-      try {
-        const response = await fetch("/api/bazaar/categories");
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data || []);
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
-
-    fetchCategories();
+    fetch("/api/bazaar/categories").then(res => res.json()).then(data => setCategories(data || [])).catch(console.error);
   }, []);
 
-  // Update local filters when props change
   useEffect(() => {
     setLocalFilters(filters);
   }, [filters]);
 
-  const handleFilterChange = (key: string, value: string) => {
-    const updatedFilters = { ...localFilters, [key]: value };
-    setLocalFilters(updatedFilters);
-  };
+  // Auto-search when filters change (with debounce for keyword)
+  useEffect(() => {
+    // Skip on initial mount
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
 
-  const handleSearch = () => {
-    onSearch(localFilters);
-    setIsModalOpen(false);
+    const timer = setTimeout(() => {
+      onSearch(localFilters);
+    }, localFilters.keyword ? 500 : 0);
+
+    return () => clearTimeout(timer);
+  }, [localFilters]);
+
+  const handleFilterChange = (key: string, value: string) => {
+    setLocalFilters({ ...localFilters, [key]: value });
   };
 
   const handleReset = () => {
-    const resetFilters = {
-      keyword: "",
-      sortBy: "",
-      categorySlug: "",
-      petType: "",
-    };
-    setLocalFilters(resetFilters);
+    setLocalFilters({ keyword: "", sortBy: "", categorySlug: "", petType: "" });
     onReset();
+  };
+
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (localFilters.keyword) count++;
+    if (localFilters.categorySlug) count++;
+    if (localFilters.petType) count++;
+    if (localFilters.sortBy) count++;
+    return count;
   };
 
   return (
@@ -104,9 +88,6 @@ const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({
               className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
               value={localFilters.keyword}
               onChange={(e) => handleFilterChange("keyword", e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSearch();
-              }}
               placeholder="Search products..."
             />
           </div>
@@ -170,12 +151,11 @@ const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({
               value={localFilters.sortBy}
               onChange={(e) => handleFilterChange("sortBy", e.target.value)}
             >
-              <option value="">Default</option>
+              <option value="">Recommended</option>
               <option value="price_asc">Price: Low to High</option>
               <option value="price_desc">Price: High to Low</option>
               <option value="new">Newest First</option>
-              <option value="trending">Trending</option>
-              <option value="discount">Most Discounted</option>
+              <option value="discount">Best Deals</option>
             </select>
           </div>
 
@@ -186,12 +166,6 @@ const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({
             >
               Reset
             </button>
-            <button
-              className="text-white px-6 py-2 rounded-2xl bg-primary hover:bg-primary/90 transition-colors"
-              onClick={handleSearch}
-            >
-              Search
-            </button>
           </div>
         </div>
       </div>
@@ -199,129 +173,47 @@ const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({
       {/* Mobile Filter Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-end z-[9996] md:hidden">
-          <div className="bg-white p-6 rounded-t-3xl w-full max-h-[90vh] overflow-y-auto relative animate-slide-up">
-            <button
-              className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
-              onClick={() => setIsModalOpen(false)}
-              aria-label="Close filters"
-            >
-              <X size={24} />
-            </button>
-
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-              <SlidersHorizontal size={20} />
-              Filters
-            </h2>
-
+          <div className="bg-white p-6 rounded-t-3xl w-full max-h-[90vh] overflow-y-auto relative">
+            <button className="absolute top-4 right-4" onClick={() => setIsModalOpen(false)}><X size={24} /></button>
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-2"><SlidersHorizontal size={20} /> Filters</h2>
             <div className="space-y-4">
               <div>
-                <label
-                  className="text-sm font-medium text-gray-700 mb-1 block"
-                  htmlFor="modal-keyword-input"
-                >
-                  Search
-                </label>
-                <input
-                  id="keyword-input"
-                  type="text"
-                  className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
-                  value={localFilters.keyword}
-                  onChange={(e) =>
-                    handleFilterChange("keyword", e.target.value)
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSearch();
-                  }}
-                  placeholder="Search products..."
-                />
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Search</label>
+                <input type="text" className="w-full p-3 border rounded-xl" value={localFilters.keyword}
+                  onChange={(e) => handleFilterChange("keyword", e.target.value)} placeholder="Search products..." />
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label
-                    className="text-sm font-medium text-gray-700 mb-1 block"
-                    htmlFor="modal-category-select"
-                  >
-                    Category
-                  </label>
-                  <select
-                    id="modal-category-select"
-                    className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
-                    value={localFilters.categorySlug || ""}
-                    onChange={(e) =>
-                      handleFilterChange("categorySlug", e.target.value)
-                    }
-                    disabled={loadingCategories}
-                  >
-                    <option value="">All Categories</option>
-                    {categories.map((category) => (
-                      <option key={category.category_id} value={category.slug}>
-                        {category.name}
-                      </option>
-                    ))}
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Category</label>
+                  <select className="w-full p-3 border rounded-xl" value={localFilters.categorySlug || ""}
+                    onChange={(e) => handleFilterChange("categorySlug", e.target.value)}>
+                    <option value="">All</option>
+                    {categories.map(cat => <option key={cat.category_id} value={cat.slug}>{cat.name}</option>)}
                   </select>
                 </div>
-
                 <div>
-                  <label
-                    className="text-sm font-medium text-gray-700 mb-1 block"
-                    htmlFor="modal-pet-type-select"
-                  >
-                    Pet Type
-                  </label>
-                  <select
-                    id="modal-pet-type-select"
-                    className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
-                    value={localFilters.petType || ""}
-                    onChange={(e) =>
-                      handleFilterChange("petType", e.target.value)
-                    }
-                  >
-                    {petTypes.map((type) => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Pet Type</label>
+                  <select className="w-full p-3 border rounded-xl" value={localFilters.petType || ""}
+                    onChange={(e) => handleFilterChange("petType", e.target.value)}>
+                    {petTypes.map(type => <option key={type.value} value={type.value}>{type.label}</option>)}
                   </select>
                 </div>
               </div>
-
               <div>
-                <label
-                  className="text-sm font-medium text-gray-700 mb-1 block"
-                  htmlFor="modal-sort-select"
-                >
-                  Sort By
-                </label>
-                <select
-                  id="modal-sort-select"
-                  className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
-                  value={localFilters.sortBy}
-                  onChange={(e) => handleFilterChange("sortBy", e.target.value)}
-                >
-                  <option value="">Default</option>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Sort By</label>
+                <select className="w-full p-3 border rounded-xl" value={localFilters.sortBy}
+                  onChange={(e) => handleFilterChange("sortBy", e.target.value)}>
+                  <option value="">Recommended</option>
                   <option value="price_asc">Price: Low to High</option>
                   <option value="price_desc">Price: High to Low</option>
-                  <option value="new">Newest First</option>
-                  <option value="trending">Trending</option>
-                  <option value="discount">Most Discounted</option>
+                  <option value="new">Newest</option>
+                  <option value="discount">Best Deals</option>
                 </select>
               </div>
             </div>
-
-            <div className="flex gap-3 mt-6 sticky bottom-0 bg-white pt-4 border-t">
-              <button
-                className="flex-1 border-2 border-primary text-primary bg-white p-3 rounded-xl font-medium"
-                onClick={handleReset}
-              >
-                Reset
-              </button>
-              <button
-                className="flex-1 text-white p-3 rounded-xl bg-primary font-medium"
-                onClick={handleSearch}
-              >
-                Apply Filters
-              </button>
+            <div className="flex gap-3 mt-6">
+              <button className="flex-1 border-2 border-primary text-primary p-3 rounded-xl" onClick={handleReset}>Reset</button>
+              <button className="flex-1 bg-primary text-white p-3 rounded-xl" onClick={() => setIsModalOpen(false)}>Close</button>
             </div>
           </div>
         </div>
@@ -345,6 +237,11 @@ const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({
             <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 0a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2z" />
           </svg>
           <span className="text-xs ml-1">Filters</span>
+          {getActiveFiltersCount() > 0 && (
+            <span className="ml-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {getActiveFiltersCount()}
+            </span>
+          )}
         </button>
       </div>
     </div>

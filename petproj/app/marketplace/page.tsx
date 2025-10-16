@@ -113,12 +113,8 @@ const handleProductClick = (productId: number) => {
 
       setTimeout(() => clearInterval(interval), 3000);
       return () => clearInterval(interval);
-    } else {
-      // Normal behavior when filters or pagination change
-      if (products.length > 0 && !loading) {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
     }
+    // Removed auto-scroll to top on filter changes - let user stay where they are
   }, [products, loading]);
 
   // ✅ Reset filters
@@ -133,10 +129,20 @@ const handleProductClick = (productId: number) => {
     setPage(1);
   };
 
-  // ✅ Search with new filters
+  // ✅ Search with new filters - reset to page 1 when filters change
   const handleSearch = (newFilters: any) => {
+    const filtersChanged =
+      newFilters.keyword !== filters.keyword ||
+      newFilters.sortBy !== filters.sortBy ||
+      newFilters.categorySlug !== filters.categorySlug ||
+      newFilters.petType !== filters.petType;
+
     setFilters(newFilters);
-    setPage(1);
+
+    // Reset to page 1 when filters change
+    if (filtersChanged) {
+      setPage(1);
+    }
   };
 
   const totalPages = meta ? Math.ceil(meta.total / meta.limit) : 0;

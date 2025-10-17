@@ -3,13 +3,14 @@
 import Link from "next/link";
 import "./navbar.css";
 import Image from "next/image";
+import { LoadingOutlined } from "@ant-design/icons"; // you already use Ant icons
 import { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCart } from "@/app/store/slices/cartSlice";
 import type { RootState, AppDispatch } from "@/app/store/store";
 import { useSession, signOut } from "next-auth/react";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   updateCartItem,
   removeCartItem,
@@ -316,6 +317,20 @@ const Navbar = ({
   const handleBackClick = () => {
     setMobileView("navlinks");
   };
+
+  const [loading, setLoading] = useState<"cart" | "checkout" | null>(null);
+
+  const handleNavigate = (path: string, type: "cart" | "checkout") => {
+    setLoading(type);
+    router.push(path);
+  };
+  const pathname = usePathname();
+  // ✅ Reset loading when route changes
+  useEffect(() => {
+    if (loading) {
+      setLoading(null);
+    }
+  }, [pathname]);
 
   return (
     <nav className="navbar" style={navbarStyle}>
@@ -711,23 +726,59 @@ const Navbar = ({
                     </div>
 
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => router.push("/cart")}
-                        className="flex-1 bg-primary text-white py-2 rounded-lg font-medium"
-                      >
-                        Go to Cart
-                      </button>
-                      <button
-                        onClick={() => router.push("/checkout")}
-                        disabled={cartItemsNav.length === 0}
-                        className={`flex-1 py-2 rounded-lg font-medium ${
-                          cartItemsNav.length === 0
-                            ? "text-gray-400 border border-gray-300 cursor-not-allowed bg-gray-100"
-                            : "text-primary border border-primary hover:bg-primary hover:text-white transition"
+                      {/* 🛒 Go to Cart */}
+                      <Link
+                        href="/cart"
+                        prefetch
+                        onClick={(e) => {
+                          if (loading)
+                            e.preventDefault(); // block multiple clicks
+                          else handleNavigate("/cart", "cart");
+                        }}
+                        className={`flex-1 text-center py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition ${
+                          loading === "cart"
+                            ? "bg-primary text-white cursor-wait"
+                            : "bg-primary text-white hover:bg-primary/90"
                         }`}
                       >
-                        Checkout
-                      </button>
+                        {loading === "cart" ? (
+                          <>
+                            <LoadingOutlined className="text-white text-sm animate-spin" />
+                            <span>Loading...</span>
+                          </>
+                        ) : (
+                          "View Cart"
+                        )}
+                      </Link>
+
+                      {/* 💳 Checkout */}
+                      <Link
+                        href="/checkout"
+                        prefetch
+                        onClick={(e) => {
+                          if (cartItemsNav.length === 0 || loading) {
+                            e.preventDefault();
+                            return;
+                          }
+                          handleNavigate("/checkout", "checkout");
+                        }}
+                        className={`flex-1 text-center py-2 rounded-lg font-medium flex items-center justify-center gap-2 ${
+                          cartItemsNav.length === 0
+                            ? "text-gray-400 border border-gray-300 cursor-not-allowed bg-gray-100"
+                            : loading === "checkout"
+                            ? "text-primary border border-primary cursor-wait"
+                            : "text-primary border border-primary hover:bg-primary/5"
+                        }`}
+                      >
+                        {loading === "checkout" ? (
+                          <>
+                            <LoadingOutlined className="text-primary text-sm animate-spin" />
+                            <span>Loading...</span>
+                          </>
+                        ) : (
+                          "Checkout"
+                        )}
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -859,7 +910,8 @@ const Navbar = ({
                       {userRole === "admin" && (
                         <Link href="/orders">
                           <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                            <i className="bi bi-card-list text-gray-600"></i> Orders
+                            <i className="bi bi-card-list text-gray-600"></i>{" "}
+                            Orders
                           </div>
                         </Link>
                       )}

@@ -72,8 +72,8 @@ if (hideFooterOn.includes(pathname)) {
             Al Basit Tower, 4th floor, Gulshan e Jamal, opposite The Venue
           </p>
           <p className="text-sm text-gray-300">Karachi, Pakistan</p>
-          <p className="text-sm text-gray-300">Phone: +92 339 402 2468</p>
-          <p className="text-sm text-gray-300">Email: paltuufoundersclub@gmail.com</p>
+          <p className="text-sm text-gray-300">Phone: +92 3394022468</p>
+          <p className="text-sm text-gray-300">Email: notifypaltuu@gmail.com</p>
 
           {/* Social Media Icons */}
           <div className="flex justify-center md:justify-start gap-4 mt-5">

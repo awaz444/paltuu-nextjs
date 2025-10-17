@@ -37,7 +37,7 @@ const INITIAL_SECTIONS = [
   'Cat Food',
   'Dog Food',
   'Accessories & Grooming',
-  'Healthcare'
+  'Housing'
 ];
 
 const initialState: BazaarState = {
@@ -94,10 +94,10 @@ const categoryConfigs = [
     featuredKey: 'accessoriesGrooming' as const,
   },
   {
-    title: "Healthcare",
-    slug: 'healthcare',
+    title: "Housing",
+    slug: 'housing',
     categoryId: 4,
-    featuredKey: 'healthcare' as const,
+    featuredKey: 'housing' as const,
   },
 ];
 
@@ -120,6 +120,7 @@ export const fetchCategoryProducts = createAsyncThunk(
         // Use manually selected featured product IDs
         params.set('featuredIds', featuredIds.join(','));
         params.set('limit', String(Math.min(featuredIds.length, 10))); // Max 10 products per section
+        params.set('admin', 'true'); // Ensure curated IDs bypass publish status
       } else {
         // Use automatic filtering based on category type
         params.set('page', '1');

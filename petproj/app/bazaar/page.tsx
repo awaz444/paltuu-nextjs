@@ -75,11 +75,11 @@ const categories = [
         featuredKey: "accessoriesGrooming" as const,
     },
     {
-        title: "Healthcare",
+        title: "Housing",
         icon: Home,
-        slug: "healthcare",
+        slug: "housing",
         categoryId: 4,
-        featuredKey: "healthcare" as const,
+        featuredKey: "housing" as const,
     },
 ];
 

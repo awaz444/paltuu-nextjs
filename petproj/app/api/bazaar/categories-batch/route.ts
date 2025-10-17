@@ -57,10 +57,10 @@ const categoryConfigs: CategoryConfig[] = [
     featuredKey: 'accessoriesGrooming',
   },
   {
-    title: "Healthcare",
-    slug: 'healthcare',
+    title: "Housing",
+    slug: 'housing',
     categoryId: 4,
-    featuredKey: 'healthcare',
+    featuredKey: 'housing',
   },
 ];
 
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
 
   try {
     // Check cache first
-    const cacheKey = 'bazaar:all-categories:v1';
+    const cacheKey = 'bazaar:all-categories:v5';
 
     try {
       const cachedData = await safeRedis.get(cacheKey);
@@ -104,6 +104,8 @@ export async function GET(req: NextRequest) {
       if (featuredIds && featuredIds.length > 0) {
         params.set('featuredIds', featuredIds.join(','));
         params.set('limit', String(Math.min(featuredIds.length, 10)));
+        // When using curated featured IDs, allow admin view to bypass publish status
+        params.set('admin', 'true');
       } else {
         params.set('page', '1');
         params.set('limit', '10');

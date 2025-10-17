@@ -8,6 +8,7 @@ export default function PetShopLandingPage() {
   return (
     <main className="overflow-hidden bg-white">
       <HeroSection />
+      
     </main>
   );
 }

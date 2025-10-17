@@ -5,12 +5,6 @@ on:
     # Note: Scheduled workflows only run from the default branch
     - cron: '*/5 * * * *'
   workflow_dispatch: {}
-  # Optional: Also trigger on push to main to keep the workflow active
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/prewarm-bazaar.yml'
 
 jobs:
   prewarm:

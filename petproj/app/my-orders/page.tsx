@@ -243,18 +243,6 @@ const MyOrdersPage = () => {
 
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Breadcrumb */}
-        <div className="flex items-center text-sm text-gray-500 mb-6">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center text-primary hover:text-primary-dark mr-4"
-          >
-            <ArrowLeft size={18} className="mr-1" />
-          </button>
-          <span>Home</span>
-          <span className="mx-2">/</span>
-          <span className="text-primary">My Orders</span>
-        </div>
 
         {/* Page Header */}
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">

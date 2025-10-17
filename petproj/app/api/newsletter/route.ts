@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '../../../db/ecom';
+import { getPool } from '../../../db/ecom';
 
 export const revalidate = 0;
 
 export async function POST(req: NextRequest) {
-  const client = createClient();
+  const pool = getPool();
+  let client: any = null;
   try {
     const body = await req.json();
     const { email } = body;
@@ -19,30 +20,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
     }
 
-    await client.connect();
+    client = await pool.connect();
 
     // Check if email already exists
     const existingQuery = `
-      SELECT id, subscription_status 
-      FROM newsletter_subscriptions 
+      SELECT id, subscription_status
+      FROM newsletter_subscriptions
       WHERE email = $1
     `;
     const existingResult = await client.query(existingQuery, [email]);
 
     if (existingResult.rows.length > 0) {
       const existing = existingResult.rows[0];
-      
+
       if (existing.subscription_status === 'active') {
         return NextResponse.json(
-          { error: 'Email is already subscribed' }, 
+          { error: 'Email is already subscribed' },
           { status: 409 }
         );
       } else {
         // Reactivate if previously unsubscribed or inactive
         const updateQuery = `
-          UPDATE newsletter_subscriptions 
-          SET subscription_status = 'active', updated_at = CURRENT_TIMESTAMP 
-          WHERE email = $1 
+          UPDATE newsletter_subscriptions
+          SET subscription_status = 'active', updated_at = CURRENT_TIMESTAMP
+          WHERE email = $1
           RETURNING *
         `;
         const updateResult = await client.query(updateQuery, [email]);
@@ -55,8 +56,8 @@ export async function POST(req: NextRequest) {
 
     // Insert new subscription
     const insertQuery = `
-      INSERT INTO newsletter_subscriptions (email, subscription_status) 
-      VALUES ($1, 'active') 
+      INSERT INTO newsletter_subscriptions (email, subscription_status)
+      VALUES ($1, 'active')
       RETURNING *
     `;
     const insertResult = await client.query(insertQuery, [email]);
@@ -68,31 +69,32 @@ export async function POST(req: NextRequest) {
 
   } catch (err: any) {
     console.error('Newsletter subscription error:', err);
-    
+
     // Handle unique constraint violation
-    if (err.code === '23505') { // unique_violation
+    if (err && err.code === '23505') { // unique_violation
       return NextResponse.json(
-        { error: 'Email is already subscribed' }, 
+        { error: 'Email is already subscribed' },
         { status: 409 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to process subscription' }, 
+      { error: 'Failed to process subscription' },
       { status: 500 }
     );
   } finally {
-    try { 
-      await client.end(); 
+    try {
+      if (client) client.release();
     } catch (endErr) {
-      console.error('Error closing client:', endErr);
+      console.error('Error releasing client:', endErr);
     }
   }
 }
 
 // Optional: GET endpoint to check subscription status
 export async function GET(req: NextRequest) {
-  const client = createClient();
+  const pool = getPool();
+  let client: any = null;
   try {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get('email');
@@ -101,11 +103,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    await client.connect();
+    client = await pool.connect();
 
     const query = `
-      SELECT id, email, subscription_status, created_at 
-      FROM newsletter_subscriptions 
+      SELECT id, email, subscription_status, created_at
+      FROM newsletter_subscriptions
       WHERE email = $1
     `;
     const result = await client.query(query, [email]);
@@ -123,6 +125,6 @@ export async function GET(req: NextRequest) {
     console.error('Newsletter check error:', err);
     return NextResponse.json({ error: 'Failed to check subscription' }, { status: 500 });
   } finally {
-    try { await client.end(); } catch { }
+    try { if (client) client.release(); } catch { }
   }
 }

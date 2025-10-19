@@ -22,6 +22,7 @@ interface Product {
   ratingCount?: number;
 }
 
+
 export default function BrandPage() {
   const params = useParams();
   const dispatch = useDispatch<AppDispatch>();

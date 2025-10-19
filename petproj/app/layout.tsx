@@ -76,7 +76,7 @@ export default function RootLayout({
             <ThemeInitializer />
             <NavbarWrapper />
 
-            <main className="flex-grow overflow-hidden">
+            <main className="flex-grow">
               <PageTransition>
                 {children}
               </PageTransition>

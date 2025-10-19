@@ -618,17 +618,18 @@ const CheckoutPage = () => {
 
                         {/* 💰 Price and Quantity Summary */}
                         <div className="flex justify-between items-center mt-auto pt-3 border-t border-gray-100">
-  <div className="flex items-center gap-1.5 text-xs text-gray-600">
-    <span className="bg-gray-100 px-2 py-0.5 rounded-lg font-medium text-gray-700">
-      {item.quantity} × Rs {item.price.toLocaleString()}
-    </span>
-  </div>
-  <div className="flex items-center gap-1 text-primary font-semibold text-sm">
-    
-    <span>{(item.price * item.quantity).toLocaleString()} PKR</span>
-  </div>
-</div>
-
+                          <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                            <span className="bg-gray-100 px-2 py-0.5 rounded-lg font-medium text-gray-700">
+                              {item.quantity} × Rs {item.price.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 text-primary font-semibold text-sm">
+                            <span>
+                              {(item.price * item.quantity).toLocaleString()}{" "}
+                              PKR
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}

@@ -162,9 +162,10 @@ export default function RescuePanel() {
           <div className="h-3" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="hidden md:block md:col-span-1">
-            <Card className="shadow-sm sticky top-6" bodyStyle={{ backgroundColor: 'var(--primary-color)', color: 'white', borderRadius: 12 }}>
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="hidden md:block md:w-1/4">
+            <div className="sticky top-6">
+              <Card className="shadow-sm max-h-[calc(100vh-8rem)] overflow-y-auto" bodyStyle={{ backgroundColor: 'var(--primary-color)', color: 'white', borderRadius: 12 }}>
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-3 p-3 rounded-lg">
                   <Image src="/paltu_logo.svg" alt="Paltuu" width={120} height={32} />
@@ -203,9 +204,10 @@ export default function RescuePanel() {
                   <HomeOutlined /> <span>My Shelter</span>
                 </button>
               </div>
-            </Card>
+              </Card>
+            </div>
           </div>
-          <div className="md:col-span-3">
+          <div className="md:w-3/4">
             {activeTab === 'bulk' && (
               <Card title="Bulk Upload Pets" className="shadow-sm">
                 <p className="mb-4">Upload multiple pets at once for your shelter.</p>

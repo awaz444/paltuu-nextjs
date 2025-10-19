@@ -35,65 +35,51 @@ const brands = [
         longDescription: "Petline provides comprehensive pet care solutions including grooming supplies, health supplements, training aids, and wellness products. Our complete range ensures that every aspect of your pet's care is covered with professional-grade quality and reliability.",
     },
     {
-        name: "La Mito",
-        slug: "la-mito",
-        image: "/images/brands/la-mito.png",
-        description: "Natural pet wellness",
-        longDescription: "La Mito focuses on natural pet wellness products made from organic and sustainably sourced ingredients. Our holistic approach to pet health includes natural supplements, organic treats, and eco-friendly care products that promote overall wellness while respecting the environment.",
-    },
-    {
         name: "Pedigree",
         slug: "pedigree",
-        image: "/images/brands/pedigree.png",
+        image: "https://lfiwvlicdkdheqynvjxb.supabase.co/storage/v1/object/public/product-imgs/products/82/variants/213/1759496516128-0-1ea71fbb-b2b3-4b74-ae78-a4301937a4d5%20(1).png",
         description: "Trusted dog nutrition",
         longDescription: "Pedigree has been a trusted name in dog nutrition for decades, providing complete and balanced meals for dogs of all sizes and life stages. Our scientifically developed recipes include essential nutrients, vitamins, and minerals to support healthy growth, strong bones, and vibrant coats.",
     },
     {
         name: "Gourmet",
         slug: "gourmet",
-        image: "/images/brands/gourmet.png",
+        image: "https://lfiwvlicdkdheqynvjxb.supabase.co/storage/v1/object/public/product-imgs/products/96/variants/227/1759499278476-0-58b050ff4146bd6d31097b84a8bd70c4.webp",
         description: "Premium cat cuisine",
         longDescription: "Gourmet delivers exquisite culinary experiences for cats with premium ingredients and sophisticated flavors. Our range includes gourmet wet foods, treats, and specialized nutrition designed to satisfy even the most discerning feline palates.",
     },
     {
         name: "Brit Care",
         slug: "brit-care",
-        image: "/images/brands/brit-care.png",
+        image: "https://lfiwvlicdkdheqynvjxb.supabase.co/storage/v1/object/public/product-imgs/products/87/variants/216/1759497525935-0-salmon.png",
         description: "Premium pet nutrition",
         longDescription: "Brit Care provides premium nutrition solutions for dogs and cats with scientifically formulated recipes. Our comprehensive range includes specialized diets for different life stages, health conditions, and dietary preferences, ensuring optimal nutrition for every pet.",
     },
     {
         name: "Royal Canin",
         slug: "royal-canin",
-        image: "/images/brands/royal-canin.png",
+        image: "https://lfiwvlicdkdheqynvjxb.supabase.co/storage/v1/object/public/product-imgs/products/63/variants/178/1759436991086-0-image_2025-10-03_012935311.png",
         description: "Veterinary nutrition leader",
         longDescription: "Royal Canin is the global leader in veterinary nutrition, offering scientifically formulated diets for dogs and cats. With over 50 years of expertise, we provide breed-specific, size-specific, and health-focused nutrition solutions backed by veterinary research and nutritional science.",
     },
     {
         name: "Whiskas",
         slug: "whiskas",
-        image: "/images/brands/whiskas.png",
+        image: "https://lfiwvlicdkdheqynvjxb.supabase.co/storage/v1/object/public/product-imgs/products/33/variants/134/1759185300005-0-j25zzoulbfvzmwttpcni.png",
         description: "Complete cat nutrition",
         longDescription: "Whiskas provides complete and balanced nutrition for cats at every life stage. From kitten to senior, our range includes wet and dry foods, treats, and specialized diets formulated with essential nutrients to keep cats healthy, happy, and thriving throughout their lives.",
     },
     {
         name: "Fluff'n Bluff",
         slug: "fluff-n-bluff",
-        image: "/images/brands/fluff-n-bluff.png",
+        image: "https://lfiwvlicdkdheqynvjxb.supabase.co/storage/v1/object/public/product-imgs/products/74/variants/199/1759464270282-0-2-9.png",
         description: "Premium pet grooming",
         longDescription: "Fluff'n Bluff specializes in premium pet grooming products and accessories designed to keep your pets looking and feeling their best. Our comprehensive range includes shampoos, conditioners, brushes, nail care tools, and styling accessories for professional-quality grooming at home.",
     },
     {
-        name: "Nourvet",
-        slug: "nourvet",
-        image: "/images/brands/nourvet.png",
-        description: "Veterinary nutrition & supplements",
-        longDescription: "Nourvet provides veterinary-grade nutrition and supplements designed to support optimal pet health. Our scientifically formulated products include therapeutic diets, nutritional supplements, vitamins, and specialized health solutions developed in collaboration with veterinary professionals.",
-    },
-    {
         name: "Jungle",
         slug: "jungle",
-        image: "/images/brands/jungle.png",
+        image: "https://lfiwvlicdkdheqynvjxb.supabase.co/storage/v1/object/public/product-imgs/products/156/variants/311/1759568118717-0-jungle%20lamb.avif",
         description: "Wild-inspired pet products",
         longDescription: "Jungle brings the wild into your pet's life with nature-inspired products and accessories. Our collection includes natural toys, organic treats, eco-friendly bedding, and adventure gear designed to satisfy your pet's natural instincts while promoting environmental sustainability.",
     },
@@ -142,12 +128,13 @@ export default function AllBrandsPage() {
 
                                 {/* Brand Content */}
                                 <div className="sm:w-2/3 p-6 flex flex-col justify-between">
-                                
+
                                     <div>
                                         <div className="flex items-center justify-between mb-3">
                                             <h2 className="text-2xl font-bold text-gray-900 group-hover:text-primary transition-colors">
                                                 {brand.name}
                                             </h2>
+                                            
                                             <ArrowRight 
                                                 size={20} 
                                                 className="text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200" 

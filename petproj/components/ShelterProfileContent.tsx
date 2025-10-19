@@ -153,7 +153,7 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch('/api/upload-image', {
+      const response = await fetch('/api/upload-shelter-image', {
         method: 'POST',
         body: formData,
       });
@@ -161,9 +161,11 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
       if (response.ok) {
         const data = await response.json();
         setProfileImage(data.imageUrl);
-        message.success('Profile picture uploaded successfully!');
+        message.success('Shelter logo uploaded successfully!');
       } else {
-        message.error('Failed to upload image');
+        const errorData = await response.json();
+        console.error('Upload error:', errorData);
+        message.error(`Failed to upload image: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error uploading image:', error);

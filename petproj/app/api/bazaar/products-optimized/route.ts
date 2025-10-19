@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
     const includeVariants = searchParams.get('variants') === 'true'; // Only load variants if needed
 
     // Cache key
-  const cacheKey = `products:v6:admin=${adminView}:page=${page}:limit=${limit}:cat=${filterCategory}:slug=${categorySlug}:col=${filterCollection}:kw=${filterKeyword}:pet=${petType}:sort=${sortBy}:minP=${minPrice}:maxP=${maxPrice}:ids=${filterProductIds}:feat=${featuredIds}:var=${includeVariants}`;
+  const cacheKey = `products:v9:admin=${adminView}:page=${page}:limit=${limit}:cat=${filterCategory}:slug=${categorySlug}:col=${filterCollection}:kw=${filterKeyword}:pet=${petType}:sort=${sortBy}:minP=${minPrice}:maxP=${maxPrice}:ids=${filterProductIds}:feat=${featuredIds}:var=${includeVariants}`;
 
     // Try cache first
     try {

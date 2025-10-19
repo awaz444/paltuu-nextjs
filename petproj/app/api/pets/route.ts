@@ -319,30 +319,78 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
 
     try {
         await withRetry(() => client.connect());
-        const result = await withRetry(() =>
-            client.query(
-                "DELETE FROM pets WHERE pet_id = $1 RETURNING *",
-                [pet_id]
-            )
-        );
+        
+        // Start a transaction to ensure all related data is deleted
+        await withRetry(() => client.query('BEGIN'));
+        
+        try {
+            // First, delete related records in the correct order
+            // Delete from rescue_medical_conditions
+            await withRetry(() =>
+                client.query(
+                    "DELETE FROM rescue_medical_conditions WHERE pet_id = $1",
+                    [pet_id]
+                )
+            );
+            
+            // Delete from rescue_special_needs
+            await withRetry(() =>
+                client.query(
+                    "DELETE FROM rescue_special_needs WHERE pet_id = $1",
+                    [pet_id]
+                )
+            );
+            
+            // Delete from pet_images
+            await withRetry(() =>
+                client.query(
+                    "DELETE FROM pet_images WHERE pet_id = $1",
+                    [pet_id]
+                )
+            );
+            
+            // Delete from adoption_applications
+            await withRetry(() =>
+                client.query(
+                    "DELETE FROM adoption_applications WHERE pet_id = $1",
+                    [pet_id]
+                )
+            );
+            
+            // Finally, delete the pet itself
+            const result = await withRetry(() =>
+                client.query(
+                    "DELETE FROM pets WHERE pet_id = $1 RETURNING *",
+                    [pet_id]
+                )
+            );
 
-        if (result.rows.length === 0) {
+            if (result.rows.length === 0) {
+                await withRetry(() => client.query('ROLLBACK'));
+                return NextResponse.json(
+                    { error: "Pet not found" },
+                    {
+                        status: 404,
+                        headers: { "Content-Type": "application/json" },
+                    }
+                );
+            }
+
+            // Commit the transaction
+            await withRetry(() => client.query('COMMIT'));
+
             return NextResponse.json(
-                { error: "Pet not found" },
+                { message: "Pet deleted successfully" },
                 {
-                    status: 404,
+                    status: 200,
                     headers: { "Content-Type": "application/json" },
                 }
             );
+        } catch (deleteError) {
+            // Rollback the transaction if any deletion fails
+            await withRetry(() => client.query('ROLLBACK'));
+            throw deleteError;
         }
-
-        return NextResponse.json(
-            { message: "Pet deleted successfully" },
-            {
-                status: 200,
-                headers: { "Content-Type": "application/json" },
-            }
-        );
     } catch (err) {
         console.error(err);
         return NextResponse.json(

@@ -201,6 +201,7 @@ const MyProfile = () => {
         setData(finalProfileData);
         setUpdatedData(finalProfileData);
 
+        
         // Fetch cities data
         const citiesRes = await fetch("/api/cities");
         if (!citiesRes.ok) throw new Error("Failed to fetch cities");

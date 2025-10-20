@@ -52,7 +52,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     } else if (userRole === 'shelter admin') {
       // Get shelter data
       const shelterResult = await client.query(
-        'SELECT shelter_id, shelter_name FROM rescue_shelters WHERE user_id = $1',
+        'SELECT shelter_id, shelter_name, address FROM rescue_shelters WHERE user_id = $1',
         [userId]
       );
       
@@ -60,7 +60,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         entityData = {
           type: 'shelter',
           id: shelterResult.rows[0].shelter_id,
-          name: shelterResult.rows[0].shelter_name
+          name: shelterResult.rows[0].shelter_name,
+          address: shelterResult.rows[0].address
         };
       }
     }

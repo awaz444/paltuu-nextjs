@@ -62,11 +62,8 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
 
     const router = useRouter(); // Initialize router for navigation
 
-    const handleViewApplications = (petId: number, listing_type: string) => {
-        if (listing_type === "adoption")
-            router.push(`/adoption-applicants?pet_id=${petId}`);
-        else if (listing_type === "foster")
-            router.push(`/foster-applicants?pet_id=${petId}`);
+    const handleViewApplications = (petId: number) => {
+        router.push(`/adoption-applicants?pet_id=${petId}`);
     };
 
     const handleDelete = async (petId: number) => {
@@ -218,13 +215,6 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                             {pet.city} - {pet.area}
                         </p>
                     </div>
-                    {pet.approved && (<button
-                        className="bg-primary text-white px-4 py-2 rounded-xl mt-4"
-                        onClick={() =>
-                            handleViewApplications(pet.pet_id, pet.listing_type)
-                        }>
-                        View Applications
-                    </button>)}
                     
                 </div>
             ))}

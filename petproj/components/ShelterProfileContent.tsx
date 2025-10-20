@@ -53,6 +53,8 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
   const [socialMedia, setSocialMedia] = useState<Array<{ platform: string; url: string }>>([]);
   const [profileImage, setProfileImage] = useState<string>('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [facilityPhotos, setFacilityPhotos] = useState<string[]>([]);
+  const [uploadingFacility, setUploadingFacility] = useState(false);
 
   useEffect(() => {
     fetchShelterProfile();
@@ -71,6 +73,7 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
         setProfileData(data);
         setSocialMedia(data.social_media || []);
         setProfileImage(data.logo_url || '');
+        setFacilityPhotos(data.facility_photos || []);
         
         const formValues = {
           shelter_name: data.shelter_name || '',
@@ -101,6 +104,59 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
       message.error('Error fetching shelter profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFacilityUpload = async (file: File) => {
+    try {
+      setUploadingFacility(true);
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const uploadRes = await fetch('/api/upload-shelter-image', { method: 'POST', body: formData });
+      if (!uploadRes.ok) {
+        const err = await uploadRes.json();
+        message.error(err.error || 'Failed to upload photo');
+        return false;
+      }
+      const { imageUrl } = await uploadRes.json();
+
+      const saveRes = await fetch(`/api/rescue/shelters/${shelterId}/photos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photo_url: imageUrl })
+      });
+      if (!saveRes.ok) {
+        const err = await saveRes.json();
+        message.error(err.error || 'Failed to save photo');
+        return false;
+      }
+      setFacilityPhotos((prev) => [imageUrl, ...prev]);
+      message.success('Facility photo added');
+    } catch (e) {
+      message.error('Error adding photo');
+    } finally {
+      setUploadingFacility(false);
+    }
+    return false;
+  };
+
+  const handleRemoveFacilityPhoto = async (url: string) => {
+    try {
+      const res = await fetch(`/api/rescue/shelters/${shelterId}/photos`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photo_url: url })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        message.error(err.error || 'Failed to remove photo');
+        return;
+      }
+      setFacilityPhotos((prev) => prev.filter((p) => p !== url));
+      message.success('Photo removed');
+    } catch (e) {
+      message.error('Error removing photo');
     }
   };
 
@@ -245,6 +301,36 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
                 >
                   <TextArea rows={4} placeholder="Enter shelter description" />
                 </Form.Item>
+              </Col>
+            </Row>
+          </div>
+
+          <Divider />
+
+          {/* Facility Photos */}
+          <div>
+            <Title level={4} className="mb-4">Facility Photos</Title>
+            <Row gutter={[16, 16]}>
+              {facilityPhotos.map((url, idx) => (
+                <Col key={idx} xs={12} sm={8} md={6}>
+                  <Card
+                    cover={<img src={url} alt={`facility-${idx}`} className="h-36 object-cover" />}
+                    actions={[<Button danger type="link" onClick={() => handleRemoveFacilityPhoto(url)} key="remove">Remove</Button>]}
+                    className="shadow-sm"
+                  />
+                </Col>
+              ))}
+              <Col xs={12} sm={8} md={6}>
+                <Upload
+                  beforeUpload={handleFacilityUpload}
+                  showUploadList={false}
+                  accept="image/*"
+                  disabled={uploadingFacility}
+                >
+                  <Button icon={<PlusOutlined />} loading={uploadingFacility} className="w-full h-36 flex items-center justify-center">
+                    {uploadingFacility ? 'Uploading...' : 'Add Photo'}
+                  </Button>
+                </Upload>
               </Col>
             </Row>
           </div>

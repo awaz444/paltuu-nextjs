@@ -201,7 +201,7 @@ const MyProfile = () => {
         setData(finalProfileData);
         setUpdatedData(finalProfileData);
 
-        
+
         // Fetch cities data
         const citiesRes = await fetch("/api/cities");
         if (!citiesRes.ok) throw new Error("Failed to fetch cities");
@@ -211,6 +211,7 @@ const MyProfile = () => {
         console.error("Error loading data:", error);
         console.log("🔍 Profile page - Using fallback data from localStorage");
 
+        
         // If database fetch fails, use localStorage data as fallback
         const fallbackData = {
           user_id: parsedUser.id,

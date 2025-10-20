@@ -167,11 +167,11 @@ if (hideFooterOn.includes(pathname)) {
         </p>
 
         {/* Payment Icons */}
-        <div className="flex gap-3">
+        {/* <div className="flex gap-3">
           <Image src="/visacard.svg" alt="Visa" width={35} height={20} />
           <Image src="/mastercard.svg" alt="MasterCard" width={35} height={20} />
           <Image src="/unionpay.svg" alt="UnionPay" width={35} height={20} />
-        </div>
+        </div> */}
       </div>
     </footer>
   );

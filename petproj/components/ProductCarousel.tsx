@@ -261,43 +261,22 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
                                             )}
 
                                             {product.original_price ? (
-                                                <div className="flex items-center gap-2 flex-wrap justify-start">
+                                                <div className="flex items-center gap-2">
                                                     <p className="text-primary font-semibold text-sm">
-                                                        PKR{" "}
-                                                        {parseInt(
-                                                            product.price
-                                                        ).toLocaleString()}
+                                                        PKR {parseInt(product.price).toLocaleString()}
                                                     </p>
                                                     <div className="flex items-center gap-2">
                                                         <p className="text-gray-400 line-through text-sm">
-                                                            {parseInt(
-                                                                product.original_price
-                                                            ).toLocaleString()}
+                                                            {parseInt(product.original_price).toLocaleString()}
                                                         </p>
                                                         <span className="text-green-600 text-sm font-medium">
-                                                            -
-                                                            {Math.round(
-                                                                ((parseInt(
-                                                                    product.original_price
-                                                                ) -
-                                                                    parseInt(
-                                                                        product.price
-                                                                    )) /
-                                                                    parseInt(
-                                                                        product.original_price
-                                                                    )) *
-                                                                    100
-                                                            )}
-                                                            %
+                                                            -{Math.round(((parseInt(product.original_price) - parseInt(product.price)) / parseInt(product.original_price)) * 100)}%
                                                         </span>
                                                     </div>
                                                 </div>
                                             ) : (
                                                 <p className="text-primary font-semibold text-sm mb-0">
-                                                    PKR{" "}
-                                                    {parseInt(
-                                                        product.price
-                                                    ).toLocaleString()}
+                                                    PKR {parseInt(product.price).toLocaleString()}
                                                 </p>
                                             )}
                                         </div>

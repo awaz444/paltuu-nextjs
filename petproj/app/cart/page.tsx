@@ -139,27 +139,11 @@ const CartPage = () => {
   return (
     <main className="min-h-screen bg-gradient-to-b from-primary/5 to-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Breadcrumb */}
-        <div className="flex items-center text-sm text-gray-500 mb-6">
-          <span>Home</span>
-          <span className="mx-2">/</span>
-          <span>Bazaar</span>
-          <span className="mx-2">/</span>
-          <span className="text-primary">Cart</span>
-        </div>
-
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-800">
             Your Shopping Cart
           </h1>
-          <button
-            className="flex items-center text-primary hover:text-primary-dark font-medium"
-            onClick={() => router.push("/marketplace")}
-          >
-            <ArrowLeft size={18} className="mr-1" />
-            Continue Shopping
-          </button>
         </div>
 
         {/* Cart Layout */}

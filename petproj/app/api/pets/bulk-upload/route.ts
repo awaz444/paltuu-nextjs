@@ -76,7 +76,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           months: pet.months || 0,
           description: pet.description,
           adoption_status: 'available',
-          price: entityType === 'shop' ? pet.price : 0,
+          price: entityType === 'shop' ? pet.price : null,
           min_age_of_children: pet.min_age_of_children || null,
           can_live_with_dogs: pet.can_live_with_dogs || null,
           can_live_with_cats: pet.can_live_with_cats || null,
@@ -88,6 +88,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           listing_type: entityType === 'shop' ? 'shop' : 'rescue',
           vaccinated: pet.vaccinated || false,
           neutered: pet.neutered || false,
+          rescue_story: entityType === 'shelter' ? (pet.rescue_story || null) : null,
           shop_id: entityType === 'shop' ? validEntityId : null,
           shelter_id: entityType === 'shelter' ? validEntityId : null
         };
@@ -98,9 +99,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             owner_id, pet_name, pet_type, pet_breed, city_id, area, age, months,
             description, adoption_status, price, min_age_of_children, can_live_with_dogs,
             can_live_with_cats, must_have_someone_home, energy_level, cuddliness_level,
-            health_issues, sex, listing_type, vaccinated, neutered, shop_id, shelter_id
+            health_issues, sex, listing_type, vaccinated, neutered, rescue_story, shop_id, shelter_id
           ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25
           ) RETURNING pet_id
         `;
 
@@ -127,6 +128,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           petData.listing_type,
           petData.vaccinated,
           petData.neutered,
+          petData.rescue_story, // rescue_story
           petData.shop_id, // shop_id
           petData.shelter_id // shelter_id
         ];

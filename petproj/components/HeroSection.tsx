@@ -19,6 +19,7 @@ import {
     faShoppingCart,
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
+import PaltuuBazaarSection from "./PaltuuBazaarSection";
 {
     /* Add this to your global CSS */
 }
@@ -215,13 +216,13 @@ const HeroSection = () => {
                 </div>
             </section>
 
-            {/* NEW: Mission & Vision Sections - Theme Matched */}
+            {/* Paltuu Bazaar Section */}
+            <PaltuuBazaarSection />
+
+            {/* Mission & Vision Sections - Theme Matched */}
             <section className="py-12 px-6 lg:px-20 bg-white relative">
                 <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Mission Card */}
-                    {/* Mission Card */}
                     <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden">
-                        {/* Decorative paw in background */}
                         <div className="absolute -bottom-4 -right-4 w-24 h-24 opacity-10">
                             <FontAwesomeIcon
                                 icon={faPaw}
@@ -263,9 +264,7 @@ const HeroSection = () => {
                         </p>
                     </div>
 
-                    {/* Vision Card */}
                     <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden">
-                        {/* Decorative heart in background */}
                         <div className="absolute -top-4 -left-4 w-24 h-24 opacity-10">
                             <FontAwesomeIcon
                                 icon={faHeart}
@@ -332,27 +331,63 @@ const HeroSection = () => {
                                 text: "Find cats, dogs & more looking for loving homes",
                                 link: "/browse-pets",
                                 delay: "100",
+                                buttonText: "Adopt Now",
+                            },
+                            {
+                                icon: faCat,
+                                title: "Cat Food",
+                                text: "Premium cat food, treats & nutrition for your feline",
+                                link: "/bazaar?category=cat-food",
+                                delay: "150",
+                                buttonText: "Shop Cat Food",
+                            },
+                            {
+                                icon: faDog,
+                                title: "Dog Food",
+                                text: "Quality dog food & treats for your canine",
+                                link: "/bazaar?category=dog-food",
+                                delay: "200",
+                                buttonText: "Shop Dog Food",
                             },
                             {
                                 icon: faShoppingCart,
-                                title: "Pet Products",
-                                text: "Shop food, grooming & accessories online in Pakistan",
-                                link: "/bazaar",
-                                delay: "150",
+                                title: "Pet Litter",
+                                text: "Cat litter, training pads & hygiene products",
+                                link: "/bazaar?category=litter",
+                                delay: "250",
+                                buttonText: "Buy Litter",
+                            },
+                            {
+                                icon: faHeart,
+                                title: "Pet Grooming",
+                                text: "Shampoos, brushes & grooming essentials",
+                                link: "/bazaar?category=grooming",
+                                delay: "300",
+                                buttonText: "Shop Grooming",
+                            },
+                            {
+                                icon: faGift,
+                                title: "Pet Accessories",
+                                text: "Toys, collars, beds & fun accessories for pets",
+                                link: "/bazaar?category=accessories",
+                                delay: "350",
+                                buttonText: "Shop Accessories",
                             },
                             {
                                 icon: faStethoscope,
                                 title: "Find Vets",
-                                text: "Connect with trusted veterinary professionals near you",
-                                link: "/vets",
-                                delay: "200",
+                                text: "Connect with trusted vets near you",
+                                link: "/pet-care",
+                                delay: "400",
+                                buttonText: "Find Vets",
                             },
                             {
                                 icon: faSearch,
                                 title: "Lost & Found",
                                 text: "Help reunite missing pets with their families",
                                 link: "/lost-and-found",
-                                delay: "300",
+                                delay: "450",
+                                buttonText: "Report Pet",
                             },
                         ].map((feature, index) => (
                             <div
@@ -392,7 +427,7 @@ const HeroSection = () => {
                                     <button
                                         className="text-sm font-semibold bg-primary text-white px-4 py-2 rounded-full
             hover:bg-primary/90 transition-colors duration-300 shadow-sm">
-                                        Learn More
+                                        {feature.buttonText}
                                     </button>
                                 </div>
 

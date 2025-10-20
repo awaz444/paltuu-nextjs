@@ -164,7 +164,7 @@ export default function RescuePanel() {
         </div>
 
         <div className="flex flex-col md:flex-row gap-6">
-          <div className="hidden md:block md:w-1/3">
+          <div className="hidden md:block md:w-1/4">
             <div className="sticky top-6">
               <Card className="shadow-sm max-h-[calc(100vh-8rem)]" bodyStyle={{ backgroundColor: 'var(--primary-color)', color: 'white', borderRadius: 12 }}>
               <div className="flex flex-col gap-3">
@@ -208,7 +208,7 @@ export default function RescuePanel() {
               </Card>
             </div>
           </div>
-          <div className="md:w-2/3">
+          <div className="md:w-3/4">
             {activeTab === 'bulk' && (
               <Card title="Bulk Upload Pets" className="shadow-sm">
                 <p className="mb-4">Upload multiple pets at once for your shelter.</p>

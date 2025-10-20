@@ -41,6 +41,7 @@ interface PetFormData {
   vaccinated: boolean;
   neutered: boolean;
   price?: number;
+  rescue_story?: string;
   images: File[];
 }
 
@@ -49,13 +50,15 @@ interface BulkPetUploadFormProps {
   entityId: number;
   entityName: string;
   showPrice: boolean;
+  entityAddress?: string;
 }
 
 export default function BulkPetUploadForm({ 
   entityType, 
   entityId, 
   entityName, 
-  showPrice 
+  showPrice,
+  entityAddress
 }: BulkPetUploadFormProps) {
   const { user } = useAuth();
   const [form] = Form.useForm();
@@ -71,6 +74,7 @@ export default function BulkPetUploadForm({
       vaccinated: false,
       neutered: false,
       price: showPrice ? 0 : undefined,
+      rescue_story: entityType === 'shelter' ? '' : undefined,
       images: []
     }
   ]);
@@ -130,6 +134,7 @@ export default function BulkPetUploadForm({
       vaccinated: false,
       neutered: false,
       price: showPrice ? 0 : undefined,
+      rescue_story: entityType === 'shelter' ? '' : undefined,
       images: []
     }]);
   };
@@ -206,12 +211,12 @@ export default function BulkPetUploadForm({
             pet_type: petData.pet_type,
             pet_breed: entityType === 'shop' ? (petData.pet_breed || null) : null, // Only shops have breed
             city_id: null, // Will be set by user selection
-            area: '',
+            area: entityAddress || '',
             age: petData.age || 0,
             months: petData.months || 0,
             description: petData.description,
             adoption_status: 'available',
-            price: showPrice ? petData.price : 0,
+            price: showPrice ? petData.price : null,
             min_age_of_children: null,
             can_live_with_dogs: null,
             can_live_with_cats: null,
@@ -223,6 +228,7 @@ export default function BulkPetUploadForm({
             listing_type: showPrice ? 'shop' : 'rescue',
             vaccinated: petData.vaccinated,
             neutered: petData.neutered,
+            rescue_story: entityType === 'shelter' ? (petData.rescue_story || null) : null,
             images: [] // Will be uploaded separately
           };
 
@@ -284,6 +290,7 @@ export default function BulkPetUploadForm({
           vaccinated: false,
           neutered: false,
           price: showPrice ? 0 : undefined,
+          rescue_story: entityType === 'shelter' ? '' : undefined,
           images: []
         }]);
       }
@@ -510,6 +517,19 @@ export default function BulkPetUploadForm({
                 </Form.Item>
               </Col>
 
+              {entityType === 'shelter' && (
+                <Col xs={24}>
+                  <Form.Item label="Rescue Story">
+                    <TextArea
+                      value={petData.rescue_story || ''}
+                      onChange={(e) => updatePetForm(index, 'rescue_story', e.target.value)}
+                      placeholder="Tell the story of how this pet was rescued - where they were found, what condition they were in, their journey to recovery, etc."
+                      rows={4}
+                    />
+                  </Form.Item>
+                </Col>
+              )}
+
               <Col xs={24}>
                 <Form.Item label="Images *" required>
                   <Upload
@@ -561,6 +581,7 @@ export default function BulkPetUploadForm({
             vaccinated: false,
             neutered: false,
             price: showPrice ? 0 : undefined,
+            rescue_story: entityType === 'shelter' ? '' : undefined,
             images: []
           }])} disabled={uploading}>
             Clear All

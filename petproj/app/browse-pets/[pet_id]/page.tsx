@@ -313,7 +313,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
             case "shop":
                 return userId ? "Purchase from Shop" : "Login to Purchase";
             case "rescue":
-                return userId ? "Help This Pet" : "Login to Help";
+                return userId ? "Adopt This Pet" : "Login to Adopt";
             case "adoption":
             default:
                 return userId ? "Apply for Adoption" : "Login to Apply";

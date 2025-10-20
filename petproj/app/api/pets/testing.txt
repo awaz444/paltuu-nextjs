@@ -38,6 +38,7 @@ post
     "city_id": 1,   // Replace with a valid city ID
     "area": "Downtown",
     "age": 3,
+    "months": 0,
     "description": "Friendly and playful dog, great with kids.",
     "adoption_status": "available",
     "min_age_of_children": 5,
@@ -46,5 +47,13 @@ post
     "must_have_someone_home": true,
     "energy_level": 4,
     "cuddliness_level": 2,
-    "health_issues": "No known health issues."
+    "health_issues": "No known health issues.",
+    "sex": "male",
+    "listing_type": "rescue",
+    "vaccinated": true,
+    "neutered": false,
+    "price": null,
+    "rescue_story": "Buddy was found abandoned in a park, malnourished and scared. After months of rehabilitation and love, he's now ready for his forever home.",
+    "shelter_id": 1,
+    "shop_id": null
 }

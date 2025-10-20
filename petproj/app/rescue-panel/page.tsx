@@ -26,7 +26,7 @@ export default function RescuePanel() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'bulk' | 'single' | 'listings' | 'profile' | 'notifications' | 'applications' | 'shelter'>('bulk');
   const [mobileSolid, setMobileSolid] = useState(true);
-  const [entityData, setEntityData] = useState<{id: number, name: string} | null>(null);
+  const [entityData, setEntityData] = useState<{id: number, name: string, address?: string} | null>(null);
 
   useEffect(() => {
     const check = () => {
@@ -60,9 +60,10 @@ export default function RescuePanel() {
         if (data.success && data.entity) {
           setEntityData({
             id: data.entity.id,
-            name: data.entity.name
+            name: data.entity.name,
+            address: data.entity.address
           });
-          console.log('Set entity data:', { id: data.entity.id, name: data.entity.name });
+          console.log('Set entity data:', { id: data.entity.id, name: data.entity.name, address: data.entity.address });
         } else {
           console.log('No entity data found or API error:', data);
         }
@@ -165,7 +166,7 @@ export default function RescuePanel() {
         <div className="flex flex-col md:flex-row gap-6">
           <div className="hidden md:block md:w-1/4">
             <div className="sticky top-6">
-              <Card className="shadow-sm max-h-[calc(100vh-8rem)] overflow-y-auto" bodyStyle={{ backgroundColor: 'var(--primary-color)', color: 'white', borderRadius: 12 }}>
+              <Card className="shadow-sm max-h-[calc(100vh-8rem)]" bodyStyle={{ backgroundColor: 'var(--primary-color)', color: 'white', borderRadius: 12 }}>
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-3 p-3 rounded-lg">
                   <Image src="/paltu_logo.svg" alt="Paltuu" width={120} height={32} />
@@ -217,6 +218,7 @@ export default function RescuePanel() {
                     entityId={entityData?.id || 1}
                     entityName={entityData?.name || "My Rescue Shelter"}
                     showPrice={false}
+                    entityAddress={entityData?.address}
                   />
                 </div>
               </Card>
@@ -230,6 +232,7 @@ export default function RescuePanel() {
                     entityId={entityData?.id || 1}
                     entityName={entityData?.name || "My Rescue Shelter"}
                     showPrice={false}
+                    entityAddress={entityData?.address}
                   />
                 </div>
               </Card>
@@ -305,6 +308,7 @@ function MyApplicationsContent() {
   const [applications, setApplications] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [expandedApplication, setExpandedApplication] = React.useState<number | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -312,7 +316,7 @@ function MyApplicationsContent() {
       try {
         const uid = user?.id || user?.user_id;
         if (!uid) throw new Error('User not found');
-        const response = await fetch(`/api/get-my-applications/${uid}`);
+        const response = await fetch(`/api/get-shelter-applications/${uid}`);
         if (!response.ok) throw new Error('Failed to fetch applications');
         const data = await response.json();
         setApplications(data.applications || []);
@@ -325,6 +329,38 @@ function MyApplicationsContent() {
     load();
   }, [user?.id, user?.user_id]);
 
+  const handleApprove = async (applicationId: number) => {
+    try {
+      const response = await fetch(`/api/accept-adoption-application/${applicationId}`, { method: "POST" });
+      
+      if (response.ok) {
+        setApplications(prev => prev.filter(app => app.application_id !== applicationId));
+        message.success('Application approved successfully!');
+      } else {
+        message.error('Failed to approve application');
+      }
+    } catch (error) {
+      console.error('Error approving application:', error);
+      message.error('Failed to approve application');
+    }
+  };
+
+  const handleReject = async (applicationId: number) => {
+    try {
+      const response = await fetch(`/api/reject-adoption-application/${applicationId}`, { method: "POST" });
+      
+      if (response.ok) {
+        setApplications(prev => prev.filter(app => app.application_id !== applicationId));
+        message.success('Application rejected');
+      } else {
+        message.error('Failed to reject application');
+      }
+    } catch (error) {
+      console.error('Error rejecting application:', error);
+      message.error('Failed to reject application');
+    }
+  };
+
   if (loading) return <div className="py-6">Loading...</div>;
   if (error) return <div className="py-6 text-red-500">{error}</div>;
 
@@ -333,13 +369,96 @@ function MyApplicationsContent() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="space-y-6">
       {applications.map((app) => (
-        <div key={app.application_id} className="bg-white p-4 rounded-2xl shadow-sm border">
-          <img src={app.image_url || "/dog-placeholder.png"} alt={app.pet_name} className="w-full h-40 object-cover rounded-xl mb-3" />
-          <div className="font-semibold">{app.pet_name}</div>
-          <div className="text-sm text-gray-600">{app.city_name}{app.area ? `, ${app.area}` : ''}</div>
-          <div className="text-sm text-gray-600">Status: {app.status}</div>
+        <div key={app.application_id} className="bg-white p-6 rounded-2xl shadow-sm border">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-xl font-bold text-gray-800">
+                {app.adopter_name}
+              </h3>
+              <p className="text-gray-600">Applied for: {app.pet_name}</p>
+              <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold mt-2 ${
+                app.status === "approved" ? "bg-green-100 text-green-800" :
+                app.status === "pending" ? "bg-yellow-100 text-yellow-800" :
+                "bg-red-100 text-red-800"
+              }`}>
+                {app.status}
+              </span>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-500">
+                {new Date(app.created_at).toLocaleDateString()}
+              </p>
+              <p className="text-sm text-gray-500">
+                Adoption Application
+              </p>
+            </div>
+          </div>
+
+          {expandedApplication === app.application_id && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <strong>Address:</strong> {app.adopter_address}
+                </div>
+                <div>
+                  <strong>Youngest Child Age:</strong> {app.age_of_youngest_child || "Not provided"}
+                </div>
+                <div>
+                  <strong>Other Pets:</strong> {app.other_pets_details || "None"}
+                </div>
+                <div>
+                  <strong>Other Pets Neutered:</strong> {app.other_pets_neutered ? "Yes" : "No"}
+                </div>
+                <div>
+                  <strong>Secure Outdoor Area:</strong> {app.has_secure_outdoor_area ? "Yes" : "No"}
+                </div>
+                <div>
+                  <strong>Pet Sleep Location:</strong> {app.pet_sleep_location || "Not specified"}
+                </div>
+                <div>
+                  <strong>Pet Left Alone:</strong> {app.pet_left_alone || "Not specified"}
+                </div>
+                <div>
+                  <strong>Delivery Required:</strong> {app.delivery ? "Yes" : "No"}
+                </div>
+                {app.additional_details && (
+                  <div className="col-span-2">
+                    <strong>Additional Details:</strong> {app.additional_details}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-between items-center mt-4">
+            <button
+              onClick={() => setExpandedApplication(
+                expandedApplication === app.application_id ? null : app.application_id
+              )}
+              className="text-primary hover:text-primary-dark font-medium"
+            >
+              {expandedApplication === app.application_id ? "Show Less" : "Show Details"}
+            </button>
+            
+            {app.status === "pending" && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleReject(app.application_id)}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Reject
+                </button>
+                <button
+                  onClick={() => handleApprove(app.application_id)}
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                >
+                  Approve
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       ))}
     </div>

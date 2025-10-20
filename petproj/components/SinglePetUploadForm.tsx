@@ -37,13 +37,15 @@ interface SinglePetUploadFormProps {
   entityId: number;
   entityName: string;
   showPrice: boolean;
+  entityAddress?: string;
 }
 
 export default function SinglePetUploadForm({ 
   entityType, 
   entityId, 
   entityName, 
-  showPrice 
+  showPrice,
+  entityAddress
 }: SinglePetUploadFormProps) {
   const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
@@ -236,12 +238,12 @@ export default function SinglePetUploadForm({
         pet_type: Number(petType),
         pet_breed: entityType === 'shop' ? (breed || null) : null,
         city_id: Number(cityId),
-        area: area || "",
+        area: area || entityAddress || "",
         age: age || 0,
         months: months || 0,
         description: description || null,
         adoption_status: "available",
-        price: showPrice ? Number(price) : 0,
+        price: showPrice ? Number(price) : null,
         min_age_of_children: minAgeOfChildren || null,
         can_live_with_dogs: canLiveWithDogs,
         can_live_with_cats: canLiveWithCats,

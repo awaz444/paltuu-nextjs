@@ -167,6 +167,7 @@ const MyProfile = () => {
     const loadUserData = async () => {
       const storedUser = localStorage.getItem("user");
       if (!storedUser) return;
+      
 
       const parsedUser = JSON.parse(storedUser);
       if (!parsedUser?.id) return;
@@ -211,7 +212,7 @@ const MyProfile = () => {
         console.error("Error loading data:", error);
         console.log("🔍 Profile page - Using fallback data from localStorage");
 
-        
+
         // If database fetch fails, use localStorage data as fallback
         const fallbackData = {
           user_id: parsedUser.id,

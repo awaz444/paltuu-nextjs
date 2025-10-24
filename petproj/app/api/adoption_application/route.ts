@@ -1,5 +1,6 @@
-import { createClient } from '../../../db/index'; 
+import { createClient } from '../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
+import { sendAdoptionApplicationEmails } from '../../../utils/mailjet';
 
 // POST: Create a new adoption application
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -28,9 +29,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         // 1. Insert adoption application
         const result = await client.query(
             `INSERT INTO adoption_applications (
-                user_id, pet_id, adopter_name, adopter_address, status, 
-                age_of_youngest_child, other_pets_details, other_pets_neutered, 
-                has_secure_outdoor_area, pet_sleep_location, pet_left_alone, 
+                user_id, pet_id, adopter_name, adopter_address, status,
+                age_of_youngest_child, other_pets_details, other_pets_neutered,
+                has_secure_outdoor_area, pet_sleep_location, pet_left_alone,
                 additional_details, agree_to_terms, created_at
             ) VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP
@@ -68,7 +69,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         const { owner_id: ownerId, pet_name: petName } = petResult.rows[0];
 
-        // 3. Create notifications
+        // 3. Get owner and applicant details for emails
+        const ownerDetailsResult = await client.query(
+            `SELECT name, email FROM users WHERE user_id = $1`,
+            [ownerId]
+        );
+
+        const applicantDetailsResult = await client.query(
+            `SELECT email FROM users WHERE user_id = $1`,
+            [user_id]
+        );
+
+        const ownerDetails = ownerDetailsResult.rows[0] || {};
+        const applicantDetails = applicantDetailsResult.rows[0] || {};
+
+        // 4. Create notifications
         // Notification to applicant
         await client.query(
             `INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
@@ -96,6 +111,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         );
 
         await client.query('COMMIT');
+
+        // 5. Send emails to admin and pet owner (non-blocking)
+        try {
+            sendAdoptionApplicationEmails({
+                pet_name: petName,
+                pet_id: pet_id,
+                adopter_name: adopter_name,
+                adopter_email: applicantDetails.email,
+                owner_email: ownerDetails.email,
+                owner_name: ownerDetails.name,
+                application_id: result.rows[0].adoption_id,
+            }).catch((err) => console.warn('Failed to send adoption application emails', err));
+        } catch (e) {
+            console.warn('Email send scheduling failed', e);
+        }
 
         return NextResponse.json(result.rows[0], {
             status: 201,
@@ -158,9 +188,9 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         await client.connect();
 
         const result = await client.query(
-            `UPDATE adoption_applications 
+            `UPDATE adoption_applications
              SET status = $1, additional_details = $2, updated_at = CURRENT_TIMESTAMP
-             WHERE adoption_id = $3 
+             WHERE adoption_id = $3
              RETURNING *`,
             [status, additional_details, adoption_id]
         );

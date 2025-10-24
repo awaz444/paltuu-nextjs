@@ -69,12 +69,66 @@ const CheckoutPage = () => {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [loadingShippingInfo, setLoadingShippingInfo] = useState(false);
   const [shippingInfoLoaded, setShippingInfoLoaded] = useState(false);
+  const [checkoutVisitTracked, setCheckoutVisitTracked] = useState(false);
+
 useEffect(() => {
   // Only fetch cart if it's empty
   if (cartItems.length === 0) {
     dispatch(fetchCart());
   }
 }, [dispatch, cartItems.length]);
+
+  // Track checkout page visit for retargeting (only once)
+  useEffect(() => {
+    if (cartItems.length > 0 && !checkoutVisitTracked) {
+      setCheckoutVisitTracked(true);
+
+      // Send tracking notification (non-blocking)
+      const trackCheckoutVisit = async () => {
+        try {
+          const sessionId = getOrCreateGuestSessionId();
+          const cartTotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
+
+          // Get user info from localStorage
+          let userName, userEmail, userId;
+          if (typeof window !== "undefined") {
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+              try {
+                const userData = JSON.parse(storedUser);
+                userId = userData.user_id || userData.id;
+                userName = userData.name;
+                userEmail = userData.email;
+              } catch (e) {
+                console.warn("Failed to parse user from localStorage", e);
+              }
+            }
+          }
+
+          await fetch('/api/track-checkout-visit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              userName,
+              userEmail,
+              sessionId,
+              cartItems: cartItems.map(item => ({
+                title: item.title,
+                quantity: item.qty,
+                price: item.price,
+              })),
+              cartTotal,
+            }),
+          });
+        } catch (error) {
+          console.warn('Failed to track checkout visit', error);
+        }
+      };
+
+      trackCheckoutVisit();
+    }
+  }, [cartItems.length, checkoutVisitTracked]);
 
   // Fetch full cart object with cart_id
   useEffect(() => {

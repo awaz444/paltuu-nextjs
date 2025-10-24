@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/db/ecom';
+import { sendOrderEmails } from '@/utils/mailjet';
 
 export const revalidate = 0;
 
@@ -169,6 +170,15 @@ export async function POST(req: NextRequest) {
 
         const completeOrderResult = await conn.query(completeOrderQuery, [order.order_id]);
         const completeOrder = completeOrderResult.rows[0];
+
+        // Send order notification emails (customer + admin) - non-blocking
+        try {
+          sendOrderEmails(completeOrder).catch((err: any) =>
+            console.warn('Email send failed for bank transfer order', err)
+          );
+        } catch (e) {
+          console.warn('Email send scheduling failed', e);
+        }
 
         return NextResponse.json({
           success: true,

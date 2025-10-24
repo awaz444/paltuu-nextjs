@@ -39,6 +39,7 @@ const CheckoutPage = () => {
   const { user } = useAuth();
   const [cart, setCart] = useState<any | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [loadingCartData, setLoadingCartData] = useState(false);
 
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
@@ -74,6 +75,37 @@ useEffect(() => {
     dispatch(fetchCart());
   }
 }, [dispatch, cartItems.length]);
+
+  // Fetch full cart object with cart_id
+  useEffect(() => {
+    const fetchCartData = async () => {
+      if (cartItems.length === 0) return;
+
+      setLoadingCartData(true);
+      try {
+        const sessionId = getOrCreateGuestSessionId();
+        const params = new URLSearchParams();
+
+        if (currentUserId) {
+          params.append('userId', currentUserId.toString());
+        } else if (sessionId) {
+          params.append('sessionId', sessionId);
+        }
+
+        const response = await fetch(`/api/bazaar/cart?${params.toString()}`);
+        if (response.ok) {
+          const data = await response.json();
+          setCart(data.cart);
+        }
+      } catch (error) {
+        console.error('Failed to fetch cart data:', error);
+      } finally {
+        setLoadingCartData(false);
+      }
+    };
+
+    fetchCartData();
+  }, [cartItems.length, currentUserId]);
   // Get user ID from localStorage on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -690,10 +722,19 @@ useEffect(() => {
 
                   {/* Place Order Button */}
                   <button
-                    disabled={placing}
+                    disabled={placing || loadingCartData || !cart}
                     onClick={async () => {
-                      if (!cart || cart.items?.length === 0)
-                        return alert("Cart is empty");
+                      // Check if we have items in Redux cart
+                      if (cartItems.length === 0) {
+                        alert("Cart is empty");
+                        return;
+                      }
+
+                      // Check if we have the cart object with cart_id
+                      if (!cart || !cart.cart_id) {
+                        alert("Unable to process order. Please refresh the page.");
+                        return;
+                      }
 
                       if (!validateForm()) {
                         return;

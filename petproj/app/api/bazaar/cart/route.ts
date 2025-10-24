@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool, query as dbQuery } from '../../../../db/ecom';
+import { sendCartActivityNotification } from '../../../../utils/mailjet';
 
 export const revalidate = 0;
 
@@ -147,7 +148,29 @@ export async function POST(req: NextRequest) {
         WHERE cart_item_id = $2
         RETURNING *
       `;
-  const updateResult = await pool.query(updateQuery, [quantity, existingItemResult.rows[0].cart_item_id]);
+      const updateResult = await pool.query(updateQuery, [quantity, existingItemResult.rows[0].cart_item_id]);
+
+      // Send cart activity notification (non-blocking)
+      try {
+        const productResult = await pool.query(
+          'SELECT title FROM bazaar_products WHERE product_id = $1',
+          [productId]
+        );
+        const productName = productResult.rows[0]?.title || 'Unknown Product';
+
+        // Send notification with available data (userId from localStorage)
+        sendCartActivityNotification({
+          activity_type: 'add_to_cart',
+          user_email: undefined, // Email not available in ecom DB
+          user_name: undefined,  // Name not available in ecom DB
+          user_id: userId || undefined,
+          session_id: sessionId,
+          product_name: productName,
+        }).catch((err) => console.warn('Failed to send cart activity notification', err));
+      } catch (e) {
+        console.warn('Cart activity notification scheduling failed', e);
+      }
+
       return NextResponse.json(updateResult.rows[0]);
     } else {
       // Add new item
@@ -156,7 +179,29 @@ export async function POST(req: NextRequest) {
         VALUES ($1, $2, $3, $4, NOW(), NOW())
         RETURNING *
       `;
-  const insertResult = await pool.query(insertQuery, [cartId, productId, variantId, quantity]);
+      const insertResult = await pool.query(insertQuery, [cartId, productId, variantId, quantity]);
+
+      // Send cart activity notification (non-blocking)
+      try {
+        const productResult = await pool.query(
+          'SELECT title FROM bazaar_products WHERE product_id = $1',
+          [productId]
+        );
+        const productName = productResult.rows[0]?.title || 'Unknown Product';
+
+        // Send notification with available data (userId from localStorage)
+        sendCartActivityNotification({
+          activity_type: 'add_to_cart',
+          user_email: undefined, // Email not available in ecom DB
+          user_name: undefined,  // Name not available in ecom DB
+          user_id: userId || undefined,
+          session_id: sessionId,
+          product_name: productName,
+        }).catch((err) => console.warn('Failed to send cart activity notification', err));
+      } catch (e) {
+        console.warn('Cart activity notification scheduling failed', e);
+      }
+
       return NextResponse.json(insertResult.rows[0]);
     }
 

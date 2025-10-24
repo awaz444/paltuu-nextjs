@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../db/index";
 import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
+import { sendNewShelterAdminNotification } from "../../../../../utils/mailjet";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -110,11 +111,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Upload files to Cloudinary
     const uploadFileToCloudinary = async (file: File | null): Promise<string | null> => {
       if (!file || file.size === 0) return null;
-      
+
       try {
         console.log("Uploading file to Cloudinary:", file.name);
         const buffer = Buffer.from(await file.arrayBuffer());
-        
+
         return new Promise<string>((resolve, reject) => {
           const upload = cloudinary.uploader.upload_stream(
             { resource_type: "image" },
@@ -143,7 +144,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     console.log("Creating shelter...");
     const shelterResult = await client.query(
       `INSERT INTO rescue_shelters (
-        user_id, shelter_name, address, description, 
+        user_id, shelter_name, address, description,
         logo_url, capacity, approved
       ) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING shelter_id`,
       [
@@ -255,6 +256,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     console.log("Committing transaction...");
     await client.query("COMMIT");
+
+    // Send notification email to admin (non-blocking)
+    try {
+      // Get city name for the email
+      const cityResult = await client.query(
+        "SELECT city_name FROM cities WHERE city_id = $1",
+        [city_id]
+      );
+      const cityName = cityResult.rows[0]?.city_name || '';
+
+      sendNewShelterAdminNotification({
+        shelter_name: shelterName,
+        admin_name: name,
+        admin_email: email,
+        admin_phone: phone_number,
+        city: cityName,
+        address: address,
+      }).catch((err) => console.warn('Failed to send shelter admin notification', err));
+    } catch (e) {
+      console.warn('Email notification scheduling failed', e);
+    }
 
     console.log("Registration completed successfully!");
     return NextResponse.json(

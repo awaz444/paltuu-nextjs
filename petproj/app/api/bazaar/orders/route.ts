@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '../../../../db/ecom';
+import { sendOrderEmails } from '../../../../utils/mailjet';
 
 // Helper: send order confirmation email. Prefers SMTP (nodemailer) when SMTP env vars are set,
 // otherwise falls back to Brevo HTTP transactional API.
@@ -511,7 +512,11 @@ export async function POST(req: NextRequest) {
 
         // fire-and-forget: send confirmation email (non-blocking)
           try {
-            sendOrderConfirmationEmail(enrichedOrder).catch((err: any) => console.warn('Email send failed', err));
+            // Use the old Brevo email function for customer
+            sendOrderConfirmationEmail(enrichedOrder).catch((err: any) => console.warn('Brevo email send failed', err));
+
+            // Use new Mailjet utility to send to both customer and admin
+            sendOrderEmails(enrichedOrder).catch((err: any) => console.warn('Mailjet email send failed', err));
           } catch (e) {
             console.warn('Email send scheduling failed', e);
           }

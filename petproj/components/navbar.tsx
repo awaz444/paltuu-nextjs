@@ -106,8 +106,7 @@ const Navbar = ({
     "regular user": "#A03048",
     vet: "#480777",
     admin: "#065758",
-
-    "shelter admin": "#1d6b34",
+    "shelter admin": "#004a99",
     "shop admin": "#b86b00",
     "ecommerce admin": "#004a99",
   };

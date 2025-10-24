@@ -40,10 +40,10 @@
 }
 
 [data-role="shelter admin"] {
-  --primary-color: #1d6b34;   /* deep natural green */
-  --dark-color: #124722;      /* darker forest green */
-  --light-color: #c8f2d4;     /* light mint */
-  --tertiary-color: #8fe4a8;  /* fresh leafy green */
+  --primary-color: #004a99;   /* trustful blue */
+  --dark-color: #002f66;      /* deep navy */
+  --light-color: #cce0ff;     /* soft sky */
+  --tertiary-color: #80b3ff;  /* bright highlight blue */
   --background-color: #ffffff;
 }
 

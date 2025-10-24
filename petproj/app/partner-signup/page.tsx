@@ -109,17 +109,17 @@ const PartnerSignup = () => {
 
                     {/* Rescue Shelter Option */}
                     <div 
-                        className={`p-6 rounded-xl border-2 transition-all cursor-pointer ${selectedRole === "shelter" ? "border-[#1d6b34] bg-[#f0f9f3]" : "border-gray-200 hover:border-[#1d6b34] hover:bg-[#f0f9f3]"}`}
+                        className={`p-6 rounded-xl border-2 transition-all cursor-pointer ${selectedRole === "shelter" ? "border-[#004a99] bg-[#f0f9f3]" : "border-gray-200 hover:border-[#004a99] hover:bg-[#f0f9f3]"}`}
                         onClick={() => handleRoleSelect("shelter")}
                     >
                         <div className="flex items-center mb-4">
                             <div className="w-12 h-12 bg-[#c8f2d4] rounded-full flex items-center justify-center mr-4">
                                 {/* Hospital Icon */}
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#1d6b34]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#004a99]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-2m-9 0H5m2 0h8M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-semibold text-[#1d6b34]">Rescue Shelter</h3>
+                            <h3 className="text-xl font-semibold text-[#004a99]">Rescue Shelter</h3>
                         </div>
                         <p className="text-gray-600 mb-4">
                             Register your rescue organization to help pets find loving homes. You'll need to provide details about your shelter.
@@ -128,30 +128,6 @@ const PartnerSignup = () => {
                             <li>✓ List pets available for adoption</li>
                             <li>✓ Connect with potential adopters</li>
                             <li>✓ Access resources for rescue organizations</li>
-                        </ul>
-                    </div>
-
-                    {/* Pet Shop Owner Option */}
-                    <div 
-                        className={`p-6 rounded-xl border-2 transition-all cursor-pointer ${selectedRole === "shop" ? "border-[#b86b00] bg-[#fff4e6]" : "border-gray-200 hover:border-[#b86b00] hover:bg-[#fff4e6]"}`}
-                        onClick={() => handleRoleSelect("shop")}
-                    >
-                        <div className="flex items-center mb-4">
-                            <div className="w-12 h-12 bg-[#ffe2b8] rounded-full flex items-center justify-center mr-4">
-                                {/* Shop Icon */}
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#b86b00]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-xl font-semibold text-[#b86b00]">Pet Shop Owner</h3>
-                        </div>
-                        <p className="text-gray-600 mb-4">
-                            Register your pet shop to reach more customers. List pets and products for sale on our platform.
-                        </p>
-                        <ul className="text-sm text-gray-500 space-y-1">
-                            <li>✓ List pets for sale</li>
-                            <li>✓ Reach a wider customer base</li>
-                            <li>✓ Manage your pets online</li>
                         </ul>
                     </div>
 

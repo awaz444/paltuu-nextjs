@@ -6,7 +6,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const client = createClient();
 
   try {
-    const { username, name, email, password, phone_number, city_id, role } = await req.json();
+    const { firstName, lastName, email, password, phoneNumber, city } = await req.json();
+    
+    // Combine firstName and lastName to create the name field
+    const name = `${firstName} ${lastName}`.trim();
 
     await client.connect();
 
@@ -31,16 +34,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Create user
     const userResult = await client.query(
       `INSERT INTO users (
-        username, name, email, password, phone_number, city_id, role, profile_image_url
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING user_id`,
+        name, email, password, phone_number, role, profile_image_url
+      ) VALUES ($1, $2, $3, $4, $5, $6) RETURNING user_id`,
       [
-        username,
         name,
         email,
         password,
-        phone_number,
-        city_id,
-        role || "regular user",
+        phoneNumber,
+        "regular user",
         "/default-avatar.png",
       ]
     );

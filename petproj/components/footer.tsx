@@ -11,7 +11,7 @@ export default function Footer() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
-const hideFooterOn: string[] = ["/login", "/sign-up", "/partner-signup", "/auth", "/forgot-password"];
+const hideFooterOn: string[] = ["/login", "/sign-up", "/partner-signup", "/auth", "/forgot-password", "/vet-register", "/rescue-register"];
 
 if (hideFooterOn.includes(pathname)) {
   return null;

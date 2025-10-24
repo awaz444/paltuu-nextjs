@@ -82,7 +82,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                 setInlineError("Failed to fetch your profile.");
                 return;
             }
-            
+
 
             const data = await res.json();
             const missingCity = !data.city;
@@ -206,14 +206,14 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                                 className="w-full aspect-square object-cover rounded-2xl"
                             />
                             {/* Overlay badge for price or rescue at the bottom-right */}
-                            {pet.price && (
+                            {/* {pet.price && (
                                 <div className="absolute bottom-2 right-2 bg-primary text-white text-[10px] sm:text-xs font-semibold px-2 sm:px-2 py-1 rounded-full flex items-center">
                                     PKR{" "}
                                     {Math.floor(
                                         Number(pet.price)
                                     ).toLocaleString()}
                                 </div>
-                            )}
+                            )} */}
                             {pet.listing_type === "rescue" && (
                                 <div className="absolute top-2 right-2 bg-primary text-white text-[10px] sm:text-xs font-semibold px-2 sm:px-2 py-1 rounded-full flex items-center">
                                     <span className="mr-1">+</span> Rescue

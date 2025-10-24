@@ -1,5 +1,6 @@
 import { createClient } from "../../../db/index";
 import { NextRequest, NextResponse } from "next/server";
+import { sendNewListingNotification } from "../../../utils/mailjet";
 
 // Helper function for retrying database operations
 async function withRetry<T>(
@@ -8,31 +9,31 @@ async function withRetry<T>(
     delayMs = 1000
 ): Promise<T> {
     let lastError: Error | null = null;
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             return await operation();
         } catch (error) {
             lastError = error as Error;
-            
+
             // Only retry on connection-related errors
             const shouldRetry = [
-                'ECONNRESET', 
-                'ETIMEDOUT', 
+                'ECONNRESET',
+                'ETIMEDOUT',
                 'ECONNREFUSED',
                 'Connection terminated unexpectedly'
             ].some(code => (error as Error).message.includes(code));
-            
+
             if (!shouldRetry || attempt === maxRetries) {
                 throw error;
             }
-            
+
             // Exponential backoff
             const waitTime = delayMs * Math.pow(2, attempt - 1);
             await new Promise(resolve => setTimeout(resolve, waitTime));
         }
     }
-    
+
     throw lastError;
 }
 
@@ -76,16 +77,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 // Set price to null for rescue listings
                 const finalPrice = listing_type === 'rescue' ? null : price;
 
-                const result = await withRetry(() => 
+                const result = await withRetry(() =>
                     client.query(
                         `INSERT INTO pets (
-                            owner_id, pet_name, pet_type, pet_breed, city_id, area, age, months, 
-                            description, adoption_status, 
-                            min_age_of_children, can_live_with_dogs, can_live_with_cats, 
-                            must_have_someone_home, energy_level, cuddliness_level, health_issues, 
+                            owner_id, pet_name, pet_type, pet_breed, city_id, area, age, months,
+                            description, adoption_status,
+                            min_age_of_children, can_live_with_dogs, can_live_with_cats,
+                            must_have_someone_home, energy_level, cuddliness_level, health_issues,
                             sex, listing_type, vaccinated, neutered, price, rescue_story, shelter_id, shop_id, created_at
-                        ) 
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, CURRENT_TIMESTAMP) 
+                        )
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, CURRENT_TIMESTAMP)
                         RETURNING *`,
                         [
                             owner_id,
@@ -119,8 +120,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         const newPet = result.rows[0];
 
+        // Send email notification to admin (non-blocking)
+        sendNewListingNotification({
+            pet_id: newPet.pet_id,
+            pet_name: pet_name,
+            pet_type: pet_type,
+            listing_type: listing_type,
+        }).catch((err) => console.warn('Failed to send new listing email notification', err));
+
         // Fetch all admin user IDs with retry
-        const adminResult = await withRetry(() => 
+        const adminResult = await withRetry(() =>
             client.query(`SELECT user_id FROM users WHERE role = 'admin'`)
         );
 
@@ -150,7 +159,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 new Date(),
             ]);
 
-            await withRetry(() => 
+            await withRetry(() =>
                 client.query(notificationQuery, notificationValues)
             );
         }
@@ -256,10 +265,10 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         await withRetry(() => client.connect());
         const result = await withRetry(() =>
             client.query(
-                `UPDATE pets SET owner_id = $1, pet_name = $2, pet_type = $3, pet_breed = $4, city_id = $5, area = $6, 
-                age = $7, months = $8, description = $9, adoption_status = $10, min_age_of_children = $11, can_live_with_dogs = $12, 
-                can_live_with_cats = $13, must_have_someone_home = $14, energy_level = $15, cuddliness_level = $16, 
-                health_issues = $17, sex = $18, listing_type = $19, vaccinated = $20, neutered = $21, price = $22, 
+                `UPDATE pets SET owner_id = $1, pet_name = $2, pet_type = $3, pet_breed = $4, city_id = $5, area = $6,
+                age = $7, months = $8, description = $9, adoption_status = $10, min_age_of_children = $11, can_live_with_dogs = $12,
+                can_live_with_cats = $13, must_have_someone_home = $14, energy_level = $15, cuddliness_level = $16,
+                health_issues = $17, sex = $18, listing_type = $19, vaccinated = $20, neutered = $21, price = $22,
                 WHERE pet_id = $23 RETURNING *`,
                 [
                     owner_id,
@@ -328,10 +337,10 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
 
     try {
         await withRetry(() => client.connect());
-        
+
         // Start a transaction to ensure all related data is deleted
         await withRetry(() => client.query('BEGIN'));
-        
+
         try {
             // First, delete related records in the correct order
             // Delete from rescue_medical_conditions
@@ -341,7 +350,7 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
                     [pet_id]
                 )
             );
-            
+
             // Delete from rescue_special_needs
             await withRetry(() =>
                 client.query(
@@ -349,7 +358,7 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
                     [pet_id]
                 )
             );
-            
+
             // Delete from pet_images
             await withRetry(() =>
                 client.query(
@@ -357,7 +366,7 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
                     [pet_id]
                 )
             );
-            
+
             // Delete from adoption_applications
             await withRetry(() =>
                 client.query(
@@ -365,7 +374,7 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
                     [pet_id]
                 )
             );
-            
+
             // Finally, delete the pet itself
             const result = await withRetry(() =>
                 client.query(

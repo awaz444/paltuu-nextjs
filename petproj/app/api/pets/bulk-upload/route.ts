@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/index";
+import { sendNewListingNotification } from "../../../../utils/mailjet";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const client = createClient();
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     for (let i = 0; i < pets.length; i++) {
       const pet = pets[i];
-      
+
       try {
         // Validate required fields
         if (!pet.pet_name || !pet.pet_type || !pet.description) {
@@ -54,10 +55,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         // Check if the entity exists in the database
         let validEntityId = null;
         if (entityId && entityId !== 1) { // Only use entityId if it's not the default demo ID
-          const entityCheckQuery = entityType === 'shop' 
+          const entityCheckQuery = entityType === 'shop'
             ? 'SELECT shop_id FROM shops WHERE shop_id = $1'
             : 'SELECT shelter_id FROM rescue_shelters WHERE shelter_id = $1';
-          
+
           const entityResult = await client.query(entityCheckQuery, [entityId]);
           if (entityResult.rows.length > 0) {
             validEntityId = entityId;
@@ -154,7 +155,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         for (const adminId of adminUserIds) {
           await client.query(
-            `INSERT INTO notifications (user_id, notification_content, notification_type, date_sent, is_read) 
+            `INSERT INTO notifications (user_id, notification_content, notification_type, date_sent, is_read)
              VALUES ($1, $2, $3, CURRENT_TIMESTAMP, false)`,
             [
               adminId,
@@ -162,6 +163,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
               'pet_approval'
             ]
           );
+        }
+
+        // Send email notification to admin (non-blocking)
+        try {
+          // Get owner details
+          const ownerResult = await client.query(
+            "SELECT name, email FROM users WHERE user_id = $1",
+            [petData.owner_id]
+          );
+          const ownerInfo = ownerResult.rows[0] || {};
+
+          sendNewListingNotification({
+            pet_id: petId,
+            pet_name: pet.pet_name,
+            pet_type: petData.pet_type,
+            listing_type: petData.listing_type || entityType,
+            owner_name: ownerInfo.name,
+            owner_email: ownerInfo.email,
+          }).catch((err) => console.warn('Failed to send new listing email', err));
+        } catch (e) {
+          console.warn('Email notification scheduling failed', e);
         }
 
         results.push({
@@ -183,7 +205,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (results.length === 0) {
       await client.query("ROLLBACK");
       return NextResponse.json(
-        { 
+        {
           error: "No pets were successfully created",
           details: errors
         },
@@ -204,7 +226,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     await client.query("ROLLBACK");
     console.error("Bulk upload error:", error);
     return NextResponse.json(
-      { 
+      {
         error: "Internal server error during bulk upload",
         details: error instanceof Error ? error.message : 'Unknown error'
       },

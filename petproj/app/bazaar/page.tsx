@@ -596,6 +596,7 @@ export default function BazaarPage() {
                                                                                         1
                                                                                             ? "s"
                                                                                             : ""}
+                                                                                        )
                                                                                     </span>
                                                                                 )}
                                                                             </div>

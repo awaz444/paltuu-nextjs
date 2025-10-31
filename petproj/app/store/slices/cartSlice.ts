@@ -1,6 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import toast from "react-hot-toast";
-import { getUserIdFromSession } from "@/utils/getUserFromSession";
 
 //
 // 🛒 Interfaces
@@ -40,13 +39,25 @@ export const fetchCart = createAsyncThunk<
   { rejectValue: string }
 >("cart/fetchCart", async (_, { rejectWithValue }) => {
   try {
-    // Get userId from NextAuth session instead of localStorage
-    const userId = await getUserIdFromSession();
+    // ✅ Prioritize userId from localStorage if user is logged in
+    let userId: string | null = null;
     let guestToken: string | null = null;
 
-    // Only use guest session if user is NOT logged in
-    if (!userId && typeof window !== "undefined") {
-      guestToken = localStorage.getItem("guest_session_id");
+    if (typeof window !== "undefined") {
+      const userString = localStorage.getItem("user");
+      if (userString) {
+        try {
+          const user = JSON.parse(userString);
+          userId = user?.id || user?.user_id || null;
+        } catch (e) {
+          console.error("Failed to parse user from localStorage:", e);
+        }
+      }
+
+      // Only use guest session if user is NOT logged in
+      if (!userId) {
+        guestToken = localStorage.getItem("guest_session_id");
+      }
     }
 
     // Build query params - prefer userId over sessionId
@@ -113,9 +124,20 @@ export const addToCart = createAsyncThunk<
   { state: { cart: CartState }; rejectValue: string }
 >("cart/addToCart", async (payload, { dispatch, rejectWithValue }) => {
   try {
-    // Get userId from NextAuth session instead of localStorage
-    const userId = await getUserIdFromSession();
-    const sessionId = payload.sessionId;
+    let userId: string | null = null;
+    let sessionId = payload.sessionId;
+
+    if (typeof window !== "undefined") {
+      const userString = localStorage.getItem("user");
+      if (userString) {
+        try {
+          const user = JSON.parse(userString);
+          userId = user?.id || user?.user_id || null;
+        } catch (e) {
+          console.error("Failed to parse user from localStorage:", e);
+        }
+      }
+    }
 
     const requestBody = {
       productId: payload.productId,

@@ -3,8 +3,6 @@ import React, { useState, useEffect } from "react";
 import { CameraOutlined, LoadingOutlined, LockOutlined } from "@ant-design/icons";
 import { Modal, Input, Form, message, Button, Select } from "antd";
 import { format } from "date-fns";
-import { useSession } from "next-auth/react";
-import { useAuth } from "@/context/AuthContext";
 
 interface UserProfileData {
     user_id: string;
@@ -25,9 +23,6 @@ interface City {
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 const VetProfileTab = () => {
-    const { data: session, status } = useSession();
-    const { user } = useAuth();
-
     const [data, setData] = useState<UserProfileData | null>(null);
     const [updatedData, setUpdatedData] = useState<UserProfileData | null>(null);
     const [editing, setEditing] = useState(false);
@@ -35,27 +30,21 @@ const VetProfileTab = () => {
     const [passwordModalVisible, setPasswordModalVisible] = useState(false);
     const [passwordForm] = Form.useForm();
     const [cities, setCities] = useState<City[]>([]);
+    const [userId, setUserId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Get userId from session
-    const userId = user?.id || (session?.user as any)?.user_id || null;
-
     useEffect(() => {
-        // Wait for session to load
-        if (status === "loading") {
-            setLoading(true);
-            return;
-        }
-
-        if (!userId) {
-            setLoading(false);
-            return;
-        }
-
         const loadUserData = async () => {
+            const storedUser = localStorage.getItem("user");
+            if (!storedUser) return;
+
+            const parsedUser = JSON.parse(storedUser);
+            if (!parsedUser?.id) return;
+
+            setUserId(parsedUser.id);
             try {
                 // Fetch user profile data
-                const res = await fetch(`/api/my-profile/${userId}`);
+                const res = await fetch(`/api/my-profile/${parsedUser.id}`);
                 if (!res.ok) throw new Error('Failed to fetch profile');
                 const profileData = await res.json();
                 setData(profileData);
@@ -74,7 +63,7 @@ const VetProfileTab = () => {
         };
 
         loadUserData();
-    }, [userId, status]);
+    }, []);
 
     const handlePasswordChange = async (values: {
         currentPassword: string;
@@ -282,7 +271,7 @@ const VetProfileTab = () => {
                                 </p>
                             )}
                         </div>
-
+                        
                         {/* Email */}
                         <div className="space-y-1">
                             <label className="text-sm font-medium text-gray-600">Email Address</label>
@@ -290,7 +279,7 @@ const VetProfileTab = () => {
                                 {updatedData?.email || "Not provided"}
                             </p>
                         </div>
-
+                        
                         {/* Phone Number */}
                         <div className="space-y-1">
                             <label className="text-sm font-medium text-gray-600">Phone Number</label>
@@ -316,7 +305,7 @@ const VetProfileTab = () => {
                                 </p>
                             )}
                         </div>
-
+                        
                         {/* Date of Birth */}
                         <div className="space-y-1">
                             <label className="text-sm font-medium text-gray-600">Date of Birth</label>

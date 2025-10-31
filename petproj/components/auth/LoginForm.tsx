@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 
@@ -11,8 +12,7 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
-  const { isAuthenticated } = useAuth();
-  const { data: session } = useSession();
+  const { isAuthenticated, login } = useAuth();
   const router = useRouter();
 
   const [user, setUser] = useState({ email: "", password: "" });
@@ -26,11 +26,14 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && session?.user) {
-      const role = (session.user as any).role;
-      redirectBasedOnRole(role);
+    if (isAuthenticated) {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        const { role } = JSON.parse(storedUser);
+        redirectBasedOnRole(role);
+      }
     }
-  }, [isAuthenticated, session, router]);
+  }, [isAuthenticated, router]);
 
   const redirectBasedOnRole = (role: string) => {
     if (role === "vet") router.push("/vet-panel");
@@ -47,22 +50,24 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
     e.preventDefault();
     try {
       setLoading(true);
-
-      const result = await signIn("credentials", {
-        email: user.email,
-        password: user.password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        toast.error("Invalid email or password!");
-      } else if (result?.ok) {
+      const response = await axios.post("/api/users/login", user);
+      if (response.data.success) {
+        const { user_id, name, email, role, profile_image_url } = response.data.user;
+        const userDetails = {
+          id: user_id,
+          name,
+          email,
+          role,
+          profile_image_url: profile_image_url || "/default-avatar.png",
+        };
+        localStorage.setItem("user", JSON.stringify(userDetails));
+        login(userDetails);
         toast.success("Login successful!");
-        // Redirect will be handled by useEffect above
+        redirectBasedOnRole(userDetails.role);
       }
     } catch (error: any) {
-      console.error("Login failed:", error);
-      toast.error("Login failed!");
+      console.error("Login failed:", error.message);
+      toast.error(error.response?.data?.message || "Login failed!");
     } finally {
       setLoading(false);
     }
@@ -71,7 +76,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const handleGoogleLogin = async () => {
     try {
       setGoogleLoading(true);
-      await signIn("google", { callbackUrl: "/browse-pets" });
+      await signIn("google");
     } catch (error) {
       console.error("Google login failed:", error);
       toast.error("Google login failed. Please try again!");

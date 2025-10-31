@@ -2,8 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { formatDistanceToNow, parseISO } from 'date-fns';
-import { useSession } from "next-auth/react";
-import { useAuth } from "@/context/AuthContext";
 
 interface Notification {
   notification_id: string;
@@ -14,31 +12,37 @@ interface Notification {
 }
 
 export default function NotificationsContent() {
-  const { data: session, status } = useSession();
-  const { user } = useAuth();
-
+  const [userId, setUserId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Get userId from session
-  const userId = user?.id || (session?.user as any)?.user_id || null;
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const userString = localStorage.getItem('user');
+      if (!userString) {
+        setError('User data not found in local storage');
+        setLoading(false);
+        return;
+      }
+
+      const user = JSON.parse(userString);
+      const id = user?.id || user?.user_id;
+      if (!id) {
+        setError('User ID is missing from the user object');
+        setLoading(false);
+        return;
+      }
+
+      setUserId(id);
+    }
+  }, []);
 
   useEffect(() => {
-    // Wait for session to load
-    if (status === "loading") {
-      setLoading(true);
-      return;
+    if (userId) {
+      fetchNotifications(userId);
     }
-
-    if (!userId) {
-      setError('Please log in to view notifications');
-      setLoading(false);
-      return;
-    }
-
-    fetchNotifications(userId);
-  }, [userId, status]);
+  }, [userId]);
 
   const fetchNotifications = async (uid: string) => {
     setLoading(true);
@@ -81,7 +85,7 @@ export default function NotificationsContent() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-900">Notifications</h2>
         {notifications.some(n => !n.is_read) && (
-          <button
+          <button 
             onClick={handleMarkAllAsRead}
             className="text-primary hover:text-primary/80 text-sm font-medium transition-colors"
           >

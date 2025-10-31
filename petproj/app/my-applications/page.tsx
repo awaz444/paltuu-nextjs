@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 import { MoonLoader } from "react-spinners";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
+import { useAuth } from "@/context/AuthContext";
+import { useSession } from "next-auth/react";
 
 interface Application {
     application_type: "foster" | "adoption";
@@ -24,8 +26,9 @@ export default function MyApplicationsPage() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [primaryColor, setPrimaryColor] = useState("#000000");
-
     
+    const { user, isAuthenticated } = useAuth();
+    const { status } = useSession();
 
     useEffect(() => {
         // Get the computed style of the `--primary-color` CSS variable
@@ -36,46 +39,51 @@ export default function MyApplicationsPage() {
         }
     }, []);
 
-    useEffect(() => {
-        const fetchApplications = async () => {
-            try {
-                const userString = localStorage.getItem("user");
-                if (!userString) {
-                    setError("User data not found in local storage");
-                    setLoading(false);
-                    return;
-                }
+    const fetchApplications = async () => {
+        if (!isAuthenticated || !user) {
+            setError("You must be logged in to view your applications.");
+            setLoading(false);
+            return;
+        }
 
-                const user = JSON.parse(userString);
-                const user_id = user?.id;
-                if (!user_id) {
-                    setError("User ID is missing from the user object");
-                    setLoading(false);
-                    return;
-                }
+        try {
+            setLoading(true);
+            setError(null);
 
-                const response = await fetch(
-                    `/api/get-my-applications/${user_id}`
-                );
-                if (!response.ok) {
+            const response = await fetch("/api/get-my-applications", {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    setError("Authentication failed. Please log in again.");
+                } else {
                     const { error } = await response.json();
                     setError(error || "Failed to fetch applications");
-                    setLoading(false);
-                    return;
                 }
-
-                const data = await response.json();
-                setApplications(data.applications);
-                setLoading(false);
-            } catch (err) {
-                console.error("Error fetching applications:", err);
-                setError("An unexpected error occurred");
-                setLoading(false);
+                return;
             }
-        };
 
-        fetchApplications();
-    }, []);
+            const data = await response.json();
+            setApplications(data.applications || []);
+        } catch (err) {
+            console.error("Error fetching applications:", err);
+            setError("An unexpected error occurred");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        // Only fetch applications when auth state is determined and user is authenticated
+        if (status !== "loading") {
+            fetchApplications();
+        }
+    }, [isAuthenticated, user, status]);
 
     const handleDeleteApplication = async (
         applicationId: string,
@@ -93,18 +101,26 @@ export default function MyApplicationsPage() {
                 : `adoption_${applicationId}`;
 
         try {
-            if (applicationType === "foster") {
-            }
             const response = await fetch(
                 `/api/delete-application/${idToDelete}`,
                 {
                     method: "DELETE",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
                 }
             );
 
             if (!response.ok) {
-                const { error } = await response.json();
-                alert(error || "Failed to delete application");
+                if (response.status === 401) {
+                    alert("Authentication failed. Please log in again.");
+                } else if (response.status === 403) {
+                    alert("You can only delete your own applications.");
+                } else {
+                    const { error } = await response.json();
+                    alert(error || "Failed to delete application");
+                }
                 return;
             }
 
@@ -123,6 +139,26 @@ export default function MyApplicationsPage() {
             );
         }
     };
+
+    // Show loading state while authentication is being determined
+    if (status === "loading") {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <MoonLoader size={30} color={primaryColor} />
+            </div>
+        );
+    }
+
+    // Show authentication error if user is not authenticated
+    if (!isAuthenticated || !user) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <p className="text-red-500 text-lg font-medium">
+                    You must be logged in to view your applications. Please log in and try again.
+                </p>
+            </div>
+        );
+    }
 
     if (loading) {
         return (

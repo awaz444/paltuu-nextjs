@@ -1,10 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { Modal, Form, message, Button, Select, Input } from "antd";
-import { 
-  AcademicCapIcon, 
-  TagIcon, 
-  PlusIcon, 
+import { useSession } from "next-auth/react";
+import { useAuth } from "@/context/AuthContext";
+import {
+  AcademicCapIcon,
+  TagIcon,
+  PlusIcon,
   XMarkIcon,
   ClockIcon,
   DocumentTextIcon,
@@ -35,6 +37,9 @@ interface PetCategory {
 }
 
 const VetQualificationsTab = () => {
+    const { data: session, status } = useSession();
+    const { user } = useAuth();
+
     const [qualifications, setQualifications] = useState<Qualification[]>([]);
     const [specializations, setSpecializations] = useState<Specialization[]>([]);
     const [vetId, setVetId] = useState<string | null>(null);
@@ -54,7 +59,7 @@ const VetQualificationsTab = () => {
         qualifications: number | null;
         specializations: number | null;
     }>({ qualifications: null, specializations: null });
-    
+
     // Add state for delete confirmation modals
     const [qualificationDeleteConfirm, setQualificationDeleteConfirm] = useState(false);
     const [specializationDeleteConfirm, setSpecializationDeleteConfirm] = useState(false);
@@ -64,16 +69,24 @@ const VetQualificationsTab = () => {
         name: string | null;
     }>({ type: null, id: null, name: null });
 
+    // Get userId from session
+    const userId = user?.id || (session?.user as any)?.user_id || null;
+
     useEffect(() => {
+        // Wait for session to load
+        if (status === "loading") {
+            setLoading(true);
+            return;
+        }
+
+        if (!userId) {
+            setLoading(false);
+            return;
+        }
+
         const loadVetId = async () => {
-            const storedUser = localStorage.getItem("user");
-            if (!storedUser) return;
-
-            const parsedUser = JSON.parse(storedUser);
-            if (!parsedUser?.id) return;
-
             try {
-                const res = await fetch(`/api/get-vet-id?user_id=${parsedUser.id}`);
+                const res = await fetch(`/api/get-vet-id?user_id=${userId}`);
                 if (!res.ok) throw new Error('Failed to fetch vet ID');
                 const data = await res.json();
                 setVetId(data.vet_id);
@@ -83,7 +96,7 @@ const VetQualificationsTab = () => {
         };
 
         loadVetId();
-    }, []);
+    }, [userId, status]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -184,7 +197,7 @@ const VetQualificationsTab = () => {
             message.success("Qualification added successfully!");
             setQualificationModalVisible(false);
             qualificationForm.resetFields();
-            
+
             // Refresh qualifications
             const res = await fetch(`/api/vet-panel/qualifications/${vetId}`);
             if (res.ok) {
@@ -213,10 +226,10 @@ const VetQualificationsTab = () => {
             });
 
             if (!res.ok) throw new Error('Failed to add specialization');
-            
+
             setSpecializationModalVisible(false);
             specializationForm.resetFields();
-            
+
             // Refresh specializations
             const refreshRes = await fetch(`/api/vet-panel/specialization/${vetId}`);
             if (refreshRes.ok) {
@@ -260,7 +273,7 @@ const VetQualificationsTab = () => {
     // Handle qualification deletion
     const handleQualificationDelete = async () => {
         if (!vetId || itemToDelete.id === null) return;
-        
+
         setDeleting(prev => ({ ...prev, qualifications: itemToDelete.id as number }));
         try {
             const res = await fetch(`/api/vet-panel/qualifications/${vetId}`, {
@@ -269,7 +282,7 @@ const VetQualificationsTab = () => {
                 body: JSON.stringify({ qualification_id: itemToDelete.id })
             });
             if (!res.ok) throw new Error('Failed to delete qualification');
-            
+
             // Remove from local state
             setQualifications(prev => prev.filter(q => q.vet_qualifications_id !== itemToDelete.id));
             message.success("Qualification deleted successfully");
@@ -286,7 +299,7 @@ const VetQualificationsTab = () => {
     // Handle specialization deletion
     const handleSpecializationDelete = async () => {
         if (!vetId || itemToDelete.id === null) return;
-        
+
         setDeleting(prev => ({ ...prev, specializations: itemToDelete.id as number }));
         try {
             const res = await fetch(`/api/vet-panel/specialization/${vetId}`, {
@@ -295,7 +308,7 @@ const VetQualificationsTab = () => {
                 body: JSON.stringify({ category_id: itemToDelete.id })
             });
             if (!res.ok) throw new Error('Failed to delete specialization');
-            
+
             // Remove from local state
             setSpecializations(prev => prev.filter(s => s.category_id !== itemToDelete.id));
             message.success("Specialization deleted successfully");
@@ -522,7 +535,7 @@ const VetQualificationsTab = () => {
                         label="Qualification"
                         rules={[{ required: true, message: 'Please select a qualification' }]}
                     >
-                        <Select 
+                        <Select
                             placeholder="Select a qualification"
                             size="large"
                         >
@@ -542,9 +555,9 @@ const VetQualificationsTab = () => {
                         label="Year Acquired"
                         rules={[{ required: true, message: 'Please enter year acquired' }]}
                     >
-                        <Input 
-                            type="number" 
-                            placeholder="e.g. 2020" 
+                        <Input
+                            type="number"
+                            placeholder="e.g. 2020"
                             size="large"
                             prefix={<CalendarIcon className="w-4 h-4 text-gray-400" />}
                         />
@@ -554,8 +567,8 @@ const VetQualificationsTab = () => {
                         name="note"
                         label="Additional Notes"
                     >
-                        <Input.TextArea 
-                            placeholder="Any additional information about this qualification" 
+                        <Input.TextArea
+                            placeholder="Any additional information about this qualification"
                             rows={4}
                             size="large"
                         />
@@ -590,7 +603,7 @@ const VetQualificationsTab = () => {
                         label="Specialization"
                         rules={[{ required: true, message: 'Please select a specialization' }]}
                     >
-                        <Select 
+                        <Select
                             placeholder="Select a specialization"
                             size="large"
                         >

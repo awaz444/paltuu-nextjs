@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 import { MoonLoader } from "react-spinners";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
+import { useSession } from "next-auth/react";
+import { useAuth } from "@/context/AuthContext";
 
 interface Application {
     application_type: "foster" | "adoption";
@@ -20,12 +22,16 @@ interface Application {
 }
 
 export default function MyApplicationsPage() {
+    const { data: session, status } = useSession();
+    const { user } = useAuth();
+
     const [applications, setApplications] = useState<Application[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [primaryColor, setPrimaryColor] = useState("#000000");
 
-    
+    // Get userId from session
+    const userId = user?.id || (session?.user as any)?.user_id || null;
 
     useEffect(() => {
         // Get the computed style of the `--primary-color` CSS variable
@@ -37,25 +43,24 @@ export default function MyApplicationsPage() {
     }, []);
 
     useEffect(() => {
+        // Wait for session to load
+        if (status === "loading") {
+            setLoading(true);
+            return;
+        }
+
+        if (!userId) {
+            setError("Please log in to view your applications");
+            setLoading(false);
+            return;
+        }
+
         const fetchApplications = async () => {
             try {
-                const userString = localStorage.getItem("user");
-                if (!userString) {
-                    setError("User data not found in local storage");
-                    setLoading(false);
-                    return;
-                }
-
-                const user = JSON.parse(userString);
-                const user_id = user?.id;
-                if (!user_id) {
-                    setError("User ID is missing from the user object");
-                    setLoading(false);
-                    return;
-                }
+                setLoading(true);
 
                 const response = await fetch(
-                    `/api/get-my-applications/${user_id}`
+                    `/api/get-my-applications/${userId}`
                 );
                 if (!response.ok) {
                     const { error } = await response.json();
@@ -75,7 +80,7 @@ export default function MyApplicationsPage() {
         };
 
         fetchApplications();
-    }, []);
+    }, [userId, status]);
 
     const handleDeleteApplication = async (
         applicationId: string,
@@ -142,7 +147,7 @@ export default function MyApplicationsPage() {
 
     return (
         <>
-            
+
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
         {/* Updated Header */}
         <header className="bg-white text-primary border border-1 border-primary p-8 rounded-2xl shadow-lg mb-10">

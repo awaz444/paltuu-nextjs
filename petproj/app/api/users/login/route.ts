@@ -19,18 +19,20 @@ export async function POST(request: NextRequest) {
     }
     console.log("User exists:", user);
 
-    // console.log("Request password:", password);
-    // console.log("Database hashed password:", user.password);
-    console.log("Request password:", password);
-    console.log("Database hashed password:", user.password);
-    console.log("Comparison result:", await bcrypt.compare(password, user.password));
+    // Check if password is hashed (bcrypt hashes start with $2a$, $2b$, or $2y$)
+    const isHashedPassword = user.password && user.password.startsWith('$2');
 
+    let validPassword = false;
 
+    if (isHashedPassword) {
+      // For new users with hashed passwords, use bcrypt
+      validPassword = await bcrypt.compare(password, user.password);
+    } else {
+      // For existing users with plain-text passwords, do direct comparison
+      validPassword = password === user.password;
+    }
 
-
-    // Check if password is correct
-    // const validPassword = await bcrypt.compare(password.trim(), user.password.trim());
-    if (password.trim() !== user.password.trim()) {
+    if (!validPassword) {
       return NextResponse.json({ error: "Invalid password" }, { status: 400 });
     }
     console.log("Password validated");

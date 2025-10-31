@@ -3,18 +3,17 @@
 import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import { Button, Input } from "antd";
 
 type LoginFormProps = {
     onSuccess: () => void;
-    onClose?: () => void; // Make optional
+    onClose?: () => void;
 };
 
 export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
-    const { login } = useAuth();
+    const { } = useAuth();
     const router = useRouter();
 
     const [user, setUser] = useState({
@@ -38,19 +37,22 @@ export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
         e.preventDefault();
         try {
             setLoading(true);
-            const response = await axios.post("/api/users/login", user);
 
-            if (response.data.success) {
-                const { id, name, email, role } = response.data.user;
-                const userDetails = { id, name, email, role };
+            const result = await signIn("credentials", {
+                email: user.email,
+                password: user.password,
+                redirect: false,
+            });
 
-                await login(userDetails);
+            if (result?.error) {
+                toast.error("Invalid email or password!");
+            } else if (result?.ok) {
                 toast.success("Login successful!");
                 onSuccess();
             }
         } catch (error: any) {
-            console.error("Login failed:", error.message);
-            toast.error(error.response?.data?.message || "Login failed!");
+            console.error("Login failed:", error);
+            toast.error("Login failed!");
         } finally {
             setLoading(false);
         }
@@ -59,7 +61,7 @@ export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
     const handleGoogleLogin = async () => {
         try {
             setGoogleLoading(true);
-            await signIn("google");
+            await signIn("google", { callbackUrl: "/browse-pets" });
             onSuccess();
         } catch (error) {
             console.error("Google login failed:", error);

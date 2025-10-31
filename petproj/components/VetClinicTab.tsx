@@ -1,12 +1,14 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { message } from "antd";
-import { 
-  BuildingStorefrontIcon, 
-  MapPinIcon, 
-  PhoneIcon, 
-  CurrencyDollarIcon, 
-  ChatBubbleLeftRightIcon, 
+import { useSession } from "next-auth/react";
+import { useAuth } from "@/context/AuthContext";
+import {
+  BuildingStorefrontIcon,
+  MapPinIcon,
+  PhoneIcon,
+  CurrencyDollarIcon,
+  ChatBubbleLeftRightIcon,
   EnvelopeIcon,
   PencilSquareIcon,
   XMarkIcon,
@@ -30,6 +32,9 @@ interface ClinicDetails {
 }
 
 const VetClinicTab = () => {
+    const { data: session, status } = useSession();
+    const { user } = useAuth();
+
     const [clinicData, setClinicData] = useState<ClinicDetails | null>(null);
     const [clinicForm, setClinicForm] = useState<Partial<ClinicDetails>>({});
     const [vetId, setVetId] = useState<string | null>(null);
@@ -46,18 +51,26 @@ const VetClinicTab = () => {
         'clinic_email'
     ] as const;
 
+    // Get userId from session
+    const userId = user?.id || (session?.user as any)?.user_id || null;
+
     type EditableClinicFields = typeof editableClinicFields[number];
 
     useEffect(() => {
+        // Wait for session to load
+        if (status === "loading") {
+            setLoading(true);
+            return;
+        }
+
+        if (!userId) {
+            setLoading(false);
+            return;
+        }
+
         const loadVetId = async () => {
-            const storedUser = localStorage.getItem("user");
-            if (!storedUser) return;
-
-            const parsedUser = JSON.parse(storedUser);
-            if (!parsedUser?.id) return;
-
             try {
-                const res = await fetch(`/api/get-vet-id?user_id=${parsedUser.id}`);
+                const res = await fetch(`/api/get-vet-id?user_id=${userId}`);
                 if (!res.ok) throw new Error('Failed to fetch vet ID');
                 const data = await res.json();
                 setVetId(data.vet_id);
@@ -67,7 +80,7 @@ const VetClinicTab = () => {
         };
 
         loadVetId();
-    }, []);
+    }, [userId, status]);
 
     useEffect(() => {
         const fetchClinicData = async () => {

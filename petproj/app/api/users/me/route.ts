@@ -1,13 +1,20 @@
-import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";
+import { getServerSession } from "next-auth/next";
+import { authoptions } from "@/app/api/auth/[...nextauth]/options";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    // Extract user ID from the token
-    const userId = await getDataFromToken(request);
+    // Get user from NextAuth session
+    const session = await getServerSession(authoptions);
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = (session.user as any).user_id;
 
     // Query database to fetch all relevant user details excluding password
     const query = `
@@ -22,7 +29,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const user = rows[0]; // Get the first (and only) user record
+    const user = rows[0];
 
     return NextResponse.json({
       message: "User found",

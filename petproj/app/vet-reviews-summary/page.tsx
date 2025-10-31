@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/navbar";
 import { message } from "antd";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
+import { useSession } from "next-auth/react";
+import { useAuth } from "@/context/AuthContext";
 import MoonLoader from "react-spinners/MoonLoader";
 import { Check, X, Star, ThumbsUp, Clock } from "lucide-react";
 
@@ -17,6 +19,9 @@ type Review = {
 };
 
 const ReviewsSummary = () => {
+  const { data: session, status } = useSession();
+  const { user } = useAuth();
+
   const [approvedReviews, setApprovedReviews] = useState<Review[]>([]);
   const [pendingReviews, setPendingReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -26,7 +31,8 @@ const ReviewsSummary = () => {
   const [primaryColor, setPrimaryColor] = useState("#A03048");
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  
+  // Get userId from session
+  const userId = user?.id || (session?.user as any)?.user_id || null;
 
   useEffect(() => {
     const rootStyles = getComputedStyle(document.documentElement);
@@ -35,16 +41,21 @@ const ReviewsSummary = () => {
   }, []);
 
   useEffect(() => {
+    // Wait for session to load
+    if (status === "loading") {
+      setLoading(true);
+      return;
+    }
+
+    if (!userId) {
+      setError("Please log in to view reviews");
+      setLoading(false);
+      return;
+    }
+
     const fetchVetIdAndReviews = async () => {
       setLoading(true);
       try {
-        const userString = localStorage.getItem("user");
-        if (!userString) throw new Error("User data not found in local storage");
-
-        const user = JSON.parse(userString);
-        const userId = user?.id;
-        if (!userId) throw new Error("User ID is missing");
-
         const vetResponse = await fetch(`/api/get-vet-id?user_id=${userId}`);
         if (!vetResponse.ok) throw new Error("Failed to fetch vet ID");
 
@@ -69,7 +80,7 @@ const ReviewsSummary = () => {
     };
 
     fetchVetIdAndReviews();
-  }, []);
+  }, [userId, status]);
 
   const acceptReview = async (review_id: number) => {
     try {
@@ -148,14 +159,14 @@ const ReviewsSummary = () => {
 
           {isPending && (
             <div className="flex items-center space-x-2">
-              <button 
-                onClick={() => acceptReview(review.review_id)} 
+              <button
+                onClick={() => acceptReview(review.review_id)}
                 className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
               >
                 <Check className="w-4 h-4" />
               </button>
-              <button 
-                onClick={() => rejectReview(review.review_id)} 
+              <button
+                onClick={() => rejectReview(review.review_id)}
                 className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -222,14 +233,14 @@ const ReviewsSummary = () => {
             {/* Enhanced Tab Switch with Smooth Transition */}
             <div className="relative flex mb-8 bg-gray-100 p-1 rounded-full w-fit mx-auto">
               {/* Sliding background indicator */}
-              <div 
+              <div
                 className="absolute top-1 bottom-1 bg-primary rounded-full transition-all duration-300 ease-out"
                 style={{
                   left: activeTab === 'approved' ? '2px' : '50%',
                   width: 'calc(50% - 4px)',
                 }}
               />
-              
+
               <button
                 ref={el => { tabRefs.current[0] = el; }}
                 onClick={() => setActiveTab("approved")}
@@ -275,7 +286,7 @@ const ReviewsSummary = () => {
                   <h2 className="text-xl font-semibold text-center mb-6 text-gray-800">Pending Reviews</h2>
                   <div className="bg-amber-50 p-4 rounded-lg mb-6 border border-amber-200">
                     <p className="text-amber-800 text-sm text-center">
-                      Approve reviews only if you recall the client availing your services. 
+                      Approve reviews only if you recall the client availing your services.
                       Once approved, the review will stay on your profile permanently.
                     </p>
                   </div>

@@ -1,12 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { CameraOutlined, LoadingOutlined, LockOutlined } from "@ant-design/icons";
 import { format } from "date-fns";
 import { Modal, Input, Form, message } from "antd";
-import { useAuth } from "@/context/AuthContext";
 
 interface UserProfileData {
   user_id: string;
@@ -89,9 +87,7 @@ const ProfileField: React.FC<ProfileFieldProps> = ({
 };
 
 export default function ProfileContent() {
-  const { data: session } = useSession();
-  const { refreshUser } = useAuth();
-
+  
   const [userId, setUserId] = useState<string | null>(null);
   const [data, setData] = useState<UserProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -146,21 +142,15 @@ export default function ProfileContent() {
 
   useEffect(() => {
     const loadUserData = async () => {
-      // Get user ID from session instead of localStorage
-      if (!session?.user) {
-        setLoading(false);
-        return;
-      }
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) return;
 
-      const userIdFromSession = (session.user as any).user_id || (session.user as any).id;
-      if (!userIdFromSession) {
-        setLoading(false);
-        return;
-      }
+      const parsedUser = JSON.parse(storedUser);
+      if (!parsedUser?.id) return;
 
-      setUserId(userIdFromSession);
+      setUserId(parsedUser.id);
       try {
-        const res = await fetch(`/api/my-profile/${userIdFromSession}`);
+        const res = await fetch(`/api/my-profile/${parsedUser.id}`);
         if (!res.ok) throw new Error("Failed to fetch profile");
         const profileData = await res.json();
         setData(profileData);
@@ -178,7 +168,7 @@ export default function ProfileContent() {
     };
 
     loadUserData();
-  }, [session]);
+  }, []);
 
   const handleImageUpload = async (file: File) => {
     if (!userId) return;

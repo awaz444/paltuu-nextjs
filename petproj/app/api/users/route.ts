@@ -1,7 +1,6 @@
 // app/api/users/route.ts
-import { createClient } from '../../../db/index';
+import { createClient } from '../../../db/index'; 
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
 
 // Function to format phone number correctly
 function formatPhoneNumber(phone: string): string | null {
@@ -33,12 +32,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             );
         }
 
-        // Hash password before storing
-        const hashedPassword = await bcrypt.hash(password, 10);
-
         const result = await client.query(
             "INSERT INTO users (username, name, DOB, city_id, email, password, phone_number, role, profile_image_url, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP) RETURNING *",
-            [username, name, DOB, city_id, email, hashedPassword, formattedPhone, role, profile_image_url]
+            [username, name, DOB, city_id, email, password, formattedPhone, role, profile_image_url]
         );
 
         return NextResponse.json(result.rows[0], {
@@ -63,7 +59,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
 
     try {
-        await client.connect();
+        await client.connect(); 
         const result = await client.query('SELECT * FROM users');
         return NextResponse.json(result.rows, {
             status: 200,
@@ -79,7 +75,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             }
         );
     } finally {
-        await client.end();
+        await client.end(); 
     }
 }
 
@@ -95,7 +91,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
             'UPDATE users SET username = $1, name = $2, DOB = $3, city_id = $4, email = $5, password = $6, phone_number = $7, role = $8, profile_image_url = $9 WHERE user_id = $10 RETURNING *',
             [username, name, DOB, city_id, email, password, phone_number, role, profile_image_url, user_id]
         );
-
+        
         if (result.rows.length === 0) {
             return NextResponse.json({ error: 'User not found' }, {
                 status: 404,

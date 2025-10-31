@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
-import { useSession } from "next-auth/react";
-import { useAuth } from "@/context/AuthContext";
 import {
   Check,
   Package,
@@ -50,13 +48,12 @@ interface Order {
 }
 
 const MyOrdersPage = () => {
-  const { data: session, status } = useSession();
-  const { user } = useAuth();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [currentReviewItem, setCurrentReviewItem] = useState<OrderItem | null>(null);
   const [reviewRating, setReviewRating] = useState(0);
@@ -65,18 +62,20 @@ const MyOrdersPage = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const router = useRouter();
 
-  // Get userId from session
-  const userId = user?.id || (session?.user as any)?.user_id || null;
+  useEffect(() => {
+    const userString = localStorage.getItem("user");
+    if (userString) {
+      try {
+        const user = JSON.parse(userString);
+        setUserId(user?.id || null);
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
-    // Wait for session to load
-    if (status === "loading") return;
-
-    if (!userId) {
-      setError("Please log in to view your orders");
-      setLoading(false);
-      return;
-    }
+    if (!userId) return;
 
     const fetchOrders = async () => {
       try {
@@ -96,7 +95,7 @@ const MyOrdersPage = () => {
     };
 
     fetchOrders();
-  }, [userId, status]);
+  }, [userId]);
 
   const toggleOrderExpanded = (orderId: number) => {
     if (expandedOrders.includes(orderId)) {

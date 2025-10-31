@@ -1,11 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { Modal, Form, message, Button, Select, Input } from "antd";
-import { useSession } from "next-auth/react";
-import { useAuth } from "@/context/AuthContext";
-import {
-  PlusIcon,
-  XMarkIcon,
+import { 
+  PlusIcon, 
+  XMarkIcon, 
   PencilSquareIcon,
   CheckIcon,
   ClockIcon,
@@ -23,9 +21,6 @@ interface Schedule {
 }
 
 const VetScheduleTab = () => {
-    const { data: session, status } = useSession();
-    const { user } = useAuth();
-
     const [schedule, setSchedule] = useState<Schedule[]>([]);
     const [vetId, setVetId] = useState<string | null>(null);
     const [editing, setEditing] = useState(false);
@@ -37,24 +32,16 @@ const VetScheduleTab = () => {
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [slotToDelete, setSlotToDelete] = useState<number | null>(null);
 
-    // Get userId from session
-    const userId = user?.id || (session?.user as any)?.user_id || null;
-
     useEffect(() => {
-        // Wait for session to load
-        if (status === "loading") {
-            setLoading(true);
-            return;
-        }
-
-        if (!userId) {
-            setLoading(false);
-            return;
-        }
-
         const loadVetId = async () => {
+            const storedUser = localStorage.getItem("user");
+            if (!storedUser) return;
+
+            const parsedUser = JSON.parse(storedUser);
+            if (!parsedUser?.id) return;
+
             try {
-                const res = await fetch(`/api/get-vet-id?user_id=${userId}`);
+                const res = await fetch(`/api/get-vet-id?user_id=${parsedUser.id}`);
                 if (!res.ok) throw new Error('Failed to fetch vet ID');
                 const data = await res.json();
                 setVetId(data.vet_id);
@@ -64,7 +51,7 @@ const VetScheduleTab = () => {
         };
 
         loadVetId();
-    }, [userId, status]);
+    }, []);
 
     useEffect(() => {
         const fetchSchedule = async () => {
@@ -128,7 +115,7 @@ const VetScheduleTab = () => {
             message.success("Time slot added successfully!");
             setScheduleModalVisible(false);
             scheduleForm.resetFields();
-
+            
             // Refresh schedule
             const res = await fetch(`/api/vet-panel/schedule/${vetId}`);
             if (res.ok) {
@@ -150,7 +137,7 @@ const VetScheduleTab = () => {
 
     const handleDeleteConfirm = async () => {
         if (!vetId || slotToDelete === null) return;
-
+        
         setDeleting(slotToDelete);
         try {
             const res = await fetch(`/api/vet-panel/schedule/${vetId}`, {
@@ -159,7 +146,7 @@ const VetScheduleTab = () => {
                 body: JSON.stringify({ availability_id: slotToDelete })
             });
             if (!res.ok) throw new Error('Failed to delete schedule slot');
-
+            
             // Remove from local state
             setSchedule(prev => prev.filter(s => s.availability_id !== slotToDelete));
             message.success("Time slot deleted successfully");
@@ -406,7 +393,7 @@ const VetScheduleTab = () => {
                         label="Day of Week"
                         rules={[{ required: true, message: 'Please select a day' }]}
                     >
-                        <Select
+                        <Select 
                             placeholder="Select a day"
                             size="large"
                             suffixIcon={<CalendarDaysIcon className="w-4 h-4 text-gray-400" />}
@@ -422,8 +409,8 @@ const VetScheduleTab = () => {
                             label="Start Time"
                             rules={[{ required: true, message: 'Please select start time' }]}
                         >
-                            <Input
-                                type="time"
+                            <Input 
+                                type="time" 
                                 size="large"
                                 prefix={<ClockIcon className="w-4 h-4 text-gray-400" />}
                             />
@@ -433,8 +420,8 @@ const VetScheduleTab = () => {
                             label="End Time"
                             rules={[{ required: true, message: 'Please select end time' }]}
                         >
-                            <Input
-                                type="time"
+                            <Input 
+                                type="time" 
                                 size="large"
                                 prefix={<ClockIcon className="w-4 h-4 text-gray-400" />}
                             />

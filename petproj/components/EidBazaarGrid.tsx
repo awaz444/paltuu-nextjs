@@ -4,8 +4,6 @@ import Link from "next/link";
 import EidBazaarListing from "./EidBazarListing";
 import axios from "axios";
 import { message } from "antd";
-import { useSession } from "next-auth/react";
-import { useAuth } from "@/context/AuthContext";
 import {
     EnvironmentOutlined,
     UserOutlined,
@@ -70,7 +68,7 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
             setSelectedImageIndex(0);
         }
     }, [selectedAnimal]);
-
+    
 
     const handleCreateSubmit = async (
         values: any

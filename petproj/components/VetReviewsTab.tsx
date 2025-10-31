@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { FaArrowRight } from "react-icons/fa";
-import { useSession } from "next-auth/react";
-import { useAuth } from "@/context/AuthContext";
 
 interface ReviewSummary {
     total_approved_reviews: number;
@@ -13,9 +11,6 @@ interface ReviewSummary {
 }
 
 const VetReviewsTab = () => {
-    const { data: session, status } = useSession();
-    const { user } = useAuth();
-
     const [reviews, setReviews] = useState<ReviewSummary>({
         total_approved_reviews: 0,
         total_pending_reviews: 0,
@@ -25,24 +20,16 @@ const VetReviewsTab = () => {
     const [vetId, setVetId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Get userId from session
-    const userId = user?.id || (session?.user as any)?.user_id || null;
-
     useEffect(() => {
-        // Wait for session to load
-        if (status === "loading") {
-            setLoading(true);
-            return;
-        }
-
-        if (!userId) {
-            setLoading(false);
-            return;
-        }
-
         const loadVetId = async () => {
+            const storedUser = localStorage.getItem("user");
+            if (!storedUser) return;
+
+            const parsedUser = JSON.parse(storedUser);
+            if (!parsedUser?.id) return;
+
             try {
-                const res = await fetch(`/api/get-vet-id?user_id=${userId}`);
+                const res = await fetch(`/api/get-vet-id?user_id=${parsedUser.id}`);
                 if (!res.ok) throw new Error('Failed to fetch vet ID');
                 const data = await res.json();
                 setVetId(data.vet_id);
@@ -52,7 +39,7 @@ const VetReviewsTab = () => {
         };
 
         loadVetId();
-    }, [userId, status]);
+    }, []);
 
     useEffect(() => {
         const fetchReviews = async () => {
@@ -86,7 +73,7 @@ const VetReviewsTab = () => {
     return (
         <div>
             <h2 className="text-xl font-semibold mb-6">Reviews Summary</h2>
-
+            
             {reviews.total_approved_reviews === 0 ? (
                 <p className="text-gray-500 py-4">No reviews yet</p>
             ) : (

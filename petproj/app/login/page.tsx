@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import { toast } from "react-hot-toast";
-import { useAuth } from "@/context/AuthContext"; // Import AuthContext
+import { useAuth } from "@/context/AuthContext";
 
 export default function Login() {
-    const { isAuthenticated, login } = useAuth(); // Use AuthContext for API-based login
+    const { isAuthenticated } = useAuth();
+    const { data: session } = useSession();
     const router = useRouter();
 
     const [user, setUser] = useState({
@@ -17,26 +17,23 @@ export default function Login() {
     });
     const [buttonDisabled, setButtonDisabled] = useState(true);
     const [loading, setLoading] = useState(false);
-    const [googleLoading, setGoogleLoading] = useState(false); // Loading state for Google login
-    const [showPassword, setShowPassword] = useState(false); // State for password visibility
+    const [googleLoading, setGoogleLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleBackToHome = () => {
         router.push("/browse-pets");
-    };  
+    };
 
     // Redirect based on role if already authenticated
     useEffect(() => {
-        if (isAuthenticated) {
-            const storedUser = localStorage.getItem("user");
-            if (storedUser) {
-                const { role } = JSON.parse(storedUser);
-                if (role === "vet") router.push("/vet-panel");
-                else if (role === "shop admin") router.push("/shop-panel");
-                else if (role === "shelter admin") router.push("/rescue-panel");
-                else router.push("/browse-pets");
-            }
+        if (isAuthenticated && session?.user) {
+            const role = (session.user as any).role;
+            if (role === "vet") router.push("/vet-panel");
+            else if (role === "shop admin") router.push("/shop-panel");
+            else if (role === "shelter admin") router.push("/rescue-panel");
+            else router.push("/browse-pets");
         }
-    }, [isAuthenticated, router]);
+    }, [isAuthenticated, session, router]);
 
     // Update button state based on user input
     useEffect(() => {
@@ -54,38 +51,27 @@ export default function Login() {
         setShowPassword(!showPassword);
     };
 
-    // Handle API-based login
+    // Handle credentials login via NextAuth
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             setLoading(true);
-            const response = await axios.post("/api/users/login", user);
 
-            if (response.data.success) {
-                const { user_id, name, email, role, profile_image_url } =
-                    response.data.user;
+            const result = await signIn("credentials", {
+                email: user.email,
+                password: user.password,
+                redirect: false,
+            });
 
-                const userDetails = {
-                    id: user_id, // ✅ fix undefined
-                    name,
-                    email,
-                    role,
-                    profile_image_url:
-                        profile_image_url || "/default-avatar.png", // ✅ use correct key
-                };
-
-                // Update AuthContext (now handles localStorage automatically)
-                await login(userDetails);
-
+            if (result?.error) {
+                toast.error("Invalid email or password!");
+            } else if (result?.ok) {
                 toast.success("Login successful!");
-                if (userDetails.role === "vet") router.push("/vet-panel");
-                else if (userDetails.role === "shop admin") router.push("/shop-panel");
-                else if (userDetails.role === "shelter admin") router.push("/rescue-panel");
-                else router.push("/browse-pets");
+                // Redirect will be handled by AuthContext useEffect
             }
         } catch (error: any) {
-            console.error("Login failed:", error.message);
-            toast.error(error.response?.data?.message || "Login failed!");
+            console.error("Login failed:", error);
+            toast.error("Login failed!");
         } finally {
             setLoading(false);
         }
@@ -95,7 +81,7 @@ export default function Login() {
     const handleGoogleLogin = async () => {
         try {
             setGoogleLoading(true);
-            await signIn("google"); // next-auth handles Google login
+            await signIn("google", { callbackUrl: "/browse-pets" });
         } catch (error) {
             console.error("Google login failed:", error);
             toast.error("Google login failed. Please try again!");

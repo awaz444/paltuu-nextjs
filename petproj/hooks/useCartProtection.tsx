@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
+import { getUserIdFromSession } from "@/utils/getUserFromSession";
 import toast from "react-hot-toast";
 
 interface CartProtectionOptions {
@@ -22,17 +23,8 @@ export const useCartProtection = (options: CartProtectionOptions = {}) => {
 
     const checkCart = async () => {
       try {
-        // Get user ID if logged in
-        let userId: string | null = null;
-        if (typeof window !== "undefined") {
-          const userString = localStorage.getItem("user");
-          if (userString) {
-            try {
-              const user = JSON.parse(userString);
-              userId = user?.id || user?.user_id || null;
-            } catch {}
-          }
-        }
+        // Get user ID from session instead of localStorage
+        const userId = await getUserIdFromSession();
 
         const params = new URLSearchParams();
         if (userId) {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getOrCreateGuestSessionId } from '@/utils/guest';
+import { getUserIdFromSession } from '@/utils/getUserFromSession';
 
 interface OrderProtectionOptions {
   redirectTo?: string;
@@ -32,21 +33,9 @@ export const useOrderProtection = (options: OrderProtectionOptions = {}) => {
           return;
         }
 
-        // ✅ Prioritize userId if user is logged in
-        let userId: string | null = null;
+        // Get userId from session instead of localStorage
+        const userId = await getUserIdFromSession();
         let sessionId: string | null = null;
-
-        if (typeof window !== 'undefined') {
-          const userString = localStorage.getItem('user');
-          if (userString) {
-            try {
-              const user = JSON.parse(userString);
-              userId = user?.id || user?.user_id || null;
-            } catch (e) {
-              console.error('Failed to parse user:', e);
-            }
-          }
-        }
 
         // Only get session ID if not logged in
         if (!userId) {

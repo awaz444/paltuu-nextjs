@@ -6,6 +6,8 @@ import Navbar from "@/components/navbar";
 import MyListingGrid from "@/components/MyListingGrid";
 import "./styles.css";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
+import { useSession } from "next-auth/react";
+import { useAuth } from "@/context/AuthContext";
 import { MoonLoader } from "react-spinners";
 import Link from "next/link";
 import { Collapse } from "antd";
@@ -58,46 +60,29 @@ const ADOPTION_CHECKLIST = [
 ];
 
 const UserListingsPage = () => {
+    const { data: session, status } = useSession();
+    const { user } = useAuth();
+
     const [listings, setListings] = useState<Pet[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [userId, setUserId] = useState<number | null>(null);
     const [primaryColor, setPrimaryColor] = useState("#000000");
 
+    // Get userId from session
+    const userId = user?.id || (session?.user as any)?.user_id || null;
+
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const userString = localStorage.getItem("user");
-            if (!userString) {
-                setError("User data not found in local storage");
-                setLoading(false);
-                return;
-            }
-
-            const user = JSON.parse(userString);
-            const user_id = user?.id;
-            if (!user_id) {
-                setError("User ID is missing from the user object");
-                setLoading(false);
-                return;
-            }
-
-            const numericUserId = Number(user_id);
-            if (isNaN(numericUserId)) {
-                setError("User ID is not a valid number");
-                setLoading(false);
-                return;
-            }
-
-            setUserId(numericUserId);
-            setLoading(false);
+        // Wait for session to load
+        if (status === "loading") {
+            setIsLoading(true);
+            return;
         }
-    }, []);
 
-    
-
-    useEffect(() => {
-        if (!userId) return;
+        if (!userId) {
+            setError("Please log in to view your listings");
+            setIsLoading(false);
+            return;
+        }
 
         const fetchData = async () => {
             try {
@@ -125,7 +110,7 @@ const UserListingsPage = () => {
         };
 
         fetchData();
-    }, [userId]);
+    }, [userId, status]);
 
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);
@@ -151,7 +136,7 @@ const UserListingsPage = () => {
 
     return (
         <>
-            
+
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
                 <header className="bg-white text-primary border border-1 border-primary p-8 rounded-2xl shadow-lg mb-10">
                     <div className="flex flex-col md:flex-row items-center gap-6">

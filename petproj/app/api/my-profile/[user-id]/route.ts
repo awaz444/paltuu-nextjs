@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/index";
-import { getToken } from "next-auth/jwt";
-import jwt from "jsonwebtoken";
+import { getServerSession } from "next-auth/next";
+import { authoptions } from "@/app/api/auth/[...nextauth]/options";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
@@ -15,31 +15,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     }
 
     try {
-        // Get authenticated user's ID from token/session
+        // Get authenticated user's ID from NextAuth session
+        const session = await getServerSession(authoptions);
         let authenticated_user_id: string | null = null;
 
-        // Check NextAuth token first (for Google OAuth users)
-        const nextAuthToken = await getToken({
-            req,
-            secret: process.env.NEXTAUTH_SECRET
-        });
-
-        if (nextAuthToken?.user_id) {
-            authenticated_user_id = nextAuthToken.user_id.toString();
-        } else {
-            // Check custom JWT token (for regular login users)
-            const customToken = req.cookies.get('token')?.value;
-            if (customToken) {
-                try {
-                    const decoded = jwt.verify(customToken, process.env.TOKEN_SECRET!) as any;
-                    authenticated_user_id = decoded.id?.toString();
-                } catch (error) {
-                    return NextResponse.json(
-                        { error: "Invalid token" },
-                        { status: 401 }
-                    );
-                }
-            }
+        if (session?.user) {
+            authenticated_user_id = (session.user as any).user_id?.toString() || null;
         }
 
         // If no authenticated user found
@@ -124,29 +105,12 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     }
 
     try {
-        // Same authorization logic for PATCH
+        // Get authenticated user's ID from NextAuth session
+        const session = await getServerSession(authoptions);
         let authenticated_user_id: string | null = null;
 
-        const nextAuthToken = await getToken({
-            req,
-            secret: process.env.NEXTAUTH_SECRET
-        });
-
-        if (nextAuthToken?.user_id) {
-            authenticated_user_id = nextAuthToken.user_id.toString();
-        } else {
-            const customToken = req.cookies.get('token')?.value;
-            if (customToken) {
-                try {
-                    const decoded = jwt.verify(customToken, process.env.TOKEN_SECRET!) as any;
-                    authenticated_user_id = decoded.id?.toString();
-                } catch (error) {
-                    return NextResponse.json(
-                        { error: "Invalid token" },
-                        { status: 401 }
-                    );
-                }
-            }
+        if (session?.user) {
+            authenticated_user_id = (session.user as any).user_id?.toString() || null;
         }
 
         if (!authenticated_user_id) {

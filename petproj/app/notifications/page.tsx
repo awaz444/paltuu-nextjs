@@ -5,6 +5,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
 import { formatDistanceToNow, parseISO } from 'date-fns';
+import { useSession } from "next-auth/react";
+import { useAuth } from "@/context/AuthContext";
 
 interface Notification {
   notification_id: string;
@@ -15,39 +17,32 @@ interface Notification {
 }
 
 const NotificationsPage = () => {
-  const [userId, setUserId] = useState<string | null>(null);
+  const { data: session, status } = useSession();
+  const { user } = useAuth();
+
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  
+
+  // Get userId from session
+  const userId = user?.id || (session?.user as any)?.user_id || null;
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const userString = localStorage.getItem('user');
-      if (!userString) {
-        setError('User data not found in local storage');
-        setLoading(false);
-        return;
-      }
-
-      const user = JSON.parse(userString);
-      const user_id = user?.id;
-      if (!user_id) {
-        setError('User ID is missing from the user object');
-        setLoading(false);
-        return;
-      }
-
-      setUserId(user_id);
+    // Wait for session to load
+    if (status === "loading") {
+      setLoading(true);
+      return;
     }
-  }, []);
 
-  useEffect(() => {
-    if (userId) {
-      fetchNotifications(userId);
+    if (!userId) {
+      setError('Please log in to view notifications');
+      setLoading(false);
+      return;
     }
-  }, [userId]);
+
+    fetchNotifications(userId);
+  }, [userId, status]);
 
   const fetchNotifications = async (userId: string) => {
     setLoading(true);
@@ -110,25 +105,25 @@ const NotificationsPage = () => {
 
   const handleMarkAllAsRead = async () => {
     if (!userId) return;
-    
+
     // Store the current state of unread notifications
     const currentUnreadNotifications = notifications.filter(n => !n.is_read);
-    
+
     try {
       // Optimistic update
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-      
+
       const response = await fetch(`/api/mark-all-notifications-read/${userId}`, {
         method: 'PUT',
       });
-      
+
       if (!response.ok) throw new Error('Failed to mark all as read');
     } catch (err) {
       console.error(err);
       // Revert optimistic update for previously unread notifications
-      setNotifications(prev => prev.map(n => 
-        currentUnreadNotifications.some(un => un.notification_id === n.notification_id) 
-          ? { ...n, is_read: false } 
+      setNotifications(prev => prev.map(n =>
+        currentUnreadNotifications.some(un => un.notification_id === n.notification_id)
+          ? { ...n, is_read: false }
           : n
       ));
     }
@@ -141,7 +136,7 @@ const NotificationsPage = () => {
 
   return (
     <>
-      
+
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
   {/* Notifications Header */}
   <header className="bg-white text-primary border border-1 border-primary p-8 rounded-2xl shadow-lg mb-10">
@@ -160,9 +155,9 @@ const NotificationsPage = () => {
           </p>
         </div>
       </div>
-      
+
       {notifications.some(n => !n.is_read) && (
-        <button 
+        <button
           onClick={handleMarkAllAsRead}
           className="px-5 py-2.5 bg-primary text-white rounded-full hover:bg-primary/90 transition-all flex items-center gap-2 font-small shadow-md whitespace-nowrap"
         >
@@ -180,8 +175,8 @@ const NotificationsPage = () => {
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className="h-20 bg-gray-100 animate-pulse rounded-lg"
                 data-testid="loading-skeleton"
               />
@@ -203,8 +198,8 @@ const NotificationsPage = () => {
                 key={notification.notification_id}
                 className={`
                   group p-4 rounded-lg transition-all cursor-pointer
-                  ${notification.is_read 
-                    ? 'bg-white hover:bg-gray-50' 
+                  ${notification.is_read
+                    ? 'bg-white hover:bg-gray-50'
                     : 'bg-primary-50 border-l-4 border-primary-600'
                   }
                   hover:shadow-sm border border-gray-200
@@ -218,7 +213,7 @@ const NotificationsPage = () => {
                     <p className={`text-gray-900 ${!notification.is_read ? 'font-semibold' : ''}`}>
                       {notification.notification_content}
                     </p>
-                    <time 
+                    <time
                       className="text-sm text-gray-500 mt-1 block"
                       title={parseISO(notification.date_sent).toLocaleString()}
                     >

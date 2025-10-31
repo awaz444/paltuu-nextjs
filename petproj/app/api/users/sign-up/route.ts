@@ -18,9 +18,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User already exists" }, { status: 400 });
     }
 
-    // Hash the password
-    // const salt = await bcrypt.genSalt(10);
-    // const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash the password - CRITICAL SECURITY
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert the new user into the database
     const insertUserQuery = `
@@ -34,7 +33,7 @@ export async function POST(request: NextRequest) {
       DOB,
       city_id,
       emailNew,
-      password,
+      hashedPassword,
       phone_number,
       role,
     ]);

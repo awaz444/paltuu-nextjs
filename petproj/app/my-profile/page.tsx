@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import { useAuth } from "@/context/AuthContext";
+import { useSession } from "next-auth/react";
 import {
   CameraOutlined,
   LoadingOutlined,
@@ -100,7 +101,8 @@ const ProfileField: React.FC<ProfileFieldProps> = ({
 };
 
 const MyProfile = () => {
-  const { refreshUser } = useAuth();
+  const { refreshUser, user } = useAuth();
+  const { data: session, status } = useSession();
   const [userId, setUserId] = useState<string | null>(null);
   const [data, setData] = useState<UserProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -165,43 +167,49 @@ const MyProfile = () => {
 
   useEffect(() => {
     const loadUserData = async () => {
-      const storedUser = localStorage.getItem("user");
-      if (!storedUser) return;
-      
+      // Get user from NextAuth session instead of localStorage
+      if (status === "loading") {
+        return; // Wait for session to load
+      }
 
-      const parsedUser = JSON.parse(storedUser);
-      if (!parsedUser?.id) return;
+      if (!session?.user || !user?.id) {
+        setLoading(false);
+        return;
+      }
 
-      setUserId(parsedUser.id);
-      console.log("🔍 Profile page - localStorage user data:", parsedUser);
+      const userIdFromSession = user.id || (session.user as any).user_id;
+      setUserId(userIdFromSession);
+      console.log("🔍 Profile page - Session user data:", session.user);
 
       try {
         // Fetch user profile data
-        const res = await fetch(`/api/my-profile/${parsedUser.id}`);
+        const res = await fetch(`/api/my-profile/${userIdFromSession}`);
         console.log("🔍 Profile page - API response status:", res.status);
 
         if (!res.ok) throw new Error("Failed to fetch profile");
         const profileData = await res.json();
         console.log("🔍 Profile page - Database profile data:", profileData);
 
-        // For Google users, use Google profile data as fallback if database data is missing or empty
+        // Use session data as fallback if database data is missing or empty
         const finalProfileData = {
           ...profileData,
           name:
             (profileData.name && profileData.name.trim()) ||
-            parsedUser.name ||
+            user.name ||
+            session.user.name ||
             "User",
           profile_image_url:
             (profileData.profile_image_url &&
               profileData.profile_image_url.trim()) ||
-            parsedUser.profile_image_url ||
+            user.profile_image_url ||
+            session.user.image ||
             "/default-avatar.png",
+          email: profileData.email || user.email || session.user.email || "",
         };
 
         console.log("🔍 Profile page - Final profile data:", finalProfileData);
         setData(finalProfileData);
         setUpdatedData(finalProfileData);
-
 
         // Fetch cities data
         const citiesRes = await fetch("/api/cities");
@@ -210,17 +218,16 @@ const MyProfile = () => {
         setCities(citiesData);
       } catch (error) {
         console.error("Error loading data:", error);
-        console.log("🔍 Profile page - Using fallback data from localStorage");
+        console.log("🔍 Profile page - Using fallback data from session");
 
-
-        // If database fetch fails, use localStorage data as fallback
+        // If database fetch fails, use session data as fallback
         const fallbackData = {
-          user_id: parsedUser.id,
-          name: parsedUser.name || "User",
+          user_id: userIdFromSession,
+          name: user.name || session.user.name || "User",
           dob: "",
-          email: parsedUser.email || "",
+          email: user.email || session.user.email || "",
           profile_image_url:
-            parsedUser.profile_image_url || "/default-avatar.png",
+            user.profile_image_url || session.user.image || "/default-avatar.png",
           phone_number: "",
           city: "",
           created_at: new Date().toISOString(),
@@ -235,7 +242,7 @@ const MyProfile = () => {
     };
 
     loadUserData();
-  }, []);
+  }, [session, status, user]);
 
   const handleImageUpload = async (file: File) => {
     if (!userId) return;

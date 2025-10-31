@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
+import { useAuth } from "@/context/AuthContext";
+import { useSession } from "next-auth/react";
 import {
   Check,
   Package,
@@ -48,41 +50,49 @@ interface Order {
 }
 
 const MyOrdersPage = () => {
+  const { user, isAuthenticated } = useAuth();
+    const { status } = useSession();
+  const router = useRouter();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [currentReviewItem, setCurrentReviewItem] = useState<OrderItem | null>(null);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewTitle, setReviewTitle] = useState("");
   const [reviewBody, setReviewBody] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
-    const userString = localStorage.getItem("user");
-    if (userString) {
-      try {
-        const user = JSON.parse(userString);
-        setUserId(user?.id || null);
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-      }
+    // Redirect to login if not authenticated
+    if (status !== "loading" && !isAuthenticated) {
+      router.push("/login?error=Please log in to view your orders");
+      return;
     }
-  }, []);
 
-  useEffect(() => {
-    if (!userId) return;
+    // Only fetch orders if user is authenticated and we have user data
+    if (!isAuthenticated || !user?.id || status === "loading") return;
 
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/orders/${userId}`);
+        const res = await fetch('/api/orders', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-        if (!res.ok) throw new Error("Failed to fetch orders");
+        if (!res.ok) {
+          if (res.status === 401) {
+            router.push('/login');
+            return;
+          }
+          throw new Error("Failed to fetch orders");
+        }
 
         const ordersData = await res.json();
         setOrders(ordersData);
@@ -95,7 +105,7 @@ const MyOrdersPage = () => {
     };
 
     fetchOrders();
-  }, [userId]);
+  }, [user?.id, isAuthenticated, status, router]);
 
   const toggleOrderExpanded = (orderId: number) => {
     if (expandedOrders.includes(orderId)) {
@@ -165,7 +175,7 @@ const MyOrdersPage = () => {
   };
 
   const submitReview = async () => {
-    if (!currentReviewItem || !userId || reviewRating === 0) return;
+    if (!currentReviewItem || !user?.id || reviewRating === 0) return;
 
     setSubmittingReview(true);
     try {
@@ -174,10 +184,10 @@ const MyOrdersPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           order_item_id: currentReviewItem.order_item_id,
           product_id: currentReviewItem.product_id,
-          user_id: userId,
           rating: reviewRating,
           title: reviewTitle,
           body: reviewBody

@@ -601,6 +601,7 @@ export default function BazaarPage() {
                                                                                 )}
                                                                             </div>
                                                                         ) : (
+                                                                            
                                                                             <div className="flex items-center gap-1 mb-2">
                                                                                 <div className="flex text-gray-200">
                                                                                     {[

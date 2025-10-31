@@ -3,10 +3,12 @@ import React, { useState, useEffect } from "react";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
-import LoginModal from "../../../components/LoginModal";
 import RescueDetails from "../../../components/RescueDetails";
 import { formatDistanceToNow } from "date-fns";
 import { formatAiResponse } from "@/utils/formatAiResponse";
+import { useAuth } from "@/context/AuthContext";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 import {
     Spin,
@@ -59,6 +61,9 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     params,
 }) => {
     const { pet_id } = params;
+    const router = useRouter();
+    const { user, isAuthenticated } = useAuth();
+    const { status } = useSession();
     const searchParams = useSearchParams();
     const [pet, setPet] = useState<PetWithImages | null>(null);
     const [carouselImages, setCarouselImages] = useState<string[]>([]);
@@ -67,12 +72,10 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [IsModalOpen, setIsModalOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [userId, setUserId] = useState<string | null>(null);
-    const [showLoginModal, setShowLoginModal] = useState(false);
     const [primaryColor, setPrimaryColor] = useState("#000000");
     const [llmSummary, setLlmSummary] = useState<string | null>(null);
     const [summaryLoading, setSummaryLoading] = useState(false);
-    const [summaryRequested, setSummaryRequested] = useState(false); // New state
+    const [summaryRequested, setSummaryRequested] = useState(false);
 
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);
@@ -85,18 +88,6 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     const formatListingDate = (dateString: string) => {
         return formatDistanceToNow(new Date(dateString), { addSuffix: true });
     };
-
-    useEffect(() => {
-        const userString = localStorage.getItem("user");
-        if (userString) {
-            try {
-                const user = JSON.parse(userString);
-                setUserId(user?.id || null);
-            } catch (error) {
-                console.error("Error parsing user data:", error);
-            }
-        }
-    }, []);
 
     const handleGenerateSummary = async () => {
         if (!pet || summaryLoading) return;
@@ -178,13 +169,14 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     const handleAdoptClick = async () => {
         if (pet?.adoption_status !== "available") return;
 
-        if (!userId) {
-            setShowLoginModal(true);
+        if (!isAuthenticated || !user?.id) {
+            message.info("Please log in to apply for adoption");
+            router.push("/login");
             return;
         }
 
         try {
-            const res = await fetch(`/api/my-profile/${userId}`);
+            const res = await fetch(`/api/my-profile/${user.id}`);
             if (!res.ok) throw new Error("Failed to fetch profile");
 
             const profileData = await res.json();
@@ -214,37 +206,6 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     const handleContactClick = () => {
         if (pet?.adoption_status !== "available") return;
         setIsModalOpen(true);
-    };
-
-    const handleLoginSuccess = async () => {
-        const userString = localStorage.getItem("user");
-        if (userString) {
-            const user = JSON.parse(userString);
-            setUserId(user.id);
-
-            try {
-                const res = await fetch(`/api/my-profile/${user.id}`);
-                if (!res.ok) throw new Error("Failed to fetch profile");
-
-                const profileData = await res.json();
-
-                if (!profileData.phone_number || !profileData.city) {
-                    message.warning({
-                        content:
-                            "Please complete your profile by adding your phone number and city before applying.",
-                        duration: 5,
-                    });
-                    setTimeout(() => {
-                        window.location.href = "/my-profile";
-                    }, 2000);
-                    return;
-                }
-            } catch (error) {
-                console.error("Error checking profile:", error);
-                message.error("Failed to verify profile information");
-            }
-        }
-        setShowLoginModal(false);
     };
 
     const handleModalClose = () => setIsModalVisible(false);
@@ -309,14 +270,14 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
         switch (pet?.listing_type) {
             case "sell":
-                return userId ? "Buy This Pet" : "Login to Buy";
+                return isAuthenticated && user?.id ? "Buy This Pet" : "Login to Buy";
             case "shop":
-                return userId ? "Purchase from Shop" : "Login to Purchase";
+                return isAuthenticated && user?.id ? "Purchase from Shop" : "Login to Purchase";
             case "rescue":
-                return userId ? "Adopt This Pet" : "Login to Adopt";
+                return isAuthenticated && user?.id ? "Adopt This Pet" : "Login to Adopt";
             case "adoption":
             default:
-                return userId ? "Apply for Adoption" : "Login to Apply";
+                return isAuthenticated && user?.id ? "Apply for Adoption" : "Login to Apply";
         }
     };
 
@@ -399,6 +360,16 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
         );
     }
 
+    // Show loading while authentication is being determined
+    if (loading || status === "loading") {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <MoonLoader size={30} color={primaryColor} />
+                <span className="ml-3">Loading...</span>
+            </div>
+        );
+    }
+
     if (error || !pet) {
         return (
             <div className="text-center mt-10">
@@ -422,11 +393,6 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
     return (
         <>
-            <LoginModal
-                visible={showLoginModal}
-                onClose={() => setShowLoginModal(false)}
-                onSuccess={handleLoginSuccess}
-            />
             <Modal
                 title="Contact Information"
                 visible={IsModalOpen}
@@ -1054,7 +1020,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
                     <AdoptionFormModal
                         petId={parseInt(pet_id)}
-                        userId={userId || ""}
+                        userId={user?.id || ""}
                         city={pet.city}
                         visible={isModalVisible}
                         onClose={handleModalClose}

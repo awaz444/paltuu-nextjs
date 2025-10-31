@@ -2,8 +2,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "../../../../db/ecom";
 import { createClient as createMainClient } from "../../../../db/index";
+import jwt from "jsonwebtoken";
+import { getServerSession } from "next-auth/next";
+import { authoptions } from "../../auth/[...nextauth]/options";
 
 export const revalidate = 0;
+
+interface JWTPayload {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+}
 
 export async function GET(req: NextRequest) {
   const pool = getPool();
@@ -112,18 +122,45 @@ export async function GET(req: NextRequest) {
 // POST function remains the same as before
 export async function POST(req: NextRequest) {
   const pool = getPool();
+  let userId: string | null = null;
+
   try {
+    // Try NextAuth session first
+    const session = await getServerSession(authoptions);
+    if (session?.user) {
+      userId = (session.user as any).user_id || (session.user as any).id;
+    }
+
+    // If no NextAuth session, try JWT token from cookies
+    if (!userId) {
+      const token = req.cookies.get("token")?.value;
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, process.env.TOKEN_SECRET!) as JWTPayload;
+          userId = decoded.id;
+        } catch (jwtError) {
+          console.error("JWT verification failed:", jwtError);
+        }
+      }
+    }
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required. Please login to submit a review." },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     const {
       order_item_id,
       product_id,
-      user_id,
       rating,
       title,
       body: reviewBody
     } = body;
 
-    if (!order_item_id || !product_id || !user_id || !rating) {
+    if (!order_item_id || !product_id || !rating) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -145,7 +182,7 @@ export async function POST(req: NextRequest) {
 
     const reviewResult = await conn.query(insertReviewQuery, [
       product_id,
-      user_id,
+      userId,
       rating,
       title,
       reviewBody

@@ -47,7 +47,12 @@ const Navbar = ({
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [markingAsRead, setMarkingAsRead] = useState(false);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const notificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleMouseEnter = () => {
     if (hideTimeoutRef.current) {
@@ -62,10 +67,26 @@ const Navbar = ({
     hideTimeoutRef.current = setTimeout(() => setIsDropdownOpen(false), 300);
   };
 
+  const handleNotificationMouseEnter = () => {
+    if (notificationTimeoutRef.current) {
+      clearTimeout(notificationTimeoutRef.current);
+      notificationTimeoutRef.current = null;
+    }
+    setShowNotifications(true);
+  };
+
+  const handleNotificationMouseLeave = () => {
+    // Set a longer timeout to allow moving to dropdown
+    notificationTimeoutRef.current = setTimeout(() => setShowNotifications(false), 300);
+  };
+
   useEffect(() => {
     return () => {
       if (hideTimeoutRef.current) {
         clearTimeout(hideTimeoutRef.current);
+      }
+      if (notificationTimeoutRef.current) {
+        clearTimeout(notificationTimeoutRef.current);
       }
     };
   }, []);
@@ -230,6 +251,73 @@ const Navbar = ({
     prevTotalRef.current = totalCartItems;
   }, [totalCartItems]);
 
+  // Mark notifications as read
+  const markNotificationsAsRead = async () => {
+    console.log('markNotificationsAsRead called');
+    console.log('User role:', user?.role);
+    console.log('User ID:', user?.id || user?.user_id);
+    
+    if (user?.role === 'shelter admin' && (user?.id || user?.user_id)) {
+      setMarkingAsRead(true);
+      try {
+        const uid = user.id || user.user_id;
+        console.log('Making API call to mark notifications as read for user:', uid);
+        
+        const response = await fetch(`/api/notifications/${uid}/mark-read`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        console.log('API response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('API response data:', data);
+          
+          // Update local state
+          setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+          setUnreadCount(0);
+          console.log('Notifications marked as read successfully');
+        } else {
+          const errorData = await response.json();
+          console.error('Failed to mark notifications as read:', errorData);
+        }
+      } catch (error) {
+        console.error('Error marking notifications as read:', error);
+      } finally {
+        setMarkingAsRead(false);
+      }
+    } else {
+      console.log('User not authorized or missing user ID');
+    }
+  };
+
+  // Fetch notifications for rescue panel users
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (user?.role === 'shelter admin' && (user?.id || user?.user_id)) {
+        try {
+          const uid = user.id || user.user_id;
+          const response = await fetch(`/api/notifications/${uid}`);
+          if (response.ok) {
+            const data = await response.json();
+            setNotifications(data.notifications || []);
+            setUnreadCount(data.notifications?.filter((n: any) => !n.is_read).length || 0);
+          }
+        } catch (error) {
+          console.error('Error fetching notifications:', error);
+        }
+      }
+    };
+
+    fetchNotifications();
+    // Refresh notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [user?.id, user?.user_id, user?.role]);
+
   // Cart dropdown mouse handlers
   const handleCartMouseEnter = () => {
     if (cartHideTimeout.current) clearTimeout(cartHideTimeout.current);
@@ -351,11 +439,11 @@ const Navbar = ({
         </Link>
 
         {/* Right: Cart */}
-
+        <div className="flex items-center gap-2">
         {!hideCart && (
           <button
             onClick={() => setIsCartModalOpen(true)}
-            className={`absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md bg-white/10 hover:bg-white/20 ${
+              className={`relative p-2 rounded-md bg-white/10 hover:bg-white/20 ${
               bounce ? "animate-bounce" : ""
             }`}
           >
@@ -367,6 +455,7 @@ const Navbar = ({
             )}
           </button>
         )}
+        </div>
       </div>
 
       {/* Mobile Drawer + Backdrop */}
@@ -786,6 +875,80 @@ const Navbar = ({
           )}
 
           {isAuthenticated || session ? (
+            <>
+              {/* Notifications - Only for shelter admins */}
+              {user?.role === 'shelter admin' && (
+                <div 
+                  className="relative mr-4"
+                  onMouseEnter={handleNotificationMouseEnter}
+                  onMouseLeave={handleNotificationMouseLeave}
+                >
+                  <button
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className="relative p-2 text-gray-600 hover:text-primary transition-colors flex items-center"
+                  >
+                    <i className="bi bi-bell text-2xl text-gray-600"></i>
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  
+                  {/* Notifications Dropdown */}
+                  {showNotifications && (
+                    <div 
+                      className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto"
+                      onMouseEnter={handleNotificationMouseEnter}
+                      onMouseLeave={handleNotificationMouseLeave}
+                    >
+                      <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                        <h3 className="font-semibold text-gray-800">Notifications</h3>
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={() => {
+                              console.log('Mark all as read button clicked');
+                              markNotificationsAsRead();
+                            }}
+                            disabled={markingAsRead}
+                            className={`text-xs font-medium ${
+                              markingAsRead 
+                                ? 'text-gray-400 cursor-not-allowed' 
+                                : 'text-blue-600 hover:text-blue-800'
+                            }`}
+                          >
+                            {markingAsRead ? 'Marking...' : 'Mark all as read'}
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-80 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <div className="p-4 text-center text-gray-500">No notifications</div>
+                        ) : (
+                          notifications.map((notification) => {
+                            const timeAgo = (() => {
+                              const now = new Date().getTime();
+                              const sent = new Date(notification.date_sent).getTime();
+                              const diffHours = Math.floor((now - sent) / (1000 * 60 * 60));
+                              if (diffHours < 1) return 'Just now';
+                              if (diffHours < 24) return `${diffHours}h ago`;
+                              const diffDays = Math.floor(diffHours / 24);
+                              return `${diffDays}d ago`;
+                            })();
+                            return (
+                              <div key={notification.notification_id} className="p-4 border-b border-gray-100 hover:bg-gray-50">
+                                <div className="text-sm text-gray-800">{notification.notification_content}</div>
+                                <div className="text-xs text-gray-500 mt-1">{timeAgo}</div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
             <div
               className="relative group"
               onMouseEnter={handleMouseEnter}
@@ -949,6 +1112,7 @@ const Navbar = ({
                 </div>
               )}
             </div>
+            </>
           ) : (
             <Link href="/auth">
               <button className="flex items-center justify-center gap-2 loginBtn">

@@ -290,21 +290,25 @@ useEffect(() => {
     }
   };
 
-  const applyPromoCode = () => {
+  const applyPromoCode = async () => {
     setPromoError("");
     const code = promoCode.trim().toUpperCase();
-
-    if (code === "WELCOME10") {
-      setDiscount(subtotal * 0.1); // 10% discount
+    if (!code) return;
+    try {
+      const res = await fetch('/api/bazaar/coupons/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, subtotal })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPromoError(data?.error || 'Invalid promo code');
+        return;
+      }
+      setDiscount(Number(data.discount || 0));
       setPromoApplied(true);
-    } else if (code === "PETLOVER15") {
-      setDiscount(subtotal * 0.15); // 15% discount
-      setPromoApplied(true);
-    } else if (code === "FREESHIP") {
-      setDiscount(shipping);
-      setPromoApplied(true);
-    } else if (code) {
-      setPromoError("Invalid promo code");
+    } catch (e) {
+      setPromoError('Failed to apply promo');
     }
   };
 

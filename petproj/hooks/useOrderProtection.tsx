@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getOrCreateGuestSessionId } from '@/utils/guest';
+import { getUserIdFromToken } from '@/utils/authClient';
 
 interface OrderProtectionOptions {
   redirectTo?: string;
@@ -32,19 +33,16 @@ export const useOrderProtection = (options: OrderProtectionOptions = {}) => {
           return;
         }
 
-        // ✅ Prioritize userId if user is logged in
+        // ✅ Prioritize userId if user is logged in (read from token cookie)
         let userId: string | null = null;
         let sessionId: string | null = null;
 
         if (typeof window !== 'undefined') {
-          const userString = localStorage.getItem('user');
-          if (userString) {
-            try {
-              const user = JSON.parse(userString);
-              userId = user?.id || user?.user_id || null;
-            } catch (e) {
-              console.error('Failed to parse user:', e);
-            }
+          try {
+            userId = getUserIdFromToken();
+          } catch (e) {
+            console.warn('Failed to get user from token cookie', e);
+            userId = null;
           }
         }
 

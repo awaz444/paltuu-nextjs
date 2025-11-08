@@ -3,6 +3,8 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
+import { getUserIdFromToken, decodeJwtPayload } from "@/utils/authClient";
+import { clearGuestSessionId } from "@/utils/guest";
 
 interface User {
   id?: string;
@@ -37,37 +39,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-  console.log("🔎 useSession status:", status);
-  console.log("🔎 NextAuth session.user:", session?.user);
+    console.log("🔎 useSession status:", status);
+    console.log("🔎 NextAuth session.user:", session?.user);
 
-  const storedUser = localStorage.getItem("user");
-  if (storedUser) {
-    const parsedUser = JSON.parse(storedUser);
-    console.log("🔎 LocalStorage user:", parsedUser);
-    // Ensure both id and user_id are set for backward compatibility
-    const userWithIds = {
-      ...parsedUser,
-      id: parsedUser.id || parsedUser.user_id,
-      // user_id: parsedUser.user_id || parsedUser.id,
-      method: parsedUser.method || "api"
-    };
-    setUser(userWithIds);
-    setIsAuthenticated(true);
-
-    // Redirect shop/shelter to respective panels when landing on login or root
-    try {
-      const role = userWithIds.role;
-      const path = typeof window !== "undefined" ? window.location.pathname : "";
-      if (path === "/login" || path === "/") {
-        if (role === "shop admin") router.push("/shop-panel");
-        if (role === "shelter admin") router.push("/rescue-panel");
+    // Try to hydrate user from JWT token cookie if present (client-side only)
+    if (typeof window !== "undefined") {
+      try {
+        const tokenUserId = getUserIdFromToken();
+        if (tokenUserId && !user) {
+          // We have a token payload; use it as a lightweight user until we fetch DB profile
+          const token = (document.cookie.match(new RegExp('(^|; )' + 'token' + '=([^;]*)')) || [])[2];
+          const payload = decodeJwtPayload(token ? decodeURIComponent(token) : null);
+          const minimalUser = payload
+            ? ({ id: payload.id || payload.user_id, email: payload.email, name: payload.name, role: payload.role || "guest", profile_image_url: payload.profile_image_url, method: "api" } as any)
+            : null;
+          if (minimalUser) {
+            setUser(minimalUser);
+            setIsAuthenticated(true);
+          }
+        }
+      } catch (e) {
+        // ignore token parse errors
       }
-    } catch {}
-  }
+    }
 
-  if (status === "authenticated" && session?.user) {
+    if (status === "authenticated" && session?.user) {
     const googleUserId = (session.user as any).user_id || (session.user as any).id;
-    
+
     // Only update if we don't have a user yet, or if this is a fresh Google login
     if (!user || user.method !== "google") {
       // First, try to fetch the user's database profile
@@ -85,11 +83,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               profile_image_url: (dbProfile.profile_image_url && dbProfile.profile_image_url.trim()) || session.user.image || undefined,
               method: "google",
             };
-            
-            localStorage.setItem("user", JSON.stringify(userWithDbData));
+
+            // Set in-memory user; do not persist to localStorage
             setUser(userWithDbData);
             setIsAuthenticated(true);
-            
+
             console.log("✅ Using database profile data for Google user:", userWithDbData);
             console.log("🔍 AuthContext - Database profile_image_url:", dbProfile.profile_image_url);
             return userWithDbData;
@@ -97,7 +95,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
           console.log("No database profile found, using Google data");
         }
-        
+
         // Fallback to Google data if no database profile exists
         const googleUser: User = {
           id: googleUserId,
@@ -107,18 +105,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           profile_image_url: session.user.image || undefined,
           method: "google",
         };
-        
-        localStorage.setItem("user", JSON.stringify(googleUser));
-        setUser(googleUser);
-        setIsAuthenticated(true);
-        
+
+            // Set in-memory user; do not persist to localStorage
+            setUser(googleUser);
+            setIsAuthenticated(true);
+
         console.log("✅ Using Google profile data:", googleUser);
         console.log("🔍 AuthContext - Google profile_image_url:", session.user.image);
         return googleUser;
       };
-      
-      fetchDatabaseProfile().then((finalUser) => {
-        localStorage.removeItem("guest_session_id");
+
+        fetchDatabaseProfile().then((finalUser) => {
+          // clear guest session cookie to avoid cart conflicts
+          try { clearGuestSessionId(); } catch {}
 
         // Redirect shop/shelter to panels after login
         try {
@@ -132,7 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 }, [status, session]);
 
 
-const login = async (userData: {
+  const login = async (userData: {
   id: string;
   name: string;
   email: string;
@@ -153,14 +152,13 @@ const login = async (userData: {
         profile_image_url: dbProfile.profile_image_url || "/default-avatar.png",
         method: "api",
       };
-      
-      setUser(userWithDbData);
-      setIsAuthenticated(true);
-      localStorage.setItem("user", JSON.stringify(userWithDbData));
-      localStorage.removeItem("guest_session_id");
-      
+
+  setUser(userWithDbData);
+  setIsAuthenticated(true);
+  try { clearGuestSessionId(); } catch {}
+
       console.log("✅ Using database profile data for API user:", userWithDbData);
-      
+
       // Redirect on API login success
       try {
         if (userWithDbData.role === "shop admin") router.push("/shop-panel");
@@ -171,7 +169,7 @@ const login = async (userData: {
   } catch (error) {
     console.log("No database profile found, using login response data");
   }
-  
+
   // Fallback to login response data if no database profile exists
   const userWithMethod: User = {
     id: userData.id,
@@ -184,8 +182,7 @@ const login = async (userData: {
 
   setUser(userWithMethod);
   setIsAuthenticated(true);
-  localStorage.setItem("user", JSON.stringify(userWithMethod));
-  localStorage.removeItem("guest_session_id");
+  try { clearGuestSessionId(); } catch {}
 
   console.log("✅ Using login response data for API user:", userWithMethod);
 
@@ -203,9 +200,9 @@ const login = async (userData: {
     try {
       const response = await fetch(`/api/my-profile/${user.id}`);
       if (!response.ok) throw new Error("Failed to fetch updated profile");
-      
+
       const updatedProfile = await response.json();
-      
+
       const updatedUser: User = {
         ...user,
         name: updatedProfile.name,
@@ -214,8 +211,8 @@ const login = async (userData: {
       };
 
       setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      
+      // Do not persist to localStorage
+
       console.log("✅ User data refreshed:", updatedUser);
     } catch (error) {
       console.error("Failed to refresh user data:", error);
@@ -226,14 +223,11 @@ const login = async (userData: {
     console.log("Logout started, user method:", user?.method);
 
     try {
-      // Clear local storage first
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      sessionStorage.clear();
+      // Clear in-memory user and guest session cookie
+      try { clearGuestSessionId(); } catch {}
 
-      // ✅ Clear guest session to prevent cart conflicts after logout
-      // This will force a new guest session to be created on next cart action
-      localStorage.removeItem("guest_session_id");
+      // Clear session storage if used
+      try { sessionStorage.clear(); } catch {}
 
       // For Google users, handle NextAuth signOut correctly
       if (user?.method === "google") {
@@ -265,23 +259,26 @@ const login = async (userData: {
       setUser(null);
       setIsAuthenticated(false);
 
-      // Manual cookie clearing as fallback
-      document.cookie.split(";").forEach(function (c) {
-        document.cookie = c
-          .replace(/^ +/, "")
-          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-      });
+      // Manual cookie clearing as fallback (leave server-controlled auth cookie to server logout)
+      try {
+        document.cookie.split(";").forEach(function (c) {
+          document.cookie = c
+            .replace(/^ +/, "")
+            .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+      } catch {}
 
       window.location.href = "/login";
     } catch (error) {
       console.error("Logout error:", error);
-      localStorage.clear();
-      sessionStorage.clear();
-      document.cookie.split(";").forEach(function (c) {
-        document.cookie = c
-          .replace(/^ +/, "")
-          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-      });
+      try { sessionStorage.clear(); } catch {}
+      try {
+        document.cookie.split(";").forEach(function (c) {
+          document.cookie = c
+            .replace(/^ +/, "")
+            .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+      } catch {}
       window.location.href = "/login";
     }
   };

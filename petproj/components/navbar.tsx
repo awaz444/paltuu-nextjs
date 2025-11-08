@@ -110,28 +110,7 @@ const Navbar = ({
     "shop admin": "#b86b00",
     "ecommerce admin": "#004a99",
   };
-
-  const buttonTextColor: Record<UserRole, string> = {
-    guest: "#ffffff",
-    "regular user": "#ffffff",
-    vet: "#ffffff",
-    admin: "#ffffff",
-    "shop admin": "#ffffff",
-    "shelter admin": "#ffffff",
-    "ecommerce admin": "#ffffff",
-  };
-
-  const arrowColor: Record<UserRole, string> = {
-    guest: "#ffd2e3",
-    "regular user": "#ffd2e3",
-    vet: "#e0c3f7",
-    admin: "#7fe1d3",
-
-    "shelter admin": "#8fe4a8",
-    "shop admin": "#ffc266",
-    "ecommerce admin": "#80b3ff",
-  };
-
+  
   // Updated dropdown items with isAction flag
   const defaultDropdownItems = [
     {
@@ -210,6 +189,7 @@ const Navbar = ({
   const dispatch = useDispatch<AppDispatch>();
   const cartState = useSelector((state: RootState) => state.cart);
   const cartHideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pathname = usePathname();
 
   const cartItemsNav = cartState.items ?? [];
   const cartLoading = cartState.loading ?? false;
@@ -298,7 +278,7 @@ const Navbar = ({
   useEffect(() => {
     const currentPath = window.location.pathname.split("/")[1];
     setActiveLink(currentPath);
-  }, []);
+  }, [pathname]);
 
   const dropdownWidth = `${
     Math.max(
@@ -323,7 +303,7 @@ const Navbar = ({
     setLoading(type);
     router.push(path);
   };
-  const pathname = usePathname();
+  
   // ✅ Reset loading when route changes
   useEffect(() => {
     if (loading) {

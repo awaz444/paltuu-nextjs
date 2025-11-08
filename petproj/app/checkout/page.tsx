@@ -20,6 +20,7 @@ import { clearCart } from "@/app/store/slices/cartSlice";
 import { fetchCart } from "@/app/store/slices/cartSlice";
 import { useRouter } from "next/navigation";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
+import { getUserIdFromToken, getTokenFromCookie, decodeJwtPayload } from "@/utils/authClient";
 import { FaUniversity } from "react-icons/fa";
 import { useCartProtection } from "@/hooks/useCartProtection";
 import { useAuth } from "@/context/AuthContext";
@@ -89,19 +90,21 @@ useEffect(() => {
           const sessionId = getOrCreateGuestSessionId();
           const cartTotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
 
-          // Get user info from localStorage
+          // Get user info from auth token cookie if available
           let userName, userEmail, userId;
           if (typeof window !== "undefined") {
-            const storedUser = localStorage.getItem("user");
-            if (storedUser) {
-              try {
-                const userData = JSON.parse(storedUser);
-                userId = userData.user_id || userData.id;
-                userName = userData.name;
-                userEmail = userData.email;
-              } catch (e) {
-                console.warn("Failed to parse user from localStorage", e);
+            try {
+              const token = getTokenFromCookie();
+              if (token) {
+                const payload = decodeJwtPayload(token);
+                if (payload) {
+                  userId = payload.user_id || payload.id;
+                  userName = payload.name;
+                  userEmail = payload.email;
+                }
               }
+            } catch (e) {
+              console.warn("Failed to parse user from token cookie", e);
             }
           }
 
@@ -160,17 +163,14 @@ useEffect(() => {
 
     fetchCartData();
   }, [cartItems.length, currentUserId]);
-  // Get user ID from localStorage on mount
+  // Get user ID from token cookie on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        try {
-          const userData = JSON.parse(storedUser);
-          setCurrentUserId(userData.user_id || userData.id || null);
-        } catch (e) {
-          console.warn("Failed to parse user from localStorage", e);
-        }
+      try {
+        const uid = getUserIdFromToken();
+        setCurrentUserId(uid ? Number(uid) : null);
+      } catch (e) {
+        console.warn("Failed to get user id from token cookie", e);
       }
     }
   }, []);

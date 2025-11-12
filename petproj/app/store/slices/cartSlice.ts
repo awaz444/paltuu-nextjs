@@ -1,5 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import toast from "react-hot-toast";
+import { getUserIdFromToken } from "@/utils/authClient";
+import { getGuestSessionId } from "@/utils/guest";
 
 //
 // 🛒 Interfaces
@@ -38,25 +40,21 @@ export const fetchCart = createAsyncThunk<
   void,
   { rejectValue: string }
 >("cart/fetchCart", async (_, { rejectWithValue }) => {
-  try {
-    // ✅ Prioritize userId from localStorage if user is logged in
+    try {
+    // ✅ Prioritize userId from auth token cookie if user is logged in
     let userId: string | null = null;
     let guestToken: string | null = null;
 
     if (typeof window !== "undefined") {
-      const userString = localStorage.getItem("user");
-      if (userString) {
-        try {
-          const user = JSON.parse(userString);
-          userId = user?.id || user?.user_id || null;
-        } catch (e) {
-          console.error("Failed to parse user from localStorage:", e);
-        }
+      try {
+        userId = getUserIdFromToken();
+      } catch (e) {
+        console.warn("Failed to get user id from token cookie", e);
       }
 
       // Only use guest session if user is NOT logged in
       if (!userId) {
-        guestToken = localStorage.getItem("guest_session_id");
+        guestToken = getGuestSessionId();
       }
     }
 
@@ -128,14 +126,10 @@ export const addToCart = createAsyncThunk<
     let sessionId = payload.sessionId;
 
     if (typeof window !== "undefined") {
-      const userString = localStorage.getItem("user");
-      if (userString) {
-        try {
-          const user = JSON.parse(userString);
-          userId = user?.id || user?.user_id || null;
-        } catch (e) {
-          console.error("Failed to parse user from localStorage:", e);
-        }
+      try {
+        userId = getUserIdFromToken();
+      } catch (e) {
+        console.warn("Failed to get user id from token cookie", e);
       }
     }
 

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
+import { getUserIdFromToken } from "@/utils/authClient";
 import toast from "react-hot-toast";
 
 interface CartProtectionOptions {
@@ -22,15 +23,14 @@ export const useCartProtection = (options: CartProtectionOptions = {}) => {
 
     const checkCart = async () => {
       try {
-        // Get user ID if logged in
+        // Get user ID from auth token cookie if present
         let userId: string | null = null;
         if (typeof window !== "undefined") {
-          const userString = localStorage.getItem("user");
-          if (userString) {
-            try {
-              const user = JSON.parse(userString);
-              userId = user?.id || user?.user_id || null;
-            } catch {}
+          try {
+            userId = getUserIdFromToken();
+          } catch (e) {
+            console.warn("Failed to get user id from token", e);
+            userId = null;
           }
         }
 

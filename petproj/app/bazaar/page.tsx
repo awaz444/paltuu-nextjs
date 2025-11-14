@@ -152,7 +152,7 @@ const brands = [
     name: "Royal Canin",
     slug: "royal-canin",
     image:
-      "royal canine gemini.jpg",
+      "royal canine gemini.png",
     description: "Veterinary nutrition leader",
     longDescription:
       "Royal Canin is the global leader in veterinary nutrition, offering scientifically formulated diets for dogs and cats. With over 50 years of expertise, we provide breed-specific, size-specific, and health-focused nutrition solutions backed by veterinary research and nutritional science.",

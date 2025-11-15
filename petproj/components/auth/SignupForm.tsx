@@ -206,7 +206,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                 return;
             }
 
-            router.push("/login");
+            router.push("/auth");
         } catch (error) {
             setGeneralError("An unexpected error occurred. Please try again.");
         } finally {

@@ -281,7 +281,7 @@ const OrderConfirmedContent = () => {
             For support, visit <a href="https://www.paltuu.pk" style="color: #a03048; text-decoration: none; font-weight: bold;">paltuu.pk</a> or contact us at notifypaltuu@gmail.com
           </p>
           <p style="margin: 8px 0 0 0; font-size: 12px; color: #666; line-height: 1.5;">
-            Policies: 
+            Policies:
             <a href="https://www.paltuu.pk/refund&return-policy" style="color: #a03048; text-decoration: none; font-weight: bold;">Return & Refund Policy</a>
             ·
             <a href="https://www.paltuu.pk/shipping-policy" style="color: #a03048; text-decoration: none; font-weight: bold;">Shipping & Service Policy</a>
@@ -958,7 +958,7 @@ const OrderConfirmedContent = () => {
               offers.
             </p>
             <button
-              onClick={() => router.push("/login")}
+              onClick={() => router.push("/auth")}
               className="px-8 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors duration-200 shadow-lg"
             >
               Login / Sign Up

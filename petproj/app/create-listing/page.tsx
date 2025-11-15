@@ -19,16 +19,16 @@ import { useSession } from "next-auth/react";
 const { Panel } = Collapse;
 
 export default function CreatePetListing() {
-    
+
     const router = useRouter();
     const dispatch = useDispatch<AppDispatch>();
     const { cities } = useSelector((state: RootState) => state.cities);
     const { categories } = useSelector((state: RootState) => state.categories);
-    
+
     // Auth hooks
     const { isAuthenticated, user } = useAuth();
     const { status } = useSession();
-    
+
     // Step state
     const [currentStep, setCurrentStep] = useState(1);
     // Form state
@@ -77,7 +77,7 @@ export default function CreatePetListing() {
     // Authentication check - redirect if not authenticated
     useEffect(() => {
         if (status !== "loading" && !isAuthenticated) {
-            router.push("/login");
+            router.push("/auth");
         }
     }, [isAuthenticated, status, router]);
 
@@ -189,7 +189,7 @@ export default function CreatePetListing() {
 
         if (!user?.id) {
             message.error("Authentication required. Please log in.");
-            router.push("/login");
+            router.push("/auth");
             return;
         }
 

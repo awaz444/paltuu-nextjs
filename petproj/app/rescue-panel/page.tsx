@@ -20,7 +20,7 @@ const ShelterProfileContent = dynamic(() => import('../../components/ShelterProf
 import { UploadOutlined, UnorderedListOutlined, UserOutlined, BellOutlined, FileTextOutlined, PlusOutlined, HomeOutlined } from "@ant-design/icons";
 
 export default function RescuePanel() {
-  
+
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ export default function RescuePanel() {
     const check = () => {
       if (!isAuthenticated || !user) {
         message.warning("Please login to access the rescue panel");
-        router.push("/login");
+        router.push("/auth");
         return;
       }
       if (user.role !== "shelter admin") {
@@ -49,14 +49,14 @@ export default function RescuePanel() {
   useEffect(() => {
     const fetchEntityData = async () => {
       if (!user?.id && !user?.user_id) return;
-      
+
       try {
         const userId = user.id || user.user_id;
         console.log('Fetching shelter entity data for user ID:', userId);
         const response = await fetch(`/api/user-shops-shelters?user_id=${userId}`);
         const data = await response.json();
         console.log('Shelter entity response:', data);
-        
+
         if (data.success && data.entity) {
           setEntityData({
             id: data.entity.id,
@@ -332,7 +332,7 @@ function MyApplicationsContent() {
   const handleApprove = async (applicationId: number) => {
     try {
       const response = await fetch(`/api/accept-adoption-application/${applicationId}`, { method: "POST" });
-      
+
       if (response.ok) {
         setApplications(prev => prev.filter(app => app.application_id !== applicationId));
         message.success('Application approved successfully!');
@@ -348,7 +348,7 @@ function MyApplicationsContent() {
   const handleReject = async (applicationId: number) => {
     try {
       const response = await fetch(`/api/reject-adoption-application/${applicationId}`, { method: "POST" });
-      
+
       if (response.ok) {
         setApplications(prev => prev.filter(app => app.application_id !== applicationId));
         message.success('Application rejected');
@@ -441,7 +441,7 @@ function MyApplicationsContent() {
             >
               {expandedApplication === app.application_id ? "Show Less" : "Show Details"}
             </button>
-            
+
             {app.status === "pending" && (
               <div className="flex gap-2">
                 <button

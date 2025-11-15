@@ -171,7 +171,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
         if (!isAuthenticated || !user?.id) {
             message.info("Please log in to apply for adoption");
-            router.push("/login");
+            router.push("/auth");
             return;
         }
 
@@ -960,7 +960,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                     }
                 `}>
                                 <div className="flex items-start mb-4">
-                              
+
                                     <div className="text-gray-800 text-base leading-relaxed">
                                         <div
                                             dangerouslySetInnerHTML={{

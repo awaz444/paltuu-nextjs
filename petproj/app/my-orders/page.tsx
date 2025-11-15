@@ -68,7 +68,7 @@ const MyOrdersPage = () => {
   useEffect(() => {
     // Redirect to login if not authenticated
     if (status !== "loading" && !isAuthenticated) {
-      router.push("/login?error=Please log in to view your orders");
+      router.push("/auth?error=Please log in to view your orders");
       return;
     }
 
@@ -88,7 +88,7 @@ const MyOrdersPage = () => {
 
         if (!res.ok) {
           if (res.status === 401) {
-            router.push('/login');
+            router.push('/auth');
             return;
           }
           throw new Error("Failed to fetch orders");

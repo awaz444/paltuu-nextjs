@@ -164,7 +164,7 @@ const AdminOrdersPage = () => {
           <h2 className="text-lg font-semibold mb-4">Access denied</h2>
           <p className="text-sm text-gray-600 mb-4">You must be signed in as an admin to view this page.</p>
           <div className="flex justify-center gap-3">
-            <button onClick={() => router.push('/login')} className="px-4 py-2 bg-blue-600 text-white rounded">Sign in</button>
+            <button onClick={() => router.push('/auth')} className="px-4 py-2 bg-blue-600 text-white rounded">Sign in</button>
             <button onClick={() => router.push('/')} className="px-4 py-2 border rounded">Go Home</button>
           </div>
         </div>

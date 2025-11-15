@@ -25,15 +25,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const [isEmailFocused, setIsEmailFocused] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        const { role } = JSON.parse(storedUser);
-        redirectBasedOnRole(role);
-      }
-    }
-  }, [isAuthenticated, router]);
+  // Redirect is now handled by AuthContext.login() - no need for localStorage
 
   const redirectBasedOnRole = (role: string) => {
     if (role === "vet") router.push("/vet-panel");
@@ -60,10 +52,9 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           role,
           profile_image_url: profile_image_url || "/default-avatar.png",
         };
-        localStorage.setItem("user", JSON.stringify(userDetails));
-        login(userDetails);
+        // AuthContext.login() now handles all state and redirection
+        await login(userDetails);
         toast.success("Login successful!");
-        redirectBasedOnRole(userDetails.role);
       }
     } catch (error: any) {
       console.error("Login failed:", error.message);

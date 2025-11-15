@@ -192,7 +192,7 @@ const RescueRegisterContent = () => {
             if (result.success) {
                 toast.success("Registration completed successfully!");
                 // Redirect to login or dashboard
-                router.push("/login");
+                router.push("/auth");
             } else {
                 throw new Error(result.error || "Registration failed");
             }

@@ -1,10 +1,12 @@
-'use client';
+"use client";
 
-import Navbar from '@/components/navbar';
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
-import { formatDistanceToNow, parseISO } from 'date-fns';
+import Navbar from "@/components/navbar";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
+import { formatDistanceToNow, parseISO } from "date-fns";
+import { useAuth } from "@/context/AuthContext";
+import { MoonLoader } from "react-spinners";
 
 interface Notification {
   notification_id: string;
@@ -15,59 +17,62 @@ interface Notification {
 }
 
 const NotificationsPage = () => {
-  const [userId, setUserId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  
+  const { user, isAuthenticated } = useAuth();
+  const [primaryColor, setPrimaryColor] = useState("#000000");
 
+  // Fetch notifications when authenticated using AuthContext (My Listings convention)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const userString = localStorage.getItem('user');
-      if (!userString) {
-        setError('User data not found in local storage');
-        setLoading(false);
-        return;
-      }
-
-      const user = JSON.parse(userString);
-      const user_id = user?.id;
-      if (!user_id) {
-        setError('User ID is missing from the user object');
-        setLoading(false);
-        return;
-      }
-
-      setUserId(user_id);
+    if (!isAuthenticated || !user?.id) {
+      setLoading(false);
+      return;
     }
-  }, []);
 
-  useEffect(() => {
-    if (userId) {
-      fetchNotifications(userId);
-    }
-  }, [userId]);
+    const fetchNotifications = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch("/api/get-notifications-by-id", {
+          method: "GET",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
 
-  const fetchNotifications = async (userId: string) => {
-    setLoading(true);
-    setError(null);
+        if (response.status === 401) {
+          // Unauthorized – stay on page; show error
+          setError("Unauthorized. Please log in.");
+          return;
+        }
 
-    try {
-      const response = await fetch(`/api/get-notifications-by-id/${userId}`);
-      if (response.ok) {
+        if (!response.ok) {
+          setError("Failed to fetch notifications");
+          return;
+        }
+
         const data: Notification[] = await response.json();
         setNotifications(data);
-      } else {
-        setError('Failed to fetch notifications');
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+        setError("Failed to fetch notifications");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
-      setError('Failed to fetch notifications');
-    } finally {
-      setLoading(false);
+    };
+
+    fetchNotifications();
+  }, [user?.id, isAuthenticated, router]);
+
+  // Derive primary color for spinner display (same convention as My Listings)
+  useEffect(() => {
+    const rootStyles = getComputedStyle(document.documentElement);
+    const color = rootStyles.getPropertyValue("--primary-color").trim();
+    if (color) {
+      setPrimaryColor(color);
     }
-  };
+  }, []);
 
   const handleNotificationClick = async (notification: Notification) => {
     try {
@@ -83,54 +88,58 @@ const NotificationsPage = () => {
         );
 
         await fetch(`/api/mark-notification-read/${notification.notification_id}`, {
-          method: 'PUT',
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
         });
       }
 
       switch (notification.notification_type) {
-        case 'new_listing':
-          router.push('/admin-pet-approval');
+        case "new_listing":
+          router.push("/admin-pet-approval");
           break;
-        case 'application_type':
-          userId && router.push(`/my-listings`);
+        case "application_type":
+          router.push(`/my-listings`);
           break;
-        case 'review_type':
-          router.push('/vet-reviews-summary');
+        case "review_type":
+          router.push("/vet-reviews-summary");
           break;
-        case 'verification_type':
-          router.push('/admin-approve-vets');
+        case "verification_type":
+          router.push("/admin-approve-vets");
           break;
         default:
           console.warn(`Unknown notification type: ${notification.notification_type}`);
       }
     } catch (err) {
-      console.error('Error handling notification click:', err);
+      console.error("Error handling notification click:", err);
     }
   };
 
   const handleMarkAllAsRead = async () => {
-    if (!userId) return;
-    
     // Store the current state of unread notifications
-    const currentUnreadNotifications = notifications.filter(n => !n.is_read);
-    
+    const currentUnreadNotifications = notifications.filter((n) => !n.is_read);
+
     try {
       // Optimistic update
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-      
-      const response = await fetch(`/api/mark-all-notifications-read/${userId}`, {
-        method: 'PUT',
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+
+      const response = await fetch(`/api/mark-all-notifications-read`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
       });
-      
-      if (!response.ok) throw new Error('Failed to mark all as read');
+
+      if (!response.ok) throw new Error("Failed to mark all as read");
     } catch (err) {
       console.error(err);
       // Revert optimistic update for previously unread notifications
-      setNotifications(prev => prev.map(n => 
-        currentUnreadNotifications.some(un => un.notification_id === n.notification_id) 
-          ? { ...n, is_read: false } 
-          : n
-      ));
+      setNotifications((prev) =>
+        prev.map((n) =>
+          currentUnreadNotifications.some((un) => un.notification_id === n.notification_id)
+            ? { ...n, is_read: false }
+            : n
+        )
+      );
     }
   };
 
@@ -141,7 +150,13 @@ const NotificationsPage = () => {
 
   return (
     <>
-      
+      {/* Authentication guard matching My Listings convention */}
+      {!isAuthenticated || !user ? (
+        <div className="flex flex-col justify-center items-center min-h-screen text-center">
+          <MoonLoader size={30} color={primaryColor} />
+          <p className="mt-4 text-gray-600">Please log in to view your notifications.</p>
+        </div>
+      ) : (
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
   {/* Notifications Header */}
   <header className="bg-white text-primary border border-1 border-primary p-8 rounded-2xl shadow-lg mb-10">
@@ -161,7 +176,7 @@ const NotificationsPage = () => {
         </div>
       </div>
       
-      {notifications.some(n => !n.is_read) && (
+      {/* {notifications.some(n => !n.is_read) && (
         <button 
           onClick={handleMarkAllAsRead}
           className="px-5 py-2.5 bg-primary text-white rounded-full hover:bg-primary/90 transition-all flex items-center gap-2 font-small shadow-md whitespace-nowrap"
@@ -171,21 +186,15 @@ const NotificationsPage = () => {
           </svg>
           Mark all as read
         </button>
-      )}
+      )} */}
     </div>
   </header>
 
 
 
         {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div 
-                key={i} 
-                className="h-20 bg-gray-100 animate-pulse rounded-lg"
-                data-testid="loading-skeleton"
-              />
-            ))}
+          <div className="flex justify-center items-center min-h-screen">
+            <MoonLoader size={30} color={primaryColor} />
           </div>
         ) : error ? (
           <div className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-100">
@@ -236,6 +245,7 @@ const NotificationsPage = () => {
           </div>
         )}
       </div>
+      )}
     </>
   );
 };

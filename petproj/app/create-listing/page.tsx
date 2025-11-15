@@ -13,20 +13,24 @@ import { Image, Upload, message, Collapse } from "antd";
 import type { UploadFile, UploadProps } from "antd";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import axios from "axios";
-import LoginModal from "@/components/LoginModal";
+import { useAuth } from "@/context/AuthContext";
+import { useSession } from "next-auth/react";
 
 const { Panel } = Collapse;
 
 export default function CreatePetListing() {
-    
+
     const router = useRouter();
     const dispatch = useDispatch<AppDispatch>();
     const { cities } = useSelector((state: RootState) => state.cities);
     const { categories } = useSelector((state: RootState) => state.categories);
 
+    // Auth hooks
+    const { isAuthenticated, user } = useAuth();
+    const { status } = useSession();
+
     // Step state
     const [currentStep, setCurrentStep] = useState(1);
-
     // Form state
     const [title, setTitle] = useState("");
     const [petType, setPetType] = useState("");
@@ -36,7 +40,6 @@ export default function CreatePetListing() {
     const [price, setPrice] = useState("");
     const [paymentFrequency, setPaymentFrequency] = useState("");
     const [sex, setSex] = useState("male");
-
     // Fields moved to accordion
     const [breed, setBreed] = useState("");
     const [age, setAge] = useState<number | null>(null);
@@ -52,7 +55,6 @@ export default function CreatePetListing() {
     const [healthIssues, setHealthIssues] = useState("");
     const [ageError, setAgeError] = useState<string | null>(null);
     const [monthsError, setMonthsError] = useState<string | null>(null);
-
     // Track if sliders have been touched
     const [energyLevelTouched, setEnergyLevelTouched] = useState(false);
     const [cuddlinessLevelTouched, setCuddlinessLevelTouched] = useState(false);
@@ -61,10 +63,6 @@ export default function CreatePetListing() {
     const [fileList, setFileList] = useState<UploadFile[]>([]);
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState("");
-
-    // Auth state
-    const [showLoginModal, setShowLoginModal] = useState(false);
-    const [userId, setUserId] = useState<number | null>(null);
 
     // Loading states
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,38 +74,12 @@ export default function CreatePetListing() {
         dispatch(fetchPetCategories());
     }, [dispatch]);
 
+    // Authentication check - redirect if not authenticated
     useEffect(() => {
-        const checkUser = () => {
-            const userString = localStorage.getItem("user");
-            if (!userString) {
-                setShowLoginModal(true);
-                return;
-            }
-
-            try {
-                const user = JSON.parse(userString);
-                const user_id = user?.id;
-                if (!user_id) {
-                    setShowLoginModal(true);
-                    return;
-                }
-                setUserId(user_id);
-            } catch (error) {
-                setShowLoginModal(true);
-            }
-        };
-
-        checkUser();
-    }, []);
-
-    const handleLoginSuccess = () => {
-        setShowLoginModal(false);
-        const userString = localStorage.getItem("user");
-        if (userString) {
-            const user = JSON.parse(userString);
-            setUserId(user?.id);
+        if (status !== "loading" && !isAuthenticated) {
+            router.push("/auth");
         }
-    };
+    }, [isAuthenticated, status, router]);
 
     const handleAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -215,8 +187,9 @@ export default function CreatePetListing() {
             return;
         }
 
-        if (!userId) {
-            setShowLoginModal(true);
+        if (!user?.id) {
+            message.error("Authentication required. Please log in.");
+            router.push("/auth");
             return;
         }
 
@@ -228,7 +201,7 @@ export default function CreatePetListing() {
 
             // First create the pet
             const newPet = {
-                owner_id: userId,
+                owner_id: parseInt(user.id),
                 pet_name: title || null,
                 pet_type: petType ? Number(petType) : null,
                 pet_breed: breed || null,
@@ -314,15 +287,26 @@ export default function CreatePetListing() {
         setCuddlinessLevel(value);
     };
 
+    // Show loading state while authentication is being determined
+    if (status === "loading") {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="text-lg">Loading...</div>
+            </div>
+        );
+    }
+
+    // Show loading state if not authenticated (will redirect)
+    if (!isAuthenticated || !user) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="text-lg">Redirecting to login...</div>
+            </div>
+        );
+    }
+
     return (
         <>
-            <LoginModal
-                visible={showLoginModal}
-                onSuccess={handleLoginSuccess}
-                onClose={() => setShowLoginModal(false)}
-                mandatory
-            />
-            
             <div
                 className="fullBody min-h-screen"
                 style={{ maxWidth: "90%", margin: "0 auto" }}>

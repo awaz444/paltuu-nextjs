@@ -20,6 +20,7 @@ import { clearCart } from "@/app/store/slices/cartSlice";
 import { fetchCart } from "@/app/store/slices/cartSlice";
 import { useRouter } from "next/navigation";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
+import { getUserIdFromToken, getTokenFromCookie, decodeJwtPayload } from "@/utils/authClient";
 import { FaUniversity } from "react-icons/fa";
 import { useCartProtection } from "@/hooks/useCartProtection";
 import { useAuth } from "@/context/AuthContext";
@@ -36,9 +37,8 @@ interface CartItem {
 }
 
 const CheckoutPage = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [cart, setCart] = useState<any | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [loadingCartData, setLoadingCartData] = useState(false);
 
   const [promoCode, setPromoCode] = useState("");
@@ -89,19 +89,21 @@ useEffect(() => {
           const sessionId = getOrCreateGuestSessionId();
           const cartTotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
 
-          // Get user info from localStorage
+          // Get user info from auth token cookie if available
           let userName, userEmail, userId;
           if (typeof window !== "undefined") {
-            const storedUser = localStorage.getItem("user");
-            if (storedUser) {
-              try {
-                const userData = JSON.parse(storedUser);
-                userId = userData.user_id || userData.id;
-                userName = userData.name;
-                userEmail = userData.email;
-              } catch (e) {
-                console.warn("Failed to parse user from localStorage", e);
+            try {
+              const token = getTokenFromCookie();
+              if (token) {
+                const payload = decodeJwtPayload(token);
+                if (payload) {
+                  userId = payload.user_id || payload.id;
+                  userName = payload.name;
+                  userEmail = payload.email;
+                }
               }
+            } catch (e) {
+              console.warn("Failed to parse user from token cookie", e);
             }
           }
 
@@ -140,8 +142,8 @@ useEffect(() => {
         const sessionId = getOrCreateGuestSessionId();
         const params = new URLSearchParams();
 
-        if (currentUserId) {
-          params.append('userId', currentUserId.toString());
+        if (user?.id) {
+          params.append('userId', user.id.toString());
         } else if (sessionId) {
           params.append('sessionId', sessionId);
         }
@@ -159,32 +161,18 @@ useEffect(() => {
     };
 
     fetchCartData();
-  }, [cartItems.length, currentUserId]);
-  // Get user ID from localStorage on mount
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        try {
-          const userData = JSON.parse(storedUser);
-          setCurrentUserId(userData.user_id || userData.id || null);
-        } catch (e) {
-          console.warn("Failed to parse user from localStorage", e);
-        }
-      }
-    }
-  }, []);
+  }, [cartItems.length, user?.id]);
 
   // Load saved shipping info for logged-in users
   useEffect(() => {
-    if (!currentUserId || cartItems.length === 0) return; // skip if cart is empty
+    if (!user?.id || cartItems.length === 0) return; // skip if cart is empty
 
     let mounted = true;
     (async () => {
       setLoadingShippingInfo(true);
       try {
         const res = await fetch(
-          `/api/bazaar/shipping-info?userId=${currentUserId}`
+          `/api/bazaar/shipping-info?userId=${user.id}`
         );
         if (!res.ok) return;
 
@@ -211,7 +199,7 @@ useEffect(() => {
     return () => {
       mounted = false;
     };
-  }, [currentUserId, cartItems.length]);
+  }, [user?.id, cartItems.length]);
 
   const subtotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.qty,
@@ -321,7 +309,7 @@ useEffect(() => {
 
   // Save shipping info for logged-in users
   const saveShippingInfo = async () => {
-    if (!currentUserId) return;
+    if (!user?.id) return;
 
     try {
       const cleanPhone = phone.replace(/\s/g, "");
@@ -330,7 +318,7 @@ useEffect(() => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: currentUserId,
+          userId: user.id,
           email,
           fullName,
           phone: cleanPhone,
@@ -410,7 +398,7 @@ useEffect(() => {
               {/* Left Section - Shipping & Payment - 60% width */}
               <div className="lg:col-span-3 space-y-6">
                 {/* Login Teaser for Guest Users */}
-                {!currentUserId && (
+                {!isAuthenticated && (
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6 shadow-sm">
                     <div className="flex items-start gap-4">
                       <div className="flex-shrink-0 w-12 h-12 bg-primary rounded-full flex items-center justify-center">
@@ -438,7 +426,7 @@ useEffect(() => {
                         </p>
                         <button
                           onClick={() =>
-                            router.push("/login?redirect=/checkout")
+                            router.push("/auth?redirect=/checkout")
                           }
                           className="px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors font-medium"
                         >
@@ -450,7 +438,7 @@ useEffect(() => {
                 )}
 
                 {/* Saved Info Indicator for Logged-in Users */}
-                {currentUserId && shippingInfoLoaded && (
+                {isAuthenticated && shippingInfoLoaded && (
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-4 shadow-sm">
                     <div className="flex items-center gap-3">
                       <CheckCircle className="text-green-600" size={24} />
@@ -802,7 +790,7 @@ useEffect(() => {
                         const sessionId = getOrCreateGuestSessionId();
                         const cleanPhone = phone.replace(/\s/g, "");
 
-                        if (currentUserId) {
+                        if (user?.id) {
                           await saveShippingInfo();
                         }
 
@@ -840,7 +828,7 @@ useEffect(() => {
                         const sessionId = getOrCreateGuestSessionId();
                         const cleanPhone = phone.replace(/\s/g, "");
 
-                        if (currentUserId) {
+                        if (user?.id) {
                           await saveShippingInfo();
                         }
 

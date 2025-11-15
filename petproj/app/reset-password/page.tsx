@@ -68,7 +68,7 @@ function ResetPasswordContent() {
 
                 // Redirect after showing toasts
                 setTimeout(() => {
-                    router.push("/login");
+                    router.push("/auth");
                 }, 3500);
             }
         } catch (error: any) {

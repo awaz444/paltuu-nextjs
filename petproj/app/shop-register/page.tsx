@@ -135,7 +135,7 @@ const ShopRegisterContent = () => {
       if (result.success) {
         toast.success("Shop registration completed successfully!");
         // Redirect to login or dashboard
-        router.push("/login");
+        router.push("/auth");
       } else {
         throw new Error(result.error || "Registration failed");
       }

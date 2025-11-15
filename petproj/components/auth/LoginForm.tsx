@@ -78,7 +78,6 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         login(userDetails);
 
         toast.success("Login successful!");
-        redirectBasedOnRole(userDetails.role);
       }
     } catch (error: any) {
       console.error("Login failed:", error.message);

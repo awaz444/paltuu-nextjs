@@ -9,6 +9,7 @@ import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
 import Link from "next/link";
 import { Collapse } from "antd";
+import { useAuth } from "@/context/AuthContext";
 import {
     CheckCircleOutlined,
     EnvironmentOutlined,
@@ -58,55 +59,31 @@ const ADOPTION_CHECKLIST = [
 ];
 
 const UserListingsPage = () => {
+    const { user, isAuthenticated } = useAuth();
     const [listings, setListings] = useState<Pet[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [userId, setUserId] = useState<number | null>(null);
     const [primaryColor, setPrimaryColor] = useState("#000000");
 
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const userString = localStorage.getItem("user");
-            if (!userString) {
-                setError("User data not found in local storage");
-                setLoading(false);
-                return;
-            }
-
-            const user = JSON.parse(userString);
-            const user_id = user?.id;
-            if (!user_id) {
-                setError("User ID is missing from the user object");
-                setLoading(false);
-                return;
-            }
-
-            const numericUserId = Number(user_id);
-            if (isNaN(numericUserId)) {
-                setError("User ID is not a valid number");
-                setLoading(false);
-                return;
-            }
-
-            setUserId(numericUserId);
-            setLoading(false);
+        if (!isAuthenticated || !user?.id) {
+            setIsLoading(false);
+            return;
         }
-    }, []);
-
-    
-
-    useEffect(() => {
-        if (!userId) return;
 
         const fetchData = async () => {
             try {
                 setIsLoading(true);
 
-                // Fetch regular listings
-                const listingsResponse = await fetch(
-                    `/api/my-listings/${userId}`
-                );
+                // Fetch regular listings using token-based authentication
+                const listingsResponse = await fetch('/api/my-listings', {
+                    method: 'GET',
+                    credentials: 'include', // Include cookies for authentication
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
                 if (!listingsResponse.ok) {
                     throw new Error("Failed to fetch listings");
                 }
@@ -125,7 +102,7 @@ const UserListingsPage = () => {
         };
 
         fetchData();
-    }, [userId]);
+    }, [user?.id, isAuthenticated]);
 
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);
@@ -134,6 +111,16 @@ const UserListingsPage = () => {
             setPrimaryColor(color);
         }
     }, []);
+
+    // Authentication check - moved after all hooks
+    if (!isAuthenticated || !user) {
+        return (
+            <div className="flex flex-col justify-center items-center min-h-screen text-center">
+                <MoonLoader size={30} color={primaryColor} />
+                <p className="mt-4 text-gray-600">Please log in to view your listings.</p>
+            </div>
+        );
+    }
 
     if (isLoading)
         return (

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useState, useEffect, ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 import { getUserIdFromToken, decodeJwtPayload } from "@/utils/authClient";
 import { clearGuestSessionId } from "@/utils/guest";
@@ -35,33 +35,103 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+
+  // Debug: Log state changes
+  useEffect(() => {
+    console.log("🔄 Auth state changed:", { isAuthenticated, user: user?.email, method: user?.method });
+  }, [isAuthenticated, user]);
+
+  // Function to validate token exists and is valid
+  const validateToken = async () => {
+    if (typeof window === "undefined") return false;
+
+    try {
+      // First check if token exists in cookies
+      const tokenUserId = getUserIdFromToken();
+      if (!tokenUserId) {
+        console.log("❌ No token found in cookies");
+        return false;
+      }
+
+      // Verify token with server (with retry logic)
+      let retries = 2;
+      while (retries > 0) {
+        try {
+          const response = await fetch("/api/auth/verify-token", {
+            credentials: 'include',
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache',
+            },
+          });
+
+          if (!response.ok) {
+            console.log("❌ Server validation failed:", response.status);
+            return false;
+          }
+
+          const data = await response.json();
+          const isValid = data.valid === true;
+          console.log("Server validation result:", isValid);
+          return isValid;
+        } catch (fetchError) {
+          retries--;
+          if (retries === 0) throw fetchError;
+          await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retry
+        }
+      }
+      return false;
+    } catch (e) {
+      console.error("Token validation error:", e);
+      return false;
+    }
+  };
+
+  // Periodic token validation - DISABLED to prevent logout loops
+  // Token will be validated on visibility change and on protected route access via middleware
+  // useEffect(() => {
+  //   if (user?.method === "api" && isAuthenticated) {
+  //     ... validation logic ...
+  //   }
+  // }, [user?.method, isAuthenticated]);
+
+  // Visibility change validation - DISABLED to prevent logout loops
+  // Token validation will happen on API calls which return 401 if token is invalid
+  // useEffect(() => {
+  //   if (typeof window === "undefined" || user?.method !== "api" || !isAuthenticated) return;
+  //   ... visibility validation logic ...
+  // }, [user?.method, isAuthenticated]);
+
+  // Initial token hydration - only run once on mount
+  useEffect(() => {
+    if (typeof window === "undefined" || user !== null) return;
+
+    try {
+      const tokenUserId = getUserIdFromToken();
+      if (tokenUserId) {
+        // We have a token payload; use it as a lightweight user until we fetch DB profile
+        const token = (document.cookie.match(new RegExp('(^|; )' + 'token' + '=([^;]*)')) || [])[2];
+        const payload = decodeJwtPayload(token ? decodeURIComponent(token) : null);
+        const minimalUser = payload
+          ? ({ id: payload.id || payload.user_id, email: payload.email, name: payload.name, role: payload.role || "guest", profile_image_url: payload.profile_image_url, method: "api" } as any)
+          : null;
+        if (minimalUser) {
+          console.log("✅ Hydrated user from token on mount");
+          setUser(minimalUser);
+          setIsAuthenticated(true);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to hydrate user from token:", e);
+    }
+  }, []); // Run only once on mount
 
   useEffect(() => {
     console.log("🔎 useSession status:", status);
     console.log("🔎 NextAuth session.user:", session?.user);
-
-    // Try to hydrate user from JWT token cookie if present (client-side only)
-    if (typeof window !== "undefined") {
-      try {
-        const tokenUserId = getUserIdFromToken();
-        if (tokenUserId && !user) {
-          // We have a token payload; use it as a lightweight user until we fetch DB profile
-          const token = (document.cookie.match(new RegExp('(^|; )' + 'token' + '=([^;]*)')) || [])[2];
-          const payload = decodeJwtPayload(token ? decodeURIComponent(token) : null);
-          const minimalUser = payload
-            ? ({ id: payload.id || payload.user_id, email: payload.email, name: payload.name, role: payload.role || "guest", profile_image_url: payload.profile_image_url, method: "api" } as any)
-            : null;
-          if (minimalUser) {
-            setUser(minimalUser);
-            setIsAuthenticated(true);
-          }
-        }
-      } catch (e) {
-        // ignore token parse errors
-      }
-    }
 
     if (status === "authenticated" && session?.user) {
     const googleUserId = (session.user as any).user_id || (session.user as any).id;
@@ -119,11 +189,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // clear guest session cookie to avoid cart conflicts
           try { clearGuestSessionId(); } catch {}
 
-        // Redirect shop/shelter to panels after login
+        // Redirect shop/shelter to panels after login - check for callback URL first
         try {
-          const role = finalUser.role;
-          if (role === "shop admin") router.push("/shop-panel");
-          if (role === "shelter admin") router.push("/rescue-panel");
+          const urlParams = new URLSearchParams(window.location.search);
+          const callbackUrl = urlParams.get('callbackUrl');
+
+          if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
+            router.push(decodeURIComponent(callbackUrl));
+          } else {
+            const role = finalUser.role;
+            if (role === "shop admin") router.push("/shop-panel");
+            else if (role === "shelter admin") router.push("/rescue-panel");
+            else if (role === "vet") router.push("/vet-panel");
+            else if (role === "admin") router.push("/admin-panel");
+            else router.push("/browse-pets");
+          }
         } catch {}
       });
     }
@@ -159,10 +239,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       console.log("✅ Using database profile data for API user:", userWithDbData);
 
-      // Redirect on API login success
+      // Redirect on API login success - check for callback URL first
       try {
-        if (userWithDbData.role === "shop admin") router.push("/shop-panel");
-        if (userWithDbData.role === "shelter admin") router.push("/rescue-panel");
+        const urlParams = new URLSearchParams(window.location.search);
+        const callbackUrl = urlParams.get('callbackUrl');
+
+        if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
+          router.push(decodeURIComponent(callbackUrl));
+        } else if (userWithDbData.role === "shop admin") {
+          router.push("/shop-panel");
+        } else if (userWithDbData.role === "shelter admin") {
+          router.push("/rescue-panel");
+        } else if (userWithDbData.role === "vet") {
+          router.push("/vet-panel");
+        } else if (userWithDbData.role === "admin") {
+          router.push("/admin-panel");
+        } else {
+          router.push("/browse-pets");
+        }
       } catch {}
       return;
     }
@@ -186,10 +280,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   console.log("✅ Using login response data for API user:", userWithMethod);
 
-  // Redirect on API login success
+  // Redirect on API login success - check for callback URL first
   try {
-    if (userWithMethod.role === "shop admin") router.push("/shop-panel");
-    if (userWithMethod.role === "shelter admin") router.push("/rescue-panel");
+    const urlParams = new URLSearchParams(window.location.search);
+    const callbackUrl = urlParams.get('callbackUrl');
+
+    if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
+      router.push(decodeURIComponent(callbackUrl));
+    } else if (userWithMethod.role === "shop admin") {
+      router.push("/shop-panel");
+    } else if (userWithMethod.role === "shelter admin") {
+      router.push("/rescue-panel");
+    } else if (userWithMethod.role === "vet") {
+      router.push("/vet-panel");
+    } else if (userWithMethod.role === "admin") {
+      router.push("/admin-panel");
+    } else {
+      router.push("/browse-pets");
+    }
   } catch {}
 };
 
@@ -233,7 +341,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (user?.method === "google") {
         console.log("Executing Google logout flow");
         await nextAuthSignOut({
-          callbackUrl: "/login",
+          callbackUrl: "/auth",
           redirect: true,
         });
         return;
@@ -268,7 +376,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       } catch {}
 
-      window.location.href = "/login";
+      window.location.href = "/auth";
     } catch (error) {
       console.error("Logout error:", error);
       try { sessionStorage.clear(); } catch {}
@@ -279,7 +387,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
         });
       } catch {}
-      window.location.href = "/login";
+      window.location.href = "/auth";
     }
   };
 

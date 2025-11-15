@@ -7,7 +7,30 @@ export async function middleware(request: NextRequest) {
 
   // Define public paths that don't require authentication
   // Allow guest checkout and order confirmation without login
-  const isPublicPath = ['/login', '/sign-up', '/browse-pets', '/foster-pets', '/pet-care', '/llm', '/forgot-password', '/reset-password', '/checkout', '/order-confirmed'].includes(pathname);
+  const publicPaths = [
+    '/auth',
+    '/sign-up',
+    '/browse-pets',
+    '/foster-pets',
+    '/pet-care',
+    '/llm',
+    '/forgot-password',
+    '/reset-password',
+    '/checkout',
+    '/order-confirmed',
+    '/bazaar',
+    '/lost-and-found',
+    '/shelters',
+    '/shops',
+    '/about-us',
+    '/terms-and-conditions',
+    '/privacy-policy',
+    '/shipping-policy',
+    '/refund&return-policy',
+    '/',
+  ];
+
+  const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/api/');
 
   // Define admin-only paths
   const adminOnlyPaths = [
@@ -45,18 +68,18 @@ export async function middleware(request: NextRequest) {
           return NextResponse.redirect(new URL('/browse-pets', request.url));
         }
       } catch (error) {
-        return NextResponse.redirect(new URL('/login', request.url));
+        return NextResponse.redirect(new URL('/auth', request.url));
       }
     }
 
     if (!isAdmin && !customAuthToken) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/auth', request.url));
     }
   }
 
   if (!isAuthenticated && !isPublicPath) {
     const callbackUrl = encodeURIComponent(request.nextUrl.pathname);
-    return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, request.url));
+    return NextResponse.redirect(new URL(`/auth?callbackUrl=${callbackUrl}`, request.url));
   }
 
   return NextResponse.next();

@@ -9,7 +9,11 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
-                primary: "var(--primary-color)", // Use the CSS variable
+                primary: {
+                    DEFAULT: "var(--primary-color)", // Use the CSS variable
+                    dark: "var(--dark-color)",
+                    light: "var(--light-color)",
+                },
             },
             backgroundImage: {
                 "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

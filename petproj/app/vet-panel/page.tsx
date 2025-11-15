@@ -5,11 +5,11 @@ import { useAuth } from "../../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Card, Button, Spin, message } from "antd";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
-import { 
-  UserOutlined, 
-  ShopOutlined, 
-  FileTextOutlined, 
-  CalendarOutlined, 
+import {
+  UserOutlined,
+  ShopOutlined,
+  FileTextOutlined,
+  CalendarOutlined,
   StarOutlined,
   PlusOutlined,
   UnorderedListOutlined,
@@ -22,7 +22,7 @@ import VetScheduleTab from "../../components/VetScheduleTab";
 import VetReviewsTab from "../../components/VetReviewsTab";
 
 export default function VetPanel() {
-  
+
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -33,7 +33,7 @@ export default function VetPanel() {
     const check = () => {
       if (!isAuthenticated || !user) {
         message.warning("Please login to access the vet panel");
-        router.push("/login");
+        router.push("/auth");
         return;
       }
       if (user.role !== "vet") {

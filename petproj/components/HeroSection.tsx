@@ -48,7 +48,7 @@ const HeroSection = () => {
                     />
                 </div>
                 <a
-                    href="/login"
+                    href="/auth"
                     className="bg-white text-primary px-6 py-2 rounded-full font-semibold hover:bg-gray-100 transition-colors">
                     Login
                 </a>
@@ -520,7 +520,7 @@ const HeroSection = () => {
                                     alt="Cheeto – adoptable dog in Lahore"
                                     className="w-full aspect-square object-cover rounded-2xl"
                                 />
-                               
+
                             </div>
                             <div className="p-4">
                                 <div className="flex justify-between items-start">

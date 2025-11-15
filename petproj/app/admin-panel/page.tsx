@@ -5,6 +5,8 @@ import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import Link from "next/link";
 import Image from "next/image";
+import { useAuth } from "@/context/AuthContext";
+import { useSession } from "next-auth/react";
 
 interface UserProfileData {
     user_id: string;
@@ -17,37 +19,33 @@ interface UserProfileData {
 }
 
 const AdminPanel = () => {
-    
+    const { user } = useAuth();
+    const { data: session, status } = useSession();
 
-    
     const [userId, setUserId] = useState<string | null>(null);
     const [data, setData] = useState<UserProfileData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        // Get user_id from local storage
-const storedUser = localStorage.getItem("user");
-if (!storedUser) {
-    console.error("No user data found in local storage.");
-    setLoading(false);
-    return;
-}
+        // Get user_id from session (NO localStorage)
+        const currentUserId = user?.id || (session?.user as any)?.user_id || null;
 
-const parsedUser = JSON.parse(storedUser);
-const userId = parsedUser?.id;
-if (!userId) {
-    console.error("User ID is missing in the stored user data.");
-    setLoading(false);
-    return;
-}
+        if (!currentUserId) {
+            console.error("No user ID found in session.");
+            setLoading(false);
+            return;
+        }
 
-console.log(`Fetched user ID: ${userId}`);
+        setUserId(currentUserId);
+        console.log(`Fetched user ID: ${currentUserId}`);
 
         // Fetch user profile
         const fetchUserProfile = async () => {
+            if (!currentUserId) return;
+
             setLoading(true);
             try {
-                const res = await fetch(`/api/my-profile/${userId}`);
+                const res = await fetch(`/api/my-profile/${currentUserId}`);
                 if (!res.ok) {
                     throw new Error(
                         `Failed to fetch user data. Status: ${res.status}`
@@ -64,7 +62,7 @@ console.log(`Fetched user ID: ${userId}`);
         };
 
         fetchUserProfile();
-    }, []);
+    }, [user, session]);
 
 
     if (loading) {
@@ -89,39 +87,39 @@ console.log(`Fetched user ID: ${userId}`);
 
     return (
         <>
-            
-            <div className="bg-gray-100 min-h-screen px-6 py-8">
+
+            <div className="bg-gray-100 min-h-screen px-4 sm:px-6 lg:px-8 py-8">
                 {/* Personal Info Box */}
-                <div className="bg-white shadow-lg rounded-lg p-6 mb-6 relative border border-gray-200 hover:border-primary">
+                <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 mb-6 relative border border-gray-200 hover:border-primary">
                     <button
                         className="absolute top-4 right-4 w-6 h-6"
                         title="Edit Personal Info">
                         <img src="/pen.svg" alt="Edit" />
                     </button>
-                    <h3 className="text-xl font-bold mb-4 text-primary">
+                    <h3 className="text-lg sm:text-xl font-bold mb-4 text-primary">
                         Personal Information
                     </h3>
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-4">
                         <img
-                            className="w-24 h-24 rounded-full shadow-md"
+                            className="w-20 h-20 sm:w-24 sm:h-24 rounded-full shadow-md mx-auto sm:mx-0"
                             src={profile_image_url || "/placeholder.jpg"}
                             alt={name}
                         />
-                        <div>
-                            <p>
+                        <div className="flex-1 text-center sm:text-left">
+                            <p className="mb-2">
                                 <span className="font-bold">Name:</span> {name}
                             </p>
-                            <p className="mt-2">
-                                <span className="font-bold">Email:</span> {email}
+                            <p className="mb-2">
+                                <span className="font-bold">Email:</span> <span className="break-all">{email}</span>
                             </p>
-                            <p className="mt-2">
+                            <p className="mb-2">
                                 <span className="font-bold">City:</span> {city}
                             </p>
-                            <p className="mt-2">
+                            <p className="mb-2">
                                 <span className="font-bold">Date of Birth:</span>{" "}
                                 {dob}
                             </p>
-                            <p className="mt-2">
+                            <p className="mb-2">
                                 <span className="font-bold">Joined:</span>{" "}
                                 {new Date(created_at).toLocaleDateString()}
                             </p>
@@ -130,15 +128,15 @@ console.log(`Fetched user ID: ${userId}`);
                 </div>
 
 
-                {/* 2x2 Grid for Smaller Cards */}
+                {/* Grid for Action Cards */}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {/* Pets */}
                     <Link href="/admin-pet">
-                        <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
+                        <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 relative border border-gray-200 hover:border-primary transition-all cursor-pointer">
                             <button
                                 className="absolute top-4 right-4 w-6 h-6"
-                                title="Edit Pets">
+                                title="Go to Pets">
                                 <img
                                     src="/arrow-right.svg"
                                     alt="Details"
@@ -146,35 +144,35 @@ console.log(`Fetched user ID: ${userId}`);
                                 />
                             </button>
 
-                            <h4 className="text-lg font-bold text-primary mb-4">
+                            <h4 className="text-base sm:text-lg font-bold text-primary mb-4">
                                 Go to Pets
                             </h4>
-                            {/* Content for Pets */}
+                            <p className="text-sm text-gray-600">Manage all pet listings</p>
                         </div>
                     </Link>
 
-                    {/* Vets */}
+                    {/* Listing Approvals */}
                     <Link href="/admin-pet-approval">
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
+                    <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 relative border border-gray-200 hover:border-primary transition-all cursor-pointer">
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
-                            title="Edit Vets">
+                            title="Go to Approvals">
                             <img
                                 src="/arrow-right.svg"
                                 alt="Details"
                                 className="hover:text-primary"
                             />
                         </button>
-                        <h4 className="text-lg font-bold text-primary mb-4">
+                        <h4 className="text-base sm:text-lg font-bold text-primary mb-4">
                             Go to Listing Approvals
                         </h4>
-                        {/* Content for Vets */}
+                        <p className="text-sm text-gray-600">Review pending pet listings</p>
                     </div>
                     </Link>
 
                     {/* Users */}
                     <Link href="/admin-user">
-                        <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
+                        <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 relative border border-gray-200 hover:border-primary transition-all cursor-pointer">
                             <div className="absolute top-4 right-4 w-6 h-6">
                                 <img
                                     src="/arrow-right.svg"
@@ -182,49 +180,48 @@ console.log(`Fetched user ID: ${userId}`);
                                     className="hover:text-primary text-primary"
                                 />
                             </div>
-                                <h4 className="text-lg font-bold text-primary mb-4">
-                                    Go to Users
-                                </h4>
-
-                            {/* Content for Users */}
+                            <h4 className="text-base sm:text-lg font-bold text-primary mb-4">
+                                Go to Users
+                            </h4>
+                            <p className="text-sm text-gray-600">Manage user accounts</p>
                         </div>
                     </Link>
 
                     {/* Verification Applications */}
                     <Link href="/admin-approve-vets">
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
+                    <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 relative border border-gray-200 hover:border-primary transition-all cursor-pointer">
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
-                            title="Edit Verification Applications">
+                            title="Go to Verification">
                             <img
                                 src="/arrow-right.svg"
                                 alt="Details"
                                 className="hover:text-primary"
                             />
                         </button>
-                        <h4 className="text-lg font-bold text-primary mb-4">
+                        <h4 className="text-base sm:text-lg font-bold text-primary mb-4">
                             Go to Verification Applications
                         </h4>
-                        {/* Content for Verification Applications */}
+                        <p className="text-sm text-gray-600">Approve vet verifications</p>
                     </div>
                     </Link>
 
                     {/* Orders */}
                     <Link href="/orders">
-                    <div className="bg-white shadow-lg rounded-lg p-6 relative border border-gray-200 hover:border-primary">
+                    <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 relative border border-gray-200 hover:border-primary transition-all cursor-pointer">
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
-                            title="Edit Orders">
+                            title="Go to Orders">
                             <img
                                 src="/arrow-right.svg"
                                 alt="Details"
                                 className="hover:text-primary"
                             />
                         </button>
-                        <h4 className="text-lg font-bold text-primary mb-4">
+                        <h4 className="text-base sm:text-lg font-bold text-primary mb-4">
                             Go to Orders
                         </h4>
-                        {/* Content for Orders */}
+                        <p className="text-sm text-gray-600">View all marketplace orders</p>
                     </div>
                     </Link>
                 </div>

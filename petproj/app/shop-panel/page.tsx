@@ -20,7 +20,7 @@ const ShopProfileContent = dynamic(() => import('../../components/ShopProfileCon
 import { UploadOutlined, UnorderedListOutlined, UserOutlined, BellOutlined, FileTextOutlined, PlusOutlined, ShopOutlined } from "@ant-design/icons";
 
 export default function ShopPanel() {
-  
+
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ export default function ShopPanel() {
     const check = () => {
       if (!isAuthenticated || !user) {
         message.warning("Please login to access the shop panel");
-        router.push("/login");
+        router.push("/auth");
         return;
       }
       if (user.role !== "shop admin") {
@@ -49,14 +49,14 @@ export default function ShopPanel() {
   useEffect(() => {
     const fetchEntityData = async () => {
       if (!user?.id && !user?.user_id) return;
-      
+
       try {
         const userId = user.id || user.user_id;
         console.log('Fetching shop entity data for user ID:', userId);
         const response = await fetch(`/api/user-shops-shelters?user_id=${userId}`);
         const data = await response.json();
         console.log('Shop entity response:', data);
-        
+
         if (data.success && data.entity) {
           setEntityData({
             id: data.entity.id,

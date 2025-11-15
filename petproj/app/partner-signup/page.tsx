@@ -12,7 +12,7 @@ const PartnerSignup = () => {
     }, []);
 
     const handleBackToLogin = () => {
-        router.push("/login");
+        router.push("/auth");
     };
 
     const handleRoleSelect = (role: string) => {
@@ -84,7 +84,7 @@ const PartnerSignup = () => {
                     </p>
 
                     {/* Veterinarian Option */}
-                    <div 
+                    <div
                         className={`p-6 rounded-xl border-2 transition-all cursor-pointer ${selectedRole === "vet" ? "border-[#480777] bg-[#f5f0ff]" : "border-gray-200 hover:border-[#480777] hover:bg-[#f5f0ff]"}`}
                         onClick={() => handleRoleSelect("vet")}
                     >
@@ -108,7 +108,7 @@ const PartnerSignup = () => {
                     </div>
 
                     {/* Rescue Shelter Option */}
-                    <div 
+                    <div
                         className={`p-6 rounded-xl border-2 transition-all cursor-pointer ${selectedRole === "shelter" ? "border-[#004a99] bg-[#cce0ff]/40" : "border-gray-200 hover:border-[#004a99] hover:bg-[#cce0ff]/40"}`}
                         onClick={() => handleRoleSelect("shelter")}
                     >
@@ -137,7 +137,7 @@ const PartnerSignup = () => {
                             <button
                                 type="button"
                                 className="text-primary font-semibold hover:underline focus:outline-none"
-                                onClick={() => router.push("/login")}>
+                                onClick={() => router.push("/auth")}>
                                 Sign in here
                             </button>
                         </p>

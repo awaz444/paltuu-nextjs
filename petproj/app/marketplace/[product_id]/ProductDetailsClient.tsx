@@ -613,7 +613,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                         ((selectedVariant
                           ? selectedVariant.stock
                           : product.stock) || 0) > 0
-                          ? "bg-primary text-white shadow-md hover:shadow-lg hover:bg-primary-dark"
+                          ? "bg-primary text-white shadow-md hover:shadow-lg hover:bg-primary"
                           : "bg-gray-200 text-gray-500 cursor-not-allowed"
                       }`}
                     >

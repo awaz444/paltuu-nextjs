@@ -26,12 +26,6 @@ import PaltuuBazaarSection from "./PaltuuBazaarSection";
 import "./HeroSection.css";
 
 const HeroSection = () => {
-    const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-
-    // Update the year unconditionally
-    useEffect(() => {
-        setCurrentYear(new Date().getFullYear());
-    }, []);
 
     return (
         <div className="font-montserrat bg-white">

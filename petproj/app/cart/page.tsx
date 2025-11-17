@@ -163,7 +163,7 @@ const CartPage = () => {
                   Add some items to get started!
                 </p>
                 <button
-                  className="bg-primary text-white px-6 py-2 rounded-xl hover:bg-primary-dark transition"
+                  className="bg-primary text-white px-6 py-2 rounded-xl hover:bg-primary transition"
                   onClick={() => router.push("/marketplace")}
                 >
                   Browse Products
@@ -211,7 +211,7 @@ const CartPage = () => {
         ${
           checkoutLoading
             ? "bg-primary cursor-not-allowed"
-            : "bg-primary hover:bg-primary-dark"
+            : "bg-primary hover:bg-primary"
         }`}
               >
                 {checkoutLoading ? "Processing..." : "Proceed to Checkout"}
@@ -476,7 +476,7 @@ function CartItemCard({
           {localQuantity !== item.qty && (
             <button
               onClick={() => onUpdate(item.id, localQuantity)}
-              className="ml-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition"
+              className="ml-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition"
             >
               Update Cart
             </button>

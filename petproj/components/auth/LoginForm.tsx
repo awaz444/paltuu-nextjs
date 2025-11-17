@@ -177,8 +177,8 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
       <button
         type="submit"
         disabled={buttonDisabled || loading}
-        className={`w-full py-3 px-4 rounded-xl text-white bg-primary hover:bg-primary-dark transition font-medium ${
-          buttonDisabled || loading ? "opacity-50 cursor-not-allowed" : ""
+        className={`w-full py-3 px-4 rounded-xl text-white bg-primary hover:bg-primary transition font-medium ${
+          buttonDisabled || loading ? "opacity-50" : ""
         }`}
       >
         {loading ? "Signing In..." : "Sign In"}

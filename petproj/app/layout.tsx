@@ -28,18 +28,19 @@ export const metadata: Metadata = {
   description:
     "Buy pet products online in Pakistan at Paltuu.pk. Shop food, accessories & grooming essentials, plus adopt or foster pets and connect with vets in Karachi, Lahore & Islamabad.",
   manifest: "/manifest.json",
-  themeColor: "#A03048",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Paltuu",
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-  },
+};
+
+export const viewport = {
+  themeColor: "#A03048",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
 };
 
 export default function RootLayout({

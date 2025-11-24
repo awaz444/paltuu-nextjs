@@ -35,6 +35,7 @@ export default function PWAInstallPrompt() {
     if (!isInStandaloneMode && (!dismissed || daysSinceDismissed > 7)) {
       // For Android/Desktop
       const handleBeforeInstallPrompt = (e: Event) => {
+        console.log('PWA: beforeinstallprompt event fired');
         e.preventDefault();
         setDeferredPrompt(e as BeforeInstallPromptEvent);
         // Show prompt after 10 seconds
@@ -42,6 +43,13 @@ export default function PWAInstallPrompt() {
       };
 
       window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+      // Check if event already fired before component mounted
+      if ((window as any).deferredPrompt) {
+        console.log('PWA: Found existing deferredPrompt');
+        setDeferredPrompt((window as any).deferredPrompt);
+        setTimeout(() => setShowPrompt(true), 5000);
+      }
 
       // For iOS, show custom prompt after 10 seconds
       if (iOS && !isInStandaloneMode) {

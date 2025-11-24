@@ -18,11 +18,17 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
   console.log('Service Worker: Installing...');
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
+    caches.open(STATIC_CACHE).then(async (cache) => {
       console.log('Service Worker: Caching static assets');
-      return cache.addAll(STATIC_ASSETS).catch((err) => {
-        console.error('Failed to cache static assets:', err);
-      });
+
+      // Cache files one by one to identify which one fails
+      for (const asset of STATIC_ASSETS) {
+        try {
+          await cache.add(asset);
+        } catch (err) {
+          console.error(`Failed to cache asset: ${asset}`, err);
+        }
+      }
     }).then(() => {
       return self.skipWaiting();
     })

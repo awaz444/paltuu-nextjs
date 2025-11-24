@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import ProductDetailsClient from "./ProductDetailsClient";
 
+export const dynamic = "force-dynamic";
+
 async function getProduct(product_id: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bazaar/products/${product_id}`);
   if (!res.ok) return null;
@@ -39,7 +41,7 @@ export async function generateMetadata({ params }: { params: { product_id: strin
 export default async function ProductPage({ params }: { params: { product_id: string } }) {
   // Fetch product data once on the server
   const product = await getProduct(params.product_id);
-  
+
   // Fetch reviews on the server as well
   let reviews = [];
   if (product) {

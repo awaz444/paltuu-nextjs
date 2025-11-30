@@ -102,7 +102,7 @@ export default function ForgotPassword() {
                     <button
                         type="submit"
                         disabled={buttonDisabled || loading}
-                        className={`w-full py-2 px-4 rounded-xl text-white bg-primary hover:bg-primary-dark transition ${
+                        className={`w-full py-2 px-4 rounded-xl text-white bg-primary hover:bg-primary transition ${
                             loading ? "opacity-50 cursor-not-allowed" : ""
                         }`}>
                         {loading ? "Sending Email..." : "Submit"}

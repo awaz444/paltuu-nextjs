@@ -144,7 +144,7 @@ export default function PWAInstallPrompt() {
               </ul>
               <button
                 onClick={handleInstallClick}
-                className="w-full py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors font-medium flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-primary text-white rounded-xl hover:bg-primary transition-colors font-medium flex items-center justify-center gap-2"
               >
                 <Download size={18} />
                 Install App

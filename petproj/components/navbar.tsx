@@ -419,22 +419,22 @@ const Navbar = ({
         </Link>
 
         {/* Right: Cart */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center right-2">
         {!hideCart && (
-          <button
-            onClick={() => setIsCartModalOpen(true)}
-              className={`relative p-2 rounded-md bg-white/10 hover:bg-white/20 ${
-              bounce ? "animate-bounce" : ""
-            }`}
-          >
-            <i className="bi bi-cart3 text-white text-lg" />
-            {totalCartItems > 0 && (
-              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs px-1.5 py-0.5">
-                {totalCartItems}
-              </span>
-            )}
-          </button>
-        )}
+  <button
+    onClick={() => setIsCartModalOpen(true)}
+    className={`absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md bg-white/10 hover:bg-white/20 ${
+      bounce ? "animate-bounce" : ""
+    }`}
+  >
+    <i className="bi bi-cart3 text-white text-lg" />
+    {totalCartItems > 0 && (
+      <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs px-1.5 py-0.5">
+        {totalCartItems}
+      </span>
+    )}
+  </button>
+)}
         </div>
       </div>
 
@@ -621,7 +621,7 @@ const Navbar = ({
       </div>
 
       {/* Rest of the desktop code remains unchanged */}
-      <div className="flex items-center justify-between w-full">
+      <div className="hidden lg:flex items-center justify-between w-full">
         {/* Logo */}
         <div className="logo hidden lg:block">
           <Link href={logoHref || "/"}>

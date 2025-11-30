@@ -11,7 +11,6 @@ function AuthPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialMode = searchParams.get("mode") as "login" | "signup" | null;
-  
   const [authMode, setAuthMode] = useState<"login" | "signup">(
     initialMode === "signup" ? "signup" : "login"
   );
@@ -52,15 +51,7 @@ function AuthPageClient() {
           alt="Paltu Logo"
           className="mb-3 mt-2 w-40 lg:w-full max-w-full"
         />
-        <h1 className="text-2xl font-bold mt-4 text-center">
-          Welcome to Paltuu
-        </h1>
-        <p className="text-center mt-2 opacity-90">
-          {authMode === "login" 
-            ? "Sign in to access your account and continue your pet's journey."
-            : "Join our community of pet lovers and find your perfect companion."
-          }
-        </p>
+        
       </div>
 
       {/* Right Side - Auth Forms */}

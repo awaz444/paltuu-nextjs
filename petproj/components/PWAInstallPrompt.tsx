@@ -26,6 +26,12 @@ export default function PWAInstallPrompt() {
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOS(iOS);
 
+    // Check if prompt has already been shown in this session
+    const shownInSession = sessionStorage.getItem('pwa-prompt-shown-session');
+    if (shownInSession) {
+      return;
+    }
+
     // Check if user has dismissed the prompt before
     const dismissed = localStorage.getItem('pwa-prompt-dismissed');
     const dismissedTime = dismissed ? parseInt(dismissed) : 0;
@@ -33,6 +39,8 @@ export default function PWAInstallPrompt() {
 
     // Show prompt if not dismissed or if 7 days have passed
     if (!isInStandaloneMode && (!dismissed || daysSinceDismissed > 7)) {
+      // Mark that we're showing the prompt in this session
+      sessionStorage.setItem('pwa-prompt-shown-session', 'true');
       // For Android/Desktop
       const handleBeforeInstallPrompt = (e: Event) => {
         console.log('PWA: beforeinstallprompt event fired');

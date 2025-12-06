@@ -118,16 +118,16 @@ function PaymentConfirmationClient() {
 
       const sessionId = getOrCreateGuestSessionId();
 
-      // Create order with payment proof
+      // Create order with payment proof (server will extract userId from cookie)
       const response = await fetch('/api/bazaar/orders/create-with-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user?.id || null,
           sessionId: sessionId,
           cartData: cartData,
           paymentProofUrl: paymentProofUrl
-        })
+        }),
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -380,7 +380,7 @@ function PaymentConfirmationClient() {
 // Main component with Suspense wrapper
 export default function PaymentConfirmationPage() {
   return (
-    <Suspense 
+    <Suspense
       fallback={
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>

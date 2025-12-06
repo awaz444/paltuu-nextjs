@@ -13,6 +13,7 @@ import ThemeInitializer from "./ThemeInitializer";
 import PageTransition from "@/components/PageTransition";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import PWARegister from "@/components/PWARegister";
+import CartSyncProvider from "@/components/CartSyncProvider";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -93,21 +94,23 @@ export default function RootLayout({
       <body className={`${montserrat.className} flex flex-col min-h-screen`}>
         <AppClientWrapper>
           <ClientProvider>
-            <ThemeInitializer />
-            <PWARegister />
-            <NavbarWrapper />
+            <CartSyncProvider>
+              <ThemeInitializer />
+              <PWARegister />
+              <NavbarWrapper />
 
-            <main className="flex-grow">
-              <PageTransition>
-                {children}
-              </PageTransition>
-            </main>
+              <main className="flex-grow">
+                <PageTransition>
+                  {children}
+                </PageTransition>
+              </main>
 
-            <div className="fixed right-2 z-[998] bottom-20 sm:bottom-4">
-              <ChatBot />
-            </div>
-            <PWAInstallPrompt />
-            <Analytics />
+              <div className="fixed right-2 z-[998] bottom-20 sm:bottom-4">
+                <ChatBot />
+              </div>
+              <PWAInstallPrompt />
+              <Analytics />
+            </CartSyncProvider>
           </ClientProvider>
         </AppClientWrapper>
 

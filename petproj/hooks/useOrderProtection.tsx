@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getOrCreateGuestSessionId } from '@/utils/guest';
-import { getUserIdFromToken } from '@/utils/authClient';
 
 interface OrderProtectionOptions {
   redirectTo?: string;
@@ -33,35 +32,16 @@ export const useOrderProtection = (options: OrderProtectionOptions = {}) => {
           return;
         }
 
-        // ✅ Prioritize userId if user is logged in (read from token cookie)
-        let userId: string | null = null;
-        let sessionId: string | null = null;
-
-        if (typeof window !== 'undefined') {
-          try {
-            userId = getUserIdFromToken();
-          } catch (e) {
-            console.warn('Failed to get user from token cookie', e);
-            userId = null;
-          }
-        }
-
-        // Only get session ID if not logged in
-        if (!userId) {
-          sessionId = getOrCreateGuestSessionId();
-        }
-
-        // Build params for order verification
+        // Server will check authentication via httpOnly cookies
+        const sessionId = getOrCreateGuestSessionId();
         const params = new URLSearchParams();
         params.append('orderNumber', orderNumber);
-        if (userId) {
-          params.append('userId', userId);
-        } else if (sessionId) {
-          params.append('sessionId', sessionId);
-        }
+        params.append('sessionId', sessionId);
 
         // Verify the order exists and belongs to current session/user
-        const response = await fetch(`/api/bazaar/orders?${params.toString()}`);
+        const response = await fetch(`/api/bazaar/orders?${params.toString()}`, {
+          credentials: 'include',
+        });
 
         if (!response.ok) {
           // Order not found or API error
@@ -80,14 +60,9 @@ export const useOrderProtection = (options: OrderProtectionOptions = {}) => {
           return;
         }
 
-        // Additional check: Verify that the order belongs to the current session/user
-        if (userId && order.user_id && order.user_id !== parseInt(userId)) {
-          setHasRedirected(true);
-          router.push(redirectTo);
-          return;
-        }
-
-        if (!userId && sessionId && order.session_id && order.session_id !== sessionId) {
+        // Server already validated that order belongs to current user/session
+        // Just verify that the order session matches if guest
+        if (sessionId && order.session_id && order.session_id !== sessionId) {
           setHasRedirected(true);
           router.push(redirectTo);
           return;
@@ -95,13 +70,11 @@ export const useOrderProtection = (options: OrderProtectionOptions = {}) => {
 
         // Also verify that the cart is empty (order should clear the cart)
         const cartParams = new URLSearchParams();
-        if (userId) {
-          cartParams.append('userId', userId);
-        } else if (sessionId) {
-          cartParams.append('sessionId', sessionId);
-        }
+        cartParams.append('sessionId', sessionId);
 
-        const cartResponse = await fetch(`/api/bazaar/cart?${cartParams.toString()}`);
+        const cartResponse = await fetch(`/api/bazaar/cart?${cartParams.toString()}`, {
+          credentials: 'include',
+        });
 
         if (cartResponse.ok) {
           const cartData = await cartResponse.json();

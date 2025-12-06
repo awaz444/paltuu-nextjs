@@ -20,7 +20,6 @@ import { clearCart } from "@/app/store/slices/cartSlice";
 import { fetchCart } from "@/app/store/slices/cartSlice";
 import { useRouter } from "next/navigation";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
-import { getUserIdFromToken, getTokenFromCookie, decodeJwtPayload } from "@/utils/authClient";
 import { FaUniversity } from "react-icons/fa";
 import { useCartProtection } from "@/hooks/useCartProtection";
 import { useAuth } from "@/context/AuthContext";
@@ -72,11 +71,10 @@ const CheckoutPage = () => {
   const [checkoutVisitTracked, setCheckoutVisitTracked] = useState(false);
 
 useEffect(() => {
-  // Only fetch cart if it's empty
-  if (cartItems.length === 0) {
-    dispatch(fetchCart());
-  }
-}, [dispatch, cartItems.length]);
+  // Fetch cart on mount to ensure we have latest data
+  console.log('🔄 Checkout page - fetching cart');
+  dispatch(fetchCart());
+}, [dispatch]);
 
   // Track checkout page visit for retargeting (only once)
   useEffect(() => {
@@ -89,23 +87,10 @@ useEffect(() => {
           const sessionId = getOrCreateGuestSessionId();
           const cartTotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
 
-          // Get user info from auth token cookie if available
-          let userName, userEmail, userId;
-          if (typeof window !== "undefined") {
-            try {
-              const token = getTokenFromCookie();
-              if (token) {
-                const payload = decodeJwtPayload(token);
-                if (payload) {
-                  userId = payload.user_id || payload.id;
-                  userName = payload.name;
-                  userEmail = payload.email;
-                }
-              }
-            } catch (e) {
-              console.warn("Failed to parse user from token cookie", e);
-            }
-          }
+          // Get user info from auth context (works with both logged-in and guest users)
+          const userId = user?.id;
+          const userName = user?.name;
+          const userEmail = user?.email;
 
           await fetch('/api/track-checkout-visit', {
             method: 'POST',
@@ -140,15 +125,11 @@ useEffect(() => {
       setLoadingCartData(true);
       try {
         const sessionId = getOrCreateGuestSessionId();
-        const params = new URLSearchParams();
 
-        if (user?.id) {
-          params.append('userId', user.id.toString());
-        } else if (sessionId) {
-          params.append('sessionId', sessionId);
-        }
-
-        const response = await fetch(`/api/bazaar/cart?${params.toString()}`);
+        // Server will extract userId from cookie automatically
+        const response = await fetch(`/api/bazaar/cart?sessionId=${sessionId}`, {
+          credentials: 'include',
+        });
         if (response.ok) {
           const data = await response.json();
           setCart(data.cart);
@@ -171,9 +152,10 @@ useEffect(() => {
     (async () => {
       setLoadingShippingInfo(true);
       try {
-        const res = await fetch(
-          `/api/bazaar/shipping-info?userId=${user.id}`
-        );
+        // Server will extract userId from cookie automatically
+        const res = await fetch('/api/bazaar/shipping-info', {
+          credentials: 'include',
+        });
         if (!res.ok) return;
 
         const json = await res.json();
@@ -314,11 +296,11 @@ useEffect(() => {
     try {
       const cleanPhone = phone.replace(/\s/g, "");
 
+      // Server will extract userId from cookie automatically
       await fetch("/api/bazaar/shipping-info", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user.id,
           email,
           fullName,
           phone: cleanPhone,
@@ -326,6 +308,7 @@ useEffect(() => {
           postalCode,
           address,
         }),
+        credentials: 'include',
       });
     } catch (error) {
       console.warn("Failed to save shipping info:", error);
@@ -794,7 +777,6 @@ useEffect(() => {
                         }
 
                         const cartData = {
-                          userId: user?.id || null,
                           sessionId,
                           cartId: cart.cart_id,
                           customerInfo: {
@@ -832,7 +814,6 @@ useEffect(() => {
                         }
 
                         const body = {
-                          userId: user?.id || null,
                           sessionId,
                           cartId: cart.cart_id,
                           customerInfo: {
@@ -843,13 +824,17 @@ useEffect(() => {
                           shippingAddress: { city, postalCode, address },
                           billingAddress: null,
                           paymentMethod,
+                          shippingAmount: shipping,
+                          discountAmount: discount,
                           notes: "",
                         };
 
+                        // Server will extract userId from cookie automatically
                         const res = await fetch("/api/bazaar/orders", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify(body),
+                          credentials: 'include',
                         });
 
                         const data = await res.json();

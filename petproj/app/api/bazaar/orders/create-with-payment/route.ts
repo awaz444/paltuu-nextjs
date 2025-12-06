@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/db/ecom';
 import { sendOrderEmails } from '@/utils/mailjet';
+import { getUserIdFromRequest } from '@/utils/authServer';
 
 export const revalidate = 0;
 
@@ -8,8 +9,13 @@ export const revalidate = 0;
 export async function POST(req: NextRequest) {
   const pool = getPool();
   try {
+    // Extract userId from server-side cookie (secure)
+    const userId = await getUserIdFromRequest(req);
+
     const body = await req.json();
-    const { userId, sessionId, cartData, paymentProofUrl } = body;
+    const { sessionId, cartData, paymentProofUrl } = body;
+
+    console.log('📥 Create Order - Authenticated userId:', userId, 'SessionId:', sessionId);
 
     if (!cartData) {
       return NextResponse.json({ error: 'Cart data is required' }, { status: 400 });

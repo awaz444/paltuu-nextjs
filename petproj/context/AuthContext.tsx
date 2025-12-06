@@ -3,7 +3,6 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
-import { getUserIdFromToken, decodeJwtPayload } from "@/utils/authClient";
 import { clearGuestSessionId } from "@/utils/guest";
 
 interface User {
@@ -44,19 +43,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     console.log("🔄 Auth state changed:", { isAuthenticated, user: user?.email, method: user?.method });
   }, [isAuthenticated, user]);
 
-  // Function to validate token exists and is valid
+  // Function to validate token exists and is valid (checks server since httpOnly cookies can't be read client-side)
   const validateToken = async () => {
     if (typeof window === "undefined") return false;
 
     try {
-      // First check if token exists in cookies
-      const tokenUserId = getUserIdFromToken();
-      if (!tokenUserId) {
-        console.log("❌ No token found in cookies");
-        return false;
-      }
-
-      // Verify token with server (with retry logic)
+      // Verify token with server (server can read httpOnly cookies)
       let retries = 2;
       while (retries > 0) {
         try {
@@ -75,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
           const data = await response.json();
           const isValid = data.valid === true;
-          console.log("Server validation result:", isValid);
+          console.log("✅ Server validation result:", isValid);
           return isValid;
         } catch (fetchError) {
           retries--;
@@ -90,43 +82,68 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Periodic token validation - DISABLED to prevent logout loops
-  // Token will be validated on visibility change and on protected route access via middleware
-  // useEffect(() => {
-  //   if (user?.method === "api" && isAuthenticated) {
-  //     ... validation logic ...
-  //   }
-  // }, [user?.method, isAuthenticated]);
-
-  // Visibility change validation - DISABLED to prevent logout loops
-  // Token validation will happen on API calls which return 401 if token is invalid
-  // useEffect(() => {
-  //   if (typeof window === "undefined" || user?.method !== "api" || !isAuthenticated) return;
-  //   ... visibility validation logic ...
-  // }, [user?.method, isAuthenticated]);
-
-  // Initial token hydration - only run once on mount
+  // Initial token hydration - verify with server since httpOnly cookies can't be read client-side
   useEffect(() => {
     if (typeof window === "undefined" || user !== null) return;
 
-    try {
-      const tokenUserId = getUserIdFromToken();
-      if (tokenUserId) {
-        // We have a token payload; use it as a lightweight user until we fetch DB profile
-        const token = (document.cookie.match(new RegExp('(^|; )' + 'token' + '=([^;]*)')) || [])[2];
-        const payload = decodeJwtPayload(token ? decodeURIComponent(token) : null);
-        const minimalUser = payload
-          ? ({ id: payload.id || payload.user_id, email: payload.email, name: payload.name, role: payload.role || "guest", profile_image_url: payload.profile_image_url, method: "api" } as any)
-          : null;
-        if (minimalUser) {
-          console.log("✅ Hydrated user from token on mount");
+    const hydrateUser = async () => {
+      try {
+        console.log("🔍 Attempting to hydrate user from server...");
+
+        // Call server to verify token (server can read httpOnly cookies)
+        const verifyResponse = await fetch("/api/auth/verify-token", {
+          credentials: 'include',
+          cache: 'no-store',
+        });
+
+        if (!verifyResponse.ok) {
+          console.log("⚠️ No valid token found on server");
+          return;
+        }
+
+        const { valid, user: tokenUser } = await verifyResponse.json();
+        if (!valid || !tokenUser) {
+          console.log("⚠️ Token validation failed");
+          return;
+        }
+
+        console.log("✅ Token verified, userId:", tokenUser.id);
+
+        // Fetch full user profile from database
+        const profileResponse = await fetch(`/api/my-profile/${tokenUser.id}`);
+        if (profileResponse.ok) {
+          const dbProfile = await profileResponse.json();
+          const hydratedUser: User = {
+            id: tokenUser.id,
+            email: tokenUser.email,
+            name: dbProfile.name || tokenUser.email,
+            role: tokenUser.role || "guest",
+            profile_image_url: dbProfile.profile_image_url || "/default-avatar.png",
+            method: "api"
+          };
+          console.log("✅ Hydrated user from database profile:", hydratedUser);
+          setUser(hydratedUser);
+          setIsAuthenticated(true);
+        } else {
+          // Fallback to minimal user data from token
+          const minimalUser: User = {
+            id: tokenUser.id,
+            email: tokenUser.email,
+            name: tokenUser.email,
+            role: tokenUser.role || "guest",
+            profile_image_url: "/default-avatar.png",
+            method: "api"
+          };
+          console.log("✅ Hydrated user from token (no profile found):", minimalUser);
           setUser(minimalUser);
           setIsAuthenticated(true);
         }
+      } catch (e) {
+        console.error("Failed to hydrate user from server:", e);
       }
-    } catch (e) {
-      console.error("Failed to hydrate user from token:", e);
-    }
+    };
+
+    hydrateUser();
   }, []); // Run only once on mount
 
   useEffect(() => {
@@ -186,8 +203,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
 
         fetchDatabaseProfile().then((finalUser) => {
-          // clear guest session cookie to avoid cart conflicts
-          try { clearGuestSessionId(); } catch {}
+          // Clear guest session cookie (cart sync will be handled by useCartSync hook)
+          try {
+            clearGuestSessionId();
+            console.log('✅ User logged in via Google - guest session cleared');
+          } catch (e) {
+            console.error('Error clearing guest session on login:', e);
+          }
 
         // Redirect shop/shelter to panels after login - check for callback URL first
         try {
@@ -235,11 +257,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   setUser(userWithDbData);
   setIsAuthenticated(true);
-  try { clearGuestSessionId(); } catch {}
+  try {
+    clearGuestSessionId();
+    console.log('✅ User logged in via API - guest session cleared');
+  } catch (e) {
+    console.error('Error clearing guest session on login:', e);
+  }
 
-      console.log("✅ Using database profile data for API user:", userWithDbData);
-
-      // Redirect on API login success - check for callback URL first
+      console.log("✅ Using database profile data for API user:", userWithDbData);      // Redirect on API login success - check for callback URL first
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const callbackUrl = urlParams.get('callbackUrl');
@@ -276,11 +301,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   setUser(userWithMethod);
   setIsAuthenticated(true);
-  try { clearGuestSessionId(); } catch {}
+  try {
+    clearGuestSessionId();
+    console.log('✅ User logged in via API (fallback) - guest session cleared');
+  } catch (e) {
+    console.error('Error clearing guest session on login:', e);
+  }
 
-  console.log("✅ Using login response data for API user:", userWithMethod);
-
-  // Redirect on API login success - check for callback URL first
+  console.log("✅ Using login response data for API user:", userWithMethod);  // Redirect on API login success - check for callback URL first
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const callbackUrl = urlParams.get('callbackUrl');
@@ -331,10 +359,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     console.log("Logout started, user method:", user?.method);
 
     try {
-      // Clear in-memory user and guest session cookie
-      try { clearGuestSessionId(); } catch {}
-
-      // Clear session storage if used
+      // Clear in-memory user and guest session cookie (cart will be handled by useCartSync hook)
+      try { clearGuestSessionId(); } catch {}      // Clear session storage if used
       try { sessionStorage.clear(); } catch {}
 
       // For Google users, handle NextAuth signOut correctly

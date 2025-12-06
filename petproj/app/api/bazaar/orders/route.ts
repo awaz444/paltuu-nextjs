@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '../../../../db/ecom';
 import { sendOrderEmails } from '../../../../utils/mailjet';
+import { getUserIdFromRequest } from '../../../../utils/authServer';
 
 // Helper: send order confirmation email. Prefers SMTP (nodemailer) when SMTP env vars are set,
 // otherwise falls back to Brevo HTTP transactional API.
@@ -243,9 +244,13 @@ export const revalidate = 0;
 export async function GET(req: NextRequest) {
   const pool = getPool();
   try {
+  // Extract userId from server-side cookie (secure)
+  const userId = await getUserIdFromRequest(req);
+
   const { searchParams } = new URL(req.url);
-  const userId = searchParams.get('userId');
   const sessionId = searchParams.get('sessionId');
+
+  console.log('📥 Get Orders - Authenticated userId:', userId, 'SessionId:', sessionId);
   const status = searchParams.get('status');
   const orderId = searchParams.get('orderId');
   const orderNumber = searchParams.get('orderNumber');
@@ -352,17 +357,23 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const pool = getPool();
   try {
+    // Extract userId from server-side cookie (secure)
+    const userId = await getUserIdFromRequest(req);
+
     const body = await req.json();
     const {
-      userId,
       sessionId,
       cartId,
       customerInfo,
       shippingAddress,
       billingAddress,
       paymentMethod = 'cod',
+      shippingAmount,
+      discountAmount,
       notes
     } = body;
+
+    console.log('📥 Create Order - Authenticated userId:', userId, 'SessionId:', sessionId);
 
     if (!cartId || !customerInfo || !shippingAddress) {
       return NextResponse.json({ error: 'Missing required order information' }, { status: 400 });
@@ -405,10 +416,10 @@ export async function POST(req: NextRequest) {
         subtotal += parseFloat(item.effective_price) * item.quantity;
       });
 
-      // const taxAmount = 0; // You can implement tax calculation here
-      const shippingAmount = 0; // You can implement shipping calculation here
-      const discountAmount = 0; // You can implement discount calculation here
-      const totalAmount = subtotal + shippingAmount - discountAmount;
+      // Use shipping and discount amounts from request, default to 0 if not provided
+      const finalShippingAmount = shippingAmount || 0;
+      const finalDiscountAmount = discountAmount || 0;
+      const totalAmount = subtotal + finalShippingAmount - finalDiscountAmount;
 
   // Generate compact order number prefixed with 'paltuu-'
   // Use a timestamp-based base36 segment plus a short random suffix to keep it short and reasonably unique
@@ -434,8 +445,8 @@ export async function POST(req: NextRequest) {
         sessionId || null,
         orderNumber,
         subtotal,
-        shippingAmount,
-        discountAmount,
+        finalShippingAmount,
+        finalDiscountAmount,
         totalAmount,
         customerInfo.email,
         customerInfo.phone,

@@ -1,6 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import toast from "react-hot-toast";
-import { getUserIdFromToken } from "@/utils/authClient";
 import { getGuestSessionId } from "@/utils/guest";
 
 //
@@ -41,63 +40,55 @@ export const fetchCart = createAsyncThunk<
   { rejectValue: string }
 >("cart/fetchCart", async (_, { rejectWithValue }) => {
     try {
-    // ✅ Prioritize userId from auth token cookie if user is logged in
-    let userId: string | null = null;
-    let guestToken: string | null = null;
+    console.log('🔍 fetchCart - Attempting to fetch cart (server will check authentication)...');
 
+    // Try fetching from server first (works for both logged-in and guest users)
+    // Server will extract userId from cookie automatically
+    try {
+      const res = await fetch('/api/bazaar/cart?sessionId=guest', {
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const apiItems = data?.items ?? data ?? [];
+        console.log('✅ fetchCart - Loaded cart from server:', apiItems.length, 'items');
+
+        const mapped = (apiItems || []).map((it: any): CartItem => ({
+          id: it.cart_item_id ?? it.item_id ?? it.id,
+          title: it.product_title ?? it.title ?? it.name ?? "Untitled",
+          qty: it.quantity ?? 1,
+          price: Number(it.effective_price ?? it.price ?? 0),
+          image: it.image_url ?? it.image ?? null,
+          code: it.product_code ?? it.sku ?? it.product_id ?? null,
+          sku: it.variant_sku ?? it.sku ?? it.product_sku ?? it.product_code ?? null,
+          variantTitle: it.variant_title ?? it.variant_name ?? it.variant?.title ?? null,
+          attributes: it.attributes ?? it.variant_attributes ?? it.attributes_map ?? it.variant?.attributes ?? null,
+        }));
+
+        return mapped;
+      }
+    } catch (fetchError) {
+      console.warn('⚠️ fetchCart - Server fetch failed, falling back to localStorage:', fetchError);
+    }
+
+    // Fallback: For guest users or if server unavailable, use localStorage
+    console.log('✅ fetchCart - Loading guest cart from localStorage');
     if (typeof window !== "undefined") {
       try {
-        userId = getUserIdFromToken();
+        const guestCart = localStorage.getItem('guest_cart');
+        if (guestCart) {
+          const parsedCart = JSON.parse(guestCart) as CartItem[];
+          console.log('📦 Guest cart loaded from localStorage:', parsedCart.length, 'items');
+          return parsedCart;
+        }
       } catch (e) {
-        console.warn("Failed to get user id from token cookie", e);
-      }
-
-      // Only use guest session if user is NOT logged in
-      if (!userId) {
-        guestToken = getGuestSessionId();
+        console.error('Failed to load guest cart from localStorage:', e);
       }
     }
+    return [];
 
-    // Build query params - prefer userId over sessionId
-    const params = new URLSearchParams();
-    if (userId) {
-      params.append("userId", userId);
-    } else if (guestToken) {
-      params.append("sessionId", guestToken);
-    } else {
-      // Neither userId nor sessionId available - return empty cart
-      return [];
-    }
 
-    const res = await fetch(`/api/bazaar/cart?${params.toString()}`);
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || "Failed to fetch cart");
-    }
-
-    const data = await res.json();
-    const apiItems = data?.items ?? data ?? [];
-
-    const mapped = (apiItems || []).map((it: any): CartItem => ({
-      id: it.cart_item_id ?? it.item_id ?? it.id,
-      title: it.product_title ?? it.title ?? it.name ?? "Untitled",
-      qty: it.quantity ?? 1,
-      price: Number(it.effective_price ?? it.price ?? 0),
-      image: it.image_url ?? it.image ?? null,
-      code: it.product_code ?? it.sku ?? it.product_id ?? null,
-      sku:
-        it.variant_sku ?? it.sku ?? it.product_sku ?? it.product_code ?? null,
-      variantTitle:
-        it.variant_title ?? it.variant_name ?? it.variant?.title ?? null,
-      attributes:
-        it.attributes ??
-        it.variant_attributes ??
-        it.attributes_map ??
-        it.variant?.attributes ??
-        null,
-    }));
-
-    return mapped;
   } catch (err: any) {
     return rejectWithValue(err.message ?? "Unknown error");
   }
@@ -122,53 +113,95 @@ export const addToCart = createAsyncThunk<
   { state: { cart: CartState }; rejectValue: string }
 >("cart/addToCart", async (payload, { dispatch, rejectWithValue }) => {
   try {
-    let userId: string | null = null;
-    let sessionId = payload.sessionId;
-
-    if (typeof window !== "undefined") {
-      try {
-        userId = getUserIdFromToken();
-      } catch (e) {
-        console.warn("Failed to get user id from token cookie", e);
-      }
-    }
+    const sessionId = payload.sessionId;
 
     const requestBody = {
       productId: payload.productId,
       quantity: payload.quantity ?? 1,
       variantId: payload.variantId ?? null,
-      ...(userId ? { userId } : { sessionId }),
+      sessionId, // Only send sessionId, server will extract userId from cookie
     };
 
-    // 🔹 1. Optimistically update Redux store instantly
-    dispatch(
-      addItem({
-        id: payload.productId,
-        title: payload.title ?? "Untitled",
-        qty: payload.quantity ?? 1,
-        price: payload.price ?? 0,
-        image: payload.image ?? null,
-        variantTitle: payload.variantTitle ?? null,
-        attributes: payload.attributes ?? null,
-      })
-    );
+    console.log('📤 addToCart - Request body:', requestBody, '(server will check auth cookie)');
 
-    // 🔹 2. Perform real backend add
-    const res = await fetch("/api/bazaar/cart", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
-    });
+    const newItem: CartItem = {
+      id: `${payload.productId}-${payload.variantId || 'no-variant'}`,
+      title: payload.title ?? "Untitled",
+      qty: payload.quantity ?? 1,
+      price: payload.price ?? 0,
+      image: payload.image ?? null,
+      code: payload.productId,
+      variantTitle: payload.variantTitle ?? null,
+      attributes: payload.attributes ?? null,
+    };
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || "Failed to add to cart");
+    // Try adding to server cart (works for both logged-in and guest users)
+    // Server automatically detects auth from cookie
+    try {
+      console.log('\ud83d\udcbe addToCart - Sending to server (auth auto-detected)...');
+
+      // 🔹 1. Optimistically update Redux store
+      dispatch(addItem(newItem));
+
+      // 🔹 2. Store in database
+      const res = await fetch("/api/bazaar/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to add to cart");
+      }
+
+      // 🔹 3. Silent sync to ensure accurate quantities from server
+      setTimeout(() => {
+        dispatch(fetchCart());
+      }, 300);
+
+      toast.success('Added to cart!');
+      return true;
+    } catch (serverError) {
+      console.warn('⚠️ addToCart - Server request failed, falling back to localStorage:', serverError);
     }
 
-    // 🔹 3. Silent sync to ensure variant merging/accurate quantities
-    setTimeout(() => {
-      dispatch(fetchCart());
-    }, 300); // small delay for backend consistency
+    // Fallback: For guests or if server unavailable, store in localStorage only
+    console.log('💾 addToCart - Storing in localStorage (fallback)');
+
+    if (typeof window !== "undefined") {
+      try {
+        const guestCart = localStorage.getItem('guest_cart');
+        let cartItems: CartItem[] = guestCart ? JSON.parse(guestCart) : [];
+
+        // Check if item already exists
+        const existingItemIndex = cartItems.findIndex(
+          item => item.code === payload.productId &&
+                  (item.variantTitle || null) === (payload.variantTitle || null)
+        );
+
+        if (existingItemIndex !== -1) {
+          // Update quantity
+          cartItems[existingItemIndex].qty += payload.quantity ?? 1;
+          console.log('\u2795 Updated existing item quantity in guest cart');
+        } else {
+          // Add new item
+          cartItems.push(newItem);
+          console.log('\u2795 Added new item to guest cart');
+        }
+
+        localStorage.setItem('guest_cart', JSON.stringify(cartItems));
+
+        // Update Redux state
+        dispatch(setCartItems(cartItems));
+
+        toast.success('Added to cart!');
+      } catch (e) {
+        console.error('Failed to save guest cart to localStorage:', e);
+        throw new Error('Failed to save cart');
+      }
+    }
 
     return true;
   } catch (err: any) {
@@ -188,18 +221,34 @@ export const updateCartItem = createAsyncThunk<
 >("cart/updateCartItem", async (payload, { getState, dispatch, rejectWithValue }) => {
   const prevItems = getState().cart.items;
   try {
-    const res = await fetch("/api/bazaar/cart", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    // Try updating on server first (server will check auth cookie)
+    try {
+      const res = await fetch("/api/bazaar/cart", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        credentials: 'include',
+      });
 
-    if (!res.ok) throw new Error("Failed to update cart item");
+      if (res.ok) {
+        const updatedItems = prevItems.map((item) =>
+          item.id === payload.cartItemId ? { ...item, qty: payload.quantity } : item
+        );
+        dispatch(setCartItems(updatedItems));
+        return true;
+      }
+    } catch (serverError) {
+      console.warn('⚠️ updateCartItem - Server request failed, using localStorage:', serverError);
+    }
 
-    const updatedItems = prevItems.map((item) =>
-      item.id === payload.cartItemId ? { ...item, qty: payload.quantity } : item
-    );
-    dispatch(setCartItems(updatedItems));
+    // Fallback: update in localStorage
+    if (typeof window !== "undefined") {
+      const updatedItems = prevItems.map((item) =>
+        item.id === payload.cartItemId ? { ...item, qty: payload.quantity } : item
+      );
+      localStorage.setItem('guest_cart', JSON.stringify(updatedItems));
+      dispatch(setCartItems(updatedItems));
+    }
 
     return true;
   } catch (err: any) {
@@ -219,21 +268,36 @@ export const removeCartItem = createAsyncThunk<
   const prevItems = getState().cart.items;
 
   try {
-    const res = await fetch(`/api/bazaar/cart?cartItemId=${payload.cartItemId}`, {
-      method: "DELETE",
-    });
+    // Try removing from server first (server will check auth cookie)
+    try {
+      const res = await fetch(`/api/bazaar/cart?cartItemId=${payload.cartItemId}`, {
+        method: "DELETE",
+        credentials: 'include',
+      });
 
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(
-        errorData.error || `HTTP ${res.status}: Failed to remove cart item`
-      );
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `HTTP ${res.status}: Failed to remove cart item`
+        );
+      }
+
+      if (res.ok) {
+        await res.json().catch(() => ({}));
+        const updatedItems = prevItems.filter((item) => item.id !== payload.cartItemId);
+        dispatch(setCartItems(updatedItems));
+        return true;
+      }
+    } catch (serverError) {
+      console.warn('⚠️ removeCartItem - Server request failed, using localStorage:', serverError);
     }
 
-    await res.json().catch(() => ({})); // avoid crash on empty response
-
-    const updatedItems = prevItems.filter((item) => item.id !== payload.cartItemId);
-    dispatch(setCartItems(updatedItems));
+    // Fallback: remove from localStorage
+    if (typeof window !== "undefined") {
+      const updatedItems = prevItems.filter((item) => item.id !== payload.cartItemId);
+      localStorage.setItem('guest_cart', JSON.stringify(updatedItems));
+      dispatch(setCartItems(updatedItems));
+    }
 
     return true;
   } catch (err: any) {
@@ -279,6 +343,21 @@ const cartSlice = createSlice({
     clearCart(state) {
       state.items = [];
       state.lastFetched = Date.now();
+      // Clear guest cart from localStorage
+      if (typeof window !== "undefined") {
+        localStorage.removeItem('guest_cart');
+      }
+    },
+    // Force clear cart state and mark as needing refresh
+    resetCartState(state) {
+      state.items = [];
+      state.lastFetched = null;
+      state.loading = false;
+      state.error = null;
+      // Clear guest cart from localStorage
+      if (typeof window !== "undefined") {
+        localStorage.removeItem('guest_cart');
+      }
     },
   },
   extraReducers: (builder) => {
@@ -306,6 +385,7 @@ export const {
   setCartItems,
   markStale,
   clearCart,
+  resetCartState,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

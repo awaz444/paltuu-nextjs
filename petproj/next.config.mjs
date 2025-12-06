@@ -8,6 +8,7 @@ const nextConfig = {
       "media.istockphoto.com",
       "qufdjlaxzyarnrsiimfw.supabase.co",
       "lfiwvlicdkdheqynvjxb.supabase.co",
+      "fjxezewxjsyyfuehnlko.supabase.co",
       // add more supabase project URLs as needed
     ],
   },

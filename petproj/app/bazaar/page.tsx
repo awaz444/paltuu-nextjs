@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { MoonLoader } from "react-spinners";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
-import { fetchCart, addToCart } from "@/app/store/slices/cartSlice";
+import { fetchCart, addToCart, resetCartState } from "@/app/store/slices/cartSlice";
 import { useRouter } from "next/navigation";
 import {
   fetchAllBazaarCategories,
@@ -280,14 +280,20 @@ export default function BazaarPage() {
         return;
       }
 
+      // Get session ID for guest users (will be ignored if user is logged in)
+      const sessionId = getOrCreateGuestSessionId();
+      console.log('🛒 Adding to cart - sessionId:', sessionId);
+
       await dispatch(
         addToCart({
-          sessionId: getOrCreateGuestSessionId(),
+          sessionId: sessionId,
           productId: product.product_id,
           variantId: null,
           quantity: 1,
         }) as any
       );
+
+      // Refetch cart to get updated data
       dispatch(fetchCart());
     } catch (err) {
       console.error("Error adding to cart:", err);

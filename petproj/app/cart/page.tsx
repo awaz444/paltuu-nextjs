@@ -55,17 +55,19 @@ const CartPage = () => {
   );
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
-  // Fetch cart only on first load
+  // Fetch cart on mount or when lastFetched is null (after login/logout)
   useEffect(() => {
-  if (!cartState.lastFetched) {
-    dispatch(fetchCart());
-  }
-}, [dispatch, cartState.lastFetched]);
+    if (!cartState.lastFetched) {
+      console.log('🔄 Cart page - fetching cart (lastFetched is null)');
+      dispatch(fetchCart());
+    }
+  }, [dispatch, cartState.lastFetched]);
 
-  // ✅ Refetch cart when auth state might have changed (on mount/focus)
+  // ✅ Refetch cart when auth state might have changed (on focus)
   useEffect(() => {
     const handleFocus = () => {
       // Refetch cart when user returns to tab (might have logged in/out in another tab)
+      console.log('🔄 Cart page - window focused, refetching cart');
       dispatch(fetchCart());
     };
 

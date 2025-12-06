@@ -25,15 +25,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const [isEmailFocused, setIsEmailFocused] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        const { role } = JSON.parse(storedUser);
-        redirectBasedOnRole(role);
-      }
-    }
-  }, [isAuthenticated, router]);
+  // Redirect handled by AuthContext after login
 
   const redirectBasedOnRole = (role: string) => {
     if (role === "vet") router.push("/vet-panel");
@@ -50,7 +42,9 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
     e.preventDefault();
     try {
       setLoading(true);
-      const response = await axios.post("/api/users/login", user);
+      const response = await axios.post("/api/users/login", user, {
+        withCredentials: true,
+      });
       if (response.data.success) {
         const { user_id, name, email, role, profile_image_url } = response.data.user;
         const userDetails = {
@@ -60,10 +54,9 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           role,
           profile_image_url: profile_image_url || "/default-avatar.png",
         };
-        localStorage.setItem("user", JSON.stringify(userDetails));
-        login(userDetails);
+        // Token is set in httpOnly cookie by server, no localStorage needed
+        login(userDetails); // This will update AuthContext and redirect
         toast.success("Login successful!");
-        redirectBasedOnRole(userDetails.role);
       }
     } catch (error: any) {
       console.error("Login failed:", error.message);

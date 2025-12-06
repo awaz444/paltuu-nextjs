@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "../../../../db/ecom";
+import { getUserIdFromRequest } from "../../../../utils/authServer";
 
 export const revalidate = 0;
 
@@ -8,15 +9,17 @@ export async function GET(request: NextRequest) {
   const pool = getPool();
 
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    // Extract userId from server-side cookie (secure)
+    const userId = await getUserIdFromRequest(request);
 
     if (!userId) {
       return NextResponse.json(
-        { error: "userId is required" },
-        { status: 400 }
+        { error: "Authentication required" },
+        { status: 401 }
       );
     }
+
+    console.log('📥 Get Shipping Info - Authenticated userId:', userId);
 
     const result = await pool.query(
       `SELECT
@@ -62,11 +65,23 @@ export async function POST(request: NextRequest) {
   const pool = getPool();
 
   try {
+    // Extract userId from server-side cookie (secure)
+    const userId = await getUserIdFromRequest(request);
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
-    const { userId, email, fullName, phone, city, postalCode, address } = body;
+    const { email, fullName, phone, city, postalCode, address } = body;
+
+    console.log('📥 Save Shipping Info - Authenticated userId:', userId);
 
     // Validation
-    if (!userId || !email || !fullName || !phone || !address) {
+    if (!email || !fullName || !phone || !address) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }

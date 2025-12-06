@@ -40,7 +40,8 @@ const OrderConfirmedContent = () => {
       setSearchError("");
 
       const res = await fetch(
-        `/api/bazaar/orders?orderNumber=${encodeURIComponent(orderNumber)}`
+        `/api/bazaar/orders?orderNumber=${encodeURIComponent(orderNumber)}`,
+        { credentials: 'include' }
       );
 
       if (!res.ok) {

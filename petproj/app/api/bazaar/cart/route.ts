@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool, query as dbQuery } from '../../../../db/ecom';
 import { sendCartActivityNotification } from '../../../../utils/mailjet';
+import { getUserIdFromRequest } from '../../../../utils/authServer';
 
 export const revalidate = 0;
 
@@ -8,18 +9,23 @@ export const revalidate = 0;
 export async function GET(req: NextRequest) {
   const pool = getPool();
   try {
+    // Extract userId from server-side cookie (secure)
+    const userId = await getUserIdFromRequest(req);
+
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId');
     const sessionId = searchParams.get('sessionId');
 
+    console.log('📥 Cart API GET - Authenticated userId:', userId, 'SessionId:', sessionId);
+
     if (!userId && !sessionId) {
-      return NextResponse.json({ error: 'User ID or Session ID is required' }, { status: 400 });
+      return NextResponse.json({ error: 'Authentication or session required' }, { status: 401 });
     }
 
   // using pool; no explicit connect required
 
     // ✅ ALWAYS prioritize userId over sessionId if both are provided
     const useUserId = userId ? true : false;
+    console.log(`🎯 Cart API GET - Fetching cart for ${useUserId ? 'userId' : 'sessionId'}:`, useUserId ? userId : sessionId);
 
     // Find or create cart
     let cartQuery = `
@@ -97,17 +103,23 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const pool = getPool();
   try {
+    // Extract userId from server-side cookie (secure)
+    const userId = await getUserIdFromRequest(req);
+
     const body = await req.json();
-    const { userId, sessionId, productId, variantId, quantity = 1 } = body;
+    const { sessionId, productId, variantId, quantity = 1 } = body;
+
+    console.log('📥 Cart API POST - Authenticated userId:', userId, 'SessionId:', sessionId, 'Product:', productId);
 
     if (!productId || (!userId && !sessionId)) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json({ error: 'Product ID and authentication required' }, { status: 400 });
     }
 
   // using pool; no explicit connect required
 
     // ✅ ALWAYS prioritize userId over sessionId if both are provided
     const useUserId = userId ? true : false;
+    console.log(`🎯 Cart API POST - Using ${useUserId ? 'userId' : 'sessionId'}:`, useUserId ? userId : sessionId);
 
     // Find or create cart
     let cartQuery = `
@@ -158,12 +170,12 @@ export async function POST(req: NextRequest) {
         );
         const productName = productResult.rows[0]?.title || 'Unknown Product';
 
-        // Send notification with available data (userId from localStorage)
+        // Send notification with available data
         sendCartActivityNotification({
           activity_type: 'add_to_cart',
           user_email: undefined, // Email not available in ecom DB
           user_name: undefined,  // Name not available in ecom DB
-          user_id: userId || undefined,
+          user_id: userId ? parseInt(userId, 10) : undefined,
           session_id: sessionId,
           product_name: productName,
         }).catch((err) => console.warn('Failed to send cart activity notification', err));
@@ -189,12 +201,12 @@ export async function POST(req: NextRequest) {
         );
         const productName = productResult.rows[0]?.title || 'Unknown Product';
 
-        // Send notification with available data (userId from localStorage)
+        // Send notification with available data
         sendCartActivityNotification({
           activity_type: 'add_to_cart',
           user_email: undefined, // Email not available in ecom DB
           user_name: undefined,  // Name not available in ecom DB
-          user_id: userId || undefined,
+          user_id: userId ? parseInt(userId, 10) : undefined,
           session_id: sessionId,
           product_name: productName,
         }).catch((err) => console.warn('Failed to send cart activity notification', err));

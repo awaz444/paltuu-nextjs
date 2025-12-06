@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
-import { getUserIdFromToken } from "@/utils/authClient";
 import toast from "react-hot-toast";
 
 interface CartProtectionOptions {
@@ -23,26 +22,14 @@ export const useCartProtection = (options: CartProtectionOptions = {}) => {
 
     const checkCart = async () => {
       try {
-        // Get user ID from auth token cookie if present
-        let userId: string | null = null;
-        if (typeof window !== "undefined") {
-          try {
-            userId = getUserIdFromToken();
-          } catch (e) {
-            console.warn("Failed to get user id from token", e);
-            userId = null;
-          }
-        }
-
+        // Server will check authentication via httpOnly cookies
+        const sessionId = getOrCreateGuestSessionId();
         const params = new URLSearchParams();
-        if (userId) {
-          params.append("userId", userId);
-        } else {
-          const sessionId = getOrCreateGuestSessionId();
-          params.append("sessionId", sessionId);
-        }
+        params.append("sessionId", sessionId);
 
-        const res = await fetch(`/api/bazaar/cart?${params.toString()}`);
+        const res = await fetch(`/api/bazaar/cart?${params.toString()}`, {
+          credentials: 'include',
+        });
         if (!res.ok) throw new Error("Failed to fetch cart");
 
         const data = await res.json();

@@ -868,7 +868,7 @@ useEffect(() => {
                         setPlacing(false);
                       }
                     }}
-                    className="w-full mt-6 bg-primary hover:bg-primary-dark text-white font-semibold py-3.5 rounded-xl transition-colors disabled:opacity-60"
+                    className="w-full mt-6 bg-primary hover:bg-primary text-white font-semibold py-3.5 rounded-xl transition-colors disabled:opacity-60"
                   >
                     {placing
                       ? "Placing order..."

@@ -71,6 +71,7 @@ const AdminPetApproval: React.FC = () => {
         console.error('Error fetching cities:', error);
       }
     };
+    
 
     fetchCities();
     fetchPets();

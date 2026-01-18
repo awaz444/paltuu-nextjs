@@ -106,3 +106,14 @@ html, body {
 .animate-slide-up {
   animation: slide-up 0.4s ease-out;
 }
+
+/* Remove Chrome autofill blue background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  -webkit-text-fill-color: #1f2937 !important; /* gray-800 */
+  transition: background-color 5000s ease-in-out 0s;
+}

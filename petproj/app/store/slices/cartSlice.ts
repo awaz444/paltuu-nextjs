@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import toast from "react-hot-toast";
-import { getGuestSessionId } from "@/utils/guest";
+import { getGuestSessionId, getOrCreateGuestSessionId } from "@/utils/guest";
 
 //
 // 🛒 Interfaces
@@ -43,11 +43,24 @@ export const fetchCart = createAsyncThunk<
     console.log('🔍 fetchCart - Attempting to fetch cart (server will check authentication)...');
 
     // Try fetching from server first (works for both logged-in and guest users)
-    // Server will extract userId from cookie automatically
+    // Server will extract userId from cookie automatically for logged-in users
+    // For guest users, we'll send sessionId as fallback
     try {
-      const res = await fetch('/api/bazaar/cart?sessionId=guest', {
+      // First, try without sessionId - backend will use userId from cookie if user is logged in
+      let res = await fetch('/api/bazaar/cart', {
         credentials: 'include',
       });
+
+      // If request fails with 401 and we have a sessionId, retry with sessionId (for guests)
+      if (!res.ok && res.status === 401) {
+        const sessionId = getGuestSessionId() || getOrCreateGuestSessionId();
+        if (sessionId) {
+          console.log('🔄 fetchCart - Retrying with sessionId for guest user');
+          res = await fetch(`/api/bazaar/cart?sessionId=${encodeURIComponent(sessionId)}`, {
+            credentials: 'include',
+          });
+        }
+      }
 
       if (res.ok) {
         const data = await res.json();

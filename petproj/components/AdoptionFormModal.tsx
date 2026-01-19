@@ -225,7 +225,7 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
                         </div>
                         {deliveryMethod === "delivery" && (
                             <p className="text-sm text-gray-500 mt-2 mx-auto text-center">
-                                Our delivery service will bring your pet safely to your doorstep for <span className="text-primary font-bold">Rs. 500-1000</span>
+                                Our delivery service will bring your pet safely to your doorstep for <span className="text-primary font-bold">Rs. 1500</span> (Rs. 500 add-on for each additional pet)
                             </p>
                         )}
                     </div>

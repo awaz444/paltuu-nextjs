@@ -11,6 +11,7 @@ import { AppDispatch } from '../store/store';
 
 const { Option } = Select;
 
+
 type Pet = {
   pet_id: number;
   owner_id: number;
@@ -70,6 +71,7 @@ const AdminPetApproval: React.FC = () => {
         console.error('Error fetching cities:', error);
       }
     };
+
 
     fetchCities();
     fetchPets();
@@ -312,3 +314,4 @@ const AdminPetApproval: React.FC = () => {
 };
 
 export default AdminPetApproval;
+

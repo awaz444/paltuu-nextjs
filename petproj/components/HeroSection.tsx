@@ -445,7 +445,7 @@ const HeroSection = () => {
                         </h2>
                         <p className="text-lg text-gray-700 mb-8 max-w-lg mx-auto lg:mx-0">
                             Meet <strong>Cheeto</strong>, a calm and cuddly
-                            one-year-old stray dog available for{" "}
+                            one-year-old stray cat available for{" "}
                             <strong>adoption in Lahore</strong>. Perfect for
                             families looking for a loving companion, he comes
                             vaccinated and neutered, ready to join his forever

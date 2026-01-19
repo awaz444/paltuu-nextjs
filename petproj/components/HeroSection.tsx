@@ -441,11 +441,11 @@ const HeroSection = () => {
                     {/* Left Column - Text Content */}
                     <div className="text-center lg:text-left">
                         <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6">
-                            Adopt Cheeto – Dog Adoption in Lahore
+                            Adopt Cheeto – Cat Adoption in Lahore
                         </h2>
                         <p className="text-lg text-gray-700 mb-8 max-w-lg mx-auto lg:mx-0">
                             Meet <strong>Cheeto</strong>, a calm and cuddly
-                            one-year-old stray dog available for{" "}
+                            one-year-old stray cat available for{" "}
                             <strong>adoption in Lahore</strong>. Perfect for
                             families looking for a loving companion, he comes
                             vaccinated and neutered, ready to join his forever

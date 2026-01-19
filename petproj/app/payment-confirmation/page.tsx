@@ -212,18 +212,18 @@ function PaymentConfirmationClient() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between items-center p-3 bg-white rounded-lg">
                 <span className="text-gray-600 font-medium">Bank Name:</span>
-                <span className="font-semibold text-gray-900">Meezan Bank</span>
+                <span className="font-semibold text-gray-900">United Bank Limited</span>
               </div>
 
               <div className="flex justify-between items-center p-3 bg-white rounded-lg">
                 <span className="text-gray-600 font-medium">Account Title:</span>
-                <span className="font-semibold text-gray-900">Paltuu (Pvt) Ltd</span>
+                <span className="font-semibold text-gray-900">Aawaiz Ali</span>
               </div>
 
               <div className="flex justify-between items-center p-3 bg-white rounded-lg">
                 <span className="text-gray-600 font-medium">Account Number:</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono font-semibold text-gray-900">0123-4567-8901</span>
+                  <span className="font-mono font-semibold text-gray-900">1288287281873</span>
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText('0123-4567-8901');

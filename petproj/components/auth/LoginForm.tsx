@@ -92,7 +92,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           onChange={(e) => setUser({ ...user, email: e.target.value })}
           onFocus={() => setIsEmailFocused(true)}
           onBlur={() => setIsEmailFocused(false)}
-          className="w-full border border-gray-300 rounded-xl px-4 pt-4 pb-3 text-sm text-gray-800 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+          className="w-full border border-gray-300 rounded-xl px-4 pt-4 pb-3 text-sm text-gray-800 focus:border-2 focus:border-primary focus:ring-0 outline-none transition-all"
           placeholder=" "
           required
         />
@@ -118,7 +118,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           onChange={(e) => setUser({ ...user, password: e.target.value })}
           onFocus={() => setIsPasswordFocused(true)}
           onBlur={() => setIsPasswordFocused(false)}
-          className="w-full border border-gray-300 rounded-xl px-4 pt-4 pb-3 text-sm text-gray-800 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all pr-10"
+          className="w-full border border-gray-300 rounded-xl px-4 pt-4 pb-3 text-sm text-gray-800 focus:border-2 focus:border-primary focus:ring-0 outline-none transition-all pr-10"
           placeholder=" "
           required
         />

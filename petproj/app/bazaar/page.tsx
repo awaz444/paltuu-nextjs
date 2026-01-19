@@ -354,7 +354,7 @@ export default function BazaarPage() {
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 100vw;
+            width: 100%;
             height: auto;
             margin: 0;
             padding: 0;

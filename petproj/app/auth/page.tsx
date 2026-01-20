@@ -43,7 +43,6 @@ function AuthPageClient() {
               clipRule="evenodd"
             />
           </svg>
-          Back to Main Page
         </button>
 
         <img
@@ -51,21 +50,16 @@ function AuthPageClient() {
           alt="Paltu Logo"
           className="mb-3 mt-2 w-40 lg:w-full max-w-full"
         />
-        
       </div>
 
       {/* Right Side - Auth Forms */}
-<div className="w-full lg:w-1/2 lg:ml-[50%] flex items-center justify-center p-6 sm:p-12 bg-gray-100 h-screen overflow-hidden">
+      <div className="w-full lg:w-1/2 lg:ml-[50%] flex items-center justify-center p-6 sm:p-12 bg-gray-100 lg:h-screen overflow-hidden">
         <div className="w-full max-w-md">
           {/* Dynamic Form Rendering */}
           {authMode === "login" ? (
-            <LoginForm 
-              onSwitchToSignup={switchToSignup}
-            />
+            <LoginForm onSwitchToSignup={switchToSignup} />
           ) : (
-            <SignupForm 
-              onSwitchToLogin={switchToLogin}
-            />
+            <SignupForm onSwitchToLogin={switchToLogin} />
           )}
         </div>
       </div>
@@ -76,7 +70,7 @@ function AuthPageClient() {
 // Create the main page component with Suspense
 export default function AuthPage() {
   return (
-    <Suspense 
+    <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
           <div className="animate-pulse text-primary">Loading...</div>

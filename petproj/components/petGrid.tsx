@@ -56,7 +56,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
     const [inlineError, setInlineError] = useState<string | null>(null);
     
 
-    console.log("Pets in PetGrid:", pets);
+    // console.log("Pets in PetGrid:", pets);
 
     const handleAddPetClick = async (e: React.MouseEvent) => {
         e.preventDefault();

@@ -23,7 +23,7 @@ export function useCartSync() {
 
     // On initial mount, if user is already logged in, fetch their cart
     if (!hasInitialized.current && isAuthenticated && user?.id) {
-      console.log('🔄 Initial cart fetch for logged-in user:', user.id);
+      // console.log('🔄 Initial cart fetch for logged-in user:', user.id);
       dispatch(fetchCart());
       hasInitialized.current = true;
       prevAuthRef.current = isAuthenticated;
@@ -33,12 +33,12 @@ export function useCartSync() {
 
     // Only reset cart if auth state actually changed
     if (authChanged || userIdChanged) {
-      console.log('🔄 Auth state changed, syncing cart...', {
-        wasAuthenticated: prevAuthRef.current,
-        isAuthenticated,
-        prevUserId: prevUserIdRef.current,
-        currentUserId: user?.id,
-      });
+      // console.log('🔄 Auth state changed, syncing cart...', {
+      //   wasAuthenticated: prevAuthRef.current,
+      //   isAuthenticated,
+      //   prevUserId: prevUserIdRef.current,
+      //   currentUserId: user?.id,
+      // });
 
       // Reset cart state and fetch new cart
       dispatch(resetCartState());

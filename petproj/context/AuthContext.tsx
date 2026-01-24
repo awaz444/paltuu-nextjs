@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Debug: Log state changes
   useEffect(() => {
-    console.log("🔄 Auth state changed:", { isAuthenticated, user: user?.email, method: user?.method });
+    // console.log("🔄 Auth state changed:", { isAuthenticated, user: user?.email, method: user?.method });
   }, [isAuthenticated, user]);
 
   // Function to validate token exists and is valid (checks server since httpOnly cookies can't be read client-side)
@@ -61,13 +61,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
 
           if (!response.ok) {
-            console.log("❌ Server validation failed:", response.status);
+            // console.log("❌ Server validation failed:", response.status);
             return false;
           }
 
           const data = await response.json();
           const isValid = data.valid === true;
-          console.log("✅ Server validation result:", isValid);
+          // console.log("✅ Server validation result:", isValid);
           return isValid;
         } catch (fetchError) {
           retries--;
@@ -88,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const hydrateUser = async () => {
       try {
-        console.log("🔍 Attempting to hydrate user from server...");
+        // console.log("🔍 Attempting to hydrate user from server...");
 
         // Call server to verify token (server can read httpOnly cookies)
         const verifyResponse = await fetch("/api/auth/verify-token", {
@@ -97,17 +97,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
 
         if (!verifyResponse.ok) {
-          console.log("⚠️ No valid token found on server");
+          // console.log("⚠️ No valid token found on server");
           return;
         }
 
         const { valid, user: tokenUser } = await verifyResponse.json();
         if (!valid || !tokenUser) {
-          console.log("⚠️ Token validation failed");
+          // console.log("⚠️ Token validation failed");
           return;
         }
 
-        console.log("✅ Token verified, userId:", tokenUser.id);
+        // console.log("✅ Token verified, userId:", tokenUser.id);
 
         // Fetch full user profile from database
         const profileResponse = await fetch(`/api/my-profile/${tokenUser.id}`);
@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             profile_image_url: dbProfile.profile_image_url || "/default-avatar.png",
             method: "api"
           };
-          console.log("✅ Hydrated user from database profile:", hydratedUser);
+          // console.log("✅ Hydrated user from database profile:", hydratedUser);
           setUser(hydratedUser);
           setIsAuthenticated(true);
         } else {
@@ -134,7 +134,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             profile_image_url: "/default-avatar.png",
             method: "api"
           };
-          console.log("✅ Hydrated user from token (no profile found):", minimalUser);
+          // console.log("✅ Hydrated user from token (no profile found):", minimalUser);
           setUser(minimalUser);
           setIsAuthenticated(true);
         }
@@ -147,8 +147,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []); // Run only once on mount
 
   useEffect(() => {
-    console.log("🔎 useSession status:", status);
-    console.log("🔎 NextAuth session.user:", session?.user);
+    // console.log("🔎 useSession status:", status);
+    // console.log("🔎 NextAuth session.user:", session?.user);
 
     if (status === "authenticated" && session?.user) {
     const googleUserId = (session.user as any).user_id || (session.user as any).id;
@@ -175,12 +175,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(userWithDbData);
             setIsAuthenticated(true);
 
-            console.log("✅ Using database profile data for Google user:", userWithDbData);
-            console.log("🔍 AuthContext - Database profile_image_url:", dbProfile.profile_image_url);
+            // console.log("✅ Using database profile data for Google user:", userWithDbData);
+            // console.log("🔍 AuthContext - Database profile_image_url:", dbProfile.profile_image_url);
             return userWithDbData;
           }
         } catch (error) {
-          console.log("No database profile found, using Google data");
+          // console.log("No database profile found, using Google data");
         }
 
         // Fallback to Google data if no database profile exists
@@ -197,8 +197,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(googleUser);
             setIsAuthenticated(true);
 
-        console.log("✅ Using Google profile data:", googleUser);
-        console.log("🔍 AuthContext - Google profile_image_url:", session.user.image);
+        // console.log("✅ Using Google profile data:", googleUser);
+        // console.log("🔍 AuthContext - Google profile_image_url:", session.user.image);
         return googleUser;
       };
 
@@ -206,7 +206,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // Clear guest session cookie (cart sync will be handled by useCartSync hook)
           try {
             clearGuestSessionId();
-            console.log('✅ User logged in via Google - guest session cleared');
+            // console.log('✅ User logged in via Google - guest session cleared');
           } catch (e) {
             console.error('Error clearing guest session on login:', e);
           }
@@ -259,12 +259,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   setIsAuthenticated(true);
   try {
     clearGuestSessionId();
-    console.log('✅ User logged in via API - guest session cleared');
+    // console.log('✅ User logged in via API - guest session cleared');
   } catch (e) {
     console.error('Error clearing guest session on login:', e);
   }
 
-      console.log("✅ Using database profile data for API user:", userWithDbData);      // Redirect on API login success - check for callback URL first
+      // console.log("✅ Using database profile data for API user:", userWithDbData);      // Redirect on API login success - check for callback URL first
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const callbackUrl = urlParams.get('callbackUrl');
@@ -286,7 +286,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
   } catch (error) {
-    console.log("No database profile found, using login response data");
+    //console.log("No database profile found, using login response data");
   }
 
   // Fallback to login response data if no database profile exists
@@ -303,12 +303,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   setIsAuthenticated(true);
   try {
     clearGuestSessionId();
-    console.log('✅ User logged in via API (fallback) - guest session cleared');
+    //console.log('✅ User logged in via API (fallback) - guest session cleared');
   } catch (e) {
     console.error('Error clearing guest session on login:', e);
   }
 
-  console.log("✅ Using login response data for API user:", userWithMethod);  // Redirect on API login success - check for callback URL first
+  //console.log("✅ Using login response data for API user:", userWithMethod);  // Redirect on API login success - check for callback URL first
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const callbackUrl = urlParams.get('callbackUrl');
@@ -349,14 +349,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(updatedUser);
       // Do not persist to localStorage
 
-      console.log("✅ User data refreshed:", updatedUser);
+      //console.log("✅ User data refreshed:", updatedUser);
     } catch (error) {
       console.error("Failed to refresh user data:", error);
     }
   };
 
   const logout = async () => {
-    console.log("Logout started, user method:", user?.method);
+   // console.log("Logout started, user method:", user?.method);
 
     try {
       // Clear in-memory user and guest session cookie (cart will be handled by useCartSync hook)
@@ -365,7 +365,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // For Google users, handle NextAuth signOut correctly
       if (user?.method === "google") {
-        console.log("Executing Google logout flow");
+        //console.log("Executing Google logout flow");
         await nextAuthSignOut({
           callbackUrl: "/auth",
           redirect: true,
@@ -374,7 +374,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // For API users, proceed with API logout
-      console.log("Executing API logout flow");
+      //console.log("Executing API logout flow");
       try {
         const response = await fetch("/api/users/logout", {
           method: "GET",
@@ -385,7 +385,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           throw new Error(`API logout failed with status: ${response.status}`);
         }
 
-        console.log("API logout successful");
+        //console.log("API logout successful");
       } catch (err) {
         console.error("API logout error:", err);
       }

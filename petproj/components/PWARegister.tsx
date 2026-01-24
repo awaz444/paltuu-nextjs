@@ -22,7 +22,6 @@ export default function PWARegister() {
                   // New service worker available, prompt user to refresh
                   if (confirm('New version available! Reload to update?')) {
                     newWorker.postMessage({ type: 'SKIP_WAITING' });
-                    window.location.reload();
                   }
                 }
               });

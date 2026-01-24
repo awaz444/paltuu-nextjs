@@ -62,7 +62,7 @@ const CheckoutPage = () => {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
-  const [city, setCity] = useState("");
+  const [city, setCity] = useState("Karachi");
   const [postalCode, setPostalCode] = useState("");
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cod");
@@ -166,7 +166,7 @@ useEffect(() => {
           setEmail(info.email || "");
           setFullName(info.full_name || "");
           setPhone(info.phone || "+92");
-          setCity(info.city || "");
+          setCity("Karachi"); // Force Karachi as it's the only supported city
           setPostalCode(info.postal_code || "");
           setAddress(info.address || "");
           setShippingInfoLoaded(true);
@@ -347,6 +347,13 @@ useEffect(() => {
       isValid = false;
     }
 
+    // City validation (Strictly Karachi)
+    if (city.toLowerCase().trim() !== "karachi") {
+      alert("We currently only deliver to Karachi.");
+      setCity("Karachi");
+      isValid = false;
+    }
+
     return isValid;
   };
 
@@ -500,13 +507,20 @@ useEffect(() => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         City
                       </label>
-                      <input
-                        type="text"
-                        placeholder="Enter your city"
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
-                      />
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value="Karachi"
+                          readOnly
+                          className="w-full p-3 border border-gray-300 rounded-xl bg-gray-100 text-gray-500 cursor-not-allowed focus:ring-0"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 pointer-events-none">
+                          <CheckCircle size={16} />
+                        </div>
+                      </div>
+                      <p className="text-xs text-primary mt-1 font-medium">
+                        * Currently only delivering in Karachi
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">

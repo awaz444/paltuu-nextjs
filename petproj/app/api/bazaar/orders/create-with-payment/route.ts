@@ -156,7 +156,8 @@ export async function POST(req: NextRequest) {
         // 8. Fetch complete order with items
         const completeOrderQuery = `
           SELECT o.*,
-            json_agg(
+          COALESCE(
+            (SELECT json_agg(
               json_build_object(
                 'order_item_id', oi.order_item_id,
                 'product_id', oi.product_id,
@@ -167,11 +168,11 @@ export async function POST(req: NextRequest) {
                 'product_title', oi.product_title,
                 'variant_title', oi.variant_title
               )
-            ) AS items
+            ) FROM bazaar_order_items oi WHERE oi.order_id = o.order_id),
+            '[]'::json
+          ) AS items
           FROM bazaar_orders o
-          LEFT JOIN bazaar_order_items oi ON o.order_id = oi.order_id
           WHERE o.order_id = $1
-          GROUP BY o.order_id
         `;
 
         const completeOrderResult = await conn.query(completeOrderQuery, [order.order_id]);

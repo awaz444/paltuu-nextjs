@@ -340,7 +340,7 @@ export default function BazaarPage() {
         {/* Mobile Banner */}
         <div className="block sm:hidden w-full">
           <Image
-            src="/bazaar-mobile.png"
+            src="/ig-post.png"
             alt="Bazaar Banner Mobile"
             width={1080}
             height={1920}

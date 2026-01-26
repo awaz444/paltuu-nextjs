@@ -240,10 +240,10 @@ function PaymentConfirmationClient() {
               <div className="flex justify-between items-center p-3 bg-white rounded-lg">
                 <span className="text-gray-600 font-medium">IBAN:</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono font-semibold text-gray-900">PK36MEZN0001230123456789</span>
+                  <span className="font-mono font-semibold text-gray-900">PK18UNIL0109000287281873</span>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText('PK36MEZN0001230123456789');
+                      navigator.clipboard.writeText('PK18UNIL0109000287281873');
                       alert('IBAN copied!');
                     }}
                     className="p-1.5 hover:bg-gray-100 rounded transition-colors"

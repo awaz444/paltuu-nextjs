@@ -70,6 +70,7 @@ const OrderConfirmedContent = () => {
       }
 
       setOrder(fetchedOrder);
+      console.log('Fetched Order:', fetchedOrder); // Debug log
       setSearchError("");
     } catch (e) {
       console.warn("Failed to fetch order", e);
@@ -704,7 +705,7 @@ const OrderConfirmedContent = () => {
         </div>
 
         {/* Order Items */}
-        {order?.items && Array.isArray(order.items) && (
+        {order?.items && Array.isArray(order.items) && order.items.filter((i:any) => i && i.product_title).length > 0 && (
           <div className="bg-white rounded-2xl p-6 mb-8 shadow-lg border border-primary/10">
             <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
               <div className="p-2 bg-primary/10 rounded-lg">
@@ -713,7 +714,7 @@ const OrderConfirmedContent = () => {
               Order Items
             </h3>
             <div className="space-y-4">
-              {order.items.map((it: any) => (
+              {order.items.filter((it:any) => it && it.product_title).map((it: any) => (
                 <div
                   key={it.order_item_id}
                   className="flex justify-between items-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"

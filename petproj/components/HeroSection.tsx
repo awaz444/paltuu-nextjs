@@ -375,6 +375,7 @@ const HeroSection = () => {
                                 delay: "400",
                                 buttonText: "Find Vets",
                             },
+                            
                             {
                                 icon: faSearch,
                                 title: "Lost & Found",

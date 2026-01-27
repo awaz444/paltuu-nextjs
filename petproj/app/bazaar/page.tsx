@@ -328,7 +328,7 @@ export default function BazaarPage() {
         {/* Desktop & Tablet Banner */}
         <div className="hidden sm:block w-full">
           <Image
-            src="/bazaarweb.png"
+            src="/wide.png"
             alt="Bazaar Banner"
             width={1920}
             height={1080}
@@ -340,7 +340,7 @@ export default function BazaarPage() {
         {/* Mobile Banner */}
         <div className="block sm:hidden w-full">
           <Image
-            src="/ig-post.png"
+            src="/tall.png"
             alt="Bazaar Banner Mobile"
             width={1080}
             height={1920}

@@ -17,6 +17,8 @@ import {
     faBullseye,
     faEye,
     faShoppingCart,
+    faBath,
+    faHome,
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 import PaltuuBazaarSection from "./PaltuuBazaarSection";
@@ -63,10 +65,8 @@ const HeroSection = () => {
                                 className="w-12 md:w-20 -rotate-12"
                             />
                             <p className="text-xs md:text-sm text-primary italic tracking-wide relative top-[-6px] md:top-[-10px] left-[-4px] md:left-[-9px]">
-                                Available in{" "}
-                                <span className="font-bold">Karachi,</span>{" "}
-                                <span className="font-bold">Lahore</span> and{" "}
-                                <span className="font-bold">Islamabad</span>
+                                Connecting pets and parents across
+                                <span className="font-bold"> Pakistan</span>
                             </p>
                         </div>
 
@@ -91,25 +91,24 @@ const HeroSection = () => {
                             </h1>
                             {/* Tagline */}
                             <h3 className="text-xl md:text-xl lg:text-2xl font-medium mb-0 md:mb-1">
-                                {" "}
-                                {/* Removed mb on mobile */}
-                                Find Your New Best Friend
+                                Get the Best for Your Pet —{" "}
+                                <a href="/bazaar" className="underline decoration-gray-400 hover:decoration-black text-black">
+                                    Shop Bazaar
+                                </a>
                             </h3>
                             <p className="text-base md:text-md text-gray-700 mb-6 mt-2 md:mb-8 max-w-lg">
-                                <span className="font-bold">Paltuu.pk</span> is
-                                Pakistan’s first pet adoption and pet care
-                                platform, helping you adopt dogs and cats,
-                                connect with vets, and shop pet products online.
-                                {/* Hidden SEO links */}
-                                <a href="/browse-pets" className="sr-only">
-                                    Pet Adoption in Pakistan
+                                <span className="font-bold">Paltuu.pk</span> is Pakistan's first pet adoption and pet care platform, helping you{" "}
+                                <a href="/browse-pets" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                    adopt dogs and cats
                                 </a>
-                                <a href="/pet-care" className="sr-only">
-                                    Connect with Vets in Pakistan
+                                ,{" "}
+                                <a href="/pet-care" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                    connect with vets
                                 </a>
-                                <a href="/bazaar" className="sr-only">
-                                    Buy Pet Products Online in Pakistan
-                                </a>
+                                , and{" "}
+                                <a href="/bazaar" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                    shop pet products online
+                                </a>.
                             </p>
                         </div>
                     </div>
@@ -162,35 +161,39 @@ const HeroSection = () => {
 
                             {/* Perks List */}
                             <ul className="list-disc list-inside text-gray-700 space-y-2 mb-5">
-                                <li>
-                                    Best place to <a href="/browse-pets" className="text-inherit no-underline ">adopt pets in Pakistan</a>
-                                </li>
-                                <li>
-                                    Trusted shelters and adoption centers
-                                    nationwide
-                                    <a href="/browse-pets" className="sr-only">
-                                        Pet adoption in Karachi Lahore Islamabad
-                                    </a>
-                                </li>
-                                <li>
-                                    Shop pet food, accessories & grooming
-                                    products online
-                                    <a href="/bazaar" className="sr-only">
-                                        Buy pet products online in Pakistan
-                                    </a>
-                                </li>
-                                <li>
-                                    24/7 veterinary guidance & pet care support
-                                    <a href="/pet-care" className="sr-only">
-                                        Find vets in Pakistan online
-                                    </a>
-                                </li>
-                                <li>
-                                    Location-based pet adoption and services
-                                    <a href="/browse-pets" className="sr-only">
-                                        Adopt pets near you in Pakistan
-                                    </a>
-                                </li>
+                                <ul className="space-y-3">
+                                    <li>
+                                        Find and{" "}
+                                        <a href="/browse-pets" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                            adopt pets in Pakistan
+                                        </a>{" "}
+                                        from trusted shelters.
+                                    </li>
+                                    <li>
+                                        Connect with{" "}
+                                        <a href="/browse-pets" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                            shelters in Karachi, Lahore, and Islamabad
+                                        </a>.
+                                    </li>
+                                    <li>
+                                        <a href="/bazaar" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                            Shop pet food & accessories
+                                        </a>{" "}
+                                        online with nationwide delivery.
+                                    </li>
+                                    <li>
+                                        <a href="/pet-care" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                            Find vets in Pakistan
+                                        </a>{" "}
+                                        and get expert pet care guidance.
+                                    </li>
+                                    <li>
+                                        <a href="/browse-pets" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                            Adopt pets near you
+                                        </a>{" "}
+                                        with our matching algorithm.
+                                    </li>
+                                </ul>
                             </ul>
 
                             <a
@@ -216,7 +219,8 @@ const HeroSection = () => {
             {/* Mission & Vision Sections - Theme Matched */}
             <section className="py-12 px-6 lg:px-20 bg-white relative">
                 <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden">
+                    {/* Mission Card */}
+                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden flex flex-col h-full">
                         <div className="absolute -bottom-4 -right-4 w-24 h-24 opacity-10">
                             <FontAwesomeIcon
                                 icon={faPaw}
@@ -234,31 +238,37 @@ const HeroSection = () => {
                                 Our Mission
                             </h3>
                         </div>
-                        <p className="text-gray-700 pl-1">
+                        <p className="text-gray-700 pl-1 mb-4 flex-grow">
                             To revolutionize pet care in Pakistan by making{" "}
-                            <strong>
-                                pet adoption, veterinary care, and pet products
-                            </strong>{" "}
+                            <span className="font-semibold text-gray-900">pet adoption</span>,{" "}
+                            <span className="font-semibold text-gray-900">veterinary care</span>, and{" "}
+                            <span className="font-semibold text-gray-900">pet products</span>{" "}
                             easily accessible. Paltuu.pk connects pet lovers in{" "}
-                            Karachi, Lahore, Islamabad and beyond with trusted{" "}
-                            <strong>
-                                adoptable pets, online pet stores, and vet
-                                services
-                            </strong>
-                            .
-                            <a href="/browse-pets" className="sr-only">
-                                Adopt pets in Pakistan
-                            </a>
-                            <a href="/bazaar" className="sr-only">
-                                Buy pet food and accessories online in Pakistan
-                            </a>
-                            <a href="/vets" className="sr-only">
-                                Find vets in Karachi Lahore Islamabad
-                            </a>
+                            <span className="font-semibold text-gray-900">Karachi, Lahore, Islamabad</span>{" "}
+                            and beyond with trusted services.
                         </p>
+
+                        {/* Visible Micro-CTAs */}
+                        <div className="flex flex-wrap gap-3 mt-auto pt-4 border-t border-primary/10 justify-center">
+                            <a
+                                href="/browse-pets"
+                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
+                            >
+                                <FontAwesomeIcon icon={faDog} className="mr-2 text-sm" />
+                                Adopt Pets
+                            </a>
+                            <a
+                                href="/pet-care"
+                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
+                            >
+                                <FontAwesomeIcon icon={faStethoscope} className="mr-2 text-sm" />
+                                Find Vets
+                            </a>
+                        </div>
                     </div>
 
-                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden">
+                    {/* Vision Card */}
+                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden flex flex-col h-full">
                         <div className="absolute -top-4 -left-4 w-24 h-24 opacity-10">
                             <FontAwesomeIcon
                                 icon={faHeart}
@@ -276,24 +286,31 @@ const HeroSection = () => {
                                 Our Vision
                             </h3>
                         </div>
-                        <p className="text-gray-700 pl-1">
+                        <p className="text-gray-700 pl-1 mb-4 flex-grow">
                             We envision a compassionate Pakistan where{" "}
-                            <strong>every pet finds a loving home</strong> and{" "}
-                            <strong>
-                                pet owners can access food, grooming, and
-                                healthcare
-                            </strong>
-                            through trusted platforms. From{" "}
-                            <strong>adopting dogs and cats</strong> to shopping
-                            for <strong>pet supplies online</strong>, Paltuu.pk
-                            makes pet care simple and reliable.
-                            <a href="/lost-and-found" className="sr-only">
-                                Lost and found pets in Pakistan
-                            </a>
-                            <a href="/bazaar" className="sr-only">
-                                Pet grooming and accessories store Pakistan
-                            </a>
+                            <span className="font-semibold text-gray-900">every pet finds a loving home</span>{" "}
+                            and owners can access{" "}
+                            <span className="font-semibold text-gray-900">food, grooming, and healthcare</span>{" "}
+                            through trusted platforms. Paltuu.pk makes pet care simple, reliable, and accessible for everyone.
                         </p>
+
+                        {/* Visible Micro-CTAs */}
+                        <div className="flex flex-wrap gap-3 mt-auto pt-4 border-t border-primary/10 justify-center">
+                            <a
+                                href="/bazaar"
+                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
+                            >
+                                <FontAwesomeIcon icon={faShoppingCart} className="mr-2 text-sm" />
+                                Shop Bazaar
+                            </a>
+                            <a
+                                href="/lost-and-found"
+                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
+                            >
+                                <FontAwesomeIcon icon={faSearch} className="mr-2 text-sm" />
+                                Lost & Found
+                            </a>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -375,7 +392,7 @@ const HeroSection = () => {
                                 delay: "400",
                                 buttonText: "Find Vets",
                             },
-                            
+
                             {
                                 icon: faSearch,
                                 title: "Lost & Found",

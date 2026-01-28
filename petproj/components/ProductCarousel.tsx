@@ -2,8 +2,14 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { MoonLoader } from "react-spinners";
+
+// Supabase Image Loader
+const supabaseLoader = ({ src, width, quality }: { src: string; width: number; quality?: number }) => {
+    return `${src}?width=${width}&quality=${quality || 75}`;
+};
 
 interface Product {
     product_id: number;
@@ -41,7 +47,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
     const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Responsive items per view
+    // Responsive items per view logic - Move window check to useEffect to fix Hydration Error
     const getItemsPerView = () => {
         if (typeof window !== "undefined") {
             const width = window.innerWidth;
@@ -51,10 +57,10 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
             if (width >= 640) return 2; // sm
             return 1; // mobile
         }
-        return 3; // Default for SSR
+        return 4; // Consistent default for initial server render
     };
 
-    const [itemsPerView, setItemsPerView] = useState(getItemsPerView);
+    const [itemsPerView, setItemsPerView] = useState(4); // Start with safe default
 
     // Create extended products array for infinite scroll
     const extendedProducts =
@@ -62,6 +68,9 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
     const originalLength = products.length;
 
     React.useEffect(() => {
+        // Set initial correct value on client
+        setItemsPerView(getItemsPerView());
+
         const handleResize = () => {
             setItemsPerView(getItemsPerView());
         };
@@ -210,25 +219,20 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
                                                 : ""
                                         }`}>
                                         {/* Product Image */}
-                                        <div className="relative bg-white rounded-2xl p-2">
-                                            <div className="w-full aspect-square flex items-center justify-center">
-                                                <img
-                                                    src={
-                                                        product.image_url ||
-                                                        "/product-placeholder.png"
-                                                    }
-                                                    alt={productTitle}
-                                                    className="max-w-full max-h-full object-contain rounded-xl"
-                                                    onError={(e) => {
-                                                        const target =
-                                                            e.target as HTMLImageElement;
-                                                        target.src =
-                                                            "/product-placeholder.png";
-                                                    }}
-                                                />
-                                            </div>
+                                        <div className="relative bg-white rounded-2xl p-2 w-full aspect-square flex items-center justify-center">
+                                            <Image
+                                                loader={supabaseLoader}
+                                                src={
+                                                    product.image_url ||
+                                                    "/product-placeholder.png"
+                                                }
+                                                alt={productTitle}
+                                                fill
+                                                className="object-contain rounded-xl"
+                                                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
+                                            />
                                             {product.inStock === false && (
-                                                <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center rounded-2xl">
+                                                <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center rounded-2xl z-10">
                                                     <span className="text-white font-bold">
                                                         Out of Stock
                                                     </span>

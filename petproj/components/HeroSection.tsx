@@ -216,6 +216,97 @@ const HeroSection = () => {
             {/* Paltuu Bazaar Section */}
             <PaltuuBazaarSection />
 
+            {/* Impact / Numbers Section */}
+            <section className="py-12 px-6 lg:px-20 bg-gray-50">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-10">
+                        <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-3">
+                            Making a <span className="text-primary">Difference</span>
+                        </h2>
+                        <p className="text-lg text-gray-600 font-medium max-w-2xl mx-auto">
+                            Every number represents a life touched and a story changed forever.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
+                        {[
+                            { count: "589", label: "Registered Users" },
+                            { count: "167", label: "Happy Adopters" },
+                            { count: "3", label: "Rescue Partners" },
+                            { count: "190", label: "Animals Helped" },
+                            { count: "47", label: "Critical Rescues" },
+                            { count: "143", label: "Forever Homes" },
+                        ].map((stat, index) => (
+                            <div key={index} className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col items-center justify-center text-center hover:-translate-y-1 transition-transform duration-300">
+                                <span className="text-3xl lg:text-4xl font-extrabold text-primary mb-2">
+                                    {stat.count}
+                                </span>
+                                <span className="text-xs md:text-sm font-bold text-gray-600 uppercase tracking-wide">
+                                    {stat.label}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* How Paltuu Works Section */}
+            <section className="py-20 px-6 lg:px-20 bg-white">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-4">
+                            How <span className="text-primary">Paltuu</span> Works
+                        </h2>
+                        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                            Your journey to pet parenthood in four simple steps.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative">
+                        {/* Connecting Line (Desktop) */}
+                        <div className="hidden lg:block absolute top-[2.5rem] left-[12%] right-[12%] h-0.5 bg-gray-200 -z-0"></div>
+
+                        {[
+                            {
+                                icon: faSearch,
+                                title: "Discover",
+                                desc: "Find adoptable pets in your city",
+                            },
+                            {
+                                icon: faUsers,
+                                title: "Apply & Connect",
+                                desc: "Fill the adoption form and contact the owner or shelter",
+                            },
+                            {
+                                icon: faEye,
+                                title: "Verify & Decide",
+                                desc: "Ask questions and confirm suitability",
+                            },
+                            {
+                                icon: faHome,
+                                title: "Welcome Them Home",
+                                desc: "Arrange pickup or use Paltuu’s Pet delivery support",
+                            },
+                        ].map((step, index) => (
+                            <div key={index} className="flex flex-col items-center text-center relative z-10">
+                                <div className="w-20 h-20 rounded-full bg-white border-4 border-primary/10 flex items-center justify-center mb-6 shadow-sm">
+                                    <FontAwesomeIcon
+                                        icon={step.icon}
+                                        className="text-2xl text-primary"
+                                    />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                    {step.title}
+                                </h3>
+                                <p className="text-gray-600 text-sm leading-relaxed px-4">
+                                    {step.desc}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* Mission & Vision Sections - Theme Matched */}
             <section className="py-12 px-6 lg:px-20 bg-white relative">
                 <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -325,11 +416,10 @@ const HeroSection = () => {
                         </h2>
                         <p className="text-lg text-white/80 max-w-2xl mx-auto">
                             Paltuu.pk provides complete pet care solutions in
-                            one place – from <strong>pet adoption</strong> to{" "}
+                            one place, from <strong>pet adoption</strong> to{" "}
                             <strong>
                                 pet products and veterinary services
                             </strong>
-                            .
                         </p>
                     </div>
 
@@ -453,184 +543,66 @@ const HeroSection = () => {
                 </div>
             </section>
 
-            {/* Featured Pet Section */}
-            <section className="py-16 px-6 lg:px-20 bg-primary/5">
-                <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                    {/* Left Column - Text Content */}
-                    <div className="text-center lg:text-left">
-                        <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6">
-                            Adopt Cheeto – Cat Adoption in Lahore
+
+
+            {/* Testimonials Section */}
+            <section className="py-20 px-6 lg:px-20 bg-gray-50 relative overflow-hidden">
+                {/* Background Decoration */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -z-0"></div>
+
+                <div className="max-w-6xl mx-auto relative z-10">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-4">
+                            Loved by the <span className="text-primary">Community</span>
                         </h2>
-                        <p className="text-lg text-gray-700 mb-8 max-w-lg mx-auto lg:mx-0">
-                            Meet <strong>Cheeto</strong>, a calm and cuddly
-                            one-year-old stray cat available for{" "}
-                            <strong>adoption in Lahore</strong>. Perfect for
-                            families looking for a loving companion, he comes
-                            vaccinated and neutered, ready to join his forever
-                            home.
+                        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                            Don't just take our word for it, hear from pet lovers across Pakistan.
                         </p>
-
-                        <div className="space-y-6 mb-8">
-                            <div>
-                                <h4 className="font-semibold text-lg">
-                                    Perfect For You If:
-                                </h4>
-                                <ul className="text-gray-600 list-disc pl-5 space-y-1">
-                                    <li>You want a low-energy companion</li>
-                                    <li>
-                                        You work from home or spend lots of time
-                                        at home
-                                    </li>
-                                    <li>You love affectionate, cuddly pets</li>
-                                </ul>
-                            </div>
-
-                            <div>
-                                <h4 className="font-semibold text-lg">
-                                    Special Needs:
-                                </h4>
-                                <p className="text-gray-600">
-                                    Requires sun protection due to light
-                                    sensitivity
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <a
-                                href="/browse-pets/279"
-                                className="bg-primary text-white px-6 py-3 rounded-full font-bold text-center
-          hover:scale-105 transition-transform duration-300 shadow-lg">
-                                Adopt Cheeto
-                            </a>
-                            <a
-                                href="/browse-pets"
-                                className="bg-white text-primary border border-primary px-6 py-3 rounded-full font-bold text-center
-          hover:scale-105 transition-transform duration-300 shadow-lg">
-                                Browse Other Pets
-                            </a>
-                        </div>
-
-                        {/* Hidden SEO Links */}
-                        <a href="/browse-pets" className="sr-only">
-                            Dog adoption in Pakistan
-                        </a>
-                        <a href="/browse-pets?city=lahore" className="sr-only">
-                            Adopt a dog in Lahore
-                        </a>
-                        <a href="/pet-care" className="sr-only">
-                            Pet care services in Pakistan
-                        </a>
                     </div>
 
-                    {/* Right Column - Featured Pet Card */}
-                    <div className="flex justify-center">
-                        <div className="bg-white pt-4 pr-4 pl-4 rounded-3xl shadow-sm overflow-hidden border-2 border-primary hover:border-primary hover:scale-102 transition-all duration-300 w-full max-w-md">
-                            <div className="relative">
-                                <img
-                                    src="https://res.cloudinary.com/dfwykqn1d/image/upload/v1744815787/vocg0o0zbnqxowcutgft.jpg"
-                                    alt="Cheeto – adoptable dog in Lahore"
-                                    className="w-full aspect-square object-cover rounded-2xl"
-                                />
-
-                            </div>
-                            <div className="p-4">
-                                <div className="flex justify-between items-start">
-                                    <h3 className="font-bold text-2xl mb-1">
-                                        Cheeto
-                                    </h3>
-                                    <span className="bg-primary/10 text-primary text-sm px-2 py-1 rounded-full">
-                                        ♂ Male
-                                    </span>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {[
+                            {
+                                name: "Ayesha K.",
+                                city: "Karachi",
+                                quote: "Paltuu made the adoption process simple and trustworthy. We found our cat through a verified rescue, and the experience was smooth.",
+                            },
+                            {
+                                name: "Hamza R.",
+                                city: "Karachi",
+                                quote: "Instead of random Facebook groups, Paltuu gave us real options and real people. Highly recommended for pet adoption.",
+                            },
+                            {
+                                name: "Sara M.",
+                                city: "Karachi",
+                                quote: "I connected with a rescue partner through Paltuu and helped rehome animals safely. The platform actually works.",
+                            },
+                        ].map((testimonial, index) => (
+                            <div key={index} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full hover:shadow-md transition-shadow">
+                                <div className="mb-6 flex-grow">
+                                    <p className="text-gray-700 italic text-lg leading-relaxed">
+                                        "{testimonial.quote}"
+                                    </p>
                                 </div>
-
-                                <p className="text-gray-600 mb-2">
-                                    1 year old • Stray
-                                </p>
-
-                                <div className="flex items-center gap-2 text-gray-600 mb-3">
-                                    <FontAwesomeIcon
-                                        icon={faMapMarkerAlt}
-                                        className="text-primary"
-                                    />
-                                    <span>Lahore, Gulberg</span>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-                                    <div className="flex items-center gap-2">
-                                        <FontAwesomeIcon
-                                            icon={faStar}
-                                            className="text-yellow-400"
-                                        />
-                                        <span>Energy: 4/5</span>
+                                <div className="flex items-center gap-4 border-t border-gray-100 pt-4">
+                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
+                                        {testimonial.name.charAt(0)}
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <FontAwesomeIcon
-                                            icon={faHeart}
-                                            className="text-red-400"
-                                        />
-                                        <span>Cuddly: 5/5</span>
+                                    <div>
+                                        <h4 className="font-bold text-gray-900 text-sm">
+                                            {testimonial.name}
+                                        </h4>
+                                        <p className="text-xs text-gray-500">
+                                            {testimonial.city}
+                                        </p>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <FontAwesomeIcon
-                                            icon={faDog}
-                                            className="text-blue-400"
-                                        />
-                                        <span>Good with dogs</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <FontAwesomeIcon
-                                            icon={faCat}
-                                            className="text-purple-400"
-                                        />
-                                        <span>Good with cats</span>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-wrap gap-2 mt-4">
-                                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                                        Vaccinated
-                                    </span>
-                                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                        Neutered
-                                    </span>
-                                    <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">
-                                        Needs company
-                                    </span>
                                 </div>
                             </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </section>
-
-            {/* Testimonials */}
-            {/* <section className="py-16 px-6 lg:px-20 bg-gray-50">
-                <h2 className="text-3xl font-bold text-center mb-12">
-                    What Our Users Say
-                </h2>
-                <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                    {[
-                        { name: "Sarah J.", review: "Found the perfect companion through Paltuu. Truly a blessing!", img: "/assets/man1.jpg" },
-                        { name: "Mike R.", review: "Smooth adoption process and an amazing team. Highly recommend!", img: "/assets/man2.jpg" },
-                        { name: "Emma W.", review: "Thanks to Paltuu, we reunited with our lost cat in just two days!", img: "/assets/man3.jpg" },
-                    ].map((review, index) => (
-                        <div key={index} className="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                            <div className="flex items-center mb-4">
-                                <img src={review.img} alt={review.name} className="w-12 h-12 rounded-full object-cover mr-4" />
-                                <div>
-                                    <h3 className="font-semibold">{review.name}</h3>
-                                    <div className="flex text-secondary">
-                                        {[...Array(4)].map((_, i) => <FontAwesomeIcon icon={faStar} key={i} />)}
-                                        <FontAwesomeIcon icon={faStarHalfAlt} />
-                                    </div>
-                                </div>
-                            </div>
-                            <p className="text-gray-600">{review.review}</p>
-                        </div>
-                    ))}
-                </div>
-            </section> */}
         </div>
     );
 };

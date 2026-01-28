@@ -18,6 +18,7 @@ interface UserProfileData {
     created_at: string;
 }
 
+
 const AdminPanel = () => {
     const { user } = useAuth();
     const { data: session, status } = useSession();

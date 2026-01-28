@@ -92,7 +92,7 @@
   display: none; /* Hide links on small screens */
   align-items: center;
   gap: 20px;
-  padding-left: 1.5rem;
+  /* padding-left: 0.5rem; */
   justify-content: flex-end; /* Align links to the right */
 }
 

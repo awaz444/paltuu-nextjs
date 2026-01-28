@@ -131,7 +131,7 @@ const Navbar = ({
     "shop admin": "#b86b00",
     "ecommerce admin": "#004a99",
   };
-  
+
   // Updated dropdown items with isAction flag
   const defaultDropdownItems = [
     {
@@ -139,22 +139,22 @@ const Navbar = ({
         userRole === "vet"
           ? "/vet-panel"
           : userRole === "admin"
-          ? "/admin-panel"
-          : userRole === "shop admin"
-          ? "/shop-panel"
-          : userRole === "shelter admin"
-          ? "/rescue-panel"
-          : "/my-profile",
+            ? "/admin-panel"
+            : userRole === "shop admin"
+              ? "/shop-panel"
+              : userRole === "shelter admin"
+                ? "/rescue-panel"
+                : "/my-profile",
       label:
         userRole === "vet"
           ? "Vet Panel"
           : userRole === "admin"
-          ? "Admin Panel"
-          : userRole === "shop admin"
-          ? "Shop Panel"
-          : userRole === "shelter admin"
-          ? "Rescue Panel"
-          : "My Profile",
+            ? "Admin Panel"
+            : userRole === "shop admin"
+              ? "Shop Panel"
+              : userRole === "shelter admin"
+                ? "Rescue Panel"
+                : "My Profile",
       icon: "bi-person-circle", // 👈 same as desktop
       isAction: false,
     },
@@ -236,26 +236,26 @@ const Navbar = ({
     console.log('markNotificationsAsRead called');
     console.log('User role:', user?.role);
     console.log('User ID:', user?.id || user?.user_id);
-    
+
     if (user?.role === 'shelter admin' && (user?.id || user?.user_id)) {
       setMarkingAsRead(true);
       try {
         const uid = user.id || user.user_id;
         console.log('Making API call to mark notifications as read for user:', uid);
-        
+
         const response = await fetch(`/api/notifications/${uid}/mark-read`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
         });
-        
+
         console.log('API response status:', response.status);
-        
+
         if (response.ok) {
           const data = await response.json();
           console.log('API response data:', data);
-          
+
           // Update local state
           setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
           setUnreadCount(0);
@@ -368,14 +368,13 @@ const Navbar = ({
     setActiveLink(currentPath);
   }, [pathname]);
 
-  const dropdownWidth = `${
-    Math.max(
-      displayName.length,
-      ...dropdownItems.map((item) => item.label.length)
-    ) *
-      10 +
+  const dropdownWidth = `${Math.max(
+    displayName.length,
+    ...dropdownItems.map((item) => item.label.length)
+  ) *
+    10 +
     50
-  }px`;
+    }px`;
 
   const handleNameplateClick = () => {
     setMobileView("dropdown");
@@ -391,7 +390,7 @@ const Navbar = ({
     setLoading(type);
     router.push(path);
   };
-  
+
   // ✅ Reset loading when route changes
   useEffect(() => {
     if (loading) {
@@ -415,37 +414,35 @@ const Navbar = ({
 
         {/* Center: Logo */}
         <Link href={logoHref || "/"} className="logo">
-          <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
+          <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} priority />
         </Link>
 
         {/* Right: Cart */}
         <div className="flex items-center right-2">
-        {!hideCart && (
-  <button
-    onClick={() => setIsCartModalOpen(true)}
-    className={`absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md bg-white/10 hover:bg-white/20 ${
-      bounce ? "animate-bounce" : ""
-    }`}
-  >
-    <i className="bi bi-cart3 text-white text-lg" />
-    {totalCartItems > 0 && (
-      <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs px-1.5 py-0.5">
-        {totalCartItems}
-      </span>
-    )}
-  </button>
-)}
+          {!hideCart && (
+            <button
+              onClick={() => setIsCartModalOpen(true)}
+              className={`absolute right-6 top-1/2 -translate-y-1/2 z-20 p-2 rounded-md bg-white/10 hover:bg-white/20 ${bounce ? "animate-bounce" : ""
+                }`}
+            >
+              <i className="bi bi-cart3 text-white text-lg" />
+              {totalCartItems > 0 && (
+                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs px-1.5 py-0.5">
+                  {totalCartItems}
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
       {/* Mobile Drawer + Backdrop */}
       <div
         className={`fixed inset-0 z-[9998] lg:hidden transition-opacity duration-500 ease-in-out
-    ${
-      isMenuOpen
-        ? "opacity-100 pointer-events-auto"
-        : "opacity-0 pointer-events-none"
-    }`}
+    ${isMenuOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+          }`}
       >
         {/* Backdrop */}
         <div
@@ -496,11 +493,10 @@ const Navbar = ({
             <div className="flex flex-col justify-center items-center w-full h-full px-4 relative space-y-6">
               {/* Navlinks */}
               <div
-                className={`transition-all duration-500 ease-in-out ${
-                  mobileView === "navlinks"
-                    ? "opacity-100 translate-y-0 pointer-events-auto"
-                    : "opacity-0 -translate-y-6 pointer-events-none"
-                } mt-32`}
+                className={`transition-all duration-500 ease-in-out ${mobileView === "navlinks"
+                  ? "opacity-100 translate-y-0 pointer-events-auto"
+                  : "opacity-0 -translate-y-6 pointer-events-none"
+                  } mt-32`}
               >
                 <div className="space-y-6 text-center">
                   {links.map((link) => (
@@ -522,11 +518,10 @@ const Navbar = ({
 
               {/* Nameplate */}
               <div
-                className={`transition-all duration-500 ease-in-out ${
-                  mobileView === "dropdown"
-                    ? "-translate-y-[240px]"
-                    : "translate-y-0"
-                }`}
+                className={`transition-all duration-500 ease-in-out ${mobileView === "dropdown"
+                  ? "-translate-y-[240px]"
+                  : "translate-y-0"
+                  }`}
               >
                 {isAuthenticated ? (
                   <button
@@ -550,9 +545,8 @@ const Navbar = ({
                       height="12"
                       viewBox="0 0 24 24"
                       fill="none"
-                      className={`text-white transition-transform duration-300 ${
-                        mobileView === "dropdown" ? "rotate-180" : ""
-                      }`}
+                      className={`text-white transition-transform duration-300 ${mobileView === "dropdown" ? "rotate-180" : ""
+                        }`}
                     >
                       <path
                         d="M6 9L12 15L18 9"
@@ -565,7 +559,7 @@ const Navbar = ({
                   </button>
                 ) : (
                   <Link href="/auth">
-                    <button className="w-full text-center text-white font-medium py-2 text-xl">
+                    <button className="w-full text-center text-primary font-medium py-2 text-xl">
                       Login
                     </button>
                   </Link>
@@ -574,11 +568,10 @@ const Navbar = ({
 
               {/* Dropdown */}
               <div
-                className={`w-full transition-all duration-500 ease-in-out ${
-                  mobileView === "dropdown"
-                    ? "opacity-100 -translate-y-[240px]"
-                    : "opacity-0 -translate-y-4 pointer-events-none"
-                }`}
+                className={`w-full transition-all duration-500 ease-in-out ${mobileView === "dropdown"
+                  ? "opacity-100 -translate-y-[240px]"
+                  : "opacity-0 -translate-y-4 pointer-events-none"
+                  }`}
               >
                 <div className="space-y-4 text-center">
                   {dropdownItems.map((item) =>
@@ -634,9 +627,8 @@ const Navbar = ({
           {links.map((link) => (
             <Link key={link.href} href={`/${link.href}`}>
               <span
-                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${
-                  activeLink === link.href ? "after:w-full" : "after:w-0"
-                }`}
+                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${activeLink === link.href ? "after:w-full" : "after:w-0"
+                  }`}
                 style={{ cursor: "pointer" }}
                 onClick={() => setActiveLink(link.href)}
               >
@@ -646,7 +638,7 @@ const Navbar = ({
           ))}
         </div>
 
-        <div className="hidden lg:flex items-center gap-4 mr-16">
+        <div className="hidden lg:flex items-center gap-4 mr-12">
           {/* Cart */}
           {!hideCart && (
             <div
@@ -656,9 +648,8 @@ const Navbar = ({
             >
               <button
                 onClick={() => setCartOpen((v) => !v)}
-                className={`flex items-center gap-2 cartBtn p-2 rounded-md bg-white/10 hover:bg-white/20 ${
-                  bounce ? "animate-bounce" : ""
-                }`}
+                className={`flex items-center gap-2 cartBtn p-2 rounded-md bg-white/10 hover:bg-white/20 ${bounce ? "animate-bounce" : ""
+                  }`}
               >
                 <i className="bi bi-cart3 text-white" />
                 <span className="sr-only">Cart</span>
@@ -685,9 +676,8 @@ const Navbar = ({
                   ) : (
                     <div className="divide-y max-h-64 overflow-auto">
                       {cartItemsNav.map((it, index) => {
-                        const uniqueKey = `${it.id}-${
-                          it.variantTitle ?? ""
-                        }-${JSON.stringify(it.attributes ?? [])}-${index}`;
+                        const uniqueKey = `${it.id}-${it.variantTitle ?? ""
+                          }-${JSON.stringify(it.attributes ?? [])}-${index}`;
 
                         return (
                           <div
@@ -715,9 +705,8 @@ const Navbar = ({
                                     e.stopPropagation();
 
                                     // Generate unique key for frontend filtering (for variant differentiation)
-                                    const cartItemUniqueKey = `${it.id}-${
-                                      it.variantTitle ?? ""
-                                    }-${JSON.stringify(it.attributes ?? [])}`;
+                                    const cartItemUniqueKey = `${it.id}-${it.variantTitle ?? ""
+                                      }-${JSON.stringify(it.attributes ?? [])}`;
 
                                     // 🔹 Dispatch backend delete using the real id
                                     dispatch(
@@ -730,11 +719,10 @@ const Navbar = ({
                                     dispatch(
                                       setCartItems(
                                         cartItemsNav.filter((item) => {
-                                          const itemKey = `${item.id}-${
-                                            item.variantTitle ?? ""
-                                          }-${JSON.stringify(
-                                            item.attributes ?? []
-                                          )}`;
+                                          const itemKey = `${item.id}-${item.variantTitle ?? ""
+                                            }-${JSON.stringify(
+                                              item.attributes ?? []
+                                            )}`;
                                           return itemKey !== cartItemUniqueKey;
                                         })
                                       )
@@ -803,11 +791,10 @@ const Navbar = ({
                             e.preventDefault(); // block multiple clicks
                           else handleNavigate("/cart", "cart");
                         }}
-                        className={`flex-1 text-center py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition ${
-                          loading === "cart"
-                            ? "bg-primary text-white cursor-wait"
-                            : "bg-primary text-white hover:bg-primary/90"
-                        }`}
+                        className={`flex-1 text-center py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition ${loading === "cart"
+                          ? "bg-primary text-white cursor-wait"
+                          : "bg-primary text-white hover:bg-primary/90"
+                          }`}
                       >
                         {loading === "cart" ? (
                           <>
@@ -830,13 +817,12 @@ const Navbar = ({
                           }
                           handleNavigate("/checkout", "checkout");
                         }}
-                        className={`flex-1 text-center py-2 rounded-lg font-medium flex items-center justify-center gap-2 ${
-                          cartItemsNav.length === 0
-                            ? "text-gray-400 border border-gray-300 cursor-not-allowed bg-gray-100"
-                            : loading === "checkout"
+                        className={`flex-1 text-center py-2 rounded-lg font-medium flex items-center justify-center gap-2 ${cartItemsNav.length === 0
+                          ? "text-gray-400 border border-gray-300 cursor-not-allowed bg-gray-100"
+                          : loading === "checkout"
                             ? "text-primary border border-primary cursor-wait"
                             : "text-primary border border-primary hover:bg-primary/5"
-                        }`}
+                          }`}
                       >
                         {loading === "checkout" ? (
                           <>
@@ -858,7 +844,7 @@ const Navbar = ({
             <>
               {/* Notifications - Only for shelter admins */}
               {user?.role === 'shelter admin' && (
-                <div 
+                <div
                   className="relative mr-4"
                   onMouseEnter={handleNotificationMouseEnter}
                   onMouseLeave={handleNotificationMouseLeave}
@@ -874,10 +860,10 @@ const Navbar = ({
                       </span>
                     )}
                   </button>
-                  
+
                   {/* Notifications Dropdown */}
                   {showNotifications && (
-                    <div 
+                    <div
                       className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto"
                       onMouseEnter={handleNotificationMouseEnter}
                       onMouseLeave={handleNotificationMouseLeave}
@@ -891,11 +877,10 @@ const Navbar = ({
                               markNotificationsAsRead();
                             }}
                             disabled={markingAsRead}
-                            className={`text-xs font-medium ${
-                              markingAsRead 
-                                ? 'text-gray-400 cursor-not-allowed' 
-                                : 'text-blue-600 hover:text-blue-800'
-                            }`}
+                            className={`text-xs font-medium ${markingAsRead
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'text-blue-600 hover:text-blue-800'
+                              }`}
                           >
                             {markingAsRead ? 'Marking...' : 'Mark all as read'}
                           </button>
@@ -929,169 +914,168 @@ const Navbar = ({
                 </div>
               )}
 
-            <div
-              className="relative group"
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
-              <button
-                className="flex items-center justify-center gap-2 loginBtn relative overflow-hidden"
-                style={{ minWidth: dropdownWidth }}
+              <div
+                className="relative group"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
               >
-                {/* Profile Image with Badge - Updated nameplate */}
-                <div className="relative">
-                  <Image
-                    src={profileImage}
-                    alt="Profile"
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 rounded-full object-cover border-2 border-white/30 transition-all duration-300"
-                  />
-                  {isVerified && (
-                    <div className="absolute -bottom-1 -right-1 rounded-full p-0.5">
-                      <i className="bi bi-patch-check-fill text-amber-500 text-xs" />
-                    </div>
-                  )}
-                </div>
-
-                {/* User Name - shown only on desktop */}
-                <div>
-                  <span className="text-sm font-medium">{displayName}</span>
-                </div>
-
-                {/* Badges */}
-                <div className="flex items-center gap-1">
-                  {isFoundersClub && (
-                    <div className="bg-white/20 p-1.5 rounded-full">
-                      <Image
-                        src="/primary_icon.svg"
-                        alt="Founders Club"
-                        width={16}
-                        height={16}
-                      />
-                    </div>
-                  )}
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className={`transition-transform duration-200 ${
-                      isDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  >
-                    <path
-                      d="M6 9L12 15L18 9"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-              </button>
-
-              {(isAuthenticated || session) && isDropdownOpen && (
-                <div
-                  className="dropdown-menu absolute right-0 bg-white shadow-lg z-20 rounded-2xl py-2 text-sm font-medium"
-                  style={{
-                    top: "calc(100% + 0.5rem)",
-                    width: dropdownWidth,
-                  }}
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
+                <button
+                  className="flex items-center justify-center gap-2 loginBtn relative overflow-hidden"
+                  style={{ minWidth: dropdownWidth }}
                 >
-                  {dropdownOverride && dropdownOverride.length ? (
-                    // Render only overridden items (e.g., Home, Logout) for panels
-                    <div>
-                      {(dropdownOverride as any).map((item: any) =>
-                        item.isAction ? (
-                          <div
-                            key={item.href}
-                            onClick={handleLogout}
-                            className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 cursor-pointer"
-                          >
-                            <i className="bi bi-box-arrow-right"></i>{" "}
-                            {item.label}
-                          </div>
-                        ) : (
-                          <Link key={item.href} href={item.href}>
-                            <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                  {/* Profile Image with Badge - Updated nameplate */}
+                  <div className="relative">
+                    <Image
+                      src={profileImage}
+                      alt="Profile"
+                      width={40}
+                      height={40}
+                      className="w-10 h-10 rounded-full object-cover border-2 border-white/30 transition-all duration-300"
+                    />
+                    {isVerified && (
+                      <div className="absolute -bottom-1 -right-1 rounded-full p-0.5">
+                        <i className="bi bi-patch-check-fill text-amber-500 text-xs" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* User Name - shown only on desktop */}
+                  <div>
+                    <span className="text-sm font-medium">{displayName}</span>
+                  </div>
+
+                  {/* Badges */}
+                  <div className="flex items-center gap-1">
+                    {isFoundersClub && (
+                      <div className="bg-white/20 p-1.5 rounded-full">
+                        <Image
+                          src="/primary_icon.svg"
+                          alt="Founders Club"
+                          width={16}
+                          height={16}
+                        />
+                      </div>
+                    )}
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className={`transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""
+                        }`}
+                    >
+                      <path
+                        d="M6 9L12 15L18 9"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                </button>
+
+                {(isAuthenticated || session) && isDropdownOpen && (
+                  <div
+                    className="dropdown-menu absolute right-0 bg-white shadow-lg z-20 rounded-2xl py-2 text-sm font-medium"
+                    style={{
+                      top: "calc(100% + 0.5rem)",
+                      width: dropdownWidth,
+                    }}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    {dropdownOverride && dropdownOverride.length ? (
+                      // Render only overridden items (e.g., Home, Logout) for panels
+                      <div>
+                        {(dropdownOverride as any).map((item: any) =>
+                          item.isAction ? (
+                            <div
+                              key={item.href}
+                              onClick={handleLogout}
+                              className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 cursor-pointer"
+                            >
+                              <i className="bi bi-box-arrow-right"></i>{" "}
                               {item.label}
                             </div>
-                          </Link>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <>
-                      {/* Profile / Panel */}
-                      <Link
-                        href={
-                          userRole === "vet"
-                            ? "/vet-panel"
-                            : userRole === "regular user"
-                            ? "/my-profile"
-                            : userRole === "admin"
-                            ? "/admin-panel"
-                            : "/"
-                        }
-                      >
-                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
-                          <i className="bi bi-person-circle text-gray-600"></i>
-                          {userRole === "vet"
-                            ? "Vet Panel"
-                            : userRole === "regular user"
-                            ? "My Profile"
-                            : userRole === "admin"
-                            ? "Admin Panel"
-                            : "Home"}
-                        </div>
-                      </Link>
-                      {userRole === "admin" && (
-                        <Link href="/orders">
-                          <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                            <i className="bi bi-card-list text-gray-600"></i>{" "}
-                            Orders
+                          ) : (
+                            <Link key={item.href} href={item.href}>
+                              <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                {item.label}
+                              </div>
+                            </Link>
+                          )
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        {/* Profile / Panel */}
+                        <Link
+                          href={
+                            userRole === "vet"
+                              ? "/vet-panel"
+                              : userRole === "regular user"
+                                ? "/my-profile"
+                                : userRole === "admin"
+                                  ? "/admin-panel"
+                                  : "/"
+                          }
+                        >
+                          <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 hover:rounded-t-2xl cursor-pointer">
+                            <i className="bi bi-person-circle text-gray-600"></i>
+                            {userRole === "vet"
+                              ? "Vet Panel"
+                              : userRole === "regular user"
+                                ? "My Profile"
+                                : userRole === "admin"
+                                  ? "Admin Panel"
+                                  : "Home"}
                           </div>
                         </Link>
-                      )}
-                      <Link href="/my-listings">
-                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                          <i className="bi bi-card-list text-gray-600"></i> My
-                          Listings
+                        {userRole === "admin" && (
+                          <Link href="/orders">
+                            <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                              <i className="bi bi-card-list text-gray-600"></i>{" "}
+                              Orders
+                            </div>
+                          </Link>
+                        )}
+                        <Link href="/my-listings">
+                          <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                            <i className="bi bi-card-list text-gray-600"></i> My
+                            Listings
+                          </div>
+                        </Link>
+                        <Link href="/my-applications">
+                          <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                            <i className="bi bi-file-earmark-text text-gray-600"></i>{" "}
+                            My Applications
+                          </div>
+                        </Link>
+                        <Link href="/my-orders">
+                          <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                            <i className="bi bi-bag text-gray-600"></i> My Orders
+                          </div>
+                        </Link>
+                        <Link href="/notifications">
+                          <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                            <i className="bi bi-bell text-gray-600"></i>{" "}
+                            Notifications
+                          </div>
+                        </Link>
+                        <div className="border-t my-1"></div>
+                        <div
+                          onClick={handleLogout}
+                          className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:rounded-b-2xl cursor-pointer"
+                        >
+                          <i className="bi bi-box-arrow-right"></i> Logout
                         </div>
-                      </Link>
-                      <Link href="/my-applications">
-                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                          <i className="bi bi-file-earmark-text text-gray-600"></i>{" "}
-                          My Applications
-                        </div>
-                      </Link>
-                      <Link href="/my-orders">
-                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                          <i className="bi bi-bag text-gray-600"></i> My Orders
-                        </div>
-                      </Link>
-                      <Link href="/notifications">
-                        <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                          <i className="bi bi-bell text-gray-600"></i>{" "}
-                          Notifications
-                        </div>
-                      </Link>
-                      <div className="border-t my-1"></div>
-                      <div
-                        onClick={handleLogout}
-                        className="dropdown-item flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 hover:rounded-b-2xl cursor-pointer"
-                      >
-                        <i className="bi bi-box-arrow-right"></i> Logout
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </>
           ) : (
             <Link href="/auth">

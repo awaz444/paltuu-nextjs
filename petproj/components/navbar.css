@@ -92,7 +92,7 @@
   display: none; /* Hide links on small screens */
   align-items: center;
   gap: 20px;
-  padding-right: 1.5rem;
+  padding-left: 1.5rem;
   justify-content: flex-end; /* Align links to the right */
 }
 
@@ -111,14 +111,16 @@
 }
 
 .loginBtn {
-  /*background-color: #ffffff; */
-  color: #ffffff; /* Primary */
+  background-color: #ffffff;
+  color: var(--primary-color); 
   border: none;
   border-radius: 60px; /* Default rounded corners */
-  /*padding: 7px 20px;*/
+  font-weight: 600;
+  padding: 7px 15px;
   cursor: pointer;
   transition: border-radius;
   border-color: #ffffff; /* Border color */
+  margin-left: 2rem;
 }
 
 .dropdown:hover .loginBtn {

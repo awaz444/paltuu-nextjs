@@ -39,72 +39,68 @@ export const fetchCart = createAsyncThunk<
   void,
   { rejectValue: string }
 >("cart/fetchCart", async (_, { rejectWithValue }) => {
-    try {
-    console.log('🔍 fetchCart - Attempting to fetch cart (server will check authentication)...');
+  // Helper to map API response to CartItem
+  const mapItems = (data: any): CartItem[] => {
+    const apiItems = data?.items ?? data ?? [];
+    return (apiItems || []).map((it: any): CartItem => ({
+      id: it.cart_item_id ?? it.item_id ?? it.id,
+      title: it.product_title ?? it.title ?? it.name ?? "Untitled",
+      qty: it.quantity ?? 1,
+      price: Number(it.effective_price ?? it.price ?? 0),
+      image: it.image_url ?? it.image ?? null,
+      code: it.product_code ?? it.sku ?? it.product_id ?? null,
+      sku: it.variant_sku ?? it.sku ?? it.product_sku ?? it.product_code ?? null,
+      variantTitle: it.variant_title ?? it.variant_name ?? it.variant?.title ?? null,
+      attributes: it.attributes ?? it.variant_attributes ?? it.attributes_map ?? it.variant?.attributes ?? null,
+    }));
+  };
 
-    // Try fetching from server first (works for both logged-in and guest users)
-    // Server will extract userId from cookie automatically for logged-in users
-    // For guest users, we'll send sessionId as fallback
-    try {
-      // First, try without sessionId - backend will use userId from cookie if user is logged in
-      let res = await fetch('/api/bazaar/cart', {
-        credentials: 'include',
-      });
+  try {
+    // 1. Silent Auth Probe: Attempt fetch with credentials
+    const res = await fetch('/api/bazaar/cart', {
+      credentials: 'include',
+    });
 
-      // If request fails with 401 and we have a sessionId, retry with sessionId (for guests)
-      if (!res.ok && res.status === 401) {
-        const sessionId = getGuestSessionId() || getOrCreateGuestSessionId();
-        if (sessionId) {
-          console.log('🔄 fetchCart - Retrying with sessionId for guest user');
-          res = await fetch(`/api/bazaar/cart?sessionId=${encodeURIComponent(sessionId)}`, {
-            credentials: 'include',
-          });
+    // 2. Control Flow: specific handling for 401 (Unauthenticated)
+    if (res.status === 401) {
+      // Gracefully retry as guest without throwing an error
+      const sessionId = getGuestSessionId() || getOrCreateGuestSessionId();
+      if (sessionId) {
+        const guestRes = await fetch(`/api/bazaar/cart?sessionId=${encodeURIComponent(sessionId)}`, {
+          credentials: 'include',
+        });
+        
+        if (guestRes.ok) {
+          const data = await guestRes.json();
+          return mapItems(data);
         }
       }
-
-      if (res.ok) {
-        const data = await res.json();
-        const apiItems = data?.items ?? data ?? [];
-        console.log('✅ fetchCart - Loaded cart from server:', apiItems.length, 'items');
-
-        const mapped = (apiItems || []).map((it: any): CartItem => ({
-          id: it.cart_item_id ?? it.item_id ?? it.id,
-          title: it.product_title ?? it.title ?? it.name ?? "Untitled",
-          qty: it.quantity ?? 1,
-          price: Number(it.effective_price ?? it.price ?? 0),
-          image: it.image_url ?? it.image ?? null,
-          code: it.product_code ?? it.sku ?? it.product_id ?? null,
-          sku: it.variant_sku ?? it.sku ?? it.product_sku ?? it.product_code ?? null,
-          variantTitle: it.variant_title ?? it.variant_name ?? it.variant?.title ?? null,
-          attributes: it.attributes ?? it.variant_attributes ?? it.attributes_map ?? it.variant?.attributes ?? null,
-        }));
-
-        return mapped;
-      }
-    } catch (fetchError) {
-      console.warn('⚠️ fetchCart - Server fetch failed, falling back to localStorage:', fetchError);
+      // If guest fetch fails, fall through to localStorage logic below
+    } 
+    
+    // 3. Success: Authenticated user
+    else if (res.ok) {
+      const data = await res.json();
+      return mapItems(data);
     }
 
-    // Fallback: For guest users or if server unavailable, use localStorage
-    console.log('✅ fetchCart - Loading guest cart from localStorage');
-    if (typeof window !== "undefined") {
-      try {
-        const guestCart = localStorage.getItem('guest_cart');
-        if (guestCart) {
-          const parsedCart = JSON.parse(guestCart) as CartItem[];
-          console.log('📦 Guest cart loaded from localStorage:', parsedCart.length, 'items');
-          return parsedCart;
-        }
-      } catch (e) {
-        console.error('Failed to load guest cart from localStorage:', e);
-      }
-    }
-    return [];
-
-
-  } catch (err: any) {
-    return rejectWithValue(err.message ?? "Unknown error");
+  } catch (error) {
+    // Network errors fall through to localStorage fallback
   }
+
+  // 4. Fallback: LocalStorage (Guest Cart)
+  if (typeof window !== "undefined") {
+    try {
+      const guestCart = localStorage.getItem('guest_cart');
+      if (guestCart) {
+        return JSON.parse(guestCart) as CartItem[];
+      }
+    } catch (e) {
+      // silent
+    }
+  }
+
+  return [];
 });
 
 //
@@ -135,7 +131,7 @@ export const addToCart = createAsyncThunk<
       sessionId, // Only send sessionId, server will extract userId from cookie
     };
 
-    console.log('📤 addToCart - Request body:', requestBody, '(server will check auth cookie)');
+    //console.log('📤 addToCart - Request body:', requestBody, '(server will check auth cookie)');
 
     const newItem: CartItem = {
       id: `${payload.productId}-${payload.variantId || 'no-variant'}`,
@@ -151,7 +147,7 @@ export const addToCart = createAsyncThunk<
     // Try adding to server cart (works for both logged-in and guest users)
     // Server automatically detects auth from cookie
     try {
-      console.log('\ud83d\udcbe addToCart - Sending to server (auth auto-detected)...');
+      //console.log('\ud83d\udcbe addToCart - Sending to server (auth auto-detected)...');
 
       // 🔹 1. Optimistically update Redux store
       dispatch(addItem(newItem));
@@ -177,11 +173,11 @@ export const addToCart = createAsyncThunk<
       toast.success('Added to cart!');
       return true;
     } catch (serverError) {
-      console.warn('⚠️ addToCart - Server request failed, falling back to localStorage:', serverError);
+      //console.warn('⚠️ addToCart - Server request failed, falling back to localStorage:', serverError);
     }
 
     // Fallback: For guests or if server unavailable, store in localStorage only
-    console.log('💾 addToCart - Storing in localStorage (fallback)');
+    //console.log('💾 addToCart - Storing in localStorage (fallback)');
 
     if (typeof window !== "undefined") {
       try {
@@ -197,11 +193,11 @@ export const addToCart = createAsyncThunk<
         if (existingItemIndex !== -1) {
           // Update quantity
           cartItems[existingItemIndex].qty += payload.quantity ?? 1;
-          console.log('\u2795 Updated existing item quantity in guest cart');
+          //console.log('\u2795 Updated existing item quantity in guest cart');
         } else {
           // Add new item
           cartItems.push(newItem);
-          console.log('\u2795 Added new item to guest cart');
+          //console.log('\u2795 Added new item to guest cart');
         }
 
         localStorage.setItem('guest_cart', JSON.stringify(cartItems));

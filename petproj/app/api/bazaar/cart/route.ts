@@ -18,8 +18,11 @@ export async function GET(req: NextRequest) {
     console.log('📥 Cart API GET - Authenticated userId:', userId, 'SessionId:', sessionId);
 
     if (!userId && !sessionId) {
-      return NextResponse.json({ error: 'Authentication or session required' }, { status: 401 });
-    }
+  return NextResponse.json({
+    cart: null,
+    items: []
+  });
+}
 
   // using pool; no explicit connect required
 

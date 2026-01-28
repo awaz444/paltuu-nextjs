@@ -1,28 +1,22 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 interface ProductCarouselSkeletonProps {
   className?: string;
 }
 
-const ProductCarouselSkeleton: React.FC<ProductCarouselSkeletonProps> = ({ 
-  className = "" 
-}) => {
-  // Responsive skeleton count
-  const getSkeletonCount = () => {
-    if (typeof window !== 'undefined') {
-      const width = window.innerWidth;
-      if (width >= 1280) return 5; // xl
-      if (width >= 1024) return 4; // lg
-      if (width >= 768) return 3;  // md
-      if (width >= 640) return 2;  // sm
-      return 1; // mobile
-    }
-    return 3; // Default for SSR
-  };
+const ProductCarouselSkeleton = ({ className = "" }) => {
+  const [skeletonCount, setSkeletonCount] = useState(3); // MUST match SSR
 
-  const skeletonCount = getSkeletonCount();
+  useEffect(() => {
+    const width = window.innerWidth;
+    if (width >= 1280) setSkeletonCount(5);
+    else if (width >= 1024) setSkeletonCount(4);
+    else if (width >= 768) setSkeletonCount(3);
+    else if (width >= 640) setSkeletonCount(2);
+    else setSkeletonCount(1);
+  }, []);
 
   return (
     <div className={`w-full ${className}`}>

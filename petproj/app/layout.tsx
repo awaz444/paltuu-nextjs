@@ -10,6 +10,7 @@ import { Toaster } from "react-hot-toast";
 import Script from "next/script";
 import NavbarWrapper from "@/components/NavbarWrapper";
 import ThemeInitializer from "./ThemeInitializer";
+import ApplyThemeColor from "@/components/ApplyThemeColor";
 import PageTransition from "@/components/PageTransition";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import PWARegister from "@/components/PWARegister";
@@ -54,25 +55,10 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon-maroon.png" id="favicon" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Paltuu" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var user = localStorage.getItem("user");
-                  var parsed = user ? JSON.parse(user) : null;
-                  var color = parsed?.primaryColor || "#A03048";
-                  document.documentElement.style.setProperty("--primary-color", color);
-                } catch (e) {
-                  document.documentElement.style.setProperty("--primary-color", "#A03048");
-                }
-              })();
-            `,
-          }}
-        />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-status-bar-style" content="default" />
+        <meta name="mobile-web-app-title" content="Paltuu" />
+        
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1403927121021328"
@@ -95,6 +81,7 @@ export default function RootLayout({
         <AppClientWrapper>
           <ClientProvider>
             <CartSyncProvider>
+              <ApplyThemeColor />
               <ThemeInitializer />
               <PWARegister />
               <NavbarWrapper />

@@ -638,7 +638,7 @@ const Navbar = ({
           ))}
         </div>
 
-        <div className="hidden lg:flex items-center gap-4 mr-12">
+        <div className="hidden lg:flex items-center gap-4 mr-14">
           {/* Cart */}
           {!hideCart && (
             <div
@@ -947,7 +947,7 @@ const Navbar = ({
                   {/* Badges */}
                   <div className="flex items-center gap-1">
                     {isFoundersClub && (
-                      <div className="bg-white/20 p-1.5 rounded-full">
+                      <div className="bg-pink-100 p-1.5 rounded-full">
                         <Image
                           src="/primary_icon.svg"
                           alt="Founders Club"

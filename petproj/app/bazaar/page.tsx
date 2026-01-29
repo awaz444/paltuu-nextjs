@@ -21,7 +21,7 @@ import {
   Search,
   Store,
 } from "lucide-react";
-import { MoonLoader } from "react-spinners";
+import { ClipLoader } from "react-spinners";
 import { getOrCreateGuestSessionId } from "@/utils/guest";
 import { fetchCart, addToCart, resetCartState } from "@/app/store/slices/cartSlice";
 import { useRouter } from "next/navigation";
@@ -89,7 +89,7 @@ const brands = [
     name: "Felicia",
     slug: "felicia",
     image:
-    "felicia gemini.png",
+      "felicia gemini.png",
     description: "Premium pet nutrition",
     longDescription:
       "Felicia offers premium pet nutrition solutions crafted with the finest ingredients to ensure your pets receive optimal health and vitality. Our scientifically formulated products support healthy growth, strong immunity, and overall well-being for pets of all ages and breeds.",
@@ -203,6 +203,7 @@ export default function BazaarPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadingProductId, setLoadingProductId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
 
   // Prefetch batch endpoint on mount for faster subsequent loads
   useEffect(() => {
@@ -232,6 +233,7 @@ export default function BazaarPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
+      setIsSearching(true);
       router.push(
         `/marketplace?page=1&keyword=${encodeURIComponent(searchTerm.trim())}`
       );
@@ -386,8 +388,13 @@ export default function BazaarPage() {
                 type="submit"
                 className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 bg-primary text-white px-3 sm:px-4 py-2 sm:py-2 rounded-lg sm:rounded-xl font-medium hover:bg-[color-mix(in srgb, var(--primary) 90%, black 10%)] transition-colors duration-200"
                 aria-label="Search"
+                disabled={isSearching}
               >
-                <Search size={16} className="sm:w-5 sm:h-5" />
+                {isSearching ? (
+                  <ClipLoader size={20} color="#ffffff" loading={true} />
+                ) : (
+                  <Search size={16} className="sm:w-5 sm:h-5" />
+                )}
               </button>
             </div>
             <p className="text-center text-gray-500 text-xs sm:text-sm mt-3">
@@ -515,7 +522,7 @@ export default function BazaarPage() {
                                             ((parseInt(prod.original_price) -
                                               parseInt(prod.price)) /
                                               parseInt(prod.original_price)) *
-                                              100
+                                            100
                                           )}
                                           %
                                         </span>
@@ -600,7 +607,7 @@ export default function BazaarPage() {
                                           ((parseInt(prod.original_price) -
                                             parseInt(prod.price)) /
                                             parseInt(prod.original_price)) *
-                                            100
+                                          100
                                         )}
                                         %
                                       </span>

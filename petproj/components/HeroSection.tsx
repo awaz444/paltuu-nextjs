@@ -216,46 +216,18 @@ const HeroSection = () => {
             {/* Paltuu Bazaar Section */}
             <PaltuuBazaarSection />
 
-            {/* Impact / Numbers Section */}
-            <section className="py-12 px-6 lg:px-20 bg-gray-50">
-                <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-10">
-                        <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-3">
-                            Making a <span className="text-primary">Difference</span>
-                        </h2>
-                        <p className="text-lg text-gray-600 font-medium max-w-2xl mx-auto">
-                            Every number represents a life touched and a story changed forever.
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
-                        {[
-                            { count: "589", label: "Registered Users" },
-                            { count: "167", label: "Happy Adopters" },
-                            { count: "3", label: "Rescue Partners" },
-                            { count: "190", label: "Animals Helped" },
-                            { count: "47", label: "Critical Rescues" },
-                            { count: "143", label: "Forever Homes" },
-                        ].map((stat, index) => (
-                            <div key={index} className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col items-center justify-center text-center hover:-translate-y-1 transition-transform duration-300">
-                                <span className="text-3xl lg:text-4xl font-extrabold text-primary mb-2">
-                                    {stat.count}
-                                </span>
-                                <span className="text-xs md:text-sm font-bold text-gray-600 uppercase tracking-wide">
-                                    {stat.label}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
             {/* How Paltuu Works Section */}
-            <section className="py-20 px-6 lg:px-20 bg-white">
+            <section className="pt-10 pb-20 px-6 lg:px-20 bg-white">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-4">
-                            How <span className="text-primary">Paltuu</span> Works
+                        <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-4 flex items-center justify-center gap-2 md:gap-4">
+                            How
+                            <img
+                                src="/paltuu.png"
+                                alt="Paltuu"
+                                className="h-24 md:h-40 object-contain pb-4"
+                            />
+                            Works
                         </h2>
                         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                             Your journey to pet parenthood in four simple steps.
@@ -303,105 +275,6 @@ const HeroSection = () => {
                                 </p>
                             </div>
                         ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Mission & Vision Sections - Theme Matched */}
-            <section className="py-12 px-6 lg:px-20 bg-white relative">
-                <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Mission Card */}
-                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden flex flex-col h-full">
-                        <div className="absolute -bottom-4 -right-4 w-24 h-24 opacity-10">
-                            <FontAwesomeIcon
-                                icon={faPaw}
-                                className="text-primary w-full h-full"
-                            />
-                        </div>
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="bg-primary/10 p-3 rounded-full">
-                                <FontAwesomeIcon
-                                    icon={faBullseye}
-                                    className="text-primary text-xl"
-                                />
-                            </div>
-                            <h3 className="text-xl md:text-2xl font-bold text-primary">
-                                Our Mission
-                            </h3>
-                        </div>
-                        <p className="text-gray-700 pl-1 mb-4 flex-grow">
-                            To revolutionize pet care in Pakistan by making{" "}
-                            <span className="font-semibold text-gray-900">pet adoption</span>,{" "}
-                            <span className="font-semibold text-gray-900">veterinary care</span>, and{" "}
-                            <span className="font-semibold text-gray-900">pet products</span>{" "}
-                            easily accessible. Paltuu.pk connects pet lovers in{" "}
-                            <span className="font-semibold text-gray-900">Karachi, Lahore, Islamabad</span>{" "}
-                            and beyond with trusted services.
-                        </p>
-
-                        {/* Visible Micro-CTAs */}
-                        <div className="flex flex-wrap gap-3 mt-auto pt-4 border-t border-primary/10 justify-center">
-                            <a
-                                href="/browse-pets"
-                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
-                            >
-                                <FontAwesomeIcon icon={faDog} className="mr-2 text-sm" />
-                                Adopt Pets
-                            </a>
-                            <a
-                                href="/pet-care"
-                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
-                            >
-                                <FontAwesomeIcon icon={faStethoscope} className="mr-2 text-sm" />
-                                Find Vets
-                            </a>
-                        </div>
-                    </div>
-
-                    {/* Vision Card */}
-                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden flex flex-col h-full">
-                        <div className="absolute -top-4 -left-4 w-24 h-24 opacity-10">
-                            <FontAwesomeIcon
-                                icon={faHeart}
-                                className="text-primary w-full h-full"
-                            />
-                        </div>
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="bg-primary/10 p-3 rounded-full">
-                                <FontAwesomeIcon
-                                    icon={faEye}
-                                    className="text-primary text-xl"
-                                />
-                            </div>
-                            <h3 className="text-xl md:text-2xl font-bold text-primary">
-                                Our Vision
-                            </h3>
-                        </div>
-                        <p className="text-gray-700 pl-1 mb-4 flex-grow">
-                            We envision a compassionate Pakistan where{" "}
-                            <span className="font-semibold text-gray-900">every pet finds a loving home</span>{" "}
-                            and owners can access{" "}
-                            <span className="font-semibold text-gray-900">food, grooming, and healthcare</span>{" "}
-                            through trusted platforms. Paltuu.pk makes pet care simple, reliable, and accessible for everyone.
-                        </p>
-
-                        {/* Visible Micro-CTAs */}
-                        <div className="flex flex-wrap gap-3 mt-auto pt-4 border-t border-primary/10 justify-center">
-                            <a
-                                href="/bazaar"
-                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
-                            >
-                                <FontAwesomeIcon icon={faShoppingCart} className="mr-2 text-sm" />
-                                Shop Bazaar
-                            </a>
-                            <a
-                                href="/lost-and-found"
-                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
-                            >
-                                <FontAwesomeIcon icon={faSearch} className="mr-2 text-sm" />
-                                Lost & Found
-                            </a>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -543,7 +416,138 @@ const HeroSection = () => {
                 </div>
             </section>
 
+            {/* Impact / Numbers Section */}
+            <section className="py-12 px-6 lg:px-20 bg-gray-50">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-10">
+                        <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-3">
+                            Making a <span className="text-primary">Difference</span>
+                        </h2>
+                        <p className="text-lg text-gray-600 font-medium max-w-2xl mx-auto">
+                            Every number represents a life touched and a story changed forever.
+                        </p>
+                    </div>
 
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
+                        {[
+                            { count: "2000+", label: "Active Users" },
+                            { count: "842", label: "Happy Adopters" },
+                            { count: "8", label: "Rescue Partners" },
+                            { count: "1000+", label: "Animals Helped" },
+                            { count: "891", label: "Critical Rescues" },
+                            { count: "798", label: "Forever Homes" },
+                        ].map((stat, index) => (
+                            <div key={index} className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col items-center justify-center text-center hover:-translate-y-1 transition-transform duration-300">
+                                <span className="text-3xl lg:text-4xl font-extrabold text-primary mb-2">
+                                    {stat.count}
+                                </span>
+                                <span className="text-xs md:text-sm font-bold text-gray-600 uppercase tracking-wide">
+                                    {stat.label}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Mission & Vision Sections - Theme Matched */}
+            <section className="py-12 px-6 lg:px-20 bg-white relative bg-primary">
+                <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Mission Card */}
+                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden flex flex-col h-full bg-white">
+                        <div className="absolute -bottom-4 -right-4 w-24 h-24 opacity-10">
+                            <FontAwesomeIcon
+                                icon={faPaw}
+                                className="text-primary w-full h-full"
+                            />
+                        </div>
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="bg-primary/10 p-3 rounded-full">
+                                <FontAwesomeIcon
+                                    icon={faBullseye}
+                                    className="text-primary text-xl"
+                                />
+                            </div>
+                            <h3 className="text-xl md:text-2xl font-bold text-primary">
+                                Our Mission
+                            </h3>
+                        </div>
+                        <p className="text-gray-700 pl-1 mb-4 flex-grow">
+                            To revolutionize pet care in Pakistan by making{" "}
+                            <span className="font-semibold text-gray-900">pet adoption</span>,{" "}
+                            <span className="font-semibold text-gray-900">veterinary care</span>, and{" "}
+                            <span className="font-semibold text-gray-900">pet products</span>{" "}
+                            easily accessible. Paltuu.pk connects pet lovers in{" "}
+                            <span className="font-semibold text-gray-900">Karachi, Lahore, Islamabad</span>{" "}
+                            and beyond with trusted services.
+                        </p>
+
+                        {/* Visible Micro-CTAs */}
+                        <div className="flex flex-wrap gap-3 mt-auto pt-4 border-t border-primary/10 justify-center">
+                            <a
+                                href="/browse-pets"
+                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
+                            >
+                                <FontAwesomeIcon icon={faDog} className="mr-2 text-sm" />
+                                <span className="whitespace-nowrap">Adopt Pets</span>
+                            </a>
+                            <a
+                                href="/pet-care"
+                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
+                            >
+                                <FontAwesomeIcon icon={faStethoscope} className="mr-2 text-sm" />
+                                <span className="whitespace-nowrap">Find Vets</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    {/* Vision Card */}
+                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden flex flex-col h-full bg-white">
+                        <div className="absolute -top-4 -left-4 w-24 h-24 opacity-10">
+                            <FontAwesomeIcon
+                                icon={faHeart}
+                                className="text-primary w-full h-full"
+                            />
+                        </div>
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="bg-primary/10 p-3 rounded-full">
+                                <FontAwesomeIcon
+                                    icon={faEye}
+                                    className="text-primary text-xl"
+                                />
+                            </div>
+                            <h3 className="text-xl md:text-2xl font-bold text-primary">
+                                Our Vision
+                            </h3>
+                        </div>
+                        <p className="text-gray-700 pl-1 mb-4 flex-grow">
+                            We envision a compassionate Pakistan where{" "}
+                            <span className="font-semibold text-gray-900">every pet finds a loving home</span>{" "}
+                            and owners can access{" "}
+                            <span className="font-semibold text-gray-900">food, grooming, and healthcare</span>{" "}
+                            through trusted platforms. Paltuu.pk makes pet care simple, reliable, and accessible for everyone.
+                        </p>
+
+                        {/* Visible Micro-CTAs */}
+                        <div className="flex flex-wrap gap-3 mt-auto pt-4 border-t border-primary/10 justify-center">
+                            <a
+                                href="/bazaar"
+                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
+                            >
+                                <FontAwesomeIcon icon={faShoppingCart} className="mr-2 text-sm" />
+                                <span className="whitespace-nowrap">Shop Bazaar</span>
+                            </a>
+                            <a
+                                href="/lost-and-found"
+                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
+                            >
+                                <FontAwesomeIcon icon={faSearch} className="mr-2 text-sm" />
+                                <span className="whitespace-nowrap">Lost & Found</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             {/* Testimonials Section */}
             <section className="py-20 px-6 lg:px-20 bg-gray-50 relative overflow-hidden">

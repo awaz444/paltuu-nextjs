@@ -11,15 +11,15 @@ export default function Footer() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
-const hideFooterOn: string[] = ["/login", "/sign-up", "/partner-signup", "/auth", "/forgot-password", "/vet-register", "/rescue-register"];
+  const hideFooterOn: string[] = ["/login", "/sign-up", "/partner-signup", "/auth", "/forgot-password", "/vet-register", "/rescue-register"];
 
-if (hideFooterOn.includes(pathname)) {
-  return null;
-}
+  if (hideFooterOn.includes(pathname)) {
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email) {
       setStatus("error");
       setMessage("Please enter your email address");
@@ -69,7 +69,7 @@ if (hideFooterOn.includes(pathname)) {
 
           {/* Address */}
           <p className="mt-3 text-sm text-gray-300">
-            Al Basit Tower, 4th floor, Gulshan e Jamal, opposite The Venue
+            National Incubation Center, Karachi, Pakistan
           </p>
           <p className="text-sm text-gray-300">Karachi, Pakistan</p>
           <p className="text-sm text-gray-300">Phone: +92 3394022468</p>
@@ -141,17 +141,16 @@ if (hideFooterOn.includes(pathname)) {
                 {status === "loading" ? "Subscribing..." : "Subscribe"}
               </button>
             </div>
-            
+
             {/* Status Message */}
             {message && (
-              <p 
-                className={`text-sm ${
-                  status === "success" 
-                    ? "text-green-300" 
-                    : status === "error" 
-                    ? "text-red-300" 
+              <p
+                className={`text-sm ${status === "success"
+                  ? "text-green-300"
+                  : status === "error"
+                    ? "text-red-300"
                     : "text-gray-300"
-                }`}
+                  }`}
               >
                 {message}
               </p>

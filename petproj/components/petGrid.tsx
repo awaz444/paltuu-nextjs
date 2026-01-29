@@ -44,6 +44,25 @@ interface PetGridProps {
     pets: Pet[];
 }
 
+const PetImage = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
+    const [isLoading, setIsLoading] = useState(true);
+
+    return (
+        <div className={`relative overflow-hidden ${className}`}>
+            {isLoading && (
+                <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+            )}
+            <img
+                src={src}
+                alt={alt}
+                className={`w-full h-full object-cover transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"
+                    }`}
+                onLoad={() => setIsLoading(false)}
+            />
+        </div>
+    );
+};
+
 const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
     const router = useRouter();
     const { isAuthenticated, user, refreshUser } = useAuth();
@@ -200,10 +219,10 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                         key={pet.pet_id}
                         className="bg-white pt-4 px-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 z-39">
                         <div className="relative">
-                            <img
-                                src={pet.image_url || "/dog-placeholder.png"} // Fallback image if pet.image_url is null
+                            <PetImage
+                                src={pet.image_url || "/dog-placeholder.png"}
                                 alt={pet.pet_name}
-                                className="w-full aspect-square object-cover rounded-2xl"
+                                className="w-full aspect-square rounded-2xl"
                             />
                             {/* Overlay badge for price or rescue at the bottom-right */}
                             {/* {pet.price && (

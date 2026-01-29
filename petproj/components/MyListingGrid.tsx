@@ -58,7 +58,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
     const [loading, setLoading] = useState(false);
     const [editingPet, setEditingPet] = useState<Pet | null>(null);
     const [successMessage, setSuccessMessage] = useState(false);
-    
+
 
     const router = useRouter(); // Initialize router for navigation
 
@@ -67,7 +67,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
     };
 
     const handleDelete = async (petId: number) => {
-        dispatch(fetchAdoptionPets());
+        dispatch(fetchAdoptionPets({}));
         dispatch(fetchFosterPets());
         const response = await fetch("/api/pets", {
             method: "DELETE",
@@ -108,7 +108,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
     const handleUpdate = async () => {
         if (!editingPet) return;
 
-        dispatch(fetchAdoptionPets());
+        dispatch(fetchAdoptionPets({}));
         dispatch(fetchFosterPets());
 
         const response = await fetch("/api/pets", {
@@ -183,11 +183,10 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                         {/* Adoption Status */}
                         <div className="absolute top-2 left-2 flex gap-2">
                             <div
-                                className={`${
-                                    pet.approved
+                                className={`${pet.approved
                                         ? "bg-green-600"
                                         : "bg-orange-500"
-                                } text-white text-sm font-semibold px-3 py-1 rounded-full`}>
+                                    } text-white text-sm font-semibold px-3 py-1 rounded-full`}>
                                 {pet.approved ? "Approved" : "Pending"}
                             </div>
                         </div>
@@ -207,15 +206,14 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                                 `${pet.age} ${pet.age > 1 ? "years" : "year"}`}
                             {pet.age > 0 && pet.months > 0 && ", "}
                             {pet.months > 0 &&
-                                `${pet.months} ${
-                                    pet.months > 1 ? "months" : "month"
+                                `${pet.months} ${pet.months > 1 ? "months" : "month"
                                 } old`}
                         </p>
                         <p className="text-gray-600 mb-1">
                             {pet.city} - {pet.area}
                         </p>
                     </div>
-                    
+
                 </div>
             ))}
 
@@ -367,11 +365,10 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
 
                     <div className="flex justify-between mb-4">
                         <button
-                            className={`w-1/2 py-2 px-4 text-center rounded-lg ${
-                                editingPet.listing_type === "adoption"
+                            className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet.listing_type === "adoption"
                                     ? "bg-primary text-white"
                                     : "bg-gray-100"
-                            }`}
+                                }`}
                             onClick={() =>
                                 setEditingPet({
                                     ...editingPet,
@@ -381,11 +378,10 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                             Adoption
                         </button>
                         <button
-                            className={`w-1/2 py-2 px-4 text-center rounded-lg ${
-                                editingPet.listing_type === "foster"
+                            className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet.listing_type === "foster"
                                     ? "bg-primary text-white"
                                     : "bg-gray-100"
-                            }`}
+                                }`}
                             onClick={() =>
                                 setEditingPet({
                                     ...editingPet,
@@ -410,7 +406,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                                     price: e.target.value,
                                 })
                             }
-                            // disabled={editingPet.listing_type === "adoption"}
+                        // disabled={editingPet.listing_type === "adoption"}
                         />
                     </div>
 
@@ -503,11 +499,9 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                                 }}
                                 style={{
                                     background: editingPet.energy_level
-                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
-                                              (editingPet.energy_level - 1) * 25
-                                          }%, #D1D5DB ${
-                                              (editingPet.energy_level - 1) * 25
-                                          }%, #D1D5DB 100%)`
+                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${(editingPet.energy_level - 1) * 25
+                                        }%, #D1D5DB ${(editingPet.energy_level - 1) * 25
+                                        }%, #D1D5DB 100%)`
                                         : "#D1D5DB important!", // Default background when unselected
                                 }}
                             />
@@ -551,15 +545,13 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                                 }}
                                 style={{
                                     background: editingPet.cuddliness_level
-                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
-                                              (editingPet.cuddliness_level -
-                                                  1) *
-                                              25
-                                          }%, #D1D5DB ${
-                                              (editingPet.cuddliness_level -
-                                                  1) *
-                                              25
-                                          }%, #D1D5DB 100%)`
+                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${(editingPet.cuddliness_level -
+                                            1) *
+                                        25
+                                        }%, #D1D5DB ${(editingPet.cuddliness_level -
+                                            1) *
+                                        25
+                                        }%, #D1D5DB 100%)`
                                         : "#D1D5DB",
                                 }}
                             />

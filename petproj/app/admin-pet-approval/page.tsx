@@ -114,7 +114,7 @@ const AdminPetApproval: React.FC = () => {
 
   // Approve pet
   const handleApprove = async (petId: number) => {
-    dispatch(fetchAdoptionPets());
+    dispatch(fetchAdoptionPets({}));
     dispatch(fetchFosterPets());
     setLoading(true);
     try {

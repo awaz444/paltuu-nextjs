@@ -2,7 +2,7 @@ import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import React, { useState } from "react";
 
 interface VerticalSearchBarProps {
-    onSearch: (filters: {
+    filters: {
         selectedSex: string;
         minAge: string;
         maxAge: string;
@@ -14,38 +14,53 @@ interface VerticalSearchBarProps {
         canLiveWithCats: boolean;
         vaccinated: boolean;
         neutered: boolean;
-        selectedCity: string; // Added selectedCity
-        selectedSpecies: string; // Added selectedSpecies
-        breed: string; // Added breed
-    }) => void;
+        selectedCity: string;
+        selectedSpecies: string;
+        breed: string;
+    };
+    onSearch: (filters: any) => void;
     onReset: () => void;
     onSearchAction: () => void;
 }
 
-
-
 const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
+    filters,
     onSearch,
     onReset,
     onSearchAction,
 }) => {
 
-    
+    const [selectedSex, setSelectedSex] = useState(filters.selectedSex);
+    const [minAge, setMinAge] = useState(filters.minAge);
+    const [maxAge, setMaxAge] = useState(filters.maxAge);
+    const [minPrice, setMinPrice] = useState(filters.minPrice);
+    const [maxPrice, setMaxPrice] = useState(filters.maxPrice);
+    const [area, setArea] = useState(filters.area);
+    const [minChildAge, setMinChildAge] = useState(filters.minChildAge);
+    const [canLiveWithDogs, setCanLiveWithDogs] = useState(filters.canLiveWithDogs);
+    const [canLiveWithCats, setCanLiveWithCats] = useState(filters.canLiveWithCats);
+    const [vaccinated, setVaccinated] = useState(filters.vaccinated);
+    const [neutered, setNeutered] = useState(filters.neutered);
+    const [selectedCity, setSelectedCity] = useState(filters.selectedCity);
+    const [selectedSpecies, setSelectedSpecies] = useState(filters.selectedSpecies);
+    const [breed, setBreed] = useState(filters.breed);
 
-    const [selectedSex, setSelectedSex] = useState("");
-    const [minAge, setMinAge] = useState("");
-    const [maxAge, setMaxAge] = useState("");
-    const [minPrice, setMinPrice] = useState("");
-    const [maxPrice, setMaxPrice] = useState("");
-    const [area, setArea] = useState("");
-    const [minChildAge, setMinChildAge] = useState("");
-    const [canLiveWithDogs, setCanLiveWithDogs] = useState(false);
-    const [canLiveWithCats, setCanLiveWithCats] = useState(false);
-    const [vaccinated, setVaccinated] = useState(false);
-    const [neutered, setNeutered] = useState(false);
-    const [selectedCity, setSelectedCity] = useState(""); // Added state for city
-    const [selectedSpecies, setSelectedSpecies] = useState(""); // Added state for species
-    const [breed, setBreed] = useState(""); // Added state for breed
+    React.useEffect(() => {
+        setSelectedSex(filters.selectedSex);
+        setMinAge(filters.minAge);
+        setMaxAge(filters.maxAge);
+        setMinPrice(filters.minPrice);
+        setMaxPrice(filters.maxPrice);
+        setArea(filters.area);
+        setMinChildAge(filters.minChildAge);
+        setCanLiveWithDogs(filters.canLiveWithDogs);
+        setCanLiveWithCats(filters.canLiveWithCats);
+        setVaccinated(filters.vaccinated);
+        setNeutered(filters.neutered);
+        setSelectedCity(filters.selectedCity);
+        setSelectedSpecies(filters.selectedSpecies);
+        setBreed(filters.breed);
+    }, [filters]);
 
     const handleSearch = () => {
         onSearch({

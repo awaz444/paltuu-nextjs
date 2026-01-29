@@ -46,7 +46,7 @@ function MarketplaceClient() {
   const initialSortBy = searchParams.get("sortBy") || "";
   const initialKeyword = searchParams.get("keyword") || "";
   const initialPetType = searchParams.get("petType") || "";
-const [loadingProductId, setLoadingProductId] = useState<number | null>(null);
+  const [loadingProductId, setLoadingProductId] = useState<number | null>(null);
 
   const [page, setPage] = useState(initialPage);
   const [filters, setFilters] = useState({
@@ -57,12 +57,12 @@ const [loadingProductId, setLoadingProductId] = useState<number | null>(null);
   });
 
   // ✅ Save scroll before navigating to product detail
-const handleProductClick = (productId: number) => {
-  sessionStorage.setItem("marketplace-scroll", window.scrollY.toString());
-  sessionStorage.setItem("marketplace-from-product", "true");
-  setLoadingProductId(productId); // show loader for this product
-  router.push(`/marketplace/${productId}`);
-};
+  const handleProductClick = (productId: number) => {
+    sessionStorage.setItem("marketplace-scroll", window.scrollY.toString());
+    sessionStorage.setItem("marketplace-from-product", "true");
+    setLoadingProductId(productId); // show loader for this product
+    router.push(`/marketplace/${productId}`);
+  };
 
 
   // ✅ Fetch products whenever filters/page change
@@ -188,11 +188,10 @@ const handleProductClick = (productId: number) => {
             <button
               key={num}
               onClick={() => setPage(num)}
-              className={`px-3 py-1 rounded-2xl transition-all duration-150 ${
-                page === num
-                  ? "bg-primary text-white shadow-md"
-                  : "bg-gray-200 text-primary font-medium hover:bg-gray-300"
-              }`}
+              className={`px-3 py-1 rounded-2xl transition-all duration-150 ${page === num
+                ? "bg-primary text-white shadow-md"
+                : "bg-gray-200 text-primary font-medium hover:bg-gray-300"
+                }`}
             >
               {num}
             </button>

@@ -7,6 +7,11 @@ import { fetchPetCategories } from "../app/store/slices/petCategoriesSlice";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 
 interface FilterSectionProps {
+    filters?: {
+        selectedCity: string;
+        selectedSpecies: string;
+        breed: string;
+    };
     onSearch: (filters: {
         selectedCity: string;
         selectedSpecies: string;
@@ -14,20 +19,28 @@ interface FilterSectionProps {
     }) => void;
 }
 
-const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
+const FilterSection: React.FC<FilterSectionProps> = ({ onSearch, filters }) => {
     const dispatch = useDispatch<AppDispatch>();
     const { cities } = useSelector((state: RootState) => state.cities);
     const { categories } = useSelector((state: RootState) => state.categories);
 
-    const [selectedCity, setSelectedCity] = useState("");
-    const [selectedSpecies, setSelectedSpecies] = useState("");
-    const [breed, setBreed] = useState("");
+    const [selectedCity, setSelectedCity] = useState(filters?.selectedCity || "");
+    const [selectedSpecies, setSelectedSpecies] = useState(filters?.selectedSpecies || "");
+    const [breed, setBreed] = useState(filters?.breed || "");
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         dispatch(fetchCities());
         dispatch(fetchPetCategories());
     }, [dispatch]);
+
+    useEffect(() => {
+        if (filters) {
+            setSelectedCity(filters.selectedCity || "");
+            setSelectedSpecies(filters.selectedSpecies || "");
+            setBreed(filters.breed || "");
+        }
+    }, [filters]);
 
     const handleReset = () => {
         setSelectedCity("");
@@ -105,7 +118,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch }) => {
                     </div>
                 </div>
 
-                
+
             </div>
 
             {/* More Filters Modal */}

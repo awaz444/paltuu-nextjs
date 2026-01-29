@@ -12,8 +12,6 @@ import NavbarWrapper from "@/components/NavbarWrapper";
 import ThemeInitializer from "./ThemeInitializer";
 import ApplyThemeColor from "@/components/ApplyThemeColor";
 import PageTransition from "@/components/PageTransition";
-import PWAInstallPrompt from "@/components/PWAInstallPrompt";
-import PWARegister from "@/components/PWARegister";
 import CartSyncProvider from "@/components/CartSyncProvider";
 
 const montserrat = Montserrat({
@@ -29,12 +27,6 @@ export const metadata: Metadata = {
   },
   description:
     "Buy pet products online in Pakistan at Paltuu.pk. Shop food, accessories & grooming essentials, plus adopt or foster pets and connect with vets in Karachi, Lahore & Islamabad.",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Paltuu",
-  },
 };
 
 export const viewport = {
@@ -54,11 +46,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" href="/favicon-maroon.png" id="favicon" />
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="mobile-web-app-status-bar-style" content="default" />
-        <meta name="mobile-web-app-title" content="Paltuu" />
-        
+
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1403927121021328"
@@ -83,7 +71,6 @@ export default function RootLayout({
             <CartSyncProvider>
               <ApplyThemeColor />
               <ThemeInitializer />
-              <PWARegister />
               <NavbarWrapper />
 
               <main className="flex-grow">
@@ -95,7 +82,6 @@ export default function RootLayout({
               <div className="fixed right-2 z-[998] bottom-20 sm:bottom-4">
                 <ChatBot />
               </div>
-              <PWAInstallPrompt />
               <Analytics />
             </CartSyncProvider>
           </ClientProvider>

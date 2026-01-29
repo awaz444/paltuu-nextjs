@@ -54,7 +54,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
     const [phoneDigits, setPhoneDigits] = useState<string>("");
     const [saving, setSaving] = useState(false);
     const [inlineError, setInlineError] = useState<string | null>(null);
-    
+
 
     // console.log("Pets in PetGrid:", pets);
 
@@ -159,7 +159,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
 
             try {
                 await (refreshUser?.() ?? Promise.resolve());
-            } catch {}
+            } catch { }
             setIsModalVisible(false);
             router.push("/create-listing");
         } catch (err) {
@@ -190,7 +190,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                 Add Your Pet
             </Link>
 
-          
+
             {pets.map((pet) => (
                 <Link
                     key={pet.pet_id}
@@ -227,18 +227,16 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                             )}
                         </div>
                         <div className="py-4">
-                            <h3 className="font-bold text-2xl mb-1 truncate max-w-[90%]">
+                            <h3 className="font-bold mb-1 truncate max-w-[90%]">
                                 {pet.pet_name}
                             </h3>
                             <p className="text-gray-600 mb-1 truncate max-w-[90%]">
                                 {pet.age > 0 &&
-                                    `${pet.age} ${
-                                        pet.age > 1 ? "years" : "year"
+                                    `${pet.age} ${pet.age > 1 ? "years" : "year"
                                     }`}
                                 {pet.age > 0 && pet.months > 0 && ", "}
                                 {pet.months > 0 &&
-                                    `${pet.months} ${
-                                        pet.months > 1 ? "months" : "month"
+                                    `${pet.months} ${pet.months > 1 ? "months" : "month"
                                     } old`}
                             </p>
                             <div className="flex flex-row gap-2 right">
@@ -249,7 +247,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                     </div>
                 </Link>
             ))}
-              <Link
+            <Link
                 href="#"
                 onClick={handleAddPetClick}
                 className="fixed bottom-4 left-1/2 transform -translate-x-1/2 sm:hidden z-49">
@@ -337,7 +335,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
 
         </div>
 
-        
+
     );
 };
 

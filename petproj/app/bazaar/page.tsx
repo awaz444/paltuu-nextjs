@@ -495,7 +495,7 @@ export default function BazaarPage() {
                                 {/* Modern Loader Overlay with MoonLoader */}
                                 {loadingProductId === prod.product_id && (
                                   <div className="absolute inset-0 z-20 bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center rounded-3xl">
-                                    <MoonLoader
+                                    <ClipLoader
                                       color="#A03048" // primary color
                                       size={40} // size of the loader
                                       speedMultiplier={1.2}

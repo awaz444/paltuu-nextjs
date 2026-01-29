@@ -113,7 +113,7 @@ const AdminPetInteraction: React.FC = () => {
   const handleDelete = async (petId: number) => {
     setLoading(true);
 
-    dispatch(fetchAdoptionPets());
+    dispatch(fetchAdoptionPets({}));
     dispatch(fetchFosterPets());
 
     try {
@@ -443,22 +443,22 @@ const AdminPetInteraction: React.FC = () => {
             <div className="flex justify-between mb-4">
               <button
                 className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet?.listing_type === "adoption"
-                        ? "bg-primary text-white"
-                        : "bg-gray-100"
-                    }`}
+                  ? "bg-primary text-white"
+                  : "bg-gray-100"
+                  }`}
                 onClick={() =>
-                    setEditingPet({ ...editingPet!, listing_type: "adoption" })
+                  setEditingPet({ ...editingPet!, listing_type: "adoption" })
                 }
               >
                 Adoption
               </button>
               <button
                 className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet?.listing_type === "foster"
-                        ? "bg-primary text-white"
-                        : "bg-gray-100"
-                    }`}
+                  ? "bg-primary text-white"
+                  : "bg-gray-100"
+                  }`}
                 onClick={() =>
-                    setEditingPet({ ...editingPet!, listing_type: "foster" })
+                  setEditingPet({ ...editingPet!, listing_type: "foster" })
                 }
               >
                 Foster

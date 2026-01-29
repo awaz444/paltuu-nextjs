@@ -68,7 +68,7 @@ function BrowsePetsContent() {
             ...(filters.breed && { breed: filters.breed }),
         };
 
-        dispatch(fetchAdoptionPets({ page, limit: 10, filters: apiFilters }));
+        dispatch(fetchAdoptionPets({ page, limit: 11, filters: apiFilters }));
 
         // Update URL
         const params = new URLSearchParams();

@@ -109,7 +109,7 @@ const VerticalSearchBar: React.FC<VerticalSearchBarProps> = ({
     };
 
     return (
-        <div className="bg-white shadow-sm p-6 rounded-3xl">
+        <div className="bg-white shadow-sm p-6 rounded-3xl sticky top-4">
 
             {/* Sex Filter */}
             <div className="mb-4">

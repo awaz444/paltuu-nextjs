@@ -559,7 +559,7 @@ const Navbar = ({
                   </button>
                 ) : (
                   <Link href="/auth">
-                    <button className="w-full text-center text-primary font-medium py-2 text-xl">
+                    <button className="w-full text-center text-white font-medium py-2 text-xl">
                       Login
                     </button>
                   </Link>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
+import PartnerModal from "./PartnerModal";
 
 interface LoginFormProps {
   onSwitchToSignup: () => void;
@@ -20,6 +21,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showPartnerModal, setShowPartnerModal] = useState(false);
 
   // Floating label states
   const [isEmailFocused, setIsEmailFocused] = useState(false);
@@ -97,12 +99,11 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           required
         />
         <label
-         htmlFor="email"
-          className={`absolute left-4 text-gray-500 text-sm transition-all duration-200 ${
-            isEmailFocused || user.email
-              ? "-top-2 text-xs text-primary bg-white px-1 pointer-events-none"
-              : "top-4 text-gray-400"
-          }`}
+          htmlFor="email"
+          className={`absolute left-4 text-gray-500 text-sm transition-all duration-200 ${isEmailFocused || user.email
+            ? "-top-2 text-xs text-primary bg-white px-1 pointer-events-none"
+            : "top-4 text-gray-400"
+            }`}
         >
           Email
         </label>
@@ -111,7 +112,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
       {/* Floating Password */}
       <div className="relative mb-6">
         <input
-        id="password"
+          id="password"
           type={showPassword ? "text" : "password"}
           name="password"
           value={user.password}
@@ -124,11 +125,10 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         />
         <label
           htmlFor="password"
-          className={`absolute left-4 text-gray-500 text-sm transition-all duration-200 ${
-            isPasswordFocused || user.password
-              ? "-top-2 text-xs text-primary bg-white px-1 pointer-events-none"
-              : "top-4 text-gray-400"
-          }`}
+          className={`absolute left-4 text-gray-500 text-sm transition-all duration-200 ${isPasswordFocused || user.password
+            ? "-top-2 text-xs text-primary bg-white px-1 pointer-events-none"
+            : "top-4 text-gray-400"
+            }`}
         >
           Password
         </label>
@@ -165,9 +165,8 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
       <button
         type="submit"
         disabled={buttonDisabled || loading}
-        className={`w-full py-3 px-4 rounded-xl text-white bg-primary hover:bg-primary transition font-medium ${
-          buttonDisabled || loading ? "opacity-50 cursor-not-allowed" : ""
-        }`}
+        className={`w-full py-3 px-4 rounded-xl text-white bg-primary hover:bg-primary transition font-medium ${buttonDisabled || loading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
       >
         {loading ? "Signing In..." : "Sign In"}
       </button>
@@ -187,9 +186,8 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         type="button"
         onClick={handleGoogleLogin}
         disabled={googleLoading}
-        className={`w-full py-3 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 font-medium ${
-          googleLoading ? "opacity-50 cursor-not-allowed" : ""
-        }`}
+        className={`w-full py-3 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 font-medium ${googleLoading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
           <path
@@ -239,16 +237,21 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
 
       <div className="pt-4 text-center">
         <p className="text-sm text-gray-600">
-          Veterinary professional, pet shop owner, or rescue organization?{" "}
+          Are you a vet, clinic, or rescue?{" "}
           <button
             type="button"
             className="text-primary font-semibold hover:underline focus:outline-none"
-            onClick={() => router.push("/partner-signup")}
+            onClick={() => setShowPartnerModal(true)}
           >
-            Join our Partner Program
+            Contact us
           </button>
         </p>
       </div>
+
+      <PartnerModal
+        visible={showPartnerModal}
+        onClose={() => setShowPartnerModal(false)}
+      />
     </form>
   );
 }

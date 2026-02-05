@@ -13,6 +13,7 @@ import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import { Modal, Button } from "antd";
 import { toast } from "react-hot-toast";
 import OTPInput from "react-otp-input";
+import PartnerModal from "./PartnerModal";
 
 interface SignupFormProps {
     onSwitchToLogin: () => void;
@@ -35,6 +36,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [phone_number, setPhoneNumber] = useState("");
     const [role, setRole] = useState<"regular user">("regular user");
+    const [showPartnerModal, setShowPartnerModal] = useState(false);
 
     // OTP Verification States
     const [isEmailVerified, setIsEmailVerified] = useState(false);
@@ -84,24 +86,21 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
     const PasswordRules = ({ password }: { password: string }) => (
         <div className="mt-0 space-y-1 text-sm">
             <p
-                className={`flex items-center ${
-                    password.length > 0 ? "text-gray-600" : "text-gray-400"
-                }`}>
+                className={`flex items-center ${password.length > 0 ? "text-gray-600" : "text-gray-400"
+                    }`}>
                 Password must contain:
             </p>
             <ul className="list-disc pl-5 space-y-1">
                 <li
-                    className={`flex items-center ${
-                        password.length >= 6 ? "text-green-500" : "text-red-500"
-                    }`}>
+                    className={`flex items-center ${password.length >= 6 ? "text-green-500" : "text-red-500"
+                        }`}>
                     {password.length >= 6 ? "✓" : "✗"} Minimum 6 characters
                 </li>
                 <li
-                    className={`flex items-center ${
-                        /[A-Za-z]/.test(password)
-                            ? "text-green-500"
-                            : "text-red-500"
-                    }`}>
+                    className={`flex items-center ${/[A-Za-z]/.test(password)
+                        ? "text-green-500"
+                        : "text-red-500"
+                        }`}>
                     {/[A-Za-z]/.test(password) ? "✓" : "✗"} At least one letter
                 </li>
             </ul>
@@ -117,21 +116,19 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
     }) => (
         <div className="mt-0 space-y-1 text-sm">
             <p
-                className={`flex items-center ${
-                    confirmPassword.length > 0
-                        ? "text-gray-600"
-                        : "text-gray-400"
-                }`}>
+                className={`flex items-center ${confirmPassword.length > 0
+                    ? "text-gray-600"
+                    : "text-gray-400"
+                    }`}>
                 Confirm password must:
             </p>
             <ul className="list-disc pl-5 space-y-1">
                 <li
-                    className={`flex items-center ${
-                        password === confirmPassword &&
+                    className={`flex items-center ${password === confirmPassword &&
                         confirmPassword.length > 0
-                            ? "text-green-500"
-                            : "text-red-500"
-                    }`}>
+                        ? "text-green-500"
+                        : "text-red-500"
+                        }`}>
                     {password === confirmPassword && confirmPassword.length > 0
                         ? "✓"
                         : "✗"}
@@ -200,7 +197,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                 } else {
                     setGeneralError(
                         errorPayload?.message ||
-                            "Failed to create account. Please try again."
+                        "Failed to create account. Please try again."
                     );
                 }
                 return;
@@ -260,16 +257,14 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         return (
             <div className="mt-0 space-y-1 text-sm">
                 <p
-                    className={`flex items-center ${
-                        email.length > 0 ? "text-gray-600" : "text-gray-400"
-                    }`}>
+                    className={`flex items-center ${email.length > 0 ? "text-gray-600" : "text-gray-400"
+                        }`}>
                     Email must be:
                 </p>
                 <ul className="list-disc pl-5 space-y-1">
                     <li
-                        className={`flex items-center ${
-                            isValid ? "text-green-500" : "text-red-500"
-                        }`}>
+                        className={`flex items-center ${isValid ? "text-green-500" : "text-red-500"
+                            }`}>
                         {isValid ? "✓" : "✗"} Properly formatted (e.g.,
                         example@domain.com)
                     </li>
@@ -338,9 +333,8 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={googleLoading}
-                className={`w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${
-                    googleLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}>
+                className={`w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${googleLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}>
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -421,13 +415,12 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                         type="button"
                         onClick={handleVerifyEmail}
                         disabled={!validateEmail(email) || isEmailVerified}
-                        className={`px-4 rounded-xl transition-colors ${
-                            isEmailVerified
-                                ? "bg-green-500 text-white"
-                                : validateEmail(email)
+                        className={`px-4 rounded-xl transition-colors ${isEmailVerified
+                            ? "bg-green-500 text-white"
+                            : validateEmail(email)
                                 ? "bg-primary text-white hover:bg-primary-dark"
                                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        }`}>
+                            }`}>
                         {isEmailVerified ? "Verified" : "Verify"}
                     </button>
 
@@ -585,13 +578,12 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                     !isEmailVerified ||
                     password !== confirmPassword
                 }
-                className={`w-full bg-primary text-white py-2 px-4 rounded-xl transition ${
-                    isLoading ||
+                className={`w-full bg-primary text-white py-2 px-4 rounded-xl transition ${isLoading ||
                     !isEmailVerified ||
                     password !== confirmPassword
-                        ? "opacity-50 cursor-not-allowed"
-                        : "hover:bg-primary-dark"
-                }`}>
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-primary-dark"
+                    }`}>
                 {isLoading ? "Creating Account..." : "Create Account"}
             </button>
 
@@ -611,16 +603,20 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             {/* Partner Signup Link */}
             <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600">
-                    Are you a veterinary professional, pet shop owner, or rescue
-                    organization?{" "}
+                    Are you a vet, clinic, or rescue?{" "}
                     <button
                         type="button"
                         className="text-primary font-semibold hover:underline focus:outline-none"
-                        onClick={() => router.push("/partner-signup")}>
-                        Register as a Paltuu Partner
+                        onClick={() => setShowPartnerModal(true)}>
+                        Contact us
                     </button>
                 </p>
             </div>
+
+            <PartnerModal
+                visible={showPartnerModal}
+                onClose={() => setShowPartnerModal(false)}
+            />
 
             <Modal
                 title="Email Verification"
@@ -653,7 +649,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                     {otpError && (
                         <p className="text-red-500 text-center text-sm">
                             {otpError === "Invalid OTP" ||
-                            otpError === "OTP Not Found or Invalid"
+                                otpError === "OTP Not Found or Invalid"
                                 ? otpError
                                 : null}
                         </p>
@@ -663,11 +659,10 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                             type="button"
                             onClick={handleSubmitOtp}
                             disabled={otp.length !== 6 || isVerifying}
-                            className={`w-full bg-primary text-white py-2 rounded-lg transition flex items-center justify-center ${
-                                otp.length !== 6 || isVerifying
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : "hover:bg-primary-dark"
-                            }`}>
+                            className={`w-full bg-primary text-white py-2 rounded-lg transition flex items-center justify-center ${otp.length !== 6 || isVerifying
+                                ? "opacity-50 cursor-not-allowed"
+                                : "hover:bg-primary-dark"
+                                }`}>
                             {isVerifying ? "Loading..." : "Verify Code"}
                         </button>
                         <button

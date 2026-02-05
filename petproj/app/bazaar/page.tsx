@@ -323,10 +323,18 @@ export default function BazaarPage() {
     router.push(`/marketplace?${params.toString()}`);
   };
 
+  // Track banner loading state
+  const [bannerLoaded, setBannerLoaded] = useState(false);
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* 🐾 Hero Section */}
       <section className="relative w-full overflow-hidden bazaar-banner">
+        {/* Skeleton Loader */}
+        {!bannerLoaded && (
+          <div className="absolute inset-0 bg-gray-200 animate-pulse z-10 w-full h-full" />
+        )}
+
         {/* Desktop & Tablet Banner */}
         <div className="hidden sm:block w-full">
           <Image
@@ -335,7 +343,9 @@ export default function BazaarPage() {
             width={1920}
             height={1080}
             priority
-            className="w-full h-auto object-contain bg-gray-50"
+            className={`w-full h-auto object-contain bg-gray-50 transition-opacity duration-500 ${bannerLoaded ? "opacity-100" : "opacity-0"
+              }`}
+            onLoad={() => setBannerLoaded(true)}
           />
         </div>
 
@@ -347,7 +357,9 @@ export default function BazaarPage() {
             width={1080}
             height={1920}
             priority
-            className="w-full h-auto"
+            className={`w-full h-auto transition-opacity duration-500 ${bannerLoaded ? "opacity-100" : "opacity-0"
+              }`}
+            onLoad={() => setBannerLoaded(true)}
           />
         </div>
 

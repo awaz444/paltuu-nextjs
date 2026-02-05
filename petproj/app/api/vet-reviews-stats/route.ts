@@ -23,9 +23,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         const query = `
             SELECT 
                 AVG(rating) AS average_rating,
-                COUNT(*) FILTER (WHERE approved = true) AS approved_reviews_count
+                COUNT(*) AS approved_reviews_count
             FROM vet_reviews
-            WHERE vet_id = $1 AND approved = true;
+            WHERE vet_id = $1;
         `;
 
         const result = await client.query(query, [vet_id]);
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     
     // Parse the incoming request body to extract review data
-    const { vet_id, user_id, rating, review_content, review_date, approved } = await req.json();
+    const { vet_id, user_id, rating, review_content, review_date } = await req.json();
 
     // Check if all required fields are provided
     if (!vet_id || !user_id || !rating || !review_content || !review_date) {
@@ -76,12 +76,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         // Insert the new review into the database
         const query = `
-            INSERT INTO vet_reviews (vet_id, user_id, rating, review_content, review_date, approved)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO vet_reviews (vet_id, user_id, rating, review_content, review_date)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING review_id;
         `;
 
-        const values = [vet_id, user_id, rating, review_content, review_date, approved];
+        const values = [vet_id, user_id, rating, review_content, review_date];
 
         const result = await client.query(query, values);
 

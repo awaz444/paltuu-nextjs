@@ -15,7 +15,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedVet, setSelectedVet] = useState<Vet | null>(null);
 
-    
+
 
     const handleWhatsApp = (phone: string) => {
         let formattedPhone = phone.trim();
@@ -49,7 +49,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {vets.map((vet) => {
-                const formattedName = vet.name.match(/^dr\.?\s*/i)
+                const formattedName = (vet.name || "").match(/^dr\.?\s*/i)
                     ? vet.name
                     : `Dr. ${vet.name}`;
 
@@ -86,9 +86,9 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
                                             <div className="font-bold text-xl text-primary truncate max-w-[calc(100%-28px)]">
                                                 {formattedName}
                                             </div>
-                                            {vet.profile_verified && (
+                                            {/* {vet.profile_verified && (
                                                 <i className="bi bi-patch-check-fill text-[#cc8800]" />
-                                            )}
+                                            )} */}
                                         </div>
                                         <p className="text-gray-700 truncate max-w-full">
                                             {vet.clinic_name}
@@ -116,7 +116,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
                                                                 vet
                                                                     .qualifications
                                                                     .length -
-                                                                    1 && ", "}
+                                                                1 && ", "}
                                                         </span>
                                                     )
                                                 )}

@@ -25,26 +25,22 @@ import { MoonLoader } from "react-spinners";
 interface VetDetails {
     vet_id: string;
     user_id: string;
+    clinic_id: string;
     clinic_name: string;
+    is_paltuu_partner: boolean;
     clinic_whatsapp: string;
+    google_maps_link: string;
     location: string;
     minimum_fee: number;
     contact_details: string;
-    profile_verified: boolean;
     created_at: string;
     bio: string;
     vet_name: string;
     dob: string;
     email: string;
-    clinic_email: string;
     profile_image_url: string;
     city: string;
-    availability: {
-        availability_id: string;
-        day_of_week: string;
-        start_time: string;
-        end_time: string;
-    }[];
+    schedule: string;
     reviews: {
         review_id: string;
         rating: number;
@@ -81,7 +77,7 @@ export default function VetDetailsPage({
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [form] = Form.useForm();
     const router = useRouter();
-    
+
 
     // Fetch user ID on mount
     useEffect(() => {
@@ -134,7 +130,6 @@ export default function VetDetailsPage({
                 ...data,
                 specializations: uniqueByKey(data.specializations, "category_id"),
                 qualifications: uniqueByKey(data.qualifications, "qualification_id"),
-                availability: uniqueByKey(data.availability, "availability_id"),
                 reviews: uniqueByKey(data.reviews, "review_id"),
             });
         } catch (err) {
@@ -205,7 +200,6 @@ export default function VetDetailsPage({
 
         const review_date = new Date().toISOString();
         const vet_id = params["vet-id"];
-        const approved = false; // Reviews start unapproved
 
         try {
             const response = await fetch(`/api/vet-reviews-stats`, {
@@ -217,7 +211,6 @@ export default function VetDetailsPage({
                     rating: values.rating,
                     review_content: values.review_content,
                     review_date,
-                    approved,
                 }),
             });
 
@@ -266,7 +259,7 @@ export default function VetDetailsPage({
 
     return (
         <>
-            
+
             <div className="container mx-auto px-4 py-8">
                 <Card className="shadow-lg rounded-2xl overflow-hidden">
                     {/* Vet Profile Header */}
@@ -282,17 +275,39 @@ export default function VetDetailsPage({
                         <div className="flex-1 space-y-4">
                             <div className="flex items-center gap-4 flex-wrap">
                                 <h1 className="text-3xl font-bold text-gray-800">{vetDetails.vet_name}</h1>
-                                {vetDetails.profile_verified && <i className="bi bi-patch-check-fill text-[#cc8800] h-5 w-5" />}
                             </div>
 
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-lg text-gray-600">
-                                    <EnvironmentOutlined className="text-primary" />
-                                    <span>{vetDetails.clinic_name}, {vetDetails.city}</span>
+                            <div className="space-y-3">
+                                <div className="flex items-start gap-2 text-lg text-gray-600">
+                                    <EnvironmentOutlined className="text-primary mt-1" />
+                                    <div>
+                                        <div className="flex items-center gap-2 font-semibold text-gray-800">
+                                            <a href={`/pet-care/clinic/${vetDetails.clinic_id}`} className="hover:text-primary hover:underline">
+                                                {vetDetails.clinic_name}
+                                            </a>
+                                            {vetDetails.is_paltuu_partner && (
+                                                <div className="bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                    <i className="bi bi-patch-check-fill text-xs" />
+                                                    <span>Partner</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="text-base">{vetDetails.location}, {vetDetails.city}</div>
+                                        {vetDetails.google_maps_link && (
+                                            <a
+                                                href={vetDetails.google_maps_link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-sm text-primary hover:underline block mt-1"
+                                            >
+                                                View on Google Maps
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="flex flex-wrap gap-4">
-                                    <div className="bg-primary/10 py-1 rounded-xl">
+                                    <div className="bg-primary/10 py-1 px-3 rounded-xl">
                                         <span className="font-semibold text-primary">Minimum Consultation Fee:</span>
                                         <span className="ml-2">PKR {vetDetails.minimum_fee}</span>
                                     </div>
@@ -338,21 +353,10 @@ export default function VetDetailsPage({
                         {/* Right Column */}
                         <div className="space-y-6">
                             <Section title="Availability">
-                                <div className="grid grid-cols-2 gap-4">
-                                    {vetDetails.availability.map((avail) => {
-                                        const formatTime = (timeString: string): string => {
-                                            return timeString.split(':').slice(0, 2).join(':');
-                                        };
-
-                                        return (
-                                            <div key={avail.availability_id} className="bg-gray-50 p-4 rounded-xl">
-                                                <div className="font-medium text-gray-800">{avail.day_of_week}</div>
-                                                <div className="text-primary">
-                                                    {formatTime(avail.start_time)} - {formatTime(avail.end_time)}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                                <div className="bg-gray-50 p-4 rounded-xl">
+                                    <p className="text-gray-800 whitespace-pre-line">
+                                        {vetDetails.schedule || "Contact clinic for availability."}
+                                    </p>
                                 </div>
                             </Section>
 
@@ -381,13 +385,7 @@ export default function VetDetailsPage({
                                             onWhatsApp={() => handleWhatsApp(vetDetails.clinic_whatsapp)}
                                         />
                                     )}
-                                    {vetDetails.clinic_email && (
-                                        <ContactInfo
-                                            label="Clinic Email"
-                                            value={vetDetails.clinic_email}
-                                            onCopy={() => handleCopy(vetDetails.clinic_email)}
-                                        />
-                                    )}
+
                                 </div>
                             </Section>
                         </div>

@@ -15,6 +15,7 @@ import cartReducer from './slices/cartSlice';
 import marketplaceReducer from "./slices/marketplaceSlice";
 import bazaarProductsReducer from './slices/bazaarProductsSlice';
 import bazaarReducer from './slices/bazaarSlice';
+import clinicReducer from './slices/clinicSlice';
 
 
 export const store = configureStore({
@@ -35,6 +36,7 @@ export const store = configureStore({
     marketplace: marketplaceReducer,
     bazaarProducts: bazaarProductsReducer,
     bazaar: bazaarReducer,
+    clinics: clinicReducer,
   },
 });
 

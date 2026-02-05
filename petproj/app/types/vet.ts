@@ -19,7 +19,7 @@ export interface Qualification {
     minimum_fee: number;
     email: string;
     contact_details: string;
-    profile_verified: boolean;
+    // profile_verified: boolean; // Removed
     bio: string | null;
     name: string; // Make sure the name field exists here
     profile_image_url: string | null;

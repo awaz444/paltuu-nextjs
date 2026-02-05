@@ -1,0 +1,324 @@
+-- -------------------------------------------------------------
+-- Database Schema DDL
+-- Generated from: Supabase Snippet Public Schema Column Inventory
+-- -------------------------------------------------------------
+
+CREATE TABLE public.OTP (
+    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    email character varying NOT NULL,
+    otp character varying NOT NULL,
+    attempts integer DEFAULT 0,
+    createdat timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE public.admin_action_logs (
+    log_id integer NOT NULL DEFAULT nextval('admin_action_logs_log_id_seq'::regclass) PRIMARY KEY,
+    admin_id integer,
+    action_performed text,
+    target_entity character varying,
+    date_performed timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    status character varying
+);
+
+CREATE TABLE public.adoption_applications (
+    adoption_id integer NOT NULL DEFAULT nextval('adoption_applications_adoption_id_seq'::regclass) PRIMARY KEY,
+    user_id integer,
+    pet_id integer,
+    adopter_name character varying,
+    adopter_address character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    status character varying,
+    age_of_youngest_child integer,
+    other_pets_details text,
+    other_pets_neutered boolean,
+    has_secure_outdoor_area boolean,
+    pet_sleep_location character varying,
+    pet_left_alone text,
+    additional_details text,
+    agree_to_terms boolean,
+    delivery boolean NOT NULL DEFAULT false
+);
+
+CREATE TABLE public.cart_items (
+    cart_item_id bigint NOT NULL DEFAULT nextval('cart_items_cart_item_id_seq'::regclass) PRIMARY KEY,
+    cart_id bigint NOT NULL,
+    product_id bigint NOT NULL,
+    quantity integer NOT NULL,
+    price numeric NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+CREATE TABLE public.carts (
+    cart_id bigint NOT NULL DEFAULT nextval('carts_cart_id_seq'::regclass) PRIMARY KEY,
+    user_id bigint,
+    guest_token text,
+    status text DEFAULT 'active'::text,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+CREATE TABLE public.cities (
+    city_id integer NOT NULL DEFAULT nextval('cities_city_id_seq'::regclass) PRIMARY KEY,
+    city_name character varying NOT NULL
+);
+
+CREATE TABLE public.clinics (
+    clinic_id bigint NOT NULL PRIMARY KEY,
+    name text NOT NULL,
+    address text NOT NULL,
+    google_maps_link text,
+    contact_number text,
+    whatsapp_number text,
+    logo_url text,
+    operating_hours text,
+    discount_details text,
+    is_paltuu_partner boolean DEFAULT false,
+    created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE public.issues (
+    id bigint NOT NULL DEFAULT nextval('issues_id_seq'::regclass) PRIMARY KEY,
+    user_id bigint,
+    title character varying NOT NULL,
+    description text,
+    image_url text,
+    status character varying NOT NULL DEFAULT 'open'::character varying,
+    priority smallint NOT NULL DEFAULT 0,
+    created_at timestamp with time zone NOT NULL DEFAULT now()
+);
+
+CREATE TABLE public.lost_and_found_post_images (
+    image_id integer NOT NULL DEFAULT nextval('lost_and_found_post_images_image_id_seq'::regclass) PRIMARY KEY,
+    post_id integer NOT NULL,
+    image_url character varying NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE public.lost_and_found_posts (
+    post_id integer NOT NULL DEFAULT nextval('lost_and_found_posts_post_id_seq'::regclass) PRIMARY KEY,
+    user_id integer,
+    post_type character varying,
+    pet_description text,
+    city_id integer,
+    location character varying,
+    contact_info character varying,
+    post_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    status character varying DEFAULT 'active'::character varying,
+    category_id integer,
+    date date
+);
+
+CREATE TABLE public.notifications (
+    notification_id integer NOT NULL DEFAULT nextval('notifications_notification_id_seq'::regclass) PRIMARY KEY,
+    user_id integer,
+    notification_content text,
+    notification_type character varying,
+    date_sent timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    is_read boolean DEFAULT false
+);
+
+CREATE TABLE public.pet_category (
+    category_id integer NOT NULL DEFAULT nextval('pet_category_category_id_seq'::regclass) PRIMARY KEY,
+    category_name character varying NOT NULL
+);
+
+CREATE TABLE public.pet_images (
+    image_id integer NOT NULL DEFAULT nextval('pet_images_image_id_seq'::regclass) PRIMARY KEY,
+    pet_id integer,
+    image_url character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    "order" integer
+);
+
+CREATE TABLE public.pets (
+    pet_id integer NOT NULL DEFAULT nextval('pets_pet_id_seq'::regclass) PRIMARY KEY,
+    owner_id integer,
+    pet_name character varying NOT NULL,
+    pet_type integer,
+    pet_breed character varying,
+    city_id integer,
+    area character varying,
+    age integer,
+    description character varying,
+    adoption_status character varying,
+    price numeric DEFAULT 0,
+    min_age_of_children integer,
+    can_live_with_dogs boolean,
+    can_live_with_cats boolean,
+    must_have_someone_home boolean,
+    energy_level integer,
+    cuddliness_level integer,
+    health_issues character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    sex character varying,
+    listing_type character varying,
+    vaccinated boolean,
+    neutered boolean,
+    approved boolean DEFAULT false,
+    months integer,
+    shelter_id integer,
+    shop_id integer,
+    rescue_story text
+);
+
+CREATE TABLE public.qualifications (
+    qualification_id integer NOT NULL DEFAULT nextval('qualifications_qualification_id_seq'::regclass) PRIMARY KEY,
+    qualification_name character varying,
+    description text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE public.rescue_images (
+    image_id integer NOT NULL DEFAULT nextval('rescue_images_image_id_seq'::regclass) PRIMARY KEY,
+    pet_id integer,
+    image_url text NOT NULL
+);
+
+CREATE TABLE public.rescue_medical_conditions (
+    condition_id integer NOT NULL DEFAULT nextval('rescue_medical_conditions_condition_id_seq'::regclass) PRIMARY KEY,
+    pet_id integer,
+    condition text NOT NULL,
+    treatment_cost numeric,
+    treated boolean DEFAULT false
+);
+
+CREATE TABLE public.rescue_shelters (
+    shelter_id integer NOT NULL DEFAULT nextval('rescue_shelters_shelter_id_seq'::regclass) PRIMARY KEY,
+    user_id integer,
+    shelter_name character varying NOT NULL,
+    address text NOT NULL,
+    description text,
+    logo_url text,
+    capacity integer,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    approved boolean NOT NULL DEFAULT false
+);
+
+CREATE TABLE public.rescue_special_needs (
+    need_id integer NOT NULL DEFAULT nextval('rescue_special_needs_need_id_seq'::regclass) PRIMARY KEY,
+    pet_id integer,
+    special_need text NOT NULL
+);
+
+CREATE TABLE public.shelter_animals (
+    id integer NOT NULL DEFAULT nextval('shelter_animals_id_seq'::regclass) PRIMARY KEY,
+    shelter_id integer,
+    animal_type integer
+);
+
+CREATE TABLE public.shelter_bank_info (
+    bank_id integer NOT NULL DEFAULT nextval('shelter_bank_info_bank_id_seq'::regclass) PRIMARY KEY,
+    shelter_id integer,
+    account_title character varying NOT NULL,
+    iban character varying NOT NULL,
+    bank_name character varying NOT NULL
+);
+
+CREATE TABLE public.shelter_emergency_contacts (
+    contact_id integer NOT NULL DEFAULT nextval('shelter_emergency_contacts_contact_id_seq'::regclass) PRIMARY KEY,
+    shelter_id integer,
+    primary_phone character varying NOT NULL,
+    backup_phone character varying,
+    vet_name character varying,
+    vet_phone character varying
+);
+
+CREATE TABLE public.shelter_photos (
+    photo_id integer NOT NULL DEFAULT nextval('shelter_photos_photo_id_seq'::regclass) PRIMARY KEY,
+    shelter_id integer,
+    photo_url text NOT NULL
+);
+
+CREATE TABLE public.shelter_socials (
+    social_id integer NOT NULL DEFAULT nextval('shelter_socials_social_id_seq'::regclass) PRIMARY KEY,
+    shelter_id integer,
+    platform character varying,
+    url text
+);
+
+CREATE TABLE public.shelter_verification (
+    verification_id integer NOT NULL DEFAULT nextval('shelter_verification_verification_id_seq'::regclass) PRIMARY KEY,
+    shelter_id integer,
+    reg_certificate_url text,
+    cnic_front_url text NOT NULL,
+    cnic_back_url text NOT NULL
+);
+
+CREATE TABLE public.shop_bank_info (
+    bank_id integer NOT NULL DEFAULT nextval('shop_bank_info_bank_id_seq'::regclass) PRIMARY KEY,
+    shop_id integer NOT NULL,
+    account_title character varying NOT NULL,
+    iban character varying NOT NULL,
+    bank_name character varying NOT NULL
+);
+
+CREATE TABLE public.shop_socials (
+    social_id integer NOT NULL DEFAULT nextval('shop_socials_social_id_seq'::regclass) PRIMARY KEY,
+    shop_id integer NOT NULL,
+    platform character varying NOT NULL,
+    url text NOT NULL
+);
+
+CREATE TABLE public.shops (
+    shop_id integer NOT NULL PRIMARY KEY,
+    user_id integer NOT NULL,
+    shop_name character varying NOT NULL,
+    address text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    logo_url character varying
+);
+
+CREATE TABLE public.users (
+    user_id integer NOT NULL DEFAULT nextval('users_user_id_seq'::regclass) PRIMARY KEY,
+    name character varying NOT NULL,
+    dob date,
+    city_id integer,
+    email character varying NOT NULL,
+    password character varying NOT NULL,
+    phone_number character varying,
+    profile_image_url character varying,
+    role character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    oauth_provider text,
+    oauth_id text,
+    username text,
+    phone_verified boolean DEFAULT false,
+    founding_club boolean DEFAULT false
+);
+
+CREATE TABLE public.vet_qualifications (
+    vet_id integer NOT NULL,
+    qualification_id integer NOT NULL,
+    year_acquired integer,
+    note text,
+    vet_qualifications_id integer NOT NULL DEFAULT nextval('vet_qualifications_vet_qualifications_id_seq'::regclass) PRIMARY KEY,
+    status text DEFAULT 'pending'::text
+);
+
+CREATE TABLE public.vet_reviews (
+    review_id integer NOT NULL DEFAULT nextval('vet_reviews_review_id_seq'::regclass) PRIMARY KEY,
+    vet_id integer,
+    user_id integer,
+    rating integer,
+    review_content text,
+    review_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    clinic_id bigint
+);
+
+CREATE TABLE public.vet_specializations (
+    vet_id integer NOT NULL,
+    category_id integer NOT NULL
+);
+
+CREATE TABLE public.vets (
+    vet_id integer NOT NULL DEFAULT nextval('vets_vet_id_seq'::regclass) PRIMARY KEY,
+    user_id integer,
+    minimum_fee integer,
+    contact_details character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    bio text,
+    clinic_id bigint,
+    is_active boolean DEFAULT true,
+    schedule text
+);

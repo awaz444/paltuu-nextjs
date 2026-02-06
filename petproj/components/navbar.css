@@ -116,7 +116,7 @@
   border: none;
   border-radius: 60px; /* Default rounded corners */
   font-weight: 600;
-  padding: 7px 15px;
+  padding: 7px;
   cursor: pointer;
   transition: border-radius;
   border-color: #ffffff; /* Border color */

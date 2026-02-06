@@ -946,7 +946,7 @@ const Navbar = ({
 
                   {/* Badges */}
                   <div className="flex items-center gap-1">
-                    {isFoundersClub && (
+                    {/* {isFoundersClub && (
                       <div className="bg-pink-100 p-1.5 rounded-full">
                         <Image
                           src="/primary_icon.svg"
@@ -955,7 +955,7 @@ const Navbar = ({
                           height={16}
                         />
                       </div>
-                    )}
+                    )} */}
                     <svg
                       width="12"
                       height="12"

@@ -41,9 +41,26 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         `;
         const vetsResult = await client.query(vetsQuery, [clinicId]);
 
+        // 3. Fetch Reviews for this Clinic
+        const reviewsQuery = `
+            SELECT 
+                vr.review_id,
+                vr.rating,
+                vr.review_content,
+                vr.review_date,
+                u.name AS review_maker_name,
+                u.profile_image_url AS review_maker_profile_image_url
+            FROM vet_reviews vr
+            JOIN users u ON vr.user_id = u.user_id
+            WHERE vr.clinic_id = $1
+            ORDER BY vr.review_date DESC;
+        `;
+        const reviewsResult = await client.query(reviewsQuery, [clinicId]);
+
         const response = {
             ...clinic,
-            vets: vetsResult.rows
+            vets: vetsResult.rows,
+            reviews: reviewsResult.rows
         };
 
         return NextResponse.json(response, { status: 200 });

@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Store, ArrowRight } from "lucide-react";
+import { Store, ArrowRight, ShieldCheck, Cat, Dog, Truck } from "lucide-react";
 
 // Brand definitions with SEO-friendly descriptions
 const brands = [
@@ -118,13 +118,6 @@ export default function AllBrandsPage() {
                         Shop 100% authentic products from the world's most trusted pet nutrition and care brands.
                         Available for delivery in <span className="font-semibold text-gray-900">Karachi</span>.
                     </p>
-
-                    {/* Trust Badges (Visual Trust) */}
-                    <div className="flex flex-wrap justify-center gap-4 mt-6 text-sm font-medium text-gray-500">
-                        <span className="flex items-center gap-1">✅ 100% Original Products</span>
-                        <span className="flex items-center gap-1">📦 Delivery in Karachi</span>
-                        <span className="flex items-center gap-1">🛡️ Official Distributors</span>
-                    </div>
                 </div>
             </div>
 
@@ -200,7 +193,8 @@ export default function AllBrandsPage() {
                             {/* Content Block 1: Authenticity (Huge Keyword: "Fake pet food Pakistan") */}
                             <div>
                                 <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                    🛡️ Authenticity Guarantee
+                                    <ShieldCheck className="w-6 h-6 text-primary" />
+                                    Authenticity Guarantee
                                 </h3>
                                 <p className="text-gray-600 leading-relaxed mb-4">
                                     Counterfeit pet food is a growing concern in Pakistan. At
@@ -213,7 +207,10 @@ export default function AllBrandsPage() {
                             {/* Content Block 2: Variety (Keywords: "Cat food," "Dog food") */}
                             <div>
                                 <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                    🐱🐶 Complete Nutrition Range
+                                    <div className="flex gap-1">
+                                        <Dog className="w-5 h-5 text-primary" />
+                                    </div>
+                                    Complete Nutrition Range
                                 </h3>
                                 <p className="text-gray-600 leading-relaxed mb-4">
                                     Whether you need <span className="font-medium text-gray-900">grain-free dog food</span>,
@@ -226,13 +223,14 @@ export default function AllBrandsPage() {
 
                             {/* Content Block 3: Delivery (Keywords: "Pet food delivery Karachi") */}
                             <div className="md:col-span-2 bg-gray-50 rounded-2xl p-6 md:p-8">
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                                    🚚 Fast Delivery in Karachi
+                                <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                    <Truck className="w-6 h-6 text-primary" />
+                                    Fast Delivery in Karachi
                                 </h3>
                                 <p className="text-gray-600">
                                     We deliver authentic pet products to all major areas including
                                     <span className="font-semibold"> DHA, Clifton, Gulshan-e-Iqbal, North Nazimabad</span>,
-                                    and across Karachi. No more heavy lifting—get your 15kg food bags delivered home.
+                                    and across Karachi. No more heavy lifting get your 15kg food bags delivered home.
                                 </p>
                             </div>
                         </div>

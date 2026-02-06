@@ -120,7 +120,6 @@
   cursor: pointer;
   transition: border-radius;
   border-color: #ffffff; /* Border color */
-  margin-left: 2rem;
 }
 
 .dropdown:hover .loginBtn {

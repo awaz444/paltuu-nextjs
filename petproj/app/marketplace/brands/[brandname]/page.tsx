@@ -105,13 +105,13 @@ export default function GenericBrandPage() {
                             </p>
 
                             <div className="flex flex-wrap gap-4 text-sm font-medium text-gray-700">
-                                <span className="flex items-center gap-1.5 bg-green-50 px-3 py-1 rounded-full text-green-700">
+                                <span className="flex items-center gap-1.5 bg-primary px-3 py-1 rounded-full text-white">
                                     <CheckCircle size={16} /> 100% Authentic
                                 </span>
-                                <span className="flex items-center gap-1.5 bg-blue-50 px-3 py-1 rounded-full text-blue-700">
+                                <span className="flex items-center gap-1.5 bg-primary px-3 py-1 rounded-full text-white">
                                     <Truck size={16} /> Fast Delivery in Karachi
                                 </span>
-                                <span className="flex items-center gap-1.5 bg-purple-50 px-3 py-1 rounded-full text-purple-700">
+                                <span className="flex items-center gap-1.5 bg-primary px-3 py-1 rounded-full text-white">
                                     <ShieldCheck size={16} /> Fresh Stock Guarantee
                                 </span>
                             </div>

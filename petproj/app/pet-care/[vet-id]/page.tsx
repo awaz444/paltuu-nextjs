@@ -16,6 +16,7 @@ import {
     Rate,
 } from "antd";
 import { CopyOutlined, WhatsAppOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import { useAuth } from "@/context/AuthContext";
 import Navbar from "../../../components/navbar";
 import LoginModal from "../../../components/LoginModal";
 import './styles.css'
@@ -49,16 +50,7 @@ interface VetDetails {
         review_maker_profile_image_url: string;
         review_maker_name: string;
     }[];
-    specializations: {
-        category_id: string;
-        category_name: string;
-    }[];
-    qualifications: {
-        qualification_id: string;
-        year_acquired: string;
-        qualification_note: string;
-        qualification_name: string;
-    }[];
+    qualifications: string;
 }
 
 export default function VetDetailsPage({
@@ -73,32 +65,14 @@ export default function VetDetailsPage({
         approvedCount: number;
     } | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [userId, setUserId] = useState<string | null>(null);
+    const { isAuthenticated, user } = useAuth();
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [form] = Form.useForm();
     const router = useRouter();
 
 
-    // Fetch user ID on mount
-    useEffect(() => {
-        const userString = localStorage.getItem("user");
-        if (userString) {
-            try {
-                const user = JSON.parse(userString);
-                setUserId(user?.id || null);
-            } catch (error) {
-                console.error("Error parsing user data:", error);
-            }
-        }
-    }, []);
-
     // Handle login success
     const handleLoginSuccess = () => {
-        const userString = localStorage.getItem("user");
-        if (userString) {
-            const user = JSON.parse(userString);
-            setUserId(user.id);
-        }
         setShowLoginModal(false);
     };
 
@@ -128,8 +102,6 @@ export default function VetDetailsPage({
 
             setVetDetails({
                 ...data,
-                specializations: uniqueByKey(data.specializations, "category_id"),
-                qualifications: uniqueByKey(data.qualifications, "qualification_id"),
                 reviews: uniqueByKey(data.reviews, "review_id"),
             });
         } catch (err) {
@@ -184,7 +156,7 @@ export default function VetDetailsPage({
 
     // Handle review button click
     const handleReviewClick = () => {
-        if (!userId) {
+        if (!isAuthenticated) {
             setShowLoginModal(true);
             return;
         }
@@ -193,7 +165,7 @@ export default function VetDetailsPage({
 
     // Handle review submission
     const handleSubmit = async (values: { rating: number; review_content: string }) => {
-        if (!userId) {
+        if (!isAuthenticated || !user?.id) {
             message.error("You must be logged in to submit a review");
             return;
         }
@@ -207,7 +179,7 @@ export default function VetDetailsPage({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     vet_id,
-                    user_id: userId,
+                    // valid token in cookies handles user_id on server, but we kept minimal payload
                     rating: values.rating,
                     review_content: values.review_content,
                     review_date,
@@ -328,24 +300,11 @@ export default function VetDetailsPage({
                                 </Section>
                             )}
 
-                            <Section title="Best Suited For">
-                                <div className="flex flex-wrap gap-2">
-                                    {vetDetails.specializations.map((spec) => (
-                                        <Tag key={spec.category_id} className="rounded-lg bg-primary/10 text-primary border-0">
-                                            {spec.category_name}
-                                        </Tag>
-                                    ))}
-                                </div>
-                            </Section>
-
                             <Section title="Qualifications">
-                                <div className="space-y-4">
-                                    {vetDetails.qualifications.map((qual) => (
-                                        <div key={qual.qualification_id} className="bg-gray-50 p-4 rounded-xl">
-                                            <h3 className="font-semibold text-gray-800">{qual.qualification_name}</h3>
-                                            <p className="text-gray-600">{qual.year_acquired} • {qual.qualification_note}</p>
-                                        </div>
-                                    ))}
+                                <div className="bg-gray-50 p-4 rounded-xl">
+                                    <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
+                                        {vetDetails.qualifications || "No qualifications listed."}
+                                    </p>
                                 </div>
                             </Section>
                         </div>
@@ -417,7 +376,7 @@ export default function VetDetailsPage({
                                 onClick={handleReviewClick}
                                 className="bg-primary text-white px-6 py-2 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
                             >
-                                {userId ? "Write a Review" : "Login to Review"}
+                                {isAuthenticated ? "Write a Review" : "Login to Review"}
                             </button>
                         </div>
 

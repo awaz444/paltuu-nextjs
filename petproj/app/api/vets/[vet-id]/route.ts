@@ -55,25 +55,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                 u_review.name AS review_maker_name,
                 u_review.profile_image_url AS review_maker_profile_image_url,
 
-                -- Vet specializations
-                vc.category_id AS specialization_category_id, 
-                pc.category_name AS specialization_category_name,
+                -- New Schema usage
+                v.qualifications,
+                v.schedule
 
-                -- Vet qualifications
-                vq.qualification_id, 
-                vq.year_acquired, 
-                vq.note AS qualification_note, 
-                q.qualification_name
             FROM vets v
             JOIN users u ON v.user_id = u.user_id
             JOIN cities c ON u.city_id = c.city_id
             LEFT JOIN clinics cl ON v.clinic_id = cl.clinic_id
             LEFT JOIN vet_reviews vr ON v.vet_id = vr.vet_id
             LEFT JOIN users u_review ON vr.user_id = u_review.user_id
-            LEFT JOIN vet_specializations vc ON v.vet_id = vc.vet_id
-            LEFT JOIN pet_category pc ON vc.category_id = pc.category_id
-            LEFT JOIN vet_qualifications vq ON v.vet_id = vq.vet_id
-            LEFT JOIN qualifications q ON vq.qualification_id = q.qualification_id
             WHERE v.vet_id = $1 AND v.is_active = true;
             `;
 
@@ -111,22 +102,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                     row.review_maker_profile_image_url,
             }));
 
-        const specializations = vetData
-            .filter((row) => row.specialization_category_id)
-            .map((row) => ({
-                category_id: row.specialization_category_id,
-                category_name: row.specialization_category_name,
-            }));
-
-        const qualifications = vetData
-            .filter((row) => row.qualification_id)
-            .map((row) => ({
-                qualification_id: row.qualification_id,
-                year_acquired: row.year_acquired,
-                qualification_note: row.qualification_note,
-                qualification_name: row.qualification_name,
-            }));
-
         // Structure response
         const response = {
             vet_id: vet.vet_id,
@@ -149,8 +124,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             city: vet.city_name,
             schedule: vet.schedule, // Added new field
             reviews,
-            specializations,
-            qualifications,
+            qualifications: vet.qualifications,
         };        
 
         return NextResponse.json(response, {

@@ -1,324 +1,359 @@
--- -------------------------------------------------------------
--- Database Schema DDL
--- Generated from: Supabase Snippet Public Schema Column Inventory
--- -------------------------------------------------------------
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
 
 CREATE TABLE public.OTP (
-    id uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
-    email character varying NOT NULL,
-    otp character varying NOT NULL,
-    attempts integer DEFAULT 0,
-    createdat timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  email character varying NOT NULL UNIQUE,
+  otp character varying NOT NULL,
+  attempts integer DEFAULT 0,
+  createdat timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT OTP_pkey PRIMARY KEY (id)
 );
-
 CREATE TABLE public.admin_action_logs (
-    log_id integer NOT NULL DEFAULT nextval('admin_action_logs_log_id_seq'::regclass) PRIMARY KEY,
-    admin_id integer,
-    action_performed text,
-    target_entity character varying,
-    date_performed timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    status character varying
+  log_id integer NOT NULL DEFAULT nextval('admin_action_logs_log_id_seq'::regclass),
+  admin_id integer,
+  action_performed text,
+  target_entity character varying,
+  date_performed timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  status character varying CHECK (status::text = ANY (ARRAY['successful'::character varying::text, 'failed'::character varying::text])),
+  CONSTRAINT admin_action_logs_pkey PRIMARY KEY (log_id),
+  CONSTRAINT admin_action_logs_admin_id_fkey FOREIGN KEY (admin_id) REFERENCES public.users(user_id)
 );
-
 CREATE TABLE public.adoption_applications (
-    adoption_id integer NOT NULL DEFAULT nextval('adoption_applications_adoption_id_seq'::regclass) PRIMARY KEY,
-    user_id integer,
-    pet_id integer,
-    adopter_name character varying,
-    adopter_address character varying,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    status character varying,
-    age_of_youngest_child integer,
-    other_pets_details text,
-    other_pets_neutered boolean,
-    has_secure_outdoor_area boolean,
-    pet_sleep_location character varying,
-    pet_left_alone text,
-    additional_details text,
-    agree_to_terms boolean,
-    delivery boolean NOT NULL DEFAULT false
+  adoption_id integer NOT NULL DEFAULT nextval('adoption_applications_adoption_id_seq'::regclass),
+  user_id integer,
+  pet_id integer,
+  adopter_name character varying,
+  adopter_address character varying,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  status character varying CHECK (status::text = ANY (ARRAY['pending'::character varying::text, 'approved'::character varying::text, 'rejected'::character varying::text])),
+  age_of_youngest_child integer,
+  other_pets_details text,
+  other_pets_neutered boolean,
+  has_secure_outdoor_area boolean,
+  pet_sleep_location character varying,
+  pet_left_alone text,
+  additional_details text,
+  agree_to_terms boolean,
+  delivery boolean NOT NULL DEFAULT false,
+  CONSTRAINT adoption_applications_pkey PRIMARY KEY (adoption_id),
+  CONSTRAINT adoption_applications_pet_id_fkey FOREIGN KEY (pet_id) REFERENCES public.pets(pet_id),
+  CONSTRAINT adoption_applications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)
 );
-
 CREATE TABLE public.cart_items (
-    cart_item_id bigint NOT NULL DEFAULT nextval('cart_items_cart_item_id_seq'::regclass) PRIMARY KEY,
-    cart_id bigint NOT NULL,
-    product_id bigint NOT NULL,
-    quantity integer NOT NULL,
-    price numeric NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+  cart_item_id bigint NOT NULL DEFAULT nextval('cart_items_cart_item_id_seq'::regclass),
+  cart_id bigint NOT NULL,
+  product_id bigint NOT NULL,
+  quantity integer NOT NULL CHECK (quantity > 0),
+  price numeric NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT cart_items_pkey PRIMARY KEY (cart_item_id),
+  CONSTRAINT cart_items_cart_id_fkey FOREIGN KEY (cart_id) REFERENCES public.carts(cart_id)
 );
-
 CREATE TABLE public.carts (
-    cart_id bigint NOT NULL DEFAULT nextval('carts_cart_id_seq'::regclass) PRIMARY KEY,
-    user_id bigint,
-    guest_token text,
-    status text DEFAULT 'active'::text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
+  cart_id bigint NOT NULL DEFAULT nextval('carts_cart_id_seq'::regclass),
+  user_id bigint,
+  guest_token text,
+  status text DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'completed'::text, 'abandoned'::text])),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT carts_pkey PRIMARY KEY (cart_id),
+  CONSTRAINT carts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)
 );
-
 CREATE TABLE public.cities (
-    city_id integer NOT NULL DEFAULT nextval('cities_city_id_seq'::regclass) PRIMARY KEY,
-    city_name character varying NOT NULL
+  city_id integer NOT NULL DEFAULT nextval('cities_city_id_seq'::regclass),
+  city_name character varying NOT NULL,
+  CONSTRAINT cities_pkey PRIMARY KEY (city_id)
 );
-
 CREATE TABLE public.clinics (
-    clinic_id bigint NOT NULL PRIMARY KEY,
-    name text NOT NULL,
-    address text NOT NULL,
-    google_maps_link text,
-    contact_number text,
-    whatsapp_number text,
-    logo_url text,
-    operating_hours text,
-    discount_details text,
-    is_paltuu_partner boolean DEFAULT false,
-    created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now())
+  clinic_id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  name text NOT NULL,
+  address text NOT NULL,
+  google_maps_link text,
+  contact_number text,
+  whatsapp_number text,
+  logo_url text,
+  operating_hours text,
+  discount_details text,
+  is_paltuu_partner boolean DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT clinics_pkey PRIMARY KEY (clinic_id)
 );
-
 CREATE TABLE public.issues (
-    id bigint NOT NULL DEFAULT nextval('issues_id_seq'::regclass) PRIMARY KEY,
-    user_id bigint,
-    title character varying NOT NULL,
-    description text,
-    image_url text,
-    status character varying NOT NULL DEFAULT 'open'::character varying,
-    priority smallint NOT NULL DEFAULT 0,
-    created_at timestamp with time zone NOT NULL DEFAULT now()
+  id bigint NOT NULL DEFAULT nextval('issues_id_seq'::regclass),
+  user_id bigint,
+  title character varying NOT NULL,
+  description text,
+  image_url text,
+  status character varying NOT NULL DEFAULT 'open'::character varying,
+  priority smallint NOT NULL DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT issues_pkey PRIMARY KEY (id),
+  CONSTRAINT issues_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)
 );
-
 CREATE TABLE public.lost_and_found_post_images (
-    image_id integer NOT NULL DEFAULT nextval('lost_and_found_post_images_image_id_seq'::regclass) PRIMARY KEY,
-    post_id integer NOT NULL,
-    image_url character varying NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+  image_id integer NOT NULL DEFAULT nextval('lost_and_found_post_images_image_id_seq'::regclass),
+  post_id integer NOT NULL,
+  image_url character varying NOT NULL,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT lost_and_found_post_images_pkey PRIMARY KEY (image_id),
+  CONSTRAINT fk_post_id FOREIGN KEY (post_id) REFERENCES public.lost_and_found_posts(post_id)
 );
-
 CREATE TABLE public.lost_and_found_posts (
-    post_id integer NOT NULL DEFAULT nextval('lost_and_found_posts_post_id_seq'::regclass) PRIMARY KEY,
-    user_id integer,
-    post_type character varying,
-    pet_description text,
-    city_id integer,
-    location character varying,
-    contact_info character varying,
-    post_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    status character varying DEFAULT 'active'::character varying,
-    category_id integer,
-    date date
+  post_id integer NOT NULL DEFAULT nextval('lost_and_found_posts_post_id_seq'::regclass),
+  user_id integer,
+  post_type character varying CHECK (post_type::text = ANY (ARRAY['lost'::character varying::text, 'found'::character varying::text])),
+  pet_description text,
+  city_id integer,
+  location character varying,
+  contact_info character varying,
+  post_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  status character varying DEFAULT 'active'::character varying CHECK (status::text = ANY (ARRAY['active'::character varying::text, 'resolved'::character varying::text])),
+  category_id integer,
+  date date,
+  CONSTRAINT lost_and_found_posts_pkey PRIMARY KEY (post_id),
+  CONSTRAINT lost_and_found_posts_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.pet_category(category_id),
+  CONSTRAINT lost_and_found_posts_city_id_fkey FOREIGN KEY (city_id) REFERENCES public.cities(city_id),
+  CONSTRAINT lost_and_found_posts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)
 );
-
 CREATE TABLE public.notifications (
-    notification_id integer NOT NULL DEFAULT nextval('notifications_notification_id_seq'::regclass) PRIMARY KEY,
-    user_id integer,
-    notification_content text,
-    notification_type character varying,
-    date_sent timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    is_read boolean DEFAULT false
+  notification_id integer NOT NULL DEFAULT nextval('notifications_notification_id_seq'::regclass),
+  user_id integer,
+  notification_content text,
+  notification_type character varying,
+  date_sent timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  is_read boolean DEFAULT false,
+  CONSTRAINT notifications_pkey PRIMARY KEY (notification_id)
 );
-
 CREATE TABLE public.pet_category (
-    category_id integer NOT NULL DEFAULT nextval('pet_category_category_id_seq'::regclass) PRIMARY KEY,
-    category_name character varying NOT NULL
+  category_id integer NOT NULL DEFAULT nextval('pet_category_category_id_seq'::regclass),
+  category_name character varying NOT NULL,
+  CONSTRAINT pet_category_pkey PRIMARY KEY (category_id)
 );
-
 CREATE TABLE public.pet_images (
-    image_id integer NOT NULL DEFAULT nextval('pet_images_image_id_seq'::regclass) PRIMARY KEY,
-    pet_id integer,
-    image_url character varying,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    "order" integer
+  image_id integer NOT NULL DEFAULT nextval('pet_images_image_id_seq'::regclass),
+  pet_id integer,
+  image_url character varying,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  order integer,
+  CONSTRAINT pet_images_pkey PRIMARY KEY (image_id),
+  CONSTRAINT pet_images_pet_id_fkey FOREIGN KEY (pet_id) REFERENCES public.pets(pet_id)
 );
-
 CREATE TABLE public.pets (
-    pet_id integer NOT NULL DEFAULT nextval('pets_pet_id_seq'::regclass) PRIMARY KEY,
-    owner_id integer,
-    pet_name character varying NOT NULL,
-    pet_type integer,
-    pet_breed character varying,
-    city_id integer,
-    area character varying,
-    age integer,
-    description character varying,
-    adoption_status character varying,
-    price numeric DEFAULT 0,
-    min_age_of_children integer,
-    can_live_with_dogs boolean,
-    can_live_with_cats boolean,
-    must_have_someone_home boolean,
-    energy_level integer,
-    cuddliness_level integer,
-    health_issues character varying,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    sex character varying,
-    listing_type character varying,
-    vaccinated boolean,
-    neutered boolean,
-    approved boolean DEFAULT false,
-    months integer,
-    shelter_id integer,
-    shop_id integer,
-    rescue_story text
+  pet_id integer NOT NULL DEFAULT nextval('pets_pet_id_seq'::regclass),
+  owner_id integer,
+  pet_name character varying NOT NULL,
+  pet_type integer,
+  pet_breed character varying,
+  city_id integer,
+  area character varying,
+  age integer,
+  description character varying,
+  adoption_status character varying CHECK (adoption_status::text = ANY (ARRAY['available'::character varying::text, 'adopted'::character varying::text, 'fostered'::character varying::text])),
+  price numeric DEFAULT 0,
+  min_age_of_children integer,
+  can_live_with_dogs boolean,
+  can_live_with_cats boolean,
+  must_have_someone_home boolean,
+  energy_level integer CHECK (energy_level >= 1 AND energy_level <= 5),
+  cuddliness_level integer CHECK (cuddliness_level >= 1 AND cuddliness_level <= 5),
+  health_issues character varying,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  sex character varying CHECK (sex::text = ANY (ARRAY['male'::character varying::text, 'female'::character varying::text])),
+  listing_type character varying CHECK (listing_type::text = ANY (ARRAY['adoption'::character varying, 'sell'::character varying, 'rescue'::character varying, 'shop'::character varying]::text[])),
+  vaccinated boolean,
+  neutered boolean,
+  approved boolean DEFAULT false,
+  months integer,
+  shelter_id integer,
+  shop_id integer,
+  rescue_story text,
+  CONSTRAINT pets_pkey PRIMARY KEY (pet_id),
+  CONSTRAINT pets_city_id_fkey FOREIGN KEY (city_id) REFERENCES public.cities(city_id),
+  CONSTRAINT pets_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES public.users(user_id),
+  CONSTRAINT pets_pet_type_fkey FOREIGN KEY (pet_type) REFERENCES public.pet_category(category_id),
+  CONSTRAINT pets_shelter_id_fkey FOREIGN KEY (shelter_id) REFERENCES public.rescue_shelters(shelter_id),
+  CONSTRAINT pets_shop_id_fkey FOREIGN KEY (shop_id) REFERENCES public.shops(shop_id)
 );
-
 CREATE TABLE public.qualifications (
-    qualification_id integer NOT NULL DEFAULT nextval('qualifications_qualification_id_seq'::regclass) PRIMARY KEY,
-    qualification_name character varying,
-    description text,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+  qualification_id integer NOT NULL DEFAULT nextval('qualifications_qualification_id_seq'::regclass),
+  qualification_name character varying,
+  description text,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT qualifications_pkey PRIMARY KEY (qualification_id)
 );
-
 CREATE TABLE public.rescue_images (
-    image_id integer NOT NULL DEFAULT nextval('rescue_images_image_id_seq'::regclass) PRIMARY KEY,
-    pet_id integer,
-    image_url text NOT NULL
+  image_id integer NOT NULL DEFAULT nextval('rescue_images_image_id_seq'::regclass),
+  pet_id integer,
+  image_url text NOT NULL,
+  CONSTRAINT rescue_images_pkey PRIMARY KEY (image_id),
+  CONSTRAINT rescue_images_pet_id_fkey FOREIGN KEY (pet_id) REFERENCES public.pets(pet_id)
 );
-
 CREATE TABLE public.rescue_medical_conditions (
-    condition_id integer NOT NULL DEFAULT nextval('rescue_medical_conditions_condition_id_seq'::regclass) PRIMARY KEY,
-    pet_id integer,
-    condition text NOT NULL,
-    treatment_cost numeric,
-    treated boolean DEFAULT false
+  condition_id integer NOT NULL DEFAULT nextval('rescue_medical_conditions_condition_id_seq'::regclass),
+  pet_id integer,
+  condition text NOT NULL,
+  treatment_cost numeric,
+  treated boolean DEFAULT false,
+  CONSTRAINT rescue_medical_conditions_pkey PRIMARY KEY (condition_id),
+  CONSTRAINT rescue_medical_conditions_pet_id_fkey FOREIGN KEY (pet_id) REFERENCES public.pets(pet_id)
 );
-
 CREATE TABLE public.rescue_shelters (
-    shelter_id integer NOT NULL DEFAULT nextval('rescue_shelters_shelter_id_seq'::regclass) PRIMARY KEY,
-    user_id integer,
-    shelter_name character varying NOT NULL,
-    address text NOT NULL,
-    description text,
-    logo_url text,
-    capacity integer,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    approved boolean NOT NULL DEFAULT false
+  shelter_id integer NOT NULL DEFAULT nextval('rescue_shelters_shelter_id_seq'::regclass),
+  user_id integer,
+  shelter_name character varying NOT NULL,
+  address text NOT NULL,
+  description text,
+  logo_url text,
+  capacity integer CHECK (capacity >= 0),
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  approved boolean NOT NULL DEFAULT false,
+  CONSTRAINT rescue_shelters_pkey PRIMARY KEY (shelter_id),
+  CONSTRAINT rescue_shelters_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)
 );
-
 CREATE TABLE public.rescue_special_needs (
-    need_id integer NOT NULL DEFAULT nextval('rescue_special_needs_need_id_seq'::regclass) PRIMARY KEY,
-    pet_id integer,
-    special_need text NOT NULL
+  need_id integer NOT NULL DEFAULT nextval('rescue_special_needs_need_id_seq'::regclass),
+  pet_id integer,
+  special_need text NOT NULL,
+  CONSTRAINT rescue_special_needs_pkey PRIMARY KEY (need_id),
+  CONSTRAINT rescue_special_needs_pet_id_fkey FOREIGN KEY (pet_id) REFERENCES public.pets(pet_id)
 );
-
 CREATE TABLE public.shelter_animals (
-    id integer NOT NULL DEFAULT nextval('shelter_animals_id_seq'::regclass) PRIMARY KEY,
-    shelter_id integer,
-    animal_type integer
+  id integer NOT NULL DEFAULT nextval('shelter_animals_id_seq'::regclass),
+  shelter_id integer,
+  animal_type integer,
+  CONSTRAINT shelter_animals_pkey PRIMARY KEY (id),
+  CONSTRAINT shelter_animals_animal_type_fkey FOREIGN KEY (animal_type) REFERENCES public.pet_category(category_id),
+  CONSTRAINT shelter_animals_shelter_id_fkey FOREIGN KEY (shelter_id) REFERENCES public.rescue_shelters(shelter_id)
 );
-
 CREATE TABLE public.shelter_bank_info (
-    bank_id integer NOT NULL DEFAULT nextval('shelter_bank_info_bank_id_seq'::regclass) PRIMARY KEY,
-    shelter_id integer,
-    account_title character varying NOT NULL,
-    iban character varying NOT NULL,
-    bank_name character varying NOT NULL
+  bank_id integer NOT NULL DEFAULT nextval('shelter_bank_info_bank_id_seq'::regclass),
+  shelter_id integer,
+  account_title character varying NOT NULL,
+  iban character varying NOT NULL,
+  bank_name character varying NOT NULL,
+  CONSTRAINT shelter_bank_info_pkey PRIMARY KEY (bank_id),
+  CONSTRAINT shelter_bank_info_shelter_id_fkey FOREIGN KEY (shelter_id) REFERENCES public.rescue_shelters(shelter_id)
 );
-
 CREATE TABLE public.shelter_emergency_contacts (
-    contact_id integer NOT NULL DEFAULT nextval('shelter_emergency_contacts_contact_id_seq'::regclass) PRIMARY KEY,
-    shelter_id integer,
-    primary_phone character varying NOT NULL,
-    backup_phone character varying,
-    vet_name character varying,
-    vet_phone character varying
+  contact_id integer NOT NULL DEFAULT nextval('shelter_emergency_contacts_contact_id_seq'::regclass),
+  shelter_id integer,
+  primary_phone character varying NOT NULL,
+  backup_phone character varying,
+  vet_name character varying,
+  vet_phone character varying,
+  CONSTRAINT shelter_emergency_contacts_pkey PRIMARY KEY (contact_id),
+  CONSTRAINT shelter_emergency_contacts_shelter_id_fkey FOREIGN KEY (shelter_id) REFERENCES public.rescue_shelters(shelter_id)
 );
-
 CREATE TABLE public.shelter_photos (
-    photo_id integer NOT NULL DEFAULT nextval('shelter_photos_photo_id_seq'::regclass) PRIMARY KEY,
-    shelter_id integer,
-    photo_url text NOT NULL
+  photo_id integer NOT NULL DEFAULT nextval('shelter_photos_photo_id_seq'::regclass),
+  shelter_id integer,
+  photo_url text NOT NULL,
+  CONSTRAINT shelter_photos_pkey PRIMARY KEY (photo_id),
+  CONSTRAINT shelter_photos_shelter_id_fkey FOREIGN KEY (shelter_id) REFERENCES public.rescue_shelters(shelter_id)
 );
-
 CREATE TABLE public.shelter_socials (
-    social_id integer NOT NULL DEFAULT nextval('shelter_socials_social_id_seq'::regclass) PRIMARY KEY,
-    shelter_id integer,
-    platform character varying,
-    url text
+  social_id integer NOT NULL DEFAULT nextval('shelter_socials_social_id_seq'::regclass),
+  shelter_id integer,
+  platform character varying,
+  url text,
+  CONSTRAINT shelter_socials_pkey PRIMARY KEY (social_id),
+  CONSTRAINT shelter_socials_shelter_id_fkey FOREIGN KEY (shelter_id) REFERENCES public.rescue_shelters(shelter_id)
 );
-
 CREATE TABLE public.shelter_verification (
-    verification_id integer NOT NULL DEFAULT nextval('shelter_verification_verification_id_seq'::regclass) PRIMARY KEY,
-    shelter_id integer,
-    reg_certificate_url text,
-    cnic_front_url text NOT NULL,
-    cnic_back_url text NOT NULL
+  verification_id integer NOT NULL DEFAULT nextval('shelter_verification_verification_id_seq'::regclass),
+  shelter_id integer,
+  reg_certificate_url text,
+  cnic_front_url text NOT NULL,
+  cnic_back_url text NOT NULL,
+  CONSTRAINT shelter_verification_pkey PRIMARY KEY (verification_id),
+  CONSTRAINT shelter_verification_shelter_id_fkey FOREIGN KEY (shelter_id) REFERENCES public.rescue_shelters(shelter_id)
 );
-
 CREATE TABLE public.shop_bank_info (
-    bank_id integer NOT NULL DEFAULT nextval('shop_bank_info_bank_id_seq'::regclass) PRIMARY KEY,
-    shop_id integer NOT NULL,
-    account_title character varying NOT NULL,
-    iban character varying NOT NULL,
-    bank_name character varying NOT NULL
+  bank_id integer NOT NULL DEFAULT nextval('shop_bank_info_bank_id_seq'::regclass),
+  shop_id integer NOT NULL,
+  account_title character varying NOT NULL,
+  iban character varying NOT NULL,
+  bank_name character varying NOT NULL,
+  CONSTRAINT shop_bank_info_pkey PRIMARY KEY (bank_id),
+  CONSTRAINT shop_bank_info_shop_id_fkey FOREIGN KEY (shop_id) REFERENCES public.shops(shop_id)
 );
-
 CREATE TABLE public.shop_socials (
-    social_id integer NOT NULL DEFAULT nextval('shop_socials_social_id_seq'::regclass) PRIMARY KEY,
-    shop_id integer NOT NULL,
-    platform character varying NOT NULL,
-    url text NOT NULL
+  social_id integer NOT NULL DEFAULT nextval('shop_socials_social_id_seq'::regclass),
+  shop_id integer NOT NULL,
+  platform character varying NOT NULL,
+  url text NOT NULL,
+  CONSTRAINT shop_socials_pkey PRIMARY KEY (social_id),
+  CONSTRAINT shop_socials_shop_id_fkey FOREIGN KEY (shop_id) REFERENCES public.shops(shop_id)
 );
-
 CREATE TABLE public.shops (
-    shop_id integer NOT NULL PRIMARY KEY,
-    user_id integer NOT NULL,
-    shop_name character varying NOT NULL,
-    address text,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    logo_url character varying
+  shop_id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id integer NOT NULL,
+  shop_name character varying NOT NULL,
+  address text,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  logo_url character varying,
+  CONSTRAINT shops_pkey PRIMARY KEY (shop_id),
+  CONSTRAINT shops_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)
 );
-
 CREATE TABLE public.users (
-    user_id integer NOT NULL DEFAULT nextval('users_user_id_seq'::regclass) PRIMARY KEY,
-    name character varying NOT NULL,
-    dob date,
-    city_id integer,
-    email character varying NOT NULL,
-    password character varying NOT NULL,
-    phone_number character varying,
-    profile_image_url character varying,
-    role character varying,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    oauth_provider text,
-    oauth_id text,
-    username text,
-    phone_verified boolean DEFAULT false,
-    founding_club boolean DEFAULT false
+  user_id integer NOT NULL DEFAULT nextval('users_user_id_seq'::regclass),
+  name character varying NOT NULL,
+  dob date,
+  city_id integer,
+  email character varying NOT NULL UNIQUE,
+  password character varying NOT NULL,
+  phone_number character varying,
+  profile_image_url character varying,
+  role character varying,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  oauth_provider text,
+  oauth_id text,
+  username text,
+  phone_verified boolean DEFAULT false,
+  founding_club boolean DEFAULT false,
+  CONSTRAINT users_pkey PRIMARY KEY (user_id),
+  CONSTRAINT users_city_id_fkey FOREIGN KEY (city_id) REFERENCES public.cities(city_id)
 );
-
 CREATE TABLE public.vet_qualifications (
-    vet_id integer NOT NULL,
-    qualification_id integer NOT NULL,
-    year_acquired integer,
-    note text,
-    vet_qualifications_id integer NOT NULL DEFAULT nextval('vet_qualifications_vet_qualifications_id_seq'::regclass) PRIMARY KEY,
-    status text DEFAULT 'pending'::text
+  vet_id integer NOT NULL,
+  qualification_id integer NOT NULL,
+  year_acquired integer,
+  note text,
+  vet_qualifications_id integer NOT NULL DEFAULT nextval('vet_qualifications_vet_qualifications_id_seq'::regclass),
+  status text DEFAULT 'pending'::text,
+  CONSTRAINT vet_qualifications_pkey PRIMARY KEY (vet_qualifications_id),
+  CONSTRAINT fk_qualification FOREIGN KEY (qualification_id) REFERENCES public.qualifications(qualification_id),
+  CONSTRAINT fk_vet FOREIGN KEY (vet_id) REFERENCES public.vets(vet_id),
+  CONSTRAINT vet_qualifications_qualification_id_fkey FOREIGN KEY (qualification_id) REFERENCES public.qualifications(qualification_id),
+  CONSTRAINT vet_qualifications_vet_id_fkey FOREIGN KEY (vet_id) REFERENCES public.vets(vet_id)
 );
-
 CREATE TABLE public.vet_reviews (
-    review_id integer NOT NULL DEFAULT nextval('vet_reviews_review_id_seq'::regclass) PRIMARY KEY,
-    vet_id integer,
-    user_id integer,
-    rating integer,
-    review_content text,
-    review_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    clinic_id bigint
+  review_id integer NOT NULL DEFAULT nextval('vet_reviews_review_id_seq'::regclass),
+  vet_id integer,
+  user_id integer,
+  rating integer CHECK (rating >= 1 AND rating <= 5),
+  review_content text,
+  review_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  clinic_id bigint,
+  CONSTRAINT vet_reviews_pkey PRIMARY KEY (review_id),
+  CONSTRAINT vet_reviews_clinic_id_fkey FOREIGN KEY (clinic_id) REFERENCES public.clinics(clinic_id),
+  CONSTRAINT vet_reviews_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id),
+  CONSTRAINT vet_reviews_vet_id_fkey FOREIGN KEY (vet_id) REFERENCES public.vets(vet_id)
 );
-
-CREATE TABLE public.vet_specializations (
-    vet_id integer NOT NULL,
-    category_id integer NOT NULL
-);
-
 CREATE TABLE public.vets (
-    vet_id integer NOT NULL DEFAULT nextval('vets_vet_id_seq'::regclass) PRIMARY KEY,
-    user_id integer,
-    minimum_fee integer,
-    contact_details character varying,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    bio text,
-    clinic_id bigint,
-    is_active boolean DEFAULT true,
-    schedule text
+  vet_id integer NOT NULL DEFAULT nextval('vets_vet_id_seq'::regclass),
+  user_id integer,
+  minimum_fee integer,
+  contact_details character varying,
+  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+  bio text,
+  clinic_id bigint,
+  is_active boolean DEFAULT true,
+  schedule text,
+  qualifications text,
+  CONSTRAINT vets_pkey PRIMARY KEY (vet_id),
+  CONSTRAINT vets_clinic_id_fkey FOREIGN KEY (clinic_id) REFERENCES public.clinics(clinic_id),
+  CONSTRAINT vets_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)
 );

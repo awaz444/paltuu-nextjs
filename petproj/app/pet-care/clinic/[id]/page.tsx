@@ -7,6 +7,7 @@ import { EnvironmentOutlined, PhoneOutlined, ClockCircleOutlined, WhatsAppOutlin
 import { MoonLoader } from "react-spinners";
 import VetGrid from "../../../../components/VetGrid";
 import LoginModal from "../../../../components/LoginModal";
+import { useAuth } from "@/context/AuthContext";
 import { Clinic } from "../../../types/clinic";
 import { Vet } from "../../../types/vet";
 
@@ -33,7 +34,7 @@ export default function ClinicPage() {
         reviewsCount: number;
     } | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [userId, setUserId] = useState<string | null>(null);
+    const { isAuthenticated, user } = useAuth();
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [form] = Form.useForm();
 
@@ -46,17 +47,7 @@ export default function ClinicPage() {
     }, []);
 
     // Fetch user ID
-    useEffect(() => {
-        const userString = localStorage.getItem("user");
-        if (userString) {
-            try {
-                const user = JSON.parse(userString);
-                setUserId(user?.id || null);
-            } catch (error) {
-                console.error("Error parsing user data:", error);
-            }
-        }
-    }, []);
+
 
     const fetchClinicDetails = async () => {
         try {
@@ -98,11 +89,6 @@ export default function ClinicPage() {
     }, [params.id, router]);
 
     const handleLoginSuccess = () => {
-        const userString = localStorage.getItem("user");
-        if (userString) {
-            const user = JSON.parse(userString);
-            setUserId(user.id);
-        }
         setShowLoginModal(false);
     };
 
@@ -119,7 +105,7 @@ export default function ClinicPage() {
     };
 
     const handleReviewClick = () => {
-        if (!userId) {
+        if (!isAuthenticated) {
             setShowLoginModal(true);
             return;
         }
@@ -129,7 +115,7 @@ export default function ClinicPage() {
     const handleCloseModal = () => setIsModalOpen(false);
 
     const handleSubmit = async (values: { rating: number; review_content: string }) => {
-        if (!userId) {
+        if (!isAuthenticated || !user?.id) {
             message.error("You must be logged in to submit a review");
             return;
         }
@@ -143,7 +129,7 @@ export default function ClinicPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     clinic_id,
-                    user_id: userId,
+                    // server handles user_id
                     rating: values.rating,
                     review_content: values.review_content,
                     review_date,
@@ -292,7 +278,7 @@ export default function ClinicPage() {
                         onClick={handleReviewClick}
                         className="bg-primary h-10 px-6 rounded-xl font-semibold"
                     >
-                        {userId ? "Write a Review" : "Login to Review"}
+                        {isAuthenticated ? "Write a Review" : "Login to Review"}
                     </Button>
                 </div>
 

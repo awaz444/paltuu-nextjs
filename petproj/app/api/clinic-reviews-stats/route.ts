@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../db/index";
+import { getUserIdFromRequest } from "../../../utils/authServer";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
@@ -61,11 +62,20 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 export async function POST(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     
+    // Authenticate user
+    const authenticatedUserId = await getUserIdFromRequest(req);
+    if (!authenticatedUserId) {
+        return NextResponse.json(
+            { error: "Unauthorized" },
+            { status: 401, headers: { "Content-Type": "application/json" } }
+        );
+    }
+
     // Parse the incoming request body to extract review data
-    const { clinic_id, user_id, rating, review_content, review_date } = await req.json();
+    const { clinic_id, rating, review_content, review_date } = await req.json();
 
     // Check if all required fields are provided
-    if (!clinic_id || !user_id || !rating || !review_date) {
+    if (!clinic_id || !rating || !review_date) {
         return NextResponse.json(
             { error: "Missing required fields" },
             { status: 400, headers: { "Content-Type": "application/json" } }
@@ -82,7 +92,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             RETURNING review_id;
         `;
 
-        const values = [clinic_id, user_id, rating, review_content, review_date];
+        const values = [clinic_id, authenticatedUserId, rating, review_content, review_date];
 
         const result = await client.query(query, values);
 

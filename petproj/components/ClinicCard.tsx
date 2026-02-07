@@ -39,9 +39,7 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
                     <h3 className="text-xl font-bold text-gray-800 line-clamp-1" title={clinic.name}>
                         {clinic.name}
                     </h3>
-                    {clinic.is_paltuu_partner && (
-                        <i className="bi bi-patch-check-fill text-[#cc8800] text-lg" title="Paltuu Partner" />
-                    )}
+
                 </div>
 
                 <div className="space-y-2 mb-4">

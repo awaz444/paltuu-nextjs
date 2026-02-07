@@ -257,12 +257,7 @@ export default function VetDetailsPage({
                                             <a href={`/pet-care/clinic/${vetDetails.clinic_id}`} className="hover:text-primary hover:underline">
                                                 {vetDetails.clinic_name}
                                             </a>
-                                            {vetDetails.is_paltuu_partner && (
-                                                <div className="bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                    <i className="bi bi-patch-check-fill text-xs" />
-                                                    <span>Partner</span>
-                                                </div>
-                                            )}
+
                                         </div>
                                         <div className="text-base">{vetDetails.location}, {vetDetails.city}</div>
                                         {vetDetails.google_maps_link && (

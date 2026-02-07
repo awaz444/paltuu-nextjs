@@ -177,9 +177,7 @@ export default function ClinicPage() {
                     <div className="flex-1 space-y-4">
                         <div className="flex items-center gap-4 flex-wrap">
                             <h1 className="text-3xl font-bold text-gray-800">{clinic.name}</h1>
-                            {clinic.is_paltuu_partner && (
-                                <i className="bi bi-patch-check-fill text-[#cc8800] h-6 w-6 text-2xl" title="Paltuu Partner" />
-                            )}
+
                         </div>
 
                         <div className="space-y-3">

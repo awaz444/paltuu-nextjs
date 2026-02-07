@@ -16,6 +16,24 @@ import {
     Rate,
 } from "antd";
 import { CopyOutlined, WhatsAppOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import {
+    FaUserMd,
+    FaGraduationCap,
+    FaClock,
+    FaPhone,
+    FaEnvelope,
+    FaStar,
+    FaMapMarkerAlt,
+    FaStethoscope,
+    FaCalendarAlt,
+    FaClinicMedical,
+    FaMoneyBillWave,
+    FaWhatsapp,
+    FaCopy,
+    FaQuoteLeft
+} from "react-icons/fa";
+import { MdRateReview, MdVerified } from "react-icons/md";
+import { IoMdMedical } from "react-icons/io";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "../../../components/navbar";
 import LoginModal from "../../../components/LoginModal";
@@ -84,7 +102,6 @@ export default function VetDetailsPage({
                 throw new Error("Failed to fetch vet details");
             }
             const data = await response.json();
-            // console.log(data);
             const uniqueByKey = <T, K extends keyof T>(
                 array: T[],
                 key: K
@@ -179,7 +196,6 @@ export default function VetDetailsPage({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     vet_id,
-                    // valid token in cookies handles user_id on server, but we kept minimal payload
                     rating: values.rating,
                     review_content: values.review_content,
                     review_date,
@@ -188,10 +204,8 @@ export default function VetDetailsPage({
 
             if (!response.ok) throw new Error("Failed to submit review");
 
-            // Show success message
             message.success("Review submitted for approval! It will appear once approved.");
 
-            // Close modal and refresh data
             handleCloseModal();
             await fetchVetDetails();
             await fetchReviewStats();
@@ -231,163 +245,323 @@ export default function VetDetailsPage({
 
     return (
         <>
-
-            <div className="container mx-auto px-4 py-8">
-                <Card className="shadow-lg rounded-2xl overflow-hidden">
-                    {/* Vet Profile Header */}
-                    <div className="flex flex-col md:flex-row gap-8 items-start">
-                        <div className="flex-shrink-0">
-                            <img
-                                src={vetDetails.profile_image_url || "/placeholder.jpg"}
-                                alt={vetDetails.vet_name}
-                                className="w-32 h-32 rounded-full object-cover border-4 border-primary/20"
-                            />
-                        </div>
-
-                        <div className="flex-1 space-y-4">
-                            <div className="flex items-center gap-4 flex-wrap">
-                                <h1 className="text-3xl font-bold text-gray-800">{vetDetails.vet_name}</h1>
-                            </div>
-
-                            <div className="space-y-3">
-                                <div className="flex items-start gap-2 text-lg text-gray-600">
-                                    <EnvironmentOutlined className="text-primary mt-1" />
-                                    <div>
-                                        <div className="flex items-center gap-2 font-semibold text-gray-800">
-                                            <a href={`/pet-care/clinic/${vetDetails.clinic_id}`} className="hover:text-primary hover:underline">
-                                                {vetDetails.clinic_name}
-                                            </a>
-
+            <div className="min-h-screen bg-gray-50">
+                <div className="container mx-auto px-4 py-6 max-w-7xl">
+                    <div className="grid lg:grid-cols-3 gap-6">
+                        {/* Left Sidebar - Sticky on desktop */}
+                        <div className="lg:col-span-1">
+                            <div className="sticky top-6 space-y-6">
+                                {/* Profile Header Card */}
+                                <div className="bg-white rounded-3xl p-6 shadow-sm">
+                                    <div className="flex flex-col items-center text-center mb-6">
+                                        {/* Profile Image */}
+                                        <div className="relative mb-4">
+                                            <img
+                                                src={vetDetails.profile_image_url || "/placeholder.jpg"}
+                                                alt={vetDetails.vet_name}
+                                                className="w-32 h-32 rounded-full object-cover border-4 border-gray-100"
+                                            />
                                         </div>
-                                        <div className="text-base">{vetDetails.location}, {vetDetails.city}</div>
-                                        {vetDetails.google_maps_link && (
-                                            <a
-                                                href={vetDetails.google_maps_link}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-sm text-primary hover:underline block mt-1"
-                                            >
-                                                View on Google Maps
-                                            </a>
+
+                                        {/* Vet Name and Specialty */}
+                                        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                                            {vetDetails.vet_name}
+                                        </h1>
+                                        <a
+                                            href={`/pet-care/clinic/${vetDetails.clinic_id}`}
+                                            className="text-primary hover:text-primary transition-colors"
+                                        >
+                                            {vetDetails.clinic_name}
+                                        </a>
+                                        {/* {reviewStats && (
+                                            <div className="flex items-center gap-2 mt-3">
+                                                <div className="flex items-center gap-1">
+                                                    <FaStar className="text-primary text-sm" />
+                                                    <span className="text-sm font-medium text-gray-700">
+                                                        {reviewStats.averageRating.toFixed(1)}
+                                                    </span>
+                                                </div>
+                                                <span className="text-gray-400">•</span>
+                                                <span className="text-sm text-gray-500">
+                                                    {reviewStats.approvedCount} Reviews
+                                                </span>
+                                            </div>
+                                        )} */}
+                                    </div>
+
+                                    {/* Stats Row */}
+                                    <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-100">
+                                        <div className="text-center">
+                                            <div className="text-lg font-bold text-primary">
+                                                PKR {vetDetails.minimum_fee}
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-1">Min Fee</div>
+                                        </div>
+                                        {reviewStats && (
+                                            <>
+                                                <div className="text-center border-l border-r border-gray-100">
+                                                    <div className="text-lg font-bold text-primary flex items-center justify-center gap-1">
+                                                        <FaStar className="text-primary text-sm" />
+                                                        {reviewStats.averageRating.toFixed(1)}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 mt-1">Rating</div>
+                                                </div>
+                                                <div className="text-center">
+                                                    <div className="text-lg font-bold text-primary">
+                                                        {reviewStats.approvedCount}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 mt-1">Reviews</div>
+                                                </div>
+                                            </>
                                         )}
                                     </div>
                                 </div>
 
-                                <div className="flex flex-wrap gap-4">
-                                    <div className="bg-primary/10 py-1 px-3 rounded-xl">
-                                        <span className="font-semibold text-primary">Minimum Consultation Fee:</span>
-                                        <span className="ml-2">PKR {vetDetails.minimum_fee}</span>
+                                {/* Location Card - Sidebar on desktop */}
+                                <div className="bg-white rounded-3xl p-6 shadow-sm">
+                                    <h2 className="text-lg font-bold text-gray-900 mb-4">Location</h2>
+                                    <div className="flex items-start gap-3">
+                                        <FaMapMarkerAlt className="text-primary text-lg mt-1 flex-shrink-0" />
+                                        <div className="flex-1">
+                                            <div className="text-gray-900 font-medium mb-1">
+                                                {vetDetails.clinic_name}
+                                            </div>
+                                            <div className="text-gray-600 text-sm mb-2">
+                                                {vetDetails.location}, {vetDetails.city}
+                                            </div>
+                                            {vetDetails.google_maps_link && (
+                                                <a
+                                                    href={vetDetails.google_maps_link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1"
+                                                >
+                                                    View on Map
+                                                    <span className="text-xs">→</span>
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Contact Information - Sidebar on desktop */}
+                                <div className="bg-white rounded-3xl p-6 shadow-sm">
+                                    <h2 className="text-lg font-bold text-gray-900 mb-4">Contact</h2>
+                                    <div className="space-y-4">
+                                        {vetDetails.contact_details && (
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                        <FaPhone className="text-primary text-sm" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-xs text-gray-500 mb-1">Personal Number</div>
+                                                        <div className="text-sm font-medium text-gray-900 truncate">
+                                                            {vetDetails.contact_details}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2 ml-13">
+                                                    <button
+                                                        onClick={() => handleCopy(vetDetails.contact_details)}
+                                                        className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm"
+                                                    >
+                                                        <FaCopy className="text-gray-600 text-xs" />
+                                                        <span className="text-gray-700">Copy</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleWhatsApp(vetDetails.contact_details)}
+                                                        className="flex-1 py-2 px-3 rounded-lg bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center gap-2 text-sm"
+                                                    >
+                                                        <FaWhatsapp className="text-white text-sm" />
+                                                        <span className="text-white">Chat</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {vetDetails.email && (
+                                            <div className="space-y-2 pt-4 border-t border-gray-100">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                        <FaEnvelope className="text-primary text-sm" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-xs text-gray-500 mb-1">Email</div>
+                                                        <div className="text-sm font-medium text-gray-900 truncate">
+                                                            {vetDetails.email}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleCopy(vetDetails.email)}
+                                                    className="w-full ml-13 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm"
+                                                >
+                                                    <FaCopy className="text-gray-600 text-xs" />
+                                                    <span className="text-gray-700">Copy</span>
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {vetDetails.clinic_whatsapp && (
+                                            <div className="space-y-2 pt-4 border-t border-gray-100">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                        <FaWhatsapp className="text-primary text-sm" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-xs text-gray-500 mb-1">Clinic Number</div>
+                                                        <div className="text-sm font-medium text-gray-900 truncate">
+                                                            {vetDetails.clinic_whatsapp}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2 ml-13">
+                                                    <button
+                                                        onClick={() => handleCopy(vetDetails.clinic_whatsapp)}
+                                                        className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm"
+                                                    >
+                                                        <FaCopy className="text-gray-600 text-xs" />
+                                                        <span className="text-gray-700">Copy</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleWhatsApp(vetDetails.clinic_whatsapp)}
+                                                        className="flex-1 py-2 px-3 rounded-lg bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center gap-2 text-sm"
+                                                    >
+                                                        <FaWhatsapp className="text-white text-sm" />
+                                                        <span className="text-white">Chat</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <Divider className="my-6" />
-
-                    {/* Main Content Grid */}
-                    <div className="grid md:grid-cols-2 gap-8">
-                        {/* Left Column */}
-                        <div className="space-y-6">
+                        {/* Main Content Area */}
+                        <div className="lg:col-span-2 space-y-6">
+                            {/* About Me Section */}
                             {vetDetails.bio && (
-                                <Section title="About">
-                                    <p className="text-gray-600 leading-relaxed">{vetDetails.bio}</p>
-                                </Section>
+                                <div className="bg-white rounded-3xl p-6 shadow-sm">
+                                    <h2 className="text-lg font-bold text-gray-900 mb-4">About Me</h2>
+                                    <p className="text-gray-600 text-sm leading-relaxed">
+                                        {vetDetails.bio}
+                                    </p>
+                                </div>
                             )}
 
-                            <Section title="Qualifications">
-                                <div className="bg-gray-50 p-4 rounded-xl">
-                                    <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
+                            {/* Two Column on Desktop - Qualifications and Working Time */}
+                            <div className="grid md:grid-cols-2 gap-6">
+                                {/* Qualifications Section */}
+                                <div className="bg-white rounded-3xl p-6 shadow-sm">
+                                    <h2 className="text-lg font-bold text-gray-900 mb-4">Qualifications</h2>
+                                    <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
                                         {vetDetails.qualifications || "No qualifications listed."}
-                                    </p>
+                                    </div>
                                 </div>
-                            </Section>
-                        </div>
 
-                        {/* Right Column */}
-                        <div className="space-y-6">
-                            <Section title="Availability">
-                                <div className="bg-gray-50 p-4 rounded-xl">
-                                    <p className="text-gray-800 whitespace-pre-line">
+                                {/* Working Time / Availability Section */}
+                                <div className="bg-white rounded-3xl p-6 shadow-sm">
+                                    <h2 className="text-lg font-bold text-gray-900 mb-4">Working Time</h2>
+                                    <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
                                         {vetDetails.schedule || "Contact clinic for availability."}
-                                    </p>
+                                    </div>
                                 </div>
-                            </Section>
+                            </div>
 
-                            <Section title="Contact">
-                                <div className="space-y-3">
-                                    {vetDetails.contact_details && (
-                                        <ContactInfo
-                                            label="Personal Number"
-                                            value={vetDetails.contact_details}
-                                            onCopy={() => handleCopy(vetDetails.contact_details)}
-                                            onWhatsApp={() => handleWhatsApp(vetDetails.contact_details)}
-                                        />
-                                    )}
-                                    {vetDetails.email && (
-                                        <ContactInfo
-                                            label="Personal Email"
-                                            value={vetDetails.email}
-                                            onCopy={() => handleCopy(vetDetails.email)}
-                                        />
-                                    )}
-                                    {vetDetails.clinic_whatsapp && (
-                                        <ContactInfo
-                                            label="Clinic Number"
-                                            value={vetDetails.clinic_whatsapp}
-                                            onCopy={() => handleCopy(vetDetails.clinic_whatsapp)}
-                                            onWhatsApp={() => handleWhatsApp(vetDetails.clinic_whatsapp)}
-                                        />
-                                    )}
-
+                            {/* Reviews Section */}
+                            <div className="bg-white rounded-3xl p-6 shadow-sm">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-lg font-bold text-gray-900">Reviews</h2>
+                                    <button
+                                        onClick={handleReviewClick}
+                                        className="text-white bg-primary px-3 py-2 rounded-lg text-sm font-medium"
+                                    >
+                                        {isAuthenticated ? "Write Review" : "Login to Review"}
+                                    </button>
                                 </div>
-                            </Section>
+
+                                {/* Overall Rating */}
+                                {reviewStats && (
+                                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl mb-6">
+                                        <div className="text-center">
+                                            <div className="flex items-center gap-1 mb-1">
+                                                <FaStar className="text-primary text-xl" />
+                                                <span className="text-2xl font-bold text-gray-900">
+                                                    {reviewStats.averageRating.toFixed(1)}
+                                                </span>
+                                            </div>
+                                            <Rate
+                                                disabled
+                                                value={reviewStats.averageRating}
+                                                className="text-primary [&>.ant-rate-star-zero>div]:text-gray-300 text-sm"
+                                            />
+                                        </div>
+                                        <div className="text-sm text-gray-600">
+                                            Based on {reviewStats.approvedCount} verified review{reviewStats.approvedCount !== 1 ? 's' : ''}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Reviews List */}
+                                <div className="space-y-4">
+                                    {vetDetails.reviews.length > 0 ? (
+                                        vetDetails.reviews.map((review, index) => (
+                                            <div
+                                                key={review.review_id}
+                                                className={`pb-4 ${index !== vetDetails.reviews.length - 1 ? 'border-b border-gray-100' : ''}`}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    {review.review_maker_profile_image_url ? (
+                                                        <img
+                                                            src={review.review_maker_profile_image_url}
+                                                            alt={review.review_maker_name}
+                                                            className="w-12 h-12 rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                                            <span className="text-primary font-semibold">
+                                                                {review.review_maker_name.charAt(0).toUpperCase()}
+                                                            </span>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <h3 className="font-semibold text-gray-900 text-sm">
+                                                                {review.review_maker_name}
+                                                            </h3>
+                                                            <span className="text-xs text-gray-500">
+                                                                {new Date(review.review_date).toLocaleDateString('en-US', {
+                                                                    month: 'short',
+                                                                    day: 'numeric',
+                                                                    year: 'numeric'
+                                                                })}
+                                                            </span>
+                                                        </div>
+                                                        <Rate
+                                                            disabled
+                                                            value={review.rating}
+                                                            className="text-primary text-xs mb-2"
+                                                        />
+                                                        <p className="text-gray-600 text-sm leading-relaxed">
+                                                            {review.review_content}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-8 text-gray-500 text-sm">
+                                            No reviews yet. Be the first to review!
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    <Divider className="my-8" />
-
-                    {/* Reviews Section */}
-                    <Section title="Reviews">
-                        <div className="flex items-center justify-between mb-6">
-                            {reviewStats && (
-                                <div className="flex items-center gap-6">
-                                    <div className="text-center">
-                                        <div className="text-4xl font-bold text-primary">
-                                            {reviewStats.averageRating.toFixed(1)}
-                                        </div>
-                                        <Rate
-                                            disabled
-                                            value={reviewStats.averageRating}
-                                            className="text-primary [&>.ant-rate-star-zero>div]:text-gray-300 text-lg sm:text-md"
-                                        />
-                                    </div>
-                                    <div className="text-gray-600">
-                                        {reviewStats.approvedCount} verified review(s)
-                                    </div>
-                                </div>
-                            )}
-                            <button
-                                onClick={handleReviewClick}
-                                className="bg-primary text-white px-6 py-2 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
-                            >
-                                {isAuthenticated ? "Write a Review" : "Login to Review"}
-                            </button>
-                        </div>
-
-                        <div className="space-y-6">
-                            {vetDetails.reviews.length > 0 ? (
-                                vetDetails.reviews.map((review) => (
-                                    <ReviewCard key={review.review_id} review={review} />
-                                ))
-                            ) : (
-                                <div className="text-center py-8 text-gray-500">
-                                    No reviews yet. Be the first to share your experience!
-                                </div>
-                            )}
-                        </div>
-                    </Section>
-                </Card>
+                </div>
             </div>
 
             {/* Login Modal */}
@@ -407,90 +581,6 @@ export default function VetDetailsPage({
         </>
     );
 }
-
-// Helper Components
-const Section: React.FC<{ title: string; icon?: React.ReactNode; children: React.ReactNode }> = ({
-    title,
-    icon,
-    children
-}) => (
-    <div className="space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-            {icon && React.cloneElement(icon as React.ReactElement, { className: "text-primary text-lg" })}
-            <h2 className="text-2xl font-semibold text-gray-800">{title}</h2>
-        </div>
-        {children}
-    </div>
-);
-
-const ContactInfo: React.FC<{
-    label: string;
-    value: string;
-    onCopy: () => void;
-    onWhatsApp?: () => void
-}> = ({ label, value, onCopy, onWhatsApp }) => (
-    <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl">
-        <div>
-            <div className="text-sm text-gray-500">{label}</div>
-            <div className="font-medium text-gray-800">{value}</div>
-        </div>
-        <div className="flex gap-2">
-            <button
-                onClick={onCopy}
-                className="p-2 hover:bg-gray-100 rounded-lg text-primary"
-            >
-                <CopyOutlined className="text-lg" />
-            </button>
-            {onWhatsApp && (
-                <button
-                    onClick={onWhatsApp}
-                    className="p-2 hover:bg-gray-100 rounded-lg text-primary"
-                >
-                    <WhatsAppOutlined className="text-lg" />
-                </button>
-            )}
-        </div>
-    </div>
-);
-
-const ReviewCard: React.FC<{ review: VetDetails['reviews'][0] }> = ({ review }) => (
-    <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-start gap-4">
-            {review.review_maker_profile_image_url ? (
-                <img
-                    src={review.review_maker_profile_image_url}
-                    alt={review.review_maker_name}
-                    className="w-12 h-12 rounded-full object-cover"
-                />
-            ) : (
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-primary font-semibold">
-                        {review.review_maker_name.charAt(0).toUpperCase()}
-                    </span>
-                </div>
-            )}
-
-            <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-semibold">{review.review_maker_name}</h3>
-                    <Rate
-                        disabled
-                        value={review.rating}
-                        className="text-sm [&>.ant-rate-star]:mr-1 text-primary"
-                    />
-                </div>
-                <p className="text-gray-600 mb-2">{review.review_content}</p>
-                <div className="text-sm text-gray-500">
-                    {new Date(review.review_date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    })}
-                </div>
-            </div>
-        </div>
-    </div>
-);
 
 const ReviewModal: React.FC<{
     open: boolean;

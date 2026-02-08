@@ -140,6 +140,7 @@ CREATE TABLE public.pet_images (
   CONSTRAINT pet_images_pkey PRIMARY KEY (image_id),
   CONSTRAINT pet_images_pet_id_fkey FOREIGN KEY (pet_id) REFERENCES public.pets(pet_id)
 );
+
 CREATE TABLE public.pets (
   pet_id integer NOT NULL DEFAULT nextval('pets_pet_id_seq'::regclass),
   owner_id integer,

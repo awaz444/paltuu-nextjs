@@ -47,7 +47,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
             {vets.map((vet) => {
                 const formattedName = (vet.name || "").match(/^dr\.?\s*/i)
                     ? vet.name

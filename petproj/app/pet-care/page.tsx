@@ -54,7 +54,6 @@ export default function PetCare() {
                         </h1>
                         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
                             Connect directly with verified veterinary clinics across Pakistan.
-                            No booking fees, no middlemen - just quality care for your beloved pets.
                         </p>
                     </div>
 

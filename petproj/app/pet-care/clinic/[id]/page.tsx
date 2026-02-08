@@ -4,6 +4,20 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, Divider, Button, message, Form, Input, Rate, Modal } from "antd";
 import { EnvironmentOutlined, PhoneOutlined, ClockCircleOutlined, WhatsAppOutlined, CopyOutlined } from "@ant-design/icons";
+import {
+    FaMapMarkerAlt,
+    FaPhone,
+    FaClock,
+    FaWhatsapp,
+    FaCopy,
+    FaStar,
+    FaUserMd,
+    FaClinicMedical,
+    FaQuoteLeft,
+    FaCheckCircle,
+    FaCalendarAlt
+} from "react-icons/fa";
+import { MdRateReview, MdVerified } from "react-icons/md";
 import { MoonLoader } from "react-spinners";
 import VetGrid from "../../../../components/VetGrid";
 import LoginModal from "../../../../components/LoginModal";
@@ -46,9 +60,6 @@ export default function ClinicPage() {
         }
     }, []);
 
-    // Fetch user ID
-
-
     const fetchClinicDetails = async () => {
         try {
             const response = await fetch(`/api/clinics/${params.id}`);
@@ -59,7 +70,6 @@ export default function ClinicPage() {
             setClinic(data);
         } catch (err) {
             console.error("Error fetching clinic details:", err);
-            // router.push("/404");
         } finally {
             setLoading(false);
         }
@@ -104,6 +114,11 @@ export default function ClinicPage() {
         window.open(whatsappUrl, "_blank");
     };
 
+    const handleCopy = (text: string) => {
+        navigator.clipboard.writeText(text);
+        message.success("Copied to clipboard!");
+    };
+
     const handleReviewClick = () => {
         if (!isAuthenticated) {
             setShowLoginModal(true);
@@ -129,7 +144,6 @@ export default function ClinicPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     clinic_id,
-                    // server handles user_id
                     rating: values.rating,
                     review_content: values.review_content,
                     review_date,
@@ -163,133 +177,249 @@ export default function ClinicPage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-            <Card className="shadow-lg rounded-2xl overflow-hidden mb-8">
-                <div className="flex flex-col md:flex-row gap-8 items-start">
-                    <div className="flex-shrink-0 w-full md:w-auto flex justify-center md:block">
-                        <img
-                            src={clinic.logo_url || "/placeholder-clinic.png"}
-                            alt={clinic.name}
-                            className="w-48 h-48 object-contain rounded-xl border border-gray-100 bg-gray-50"
-                        />
+        <div className="min-h-screen bg-gray-50">
+            <div className="container mx-auto px-4 py-6 max-w-7xl">
+                <div className="grid lg:grid-cols-3 gap-6">
+                    {/* Left Sidebar - Sticky on desktop */}
+                    <div className="lg:col-span-1">
+                        <div className="sticky top-6 space-y-6">
+                            {/* Clinic Header Card */}
+                            <div className="bg-white rounded-3xl p-6 shadow-sm">
+                                <div className="flex flex-col items-center text-center mb-6">
+                                    {/* Clinic Logo */}
+                                    <div className="relative mb-4">
+                                        <img
+                                            src={clinic.logo_url || "/placeholder-clinic.png"}
+                                            alt={clinic.name}
+                                            className="w-32 h-32 rounded-full object-cover border-4 border-gray-100"
+                                        />
+                                        {clinic.is_paltuu_partner && (
+                                            <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-2 shadow-lg">
+                                                <MdVerified className="text-lg" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Clinic Name */}
+                                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                                        {clinic.name}
+                                    </h1>
+                                </div>
+
+                                {/* Stats Row */}
+                                {reviewStats && (
+                                    <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100">
+                                        <div className="text-center">
+                                            <div className="text-lg font-bold text-primary flex items-center justify-center gap-1">
+                                                <FaStar className="text-primary text-sm" />
+                                                {reviewStats.averageRating.toFixed(1)}
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-1">Rating</div>
+                                        </div>
+                                        <div className="text-center border-l border-gray-100">
+                                            <div className="text-lg font-bold text-primary">
+                                                {reviewStats.reviewsCount}
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-1">Reviews</div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Location Card */}
+                            <div className="bg-white rounded-3xl p-6 shadow-sm">
+                                <h2 className="text-lg font-bold text-gray-900 mb-4">Location</h2>
+                                <div className="flex items-start gap-3">
+                                    <FaMapMarkerAlt className="text-primary text-lg mt-1 flex-shrink-0" />
+                                    <div className="flex-1">
+                                        <div className="text-gray-900 font-medium mb-1">
+                                            {clinic.name}
+                                        </div>
+                                        <div className="text-gray-600 text-sm mb-2">
+                                            {clinic.address}
+                                        </div>
+                                        {clinic.google_maps_link && (
+                                            <a
+                                                href={clinic.google_maps_link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1"
+                                            >
+                                                View on Map
+                                                <span className="text-xs">→</span>
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Contact Information */}
+                            <div className="bg-white rounded-3xl p-6 shadow-sm">
+                                <h2 className="text-lg font-bold text-gray-900 mb-4">Contact</h2>
+                                <div className="space-y-4">
+                                    {/* Phone Number */}
+                                    {clinic.contact_number && (
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                    <FaPhone className="text-primary text-sm" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-xs text-gray-500 mb-1">Phone Number</div>
+                                                    <div className="text-sm font-medium text-gray-900 truncate">
+                                                        {clinic.contact_number}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2 ml-13">
+                                                <button
+                                                    onClick={() => handleCopy(clinic.contact_number)}
+                                                    className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm"
+                                                >
+                                                    <FaCopy className="text-gray-600 text-xs" />
+                                                    <span className="text-gray-700">Copy</span>
+                                                </button>
+                                                {clinic.whatsapp_number && (
+                                                    <button
+                                                        onClick={() => handleWhatsApp(clinic.whatsapp_number)}
+                                                        className="flex-1 py-2 px-3 rounded-lg bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center gap-2 text-sm"
+                                                    >
+                                                        <FaWhatsapp className="text-white text-sm" />
+                                                        <span className="text-white">Chat</span>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Operating Hours */}
+                                    {clinic.operating_hours && (
+                                        <div className="pt-4 border-t border-gray-100">
+                                            <div className="flex items-start gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                    <FaClock className="text-primary text-sm" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="text-xs text-gray-500 mb-1">Operating Hours</div>
+                                                    <div className="text-sm font-medium text-gray-900 whitespace-pre-line">
+                                                        {clinic.operating_hours}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="flex-1 space-y-4">
-                        <div className="flex items-center gap-4 flex-wrap">
-                            <h1 className="text-3xl font-bold text-gray-800">{clinic.name}</h1>
-
-                        </div>
-
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-3 text-lg text-gray-600">
-                                <EnvironmentOutlined className="text-primary text-xl" />
-                                <span className="text-base">{clinic.address}</span>
-                                {clinic.google_maps_link && (
-                                    <a
-                                        href={clinic.google_maps_link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-primary text-sm hover:underline ml-2"
-                                    >
-                                        (View on Map)
-                                    </a>
+                    {/* Main Content Area */}
+                    <div className="lg:col-span-2 space-y-6">
+                        {/* Veterinarians Section */}
+                        <div className="bg-white rounded-3xl p-6 shadow-sm">
+                            <div className="flex items-center gap-3 mb-6">
+                                <h2 className="text-lg font-bold text-gray-900">Our Veterinarians</h2>
+                                {clinic.vets && clinic.vets.length > 0 && (
+                                    <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                                        {clinic.vets.length}
+                                    </span>
                                 )}
                             </div>
-
-                            <div className="flex flex-wrap gap-6">
-                                {clinic.contact_number && (
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <PhoneOutlined className="text-primary" />
-                                        <span>{clinic.contact_number}</span>
-                                    </div>
-                                )}
-                                {clinic.operating_hours && (
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <ClockCircleOutlined className="text-primary" />
-                                        <span>{clinic.operating_hours}</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {clinic.whatsapp_number && (
-                                <Button
-                                    type="primary"
-                                    icon={<WhatsAppOutlined />}
-                                    className="bg-[#25D366] hover:!bg-[#128C7E] border-0 h-10 rounded-xl font-semibold mt-2"
-                                    onClick={() => handleWhatsApp(clinic.whatsapp_number)}
-                                >
-                                    Chat on WhatsApp
-                                </Button>
+                            {clinic.vets && clinic.vets.length > 0 ? (
+                                <VetGrid vets={clinic.vets.map(v => ({
+                                    ...v,
+                                    city_id: 0,
+                                    city_name: '',
+                                    qualifications: [],
+                                    specializations: [],
+                                    clinic_name: clinic.name,
+                                    location: clinic.address
+                                }))} />
+                            ) : (
+                                <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                    <p className="text-gray-500 text-sm">No veterinarians listed yet.</p>
+                                </div>
                             )}
                         </div>
-                    </div>
-                </div>
-            </Card>
 
-            <div className="mb-8">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Our Veterinarians</h2>
-                {clinic.vets && clinic.vets.length > 0 ? (
-                    <VetGrid vets={clinic.vets.map(v => ({
-                        ...v,
-                        city_id: 0,
-                        city_name: '',
-                        qualifications: [],
-                        specializations: [],
-                        clinic_name: clinic.name,
-                        location: clinic.address
-                    }))} />
-                ) : (
-                    <div className="text-center py-10 bg-gray-50 rounded-xl text-gray-500">
-                        No veterinarians listed for this clinic yet.
-                    </div>
-                )}
-            </div>
-
-            <Divider className="my-8" />
-
-            {/* Reviews Section */}
-            <div className="mb-8 p-6 bg-white rounded-2xl shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Reviews</h2>
-                        {reviewStats && (
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-4xl font-bold text-primary">
-                                        {reviewStats.averageRating.toFixed(1)}
-                                    </span>
-                                    <Rate
-                                        disabled
-                                        allowHalf
-                                        value={reviewStats.averageRating}
-                                        className="text-primary"
-                                    />
+                        {/* Reviews Section */}
+                        <div className="bg-white rounded-3xl p-6 shadow-sm">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-4">
+                                    <h2 className="text-lg font-bold text-gray-900">Reviews</h2>
+                                    {reviewStats && (
+                                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                                            <span className="font-bold text-gray-900 text-lg">{reviewStats.averageRating.toFixed(1)}</span>
+                                            <Rate disabled value={reviewStats.averageRating} className="text-primary text-sm" />
+                                            <span>({reviewStats.reviewsCount})</span>
+                                        </div>
+                                    )}
                                 </div>
-                                <span className="text-gray-500">
-                                    ({reviewStats.reviewsCount} reviews)
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                    <Button
-                        type="primary"
-                        onClick={handleReviewClick}
-                        className="bg-primary h-10 px-6 rounded-xl font-semibold"
-                    >
-                        {isAuthenticated ? "Write a Review" : "Login to Review"}
-                    </Button>
-                </div>
 
-                <div className="space-y-4">
-                    {clinic.reviews && clinic.reviews.length > 0 ? (
-                        clinic.reviews.map((review) => (
-                            <ReviewCard key={review.review_id} review={review} />
-                        ))
-                    ) : (
-                        <div className="text-center py-8 text-gray-500">
-                            No reviews yet. Be the first to share your experience!
+                                <button
+                                    onClick={handleReviewClick}
+                                    className="text-white bg-primary px-4 py-2 rounded-lg font-medium hover:bg-primary transition-colors text-sm"
+                                >
+                                    {isAuthenticated ? "Write Review" : "Login to Review"}
+                                </button>
+                            </div>
+
+                            {/* Reviews List */}
+                            <div className="space-y-4">
+                                {clinic.reviews && clinic.reviews.length > 0 ? (
+                                    clinic.reviews.map((review, index) => (
+                                        <div
+                                            key={review.review_id}
+                                            className={`pb-4 ${index !== clinic.reviews.length - 1 ? 'border-b border-gray-100' : ''}`}
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                {review.review_maker_profile_image_url ? (
+                                                    <img
+                                                        src={review.review_maker_profile_image_url}
+                                                        alt={review.review_maker_name}
+                                                        className="w-12 h-12 rounded-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                                        <span className="text-primary font-semibold">
+                                                            {review.review_maker_name?.charAt(0).toUpperCase() || "A"}
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex-1">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <h3 className="font-semibold text-gray-900 text-sm">
+                                                            {review.review_maker_name}
+                                                        </h3>
+                                                        <span className="text-xs text-gray-500">
+                                                            {new Date(review.review_date).toLocaleDateString('en-US', {
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                year: 'numeric'
+                                                            })}
+                                                        </span>
+                                                    </div>
+                                                    <Rate
+                                                        disabled
+                                                        value={review.rating}
+                                                        className="text-primary text-xs mb-2"
+                                                    />
+                                                    <p className="text-gray-600 text-sm leading-relaxed">
+                                                        {review.review_content}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                        <p className="text-gray-500 text-sm">No reviews yet. Be the first to review!</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
 
@@ -310,45 +440,6 @@ export default function ClinicPage() {
         </div>
     );
 }
-
-const ReviewCard: React.FC<{ review: ClinicDetails['reviews'][0] }> = ({ review }) => (
-    <div className="bg-gray-50 p-6 rounded-xl">
-        <div className="flex items-start gap-4">
-            {review.review_maker_profile_image_url ? (
-                <img
-                    src={review.review_maker_profile_image_url}
-                    alt={review.review_maker_name}
-                    className="w-12 h-12 rounded-full object-cover"
-                />
-            ) : (
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-primary font-semibold text-lg">
-                        {review.review_maker_name?.charAt(0).toUpperCase() || "A"}
-                    </span>
-                </div>
-            )}
-
-            <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-semibold text-gray-900">{review.review_maker_name}</h3>
-                    <Rate
-                        disabled
-                        value={review.rating}
-                        className="text-sm text-primary"
-                    />
-                </div>
-                <p className="text-gray-600 mb-2">{review.review_content}</p>
-                <div className="text-sm text-gray-400">
-                    {new Date(review.review_date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    })}
-                </div>
-            </div>
-        </div>
-    </div>
-);
 
 const ReviewModal: React.FC<{
     open: boolean;
@@ -399,4 +490,3 @@ const ReviewModal: React.FC<{
         </Form>
     </Modal>
 );
-

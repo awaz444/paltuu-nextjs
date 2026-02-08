@@ -344,8 +344,8 @@ export default function ClinicPage() {
 
                         {/* Reviews Section */}
                         <div className="bg-white rounded-3xl p-6 shadow-sm">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                                     <h2 className="text-lg font-bold text-gray-900">Reviews</h2>
                                     {reviewStats && (
                                         <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -358,7 +358,7 @@ export default function ClinicPage() {
 
                                 <button
                                     onClick={handleReviewClick}
-                                    className="text-white bg-primary px-4 py-2 rounded-lg font-medium hover:bg-primary transition-colors text-sm"
+                                    className="text-white bg-primary px-4 py-2 rounded-lg font-medium hover:bg-primary transition-colors text-sm whitespace-nowrap"
                                 >
                                     {isAuthenticated ? "Write Review" : "Login to Review"}
                                 </button>
@@ -377,22 +377,22 @@ export default function ClinicPage() {
                                                     <img
                                                         src={review.review_maker_profile_image_url}
                                                         alt={review.review_maker_name}
-                                                        className="w-12 h-12 rounded-full object-cover"
+                                                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0"
                                                     />
                                                 ) : (
-                                                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                                        <span className="text-primary font-semibold">
+                                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                        <span className="text-primary font-semibold text-sm">
                                                             {review.review_maker_name?.charAt(0).toUpperCase() || "A"}
                                                         </span>
                                                     </div>
                                                 )}
 
-                                                <div className="flex-1">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <h3 className="font-semibold text-gray-900 text-sm">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 mb-2">
+                                                        <h3 className="font-semibold text-gray-900 text-sm truncate">
                                                             {review.review_maker_name}
                                                         </h3>
-                                                        <span className="text-xs text-gray-500">
+                                                        <span className="text-xs text-gray-500 whitespace-nowrap">
                                                             {new Date(review.review_date).toLocaleDateString('en-US', {
                                                                 month: 'short',
                                                                 day: 'numeric',
@@ -405,7 +405,7 @@ export default function ClinicPage() {
                                                         value={review.rating}
                                                         className="text-primary text-xs mb-2"
                                                     />
-                                                    <p className="text-gray-600 text-sm leading-relaxed">
+                                                    <p className="text-gray-600 text-sm leading-relaxed break-words">
                                                         {review.review_content}
                                                     </p>
                                                 </div>

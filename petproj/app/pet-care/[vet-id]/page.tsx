@@ -472,11 +472,11 @@ export default function VetDetailsPage({
 
                             {/* Reviews Section */}
                             <div className="bg-white rounded-3xl p-6 shadow-sm">
-                                <div className="flex items-center justify-between mb-6">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                                     <h2 className="text-lg font-bold text-gray-900">Reviews</h2>
                                     <button
                                         onClick={handleReviewClick}
-                                        className="text-white bg-primary px-3 py-2 rounded-lg text-sm font-medium"
+                                        className="text-white bg-primary px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap"
                                     >
                                         {isAuthenticated ? "Write Review" : "Login to Review"}
                                     </button>
@@ -484,9 +484,9 @@ export default function VetDetailsPage({
 
                                 {/* Overall Rating */}
                                 {reviewStats && (
-                                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl mb-6">
-                                        <div className="text-center">
-                                            <div className="flex items-center gap-1 mb-1">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 bg-gray-50 rounded-2xl mb-6">
+                                        <div className="text-center sm:text-left">
+                                            <div className="flex items-center justify-center sm:justify-start gap-1 mb-1">
                                                 <FaStar className="text-primary text-xl" />
                                                 <span className="text-2xl font-bold text-gray-900">
                                                     {reviewStats.averageRating.toFixed(1)}
@@ -498,7 +498,7 @@ export default function VetDetailsPage({
                                                 className="text-primary [&>.ant-rate-star-zero>div]:text-gray-300 text-sm"
                                             />
                                         </div>
-                                        <div className="text-sm text-gray-600">
+                                        <div className="text-sm text-gray-600 text-center sm:text-left">
                                             Based on {reviewStats.approvedCount} verified review{reviewStats.approvedCount !== 1 ? 's' : ''}
                                         </div>
                                     </div>
@@ -517,22 +517,22 @@ export default function VetDetailsPage({
                                                         <img
                                                             src={review.review_maker_profile_image_url}
                                                             alt={review.review_maker_name}
-                                                            className="w-12 h-12 rounded-full object-cover"
+                                                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0"
                                                         />
                                                     ) : (
-                                                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                                            <span className="text-primary font-semibold">
+                                                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                            <span className="text-primary font-semibold text-sm">
                                                                 {review.review_maker_name.charAt(0).toUpperCase()}
                                                             </span>
                                                         </div>
                                                     )}
 
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center justify-between mb-2">
-                                                            <h3 className="font-semibold text-gray-900 text-sm">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 mb-2">
+                                                            <h3 className="font-semibold text-gray-900 text-sm truncate">
                                                                 {review.review_maker_name}
                                                             </h3>
-                                                            <span className="text-xs text-gray-500">
+                                                            <span className="text-xs text-gray-500 whitespace-nowrap">
                                                                 {new Date(review.review_date).toLocaleDateString('en-US', {
                                                                     month: 'short',
                                                                     day: 'numeric',
@@ -545,7 +545,7 @@ export default function VetDetailsPage({
                                                             value={review.rating}
                                                             className="text-primary text-xs mb-2"
                                                         />
-                                                        <p className="text-gray-600 text-sm leading-relaxed">
+                                                        <p className="text-gray-600 text-sm leading-relaxed break-words">
                                                             {review.review_content}
                                                         </p>
                                                     </div>

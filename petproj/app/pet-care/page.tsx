@@ -148,23 +148,9 @@ export default function PetCare() {
                 {/* ================= CLINIC GRID ================= */}
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
-                        <div className="relative">
-                            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                                <FaPaw className="text-primary text-3xl animate-pulse" />
-                            </div>
-                            <MoonLoader
-                                size={90}
-                                color={primaryColor}
-                                cssOverride={{
-                                    position: 'absolute',
-                                    top: '-5px',
-                                    left: '-5px'
-                                }}
-                            />
+                        <div className="text-gray-500 text-lg">
+                            Loading clinics...
                         </div>
-                        <p className="text-gray-500 mt-6">
-                            Finding the best veterinary clinics for you...
-                        </p>
                     </div>
                 ) : error ? (
                     <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">

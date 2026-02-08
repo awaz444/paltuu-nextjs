@@ -116,15 +116,15 @@
   border: none;
   border-radius: 60px; /* Default rounded corners */
   font-weight: 600;
-  padding: 7px;
+  padding: 7px 20px; /* Increased horizontal padding */
   cursor: pointer;
-  transition: border-radius;
+  transition: border-radius, box-shadow 0.3s ease;
   border-color: #ffffff; /* Border color */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Added shadow */
 }
 
-.dropdown:hover .loginBtn {
-  /*background-color: #ffffff;  Light */
-  /*border-radius: 20px; /* Only round the top corners */
+.loginBtn:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
 }
 
 .dropdown-menu {

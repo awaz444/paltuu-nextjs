@@ -62,13 +62,12 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
                 </div>
 
                 {/* mt-auto pushes the button to the very bottom of the flex container */}
-                <Button
-                    type="primary"
-                    className="w-full mt-auto bg-primary hover:bg-primary/90 border-0 h-10 rounded-xl font-semibold"
+                <button
+                    className="w-full mt-auto bg-primary hover:bg-primary border-0 h-10 rounded-xl font-semibold text-white"
                     onClick={handleViewDetails}
                 >
                     View Details
-                </Button>
+                </button>
             </div>
         </Card>
     );

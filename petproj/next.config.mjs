@@ -9,6 +9,7 @@ const nextConfig = {
       "qufdjlaxzyarnrsiimfw.supabase.co",
       "lfiwvlicdkdheqynvjxb.supabase.co",
       "fjxezewxjsyyfuehnlko.supabase.co",
+      "images.unsplash.com",
       // add more supabase project URLs as needed
     ],
   },

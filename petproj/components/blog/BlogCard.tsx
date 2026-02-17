@@ -1,12 +1,22 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BlogPost } from "./data";
+import { BlogMetadata } from "@/lib/mdx-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock, faUser } from "@fortawesome/free-solid-svg-icons";
 
 interface BlogCardProps {
-    post: BlogPost;
+    post: BlogMetadata;
+}
+
+// Format date for display (client-safe version)
+function formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
 }
 
 const BlogCard: React.FC<BlogCardProps> = ({ post }) => {
@@ -16,7 +26,7 @@ const BlogCard: React.FC<BlogCardProps> = ({ post }) => {
                 {/* Image Section */}
                 <div className="relative h-48 w-full overflow-hidden">
                     <Image
-                        src={post.image}
+                        src={post.featuredImage}
                         alt={post.title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -37,7 +47,7 @@ const BlogCard: React.FC<BlogCardProps> = ({ post }) => {
                             {post.author}
                         </span>
                         <span>•</span>
-                        <span>{post.date}</span>
+                        <span>{formatDate(post.date)}</span>
                     </div>
 
                     {/* Title */}
@@ -47,7 +57,7 @@ const BlogCard: React.FC<BlogCardProps> = ({ post }) => {
 
                     {/* Excerpt */}
                     <p className="text-gray-600 text-sm line-clamp-3 mb-4 flex-grow">
-                        {post.excerpt}
+                        {post.description}
                     </p>
 
                     {/* Footer */}

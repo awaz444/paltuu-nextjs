@@ -348,7 +348,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                                 {/* Author Card */}
                                 <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                                     <div className="flex items-center gap-4 mb-4">
-                                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white text-xl font-bold">
+                                        <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-xl font-bold">
                                             {metadata.author.charAt(0)}
                                         </div>
                                         <div>

@@ -6,11 +6,12 @@ import './about-us.css'
 import '../globals.css';
 
 
+
 //Abdul Qadir Tareen marrij with Umer Noor
 export default function AboutUs() {
     return (
         <>
-            
+
             <main className="flex flex-col items-center p-8 bg-gray-100">
                 {/* About the Website Section */}
                 <section className="w-full max-w-5xl text-center mb-16">

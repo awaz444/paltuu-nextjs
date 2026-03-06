@@ -9,36 +9,9 @@ import { useAuth } from "@/context/AuthContext";
 
 import "./petGrid.css";
 
-interface Pet {
-    pet_id: number;
-    owner_id: number;
-    pet_name: string;
-    pet_type: number;
-    pet_breed: string | null;
-    city_id: number;
-    area: string;
-    age: number;
-    months: number;
-    description: string;
-    adoption_status: string;
-    price: string;
-    min_age_of_children: number;
-    can_live_with_dogs: boolean;
-    can_live_with_cats: boolean;
-    must_have_someone_home: boolean;
-    energy_level: number;
-    cuddliness_level: number;
-    health_issues: string;
-    created_at: string;
-    sex: string | null;
-    listing_type: string;
-    vaccinated: boolean | null;
-    neutered: boolean | null;
-    city: string;
-    profile_image_url: string | null;
-    image_id: number | null;
-    image_url: string | null;
-}
+import { PetWithImages } from "@/app/types/petWithImages";
+
+type Pet = PetWithImages;
 
 interface PetGridProps {
     pets: Pet[];
@@ -220,7 +193,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                         className="bg-white pt-4 px-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 z-39">
                         <div className="relative">
                             <PetImage
-                                src={pet.image_url || "/dog-placeholder.png"}
+                                src={pet.pet_images?.[0]?.image_url || pet.image_url || "/dog-placeholder.png"}
                                 alt={pet.pet_name}
                                 className="w-full aspect-square rounded-2xl"
                             />
@@ -260,7 +233,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                             </p>
                             <div className="flex flex-row gap-2 right">
                                 <EnvironmentOutlined className="text-primary" />
-                                <p className="text-gray-600">{pet.city}</p>
+                                <p className="text-gray-600">{pet.cities?.city_name || pet.city}</p>
                             </div>
                         </div>
                     </div>

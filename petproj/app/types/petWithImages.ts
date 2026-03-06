@@ -18,19 +18,37 @@ export type PetWithImages = {
     energy_level: number;
     cuddliness_level: number;
     health_issues: string | null;
-    created_at: string;
-    email: string;
-    phone_number: string;
+    created_at: any;
+    email?: string;
+    phone_number?: string;
     sex: string | null;
     listing_type: "adoption" | "sell" | "shop" | "rescue";
     vaccinated: boolean | null;
     neutered: boolean | null;
-    city: string;
-    profile_image_url: string | null;
-    image_id: number | null;
-    image_url: string | null;
-    additional_images: Array<{ image_url: string }>;
-    images: Array<{
+    approved?: boolean;
+    // New nested fields from NestJS
+    cities?: {
+        city_id: number;
+        city_name: string;
+    };
+    pet_images?: Array<{
+        image_id: number;
+        pet_id: number;
+        image_url: string;
+        created_at: any;
+        order: number;
+    }>;
+    pet_category?: {
+        category_id: number;
+        category_name: string;
+    };
+    // Kept for backward compatibility if needed
+    city?: string;
+    profile_image_url?: string | null;
+    image_id?: number | null;
+    image_url?: string | null;
+    additional_images?: Array<{ image_url: string }>;
+    images?: Array<{
         image_id: number;
         image_url: string;
         order: number;
@@ -50,7 +68,6 @@ export type PetWithImages = {
         shelter_name: string;
         logo_url: string | null;
     };
-    // Add rescue-specific properties
     rescue_story?: string | null;
     special_needs?: string[];
     medical_conditions?: Array<{

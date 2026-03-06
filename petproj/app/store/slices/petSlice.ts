@@ -1,33 +1,10 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store'; // Ensure this path is correct
+import { getPetsApi, createPetApi, deletePetApi } from '../../../utils/api';
+import { PetWithImages } from '@/app/types/petWithImages';
 
 // Define your Pet interface
-// Assuming your Pet type is defined like this
-export type Pet = {
-  pet_id: number; // assuming this exists
-  owner_id: number;
-  pet_name: string | null; // Allow null
-  pet_type: number | null; // Allow null
-  pet_breed: string | null; // Allow null
-  city_id: number | null; // Allow null
-  area: string; // This will need to be updated if you want it to allow null
-  age: number | null; // Allow null
-  months: number | null;
-  description: string | null; // Allow null
-  adoption_status: string;
-  price: number | null; // Allow null
-  min_age_of_children: number | null; // Allow null
-  can_live_with_dogs: boolean;
-  can_live_with_cats: boolean;
-  must_have_someone_home: boolean;
-  energy_level: number | null;
-  cuddliness_level: number | null;
-  health_issues: string | null; // Allow null
-  sex: string;
-  listing_type: string;
-  vaccinated: boolean;
-  neutered: boolean;
-};
+export type Pet = PetWithImages;
 
 
 // Define the initial state
@@ -47,11 +24,8 @@ const initialState: PetState = {
 export const fetchPets = createAsyncThunk<Pet[], void>(
   'pets/fetchPets',
   async () => {
-    const response = await fetch('/api/pets');
-    if (!response.ok) {
-      throw new Error('Failed to fetch pets');
-    }
-    return await response.json();
+    const response = await getPetsApi();
+    return response.data || response;
   }
 );
 
@@ -60,19 +34,8 @@ export const postPet = createAsyncThunk<Pet, Omit<Pet, 'pet_id'>>(
   'pets/postPet',
   async (newPet, { rejectWithValue }) => {
     try {
-      const response = await fetch('/api/pets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newPet),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to post new pet');
-      }
-
-      return await response.json();
+      const response = await createPetApi(newPet);
+      return response.data || response;
     } catch (error) {
       return rejectWithValue((error as Error).message);
     }
@@ -83,14 +46,7 @@ export const deletePet = createAsyncThunk<number, number>(
   'pets/deletePet',
   async (petId, { rejectWithValue }) => {
     try {
-      const response = await fetch(`/api/pets/${petId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete pet');
-      }
-
+      await deletePetApi(petId);
       return petId; // Return the ID of the deleted pet
     } catch (error) {
       return rejectWithValue((error as Error).message);

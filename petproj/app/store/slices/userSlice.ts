@@ -31,7 +31,7 @@ export const fetchUsers = createAsyncThunk('users/fetchUsers', async () => {
 export const postUser = createAsyncThunk<User, Omit<User, 'user_id'>>(
     'users/postUser',
     async (userData: User) => {
-        const response = await fetch('http://localhost:3000/core/auth/sign-up', {
+        const response = await fetch('http://localhost:8080/core/auth/sign-up', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

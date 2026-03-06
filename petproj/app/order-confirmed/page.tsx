@@ -153,17 +153,17 @@ const OrderConfirmedContent = () => {
           <div>
             <h1 style="margin: 0; font-size: 28px; color: #a03048; font-weight: bold;">RECEIPT</h1>
             <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">Order #${escapeHtml(
-              o?.order_number || ""
-            )}</p>
+      o?.order_number || ""
+    )}</p>
             <p style="margin: 0; font-size: 12px; color: #666;">${new Date(
-              o?.created_at || Date.now()
-            ).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}</p>
+      o?.created_at || Date.now()
+    ).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}</p>
           </div>
           <img src="${logoUrl}" alt="Paltuu" style="height: 140px; margin-left: 20px; margin-bottom: 50px;" />
         </div>
@@ -175,20 +175,20 @@ const OrderConfirmedContent = () => {
             <tr>
               <td style="padding: 3px 0; font-weight: bold; width: 100px;">Name:</td>
               <td style="padding: 3px 0;">${escapeHtml(
-                o?.customer_name || "N/A"
-              )}</td>
+      o?.customer_name || "N/A"
+    )}</td>
             </tr>
             <tr>
               <td style="padding: 3px 0; font-weight: bold;">Email:</td>
               <td style="padding: 3px 0;">${escapeHtml(
-                o?.customer_email || "N/A"
-              )}</td>
+      o?.customer_email || "N/A"
+    )}</td>
             </tr>
             <tr>
               <td style="padding: 3px 0; font-weight: bold;">Phone:</td>
               <td style="padding: 3px 0;">${escapeHtml(
-                o?.customer_phone || "N/A"
-              )}</td>
+      o?.customer_phone || "N/A"
+    )}</td>
             </tr>
           </table>
         </div>
@@ -198,13 +198,13 @@ const OrderConfirmedContent = () => {
           <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #333; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Shipping Address</h3>
           <div style="font-size: 14px; line-height: 1.4;">
             ${escapeHtml(
-              (o?.shipping_address &&
-                (o.shipping_address.address || o.shipping_address.line1)) ||
-                "N/A"
-            )}<br/>
+      (o?.shipping_address &&
+        (o.shipping_address.address || o.shipping_address.line1)) ||
+      "N/A"
+    )}<br/>
             ${escapeHtml(
-              (o?.shipping_address && (o.shipping_address.city || "")) || ""
-            )} ${escapeHtml(
+      (o?.shipping_address && (o.shipping_address.city || "")) || ""
+    )} ${escapeHtml(
       (o?.shipping_address && o.shipping_address.postalCode) || ""
     )}
           </div>
@@ -236,32 +236,31 @@ const OrderConfirmedContent = () => {
               <tr>
                 <td style="padding: 8px 0; text-align: left;">Subtotal:</td>
                 <td style="padding: 8px 0; text-align: right; font-weight: bold;">Rs ${Number(
-                  o?.subtotal || 0
-                ).toLocaleString()}</td>
+      o?.subtotal || 0
+    ).toLocaleString()}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; text-align: left;">Shipping:</td>
                 <td style="padding: 8px 0; text-align: right;">Rs ${Number(
-                  shipping
-                ).toLocaleString()}</td>
+      shipping
+    ).toLocaleString()}</td>
               </tr>
-              ${
-                discount > 0
-                  ? `
+              ${discount > 0
+        ? `
               <tr>
                 <td style="padding: 8px 0; text-align: left; color: #28a745;">Discount:</td>
                 <td style="padding: 8px 0; text-align: right; color: #28a745;">-Rs ${Number(
-                  discount
-                ).toLocaleString()}</td>
+          discount
+        ).toLocaleString()}</td>
               </tr>
               `
-                  : ""
-              }
+        : ""
+      }
               <tr style="border-top: 2px solid #a03048;">
                 <td style="padding: 12px 0 8px 0; text-align: left; font-size: 16px; font-weight: bold;">TOTAL:</td>
                 <td style="padding: 12px 0 8px 0; text-align: right; font-size: 16px; font-weight: bold; color: #a03048;">Rs ${Number(
-                  total
-                ).toLocaleString()}</td>
+        total
+      ).toLocaleString()}</td>
               </tr>
             </table>
           </div>
@@ -271,8 +270,8 @@ const OrderConfirmedContent = () => {
         <div style="margin-bottom: 25px;">
           <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #333; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Payment Information</h3>
           <p style="margin: 0; font-size: 14px;">Payment Method: <strong>${escapeHtml(
-            o?.payment_method?.toUpperCase() || "COD"
-          )}</strong></p>
+        o?.payment_method?.toUpperCase() || "COD"
+      )}</strong></p>
           <p style="margin: 5px 0 0 0; font-size: 14px;">Status: <strong style="color: #28a745;">CONFIRMED</strong></p>
         </div>
 
@@ -280,7 +279,7 @@ const OrderConfirmedContent = () => {
         <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
           <p style="margin: 0; font-size: 12px; color: #666; line-height: 1.5;">
             Thank you for choosing Paltuu!<br/>
-            For support, visit <a href="https://www.paltuu.pk" style="color: #a03048; text-decoration: none; font-weight: bold;">paltuu.pk</a> or contact us at notifypaltuu@gmail.com
+            For support, visit <a href="https://www.paltuu.pk" style="color: #a03048; text-decoration: none; font-weight: bold;">paltuu.pk</a> or contact us at contact@paltuu.pk
           </p>
           <p style="margin: 8px 0 0 0; font-size: 12px; color: #666; line-height: 1.5;">
             Policies:
@@ -705,7 +704,7 @@ const OrderConfirmedContent = () => {
         </div>
 
         {/* Order Items */}
-        {order?.items && Array.isArray(order.items) && order.items.filter((i:any) => i && i.product_title).length > 0 && (
+        {order?.items && Array.isArray(order.items) && order.items.filter((i: any) => i && i.product_title).length > 0 && (
           <div className="bg-white rounded-2xl p-6 mb-8 shadow-lg border border-primary/10">
             <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
               <div className="p-2 bg-primary/10 rounded-lg">
@@ -714,7 +713,7 @@ const OrderConfirmedContent = () => {
               Order Items
             </h3>
             <div className="space-y-4">
-              {order.items.filter((it:any) => it && it.product_title).map((it: any) => (
+              {order.items.filter((it: any) => it && it.product_title).map((it: any) => (
                 <div
                   key={it.order_item_id}
                   className="flex justify-between items-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
@@ -789,8 +788,8 @@ const OrderConfirmedContent = () => {
                   time: order?.shipped_at
                     ? new Date(order.shipped_at).toLocaleString()
                     : currentIndex >= 2
-                    ? new Date(order.updated_at).toLocaleString()
-                    : "1-2 business days",
+                      ? new Date(order.updated_at).toLocaleString()
+                      : "1-2 business days",
                   status: "dispatched",
                   dbStatus: "dispatched",
                 },
@@ -801,8 +800,8 @@ const OrderConfirmedContent = () => {
                   time: order?.delivered_at
                     ? new Date(order.delivered_at).toLocaleString()
                     : currentIndex >= 3
-                    ? new Date(order.updated_at).toLocaleString()
-                    : "3-5 business days",
+                      ? new Date(order.updated_at).toLocaleString()
+                      : "3-5 business days",
                   status: "delivered",
                   dbStatus: "delivered",
                 },
@@ -836,24 +835,22 @@ const OrderConfirmedContent = () => {
                     <div
                       className={`
                       w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 z-10
-                      ${
-                        itemStatus === "completed"
+                      ${itemStatus === "completed"
                           ? "bg-primary border-primary text-white shadow-lg"
                           : itemStatus === "pending"
-                          ? "bg-primary border-primary text-white shadow-lg animate-pulse"
-                          : "border-primary/30 text-primary/30 bg-white"
-                      }
+                            ? "bg-primary border-primary text-white shadow-lg animate-pulse"
+                            : "border-primary/30 text-primary/30 bg-white"
+                        }
                     `}
                     >
                       <item.icon className="w-5 h-5" />
                     </div>
                     <div className="flex-1 pt-2">
                       <h4
-                        className={`font-medium ${
-                          itemStatus === "upcoming"
+                        className={`font-medium ${itemStatus === "upcoming"
                             ? "text-gray-400"
                             : "text-gray-900"
-                        }`}
+                          }`}
                       >
                         {item.title}
                       </h4>
@@ -867,11 +864,10 @@ const OrderConfirmedContent = () => {
                         {item.description}
                       </p>
                       <p
-                        className={`font-medium text-sm mt-1 ${
-                          itemStatus === "upcoming"
+                        className={`font-medium text-sm mt-1 ${itemStatus === "upcoming"
                             ? "text-gray-400"
                             : "text-primary"
-                        }`}
+                          }`}
                       >
                         {item.time}
                       </p>
@@ -902,7 +898,7 @@ const OrderConfirmedContent = () => {
             </div>
           )}
         </div>
-{/* Review Policies Section */}
+        {/* Review Policies Section */}
         <div className="text-center mt-8 text-sm text-gray-500">
           <p>
             All orders are processed in accordance with our{" "}

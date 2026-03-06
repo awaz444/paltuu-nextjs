@@ -26,10 +26,10 @@ export default function PartnerModal({ visible, onClose }: PartnerModalProps) {
                     <div>
                         <span className="font-medium text-gray-700">Email: </span>
                         <a
-                            href="mailto:notifypaltuu@gmail.com"
+                            href="mailto:contact@paltuu.pk"
                             className="text-primary hover:underline"
                         >
-                            notifypaltuu@gmail.com
+                            contact@paltuu.pk
                         </a>
                     </div>
                     <div>

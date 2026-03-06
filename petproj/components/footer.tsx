@@ -73,7 +73,7 @@ export default function Footer() {
           </p>
           <p className="text-sm text-gray-300">Karachi, Pakistan</p>
           <p className="text-sm text-gray-300">Phone: +92 3394022468</p>
-          <p className="text-sm text-gray-300">Email: notifypaltuu@gmail.com</p>
+          <p className="text-sm text-gray-300">Email: contact@paltuu.pk</p>
 
           {/* Social Media Icons */}
           <div className="flex justify-center md:justify-start gap-4 mt-5">

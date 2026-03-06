@@ -62,7 +62,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             pets.vaccinated, 
             pets.neutered, 
             pets.shelter_id,
-            pets.shop_id,
             pets.rescue_story,
             users.user_id, 
             users.username, 
@@ -73,15 +72,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             cities.city_name AS city,
             rescue_shelters.shelter_id as rescue_shelter_id,
             rescue_shelters.shelter_name,
-            rescue_shelters.logo_url as shelter_logo,
-            shops.shop_id,
-            shops.shop_name,
-            shops.logo_url as shop_logo
+            rescue_shelters.logo_url as shelter_logo
         FROM pets
         JOIN users ON pets.owner_id = users.user_id
         JOIN cities ON pets.city_id = cities.city_id
         LEFT JOIN rescue_shelters ON pets.shelter_id = rescue_shelters.shelter_id
-        LEFT JOIN shops ON pets.shop_id = shops.shop_id
         WHERE pets.pet_id = $1
         `;
 
@@ -186,15 +181,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                         shelter_id: pet.rescue_shelter_id,
                         shelter_name: pet.shelter_name,
                         logo_url: pet.shelter_logo
-                    };
-                }
-                break;
-            case 'shop':
-                if (pet.shop_id) {
-                    response.shop = {
-                        shop_id: pet.shop_id,
-                        shop_name: pet.shop_name,
-                        logo_url: pet.shop_logo
                     };
                 }
                 break;

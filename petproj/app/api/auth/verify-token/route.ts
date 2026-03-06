@@ -38,11 +38,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ valid: false, user: null }, { status: 200 });
     }
 
-    // 4️⃣ Valid token
+    // 4️⃣ Valid token — NestJS encodes `user_id`, legacy Next.js used `id`
     return NextResponse.json({
       valid: true,
       user: {
-        id: decoded.id,
+        id: decoded.user_id || decoded.id,
         email: decoded.email,
         role: decoded.role,
       }

@@ -4,6 +4,7 @@ import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 import { clearGuestSessionId } from "@/utils/guest";
+import { logoutApi } from "@/utils/api";
 
 interface User {
   id?: string;
@@ -151,56 +152,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // console.log("🔎 NextAuth session.user:", session?.user);
 
     if (status === "authenticated" && session?.user) {
-    const googleUserId = (session.user as any).user_id || (session.user as any).id;
+      const googleUserId = (session.user as any).user_id || (session.user as any).id;
 
-    // Only update if we don't have a user yet, or if this is a fresh Google login
-    if (!user || user.method !== "google") {
-      // First, try to fetch the user's database profile
-      const fetchDatabaseProfile = async () => {
-        try {
-          const response = await fetch(`/api/my-profile/${googleUserId}`);
-          if (response.ok) {
-            const dbProfile = await response.json();
-            // Use database profile data if available, but fallback to Google data if empty
-            const userWithDbData: User = {
-              id: googleUserId,
-              name: (dbProfile.name && dbProfile.name.trim()) || session.user.name || undefined,
-              email: session.user.email || "",
-              role: (session.user as any).role || "guest",
-              profile_image_url: (dbProfile.profile_image_url && dbProfile.profile_image_url.trim()) || session.user.image || undefined,
-              method: "google",
-            };
+      // Only update if we don't have a user yet, or if this is a fresh Google login
+      if (!user || user.method !== "google") {
+        // First, try to fetch the user's database profile
+        const fetchDatabaseProfile = async () => {
+          try {
+            const response = await fetch(`/api/my-profile/${googleUserId}`);
+            if (response.ok) {
+              const dbProfile = await response.json();
+              // Use database profile data if available, but fallback to Google data if empty
+              const userWithDbData: User = {
+                id: googleUserId,
+                name: (dbProfile.name && dbProfile.name.trim()) || session.user.name || undefined,
+                email: session.user.email || "",
+                role: (session.user as any).role || "guest",
+                profile_image_url: (dbProfile.profile_image_url && dbProfile.profile_image_url.trim()) || session.user.image || undefined,
+                method: "google",
+              };
 
-            // Set in-memory user; do not persist to localStorage
-            setUser(userWithDbData);
-            setIsAuthenticated(true);
+              // Set in-memory user; do not persist to localStorage
+              setUser(userWithDbData);
+              setIsAuthenticated(true);
 
-            // console.log("✅ Using database profile data for Google user:", userWithDbData);
-            // console.log("🔍 AuthContext - Database profile_image_url:", dbProfile.profile_image_url);
-            return userWithDbData;
+              // console.log("✅ Using database profile data for Google user:", userWithDbData);
+              // console.log("🔍 AuthContext - Database profile_image_url:", dbProfile.profile_image_url);
+              return userWithDbData;
+            }
+          } catch (error) {
+            // console.log("No database profile found, using Google data");
           }
-        } catch (error) {
-          // console.log("No database profile found, using Google data");
-        }
 
-        // Fallback to Google data if no database profile exists
-        const googleUser: User = {
-          id: googleUserId,
-          name: session.user.name || undefined,
-          email: session.user.email || "",
-          role: (session.user as any).role || "guest",
-          profile_image_url: session.user.image || undefined,
-          method: "google",
+          // Fallback to Google data if no database profile exists
+          const googleUser: User = {
+            id: googleUserId,
+            name: session.user.name || undefined,
+            email: session.user.email || "",
+            role: (session.user as any).role || "guest",
+            profile_image_url: session.user.image || undefined,
+            method: "google",
+          };
+
+          // Set in-memory user; do not persist to localStorage
+          setUser(googleUser);
+          setIsAuthenticated(true);
+
+          // console.log("✅ Using Google profile data:", googleUser);
+          // console.log("🔍 AuthContext - Google profile_image_url:", session.user.image);
+          return googleUser;
         };
-
-            // Set in-memory user; do not persist to localStorage
-            setUser(googleUser);
-            setIsAuthenticated(true);
-
-        // console.log("✅ Using Google profile data:", googleUser);
-        // console.log("🔍 AuthContext - Google profile_image_url:", session.user.image);
-        return googleUser;
-      };
 
         fetchDatabaseProfile().then((finalUser) => {
           // Clear guest session cookie (cart sync will be handled by useCartSync hook)
@@ -211,123 +212,123 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error('Error clearing guest session on login:', e);
           }
 
-        // Redirect shop/shelter to panels after login - check for callback URL first
+          // Redirect shop/shelter to panels after login - check for callback URL first
+          try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const callbackUrl = urlParams.get('callbackUrl');
+
+            if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
+              router.push(decodeURIComponent(callbackUrl));
+            } else {
+              const role = finalUser.role;
+              if (role === "shop admin") router.push("/shop-panel");
+              else if (role === "shelter admin") router.push("/rescue-panel");
+              else if (role === "vet") router.push("/vet-panel");
+              else if (role === "admin") router.push("/admin-panel");
+              else router.push("/browse-pets");
+            }
+          } catch { }
+        });
+      }
+    }
+  }, [status, session]);
+
+
+  const login = async (userData: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    profile_image_url?: string; // backend field
+  }) => {
+    // Try to fetch the user's database profile first
+    try {
+      const response = await fetch(`/api/my-profile/${userData.id}`);
+      if (response.ok) {
+        const dbProfile = await response.json();
+        // Use database profile data if available
+        const userWithDbData: User = {
+          id: userData.id,
+          name: dbProfile.name,
+          email: userData.email,
+          role: userData.role,
+          profile_image_url: dbProfile.profile_image_url || "/default-avatar.png",
+          method: "api",
+        };
+
+        setUser(userWithDbData);
+        setIsAuthenticated(true);
+        try {
+          clearGuestSessionId();
+          // console.log('✅ User logged in via API - guest session cleared');
+        } catch (e) {
+          console.error('Error clearing guest session on login:', e);
+        }
+
+        // console.log("✅ Using database profile data for API user:", userWithDbData);      // Redirect on API login success - check for callback URL first
         try {
           const urlParams = new URLSearchParams(window.location.search);
           const callbackUrl = urlParams.get('callbackUrl');
 
           if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
             router.push(decodeURIComponent(callbackUrl));
+          } else if (userWithDbData.role === "shop admin") {
+            router.push("/shop-panel");
+          } else if (userWithDbData.role === "shelter admin") {
+            router.push("/rescue-panel");
+          } else if (userWithDbData.role === "vet") {
+            router.push("/vet-panel");
+          } else if (userWithDbData.role === "admin") {
+            router.push("/admin-panel");
           } else {
-            const role = finalUser.role;
-            if (role === "shop admin") router.push("/shop-panel");
-            else if (role === "shelter admin") router.push("/rescue-panel");
-            else if (role === "vet") router.push("/vet-panel");
-            else if (role === "admin") router.push("/admin-panel");
-            else router.push("/browse-pets");
+            router.push("/browse-pets");
           }
-        } catch {}
-      });
+        } catch { }
+        return;
+      }
+    } catch (error) {
+      //console.log("No database profile found, using login response data");
     }
-  }
-}, [status, session]);
 
+    // Fallback to login response data if no database profile exists
+    const userWithMethod: User = {
+      id: userData.id,
+      name: userData.name,
+      email: userData.email,
+      role: userData.role,
+      profile_image_url: userData.profile_image_url || "/default-avatar.png",
+      method: "api",
+    };
 
-  const login = async (userData: {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  profile_image_url?: string; // backend field
-}) => {
-  // Try to fetch the user's database profile first
-  try {
-    const response = await fetch(`/api/my-profile/${userData.id}`);
-    if (response.ok) {
-      const dbProfile = await response.json();
-      // Use database profile data if available
-      const userWithDbData: User = {
-        id: userData.id,
-        name: dbProfile.name,
-        email: userData.email,
-        role: userData.role,
-        profile_image_url: dbProfile.profile_image_url || "/default-avatar.png",
-        method: "api",
-      };
-
-  setUser(userWithDbData);
-  setIsAuthenticated(true);
-  try {
-    clearGuestSessionId();
-    // console.log('✅ User logged in via API - guest session cleared');
-  } catch (e) {
-    console.error('Error clearing guest session on login:', e);
-  }
-
-      // console.log("✅ Using database profile data for API user:", userWithDbData);      // Redirect on API login success - check for callback URL first
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const callbackUrl = urlParams.get('callbackUrl');
-
-        if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
-          router.push(decodeURIComponent(callbackUrl));
-        } else if (userWithDbData.role === "shop admin") {
-          router.push("/shop-panel");
-        } else if (userWithDbData.role === "shelter admin") {
-          router.push("/rescue-panel");
-        } else if (userWithDbData.role === "vet") {
-          router.push("/vet-panel");
-        } else if (userWithDbData.role === "admin") {
-          router.push("/admin-panel");
-        } else {
-          router.push("/browse-pets");
-        }
-      } catch {}
-      return;
+    setUser(userWithMethod);
+    setIsAuthenticated(true);
+    try {
+      clearGuestSessionId();
+      //console.log('✅ User logged in via API (fallback) - guest session cleared');
+    } catch (e) {
+      console.error('Error clearing guest session on login:', e);
     }
-  } catch (error) {
-    //console.log("No database profile found, using login response data");
-  }
 
-  // Fallback to login response data if no database profile exists
-  const userWithMethod: User = {
-    id: userData.id,
-    name: userData.name,
-    email: userData.email,
-    role: userData.role,
-    profile_image_url: userData.profile_image_url || "/default-avatar.png",
-    method: "api",
+    //console.log("✅ Using login response data for API user:", userWithMethod);  // Redirect on API login success - check for callback URL first
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const callbackUrl = urlParams.get('callbackUrl');
+
+      if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
+        router.push(decodeURIComponent(callbackUrl));
+      } else if (userWithMethod.role === "shop admin") {
+        router.push("/shop-panel");
+      } else if (userWithMethod.role === "shelter admin") {
+        router.push("/rescue-panel");
+      } else if (userWithMethod.role === "vet") {
+        router.push("/vet-panel");
+      } else if (userWithMethod.role === "admin") {
+        router.push("/admin-panel");
+      } else {
+        router.push("/browse-pets");
+      }
+    } catch { }
   };
-
-  setUser(userWithMethod);
-  setIsAuthenticated(true);
-  try {
-    clearGuestSessionId();
-    //console.log('✅ User logged in via API (fallback) - guest session cleared');
-  } catch (e) {
-    console.error('Error clearing guest session on login:', e);
-  }
-
-  //console.log("✅ Using login response data for API user:", userWithMethod);  // Redirect on API login success - check for callback URL first
-  try {
-    const urlParams = new URLSearchParams(window.location.search);
-    const callbackUrl = urlParams.get('callbackUrl');
-
-    if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
-      router.push(decodeURIComponent(callbackUrl));
-    } else if (userWithMethod.role === "shop admin") {
-      router.push("/shop-panel");
-    } else if (userWithMethod.role === "shelter admin") {
-      router.push("/rescue-panel");
-    } else if (userWithMethod.role === "vet") {
-      router.push("/vet-panel");
-    } else if (userWithMethod.role === "admin") {
-      router.push("/admin-panel");
-    } else {
-      router.push("/browse-pets");
-    }
-  } catch {}
-};
 
 
   const refreshUser = async () => {
@@ -356,12 +357,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-   // console.log("Logout started, user method:", user?.method);
+    // console.log("Logout started, user method:", user?.method);
 
     try {
       // Clear in-memory user and guest session cookie (cart will be handled by useCartSync hook)
-      try { clearGuestSessionId(); } catch {}      // Clear session storage if used
-      try { sessionStorage.clear(); } catch {}
+      try { clearGuestSessionId(); } catch { }      // Clear session storage if used
+      try { sessionStorage.clear(); } catch { }
 
       // For Google users, handle NextAuth signOut correctly
       if (user?.method === "google") {
@@ -376,16 +377,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // For API users, proceed with API logout
       //console.log("Executing API logout flow");
       try {
-        const response = await fetch("/api/users/logout", {
-          method: "GET",
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          throw new Error(`API logout failed with status: ${response.status}`);
-        }
-
-        //console.log("API logout successful");
+        await logoutApi();
       } catch (err) {
         console.error("API logout error:", err);
       }
@@ -400,19 +392,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .replace(/^ +/, "")
             .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
         });
-      } catch {}
+      } catch { }
 
       window.location.href = "/auth";
     } catch (error) {
       console.error("Logout error:", error);
-      try { sessionStorage.clear(); } catch {}
+      try { sessionStorage.clear(); } catch { }
       try {
         document.cookie.split(";").forEach(function (c) {
           document.cookie = c
             .replace(/^ +/, "")
             .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
         });
-      } catch {}
+      } catch { }
       window.location.href = "/auth";
     }
   };

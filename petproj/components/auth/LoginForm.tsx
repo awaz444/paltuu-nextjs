@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
+import { loginApi } from "@/utils/api";
 import PartnerModal from "./PartnerModal";
 
 interface LoginFormProps {
@@ -44,25 +44,22 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
     e.preventDefault();
     try {
       setLoading(true);
-      const response = await axios.post("/api/users/login", user, {
-        withCredentials: true,
-      });
-      if (response.data.success) {
-        const { user_id, name, email, role, profile_image_url } = response.data.user;
-        const userDetails = {
-          id: user_id,
+      // Call NestJS directly — sets httpOnly `token` cookie via credentials:include
+      const data = await loginApi(user);
+      if (data.success) {
+        const { id, user_id, name, email, role, profile_image_url } = data.user;
+        login({
+          id: String(id ?? user_id),
           name,
           email,
           role,
           profile_image_url: profile_image_url || "/default-avatar.png",
-        };
-        // Token is set in httpOnly cookie by server, no localStorage needed
-        login(userDetails); // This will update AuthContext and redirect
+        });
         toast.success("Login successful!");
       }
     } catch (error: any) {
       console.error("Login failed:", error.message);
-      toast.error(error.response?.data?.message || "Login failed!");
+      toast.error(error.message || "Login failed!");
     } finally {
       setLoading(false);
     }

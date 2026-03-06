@@ -18,7 +18,7 @@ const initialState: UserState = {
 
 // Async thunk for fetching users
 export const fetchUsers = createAsyncThunk('users/fetchUsers', async () => {
-    const response = await fetch('/api/users'); // Adjust to your API endpoint
+    const response = await fetch('http://localhost:8080/core/users'); // Adjusted to NestJS endpoint
 
     if (!response.ok) {
         throw new Error('Failed to fetch users');
@@ -31,7 +31,7 @@ export const fetchUsers = createAsyncThunk('users/fetchUsers', async () => {
 export const postUser = createAsyncThunk<User, Omit<User, 'user_id'>>(
     'users/postUser',
     async (userData: User) => {
-        const response = await fetch('/api/users', {
+        const response = await fetch('http://localhost:3000/core/auth/sign-up', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -1,9 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import bcrypt from "bcrypt";
-import { db } from "@/db/index";
-import { QueryResult } from "pg";
 
 export const authoptions: NextAuthOptions = {
   session: {
@@ -26,24 +23,21 @@ export const authoptions: NextAuthOptions = {
         const { email, password } = credentials;
 
         try {
-          const query = "SELECT user_id, email, password, role FROM users WHERE email = $1";
-          const result: QueryResult = await db.query(query, [email]);
+          const res = await fetch("http://localhost:8080/core/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+          const result = await res.json();
 
-          if (result.rowCount === 0) {
-            return null; // No user found
+          if (res.ok && result.success && result.user) {
+            return {
+              id: result.user.user_id,
+              email: result.user.email,
+              role: result.user.role,
+            };
           }
-
-          const user = result.rows[0];
-          const isPasswordValid = await bcrypt.compare(password, user.password);
-          if (!isPasswordValid) {
-            return null; // Invalid password
-          }
-
-          return {
-            id: user.user_id,
-            email: user.email,
-            role: user.role,
-          };
+          return null;
         } catch (error) {
           console.error("Error authorizing credentials:", error);
           return null;
@@ -58,35 +52,16 @@ export const authoptions: NextAuthOptions = {
         const name = profile?.name || "Google User";
 
         try {
-          const query = "SELECT user_id, email, role FROM users WHERE email = $1";
-          const result = await db.query(query, [email]);
+          const res = await fetch("http://localhost:8080/core/auth/google", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, name }),
+          });
+          const result = await res.json();
 
-          if (result.rowCount === 0) {
-            // User doesn't exist, create a new user
-            const defaultPassword = await bcrypt.hash("defaultGooglePassword123!", 10);
-
-            const insertQuery = `
-              INSERT INTO users (username, name, email, password, role)
-              VALUES ($1, $2, $3, $4, $5)
-              RETURNING user_id, email, role
-            `;
-            const insertValues = [
-              email.split("@")[0],
-              name,
-              email,
-              defaultPassword,
-              "regular user",
-            ];
-
-            const insertResult = await db.query(insertQuery, insertValues);
-            const newUser = insertResult.rows[0];
-            token.user_id = newUser.user_id;
-            token.role = "regular user";
-          } else {
-            // User exists, return their details
-            const existingUser = result.rows[0];
-            token.user_id = existingUser.user_id;
-            token.role = existingUser.role;
+          if (res.ok && result.success && result.user) {
+            token.user_id = result.user.user_id;
+            token.role = result.user.role;
           }
         } catch (error) {
           console.error("Database query failed during Google login:", error);

@@ -290,7 +290,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                     <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
                         <Avatar
                             size={48}
-                            src={pet.owner?.profile_image_url}
+                            src={pet.users?.profile_image_url || pet.owner?.profile_image_url}
                             icon={<UserOutlined />}
                             className="bg-primary/10 text-primary"
                         />
@@ -299,7 +299,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                 Owner
                             </Text>
                             <Text className="text-lg font-semibold text-gray-800">
-                                {pet.owner?.name || "Unknown Owner"}
+                                {pet.users?.name || pet.owner?.name || "Unknown Owner"}
                             </Text>
                         </div>
                     </div>
@@ -331,7 +331,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                         <div className="flex items-center gap-3 p-4 mt-6 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
                             <Avatar
                                 size={48}
-                                src={pet.shelter?.logo_url}
+                                src={pet.rescue_shelters?.logo_url || pet.shelter?.logo_url}
                                 className="bg-red-100 text-red-600"
                             />
                             <div>
@@ -339,7 +339,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                     Rescue Shelter
                                 </Text>
                                 <Text className="text-lg font-semibold text-gray-800">
-                                    {pet.shelter?.shelter_name ||
+                                    {pet.rescue_shelters?.shelter_name || pet.shelter?.shelter_name ||
                                         "Unknown Shelter"}
                                 </Text>
                             </div>
@@ -574,21 +574,21 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                         </div>
                                     </div>
 
-                                    {/* Listing Type Tag */}
-                                    {pet.listing_type !== "shop" && (
-                                        <Tag
-                                            color={listingTypeInfo.color}
-                                            className="rounded-full px-3 py-1 text-sm inline-flex items-center gap-1 w-fit"
-                                            icon={listingTypeInfo.icon}>
-                                            {listingTypeInfo.text}
-                                        </Tag>
-                                    )}
-
-                                    {/* Adoption Status Tag */}
-                                    {!isAvailable && (
+                                    {/* Listing Type or Adoption Status Tag */}
+                                    {isAvailable ? (
+                                        pet.listing_type !== "shop" && (
+                                            <Tag
+                                                color={listingTypeInfo.color}
+                                                className="rounded-full px-3 py-1 text-sm inline-flex items-center gap-1 w-fit"
+                                                icon={listingTypeInfo.icon}>
+                                                {listingTypeInfo.text}
+                                            </Tag>
+                                        )
+                                    ) : (
                                         <Tag
                                             color="red"
-                                            className="rounded-full px-4 py-1 text-base">
+                                            className="rounded-full px-3 py-1 text-sm inline-flex items-center gap-1 w-fit"
+                                            icon={<InfoCircleOutlined />}>
                                             Already Adopted
                                         </Tag>
                                     )}
@@ -1005,8 +1005,8 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                     {pet.listing_type === "rescue" && (
                         <RescueDetails
                             rescue_story={pet.rescue_story || null}
-                            special_needs={pet.special_needs || []}
-                            medical_conditions={pet.medical_conditions || []}
+                            special_needs={pet.rescue_special_needs || pet.special_needs || []}
+                            medical_conditions={pet.rescue_medical_conditions || pet.medical_conditions || []}
                         />
                     )}
 

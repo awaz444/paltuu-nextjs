@@ -42,6 +42,23 @@ export type PetWithImages = {
         category_id: number;
         category_name: string;
     };
+    users?: {
+        user_id: number;
+        name: string;
+        profile_image_url: string | null;
+        created_at: any;
+    };
+    rescue_shelters?: {
+        shelter_id: number;
+        shelter_name: string;
+        logo_url: string | null;
+    } | null;
+    rescue_medical_conditions?: Array<{
+        condition: string;
+        treatment_cost: string;
+        treated: boolean;
+    }>;
+    rescue_special_needs?: string[];
     // Kept for backward compatibility if needed
     city?: string;
     profile_image_url?: string | null;

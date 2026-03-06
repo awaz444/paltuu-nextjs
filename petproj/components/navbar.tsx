@@ -44,7 +44,6 @@ const Navbar = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [mobileView, setMobileView] = useState("navlinks"); // 'navlinks' or 'dropdown'
-  const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -325,27 +324,6 @@ const Navbar = ({
     //{ name: "Paltuu AI", href: "llm" },
   ];
   const links = linksOverride || defaultLinks;
-
-  useEffect(() => {
-    const fetchVerificationStatus = async () => {
-      if (userRole === "vet" && user?.id) {
-        console.log(user.id);
-        try {
-          const response = await fetch(
-            `/api/is-verified-by-user-id/${user.id}`
-          );
-          const data = await response.json();
-          console.log("gagea", data);
-          setIsVerified(data.profile_verified); // assuming the response contains an 'isVerified' boolean
-          console.log("Verified", data.profile_verified);
-        } catch (error) {
-          console.error("Failed to fetch verification status:", error);
-        }
-      }
-    };
-
-    fetchVerificationStatus();
-  }, [userRole, user?.id]);
 
   useEffect(() => {
     const checkFoundersClub = async () => {
@@ -932,11 +910,6 @@ const Navbar = ({
                       height={40}
                       className="w-10 h-10 rounded-full object-cover border-2 border-white/30 transition-all duration-300"
                     />
-                    {isVerified && (
-                      <div className="absolute -bottom-1 -right-1 rounded-full p-0.5">
-                        <i className="bi bi-patch-check-fill text-amber-500 text-xs" />
-                      </div>
-                    )}
                   </div>
 
                   {/* User Name - shown only on desktop */}

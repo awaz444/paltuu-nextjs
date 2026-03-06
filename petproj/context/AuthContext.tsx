@@ -4,7 +4,7 @@ import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 import { clearGuestSessionId } from "@/utils/guest";
-import { logoutApi } from "@/utils/api";
+import { logoutApi, googleLoginApi } from "@/utils/api";
 
 interface User {
   id?: string;
@@ -152,83 +152,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // console.log("🔎 NextAuth session.user:", session?.user);
 
     if (status === "authenticated" && session?.user) {
-      const googleUserId = (session.user as any).user_id || (session.user as any).id;
-
       // Only update if we don't have a user yet, or if this is a fresh Google login
       if (!user || user.method !== "google") {
-        // First, try to fetch the user's database profile
-        const fetchDatabaseProfile = async () => {
+        const syncGoogleWithNestJS = async () => {
           try {
-            const response = await fetch(`/api/my-profile/${googleUserId}`);
-            if (response.ok) {
-              const dbProfile = await response.json();
-              // Use database profile data if available, but fallback to Google data if empty
-              const userWithDbData: User = {
-                id: googleUserId,
-                name: (dbProfile.name && dbProfile.name.trim()) || session.user.name || undefined,
-                email: session.user.email || "",
-                role: (session.user as any).role || "guest",
-                profile_image_url: (dbProfile.profile_image_url && dbProfile.profile_image_url.trim()) || session.user.image || undefined,
+            // Forward Google profile to NestJS to establish a backend session
+            const data = await googleLoginApi({
+              email: session.user?.email || "",
+              name: session.user?.name || undefined,
+            });
+
+            if (data.success) {
+              const { id, user_id, name, email, role, profile_image_url } = data.user;
+              const nestUser: User = {
+                id: String(id ?? user_id),
+                name,
+                email,
+                role: role || "guest",
+                profile_image_url: profile_image_url || "/default-avatar.png",
                 method: "google",
               };
 
-              // Set in-memory user; do not persist to localStorage
-              setUser(userWithDbData);
+              setUser(nestUser);
               setIsAuthenticated(true);
 
-              // console.log("✅ Using database profile data for Google user:", userWithDbData);
-              // console.log("🔍 AuthContext - Database profile_image_url:", dbProfile.profile_image_url);
-              return userWithDbData;
+              // Clear guest session cookie
+              try { clearGuestSessionId(); } catch { }
+
+              // Redirect based on role
+              try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const callbackUrl = urlParams.get('callbackUrl');
+
+                if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
+                  router.push(decodeURIComponent(callbackUrl));
+                } else {
+                  const userRole = nestUser.role;
+                  if (userRole === "shop admin") router.push("/shop-panel");
+                  else if (userRole === "shelter admin") router.push("/rescue-panel");
+                  else if (userRole === "vet") router.push("/vet-panel");
+                  else if (userRole === "admin") router.push("/admin-panel");
+                  else router.push("/browse-pets");
+                }
+              } catch { }
             }
           } catch (error) {
-            // console.log("No database profile found, using Google data");
+            console.error("Failed to sync Google login with NestJS:", error);
           }
-
-          // Fallback to Google data if no database profile exists
-          const googleUser: User = {
-            id: googleUserId,
-            name: session.user.name || undefined,
-            email: session.user.email || "",
-            role: (session.user as any).role || "guest",
-            profile_image_url: session.user.image || undefined,
-            method: "google",
-          };
-
-          // Set in-memory user; do not persist to localStorage
-          setUser(googleUser);
-          setIsAuthenticated(true);
-
-          // console.log("✅ Using Google profile data:", googleUser);
-          // console.log("🔍 AuthContext - Google profile_image_url:", session.user.image);
-          return googleUser;
         };
 
-        fetchDatabaseProfile().then((finalUser) => {
-          // Clear guest session cookie (cart sync will be handled by useCartSync hook)
-          try {
-            clearGuestSessionId();
-            // console.log('✅ User logged in via Google - guest session cleared');
-          } catch (e) {
-            console.error('Error clearing guest session on login:', e);
-          }
-
-          // Redirect shop/shelter to panels after login - check for callback URL first
-          try {
-            const urlParams = new URLSearchParams(window.location.search);
-            const callbackUrl = urlParams.get('callbackUrl');
-
-            if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
-              router.push(decodeURIComponent(callbackUrl));
-            } else {
-              const role = finalUser.role;
-              if (role === "shop admin") router.push("/shop-panel");
-              else if (role === "shelter admin") router.push("/rescue-panel");
-              else if (role === "vet") router.push("/vet-panel");
-              else if (role === "admin") router.push("/admin-panel");
-              else router.push("/browse-pets");
-            }
-          } catch { }
-        });
+        syncGoogleWithNestJS();
       }
     }
   }, [status, session]);
@@ -364,9 +337,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try { clearGuestSessionId(); } catch { }      // Clear session storage if used
       try { sessionStorage.clear(); } catch { }
 
-      // For Google users, handle NextAuth signOut correctly
+      // Always attempt to clear the NestJS backend session via logoutApi
+      try {
+        await logoutApi();
+      } catch (err) {
+        console.error("API logout error during Google logout:", err);
+      }
+
+      // For Google users, handle NextAuth signOut
       if (user?.method === "google") {
-        //console.log("Executing Google logout flow");
         await nextAuthSignOut({
           callbackUrl: "/auth",
           redirect: true,

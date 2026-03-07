@@ -5,6 +5,7 @@ import { MoonLoader } from "react-spinners";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { useAuth } from "@/context/AuthContext";
 import { useSession } from "next-auth/react";
+import { getMyApplicationsApi, deleteAdoptionApplicationApi } from "@/utils/api";
 
 interface Application {
     application_type: "foster" | "adoption";
@@ -26,7 +27,7 @@ export default function MyApplicationsPage() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [primaryColor, setPrimaryColor] = useState("#000000");
-    
+
     const { user, isAuthenticated } = useAuth();
     const { status } = useSession();
 
@@ -50,29 +51,31 @@ export default function MyApplicationsPage() {
             setLoading(true);
             setError(null);
 
-            const response = await fetch("/api/get-my-applications", {
-                method: "GET",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
+            const data = await getMyApplicationsApi();
 
-            if (!response.ok) {
-                if (response.status === 401) {
-                    setError("Authentication failed. Please log in again.");
-                } else {
-                    const { error } = await response.json();
-                    setError(error || "Failed to fetch applications");
-                }
-                return;
-            }
+            // Map NestJS response to Application interface
+            // NestJS returns a list of applications directly or in a results/data field
+            const apps = Array.isArray(data) ? data : data.data || data.applications || [];
 
-            const data = await response.json();
-            setApplications(data.applications || []);
-        } catch (err) {
+            const mappedApps: Application[] = apps.map((app: any) => ({
+                application_id: app.application_id,
+                application_type: app.application_type,
+                pet_id: app.pet_id,
+                status: app.status,
+                created_at: app.created_at,
+                pet_name: app.pets?.pet_name || app.pet_name || "Unknown Pet",
+                breed: app.pets?.pet_breed || app.breed || "",
+                city_name: app.pets?.cities?.city_name || app.city_name || "",
+                area: app.pets?.area || app.area || "",
+                age: app.pets?.age || app.age || 0,
+                adoption_status: app.pets?.adoption_status || app.adoption_status || "",
+                image_url: app.pets?.pet_images?.[0]?.image_url || app.image_url || "",
+            }));
+
+            setApplications(mappedApps);
+        } catch (err: any) {
             console.error("Error fetching applications:", err);
-            setError("An unexpected error occurred");
+            setError(err.message || "An unexpected error occurred");
         } finally {
             setLoading(false);
         }
@@ -86,43 +89,15 @@ export default function MyApplicationsPage() {
     }, [isAuthenticated, user, status]);
 
     const handleDeleteApplication = async (
-        applicationId: string,
-        applicationType: string
+        applicationId: string
     ) => {
         const confirmDelete = window.confirm(
             "Are you sure you want to delete this application? This action cannot be undone."
         );
         if (!confirmDelete) return;
 
-        // Determine the correct ID based on application type
-        const idToDelete =
-            applicationType === "foster"
-                ? `foster_${applicationId}`
-                : `adoption_${applicationId}`;
-
         try {
-            const response = await fetch(
-                `/api/delete-application/${idToDelete}`,
-                {
-                    method: "DELETE",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    alert("Authentication failed. Please log in again.");
-                } else if (response.status === 403) {
-                    alert("You can only delete your own applications.");
-                } else {
-                    const { error } = await response.json();
-                    alert(error || "Failed to delete application");
-                }
-                return;
-            }
+            await deleteAdoptionApplicationApi(applicationId);
 
             // Remove the deleted application from the state
             setApplications((prevApplications) =>
@@ -132,11 +107,9 @@ export default function MyApplicationsPage() {
             );
 
             alert("Application deleted successfully.");
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error deleting application:", err);
-            alert(
-                "An unexpected error occurred while deleting the application."
-            );
+            alert(err.message || "An unexpected error occurred while deleting the application.");
         }
     };
 
@@ -178,22 +151,22 @@ export default function MyApplicationsPage() {
 
     return (
         <>
-            
-            <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
-        {/* Updated Header */}
-        <header className="bg-white text-primary border border-1 border-primary p-8 rounded-2xl shadow-lg mb-10">
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="bg-primary flex-shrink-0 w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center shadow-lg">
-              <img className="p-3" src="/favicon-dark.png" alt="paltuu logo" />
-            </div>
 
-            <div className="text-center md:text-left">
-              <h1 className="text-3xl text-black md:text-4xl font-bold mb-2">
-                My Applications
-              </h1>
-            </div>
-          </div>
-        </header>
+            <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+                {/* Updated Header */}
+                <header className="bg-white text-primary border border-1 border-primary p-8 rounded-2xl shadow-lg mb-10">
+                    <div className="flex flex-col md:flex-row items-center gap-6">
+                        <div className="bg-primary flex-shrink-0 w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center shadow-lg">
+                            <img className="p-3" src="/favicon-dark.png" alt="paltuu logo" />
+                        </div>
+
+                        <div className="text-center md:text-left">
+                            <h1 className="text-3xl text-black md:text-4xl font-bold mb-2">
+                                My Applications
+                            </h1>
+                        </div>
+                    </div>
+                </header>
 
                 {applications.length === 0 ? (
                     <div className="bg-white p-8 rounded-2xl shadow-sm text-center">
@@ -316,8 +289,7 @@ export default function MyApplicationsPage() {
                                     className="w-full bg-primary text-white py-2 px-4 rounded-xl hover:bg-primary-dark transition-colors"
                                     onClick={() =>
                                         handleDeleteApplication(
-                                            app.application_id,
-                                            app.application_type
+                                            app.application_id
                                         )
                                     }>
                                     Delete Application

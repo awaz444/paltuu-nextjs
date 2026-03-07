@@ -196,6 +196,30 @@ export async function getReceivedApplicationsApi(petId?: number | string): Promi
     return data;
 }
 
+/** Get applications submitted by the current user */
+export async function getMyApplicationsApi(): Promise<any> {
+    const res = await fetch(`${BACKEND_URL}/adoptions/applications`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to fetch your applications");
+    return data;
+}
+
+/** Cancel/Delete an adoption application */
+export async function deleteAdoptionApplicationApi(id: number | string): Promise<any> {
+    const res = await fetch(`${BACKEND_URL}/adoptions/applications/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to delete application");
+    return data;
+}
+
 /** Accept or reject an adoption application */
 export async function updateAdoptionStatusApi(applicationId: number | string, status: "approved" | "rejected"): Promise<any> {
     const res = await fetch(`${BACKEND_URL}/adoptions/applications/${applicationId}/status`, {

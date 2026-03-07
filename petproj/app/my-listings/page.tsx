@@ -19,6 +19,7 @@ import {
     MedicineBoxOutlined,
     SafetyCertificateOutlined,
 } from "@ant-design/icons";
+import { getMyListingsApi } from "@/utils/api";
 
 const { Panel } = Collapse;
 
@@ -75,20 +76,9 @@ const UserListingsPage = () => {
             try {
                 setIsLoading(true);
 
-                // Fetch regular listings using token-based authentication
-                const listingsResponse = await fetch('/api/my-listings', {
-                    method: 'GET',
-                    credentials: 'include', // Include cookies for authentication
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-                
-                if (!listingsResponse.ok) {
-                    throw new Error("Failed to fetch listings");
-                }
-                const listingsData = await listingsResponse.json();
-                setListings(listingsData.listings);
+                // Fetch regular listings using NestJS API directly
+                const listingsData = await getMyListingsApi(1, 100);
+                setListings(listingsData.listings || listingsData.data || []);
 
                 setIsLoading(false);
             } catch (err) {
@@ -138,7 +128,7 @@ const UserListingsPage = () => {
 
     return (
         <>
-            
+
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
                 <header className="bg-white text-primary border border-1 border-primary p-8 rounded-2xl shadow-lg mb-10">
                     <div className="flex flex-col md:flex-row items-center gap-6">

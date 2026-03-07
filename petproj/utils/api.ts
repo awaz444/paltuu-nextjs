@@ -143,6 +143,20 @@ export async function deletePetApi(id: string | number): Promise<any> {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to delete pet");
+    if (!res.ok) throw new Error(data.message || "Failed to delete pet");
+    return data;
+}
+
+/** Get current user's pet listings */
+export async function getMyListingsApi(page: number = 1, limit: number = 20): Promise<any> {
+    const searchParams = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
+    const res = await fetch(`${BACKEND_URL}/pets/me?${searchParams.toString()}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to fetch your listings");
     return data;
 }
 
@@ -161,6 +175,40 @@ export async function submitAdoptionApplicationApi(payload: any): Promise<any> {
         const message = Array.isArray(data?.message)
             ? data.message.join(", ")
             : data?.message || "Failed to submit application";
+        throw new Error(message);
+    }
+    return data;
+}
+
+/** Get adoption applications received for the user's pets */
+export async function getReceivedApplicationsApi(petId?: number | string): Promise<any> {
+    const url = petId 
+        ? `${BACKEND_URL}/adoptions/applications/received?pet_id=${petId}` 
+        : `${BACKEND_URL}/adoptions/applications/received`;
+        
+    const res = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to fetch applications");
+    return data;
+}
+
+/** Accept or reject an adoption application */
+export async function updateAdoptionStatusApi(applicationId: number | string, status: "approved" | "rejected"): Promise<any> {
+    const res = await fetch(`${BACKEND_URL}/adoptions/applications/${applicationId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+        const message = Array.isArray(data?.message)
+            ? data.message.join(", ")
+            : data?.message || `Failed to ${status} application`;
         throw new Error(message);
     }
     return data;
@@ -216,29 +264,6 @@ export async function uploadPetImagesApi(id: string | number, formData: FormData
     return data;
 }
 
-/** Get applications received for user's pet listings */
-export async function getReceivedApplicationsApi(): Promise<any> {
-    const res = await fetch(`${BACKEND_URL}/adoptions/applications/received`, {
-        credentials: "include",
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to fetch received applications");
-    return data;
-}
-
-/** Update status of an adoption application */
-export async function updateApplicationStatusApi(id: string | number, status: 'approved' | 'rejected' | 'pending'): Promise<any> {
-    const res = await fetch(`${BACKEND_URL}/adoptions/applications/${id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ status }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to update application status");
-    return data;
-}
-
 /** Get entity (shelter/shop) for the current user */
 export async function getMyEntityApi(): Promise<any> {
     const res = await fetch(`${BACKEND_URL}/core/my-entity`, {
@@ -248,9 +273,3 @@ export async function getMyEntityApi(): Promise<any> {
     if (!res.ok) throw new Error(data.message || "Failed to fetch entity info");
     return data;
 }
-
-
-
-
-
-

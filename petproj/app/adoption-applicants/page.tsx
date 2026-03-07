@@ -4,6 +4,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/navbar";
 import { MoonLoader } from "react-spinners";
+import { getReceivedApplicationsApi, updateAdoptionStatusApi } from "@/utils/api";
 
 interface Application {
     adoption_id: number;
@@ -39,85 +40,49 @@ const AdoptionApplications = () => {
 
         const fetchApplications = async () => {
             try {
-                const response = await fetch(
-                    `/api/adoption_application/${petId}`
-                );
-                if (response.ok) {
-                    const data = await response.json();
-                    setApplications(Array.isArray(data) ? data : [data]);
-                } else if (response.status === 404) {
-                    console.error(
-                        "No applications found for the given pet ID."
-                    );
-                    setApplications([]); // Set applications to an empty array for 404
-                } else {
-                    console.error(
-                        "Failed to fetch applications:",
-                        response.statusText
-                    );
-                    setApplications(null); // Optionally handle other errors
-                }
-            } catch (error) {
+                const data = await getReceivedApplicationsApi(petId);
+                // NestJS might return an array or { data: [] }
+                const apps = Array.isArray(data) ? data : (data.data || [data]);
+                setApplications(apps);
+            } catch (error: any) {
                 console.error("Error fetching applications:", error);
-                setApplications(null); // Handle network or unexpected errors
+                if (error.message.includes("404")) {
+                    setApplications([]);
+                } else {
+                    setApplications(null);
+                }
             }
         };
 
         fetchApplications();
     }, [petId]);
 
-    const handleApprove = async (fosterId: number) => {
+    const handleApprove = async (adoptionId: number) => {
         try {
-            const response = await fetch(
-                `/api/accept-adoption-application/${fosterId}`,
-                {
-                    method: "POST",
-                }
+            await updateAdoptionStatusApi(adoptionId, 'approved');
+            setApplications((prev) =>
+                prev
+                    ? prev.filter((app) => app.adoption_id !== adoptionId)
+                    : []
             );
-
-            if (response.ok) {
-                setApplications((prev) =>
-                    prev
-                        ? prev.filter((app) => app.adoption_id !== fosterId)
-                        : []
-                );
-                console.log(
-                    `Foster application with ID ${fosterId} has been approved.`
-                );
-            } else {
-                const errorData = await response.json();
-                console.error(
-                    "Failed to approve foster application:",
-                    errorData.error || response.statusText
-                );
-            }
-        } catch (error) {
-            console.error("Error approving foster application:", error);
+            console.log(
+                `Adoption application with ID ${adoptionId} has been approved.`
+            );
+        } catch (error: any) {
+            console.error("Failed to approve adoption application:", error.message);
         }
     };
 
     const handleReject = async (adoptionId: number) => {
         try {
-            const response = await fetch(
-                `/api/reject-adoption-application/${adoptionId}`,
-                {
-                    method: "POST",
-                }
+            await updateAdoptionStatusApi(adoptionId, 'rejected');
+            setApplications((prev) =>
+                prev
+                    ? prev.filter((app) => app.adoption_id !== adoptionId)
+                    : null
             );
-            if (response.ok) {
-                setApplications((prev) =>
-                    prev
-                        ? prev.filter((app) => app.adoption_id !== adoptionId)
-                        : null
-                );
-            } else {
-                console.error(
-                    "Failed to reject application:",
-                    response.statusText
-                );
-            }
-        } catch (error) {
-            console.error("Error rejecting application:", error);
+        } catch (error: any) {
+            console.error("Error rejecting application:", error.message);
         }
     };
 
@@ -156,11 +121,10 @@ const AdoptionApplications = () => {
                             {applications.map((app) => (
                                 <li
                                     key={app.adoption_id}
-                                    className={`p-6 bg-gradient-to-r from-white to-gray-100 border-2 ${
-                                        expandedApplication === app.adoption_id
+                                    className={`p-6 bg-gradient-to-r from-white to-gray-100 border-2 ${expandedApplication === app.adoption_id
                                             ? "border-primary"
                                             : "border-primary"
-                                    } rounded-xl shadow-md cursor-pointer transition-all duration-300 hover:shadow-lg`}
+                                        } rounded-xl shadow-md cursor-pointer transition-all duration-300 hover:shadow-lg`}
                                     onClick={() =>
                                         handleExpand(app.adoption_id)
                                     }>
@@ -171,21 +135,20 @@ const AdoptionApplications = () => {
                                                 {app.adopter_name}
                                             </h2>
                                             <span
-                                                className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                                                    app.status === "Approved"
+                                                className={`px-3 py-1 rounded-full text-sm font-semibold ${app.status === "Approved"
                                                         ? "bg-green-100 text-green-800"
                                                         : app.status ===
-                                                          "Pending"
-                                                        ? "bg-yellow-100 text-yellow-800"
-                                                        : "bg-gray-200 text-primary"
-                                                }`}>
+                                                            "Pending"
+                                                            ? "bg-yellow-100 text-yellow-800"
+                                                            : "bg-gray-200 text-primary"
+                                                    }`}>
                                                 {app.status}
                                             </span>
                                         </div>
 
                                         {/* Arrow Icon */}
                                         {expandedApplication ===
-                                        app.adoption_id ? (
+                                            app.adoption_id ? (
                                             <svg
                                                 fill="currentColor"
                                                 height="800px"
@@ -221,82 +184,82 @@ const AdoptionApplications = () => {
                                     {/* Accordion Content */}
                                     {expandedApplication ===
                                         app.adoption_id && (
-                                        <div className="mt-4 grid grid-cols-2 gap-6 text-gray-700 border-t border-gray-200 pt-4">
-                                            <p>
-                                                <strong className="font-medium">
-                                                    Address:
-                                                </strong>{" "}
-                                                {app.adopter_address}
-                                            </p>
-                                            <p>
-                                                <strong className="font-medium">
-                                                    Application Date:
-                                                </strong>{" "}
-                                                {new Date(
-                                                    app.created_at
-                                                ).toLocaleDateString()}
-                                            </p>
-                                            <p>
-                                                <strong className="font-medium">
-                                                    Youngest Child Age:
-                                                </strong>{" "}
-                                                {app.age_of_youngest_child ||
-                                                    "Not Provided"}
-                                            </p>
-                                            <p>
-                                                <strong className="font-medium">
-                                                    Other Pets Details:
-                                                </strong>{" "}
-                                                {app.other_pets_details ||
-                                                    "Not Provided"}
-                                            </p>
-                                            <p>
-                                                <strong className="font-medium">
-                                                    Other Pets Neutered:
-                                                </strong>{" "}
-                                                {app.other_pets_neutered
-                                                    ? "Yes"
-                                                    : "No"}
-                                            </p>
-                                            <p>
-                                                <strong className="font-medium">
-                                                    Secure Outdoor Area:
-                                                </strong>{" "}
-                                                {app.has_secure_outdoor_area
-                                                    ? "Yes"
-                                                    : "No"}
-                                            </p>
-                                            <p>
-                                                <strong className="font-medium">
-                                                    Pet Sleep Location:
-                                                </strong>{" "}
-                                                {app.pet_sleep_location ||
-                                                    "Not Provided"}
-                                            </p>
-                                            <p>
-                                                <strong className="font-medium">
-                                                    Pet Left Alone:
-                                                </strong>{" "}
-                                                {app.pet_left_alone ||
-                                                    "Not Provided"}
-                                            </p>
-                                            <p className="col-span-2">
-                                                <strong className="font-medium">
-                                                    Additional Details:
-                                                </strong>{" "}
-                                                {app.additional_details ||
-                                                    "Not Provided"}
-                                            </p>
-                                            <p className="col-span-2">
-                                                <strong className="font-medium">
-                                                    Agreed to Terms:
-                                                </strong>{" "}
-                                                {app.agree_to_terms
-                                                    ? "Yes"
-                                                    : "No"}
-                                            </p>
-                                        </div>
-                                    )}
+                                            <div className="mt-4 grid grid-cols-2 gap-6 text-gray-700 border-t border-gray-200 pt-4">
+                                                <p>
+                                                    <strong className="font-medium">
+                                                        Address:
+                                                    </strong>{" "}
+                                                    {app.adopter_address}
+                                                </p>
+                                                <p>
+                                                    <strong className="font-medium">
+                                                        Application Date:
+                                                    </strong>{" "}
+                                                    {new Date(
+                                                        app.created_at
+                                                    ).toLocaleDateString()}
+                                                </p>
+                                                <p>
+                                                    <strong className="font-medium">
+                                                        Youngest Child Age:
+                                                    </strong>{" "}
+                                                    {app.age_of_youngest_child ||
+                                                        "Not Provided"}
+                                                </p>
+                                                <p>
+                                                    <strong className="font-medium">
+                                                        Other Pets Details:
+                                                    </strong>{" "}
+                                                    {app.other_pets_details ||
+                                                        "Not Provided"}
+                                                </p>
+                                                <p>
+                                                    <strong className="font-medium">
+                                                        Other Pets Neutered:
+                                                    </strong>{" "}
+                                                    {app.other_pets_neutered
+                                                        ? "Yes"
+                                                        : "No"}
+                                                </p>
+                                                <p>
+                                                    <strong className="font-medium">
+                                                        Secure Outdoor Area:
+                                                    </strong>{" "}
+                                                    {app.has_secure_outdoor_area
+                                                        ? "Yes"
+                                                        : "No"}
+                                                </p>
+                                                <p>
+                                                    <strong className="font-medium">
+                                                        Pet Sleep Location:
+                                                    </strong>{" "}
+                                                    {app.pet_sleep_location ||
+                                                        "Not Provided"}
+                                                </p>
+                                                <p>
+                                                    <strong className="font-medium">
+                                                        Pet Left Alone:
+                                                    </strong>{" "}
+                                                    {app.pet_left_alone ||
+                                                        "Not Provided"}
+                                                </p>
+                                                <p className="col-span-2">
+                                                    <strong className="font-medium">
+                                                        Additional Details:
+                                                    </strong>{" "}
+                                                    {app.additional_details ||
+                                                        "Not Provided"}
+                                                </p>
+                                                <p className="col-span-2">
+                                                    <strong className="font-medium">
+                                                        Agreed to Terms:
+                                                    </strong>{" "}
+                                                    {app.agree_to_terms
+                                                        ? "Yes"
+                                                        : "No"}
+                                                </p>
+                                            </div>
+                                        )}
 
                                     {/* Buttons */}
                                     <div className="mt-6 flex justify-end space-x-4">
@@ -305,11 +268,10 @@ const AdoptionApplications = () => {
                                                 e.stopPropagation();
                                                 handleApprove(app.adoption_id);
                                             }}
-                                            className={`px-6 py-2 font-medium text-sm rounded-3xl ${
-                                                app.status === "Approved"
+                                            className={`px-6 py-2 font-medium text-sm rounded-3xl ${app.status === "Approved"
                                                     ? "bg-white text-primary bordder border-primary"
                                                     : "bg-primary text-white"
-                                            } transition-all`}
+                                                } transition-all`}
                                             disabled={
                                                 app.status === "Approved"
                                             }>
@@ -320,11 +282,10 @@ const AdoptionApplications = () => {
                                                 e.stopPropagation();
                                                 handleReject(app.adoption_id);
                                             }}
-                                            className={`px-6 py-2 font-medium text-sm rounded-3xl ${
-                                                app.status === "Rejected"
+                                            className={`px-6 py-2 font-medium text-sm rounded-3xl ${app.status === "Rejected"
                                                     ? "bg-primary text-white cursor-not-allowed"
                                                     : "bg-white text-primary border border-primary"
-                                            } transition-all`}
+                                                } transition-all`}
                                             disabled={
                                                 app.status === "Rejected"
                                             }>

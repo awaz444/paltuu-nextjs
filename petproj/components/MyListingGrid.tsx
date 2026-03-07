@@ -9,6 +9,7 @@ import Link from "next/link";
 import { UseDispatch } from "react-redux";
 import { fetchAdoptionPets } from "@/app/store/slices/adoptionPetsSlice";
 import { fetchFosterPets } from "@/app/store/slices/fosterPetsSlice";
+import { updatePetApi, deletePetApi } from "@/utils/api";
 
 const { TextArea } = Input;
 
@@ -67,23 +68,15 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
     };
 
     const handleDelete = async (petId: number) => {
-        dispatch(fetchAdoptionPets({}));
-        dispatch(fetchFosterPets());
-        const response = await fetch("/api/pets", {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ pet_id: petId }),
-        });
-
-        setLoading(false);
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Delete failed:", errorData);
-        } else {
+        try {
+            await deletePetApi(petId);
             console.log("Delete successful");
+            dispatch(fetchAdoptionPets({}));
+            dispatch(fetchFosterPets());
+        } catch (error: any) {
+            console.error("Delete failed:", error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -108,23 +101,19 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
     const handleUpdate = async () => {
         if (!editingPet) return;
 
-        dispatch(fetchAdoptionPets({}));
-        dispatch(fetchFosterPets());
-
-        const response = await fetch("/api/pets", {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(editingPet),
-        });
-
-        if (!response.ok) {
-            console.error("Update failed:", await response.json());
-        } else {
+        try {
+            // Include only necessary fields for update or map `Pet` properly
+            // updatePetApi now handles the PUT/PATCH call
+            await updatePetApi(editingPet.pet_id, editingPet);
             console.log("Update successful");
-            setSuccessMessage(true); // Show success message
-            setTimeout(() => setSuccessMessage(false), 3000); // Hide after 3 seconds
+            setSuccessMessage(true);
+            setTimeout(() => setSuccessMessage(false), 3000);
+
+            // Refresh data
+            dispatch(fetchAdoptionPets({}));
+            dispatch(fetchFosterPets());
+        } catch (error: any) {
+            console.error("Update failed:", error.message);
         }
 
         setEditingPet(null);
@@ -184,8 +173,8 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                         <div className="absolute top-2 left-2 flex gap-2">
                             <div
                                 className={`${pet.approved
-                                        ? "bg-green-600"
-                                        : "bg-orange-500"
+                                    ? "bg-green-600"
+                                    : "bg-orange-500"
                                     } text-white text-sm font-semibold px-3 py-1 rounded-full`}>
                                 {pet.approved ? "Approved" : "Pending"}
                             </div>
@@ -366,8 +355,8 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                     <div className="flex justify-between mb-4">
                         <button
                             className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet.listing_type === "adoption"
-                                    ? "bg-primary text-white"
-                                    : "bg-gray-100"
+                                ? "bg-primary text-white"
+                                : "bg-gray-100"
                                 }`}
                             onClick={() =>
                                 setEditingPet({
@@ -379,8 +368,8 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                         </button>
                         <button
                             className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet.listing_type === "foster"
-                                    ? "bg-primary text-white"
-                                    : "bg-gray-100"
+                                ? "bg-primary text-white"
+                                : "bg-gray-100"
                                 }`}
                             onClick={() =>
                                 setEditingPet({

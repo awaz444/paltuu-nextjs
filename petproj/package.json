@@ -31,8 +31,7 @@
     "@vercel/analytics": "^1.4.1",
     "antd": "^5.22.2",
     "axios": "^1.7.7",
-    "bcrypt": "^5.1.1",
-    "bcryptjs": "^3.0.2",
+    "bcryptjs": "^3.0.3",
     "bootstrap-icons": "^1.11.3",
     "cloudinary": "^2.5.1",
     "date-fns": "^4.1.0",
@@ -82,6 +81,7 @@
   "devDependencies": {
     "@svgr/webpack": "^8.1.0",
     "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^2.4.6",
     "@types/formidable": "^3.4.5",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22",

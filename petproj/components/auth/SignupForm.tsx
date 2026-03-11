@@ -57,6 +57,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
     const [googleLoading, setGoogleLoading] = useState(false);
 
     const [isVerifying, setIsVerifying] = useState(false);
+    const [isEmailVerifying, setIsEmailVerifying] = useState(false);
 
     const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] =
         useState(false);
@@ -189,11 +190,14 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                 const errorPayload = result.payload as {
                     message?: string;
                     errorCode?: string;
+                    error?: string;
                 };
                 if (errorPayload?.errorCode === "EMAIL_EXISTS") {
                     setEmailExistsError("This email is already registered");
                     setIsEmailVerified(false);
                     setShowOtpModal(false);
+                } else if (errorPayload?.error) {
+                    setGeneralError(errorPayload.error);
                 } else {
                     setGeneralError(
                         errorPayload?.message ||
@@ -203,7 +207,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                 return;
             }
 
-            router.push("/auth");
+            router.push("/browse-pets");
         } catch (error) {
             setGeneralError("An unexpected error occurred. Please try again.");
         } finally {
@@ -221,6 +225,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         }
 
         try {
+            setIsEmailVerifying(true);
             const response = await fetch("/api/send-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -244,6 +249,8 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                         ? error.message
                         : "Failed to send verification code",
             }));
+        } finally {
+            setIsEmailVerifying(false);
         }
     };
 
@@ -333,7 +340,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={googleLoading}
-                className={`w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 ${googleLoading ? "opacity-50 cursor-not-allowed" : ""
+                className={`w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 focus:outline-none transition flex items-center justify-center space-x-2 ${googleLoading ? "opacity-50 cursor-not-allowed" : ""
                     }`}>
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -414,14 +421,14 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                     <button
                         type="button"
                         onClick={handleVerifyEmail}
-                        disabled={!validateEmail(email) || isEmailVerified}
+                        disabled={!validateEmail(email) || isEmailVerified || isEmailVerifying}
                         className={`px-4 rounded-xl transition-colors ${isEmailVerified
                             ? "bg-green-500 text-white"
                             : validateEmail(email)
-                                ? "bg-primary text-white hover:bg-primary-dark"
+                                ? "bg-primary text-white"
                                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
                             }`}>
-                        {isEmailVerified ? "Verified" : "Verify"}
+                        {isEmailVerifying ? "Loading..." : isEmailVerified ? "Verified" : "Verify"}
                     </button>
 
                     {isEmailFocused && !isEmailVerified && (
@@ -582,7 +589,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                     !isEmailVerified ||
                     password !== confirmPassword
                     ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-primary-dark"
+                    : ""
                     }`}>
                 {isLoading ? "Creating Account..." : "Create Account"}
             </button>
@@ -637,9 +644,10 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                         renderInput={(props) => (
                             <input
                                 {...props}
+                                style={{ width: "3.5rem", height: "3.5rem" }}
                                 type="tel"
                                 inputMode="numeric"
-                                className="w-12 h-12 text-2xl text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                className="text-2xl text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                                 maxLength={1}
                             />
                         )}
@@ -661,14 +669,14 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                             disabled={otp.length !== 6 || isVerifying}
                             className={`w-full bg-primary text-white py-2 rounded-lg transition flex items-center justify-center ${otp.length !== 6 || isVerifying
                                 ? "opacity-50 cursor-not-allowed"
-                                : "hover:bg-primary-dark"
+                                : ""
                                 }`}>
                             {isVerifying ? "Loading..." : "Verify Code"}
                         </button>
                         <button
                             type="button"
                             onClick={handleVerifyEmail}
-                            className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition">
+                            className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg transition">
                             Resend Code
                         </button>
                     </div>

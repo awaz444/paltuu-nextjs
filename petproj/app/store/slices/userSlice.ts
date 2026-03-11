@@ -30,20 +30,26 @@ export const fetchUsers = createAsyncThunk('users/fetchUsers', async () => {
 
 export const postUser = createAsyncThunk<User, Omit<User, 'user_id'>>(
     'users/postUser',
-    async (userData: User) => {
-        const response = await fetch('/api/users', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(userData),
-        });
+    async (userData, { rejectWithValue }) => {
+        try {
+            const response = await fetch('/api/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData),
+            });
 
-        if (!response.ok) {
-            throw new Error('Failed to create user');
+            const data = await response.json();
+
+            if (!response.ok) {
+                return rejectWithValue(data);
+            }
+
+            return data;
+        } catch (error) {
+            return rejectWithValue({ error: 'An unexpected error occurred' });
         }
-
-        return await response.json();
     }
 );
 

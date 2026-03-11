@@ -17,7 +17,8 @@ function formatPhoneNumber(phone: string): string | null {
 
 // POST method to create a new user
 export async function POST(req: NextRequest): Promise<NextResponse> {
-    const { username, name, DOB, city_id, email, password, phone_number, role, profile_image_url } = await req.json();
+    const { username, name, DOB: rawDOB, city_id, email, password, phone_number, role, profile_image_url } = await req.json();
+    const DOB = rawDOB === "" ? null : rawDOB;
     const client = createClient();
 
     try {
@@ -82,7 +83,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 // PUT method to update a user by ID
 // PUT method to update a user by ID
 export async function PUT(req: NextRequest): Promise<NextResponse> {
-    const { user_id, username, name, DOB, city_id, email, password, phone_number, role, profile_image_url } = await req.json();
+    const { user_id, username, name, DOB: rawDOB, city_id, email, password, phone_number, role, profile_image_url } = await req.json();
+    const DOB = rawDOB === "" ? null : rawDOB;
     const client = createClient();
 
     try {

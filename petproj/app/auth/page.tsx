@@ -53,7 +53,7 @@ function AuthPageClient() {
       </div>
 
       {/* Right Side - Auth Forms */}
-      <div className="w-full lg:w-1/2 lg:ml-[50%] flex items-center justify-center p-6 sm:p-12 bg-gray-100 lg:h-screen overflow-hidden">
+      <div className="w-full lg:w-1/2 lg:ml-[50%] flex items-center justify-center p-6 sm:p-12 bg-gray-100 lg:min-h-screen py-10">
         <div className="w-full max-w-md">
           {/* Dynamic Form Rendering */}
           {authMode === "login" ? (

@@ -1,6 +1,5 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export async function POST(request: NextRequest) {
@@ -23,9 +22,6 @@ export async function POST(request: NextRequest) {
     // console.log("Database hashed password:", user.password);
     console.log("Request password:", password);
     console.log("Database hashed password:", user.password);
-    console.log("Comparison result:", await bcrypt.compare(password, user.password));
-
-
 
 
     // Check if password is correct

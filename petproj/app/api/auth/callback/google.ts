@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";
 import { OAuth2Client } from "google-auth-library";
-import bcrypt from "bcrypt";
+import bcrypt from 'bcryptjs';
+
 
 const clientId = process.env.GOOGLE_CLIENT_ID!;
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET!;

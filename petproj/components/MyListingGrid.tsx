@@ -43,6 +43,16 @@ export interface Pet {
     image_id: number | null;
     image_url: string | null;
     approved: boolean | null;
+    pet_images?: {
+        image_id: number;
+        pet_id: number;
+        image_url: string;
+        order: number;
+    }[];
+    cities?: {
+        city_id: number;
+        city_name: string;
+    };
 }
 
 interface PetGridProps {
@@ -180,7 +190,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                             </div>
                         </div>
                         <img
-                            src={pet.image_url || "/dog-placeholder.png"}
+                            src={(pet.pet_images && pet.pet_images.length > 0) ? pet.pet_images[0].image_url : (pet.image_url || "/dog-placeholder.png")}
                             alt={pet.pet_name}
                             className="w-full h-48 object-cover rounded-2xl"
                         />
@@ -199,7 +209,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                                 } old`}
                         </p>
                         <p className="text-gray-600 mb-1">
-                            {pet.city} - {pet.area}
+                            {pet.cities?.city_name || pet.city} - {pet.area}
                         </p>
                     </div>
 

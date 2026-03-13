@@ -175,13 +175,8 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
         }
 
         try {
-            const res = await fetch(`/api/my-profile/${user.id}`);
-            if (!res.ok) throw new Error("Failed to fetch profile");
-
-            const profileData = await res.json();
-
-            const isPhoneMissing = !profileData.phone_number;
-            const isCityMissing = !profileData.city;
+            const isPhoneMissing = !user.phone_number;
+            const isCityMissing = !user.city;
 
             if (isPhoneMissing || isCityMissing) {
                 message.warning({

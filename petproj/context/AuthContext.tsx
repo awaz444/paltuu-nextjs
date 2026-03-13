@@ -13,6 +13,10 @@ interface User {
   email: string;
   profile_image_url?: string; // ✅ consistent naming
   role?: string;
+  dob?: string;
+  phone_number?: string;
+  city?: string;
+  created_at?: string;
   method: "google" | "api" | null;
 }
 
@@ -91,8 +95,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         // console.log("🔍 Attempting to hydrate user from server...");
 
-        // Call server to verify token (server can read httpOnly cookies)
-        const verifyResponse = await fetch("/api/auth/verify-token", {
+        // Call server to verify token and get profile (NestJS)
+        const verifyResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'}/core/auth/me`, {
           credentials: 'include',
           cache: 'no-store',
         });
@@ -102,43 +106,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        const { valid, user: tokenUser } = await verifyResponse.json();
-        if (!valid || !tokenUser) {
-          // console.log("⚠️ Token validation failed");
+        const data = await verifyResponse.json();
+        const { success, user: nestUser } = data;
+
+        if (!success || !nestUser) {
+          // console.log("⚠️ Profile retrieval failed");
           return;
         }
 
-        // console.log("✅ Token verified, userId:", tokenUser.id);
+        // console.log("✅ Profile retrieved from NestJS:", nestUser);
 
-        // Fetch full user profile from database
-        const profileResponse = await fetch(`/api/my-profile/${tokenUser.id}`);
-        if (profileResponse.ok) {
-          const dbProfile = await profileResponse.json();
-          const hydratedUser: User = {
-            id: tokenUser.id,
-            email: tokenUser.email,
-            name: dbProfile.name || tokenUser.email,
-            role: tokenUser.role || "guest",
-            profile_image_url: dbProfile.profile_image_url || "/default-avatar.png",
-            method: "api"
-          };
-          // console.log("✅ Hydrated user from database profile:", hydratedUser);
-          setUser(hydratedUser);
-          setIsAuthenticated(true);
-        } else {
-          // Fallback to minimal user data from token
-          const minimalUser: User = {
-            id: tokenUser.id,
-            email: tokenUser.email,
-            name: tokenUser.email,
-            role: tokenUser.role || "guest",
-            profile_image_url: "/default-avatar.png",
-            method: "api"
-          };
-          // console.log("✅ Hydrated user from token (no profile found):", minimalUser);
-          setUser(minimalUser);
-          setIsAuthenticated(true);
-        }
+        const hydratedUser: User = {
+          id: String(nestUser.id),
+          email: nestUser.email,
+          name: nestUser.name || nestUser.email,
+          role: nestUser.role || "guest",
+          profile_image_url: nestUser.profile_image_url || "/default-avatar.png",
+          dob: nestUser.dob,
+          phone_number: nestUser.phone_number,
+          city: nestUser.city,
+          created_at: nestUser.created_at,
+          method: "api"
+        };
+        setUser(hydratedUser);
+        setIsAuthenticated(true);
       } catch (e) {
         console.error("Failed to hydrate user from server:", e);
       }
@@ -179,14 +170,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               // Clear guest session cookie
               try { clearGuestSessionId(); } catch { }
 
-              // Redirect based on role
+              // Redirect based on role - only if on auth pages or landing
               try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const callbackUrl = urlParams.get('callbackUrl');
+                const isAuthPage = pathname === '/auth' || pathname === '/sign-up' || pathname === '/';
 
                 if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
                   router.push(decodeURIComponent(callbackUrl));
-                } else {
+                } else if (isAuthPage) {
                   const userRole = nestUser.role;
                   if (userRole === "shop admin") router.push("/shop-panel");
                   else if (userRole === "shelter admin") router.push("/rescue-panel");
@@ -242,19 +234,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           const urlParams = new URLSearchParams(window.location.search);
           const callbackUrl = urlParams.get('callbackUrl');
+          const isAuthPage = pathname === '/auth' || pathname === '/sign-up' || pathname === '/';
 
           if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
             router.push(decodeURIComponent(callbackUrl));
-          } else if (userWithDbData.role === "shop admin") {
-            router.push("/shop-panel");
-          } else if (userWithDbData.role === "shelter admin") {
-            router.push("/rescue-panel");
-          } else if (userWithDbData.role === "vet") {
-            router.push("/vet-panel");
-          } else if (userWithDbData.role === "admin") {
-            router.push("/admin-panel");
-          } else {
-            router.push("/browse-pets");
+          } else if (isAuthPage) {
+            if (userWithDbData.role === "shop admin") {
+              router.push("/shop-panel");
+            } else if (userWithDbData.role === "shelter admin") {
+              router.push("/rescue-panel");
+            } else if (userWithDbData.role === "vet") {
+              router.push("/vet-panel");
+            } else if (userWithDbData.role === "admin") {
+              router.push("/admin-panel");
+            } else {
+              router.push("/browse-pets");
+            }
           }
         } catch { }
         return;
@@ -286,44 +281,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const callbackUrl = urlParams.get('callbackUrl');
+      const isAuthPage = pathname === '/auth' || pathname === '/sign-up' || pathname === '/';
 
       if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
         router.push(decodeURIComponent(callbackUrl));
-      } else if (userWithMethod.role === "shop admin") {
-        router.push("/shop-panel");
-      } else if (userWithMethod.role === "shelter admin") {
-        router.push("/rescue-panel");
-      } else if (userWithMethod.role === "vet") {
-        router.push("/vet-panel");
-      } else if (userWithMethod.role === "admin") {
-        router.push("/admin-panel");
-      } else {
-        router.push("/browse-pets");
+      } else if (isAuthPage) {
+        if (userWithMethod.role === "shop admin") {
+          router.push("/shop-panel");
+        } else if (userWithMethod.role === "shelter admin") {
+          router.push("/rescue-panel");
+        } else if (userWithMethod.role === "vet") {
+          router.push("/vet-panel");
+        } else if (userWithMethod.role === "admin") {
+          router.push("/admin-panel");
+        } else {
+          router.push("/browse-pets");
+        }
       }
     } catch { }
   };
 
 
   const refreshUser = async () => {
-    if (!user?.id) return;
-
     try {
-      const response = await fetch(`/api/my-profile/${user.id}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'}/core/auth/me`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch updated profile");
 
-      const updatedProfile = await response.json();
+      const data = await response.json();
+      const updatedProfile = data.user;
 
       const updatedUser: User = {
-        ...user,
+        id: user?.id || String(updatedProfile.id),
+        user_id: user?.user_id || String(updatedProfile.user_id),
         name: updatedProfile.name,
         profile_image_url: updatedProfile.profile_image_url,
-        // Keep other fields from current user (including method, role, etc.)
+        email: updatedProfile.email,
+        role: updatedProfile.role,
+        dob: updatedProfile.dob,
+        phone_number: updatedProfile.phone_number,
+        city: updatedProfile.city,
+        created_at: updatedProfile.created_at,
+        method: user?.method || "api",
       };
 
       setUser(updatedUser);
-      // Do not persist to localStorage
-
-      //console.log("✅ User data refreshed:", updatedUser);
+      //console.log("✅ User data refreshed from NestJS:", updatedUser);
     } catch (error) {
       console.error("Failed to refresh user data:", error);
     }

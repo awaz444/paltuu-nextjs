@@ -81,6 +81,22 @@ export async function logoutApi(): Promise<void> {
     });
 }
 
+/** Get current user profile via NestJS */
+export async function getMeApi(): Promise<LoginResponse> {
+    const res = await fetch(`${BACKEND_URL}/core/auth/me`, {
+        method: "GET",
+        credentials: "include",
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        throw new Error(data?.message || "Failed to fetch profile");
+    }
+
+    return data as LoginResponse;
+}
+
 // ─── Pets ────────────────────────────────────────────────────────────────────
 
 /** Browse all pets with filters */

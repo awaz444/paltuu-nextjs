@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../store';
+import { getPetCategoriesApi } from '@/utils/api';
 
 interface PetCategory {
   category_id: number;
@@ -19,8 +20,7 @@ const initialState: PetCategoriesState = {
 };
 
 export const fetchPetCategories = createAsyncThunk('categories/fetchPetCategories', async () => {
-  const response = await fetch('/api/pet-categories');
-  const data = await response.json();
+  const data = await getPetCategoriesApi();
   return data as PetCategory[];
 });
 

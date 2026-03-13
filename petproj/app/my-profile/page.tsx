@@ -170,31 +170,24 @@ const MyProfile = () => {
       }
 
       try {
-        // Fetch user profile data
-        const res = await fetch(`/api/my-profile/${user.id}`);
+        // Initialize data from AuthContext user if available
+        if (user) {
+          const profileData: UserProfileData = {
+            user_id: user.id || "",
+            name: user.name || "",
+            dob: user.dob || "",
+            email: user.email || "",
+            profile_image_url: user.profile_image_url || "/default-avatar.png",
+            phone_number: user.phone_number || "",
+            city: user.city || "",
+            created_at: user.created_at || new Date().toISOString(),
+          };
+          setData(profileData);
+          setUpdatedData(profileData);
+        }
 
-        if (!res.ok) throw new Error("Failed to fetch profile");
-        const profileData = await res.json();
-
-        // For Google users, use Google profile data as fallback if database data is missing or empty
-        const finalProfileData = {
-          ...profileData,
-          name:
-            (profileData.name && profileData.name.trim()) ||
-            user.name ||
-            "User",
-          profile_image_url:
-            (profileData.profile_image_url &&
-              profileData.profile_image_url.trim()) ||
-            user.profile_image_url ||
-            "/default-avatar.png",
-        };
-
-        setData(finalProfileData);
-        setUpdatedData(finalProfileData);
-
-        // Fetch cities data
-        const citiesRes = await fetch("/api/cities");
+        // Fetch cities data from NestJS metadata API
+        const citiesRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080"}/metadata/cities`);
         if (!citiesRes.ok) throw new Error("Failed to fetch cities");
         const citiesData = await citiesRes.json();
         setCities(citiesData);

@@ -32,10 +32,16 @@ const VetFilterSection: React.FC<VetFilterSectionProps> = ({ onSearch }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
-        dispatch(fetchCities());
-        dispatch(fetchQualifications());
-        dispatch(fetchPetCategories());
-    }, [dispatch]);
+        if (cities.length === 0) {
+            dispatch(fetchCities());
+        }
+        if (qualifications.length === 0) {
+            dispatch(fetchQualifications());
+        }
+        if (categories.length === 0) {
+            dispatch(fetchPetCategories());
+        }
+    }, [dispatch, cities.length, qualifications.length, categories.length]);
 
     const handleReset = () => {
         setSelectedCity("1"); // Reset to Karachi

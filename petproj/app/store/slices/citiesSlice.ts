@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { getCitiesApi } from '@/utils/api';
 
 export const fetchCities = createAsyncThunk('cities/fetchCities', async () => {
-    const response = await fetch('/api/cities');
-    const data = await response.json();
+    const data = await getCitiesApi();
     return data;
 });
 

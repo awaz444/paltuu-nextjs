@@ -30,9 +30,13 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch, filters }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
-        dispatch(fetchCities());
-        dispatch(fetchPetCategories());
-    }, [dispatch]);
+        if (cities.length === 0) {
+            dispatch(fetchCities());
+        }
+        if (categories.length === 0) {
+            dispatch(fetchPetCategories());
+        }
+    }, [dispatch, cities.length, categories.length]);
 
     useEffect(() => {
         if (filters) {

@@ -5,9 +5,10 @@ import { Table, Button, Space, message, Select, Input } from 'antd';
 import Navbar from '@/components/navbar';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
 import { fetchAdoptionPets } from '../store/slices/adoptionPetsSlice';
-import { UseDispatch, useDispatch } from 'react-redux';
 import { fetchFosterPets } from '../store/slices/fosterPetsSlice';
-import { AppDispatch } from '../store/store';
+import { AppDispatch, RootState } from '../store/store';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchCities as fetchCitiesRedux } from '../store/slices/citiesSlice';
 
 const { Option } = Select;
 
@@ -34,11 +35,11 @@ type City = {
 };
 
 const AdminPetApproval: React.FC = () => {
-
+  const dispatch = useDispatch<AppDispatch>();
+  const { cities, loading: citiesLoading } = useSelector((state: RootState) => state.cities);
 
   const [pets, setPets] = useState<Pet[]>([]);
   const [filteredPets, setFilteredPets] = useState<Pet[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState<string>("newest");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -59,23 +60,11 @@ const AdminPetApproval: React.FC = () => {
       }
     };
 
-    const fetchCities = async () => {
-      try {
-        const response = await fetch('/api/cities');
-        if (!response.ok) {
-          throw new Error('Failed to fetch cities');
-        }
-        const data: City[] = await response.json();
-        setCities(data);
-      } catch (error) {
-        console.error('Error fetching cities:', error);
-      }
-    };
-
-
-    fetchCities();
+    if (cities.length === 0) {
+      dispatch(fetchCitiesRedux());
+    }
     fetchPets();
-  }, []);
+  }, [dispatch, cities.length]);
 
   // Apply filters and sorting
   useEffect(() => {
@@ -110,7 +99,6 @@ const AdminPetApproval: React.FC = () => {
     setFilteredPets(result);
   }, [pets, sortBy, typeFilter, searchTerm]);
 
-  const dispatch = useDispatch<AppDispatch>();
 
   // Approve pet
   const handleApprove = async (petId: number) => {

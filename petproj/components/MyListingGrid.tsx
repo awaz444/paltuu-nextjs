@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import "./petGrid.css";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import Link from "next/link";
-import { UseDispatch } from "react-redux";
+import { EnvironmentOutlined } from "@ant-design/icons";
 import { fetchAdoptionPets } from "@/app/store/slices/adoptionPetsSlice";
 import { fetchFosterPets } from "@/app/store/slices/fosterPetsSlice";
 import { updatePetApi, deletePetApi } from "@/utils/api";
@@ -134,11 +134,11 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
     };
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {showCreateButton && (
                 <Link
                     href="/create-listing"
-                    className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex  flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300">
+                    className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 text-sm sm:text-base min-h-[200px]">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="16"
@@ -155,13 +155,16 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
             {pets.map((pet) => (
                 <div
                     key={pet.pet_id}
-                    className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 relative">
+                    className="bg-white pt-4 px-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 relative">
                     <div className="relative">
-                        <div className="absolute top-2 right-2 flex gap-2">
+                        <div className="absolute top-2 right-2 flex gap-2 z-10">
                             {/* Delete Button */}
                             <button
-                                className="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition"
-                                onClick={() => handleConfirmation(pet.pet_id)}>
+                                className="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition shadow-sm"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    handleConfirmation(pet.pet_id);
+                                }}>
                                 <img
                                     src="/trash.svg"
                                     alt="Delete"
@@ -170,8 +173,11 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                             </button>
                             {/* Edit Button */}
                             <button
-                                className="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition"
-                                onClick={() => handleEdit(pet)}>
+                                className="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition shadow-sm"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    handleEdit(pet);
+                                }}>
                                 <img
                                     src="/pen.svg"
                                     alt="Edit"
@@ -180,27 +186,27 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                             </button>
                         </div>
                         {/* Adoption Status */}
-                        <div className="absolute top-2 left-2 flex gap-2">
+                        <div className="absolute top-2 left-2 flex gap-2 z-10">
                             <div
                                 className={`${pet.approved
                                     ? "bg-green-600"
                                     : "bg-orange-500"
-                                    } text-white text-sm font-semibold px-3 py-1 rounded-full`}>
+                                    } text-white text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-1 rounded-full shadow-sm`}>
                                 {pet.approved ? "Approved" : "Pending"}
                             </div>
                         </div>
                         <img
                             src={(pet.pet_images && pet.pet_images.length > 0) ? pet.pet_images[0].image_url : (pet.image_url || "/dog-placeholder.png")}
                             alt={pet.pet_name}
-                            className="w-full h-48 object-cover rounded-2xl"
+                            className="w-full aspect-square object-cover rounded-2xl"
                         />
                     </div>
                     {/* Pet Details */}
-                    <div className="pt-4 pl-2">
-                        <h3 className="font-bold text-2xl mb-1">
+                    <div className="py-4">
+                        <h3 className="font-bold mb-1 truncate max-w-[90%]">
                             {pet.pet_name}
                         </h3>
-                        <p className="text-gray-600 mb-1">
+                        <p className="text-gray-600 mb-1 truncate max-w-[90%] text-sm sm:text-base">
                             {pet.age > 0 &&
                                 `${pet.age} ${pet.age > 1 ? "years" : "year"}`}
                             {pet.age > 0 && pet.months > 0 && ", "}
@@ -208,9 +214,12 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                                 `${pet.months} ${pet.months > 1 ? "months" : "month"
                                 } old`}
                         </p>
-                        <p className="text-gray-600 mb-1">
-                            {pet.cities?.city_name || pet.city} - {pet.area}
-                        </p>
+                        <div className="flex flex-row gap-2 items-center text-sm sm:text-base">
+                            <EnvironmentOutlined className="text-primary" />
+                            <p className="text-gray-600 truncate">
+                                {pet.cities?.city_name || pet.city} - {pet.area}
+                            </p>
+                        </div>
                     </div>
 
                 </div>

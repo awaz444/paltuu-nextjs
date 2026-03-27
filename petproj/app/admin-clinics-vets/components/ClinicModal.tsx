@@ -99,7 +99,7 @@ export default function ClinicModal({ visible, onCancel, onSuccess, initialData 
     return (
         <Modal
             title={initialData ? "Edit Clinic" : "Add New Clinic"}
-            visible={visible}
+            open={visible}
             onOk={handleOk}
             onCancel={onCancel}
             confirmLoading={loading}
@@ -135,6 +135,10 @@ export default function ClinicModal({ visible, onCancel, onSuccess, initialData 
 
                 <Form.Item name="discount_details" label="Discount Details">
                     <Input.TextArea placeholder="Any discount details for Paltuu app users..." rows={3} className="rounded-xl p-2" />
+                </Form.Item>
+
+                <Form.Item name="owner_email" label="Owner Email (User to link)">
+                    <Input placeholder="Enter owner email to link/create user" className="rounded-xl p-2" />
                 </Form.Item>
 
                 <Form.Item name="is_paltuu_partner" label="Is Paltuu Partner?" valuePropName="checked">

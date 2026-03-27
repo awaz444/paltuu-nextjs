@@ -122,7 +122,6 @@ export default function AdminClinicsVets() {
         },
         { title: "Name", dataIndex: "name", key: "name" },
         { title: "Email", dataIndex: "email", key: "email" },
-        { title: "Clinic", dataIndex: "clinic_name", key: "clinic_name" },
         {
             title: "Actions",
             key: "actions",
@@ -146,36 +145,48 @@ export default function AdminClinicsVets() {
                 </div>
 
                 <div className="bg-white rounded-xl shadow p-6">
-                    <Tabs defaultActiveKey="1">
-                        <Tabs.TabPane tab={<span className="text-lg font-semibold">Clinics</span>} key="1">
-                            <div className="mb-4 flex justify-end">
-                                <Button type="primary" size="large" onClick={() => { setEditingClinic(null); setIsClinicModalVisible(true); }}>
-                                    + Add New Clinic
-                                </Button>
-                            </div>
-                            <Table 
-                                dataSource={clinics} 
-                                columns={clinicColumns} 
-                                rowKey="clinic_id"
-                                loading={loading}
-                                scroll={{ x: true }}
-                            />
-                        </Tabs.TabPane>
-                        <Tabs.TabPane tab={<span className="text-lg font-semibold">Vets</span>} key="2">
-                            <div className="mb-4 flex justify-end">
-                                <Button type="primary" size="large" onClick={() => { setEditingVet(null); setIsVetModalVisible(true); }}>
-                                    + Add New Vet
-                                </Button>
-                            </div>
-                            <Table 
-                                dataSource={vets} 
-                                columns={vetColumns} 
-                                rowKey="vet_id"
-                                loading={loading}
-                                scroll={{ x: true }}
-                            />
-                        </Tabs.TabPane>
-                    </Tabs>
+                    <Tabs defaultActiveKey="1" items={[
+                        {
+                            key: "1",
+                            label: <span className="text-lg font-semibold">Clinics</span>,
+                            children: (
+                                <>
+                                    <div className="mb-4 flex justify-end">
+                                        <Button type="primary" size="large" onClick={() => { setEditingClinic(null); setIsClinicModalVisible(true); }}>
+                                            + Add New Clinic
+                                        </Button>
+                                    </div>
+                                    <Table 
+                                        dataSource={clinics} 
+                                        columns={clinicColumns} 
+                                        rowKey="clinic_id"
+                                        loading={loading}
+                                        scroll={{ x: true }}
+                                    />
+                                </>
+                            )
+                        },
+                        {
+                            key: "2",
+                            label: <span className="text-lg font-semibold">Vets</span>,
+                            children: (
+                                <>
+                                    <div className="mb-4 flex justify-end">
+                                        <Button type="primary" size="large" onClick={() => { setEditingVet(null); setIsVetModalVisible(true); }}>
+                                            + Add New Vet
+                                        </Button>
+                                    </div>
+                                    <Table 
+                                        dataSource={vets} 
+                                        columns={vetColumns} 
+                                        rowKey="vet_id"
+                                        loading={loading}
+                                        scroll={{ x: true }}
+                                    />
+                                </>
+                            )
+                        }
+                    ]} />
                 </div>
             </div>
 
@@ -197,6 +208,7 @@ export default function AdminClinicsVets() {
                     fetchVets();
                 }}
                 initialData={editingVet}
+                clinics={clinics}
             />
         </div>
     );

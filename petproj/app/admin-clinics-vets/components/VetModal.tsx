@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Modal, Form, Input, Switch, Upload, Button, message, InputNumber } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Modal, Form, Input, Switch, Upload, Button, message, InputNumber, Select, Space, Card } from "antd";
+import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
 
 interface VetModalProps {
@@ -10,9 +10,10 @@ interface VetModalProps {
     onCancel: () => void;
     onSuccess: () => void;
     initialData?: any;
+    clinics: any[];
 }
 
-export default function VetModal({ visible, onCancel, onSuccess, initialData }: VetModalProps) {
+export default function VetModal({ visible, onCancel, onSuccess, initialData, clinics }: VetModalProps) {
     const [form] = Form.useForm();
     const [fileList, setFileList] = useState<UploadFile[]>([]);
     const [loading, setLoading] = useState(false);
@@ -20,7 +21,10 @@ export default function VetModal({ visible, onCancel, onSuccess, initialData }: 
     useEffect(() => {
         if (visible) {
             if (initialData) {
-                form.setFieldsValue(initialData);
+                form.setFieldsValue({
+                    ...initialData,
+                    associated_clinics: initialData.associated_clinics || []
+                });
                 if (initialData.profile_image_url) {
                     setFileList([
                         {
@@ -100,11 +104,11 @@ export default function VetModal({ visible, onCancel, onSuccess, initialData }: 
     return (
         <Modal
             title={initialData ? "Edit Vet" : "Add New Vet"}
-            visible={visible}
+            open={visible}
             onOk={handleOk}
             onCancel={onCancel}
             confirmLoading={loading}
-            width={800}
+            width={900}
             destroyOnClose
         >
             <Form form={form} layout="vertical" className="mt-4">
@@ -122,27 +126,11 @@ export default function VetModal({ visible, onCancel, onSuccess, initialData }: 
 
                 <h3 className="text-lg font-bold text-gray-800 mb-2 border-b pb-2 mt-4">Professional Details</h3>
                 <div className="grid grid-cols-2 gap-4">
-                    <Form.Item name="clinic_name" label="Clinic Name">
-                        <Input placeholder="Enter primary clinic name" className="rounded-xl p-2" />
-                    </Form.Item>
-
-                    <Form.Item name="location" label="Location/Address">
-                        <Input placeholder="Enter physical location" className="rounded-xl p-2" />
-                    </Form.Item>
-
                     <Form.Item name="minimum_fee" label="Minimum Fee (PKR)">
                         <InputNumber className="w-full rounded-xl" size="large" min={0} />
                     </Form.Item>
 
                     <Form.Item name="contact_details" label="Contact Details">
-                        <Input placeholder="E.g. +92..." className="rounded-xl p-2" />
-                    </Form.Item>
-
-                    <Form.Item name="clinic_email" label="Clinic Email">
-                        <Input placeholder="clinic@example.com" className="rounded-xl p-2" />
-                    </Form.Item>
-
-                    <Form.Item name="clinic_whatsapp" label="Clinic WhatsApp">
                         <Input placeholder="E.g. +92..." className="rounded-xl p-2" />
                     </Form.Item>
 
@@ -166,6 +154,74 @@ export default function VetModal({ visible, onCancel, onSuccess, initialData }: 
                 <Form.Item name="is_active" label="Is Active?" valuePropName="checked">
                     <Switch defaultChecked />
                 </Form.Item>
+
+                <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2 mt-4">Clinic Associations</h3>
+                <Form.List name="associated_clinics">
+                    {(fields, { add, remove }) => (
+                        <>
+                            {fields.map(({ key, name, ...restField }) => (
+                                <Card size="small" className="mb-4 bg-gray-50 border-gray-200 rounded-xl" key={key}>
+                                    <div className="grid grid-cols-2 gap-x-4">
+                                        <Form.Item
+                                            {...restField}
+                                            name={[name, 'clinic_id']}
+                                            label="Clinic"
+                                            rules={[{ required: true, message: 'Missing clinic' }]}
+                                        >
+                                            <Select placeholder="Select a clinic" className="w-full">
+                                                {clinics.map(c => (
+                                                    <Select.Option key={c.clinic_id} value={c.clinic_id}>
+                                                        {c.name}
+                                                    </Select.Option>
+                                                ))}
+                                            </Select>
+                                        </Form.Item>
+
+                                        <Form.Item
+                                            {...restField}
+                                            name={[name, 'consultation_fee']}
+                                            label="Consultation Fee"
+                                        >
+                                            <InputNumber className="w-full" min={0} placeholder="PKR" />
+                                        </Form.Item>
+
+                                        <Form.Item
+                                            {...restField}
+                                            name={[name, 'is_primary_location']}
+                                            label="Primary Location?"
+                                            valuePropName="checked"
+                                        >
+                                            <Switch />
+                                        </Form.Item>
+
+                                        <Form.Item
+                                            {...restField}
+                                            name={[name, 'schedule_notes']}
+                                            label="Schedule Notes"
+                                        >
+                                            <Input placeholder="E.g. Mon-Wed 5pm-8pm" />
+                                        </Form.Item>
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <Button 
+                                            type="text" 
+                                            danger 
+                                            icon={<DeleteOutlined />} 
+                                            onClick={() => remove(name)}
+                                        >
+                                            Remove Association
+                                        </Button>
+                                    </div>
+                                </Card>
+                            ))}
+                            <Form.Item>
+                                <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />} className="rounded-xl">
+                                    Add Clinic Association
+                                </Button>
+                            </Form.Item>
+                        </>
+                    )}
+                </Form.List>
 
                 <Form.Item label="Profile Picture">
                     <Upload

@@ -21,6 +21,7 @@ const hideNavbarRoutes = [
   "/rescue-panel",
   "/auth",
   "/forgot-password",
+  "/admin-clinics-vets",
 ];
 
 export default function NavbarWrapper() {

@@ -54,8 +54,8 @@ export async function GET(req: NextRequest) {
 
     // Extract user IDs from reviews
     const userIds = reviewsResult.rows
-      .map(review => review.user_id)
-      .filter((id, index, arr) => id && arr.indexOf(id) === index); // Remove duplicates
+      .map((review: any) => review.user_id)
+      .filter((id: any, index: number, arr: any[]) => id && arr.indexOf(id) === index); // Remove duplicates
 
     // Fetch user details from main database
     let users = [];
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
       `;
 
       const tableInfo = await mainClient.query(tableInfoQuery);
-      console.log("Users table columns:", tableInfo.rows.map(r => r.column_name));
+      console.log("Users table columns:", tableInfo.rows.map((r: any) => r.column_name));
 
       // Use a more flexible query that adapts to the actual schema
       const usersQuery = `
@@ -89,8 +89,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Combine reviews with user details
-    const reviewsWithUserDetails = reviewsResult.rows.map(review => {
-      const user = users.find(u => u.user_id === review.user_id) || {};
+    const reviewsWithUserDetails = reviewsResult.rows.map((review: any) => {
+      const user = users.find((u: any) => u.user_id === review.user_id) || {};
 
       return {
         id: review.review_id,

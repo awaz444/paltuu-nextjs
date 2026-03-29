@@ -190,6 +190,9 @@ export default function ClinicPage() {
                                     <div className="relative mb-4">
                                         <img
                                             src={clinic.logo_url || "/placeholder-clinic.png"}
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = "/placeholder-clinic.png";
+                                            }}
                                             alt={clinic.name}
                                             className="w-32 h-32 rounded-full object-cover border-4 border-gray-100"
                                         />

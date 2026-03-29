@@ -113,7 +113,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                 WHERE pet_id = $1
             `;
             const specialNeedsResult = await client.query(specialNeedsQuery, [pet_id]);
-            specialNeeds = specialNeedsResult.rows.map(row => row.special_need);
+            specialNeeds = specialNeedsResult.rows.map((row: any) => row.special_need);
         }
 
         // Medical conditions query (only for rescue pets)

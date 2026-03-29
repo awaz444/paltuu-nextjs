@@ -242,8 +242,8 @@ if (filterKeyword) {
     } else if (featuredIds) {
       const idsArray = featuredIds
         .split(",")
-        .map((id) => parseInt(id.trim(), 10))
-        .filter((id) => !isNaN(id));
+        .map((id: any) => parseInt(id.trim(), 10))
+        .filter((id: any) => !isNaN(id));
       if (idsArray.length > 0) {
         // Use CASE statement to maintain the order of provided IDs
         const caseStatements = idsArray
@@ -306,7 +306,7 @@ if (filterKeyword) {
     console.info("[Perf] Products query took", Date.now() - queryStart, "ms");
 
     const products = productsResult.rows;
-    const productIds = products.map((p) => p.product_id);
+    const productIds = products.map((p: any) => p.product_id);
 
     // Fetch counts
     const countStart = Date.now();
@@ -332,7 +332,7 @@ if (filterKeyword) {
         ORDER BY product_id, ordering
       `;
       const imagesResult = await client.query(imagesQuery, [productIds]);
-      imagesResult.rows.forEach((row) => {
+      imagesResult.rows.forEach((row: any) => {
         imagesMap.set(row.product_id, row.url);
       });
       console.info("[Perf] Images query took", Date.now() - imagesStart, "ms");
@@ -356,7 +356,7 @@ if (filterKeyword) {
         ORDER BY product_id, is_default DESC NULLS LAST, variant_id
       `;
       const variantsResult = await client.query(variantsQuery, [productIds]);
-      variantsResult.rows.forEach((variant) => {
+      variantsResult.rows.forEach((variant: any) => {
         if (!variantsMap.has(variant.product_id)) {
           variantsMap.set(variant.product_id, []);
         }
@@ -385,7 +385,7 @@ if (filterKeyword) {
       `;
       try {
         const ratingsResult = await client.query(ratingsQuery, [productIds]);
-        ratingsResult.rows.forEach((row) => {
+        ratingsResult.rows.forEach((row: any) => {
           ratingsMap.set(row.product_id, {
             rating: parseFloat(row.avg_rating),
             reviewCount: parseInt(row.review_count, 10),
@@ -402,7 +402,7 @@ if (filterKeyword) {
     }
 
     // Assemble response with compare_at_price from variants
-    const rows = products.map((p) => {
+    const rows = products.map((p: any) => {
       const variants = includeVariants
         ? variantsMap.get(p.product_id) || []
         : undefined;

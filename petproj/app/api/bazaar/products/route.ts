@@ -186,7 +186,7 @@ export async function POST(req: NextRequest) {
 
     // Link categories (many-to-many)
     if (category_ids && category_ids.length > 0) {
-      const catInsertPromises = category_ids.map((catId) => {
+      const catInsertPromises = category_ids.map((catId: any) => {
         return client.query(
           `INSERT INTO bazaar_product_categories (product_id, category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
           [product.product_id, catId]
@@ -197,7 +197,7 @@ export async function POST(req: NextRequest) {
 
     // Link collections (pet types) using junction table - supports multiple collections
     if (collection_ids && collection_ids.length > 0) {
-      const collectionInsertPromises = collection_ids.map((collectionId) => {
+      const collectionInsertPromises = collection_ids.map((collectionId: any) => {
         return client.query(
           `INSERT INTO bazaar_product_collections (product_id, collection_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
           [product.product_id, collectionId]

@@ -65,7 +65,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             );
         }
 
-        const listings = result.rows.map((row) => ({
+        const listings = result.rows.map((row: any) => ({
             pet_id: row.pet_id,
             owner_id: row.owner_id,
             pet_name: row.pet_name,

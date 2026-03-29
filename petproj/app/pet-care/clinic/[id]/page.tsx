@@ -322,7 +322,7 @@ export default function ClinicPage() {
                         {clinic.discount_details && 
                          !clinic.discount_details.toLowerCase().includes("no discount") && 
                          !clinic.discount_details.toLowerCase().includes("pending negotiation") && (
-                            <div className="bg-gradient-to-r from-red-500 to-rose-600 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden group">
+                            <div className="bg-primary rounded-3xl p-6 text-white shadow-lg relative overflow-hidden group">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-125 transition-transform duration-700"></div>
                                 <div className="relative flex items-center gap-4">
                                     <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0 backdrop-blur-sm border border-white/30">
@@ -365,7 +365,8 @@ export default function ClinicPage() {
                             )}
                         </div>
 
-                        {/* Reviews Section */}
+                        {/* Reviews Section — commented out for now */}
+                        {/*
                         <div className="bg-white rounded-3xl p-6 shadow-sm">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -378,7 +379,6 @@ export default function ClinicPage() {
                                         </div>
                                     )}
                                 </div>
-
                                 <button
                                     onClick={handleReviewClick}
                                     className="text-white bg-primary px-4 py-2 rounded-lg font-medium hover:bg-primary transition-colors text-sm whitespace-nowrap"
@@ -386,53 +386,11 @@ export default function ClinicPage() {
                                     {isAuthenticated ? "Write Review" : "Login to Review"}
                                 </button>
                             </div>
-
-                            {/* Reviews List */}
                             <div className="space-y-4">
                                 {clinic.reviews && clinic.reviews.length > 0 ? (
                                     clinic.reviews.map((review, index) => (
-                                        <div
-                                            key={review.review_id}
-                                            className={`pb-4 ${index !== clinic.reviews.length - 1 ? 'border-b border-gray-100' : ''}`}
-                                        >
-                                            <div className="flex items-start gap-3">
-                                                {review.review_maker_profile_image_url ? (
-                                                    <img
-                                                        src={review.review_maker_profile_image_url}
-                                                        alt={review.review_maker_name}
-                                                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0"
-                                                    />
-                                                ) : (
-                                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                                        <span className="text-primary font-semibold text-sm">
-                                                            {review.review_maker_name?.charAt(0).toUpperCase() || "A"}
-                                                        </span>
-                                                    </div>
-                                                )}
-
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 mb-2">
-                                                        <h3 className="font-semibold text-gray-900 text-sm truncate">
-                                                            {review.review_maker_name}
-                                                        </h3>
-                                                        <span className="text-xs text-gray-500 whitespace-nowrap">
-                                                            {new Date(review.review_date).toLocaleDateString('en-US', {
-                                                                month: 'short',
-                                                                day: 'numeric',
-                                                                year: 'numeric'
-                                                            })}
-                                                        </span>
-                                                    </div>
-                                                    <Rate
-                                                        disabled
-                                                        value={review.rating}
-                                                        className="text-primary text-xs mb-2"
-                                                    />
-                                                    <p className="text-gray-600 text-sm leading-relaxed break-words">
-                                                        {review.review_content}
-                                                    </p>
-                                                </div>
-                                            </div>
+                                        <div key={review.review_id} className={`pb-4 ${index !== clinic.reviews.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                                            ...
                                         </div>
                                     ))
                                 ) : (
@@ -442,6 +400,7 @@ export default function ClinicPage() {
                                 )}
                             </div>
                         </div>
+                        */}
                     </div>
                 </div>
             </div>
@@ -453,13 +412,15 @@ export default function ClinicPage() {
                 onSuccess={handleLoginSuccess}
             />
 
-            {/* Review Modal */}
+            {/* Review Modal — commented out with reviews section */}
+            {/*
             <ReviewModal
                 open={isModalOpen}
                 onClose={handleCloseModal}
                 form={form}
                 onSubmit={handleSubmit}
             />
+            */}
         </div>
     );
 }

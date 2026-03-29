@@ -5,18 +5,17 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../store/store";
 import { fetchClinics } from "../store/slices/clinicSlice";
 import ClinicGrid from "../../components/ClinicGrid";
-import { MoonLoader } from "react-spinners";
 import {
-    FaCheckCircle,
-    FaPhoneAlt,
-    FaShieldAlt,
-    FaMoneyBillWave,
     FaClinicMedical,
     FaUserMd,
     FaHeart,
-    FaPaw
+    FaShieldAlt,
+    FaPaw,
+    FaStar,
+    FaMapMarkerAlt,
+    FaCheckCircle,
 } from "react-icons/fa";
-import { MdVerified, MdLocationOn } from "react-icons/md";
+import { HiSparkles } from "react-icons/hi2";
 
 export default function PetCare() {
     const dispatch = useDispatch<AppDispatch>();
@@ -24,206 +23,235 @@ export default function PetCare() {
         (state: RootState) => state.clinics
     );
 
-    const [primaryColor, setPrimaryColor] = useState("#FBC000"); // Paltuu yellow fallback
-
-    useEffect(() => {
-        const rootStyles = getComputedStyle(document.documentElement);
-        const color = rootStyles.getPropertyValue("--primary-color").trim();
-        if (color) setPrimaryColor(color);
-    }, []);
-
     useEffect(() => {
         dispatch(fetchClinics());
     }, [dispatch]);
 
+    const stats = [
+        { icon: <FaClinicMedical />, value: `${clinics.length || "10"}+`, label: "Verified Clinics" },
+        { icon: <FaUserMd />, value: "50+", label: "Expert Vets" },
+        { icon: <FaStar />, value: "4.8", label: "Avg. Rating" },
+        { icon: <FaHeart />, value: "100%", label: "Pet-Focused" },
+    ];
+
     return (
-        <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-            <div className="max-w-7xl mx-auto px-4 py-8">
+        <main className="min-h-screen bg-[#f8f4f5]">
 
-                {/* ================= HERO SECTION ================= */}
-                <section className="mb-12">
-                    <div className="text-center mb-8">
-                        <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-4">
-                            <FaPaw className="text-primary" />
-                            <span className="text-sm font-medium text-primary">
-                                Trusted Veterinary Care Network
-                            </span>
-                        </div>
-                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                            Find Trusted Vets <span className="text-primary">Near You</span>
-                        </h1>
-                        <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                            Connect directly with verified veterinary clinics across Pakistan.
-                        </p>
-                    </div>
+            {/* ================= HERO SECTION ================= */}
+            <section className="relative overflow-hidden bg-white border-b border-[#a03048]/10">
+                {/* Background decorative blobs */}
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#a03048]/5 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#a03048]/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
 
-                    {/* Trust Features Grid */}
-                    {/* <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
-                                <MdVerified className="text-primary text-2xl" />
+                <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-20 md:py-28">
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+
+                        {/* Left: Text Content */}
+                        <div>
+                            {/* Badge */}
+                            <div className="inline-flex items-center gap-2 bg-[#a03048]/10 text-[#a03048] px-4 py-2 rounded-full text-sm font-semibold mb-6">
+                                <HiSparkles className="text-base" />
+                                Pakistan's Trusted Vet Network
                             </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">Verified Clinics</h3>
-                            <p className="text-sm text-gray-600">
-                                All veterinary clinics are verified for quality care
-                            </p>
-                        </div>
 
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
-                                <FaPhoneAlt className="text-primary text-xl" />
-                            </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">Direct Contact</h3>
-                            <p className="text-sm text-gray-600">
-                                Connect directly with clinics via phone or WhatsApp
-                            </p>
-                        </div>
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[#111827] leading-tight mb-5">
+                                Find the Right Vet{" "}
+                                <span
+                                    className="relative"
+                                    style={{ color: "#a03048" }}
+                                >
+                                    Near You
+                                    <svg
+                                        className="absolute -bottom-2 left-0 w-full"
+                                        viewBox="0 0 300 12"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                        <path
+                                            d="M2 9C72 3 164 1 298 9"
+                                            stroke="#a03048"
+                                            strokeWidth="3"
+                                            strokeLinecap="round"
+                                        />
+                                    </svg>
+                                </span>
+                            </h1>
 
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
-                                <FaMoneyBillWave className="text-primary text-xl" />
-                            </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">No Hidden Fees</h3>
-                            <p className="text-sm text-gray-600">
-                                Zero booking fees or platform charges
+                            <p className="text-gray-500 text-lg leading-relaxed mb-8 max-w-lg">
+                                Browse verified veterinary clinics across Pakistan. Book directly, zero platform fees, real reviews from real pet owners.
                             </p>
-                        </div>
 
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
-                                <MdLocationOn className="text-primary text-2xl" />
-                            </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">Nationwide Coverage</h3>
-                            <p className="text-sm text-gray-600">
-                                Trusted pet care services across Pakistan
-                            </p>
-                        </div>
-                    </div> */}
-                </section>
-
-                {/* ================= STATS BAR ================= */}
-                {!loading && clinics.length > 0 && (
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            <div className="text-center">
-                                <div className="flex items-center justify-center gap-2 mb-2">
-                                    <FaClinicMedical className="text-primary text-xl" />
-                                    <div className="text-3xl font-bold text-gray-900">
-                                        {clinics.length}+
+                            {/* Trust Chips */}
+                            <div className="flex flex-wrap gap-3">
+                                {[
+                                    "Verified Clinics",
+                                    "Direct Contact",
+                                    "No Hidden Fees",
+                                ].map((chip) => (
+                                    <div
+                                        key={chip}
+                                        className="flex items-center gap-1.5 bg-white border border-[#a03048]/20 text-[#a03048] text-sm font-medium px-4 py-2 rounded-full shadow-sm"
+                                    >
+                                        <FaCheckCircle className="text-xs" />
+                                        {chip}
                                     </div>
-                                </div>
-                                <div className="text-sm text-gray-600">Verified Clinics</div>
-                            </div>
-
-
-                            <div className="text-center">
-                                <div className="flex items-center justify-center gap-2 mb-2">
-                                    <FaHeart className="text-primary text-xl" />
-                                    <div className="text-3xl font-bold text-gray-900">100%</div>
-                                </div>
-                                <div className="text-sm text-gray-600">Pet Care Focused</div>
-                            </div>
-
-                            <div className="text-center">
-                                <div className="flex items-center justify-center gap-2 mb-2">
-                                    <FaShieldAlt className="text-primary text-xl" />
-                                    <div className="text-3xl font-bold text-gray-900">24/7</div>
-                                </div>
-                                <div className="text-sm text-gray-600">Support Available</div>
+                                ))}
                             </div>
                         </div>
-                    </div>
-                )}
 
-                {/* ================= SECTION HEADER ================= */}
-                <div className="mb-8">
-                    <h2 className="text-2xl md:text-3xl text-center font-bold text-gray-900 mb-2">
+                        {/* Right: Feature Cards Stack */}
+                        <div className="hidden lg:grid grid-cols-2 gap-4">
+                            {[
+                                {
+                                    icon: <FaShieldAlt className="text-[#a03048] text-2xl" />,
+                                    title: "Verified & Trusted",
+                                    desc: "Every clinic is manually reviewed and verified by our team.",
+                                },
+                                {
+                                    icon: <FaMapMarkerAlt className="text-[#a03048] text-2xl" />,
+                                    title: "Instant Booking",
+                                    desc: "Skip the wait—book appointments and manage visits instantly online.",
+                                },
+                                {
+                                    icon: <FaUserMd className="text-[#a03048] text-2xl" />,
+                                    title: "Expert Veterinarians",
+                                    desc: "Connect with qualified and experienced vet professionals.",
+                                },
+                                {
+                                    icon: <FaHeart className="text-[#a03048] text-2xl" />,
+                                    title: "Pet-First Always",
+                                    desc: "Our platform is designed with your pet's wellbeing in mind.",
+                                },
+                            ].map((item) => (
+                                <div
+                                    key={item.title}
+                                    className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:border-[#a03048]/20 transition-all duration-300"
+                                >
+                                    <div className="w-11 h-11 bg-[#a03048]/10 rounded-xl flex items-center justify-center mb-3">
+                                        {item.icon}
+                                    </div>
+                                    <h3 className="font-semibold text-[#111827] text-sm mb-1">
+                                        {item.title}
+                                    </h3>
+                                    <p className="text-gray-500 text-xs leading-relaxed">
+                                        {item.desc}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ================= FLOATING STATS BAR ================= */}
+            {!loading && clinics.length > 0 && (
+                <div className="max-w-4xl mx-auto px-6 -mt-6 relative z-10">
+                    <div className="bg-white rounded-2xl shadow-xl border border-[#a03048]/10 px-6 py-5">
+                        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-100">
+                            {stats.map((stat, i) => (
+                                <div key={i} className="flex flex-col items-center justify-center px-4 py-1 gap-1">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[#a03048]">{stat.icon}</span>
+                                        <span className="text-2xl font-bold text-[#111827]">
+                                            {stat.value}
+                                        </span>
+                                    </div>
+                                    <span className="text-xs text-gray-500 font-medium">
+                                        {stat.label}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ================= CLINICS SECTION ================= */}
+            <section className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
+                {/* Section Header */}
+                <div className="mb-10 text-center">
+                    <div className="inline-flex items-center gap-2 bg-[#a03048]/10 text-[#a03048] px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                        <FaPaw className="text-xs" />
+                        All Clinics
+                    </div>
+                    <h2 className="text-3xl md:text-4xl font-bold text-[#111827] mb-3">
                         Browse Veterinary Clinics
                     </h2>
-                    <p className="text-center text-gray-600">
-                        Find the perfect veterinary clinic for your pet's needs
+                    <p className="text-gray-500 text-base max-w-xl mx-auto">
+                        Find the perfect veterinary clinic for your pet's needs across Pakistan.
                     </p>
                 </div>
 
-                {/* ================= CLINIC GRID ================= */}
+                {/* Clinic Grid / States */}
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20">
-                        <div className="text-gray-500 text-lg">
+                    <div className="flex flex-col items-center justify-center py-24 gap-4">
+                        <div className="w-12 h-12 border-4 border-[#a03048]/20 border-t-[#a03048] rounded-full animate-spin" />
+                        <p className="text-gray-500 text-sm font-medium">
                             Loading clinics...
-                        </div>
+                        </p>
                     </div>
                 ) : error ? (
-                    <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
-                        <div className="text-red-500 text-4xl mb-4">⚠️</div>
-                        <h3 className="text-red-800 font-semibold mb-2">Error Loading Clinics</h3>
-                        <p className="text-red-600">{error}</p>
+                    <div className="bg-red-50 border border-red-100 rounded-2xl p-10 text-center">
+                        <div className="text-4xl mb-3">⚠️</div>
+                        <h3 className="text-red-700 font-semibold text-lg mb-1">
+                            Error Loading Clinics
+                        </h3>
+                        <p className="text-red-500 text-sm">{error}</p>
                     </div>
                 ) : clinics.length === 0 ? (
-                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-12 text-center">
-                        <FaClinicMedical className="text-gray-300 text-6xl mx-auto mb-4" />
-                        <h3 className="text-gray-700 font-semibold mb-2">No Clinics Found</h3>
-                        <p className="text-gray-500">
-                            We're working on adding more veterinary clinics to your area.
+                    <div className="bg-white border border-gray-100 rounded-2xl p-16 text-center shadow-sm">
+                        <FaClinicMedical className="text-gray-200 text-6xl mx-auto mb-5" />
+                        <h3 className="text-gray-700 font-semibold text-xl mb-2">
+                            No Clinics Found
+                        </h3>
+                        <p className="text-gray-400 text-sm max-w-sm mx-auto">
+                            We're working on adding more veterinary clinics to your area. Check back soon!
                         </p>
                     </div>
                 ) : (
                     <ClinicGrid clinics={clinics} />
                 )}
+            </section>
 
-                {/* ================= VET CTA ================= */}
-                <section className="mt-20 mb-10 relative overflow-hidden">
-                    <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-3xl border-2 border-primary/20 p-8 md:p-12 relative">
-                        {/* Decorative Elements */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10"></div>
-                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/5 rounded-full blur-2xl -z-10"></div>
+            {/* ================= CTA SECTION ================= */}
+            <section className="max-w-7xl mx-auto px-6 lg:px-8 pb-20">
+                <div className="relative overflow-hidden rounded-3xl bg-[#a03048] px-8 md:px-16 py-14">
+                    {/* Decorative Circles */}
+                    <div className="absolute -top-20 -right-20 w-72 h-72 bg-white/5 rounded-full pointer-events-none" />
+                    <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-white/5 rounded-full pointer-events-none" />
+                    <div className="absolute top-8 right-40 w-24 h-24 bg-white/5 rounded-full pointer-events-none" />
 
-                        <div className="max-w-3xl mx-auto text-center relative z-10">
-                            <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full mb-6 shadow-sm">
-                                <FaClinicMedical className="text-primary" />
-                                <span className="text-sm font-medium text-gray-700">
-                                    For Veterinary Professionals
-                                </span>
-                            </div>
+                    <div className="relative z-10 max-w-2xl">
+                        <div className="inline-flex items-center gap-2 bg-white/15 text-white px-4 py-2 rounded-full text-sm font-semibold mb-5">
+                            <FaClinicMedical />
+                            For Veterinary Professionals
+                        </div>
+                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
+                            Own a Veterinary Clinic?
+                            <br />
+                            <span className="text-white/80">Join Our Network Today.</span>
+                        </h2>
+                        <p className="text-white/70 text-base mb-8 max-w-lg leading-relaxed">
+                            Join Pakistan's leading pet care network and connect with thousands of pet owners searching for trusted veterinary services. Free listing, quick approval, and direct client contact.
+                        </p>
 
-                            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                                Own a Veterinary Clinic?
-                            </h2>
-                            <p className="text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
-                                Join Pakistan's leading pet care network and connect with thousands of
-                                pet owners searching for trusted veterinary services.
-                            </p>
-
-                            {/* Benefits List */}
-                            {/* <div className="grid md:grid-cols-3 gap-4 mb-8 max-w-2xl mx-auto">
-                                <div className="bg-white rounded-xl p-4 shadow-sm">
-                                    <FaCheckCircle className="text-green-500 text-xl mx-auto mb-2" />
-                                    <p className="text-sm font-medium text-gray-700">Free Listing</p>
-                                </div>
-                                <div className="bg-white rounded-xl p-4 shadow-sm">
-                                    <FaCheckCircle className="text-green-500 text-xl mx-auto mb-2" />
-                                    <p className="text-sm font-medium text-gray-700">Direct Client Contact</p>
-                                </div>
-                                <div className="bg-white rounded-xl p-4 shadow-sm">
-                                    <FaCheckCircle className="text-green-500 text-xl mx-auto mb-2" />
-                                    <p className="text-sm font-medium text-gray-700">Grow Your Practice</p>
-                                </div>
-                            </div> */}
-
-                            <button
-                                className="bg-primary text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 inline-flex items-center gap-2"
-                            >
+                        <div className="flex flex-wrap gap-4">
+                            <button className="bg-white text-[#a03048] hover:bg-white/90 transition-all px-8 py-3.5 rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transform inline-flex items-center gap-2">
                                 <FaClinicMedical />
                                 List Your Clinic
                             </button>
-
-                            <p className="text-sm text-gray-500 mt-4">
-                                No setup fees • Quick approval • Start connecting today
-                            </p>
+                            <button className="bg-white/10 hover:bg-white/20 transition-all text-white border border-white/20 px-8 py-3.5 rounded-xl font-semibold text-sm inline-flex items-center gap-2">
+                                Learn More
+                            </button>
                         </div>
-                    </div>
-                </section>
 
-            </div>
+                        <p className="text-white/50 text-xs mt-5">
+                            No setup fees • Quick approval • Start connecting today
+                        </p>
+                    </div>
+                </div>
+            </section>
+
         </main>
     );
 }

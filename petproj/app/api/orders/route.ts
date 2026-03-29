@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
 
     // For each order, get the items with product images
     const ordersWithItems = await Promise.all(
-      ordersResult.rows.map(async (order) => {
+      ordersResult.rows.map(async (order: any) => {
         const itemsQuery = `
           SELECT
             oi.order_item_id,

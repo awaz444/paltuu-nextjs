@@ -43,12 +43,12 @@ export async function POST(request: NextRequest) {
 
     // Upload to Cloudinary
     console.log("[INFO] Starting Cloudinary uploads...");
-    const uploadPromises = files.map(async (file, index) => {
+    const uploadPromises = files.map(async (file: any, index: number) => {
       const buffer = Buffer.from(await file.arrayBuffer());
       return new Promise<string>((resolve, reject) => {
         const upload = cloudinary.uploader.upload_stream(
           { resource_type: "image" },
-          (error, result) => {
+          (error: any, result: any) => {
             if (error) {
               console.error(`[ERROR] Cloudinary upload failed (file ${index + 1}):`, error);
               reject(error);
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     // Notify all admins
     console.log("[INFO] Fetching admin users...");
     const adminResult = await client.query(`SELECT user_id FROM users WHERE role = 'admin'`);
-    const adminUserIds = adminResult.rows.map((row) => row.user_id);
+    const adminUserIds = adminResult.rows.map((row: any) => row.user_id);
     console.log("[DEBUG] Admin user IDs:", adminUserIds);
 
     if (adminUserIds.length > 0) {
@@ -124,12 +124,12 @@ export async function POST(request: NextRequest) {
         INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
         VALUES ${adminUserIds
           .map(
-            (_, i) =>
+            (_: any, i: number) =>
               `($${i * 5 + 1}, $${i * 5 + 2}, $${i * 5 + 3}, $${i * 5 + 4}, $${i * 5 + 5})`
           )
           .join(", ")}
       `;
-      const notificationValues = adminUserIds.flatMap((user_id) => [
+      const notificationValues = adminUserIds.flatMap((user_id: any) => [
         user_id,
         adminNotificationContent,
         "vet_application",

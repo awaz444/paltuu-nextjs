@@ -91,8 +91,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         // So I should remove the join with `vet_availability` and use `v.schedule`.
 
         const reviews = vetData
-            .filter((row) => row.review_id)
-            .map((row) => ({
+            .filter((row: any) => row.review_id)
+            .map((row: any) => ({
                 review_id: row.review_id,
                 rating: row.rating,
                 review_content: row.review_content,

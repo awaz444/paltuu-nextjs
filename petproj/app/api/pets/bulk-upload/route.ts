@@ -151,7 +151,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const adminResult = await client.query(
           "SELECT user_id FROM users WHERE role = 'admin'"
         );
-        const adminUserIds = adminResult.rows.map((row) => row.user_id);
+        const adminUserIds = adminResult.rows.map((row: any) => row.user_id);
 
         for (const adminId of adminUserIds) {
           await client.query(

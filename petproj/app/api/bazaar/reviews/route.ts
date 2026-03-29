@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
     // Fetch user details from main database
     let users = [];
     if (userIds.length > 0) {
-      const placeholders = userIds.map((_, i) => `$${i + 1}`).join(',');
+      const placeholders = userIds.map((_: any, i: number) => `$${i + 1}`).join(',');
 
       // First, let's check the structure of the users table
       const tableInfoQuery = `

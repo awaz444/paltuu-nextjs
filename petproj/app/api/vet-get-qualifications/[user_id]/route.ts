@@ -64,7 +64,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             );
         }
 
-        const qualifications = result.rows.map((row) => ({
+        const qualifications = result.rows.map((row: any) => ({
             qualification_id: row.qualification_id,
             qualification_name: row.qualification_name,
             year_acquired: row.year_acquired,

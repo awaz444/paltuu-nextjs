@@ -44,12 +44,12 @@ export async function POST(request: NextRequest) {
     // Should log: "Received animal_id: fbca22bf-e65d-4057-9dff-921f3adb241d Type: string"
 
     // Upload files to Cloudinary
-    const uploadPromises = files.map(async (file) => {
+    const uploadPromises = files.map(async (file: any) => {
       const buffer = Buffer.from(await file.arrayBuffer());
       return new Promise<string>((resolve, reject) => {
         const upload = cloudinary.uploader.upload_stream(
           { resource_type: "image" },
-          (error, result) => {
+          (error: any, result: any) => {
             if (error) {
               console.error("Cloudinary upload error:", error);
               reject(error);

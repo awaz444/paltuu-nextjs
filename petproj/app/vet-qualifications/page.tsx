@@ -35,11 +35,12 @@ const VetQualificationsForm = () => {
 
     if (!selectedQualifications.length) {
       alert("Please select at least one qualification.");
+      setIsLoading(false);
       return;
     }
 
     if (vetId !== null) {
-      const payload = selectedQualifications.map((qualificationId) => ({
+      const payload = selectedQualifications.map((qualificationId: number) => ({
         vet_id: vetId,
         qualification_id: qualificationId,
         year_acquired: qualificationDetails[qualificationId]?.yearAcquired || "",
@@ -55,6 +56,8 @@ const VetQualificationsForm = () => {
         router.push(`/vet-specialization?vet_id=${vetId}`);
       } catch (error) {
         console.error("Error posting qualifications:", error);
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -62,7 +65,7 @@ const VetQualificationsForm = () => {
   const handleCheckboxChange = (qualificationId: number) => {
     setSelectedQualifications((prevSelected) =>
       prevSelected.includes(qualificationId)
-        ? prevSelected.filter((id) => id !== qualificationId)
+        ? prevSelected.filter((id: number) => id !== qualificationId)
         : [...prevSelected, qualificationId]
     );
   };

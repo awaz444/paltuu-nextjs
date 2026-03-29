@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
       try { poolConn.release(); } catch {}
     }
 
-    const uploadPromises = files.map(async (file, idx) => {
+    const uploadPromises = files.map(async (file: any, idx: number) => {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       const originalName = (file as any).name || `upload-${Date.now()}`;

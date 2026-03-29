@@ -119,7 +119,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         return new Promise<string>((resolve, reject) => {
           const upload = cloudinary.uploader.upload_stream(
             { resource_type: "image" },
-            (error, result) => {
+            (error: any, result: any) => {
               if (error) {
                 console.error("Cloudinary upload error:", error);
                 reject(error);
@@ -190,8 +190,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     console.log("Saving socials...");
     await Promise.all(
       ["instagram", "facebook", "website"]
-        .filter((platform) => socials[platform])
-        .map((platform) =>
+        .filter((platform: any) => socials[platform])
+        .map((platform: any) =>
           client.query(
             "INSERT INTO shelter_socials (shelter_id, platform, url) VALUES ($1, $2, $3)",
             [shelterId, platform, socials[platform]]

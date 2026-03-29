@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
           resource_type: "image",
           folder: "shelter-logos"
         },
-        (error, result) => {
+        (error: any, result: any) => {
           if (error) {
             console.error("Cloudinary upload error:", error);
             reject(error);

@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
                     resource_type: "image",
                     folder: "profile-images"
                 },
-                (error, result) => {
+                (error: any, result: any) => {
                     if (error) {
                         console.error("Cloudinary upload error:", error);
                         reject(error);

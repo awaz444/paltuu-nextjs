@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
     const { getFeaturedProductIds } = await import('@/app/bazaar/curatedProducts');
 
     // Fetch all categories in parallel
-    const fetchPromises = categoryConfigs.map(async (categoryConfig) => {
+    const fetchPromises = categoryConfigs.map(async (categoryConfig: any) => {
       const params = new URLSearchParams();
 
       // Check if there are manually selected featured product IDs for this section

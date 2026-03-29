@@ -116,7 +116,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
             SELECT category_id FROM vet_specializations WHERE vet_id = $1;
         `;
         const existingResult = await client.query(existingQuery, [vet_id]);
-        const existingSpecializations = new Set(existingResult.rows.map(row => row.category_id));
+        const existingSpecializations = new Set(existingResult.rows.map((row: any) => row.category_id));
 
         // Insert only new specializations
         const insertQuery = `

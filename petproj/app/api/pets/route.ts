@@ -77,7 +77,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 // Set price to null for rescue listings
                 const finalPrice = listing_type === 'rescue' ? null : price;
 
-                const result = await withRetry(() =>
+                const result = await withRetry<any>(() =>
                     client.query(
                         `INSERT INTO pets (
                             owner_id, pet_name, pet_type, pet_breed, city_id, area, age, months,
@@ -128,12 +128,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             listing_type: listing_type,
         }).catch((err) => console.warn('Failed to send new listing email notification', err));
 
-        // Fetch all admin user IDs with retry
-        const adminResult = await withRetry(() =>
+        const adminResult = await withRetry<any>(() =>
             client.query(`SELECT user_id FROM users WHERE role = 'admin'`)
         );
 
-        const adminUserIds = adminResult.rows.map((row) => row.user_id);
+        const adminUserIds = adminResult.rows.map((row: any) => row.user_id);
 
         // Insert notifications for all admin users with retry
         if (adminUserIds.length > 0) {
@@ -143,7 +142,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
                 VALUES ${adminUserIds
                     .map(
-                        (_, i) =>
+                        (_: any, i: number) =>
                             `($${i * 5 + 1}, $${i * 5 + 2}, $${i * 5 + 3}, $${
                                 i * 5 + 4
                             }, $${i * 5 + 5})`
@@ -151,7 +150,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                     .join(", ")}
             `;
 
-            const notificationValues = adminUserIds.flatMap((user_id) => [
+            const notificationValues = adminUserIds.flatMap((user_id: any) => [
                 user_id,
                 notificationContent,
                 "listing_type",
@@ -208,7 +207,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     try {
         await withRetry(() => client.connect());
-        const result = await withRetry(() => client.query("SELECT * FROM pets"));
+        const result = await withRetry<any>(() => client.query("SELECT * FROM pets"));
         return NextResponse.json(result.rows, {
             status: 200,
             headers: { "Content-Type": "application/json" },
@@ -263,7 +262,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
 
     try {
         await withRetry(() => client.connect());
-        const result = await withRetry(() =>
+        const result = await withRetry<any>(() =>
             client.query(
                 `UPDATE pets SET owner_id = $1, pet_name = $2, pet_type = $3, pet_breed = $4, city_id = $5, area = $6,
                 age = $7, months = $8, description = $9, adoption_status = $10, min_age_of_children = $11, can_live_with_dogs = $12,
@@ -376,7 +375,7 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
             );
 
             // Finally, delete the pet itself
-            const result = await withRetry(() =>
+            const result = await withRetry<any>(() =>
                 client.query(
                     "DELETE FROM pets WHERE pet_id = $1 RETURNING *",
                     [pet_id]

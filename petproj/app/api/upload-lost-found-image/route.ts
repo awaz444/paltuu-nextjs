@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     const image_url = await new Promise<string>((resolve, reject) => {
       const upload = cloudinary.uploader.upload_stream(
         { resource_type: "image" },
-        (error, result) => {
+        (error: any, result: any) => {
           if (error) {
             console.error("Cloudinary upload error:", error);
             reject(error);

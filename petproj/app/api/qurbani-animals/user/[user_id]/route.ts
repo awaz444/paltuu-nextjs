@@ -50,7 +50,7 @@ export async function GET(
     const result = await client.query(query, [userId]);
 
     // Transform the data to match the expected format
-    const transformedAnimals = result.rows.map(animal => ({
+    const transformedAnimals = result.rows.map((animal: any) => ({
       ...animal,
       weight: parseFloat(animal.weight),
       height: parseFloat(animal.height),

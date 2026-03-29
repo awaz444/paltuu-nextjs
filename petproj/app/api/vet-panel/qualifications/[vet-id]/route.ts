@@ -128,7 +128,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
             SELECT qualification_id FROM vet_qualifications WHERE vet_id = $1;
         `;
         const existingResult = await client.query(existingQuery, [vet_id]);
-        const existingQualifications = existingResult.rows.map(q => q.qualification_id);
+        const existingQualifications = existingResult.rows.map((q: any) => q.qualification_id);
 
         for (const qual of qualifications) {
             const { qualification_id, year_acquired, note } = qual;

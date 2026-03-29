@@ -105,7 +105,7 @@ export async function GET(req: NextRequest, { params }: { params: { shop_id: str
         };
 
         // Process related data that might have multiple rows
-        shopResult.rows.forEach(row => {
+        shopResult.rows.forEach((row: any) => {
             if (row.social_platform && !response.social_media.find((s: any) => s.platform === row.social_platform)) {
                 response.social_media.push({
                     platform: row.social_platform,
@@ -116,7 +116,7 @@ export async function GET(req: NextRequest, { params }: { params: { shop_id: str
 
         // Process pets data
         const petsMap = new Map();
-        petsResult.rows.forEach(row => {
+        petsResult.rows.forEach((row: any) => {
             if (!petsMap.has(row.pet_id)) {
                 petsMap.set(row.pet_id, {
                     pet_id: row.pet_id,

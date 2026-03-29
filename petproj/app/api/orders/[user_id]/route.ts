@@ -84,7 +84,7 @@ export async function GET(
           created_at: order.created_at,
           payment_status: order.payment_status,
           tracking_number: order.tracking_number,
-          items: itemsResult.rows.map(item => ({
+          items: itemsResult.rows.map((item: any) => ({
             ...item,
             unit_price: parseFloat(item.unit_price),
             total_price: parseFloat(item.total_price)

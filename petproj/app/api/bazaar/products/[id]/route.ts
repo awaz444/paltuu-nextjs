@@ -240,7 +240,7 @@ export async function PUT(req: NextRequest, { params }: any) {
         const referencedVariantIds = new Set(referencedVariantsRes.rows.map((r: any) => r.variant_id));
 
         // Only delete unreferenced variants
-        const safeToDelete = variantsToExplicitlyDelete.filter(vid => !referencedVariantIds.has(vid));
+        const safeToDelete = variantsToExplicitlyDelete.filter((vid: any) => !referencedVariantIds.has(vid));
         if (safeToDelete.length > 0) {
           await client.query(
             'DELETE FROM bazaar_product_variants WHERE variant_id = ANY($1)',
@@ -250,7 +250,7 @@ export async function PUT(req: NextRequest, { params }: any) {
         }
 
         // Log warning for variants that couldn't be deleted
-        const couldNotDelete = variantsToExplicitlyDelete.filter(vid => referencedVariantIds.has(vid));
+        const couldNotDelete = variantsToExplicitlyDelete.filter((vid: any) => referencedVariantIds.has(vid));
         if (couldNotDelete.length > 0) {
           console.warn(`[Product Update] Could not delete ${couldNotDelete.length} variant(s) as they are referenced in orders:`, couldNotDelete);
         }

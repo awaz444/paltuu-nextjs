@@ -412,7 +412,7 @@ export async function POST(req: NextRequest) {
 
       // Calculate totals
       let subtotal = 0;
-      cartItems.rows.forEach(item => {
+      cartItems.rows.forEach((item: any) => {
         subtotal += parseFloat(item.effective_price) * item.quantity;
       });
 

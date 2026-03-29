@@ -59,7 +59,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         }
 
         const postData = result.rows[0];
-        const images = result.rows.map((row) => ({
+        const images = result.rows.map((row: any) => ({
             image_id: row.image_id,
             image_url: row.image_url,
         }));

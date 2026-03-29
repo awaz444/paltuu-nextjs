@@ -4,7 +4,6 @@ import { createClient } from "../../../db/index";
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     try {
-        await client.connect();
         const query = `
             SELECT 
                 clinic_id, 
@@ -15,7 +14,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                 contact_number, 
                 whatsapp_number,
                 is_paltuu_partner,
-                google_maps_link
+                google_maps_link,
+                discount_details
             FROM clinics
             ORDER BY name ASC;
         `;
@@ -27,7 +27,5 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             { error: "Internal Server Error", message: (error as Error).message },
             { status: 500 }
         );
-    } finally {
-        await client.end();
     }
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "../../../../db/index";
+import { createClient, db } from "../../../../db/index";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
     const client = createClient();
@@ -26,6 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
         // 2. Fetch Vets in this Clinic
         // We join with users to get the name and other user-related info
+        // We join with clinic_vets to get the association
         const vetsQuery = `
             SELECT 
                 v.vet_id,
@@ -37,7 +38,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 u.profile_image_url
             FROM vets v
             JOIN users u ON v.user_id = u.user_id
-            WHERE v.clinic_id = $1 AND v.is_active = true;
+            JOIN clinic_vets cv ON v.vet_id = cv.vet_id
+            WHERE cv.clinic_id = $1 AND v.is_active = true;
         `;
         const vetsResult = await client.query(vetsQuery, [clinicId]);
 

@@ -24,7 +24,15 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
             className="flex flex-col w-full h-full shadow-md rounded-2xl overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl"
             bodyStyle={{ display: 'flex', flexDirection: 'column', flex: 1 }}
             cover={
-                <div className="h-48 w-full bg-gray-100 flex items-center justify-center p-4">
+                <div className="relative h-48 w-full bg-gray-100 flex items-center justify-center p-4">
+                    {clinic.discount_details && 
+                    !clinic.discount_details.toLowerCase().includes("no discount") && 
+                    !clinic.discount_details.toLowerCase().includes("pending negotiation") && (
+                        <div className="absolute top-4 left-4 bg-gradient-to-r from-red-600 to-rose-500 text-white text-[10px] uppercase font-black px-4 py-1.5 rounded-lg shadow-xl z-20 flex items-center gap-1.5 backdrop-blur-md border border-white/20 tracking-wider">
+                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                            {clinic.discount_details}
+                        </div>
+                    )}
                     <img
                         alt={clinic.name}
                         src={clinic.logo_url || "/placeholder-clinic.png"}

@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "../../../db/index";
+import { db } from "../../../db/index";
 import { getUserIdFromRequest } from "../../../utils/authServer";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
-    const client = createClient();
-
     // Extract query parameter
     const clinic_id = req.nextUrl.searchParams.get("clinic_id");
 
@@ -19,8 +17,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     }
 
     try {
-        await client.connect();
-
         const query = `
             SELECT 
                 AVG(rating) AS average_rating,
@@ -29,7 +25,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             WHERE clinic_id = $1;
         `;
 
-        const result = await client.query(query, [clinic_id]);
+        const result = await db.query(query, [clinic_id]);
 
         // Handle the possibility of no rows being returned
         const row = result.rows[0] || { average_rating: null, reviews_count: 0 };
@@ -54,14 +50,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
                 headers: { "Content-Type": "application/json" },
             }
         );
-    } finally {
-        await client.end();
     }
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-    const client = createClient();
-    
     // Authenticate user
     const authenticatedUserId = await getUserIdFromRequest(req);
     if (!authenticatedUserId) {
@@ -83,8 +75,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     try {
-        await client.connect();
-
         // Insert the new review into the database
         const query = `
             INSERT INTO vet_reviews (clinic_id, user_id, rating, review_content, review_date)
@@ -94,7 +84,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         const values = [clinic_id, authenticatedUserId, rating, review_content, review_date];
 
-        const result = await client.query(query, values);
+        const result = await db.query(query, values);
 
         // Get the inserted review ID from the result
         const review_id = result.rows[0].review_id;
@@ -109,7 +99,5 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             { error: "Internal Server Error", message: (error as Error).message },
             { status: 500, headers: { "Content-Type": "application/json" } }
         );
-    } finally {
-        await client.end();
     }
 }

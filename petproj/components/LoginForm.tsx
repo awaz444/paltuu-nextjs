@@ -115,7 +115,7 @@ export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
                 <button
                     type="submit"
                     disabled={buttonDisabled || loading}
-                    className={`w-full py-2 px-4 rounded-xl text-white bg-primary hover:bg-primary-dark transition ${loading ? "opacity-50 cursor-not-allowed" : ""
+                    className={`w-full py-2 px-4 rounded-xl text-white bg-primary hover:bg-primary transition ${loading ? "opacity-50 cursor-not-allowed" : ""
                         }`}>
                     {loading ? "Logging in..." : "Log In"}
                 </button>

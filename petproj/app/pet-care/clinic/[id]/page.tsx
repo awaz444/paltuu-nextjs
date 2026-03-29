@@ -315,6 +315,26 @@ export default function ClinicPage() {
 
                     {/* Main Content Area */}
                     <div className="lg:col-span-2 space-y-6">
+                        {/* Discount Banner */}
+                        {clinic.discount_details && 
+                         !clinic.discount_details.toLowerCase().includes("no discount") && 
+                         !clinic.discount_details.toLowerCase().includes("pending negotiation") && (
+                            <div className="bg-gradient-to-r from-red-500 to-rose-600 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-125 transition-transform duration-700"></div>
+                                <div className="relative flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0 backdrop-blur-sm border border-white/30">
+                                        <i className="bi bi-gift-fill text-2xl"></i>
+                                    </div>
+                                    <div>
+                                        <div className="text-red-100/80 text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-2">
+                                            Exclusive Offer <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                                        </div>
+                                        <h2 className="text-xl font-bold">{clinic.discount_details}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Veterinarians Section */}
                         <div className="bg-white rounded-3xl p-6 shadow-sm">
                             <div className="flex items-center gap-3 mb-6">

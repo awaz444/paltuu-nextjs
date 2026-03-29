@@ -1,4 +1,4 @@
-import { Client } from 'pg';
+import { Pool } from 'pg';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 
@@ -15,33 +15,48 @@ if (!connectionStringRaw) {
 // narrow to string for TypeScript
 const connectionString: string = connectionStringRaw;
 
-console.log("DB string: ", connectionString);
+// Singleton pattern for Pool in Next.js development
+// Use a unique key to force recreation if the old pool was shutting down
+const globalForPool = globalThis as unknown as { pgPool: Pool | undefined };
 
-export function createClient(): Client {
-    // Configure SSL when connecting to Supabase (or when explicitly requested).
-    // Supabase Postgres requires TLS; Node's TLS validation may fail in some envs,
-    // so we set `rejectUnauthorized: false` by default for supabase.co hosts.
-    const clientConfig: any = { connectionString };
+export const db: Pool = globalForPool.pgPool || new Pool({
+    connectionString,
+    ssl: { rejectUnauthorized: false }
+});
 
-    const forceSsl = process.env.SUPABASE_DB_SSL === 'true' ||
-        connectionString.toLowerCase().includes('supabase.co') ||
-        process.env.NODE_ENV === 'production';
+if (process.env.NODE_ENV !== "production") globalForPool.pgPool = db;
 
-    if (forceSsl) {
-        clientConfig.ssl = { rejectUnauthorized: false };
-    }
+// Handle unexpected errors on idle clients
+db.on('error', (err) => {
+    console.error('Unexpected database error on idle client:', err);
+    // Note: Do not throw or process.exit here. The pool will attempt to recreate connections on the next request.
+});
 
-    return new Client(clientConfig);
+// Create client helper function for backwards compatibility
+// Now returns a 'virtual client' that delegates to the shared pool.
+// .connect() and .end() become safe no-ops, as the pool manages connections automatically.
+export function createClient(): any {
+    let poolClient: any = null;
+    return {
+        query: async (text: string, params?: any[]) => {
+            if (poolClient) {
+                return poolClient.query(text, params);
+            }
+            return db.query(text, params);
+        },
+        connect: async () => {
+            if (!poolClient) {
+                poolClient = await db.connect();
+            }
+        },
+        end: async () => {
+            if (poolClient) {
+                poolClient.release();
+                poolClient = null;
+            }
+        },
+    };
 }
-
-export const db: Client = createClient();
-
-db.connect()
-    .then(() => console.log("Connected to the database successfully"))
-    .catch((err) => {
-        console.error("Error connecting to the database:", err);
-        throw err;
-    });
 
 // Supabase client for storage operations
 const RAW_SUPABASE_URL = process.env.SUPABASE_URL;

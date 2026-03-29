@@ -25,6 +25,7 @@ const hideNavbarRoutes = [
 ];
 
 
+
 export default function NavbarWrapper() {
   const pathname = usePathname();
   const isBazaarPage = pathname === "/bazaar";

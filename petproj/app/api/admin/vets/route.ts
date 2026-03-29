@@ -21,7 +21,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
         // Fetch all clinic associations for these vets
         if (vets.length > 0) {
-            const vetIds = vets.map(v => v.vet_id);
+            const vetIds = vets.map((v: any) => v.vet_id);
             const associationQuery = `
                 SELECT 
                     cv.vet_id, cv.clinic_id, cv.consultation_fee, cv.is_primary_location, cv.schedule_notes,
@@ -33,8 +33,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             const associationResult = await client.query(associationQuery, [vetIds]);
             
             // Map associations to vets
-            vets.forEach(v => {
-                v.associated_clinics = associationResult.rows.filter(a => a.vet_id === v.vet_id);
+            vets.forEach((v: any) => {
+                v.associated_clinics = associationResult.rows.filter((a: any) => a.vet_id === v.vet_id);
             });
         }
 

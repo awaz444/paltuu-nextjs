@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Vet } from "../app/types/vet";
-import Link from "next/link";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Modal, Button, message } from "antd";
 import { CopyOutlined, WhatsAppOutlined } from "@ant-design/icons";
@@ -54,11 +53,10 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
                     : `Dr. ${vet.name}`;
 
                 return (
-                    <Link
+                    <div
                         key={vet.vet_id}
-                        href={`/pet-care/${vet.vet_id}`}
                         className="h-full">
-                        <div className="h-full flex flex-col bg-white p-4 rounded-2xl shadow-sm border-2 border-transparent hover:border-primary relative overflow-hidden">
+                        <div className="h-full flex flex-col bg-white p-4 rounded-2xl shadow-sm border-2 border-transparent relative overflow-hidden">
                             {/* Call Button - Top Right */}
                             <button
                                 className="absolute top-2 right-2 bg-primary text-white p-2 rounded-xl w-10 h-10 flex items-center justify-center shadow-md hover:scale-105 transition-all duration-300 z-10"
@@ -131,7 +129,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
                                 Fee Starting from: PKR {vet.minimum_fee}
                             </div> */}
                         </div>
-                    </Link>
+                    </div>
                 );
             })}
             <Modal

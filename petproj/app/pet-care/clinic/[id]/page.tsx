@@ -204,13 +204,13 @@ export default function ClinicPage() {
                                     </div>
 
                                     {/* Clinic Name */}
-                                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                                    <h1 className="text-2xl font-bold text-gray-900 mb-0">
                                         {clinic.name}
                                     </h1>
                                 </div>
 
                                 {/* Stats Row */}
-                                {reviewStats && (
+                                {/* {reviewStats && (
                                     <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100">
                                         <div className="text-center">
                                             <div className="text-lg font-bold text-primary flex items-center justify-center gap-1">
@@ -226,7 +226,7 @@ export default function ClinicPage() {
                                             <div className="text-xs text-gray-500 mt-1">Reviews</div>
                                         </div>
                                     </div>
-                                )}
+                                )} */}
                             </div>
 
                             {/* Location Card */}
@@ -319,24 +319,24 @@ export default function ClinicPage() {
                     {/* Main Content Area */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Discount Banner */}
-                        {clinic.discount_details && 
-                         !clinic.discount_details.toLowerCase().includes("no discount") && 
-                         !clinic.discount_details.toLowerCase().includes("pending negotiation") && (
-                            <div className="bg-primary rounded-3xl p-6 text-white shadow-lg relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-125 transition-transform duration-700"></div>
-                                <div className="relative flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0 backdrop-blur-sm border border-white/30">
-                                        <i className="bi bi-gift-fill text-2xl"></i>
-                                    </div>
-                                    <div>
-                                        <div className="text-red-100/80 text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-2">
-                                            Exclusive Offer <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                        {clinic.discount_details &&
+                            !clinic.discount_details.toLowerCase().includes("no discount") &&
+                            !clinic.discount_details.toLowerCase().includes("pending negotiation") && (
+                                <div className="bg-primary rounded-3xl p-6 text-white shadow-lg relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-125 transition-transform duration-700"></div>
+                                    <div className="relative flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0 backdrop-blur-sm border border-white/30">
+                                            <i className="bi bi-gift-fill text-2xl"></i>
                                         </div>
-                                        <h2 className="text-xl font-bold">{clinic.discount_details}</h2>
+                                        <div>
+                                            <div className="text-red-100/80 text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-2">
+                                                Exclusive Offer <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                                            </div>
+                                            <h2 className="text-xl font-bold">{clinic.discount_details}</h2>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
                         {/* Veterinarians Section */}
                         <div className="bg-white rounded-3xl p-6 shadow-sm">

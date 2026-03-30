@@ -14,6 +14,8 @@ import {
     FaStar,
     FaMapMarkerAlt,
     FaCheckCircle,
+    FaPhoneAlt,
+    FaEnvelope,
 } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi2";
 
@@ -35,7 +37,7 @@ export default function PetCare() {
     ];
 
     return (
-        <main className="min-h-screen bg-[#f8f4f5]">
+        <main className="min-h-screen bg-[#f0f0f0]">
 
             {/* ================= HERO SECTION ================= */}
             <section className="relative overflow-hidden bg-white border-b border-[#a03048]/10">
@@ -110,7 +112,7 @@ export default function PetCare() {
                                 {
                                     icon: <FaMapMarkerAlt className="text-[#a03048] text-2xl" />,
                                     title: "Instant Booking",
-                                    desc: "Skip the wait—book appointments and manage visits instantly online.",
+                                    desc: "Skip the wait—book appointments and manage visits instantly on call.",
                                 },
                                 {
                                     icon: <FaUserMd className="text-[#a03048] text-2xl" />,
@@ -144,6 +146,7 @@ export default function PetCare() {
             </section>
 
             {/* ================= FLOATING STATS BAR ================= */}
+            {/*
             {!loading && clinics.length > 0 && (
                 <div className="max-w-4xl mx-auto px-6 -mt-6 relative z-10">
                     <div className="bg-white rounded-2xl shadow-xl border border-[#a03048]/10 px-6 py-5">
@@ -164,13 +167,13 @@ export default function PetCare() {
                         </div>
                     </div>
                 </div>
-            )}
+            )} */}
 
             {/* ================= CLINICS SECTION ================= */}
             <section className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
                 {/* Section Header */}
-                <div className="mb-10 text-center">
-                    <div className="inline-flex items-center gap-2 bg-[#a03048]/10 text-[#a03048] px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                {/* <div className="mb-10 text-center">
+                    <div className="inline-flex items-center gap-2 bg-white text-[#a03048] px-4 py-2 rounded-full text-sm font-semibold mb-4">
                         <FaPaw className="text-xs" />
                         All Clinics
                     </div>
@@ -180,7 +183,7 @@ export default function PetCare() {
                     <p className="text-gray-500 text-base max-w-xl mx-auto">
                         Find the perfect veterinary clinic for your pet's needs across Pakistan.
                     </p>
-                </div>
+                </div> */}
 
                 {/* Clinic Grid / States */}
                 {loading ? (
@@ -235,17 +238,45 @@ export default function PetCare() {
                             Join Pakistan's leading pet care network and connect with thousands of pet owners searching for trusted veterinary services. Free listing, quick approval, and direct client contact.
                         </p>
 
-                        <div className="flex flex-wrap gap-4">
-                            <button className="bg-white text-[#a03048] hover:bg-white/90 transition-all px-8 py-3.5 rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transform inline-flex items-center gap-2">
+                        {/* <div className="flex flex-wrap gap-4 mb-8">
+                            <a
+                                href="https://wa.me/923394022468"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-white text-[#a03048] hover:bg-white/90 transition-all px-8 py-3.5 rounded-xl font-semibold text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transform inline-flex items-center gap-2"
+                            >
                                 <FaClinicMedical />
                                 List Your Clinic
-                            </button>
-                            <button className="bg-white/10 hover:bg-white/20 transition-all text-white border border-white/20 px-8 py-3.5 rounded-xl font-semibold text-sm inline-flex items-center gap-2">
-                                Learn More
-                            </button>
+                            </a>
+                            <a
+                                href="mailto:contact@paltuu.pk"
+                                className="bg-white/10 hover:bg-white/20 transition-all text-white border border-white/20 px-8 py-3.5 rounded-xl font-semibold text-sm inline-flex items-center gap-2"
+                            >
+                                <FaEnvelope />
+                                Contact Us
+                            </a>
+                        </div> */}
+
+                        <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 items-start sm:items-center text-white/80 text-sm">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
+                                    <FaPhoneAlt className="text-xs" />
+                                </div>
+                                <a href="tel:+923394022468" className="hover:text-white transition-colors">
+                                    +92 339 4022468
+                                </a>
+                            </div>
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
+                                    <FaEnvelope className="text-xs" />
+                                </div>
+                                <a href="mailto:contact@paltuu.pk" className="hover:text-white transition-colors">
+                                    contact@paltuu.pk
+                                </a>
+                            </div>
                         </div>
 
-                        <p className="text-white/50 text-xs mt-5">
+                        <p className="text-white/50 text-xs mt-8">
                             No setup fees • Quick approval • Start connecting today
                         </p>
                     </div>

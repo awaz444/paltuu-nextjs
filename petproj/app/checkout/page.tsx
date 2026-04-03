@@ -70,11 +70,11 @@ const CheckoutPage = () => {
   const [shippingInfoLoaded, setShippingInfoLoaded] = useState(false);
   const [checkoutVisitTracked, setCheckoutVisitTracked] = useState(false);
 
-useEffect(() => {
-  // Fetch cart on mount to ensure we have latest data
-  console.log('🔄 Checkout page - fetching cart');
-  dispatch(fetchCart());
-}, [dispatch]);
+  useEffect(() => {
+    // Fetch cart on mount to ensure we have latest data
+    console.log('🔄 Checkout page - fetching cart');
+    dispatch(fetchCart());
+  }, [dispatch]);
 
   // Track checkout page visit for retargeting (only once)
   useEffect(() => {
@@ -187,7 +187,7 @@ useEffect(() => {
     (acc, item) => acc + item.price * item.qty,
     0
   );
-  const shipping = 200;
+  const shipping = 300;
   const total = subtotal + shipping - discount;
 
   // Email validation function
@@ -461,9 +461,8 @@ useEffect(() => {
                         placeholder="Enter email address"
                         value={email}
                         onChange={(e) => handleEmailChange(e.target.value)}
-                        className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition ${
-                          emailError ? "border-red-500" : "border-gray-300"
-                        }`}
+                        className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition ${emailError ? "border-red-500" : "border-gray-300"
+                          }`}
                       />
                       {emailError && (
                         <p className="text-red-500 text-sm mt-1">
@@ -492,9 +491,8 @@ useEffect(() => {
                         placeholder="+92 300 1234567"
                         value={phone}
                         onChange={(e) => handlePhoneChange(e.target.value)}
-                        className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition ${
-                          phoneError ? "border-red-500" : "border-gray-300"
-                        }`}
+                        className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition ${phoneError ? "border-red-500" : "border-gray-300"
+                          }`}
                       />
                       {phoneError && (
                         <p className="text-red-500 text-sm mt-1">
@@ -855,8 +853,8 @@ useEffect(() => {
                         if (!res.ok) {
                           alert(
                             data.message ||
-                              data.error ||
-                              "Failed to place order"
+                            data.error ||
+                            "Failed to place order"
                           );
                           setPlacing(false);
                           return;
@@ -887,8 +885,8 @@ useEffect(() => {
                     {placing
                       ? "Placing order..."
                       : paymentMethod === "bank"
-                      ? "Continue to Payment"
-                      : "Place Order"}
+                        ? "Continue to Payment"
+                        : "Place Order"}
                   </button>
 
                   {/* Terms Note */}

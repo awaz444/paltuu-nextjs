@@ -187,7 +187,7 @@ const CheckoutPage = () => {
     (acc, item) => acc + item.price * item.qty,
     0
   );
-  const shipping = 300;
+  const shipping = 350;
   const total = subtotal + shipping - discount;
 
   // Email validation function
@@ -740,7 +740,12 @@ const CheckoutPage = () => {
                     </div>
                     <div className="flex justify-between">
                       <span>Shipping</span>
-                      <span>Rs {shipping.toLocaleString()}</span>
+                      <div className="text-right">
+                        <span>Rs {shipping.toLocaleString()}</span>
+                        <p className="text-[10px] text-gray-400 italic mt-0.5">
+                          * Shipping cost has been increased due to recent fuel price hikes
+                        </p>
+                      </div>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-green-600">

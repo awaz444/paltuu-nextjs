@@ -62,6 +62,7 @@ export async function GET(request: NextRequest) {
       ORDER BY o.created_at DESC
     `;
 
+    
     const pool = getPool();
     const ordersResult = await pool.query(ordersQuery, [userId]);
 

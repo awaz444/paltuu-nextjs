@@ -26,6 +26,8 @@ export type Pet = {
   listing_type: string;
   vaccinated: boolean;
   neutered: boolean;
+  energy_level?: number | null;
+  cuddliness_level?: number | null;
 };
 
 

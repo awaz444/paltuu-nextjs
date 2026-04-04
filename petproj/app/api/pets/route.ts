@@ -64,6 +64,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         rescue_story,
         shelter_id,
         shop_id,
+        energy_level,
+        cuddliness_level,
     } = await req.json();
 
     const client = createClient();
@@ -83,9 +85,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                             description, adoption_status,
                             min_age_of_children, can_live_with_dogs, can_live_with_cats,
                             must_have_someone_home, health_issues,
-                            sex, listing_type, vaccinated, neutered, price, rescue_story, shelter_id, shop_id, created_at
+                            sex, listing_type, vaccinated, neutered, price, rescue_story, shelter_id, shop_id, created_at,
+                            energy_level, cuddliness_level
                         )
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, CURRENT_TIMESTAMP)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, CURRENT_TIMESTAMP, $24, $25)
                         RETURNING *`,
                         [
                             owner_id,
@@ -111,6 +114,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                             rescue_story,
                             shelter_id,
                             shop_id,
+                            energy_level,
+                            cuddliness_level,
                         ]
                     )
                 );
@@ -264,6 +269,8 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         vaccinated,
         neutered,
         price,
+        energy_level,
+        cuddliness_level,
     } = await req.json();
 
     const client = createClient();
@@ -275,7 +282,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
                 `UPDATE pets SET owner_id = $1, pet_name = $2, pet_type = $3, pet_breed = $4, city_id = $5, area = $6,
                 age_months = $7, contact_number = $8, description = $9, adoption_status = $10, min_age_of_children = $11, can_live_with_dogs = $12,
                 can_live_with_cats = $13, must_have_someone_home = $14, health_issues = $15, sex = $16, listing_type = $17, vaccinated = $18,
-                neutered = $19, price = $20 WHERE pet_id = $21 RETURNING *`,
+                neutered = $19, price = $20, energy_level = $22, cuddliness_level = $23 WHERE pet_id = $21 RETURNING *`,
                 [
                     owner_id,
                     pet_name,
@@ -298,6 +305,8 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
                     neutered,
                     price,
                     pet_id,
+                    energy_level,
+                    cuddliness_level,
                 ]
             )
         );

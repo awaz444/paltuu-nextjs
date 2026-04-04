@@ -46,16 +46,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         pet_breed,
         city_id,
         area,
-        age,
-        months,
+        age_months,
+        contact_number,
+        tags,
         description,
         adoption_status,
         min_age_of_children,
         can_live_with_dogs,
         can_live_with_cats,
         must_have_someone_home,
-        energy_level,
-        cuddliness_level,
         health_issues,
         sex,
         listing_type,
@@ -80,13 +79,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 const result = await withRetry<any>(() =>
                     client.query(
                         `INSERT INTO pets (
-                            owner_id, pet_name, pet_type, pet_breed, city_id, area, age, months,
+                            owner_id, pet_name, pet_type, pet_breed, city_id, area, age_months, contact_number,
                             description, adoption_status,
                             min_age_of_children, can_live_with_dogs, can_live_with_cats,
-                            must_have_someone_home, energy_level, cuddliness_level, health_issues,
+                            must_have_someone_home, health_issues,
                             sex, listing_type, vaccinated, neutered, price, rescue_story, shelter_id, shop_id, created_at
                         )
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, CURRENT_TIMESTAMP)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, CURRENT_TIMESTAMP)
                         RETURNING *`,
                         [
                             owner_id,
@@ -95,16 +94,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                             pet_breed,
                             city_id,
                             area,
-                            age,
-                            months,
+                            age_months,
+                            contact_number,
                             description,
                             adoption_status,
                             min_age_of_children,
                             can_live_with_dogs,
                             can_live_with_cats,
                             must_have_someone_home,
-                            energy_level,
-                            cuddliness_level,
                             health_issues,
                             sex,
                             listing_type,
@@ -119,6 +116,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 );
 
         const newPet = result.rows[0];
+
+        // Insert tags if any exist
+        if (tags && Array.isArray(tags) && tags.length > 0) {
+            const tagValues = tags.map((tagId: number) => `(${newPet.pet_id}, ${tagId})`).join(", ");
+            await withRetry(() => 
+                client.query(`INSERT INTO pet_tag_assignments (pet_id, tag_id) VALUES ${tagValues}`)
+            );
+        }
 
         // Send email notification to admin (non-blocking)
         sendNewListingNotification({
@@ -139,13 +144,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             const notificationContent = `A new pet listing ${pet_name} has been added. Please approve or reject it.`;
 
             const notificationQuery = `
-                INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+                INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent, entity_type, entity_id)
                 VALUES ${adminUserIds
                     .map(
                         (_: any, i: number) =>
-                            `($${i * 5 + 1}, $${i * 5 + 2}, $${i * 5 + 3}, $${
-                                i * 5 + 4
-                            }, $${i * 5 + 5})`
+                            `($${i * 7 + 1}, $${i * 7 + 2}, $${i * 7 + 3}, $${
+                                i * 7 + 4
+                            }, $${i * 7 + 5}, $${i * 7 + 6}, $${i * 7 + 7})`
                     )
                     .join(", ")}
             `;
@@ -156,6 +161,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 "listing_type",
                 false,
                 new Date(),
+                "pet",
+                newPet.pet_id
             ]);
 
             await withRetry(() =>
@@ -167,14 +174,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const ownerNotificationContent = `Your pet listing "${pet_name}" has been submitted for approval. You'll be notified once it's approved.`;
         await withRetry(() =>
             client.query(
-                `INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
-                 VALUES ($1, $2, $3, $4, $5)`,
+                `INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent, entity_type, entity_id)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
                 [
                     owner_id,
                     ownerNotificationContent,
                     "listing_submission",
                     false,
-                    new Date()
+                    new Date(),
+                    "pet",
+                    newPet.pet_id
                 ]
             )
         );
@@ -240,16 +249,15 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         pet_breed,
         city_id,
         area,
-        age,
-        months, // Changed from 'month' to 'months' to match frontend
+        age_months,
+        contact_number,
+        tags,
         description,
         adoption_status,
         min_age_of_children,
         can_live_with_dogs,
         can_live_with_cats,
         must_have_someone_home,
-        energy_level,
-        cuddliness_level,
         health_issues,
         sex,
         listing_type,
@@ -265,10 +273,9 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         const result = await withRetry<any>(() =>
             client.query(
                 `UPDATE pets SET owner_id = $1, pet_name = $2, pet_type = $3, pet_breed = $4, city_id = $5, area = $6,
-                age = $7, months = $8, description = $9, adoption_status = $10, min_age_of_children = $11, can_live_with_dogs = $12,
-                can_live_with_cats = $13, must_have_someone_home = $14, energy_level = $15, cuddliness_level = $16,
-                health_issues = $17, sex = $18, listing_type = $19, vaccinated = $20, neutered = $21, price = $22,
-                WHERE pet_id = $23 RETURNING *`,
+                age_months = $7, contact_number = $8, description = $9, adoption_status = $10, min_age_of_children = $11, can_live_with_dogs = $12,
+                can_live_with_cats = $13, must_have_someone_home = $14, health_issues = $15, sex = $16, listing_type = $17, vaccinated = $18,
+                neutered = $19, price = $20 WHERE pet_id = $21 RETURNING *`,
                 [
                     owner_id,
                     pet_name,
@@ -276,26 +283,35 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
                     pet_breed,
                     city_id,
                     area,
-                    age,
-                    months, // Added months parameter
+                    age_months,
+                    contact_number,
                     description,
                     adoption_status,
                     min_age_of_children,
                     can_live_with_dogs,
                     can_live_with_cats,
                     must_have_someone_home,
-                    energy_level,
-                    cuddliness_level,
                     health_issues,
                     sex,
                     listing_type,
                     vaccinated,
                     neutered,
                     price,
-                    pet_id, // Moved to $24
+                    pet_id,
                 ]
             )
         );
+
+        // Update tags if provided
+        if (tags && Array.isArray(tags)) {
+            await withRetry(() => client.query("DELETE FROM pet_tag_assignments WHERE pet_id = $1", [pet_id]));
+            if (tags.length > 0) {
+                const tagValues = tags.map((tagId: number) => `(${pet_id}, ${tagId})`).join(", ");
+                await withRetry(() => 
+                    client.query(`INSERT INTO pet_tag_assignments (pet_id, tag_id) VALUES ${tagValues}`)
+                );
+            }
+        }
 
         if (result.rows.length === 0) {
             return NextResponse.json(

@@ -73,8 +73,8 @@ export default function SinglePetUploadForm({
   const [canLiveWithDogs, setCanLiveWithDogs] = useState(false);
   const [canLiveWithCats, setCanLiveWithCats] = useState(false);
   const [mustHaveSomeoneHome, setMustHaveSomeoneHome] = useState(false);
-  const [energyLevel, setEnergyLevel] = useState<number | null>(null);
-  const [cuddlinessLevel, setCuddlinessLevel] = useState<number | null>(null);
+  const [contactNumber, setContactNumber] = useState("");
+  const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [healthIssues, setHealthIssues] = useState("");
   const [rescueStory, setRescueStory] = useState("");
   const [ageError, setAgeError] = useState<string | null>(null);
@@ -88,10 +88,7 @@ export default function SinglePetUploadForm({
   const [newTreatmentCost, setNewTreatmentCost] = useState<number | null>(null);
   const [newTreated, setNewTreated] = useState(false);
   
-  // Track if sliders have been touched
-  const [energyLevelTouched, setEnergyLevelTouched] = useState(false);
-  const [cuddlinessLevelTouched, setCuddlinessLevelTouched] = useState(false);
-  
+
   // Image upload state
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -239,8 +236,8 @@ export default function SinglePetUploadForm({
         pet_breed: entityType === 'shop' ? (breed || null) : null,
         city_id: Number(cityId),
         area: area || entityAddress || "",
-        age: age || 0,
-        months: months || 0,
+        age_months: ((age || 0) * 12) + (months || 0),
+        contact_number: contactNumber || null,
         description: description || null,
         adoption_status: "available",
         price: showPrice ? Number(price) : null,
@@ -248,8 +245,7 @@ export default function SinglePetUploadForm({
         can_live_with_dogs: canLiveWithDogs,
         can_live_with_cats: canLiveWithCats,
         must_have_someone_home: mustHaveSomeoneHome,
-        energy_level: energyLevelTouched ? energyLevel : null,
-        cuddliness_level: cuddlinessLevelTouched ? cuddlinessLevel : null,
+        tags: selectedTags,
         health_issues: healthIssues || null,
         rescue_story: entityType === 'shelter' ? (rescueStory || null) : null,
         sex: sex,
@@ -327,14 +323,12 @@ export default function SinglePetUploadForm({
       setCanLiveWithDogs(false);
       setCanLiveWithCats(false);
       setMustHaveSomeoneHome(false);
-      setEnergyLevel(null);
-      setCuddlinessLevel(null);
+      setContactNumber("");
+      setSelectedTags([]);
       setHealthIssues("");
       setRescueStory("");
       setAgeError(null);
       setMonthsError(null);
-      setEnergyLevelTouched(false);
-      setCuddlinessLevelTouched(false);
       setFileList([]);
       setCurrentStep(1);
       
@@ -366,18 +360,37 @@ export default function SinglePetUploadForm({
     setCurrentStep(1);
   };
 
-  const handleEnergyLevelChange = (value: number) => {
-    if (!energyLevelTouched) {
-      setEnergyLevelTouched(true);
-    }
-    setEnergyLevel(value);
-  };
+  const AVAILABLE_TAGS = [
+    { id: 1, name: 'Playful', category: 'personality' },
+    { id: 2, name: 'Calm', category: 'personality' },
+    { id: 3, name: 'Affectionate', category: 'personality' },
+    { id: 4, name: 'Independent', category: 'personality' },
+    { id: 5, name: 'Vocal', category: 'personality' },
+    { id: 6, name: 'Gentle', category: 'personality' },
+    { id: 7, name: 'Energetic', category: 'personality' },
+    { id: 8, name: 'Shy', category: 'personality' },
+    { id: 9, name: 'Confident', category: 'personality' },
+    { id: 10, name: 'Curious', category: 'personality' },
+    { id: 11, name: 'Good with kids', category: 'lifestyle' },
+    { id: 12, name: 'Apartment friendly', category: 'lifestyle' },
+    { id: 13, name: 'Needs outdoor space', category: 'lifestyle' },
+    { id: 14, name: 'Low maintenance', category: 'lifestyle' },
+    { id: 15, name: 'Lap cat/dog', category: 'lifestyle' },
+    { id: 16, name: 'Active lifestyle', category: 'lifestyle' },
+    { id: 17, name: 'Vaccinated', category: 'health' },
+    { id: 18, name: 'Neutered/Spayed', category: 'health' },
+    { id: 19, name: 'Special needs', category: 'health' },
+    { id: 20, name: 'Senior pet', category: 'health' },
+    { id: 21, name: 'Good with dogs', category: 'compatibility' },
+    { id: 22, name: 'Good with cats', category: 'compatibility' },
+    { id: 23, name: 'Good with other pets', category: 'compatibility' },
+    { id: 24, name: 'Prefers to be only pet', category: 'compatibility' }
+  ];
 
-  const handleCuddlinessLevelChange = (value: number) => {
-    if (!cuddlinessLevelTouched) {
-      setCuddlinessLevelTouched(true);
-    }
-    setCuddlinessLevel(value);
+  const toggleTag = (id: number) => {
+    setSelectedTags(prev => 
+      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
+    );
   };
 
   // Special needs functions
@@ -701,63 +714,36 @@ export default function SinglePetUploadForm({
                       </Row>
                     </div>
 
-                    {/* Energy Level */}
+                    {/* Pet Tags */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Energy Level
+                        Pet Attributes
                       </label>
-                      <div className="relative px-2">
-                        <input
-                          type="range"
-                          min="1"
-                          max="5"
-                          className="w-full appearance-none h-3 rounded-lg bg-gray-300 touch-manipulation"
-                          value={energyLevel ?? 3}
-                          onChange={(e) => handleEnergyLevelChange(Number(e.target.value))}
-                          style={{
-                            background: energyLevel !== null
-                              ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
-                                    ((energyLevel ?? 3) - 1) * 25
-                                  }%, #D1D5DB ${
-                                    ((energyLevel ?? 3) - 1) * 25
-                                  }%, #D1D5DB 100%)`
-                              : "#D1D5DB",
-                          }}
-                        />
-                        <div className="w-full flex justify-between mt-3 text-sm text-gray-500">
-                          <span>Chilled</span>
-                          <span>Hyper</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Cuddliness Level */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Cuddliness Level
-                      </label>
-                      <div className="relative px-2">
-                        <input
-                          type="range"
-                          min="1"
-                          max="5"
-                          className="w-full appearance-none h-3 rounded-lg bg-gray-300 touch-manipulation"
-                          value={cuddlinessLevel ?? 3}
-                          onChange={(e) => handleCuddlinessLevelChange(Number(e.target.value))}
-                          style={{
-                            background: cuddlinessLevel !== null
-                              ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
-                                    ((cuddlinessLevel ?? 3) - 1) * 25
-                                  }%, #D1D5DB ${
-                                    ((cuddlinessLevel ?? 3) - 1) * 25
-                                  }%, #D1D5DB 100%)`
-                              : "#D1D5DB",
-                          }}
-                        />
-                        <div className="w-full flex justify-between mt-3 text-sm text-gray-500">
-                          <span>Independent</span>
-                          <span>Cuddler</span>
-                        </div>
+                      <div className="space-y-4">
+                        {['personality', 'lifestyle', 'compatibility'].map(category => (
+                          <div key={category}>
+                            <p className="text-xs font-semibold text-gray-500 uppercase mb-2">{category}</p>
+                            <div className="flex flex-wrap gap-2">
+                              {AVAILABLE_TAGS.filter(tag => tag.category === category).map(tag => {
+                                const isSelected = selectedTags.includes(tag.id);
+                                return (
+                                  <button
+                                    key={tag.id}
+                                    type="button"
+                                    onClick={() => toggleTag(tag.id)}
+                                    className={`px-3 py-1 text-sm rounded-full transition-colors border ${
+                                      isSelected
+                                        ? 'bg-blue-100 text-blue-700 border-blue-300'
+                                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                                    }`}
+                                  >
+                                    {tag.name}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
 

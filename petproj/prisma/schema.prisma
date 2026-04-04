@@ -40,6 +40,8 @@ model adoption_applications {
   adopter_address         String?   @db.VarChar(255)
   created_at              DateTime? @default(now()) @db.Timestamp(6)
   status                  String?   @db.VarChar(255)
+  city_id                 Int?
+  contact_number          String?   @db.VarChar(255)
   age_of_youngest_child   Int?
   other_pets_details      String?
   other_pets_neutered     Boolean?
@@ -126,6 +128,8 @@ model notifications {
   notification_type    String?   @db.VarChar(255)
   date_sent            DateTime? @default(now()) @db.Timestamp(6)
   is_read              Boolean?  @default(false)
+  entity_type          String?   @db.VarChar(255)
+  entity_id            Int?
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -206,6 +210,9 @@ model pets {
   vaccinated             Boolean?
   neutered               Boolean?
   approved               Boolean?                @default(false)
+  age_months             Int?
+  contact_number         String?                 @db.VarChar(255)
+  pet_tag_assignments    pet_tag_assignments[]
   accepted_adoptions     accepted_adoptions[]
   adoption_applications  adoption_applications[]
   foster_applications    foster_applications[]
@@ -362,4 +369,20 @@ model OTP {
   createdat DateTime? @default(now()) @db.Timestamp(6)
 
   @@map("OTP")
+}
+
+model pet_tags {
+  tag_id              Int                   @id @default(autoincrement())
+  tag_name            String                @unique @db.VarChar(255)
+  tag_category        String                @db.VarChar(255)
+  pet_tag_assignments pet_tag_assignments[]
+}
+
+model pet_tag_assignments {
+  pet_id   Int
+  tag_id   Int
+  pets     pets     @relation(fields: [pet_id], references: [pet_id], onDelete: Cascade)
+  pet_tags pet_tags @relation(fields: [tag_id], references: [tag_id], onDelete: Cascade)
+
+  @@id([pet_id, tag_id])
 }

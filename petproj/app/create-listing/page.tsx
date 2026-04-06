@@ -15,6 +15,7 @@ import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { useSession } from "next-auth/react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const { Panel } = Collapse;
 
@@ -36,29 +37,16 @@ export default function CreatePetListing() {
     const [petType, setPetType] = useState("");
     const [cityId, setCityId] = useState("");
     const [area, setArea] = useState("");
+    const [contactNumber, setContactNumber] = useState("");
     const [description, setDescription] = useState("");
-    const [price, setPrice] = useState("");
-    const [paymentFrequency, setPaymentFrequency] = useState("");
     const [sex, setSex] = useState("male");
-    // Fields moved to accordion
     const [breed, setBreed] = useState("");
     const [age, setAge] = useState<number | null>(null);
     const [months, setMonths] = useState<number | null>(null);
-    const [vaccinated, setVaccinated] = useState(false);
-    const [neutered, setNeutered] = useState(false);
-    const [minAgeOfChildren, setMinAgeOfChildren] = useState(0);
-    const [canLiveWithDogs, setCanLiveWithDogs] = useState(false);
-    const [canLiveWithCats, setCanLiveWithCats] = useState(false);
-    const [mustHaveSomeoneHome, setMustHaveSomeoneHome] = useState(false);
-    const [energyLevel, setEnergyLevel] = useState<number | null>(null);
-    const [cuddlinessLevel, setCuddlinessLevel] = useState<number | null>(null);
     const [healthIssues, setHealthIssues] = useState("");
-    const [contactNumber, setContactNumber] = useState("");
+    const [selectedTags, setSelectedTags] = useState<number[]>([]);
     const [ageError, setAgeError] = useState<string | null>(null);
     const [monthsError, setMonthsError] = useState<string | null>(null);
-    // Track if sliders have been touched
-    const [energyLevelTouched, setEnergyLevelTouched] = useState(false);
-    const [cuddlinessLevelTouched, setCuddlinessLevelTouched] = useState(false);
 
     // Image upload state
     const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -69,6 +57,34 @@ export default function CreatePetListing() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+    const petTags = [
+        { tag_id: 1, tag_name: "Playful", tag_category: "personality" },
+        { tag_id: 2, tag_name: "Calm", tag_category: "personality" },
+        { tag_id: 3, tag_name: "Affectionate", tag_category: "personality" },
+        { tag_id: 4, tag_name: "Independent", tag_category: "personality" },
+        { tag_id: 5, tag_name: "Vocal", tag_category: "personality" },
+        { tag_id: 6, tag_name: "Gentle", tag_category: "personality" },
+        { tag_id: 7, tag_name: "Energetic", tag_category: "personality" },
+        { tag_id: 8, tag_name: "Shy", tag_category: "personality" },
+        { tag_id: 9, tag_name: "Confident", tag_category: "personality" },
+        { tag_id: 10, tag_name: "Curious", tag_category: "personality" },
+        { tag_id: 11, tag_name: "Good with kids", tag_category: "lifestyle" },
+        { tag_id: 12, tag_name: "Apartment friendly", tag_category: "lifestyle" },
+        { tag_id: 13, tag_name: "Needs outdoor space", tag_category: "lifestyle" },
+        { tag_id: 14, tag_name: "Low maintenance", tag_category: "lifestyle" },
+        { tag_id: 15, tag_name: "Lap cat/dog", tag_category: "lifestyle" },
+        { tag_id: 16, tag_name: "Active lifestyle", tag_category: "lifestyle" },
+        { tag_id: 17, tag_name: "Vaccinated", tag_category: "health" },
+        { tag_id: 18, tag_name: "Neutered/Spayed", tag_category: "health" },
+        { tag_id: 19, tag_name: "Special needs", tag_category: "health" },
+        { tag_id: 20, tag_name: "Senior pet", tag_category: "health" },
+        { tag_id: 21, tag_name: "Good with dogs", tag_category: "compatibility" },
+        { tag_id: 22, tag_name: "Good with cats", tag_category: "compatibility" },
+        { tag_id: 23, tag_name: "Good with other pets", tag_category: "compatibility" },
+        { tag_id: 24, tag_name: "Prefers to be only pet", tag_category: "compatibility" },
+        { tag_id: 25, tag_name: "Requires Company", tag_category: "compatibility" },
+    ];
 
     useEffect(() => {
         dispatch(fetchCities());
@@ -121,9 +137,6 @@ export default function CreatePetListing() {
         }
     };
 
-    const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setPrice(e.target.value);
-    };
 
     const beforeUpload = (file: File) => {
         const isImage = file.type.startsWith("image/");
@@ -170,6 +183,7 @@ export default function CreatePetListing() {
         if (!title) errors.title = "Title is required";
         if (!petType) errors.petType = "Pet type is required";
         if (!cityId) errors.cityId = "City is required";
+        if (!contactNumber) errors.contactNumber = "Contact number is required";
 
         if ((age === null || age === 0) && (months === null || months === 0)) {
             errors.age = "Either age or months must be filled";
@@ -197,10 +211,6 @@ export default function CreatePetListing() {
         setIsSubmitting(true);
 
         try {
-            // Determine listing type based on price
-            const listingType = price ? "sell" : "adoption";
-
-            // First create the pet
             const newPet = {
                 owner_id: parseInt(user.id),
                 pet_name: title || null,
@@ -212,18 +222,11 @@ export default function CreatePetListing() {
                 contact_number: contactNumber || null,
                 description: description || null,
                 adoption_status: "available",
-                price: price ? Number(price) : null,
-                min_age_of_children: minAgeOfChildren || null,
-                can_live_with_dogs: canLiveWithDogs,
-                can_live_with_cats: canLiveWithCats,
-                must_have_someone_home: mustHaveSomeoneHome,
-                energy_level: energyLevelTouched ? energyLevel : null, // Only send if touched
-                cuddliness_level: cuddlinessLevelTouched ? cuddlinessLevel : null, // Only send if touched
+                price: null,
                 health_issues: healthIssues || null,
                 sex: sex || "male",
-                listing_type: listingType,
-                vaccinated,
-                neutered,
+                listing_type: "adoption",
+                tags: selectedTags,
             };
 
             const petResult = await dispatch(postPet(newPet)).unwrap();
@@ -259,33 +262,31 @@ export default function CreatePetListing() {
         }
     };
 
+    const handleTagToggle = (tagId: number) => {
+        setSelectedTags((prev) =>
+            prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+        );
+    };
+
     const nextStep = () => {
-        // Validate required fields before proceeding
-        if (!title || !petType || !cityId) {
-            message.error("Please fill in all required fields");
-            return;
+        // Validate based on current step
+        if (currentStep === 1) {
+            if (!title || !petType || !cityId || !contactNumber) {
+                message.error("Please fill in all required fields");
+                return;
+            }
+            setCurrentStep(2);
+        } else if (currentStep === 2) {
+            if ((age === null || age === 0) && (months === null || months === 0)) {
+                message.error("Age is required");
+                return;
+            }
+            setCurrentStep(3);
         }
-        setCurrentStep(2);
     };
 
     const prevStep = () => {
-        setCurrentStep(1);
-    };
-
-    // Handle energy level change
-    const handleEnergyLevelChange = (value: number) => {
-        if (!energyLevelTouched) {
-            setEnergyLevelTouched(true);
-        }
-        setEnergyLevel(value);
-    };
-
-    // Handle cuddliness level change
-    const handleCuddlinessLevelChange = (value: number) => {
-        if (!cuddlinessLevelTouched) {
-            setCuddlinessLevelTouched(true);
-        }
-        setCuddlinessLevel(value);
+        setCurrentStep((prev) => prev - 1);
     };
 
     // Show loading state while authentication is being determined
@@ -309,468 +310,354 @@ export default function CreatePetListing() {
     return (
         <>
             <div
-                className="fullBody min-h-screen"
-                style={{ maxWidth: "90%", margin: "0 auto" }}>
-                <form
-                    className="bg-white p-6 rounded-3xl shadow-md w-full max-w-lg mx-auto my-8"
-                    onSubmit={handleSubmit}>
-                    <h2 className="text-2xl font-bold mb-6 text-center">
-                        {currentStep === 1
-                            ? "Create Pet Listing"
-                            : "Upload Images"}
-                    </h2>
-
-                    {currentStep === 1 ? (
-                        <>
-                            {/* Title (replaces Pet Name) */}
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Title *
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                    placeholder="E.g. 'Max the friendly dog' or '5 kittens needing homes'"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                />
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Give your listing a descriptive title that
-                                    will attract potential adopters
-                                </p>
+                className="fullBody min-h-screen py-12 px-4 sm:px-6"
+                style={{ maxWidth: "1200px", margin: "0 auto" }}>
+                
+                {/* Progress Header */}
+                <div className="max-w-xl mx-auto mb-12">
+                    <div className="flex justify-between items-center relative">
+                        {[1, 2, 3].map((step) => (
+                            <div key={step} className="flex flex-col items-center relative z-10">
+                                <motion.div
+                                    initial={false}
+                                    animate={{
+                                        scale: currentStep === step ? 1.2 : 1,
+                                        backgroundColor: currentStep >= step ? "var(--primary-color)" : "#e2e8f0",
+                                    }}
+                                    className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white transition-all shadow-lg ${
+                                        currentStep >= step ? "shadow-primary/20" : ""
+                                    }`}>
+                                    {step}
+                                </motion.div>
+                                <span className={`text-[10px] uppercase tracking-widest mt-3 font-black ${currentStep >= step ? "text-primary" : "text-gray-400"}`}>
+                                    {step === 1 ? "Essentials" : step === 2 ? "Attributes" : "Gallery"}
+                                </span>
                             </div>
+                        ))}
+                        <div className="absolute top-6 left-0 right-0 h-[2px] bg-gray-100 -z-0">
+                            <motion.div
+                                className="h-full bg-primary"
+                                initial={{ width: "0%" }}
+                                animate={{ width: `${((currentStep - 1) / 2) * 100}%` }}
+                                transition={{ duration: 0.5, ease: "easeInOut" }}
+                            />
+                        </div>
+                    </div>
+                </div>
 
-                            {/* Pet Type */}
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Pet Type *
-                                </label>
-                                <select
-                                    className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                    value={petType}
-                                    required
-                                    onChange={(e) =>
-                                        setPetType(e.target.value)
-                                    }>
-                                    <option value="">Select pet type</option>
-                                    {categories.map((category) => (
-                                        <option
-                                            key={category.category_id}
-                                            value={category.category_id}>
-                                            {category.category_name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                <motion.div 
+                    layout
+                    className="bg-white p-8 sm:p-12 rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] w-full max-w-2xl mx-auto overflow-hidden relative border border-gray-50">
+                    
+                    <form onSubmit={handleSubmit}>
+                        <AnimatePresence mode="wait">
+                            {currentStep === 1 && (
+                                <motion.div
+                                    key="step1"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="space-y-8">
+                                    
+                                    <div className="text-center mb-10">
+                                        <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">The Essentials</h2>
+                                        <p className="text-gray-500 font-medium">Start with the fundamental details</p>
+                                    </div>
 
-                            {/* City */}
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    City *
-                                </label>
-                                <select
-                                    className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                    value={cityId}
-                                    required
-                                    onChange={(e) => setCityId(e.target.value)}>
-                                    <option value="">Select City</option>
-                                    {cities.map((city) => (
-                                        <option
-                                            key={city.city_id}
-                                            value={city.city_id}>
-                                            {city.city_name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
 
-                            {/* Area */}
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Area/Neighborhood *
-                                </label>
-                                <input
-                                    type="text"
-                                    className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                    placeholder="Enter your area or neighborhood"
-                                    value={area}
-                                    onChange={(e) => setArea(e.target.value)}
-                                />
-                            </div>
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Listing Title *</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 focus:bg-white text-lg font-bold"
+                                                placeholder="e.g. Energetic Husky Mix for Adoption"
+                                                value={title}
+                                                onChange={(e) => setTitle(e.target.value)}
+                                            />
+                                        </div>
 
-                            {/* Sex */}
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Sex *
-                                </label>
-                                <select
-                                    className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                    value={sex}
-                                    onChange={(e) => setSex(e.target.value)}>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="unknown">Unknown</option>
-                                </select>
-                            </div>
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Pet Type *</label>
+                                                <select
+                                                    className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 font-bold appearance-none"
+                                                    value={petType}
+                                                    required
+                                                    onChange={(e) => setPetType(e.target.value)}>
+                                                    <option value="">Select Category</option>
+                                                    {categories.map((category) => (
+                                                        <option key={category.category_id} value={category.category_id}>
+                                                            {category.category_name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Sex *</label>
+                                                <div className="flex gap-2">
+                                                    {["male", "female"].map((s) => (
+                                                        <button
+                                                            key={s}
+                                                            type="button"
+                                                            onClick={() => setSex(s)}
+                                                            className={`flex-1 py-4 rounded-3xl text-sm font-bold capitalize border transition-all ${
+                                                                sex === s 
+                                                                    ? "border-primary bg-primary/5 text-primary" 
+                                                                    : "border-gray-100 bg-gray-50 text-gray-400"
+                                                            }`}>
+                                                            {s}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
 
-                            {/* Contact Number */}
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Contact Number *
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                    placeholder="+923..."
-                                    value={contactNumber}
-                                    onChange={(e) => setContactNumber(e.target.value)}
-                                />
-                            </div>
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">City *</label>
+                                                <select
+                                                    className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 font-bold"
+                                                    value={cityId}
+                                                    required
+                                                    onChange={(e) => setCityId(e.target.value)}>
+                                                    <option value="">Choose City</option>
+                                                    {cities.map((city) => (
+                                                        <option key={city.city_id} value={city.city_id}>
+                                                            {city.city_name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Area/Neighborhood *</label>
+                                                <input
+                                                    type="text"
+                                                    className="p-5 w-full border rounded-3xl input-field bg-gray-50/50"
+                                                    placeholder="DHA, Gulberg, etc."
+                                                    value={area}
+                                                    onChange={(e) => setArea(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
 
-                            {/* Age and Months */}
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Age (Years) *
-                                    </label>
-                                    <input
-                                        type="number"
-                                        className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                        placeholder="Years"
-                                        value={age ?? ""}
-                                        onChange={handleAgeChange}
-                                    />
-                                    {ageError && (
-                                        <p className="text-red-500 text-xs mt-1">
-                                            {ageError}
-                                        </p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Age (Months) *
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="11"
-                                        className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                        placeholder="Months (0-11)"
-                                        value={months ?? ""}
-                                        onChange={handleMonthsChange}
-                                    />
-                                    {monthsError && (
-                                        <p className="text-red-500 text-xs mt-1">
-                                            {monthsError}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div className="col-span-2">
+                                                <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Contact Phone *</label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    className="p-5 w-full border rounded-3xl input-field bg-gray-50/50"
+                                                    placeholder="+92 3..."
+                                                    value={contactNumber}
+                                                    onChange={(e) => setContactNumber(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            {/* Price */}
-                            {/* <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Price
-                                </label>
-                                <input
-                                    type="text"
-                                    className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                    placeholder="Enter price if selling"
-                                    value={price}
-                                    onChange={handlePriceChange}
-                                />
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Leave empty for adoption listings
-                                </p>
-                            </div> */}
-
-                            {price && (
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Payment Frequency
-                                    </label>
-                                    <select
-                                        className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                        value={paymentFrequency}
-                                        onChange={(e) =>
-                                            setPaymentFrequency(e.target.value)
-                                        }>
-                                        <option value="day">Daily</option>
-                                        <option value="week">Weekly</option>
-                                        <option value="month">Monthly</option>
-                                        <option value="year">Yearly</option>
-                                    </select>
-                                </div>
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        type="button"
+                                        onClick={nextStep}
+                                        className="mt-12 p-6 bg-primary text-white rounded-[2rem] w-full font-black text-lg shadow-2xl shadow-primary/30 active:shadow-none transition-shadow">
+                                        Next Component
+                                    </motion.button>
+                                </motion.div>
                             )}
 
-                            {/* Description */}
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Description
-                                </label>
-                                <textarea
-                                    className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                    placeholder="Tell potential adopters about the pet(s) - personality, history, special needs, etc."
-                                    rows={3}
-                                    value={description}
-                                    onChange={(e) =>
-                                        setDescription(e.target.value)
-                                    }></textarea>
-                            </div>
-
-                            {/* Additional Details Accordion */}
-                            <Collapse className="mb-6" defaultActiveKey={[]}>
-                                <Panel
-                                    className=""
-                                    header="Additional Details"
-                                    key="1">
-                                    {/* Breed */}
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Breed
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                            placeholder="Enter breed if known"
-                                            value={breed}
-                                            onChange={(e) =>
-                                                setBreed(e.target.value)
-                                            }
-                                        />
+                            {currentStep === 2 && (
+                                <motion.div
+                                    key="step2"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="space-y-10">
+                                    
+                                    <div className="text-center mb-8">
+                                        <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">Traits & Behavior</h2>
+                                        <p className="text-gray-500 font-medium">Describe their unique personality</p>
                                     </div>
 
-                                    {/* Vaccinated & Neutered */}
-                                    <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={vaccinated}
-                                                onChange={(e) =>
-                                                    setVaccinated(
-                                                        e.target.checked
-                                                    )
-                                                }
-                                                className="mr-2"
-                                            />
-                                            Vaccinated
-                                        </label>
-                                        <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={neutered}
-                                                onChange={(e) =>
-                                                    setNeutered(
-                                                        e.target.checked
-                                                    )
-                                                }
-                                                className="mr-2"
-                                            />
-                                            Neutered/Spayed
-                                        </label>
-                                    </div>
-
-                                    {/* Compatibility */}
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Compatibility
-                                        </label>
-                                        <div className="space-y-2">
-                                            <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+                                    <div className="grid grid-cols-2 gap-8 p-8 bg-gray-50/50 rounded-[3rem] border border-gray-100">
+                                        <div className="space-y-6">
+                                            <div>
+                                                <label className="block text-[10px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Years</label>
                                                 <input
-                                                    type="checkbox"
-                                                    checked={canLiveWithDogs}
-                                                    onChange={(e) =>
-                                                        setCanLiveWithDogs(
-                                                            e.target.checked
-                                                        )
-                                                    }
-                                                    className="mr-2"
+                                                    type="number"
+                                                    className="p-5 w-full border rounded-3xl input-field bg-white font-bold"
+                                                    placeholder="0"
+                                                    value={age ?? ""}
+                                                    onChange={handleAgeChange}
                                                 />
-                                                Can live with dogs
-                                            </label>
-                                            <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Months</label>
                                                 <input
-                                                    type="checkbox"
-                                                    checked={canLiveWithCats}
-                                                    onChange={(e) =>
-                                                        setCanLiveWithCats(
-                                                            e.target.checked
-                                                        )
-                                                    }
-                                                    className="mr-2"
+                                                    type="number"
+                                                    max="11"
+                                                    className="p-5 w-full border rounded-3xl input-field bg-white font-bold"
+                                                    placeholder="0"
+                                                    value={months ?? ""}
+                                                    onChange={handleMonthsChange}
                                                 />
-                                                Can live with cats
-                                            </label>
-                                            <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={
-                                                        mustHaveSomeoneHome
-                                                    }
-                                                    onChange={(e) =>
-                                                        setMustHaveSomeoneHome(
-                                                            e.target.checked
-                                                        )
-                                                    }
-                                                    className="mr-2"
-                                                />
-                                                Needs someone home most of the
-                                                time
-                                            </label>
+                                            </div>
                                         </div>
-                                    </div>
-
-                                    {/* Energy Level */}
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Energy Level
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type="range"
-                                                min="1"
-                                                max="5"
-                                                className="mt-2 w-full appearance-none h-2 rounded-lg bg-gray-300"
-                                                value={energyLevel ?? 3}
-                                                onChange={(e) =>
-                                                    handleEnergyLevelChange(
-                                                        Number(e.target.value)
-                                                    )
-                                                }
-                                                style={{
-                                                    background: energyLevel !== null
-                                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
-                                                              ((energyLevel ?? 3) - 1) *
-                                                              25
-                                                          }%, #D1D5DB ${
-                                                              ((energyLevel ?? 3) - 1) *
-                                                              25
-                                                          }%, #D1D5DB 100%)`
-                                                        : "#D1D5DB",
-                                                }}
-                                            />
-                                            <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
-                                                <span>Chilled</span>
-                                                <span>Hyper</span>
+                                        <div className="space-y-6">
+                                            <div>
+                                                <label className="block text-[10px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Breed</label>
+                                                <input
+                                                    type="text"
+                                                    className="p-5 w-full border rounded-3xl input-field bg-white"
+                                                    placeholder="e.g. Persian"
+                                                    value={breed}
+                                                    onChange={(e) => setBreed(e.target.value)}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Health Issues</label>
+                                                <input
+                                                    type="text"
+                                                    className="p-5 w-full border rounded-3xl input-field bg-white"
+                                                    placeholder="None / Minor"
+                                                    value={healthIssues}
+                                                    onChange={(e) => setHealthIssues(e.target.value)}
+                                                />
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Cuddliness Level */}
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Cuddliness Level
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type="range"
-                                                min="1"
-                                                max="5"
-                                                className="mt-2 w-full appearance-none h-2 rounded-lg bg-gray-300"
-                                                value={cuddlinessLevel ?? 3}
-                                                onChange={(e) =>
-                                                    handleCuddlinessLevelChange(
-                                                        Number(e.target.value)
-                                                    )
-                                                }
-                                                style={{
-                                                    background: cuddlinessLevel !== null
-                                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${
-                                                              ((cuddlinessLevel ?? 3) - 1) *
-                                                              25
-                                                          }%, #D1D5DB ${
-                                                              ((cuddlinessLevel ?? 3) - 1) *
-                                                              25
-                                                          }%, #D1D5DB 100%)`
-                                                        : "#D1D5DB",
-                                                }}
-                                            />
-                                            <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
-                                                <span>Independent</span>
-                                                <span>Cuddler</span>
-                                            </div>
+                                    <div className="space-y-8">
+                                        <h3 className="text-sm font-black text-gray-300 uppercase tracking-[0.2em] text-center italic">Select all that apply</h3>
+                                        
+                                        <div className="space-y-10">
+                                            {["personality", "lifestyle", "compatibility", "health"].map((cat) => (
+                                                <div key={cat} className="space-y-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-[10px] uppercase tracking-[0.3em] font-black text-primary/40 leading-none">{cat}</span>
+                                                        <div className="h-[1px] flex-1 bg-gray-100"></div>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {petTags
+                                                            .filter((t) => t.tag_category === cat)
+                                                            .map((tag, idx) => (
+                                                                <motion.button
+                                                                    whileHover={{ y: -2 }}
+                                                                    whileTap={{ scale: 0.95 }}
+                                                                    key={tag.tag_id}
+                                                                    type="button"
+                                                                    onClick={() => handleTagToggle(tag.tag_id)}
+                                                                    className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border-2 ${
+                                                                        selectedTags.includes(tag.tag_id)
+                                                                            ? "bg-primary border-primary text-white shadow-xl shadow-primary/20"
+                                                                            : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"
+                                                                    }`}>
+                                                                    {tag.tag_name}
+                                                                </motion.button>
+                                                            ))}
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
 
-                                    {/* Health Issues */}
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Known Health Issues
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className="mt-1 p-3 w-full border rounded-2xl input-field"
-                                            placeholder="Describe any health issues"
-                                            value={healthIssues}
-                                            onChange={(e) =>
-                                                setHealthIssues(e.target.value)
-                                            }
-                                        />
+                                    <div className="flex gap-4 pt-4">
+                                        <button
+                                            type="button"
+                                            onClick={prevStep}
+                                            className="p-6 bg-gray-50 text-gray-400 rounded-[2rem] w-1/3 font-black hover:bg-gray-100 transition-all">
+                                            Return
+                                        </button>
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            type="button"
+                                            onClick={nextStep}
+                                            className="p-6 bg-primary text-white rounded-[2rem] flex-1 font-black shadow-xl shadow-primary/10">
+                                            Almost Done
+                                        </motion.button>
                                     </div>
-                                </Panel>
-                            </Collapse>
+                                </motion.div>
+                            )}
 
-                            <button
-                                type="button"
-                                onClick={nextStep}
-                                className="mt-4 p-3 bg-primary text-white rounded-3xl w-full">
-                                Next
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            {/* Upload Images */}
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-3">
-                                    Upload Images (Maximum 5)
-                                </label>
-                                <Upload
-                                    action=""
-                                    listType="picture-card"
-                                    fileList={fileList}
-                                    onPreview={handlePreview}
-                                    onChange={handleChange}
-                                    beforeUpload={beforeUpload}
-                                    maxCount={5}>
-                                    {fileList.length >= 5 ? null : uploadButton}
-                                </Upload>
-                                {previewImage && (
-                                    <Image
-                                        wrapperStyle={{ display: "none" }}
-                                        preview={{
-                                            visible: previewOpen,
-                                            onVisibleChange: (visible) =>
-                                                setPreviewOpen(visible),
-                                            afterOpenChange: (visible) =>
-                                                !visible && setPreviewImage(""),
-                                        }}
-                                        src={previewImage}
-                                    />
-                                )}
-                            </div>
+                            {currentStep === 3 && (
+                                <motion.div
+                                    key="step3"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="space-y-10">
+                                    
+                                    <div className="text-center">
+                                        <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">Final Details</h2>
+                                        <p className="text-gray-500 font-medium">Add photos and a short description</p>
+                                    </div>
 
-                            <div className="flex gap-4">
-                                <button
-                                    type="button"
-                                    onClick={prevStep}
-                                    className="mt-4 p-3 bg-gray-300 text-gray-700 rounded-3xl w-full">
-                                    Back
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="mt-4 p-3 bg-primary text-white rounded-3xl w-full disabled:bg-gray-400"
-                                    disabled={isSubmitting}>
-                                    {isSubmitting
-                                        ? "Creating Listing..."
-                                        : "Create Listing"}
-                                </button>
-                            </div>
-                        </>
-                    )}
-                </form>
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-3 ml-1">The Story</label>
+                                            <textarea
+                                                className="p-6 w-full border rounded-[2.5rem] input-field bg-gray-50/50 min-h-[180px] text-gray-700 leading-relaxed font-medium"
+                                                placeholder="Tell us about their habits, favorite toys, or how you found them..."
+                                                value={description}
+                                                onChange={(e) => setDescription(e.target.value)}></textarea>
+                                        </div>
+
+                                        <div className="p-10 bg-gray-50/30 rounded-[3rem] border-2 border-dashed border-gray-100 flex flex-col items-center">
+                                            <label className="text-[11px] uppercase tracking-widest font-black text-gray-400 mb-8">Photos Gallery (Max 5)</label>
+                                            <Upload
+                                                className="listing-uploader scale-110"
+                                                listType="picture-card"
+                                                fileList={fileList}
+                                                onPreview={handlePreview}
+                                                onChange={handleChange}
+                                                beforeUpload={beforeUpload}
+                                                maxCount={5}>
+                                                {fileList.length >= 5 ? null : (
+                                                    <div className="flex flex-col items-center opacity-40 hover:opacity-100 transition-opacity">
+                                                        <PlusOutlined style={{ fontSize: "32px", color: "var(--primary-color)" }} />
+                                                        <div className="mt-2 text-[10px] font-black uppercase tracking-tighter">Add</div>
+                                                    </div>
+                                                )}
+                                            </Upload>
+                                        </div>
+                                    </div>
+
+                                    {previewImage && (
+                                        <Image
+                                            wrapperStyle={{ display: "none" }}
+                                            preview={{
+                                                visible: previewOpen,
+                                                onVisibleChange: (visible) => setPreviewOpen(visible),
+                                                afterOpenChange: (visible) => !visible && setPreviewImage(""),
+                                            }}
+                                            src={previewImage}
+                                        />
+                                    )}
+
+                                    <div className="flex gap-4 pt-4">
+                                        <button
+                                            type="button"
+                                            onClick={prevStep}
+                                            className="p-6 bg-gray-50 text-gray-400 rounded-[2rem] w-1/3 font-black hover:bg-gray-100 transition-all">
+                                            Back
+                                        </button>
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            type="submit"
+                                            className="p-6 bg-[#1a1a1a] text-white rounded-[2rem] flex-1 font-black shadow-2xl shadow-black/20 disabled:bg-gray-200 transition-all"
+                                            disabled={isSubmitting}>
+                                            {isSubmitting ? "Generating..." : "Launch Listing"}
+                                        </motion.button>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </form>
+                </motion.div>
             </div>
         </>
     );

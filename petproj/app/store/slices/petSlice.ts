@@ -6,28 +6,28 @@ import { RootState } from '../store'; // Ensure this path is correct
 export type Pet = {
   pet_id: number; // assuming this exists
   owner_id: number;
-  pet_name: string | null; // Allow null
-  pet_type: number | null; // Allow null
-  pet_breed: string | null; // Allow null
-  city_id: number | null; // Allow null
-  area: string; // This will need to be updated if you want it to allow null
-  age_months: number | null;
-  contact_number?: string | null; 
-  tags?: number[];
-  description: string | null; // Allow null
-  adoption_status: string;
-  price: number | null; // Allow null
-  min_age_of_children: number | null; // Allow null
-  can_live_with_dogs: boolean;
-  can_live_with_cats: boolean;
-  must_have_someone_home: boolean;
-  health_issues: string | null; // Allow null
-  sex: string;
-  listing_type: string;
-  vaccinated: boolean;
-  neutered: boolean;
-  energy_level?: number | null;
-  cuddliness_level?: number | null;
+    pet_name: string | null;
+    pet_type: number | null;
+    pet_breed: string | null;
+    city_id: number | null;
+    area: string;
+    age_months: number | null;
+    contact_number?: string | null;
+    tags?: number[];
+    description: string | null;
+    adoption_status: string;
+    price: number | null;
+    min_age_of_children?: number | null;
+    can_live_with_dogs?: boolean;
+    can_live_with_cats?: boolean;
+    must_have_someone_home?: boolean;
+    health_issues: string | null;
+    sex: string;
+    listing_type: string;
+    vaccinated?: boolean;
+    neutered?: boolean;
+    energy_level?: number | null;
+    cuddliness_level?: number | null;
 };
 
 

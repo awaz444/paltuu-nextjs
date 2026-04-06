@@ -8,6 +8,7 @@ import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { useAuth } from "@/context/AuthContext";
 
 import "./petGrid.css";
+import { formatAge } from "@/utils/formatAge";
 
 interface Pet {
     pet_id: number;
@@ -17,8 +18,9 @@ interface Pet {
     pet_breed: string | null;
     city_id: number;
     area: string;
-    age: number;
-    months: number;
+    age?: number;
+    months?: number;
+    age_months: number;
     description: string;
     adoption_status: string;
     price: string;
@@ -250,13 +252,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                                 {pet.pet_name}
                             </h3>
                             <p className="text-gray-600 mb-1 truncate max-w-[90%]">
-                                {pet.age > 0 &&
-                                    `${pet.age} ${pet.age > 1 ? "years" : "year"
-                                    }`}
-                                {pet.age > 0 && pet.months > 0 && ", "}
-                                {pet.months > 0 &&
-                                    `${pet.months} ${pet.months > 1 ? "months" : "month"
-                                    } old`}
+                                {formatAge(pet.age_months)}
                             </p>
                             <div className="flex flex-row gap-2 right">
                                 <EnvironmentOutlined className="text-primary" />

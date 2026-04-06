@@ -54,12 +54,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             values.push(sex);
         }
         if (minAge) {
-            conditions.push(`pets.age >= $${paramIndex++}`);
-            values.push(parseFloat(minAge));
+            conditions.push(`pets.age_months >= $${paramIndex++}`);
+            values.push(Math.round(parseFloat(minAge) * 12));
         }
         if (maxAge) {
-            conditions.push(`pets.age <= $${paramIndex++}`);
-            values.push(parseFloat(maxAge));
+            conditions.push(`pets.age_months <= $${paramIndex++}`);
+            values.push(Math.round(parseFloat(maxAge) * 12));
         }
         if (minPrice) {
             conditions.push(`pets.price >= $${paramIndex++}`);

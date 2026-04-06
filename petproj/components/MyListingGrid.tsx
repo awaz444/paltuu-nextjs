@@ -9,6 +9,7 @@ import Link from "next/link";
 import { UseDispatch } from "react-redux";
 import { fetchAdoptionPets } from "@/app/store/slices/adoptionPetsSlice";
 import { fetchFosterPets } from "@/app/store/slices/fosterPetsSlice";
+import { formatAge } from "@/utils/formatAge";
 
 const { TextArea } = Input;
 
@@ -20,8 +21,8 @@ export interface Pet {
     pet_breed: string | null;
     city_id: number;
     area: string;
-    age: number;
-    months: number;
+    age_months: number;
+    contact_number: string | null;
     description: string;
     adoption_status: string;
     price: string;
@@ -202,12 +203,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                             {pet.pet_name}
                         </h3>
                         <p className="text-gray-600 mb-1">
-                            {pet.age > 0 &&
-                                `${pet.age} ${pet.age > 1 ? "years" : "year"}`}
-                            {pet.age > 0 && pet.months > 0 && ", "}
-                            {pet.months > 0 &&
-                                `${pet.months} ${pet.months > 1 ? "months" : "month"
-                                } old`}
+                            {formatAge(pet.age_months)}
                         </p>
                         <p className="text-gray-600 mb-1">
                             {pet.city} - {pet.area}
@@ -308,42 +304,39 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                         />
                     </div>
 
-                    {/* Age and Months fields */}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Years
-                            </label>
-                            <Input
-                                placeholder="Years"
-                                type="number"
-                                value={editingPet.age}
-                                onChange={(e) =>
-                                    setEditingPet({
-                                        ...editingPet,
-                                        age: Number(e.target.value),
-                                    })
-                                }
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Months
-                            </label>
-                            <Input
-                                placeholder="Months"
-                                type="number"
-                                min="0"
-                                max="11"
-                                value={editingPet.months}
-                                onChange={(e) =>
-                                    setEditingPet({
-                                        ...editingPet,
-                                        months: Number(e.target.value),
-                                    })
-                                }
-                            />
-                        </div>
+                    {/* Age months field */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Age (Total Months)
+                        </label>
+                        <Input
+                            placeholder="Age in months"
+                            type="number"
+                            value={editingPet.age_months}
+                            onChange={(e) =>
+                                setEditingPet({
+                                    ...editingPet,
+                                    age_months: Number(e.target.value),
+                                })
+                            }
+                        />
+                        <p className="text-[10px] text-gray-500 mt-1">Current: {formatAge(editingPet.age_months)}</p>
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Contact Number
+                        </label>
+                        <Input
+                            placeholder="+923..."
+                            value={editingPet.contact_number || ""}
+                            onChange={(e) =>
+                                setEditingPet({
+                                    ...editingPet,
+                                    contact_number: e.target.value,
+                                })
+                            }
+                        />
                     </div>
 
                     <div className="mb-4">

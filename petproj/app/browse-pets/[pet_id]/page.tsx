@@ -9,6 +9,7 @@ import { formatAiResponse } from "@/utils/formatAiResponse";
 import { useAuth } from "@/context/AuthContext";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { formatAge } from "@/utils/formatAge";
 
 import {
     Spin,
@@ -556,24 +557,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                                 </span>
                                                 <span>•</span>
                                                 <span>
-                                                    {pet.age > 0 &&
-                                                        `${pet.age} ${
-                                                            pet.age > 1
-                                                                ? "years"
-                                                                : "year"
-                                                        }`}
-                                                    {pet.age > 0 &&
-                                                        pet.months > 0 &&
-                                                        ", "}
-                                                    {pet.months > 0 &&
-                                                        `${pet.months} ${
-                                                            pet.months > 1
-                                                                ? "months"
-                                                                : "month"
-                                                        } old`}
-                                                    {pet.age === 0 &&
-                                                        pet.months === 0 &&
-                                                        "Age not specified"}
+                                                    {formatAge(pet.age_months)}
                                                 </span>
                                             </div>
                                         </div>
@@ -714,66 +698,19 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                     </Paragraph>
                                 </div>
                             )}
-
-                            {(hasValue(pet.energy_level) ||
-                                hasValue(pet.cuddliness_level)) && (
+                            {pet.tags && pet.tags.length > 0 && (
                                 <div className="p-5 rounded-lg border border-gray-200">
                                     <Title
                                         level={3}
                                         className="text-gray-800 mb-4 flex items-center">
-                                        Personality Traits
+                                        Pet Attributes
                                     </Title>
-
-                                    <div className="space-y-5">
-                                        {hasValue(pet.energy_level) && (
-                                            <div>
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <Text className="font-medium text-gray-700">
-                                                        Energy Level
-                                                    </Text>
-                                                    <Text className="font-semibold text-gray-800">
-                                                        {pet.energy_level}/5
-                                                    </Text>
-                                                </div>
-                                                <input
-                                                    type="range"
-                                                    min="1"
-                                                    max="5"
-                                                    value={pet.energy_level}
-                                                    disabled
-                                                    className="w-full"
-                                                />
-                                                <div className="flex justify-between mt-1 text-xs text-gray-600">
-                                                    <span>Calm</span>
-                                                    <span>Energetic</span>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {hasValue(pet.cuddliness_level) && (
-                                            <div>
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <Text className="font-medium text-gray-700">
-                                                        Cuddliness Level
-                                                    </Text>
-                                                    <Text className="font-semibold text-gray-800">
-                                                        {pet.cuddliness_level}/5
-                                                    </Text>
-                                                </div>
-                                                <input
-                                                    type="range"
-                                                    min="1"
-                                                    max="5"
-                                                    value={pet.cuddliness_level}
-                                                    disabled
-                                                    className="w-full"
-                                                />
-                                                <div className="flex justify-between mt-1 text-xs text-gray-600">
-                                                    <span>Independent</span>
-                                                    <span>Affectionate</span>
-                                                </div>
-                                            </div>
-                                        )}
+                                    <div className="flex flex-wrap gap-2">
+                                        {pet.tags.map((tag: any) => (
+                                            <Tag key={tag.tag_id} color="blue" className="rounded-full px-3 py-1">
+                                                {tag.tag_name}
+                                            </Tag>
+                                        ))}
                                     </div>
                                 </div>
                             )}

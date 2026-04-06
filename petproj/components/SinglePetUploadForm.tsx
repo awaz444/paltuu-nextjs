@@ -190,6 +190,10 @@ export default function SinglePetUploadForm({
       message.error("City is required");
       return false;
     }
+    if (!contactNumber) {
+      message.error("Contact number is required");
+      return false;
+    }
     if ((age === null || age === 0) && (months === null || months === 0)) {
       message.error("Either age or months must be filled");
       return false;
@@ -531,6 +535,23 @@ export default function SinglePetUploadForm({
                       <Option value="female">Female</Option>
                       <Option value="unknown">Unknown</Option>
                     </Select>
+                  </div>
+                </Col>
+              </Row>
+
+              <Row gutter={[16, 16]}>
+                {/* Contact Number */}
+                <Col xs={24} sm={24}>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contact Number *
+                    </label>
+                    <Input
+                      value={contactNumber}
+                      onChange={(e) => setContactNumber(e.target.value)}
+                      placeholder="+923..."
+                      size="large"
+                    />
                   </div>
                 </Col>
               </Row>

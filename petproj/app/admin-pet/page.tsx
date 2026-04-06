@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Table, Button, Space, message, Popconfirm, Form, Select, Modal, Input } from 'antd';
 import Navbar from '@/components/navbar';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
+import { formatAge } from '@/utils/formatAge';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store/store';
 import { fetchCities } from '../store/slices/citiesSlice';
@@ -18,7 +19,8 @@ type Pet = {
   pet_breed: string | null;
   city_id: number | null;
   area: string;
-  age: number | null;
+  age_months: number | null;
+  contact_number: string | null;
   description: string | null;
   adoption_status: string;
   price: number | null;
@@ -26,8 +28,6 @@ type Pet = {
   can_live_with_dogs: boolean;
   can_live_with_cats: boolean;
   must_have_someone_home: boolean;
-  energy_level: number;
-  cuddliness_level: number;
   health_issues: string | null;
   sex: string;
   listing_type: string;
@@ -215,10 +215,10 @@ const AdminPetInteraction: React.FC = () => {
     },
     {
       title: 'Age',
-      dataIndex: 'age',
-      key: 'age',
+      dataIndex: 'age_months',
+      key: 'age_months',
       responsive: ['md'] as any,
-      render: (age: number | null) => (age !== null ? age : 'N/A'),
+      render: (age_months: number | null) => (age_months !== null ? formatAge(age_months) : 'N/A'),
     },
     {
       title: 'Sex',
@@ -430,12 +430,22 @@ const AdminPetInteraction: React.FC = () => {
                 }
               />
             </Form.Item>
-            <Form.Item label="Age">
+            <Form.Item label="Age (Months)">
               <Input
                 type="number"
-                value={editingPet?.age || undefined}
+                value={editingPet?.age_months || undefined}
                 onChange={(e) =>
-                  setEditingPet((prev) => ({ ...prev!, age: Number(e.target.value) }))
+                  setEditingPet((prev) => ({ ...prev!, age_months: Number(e.target.value) }))
+                }
+              />
+              <p className="text-[10px] text-gray-500 mt-1">Current: {formatAge(editingPet?.age_months || 0)}</p>
+            </Form.Item>
+            <Form.Item label="Contact Number">
+              <Input
+                placeholder="+923..."
+                value={editingPet?.contact_number || undefined}
+                onChange={(e) =>
+                  setEditingPet((prev) => ({ ...prev!, contact_number: e.target.value }))
                 }
               />
             </Form.Item>

@@ -30,7 +30,8 @@ export async function GET(
                 p.pet_breed,
                 c.city_name,
                 p.area,
-                p.age,
+                p.age_months,
+                p.contact_number,
                 p.adoption_status,
                 pi.image_url
             FROM adoption_applications AS aa

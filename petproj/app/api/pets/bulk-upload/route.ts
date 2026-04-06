@@ -73,8 +73,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           pet_breed: pet.pet_breed || null,
           city_id: pet.city_id || null,
           area: pet.area || '',
-          age: pet.age || 0,
-          months: pet.months || 0,
+          age_months: ((pet.age || 0) * 12) + (pet.months || 0),
+          contact_number: pet.contact_number || null,
           description: pet.description,
           adoption_status: 'available',
           price: entityType === 'shop' ? pet.price : null,
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         // Insert pet record
         const insertQuery = `
           INSERT INTO pets (
-            owner_id, pet_name, pet_type, pet_breed, city_id, area, age, months,
+            owner_id, pet_name, pet_type, pet_breed, city_id, area, age_months, contact_number,
             description, adoption_status, price, min_age_of_children, can_live_with_dogs,
             can_live_with_cats, must_have_someone_home, energy_level, cuddliness_level,
             health_issues, sex, listing_type, vaccinated, neutered, rescue_story, shop_id, shelter_id
@@ -113,8 +113,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           petData.pet_breed,
           petData.city_id,
           petData.area,
-          petData.age,
-          petData.months,
+          petData.age_months,
+          petData.contact_number,
           petData.description,
           petData.adoption_status,
           petData.price,

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 import { MoonLoader } from "react-spinners";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
+import { formatAge } from "@/utils/formatAge";
 import { useAuth } from "@/context/AuthContext";
 import { useSession } from "next-auth/react";
 
@@ -16,7 +17,7 @@ interface Application {
     breed: string;
     city_name: string;
     area: string;
-    age: number;
+    age_months: number;
     adoption_status: string;
     image_url: string;
 }
@@ -288,8 +289,7 @@ export default function MyApplicationsPage() {
                                                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                                             />
                                         </svg>
-                                        {app.age}{" "}
-                                        {app.age === 1 ? "year" : "years"} old
+                                        {formatAge(app.age_months)}
                                     </p>
 
                                     <p className="text-gray-600 flex items-center">

@@ -53,6 +53,7 @@ export default function CreatePetListing() {
     const [energyLevel, setEnergyLevel] = useState<number | null>(null);
     const [cuddlinessLevel, setCuddlinessLevel] = useState<number | null>(null);
     const [healthIssues, setHealthIssues] = useState("");
+    const [contactNumber, setContactNumber] = useState("");
     const [ageError, setAgeError] = useState<string | null>(null);
     const [monthsError, setMonthsError] = useState<string | null>(null);
     // Track if sliders have been touched
@@ -208,6 +209,7 @@ export default function CreatePetListing() {
                 city_id: cityId ? Number(cityId) : null,
                 area: area || "",
                 age_months: (age || 0) * 12 + (months || 0),
+                contact_number: contactNumber || null,
                 description: description || null,
                 adoption_status: "available",
                 price: price ? Number(price) : null,
@@ -410,6 +412,21 @@ export default function CreatePetListing() {
                                     <option value="female">Female</option>
                                     <option value="unknown">Unknown</option>
                                 </select>
+                            </div>
+
+                            {/* Contact Number */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Contact Number *
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="mt-1 p-3 w-full border rounded-2xl input-field"
+                                    placeholder="+923..."
+                                    value={contactNumber}
+                                    onChange={(e) => setContactNumber(e.target.value)}
+                                />
                             </div>
 
                             {/* Age and Months */}

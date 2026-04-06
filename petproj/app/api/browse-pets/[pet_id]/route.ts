@@ -44,8 +44,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             pets.pet_breed, 
             pets.city_id, 
             pets.area, 
-            pets.age, 
-            pets.months,
+            pets.age_months,
+            pets.contact_number,
             pets.description, 
             pets.adoption_status, 
             pets.price, 
@@ -127,6 +127,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             const medicalConditionsResult = await client.query(medicalConditionsQuery, [pet_id]);
             medicalConditions = medicalConditionsResult.rows;
         }
+        
+        // Tags query
+        const tagsQuery = `
+            SELECT t.tag_id, t.tag_name, t.tag_category
+            FROM pet_tags t
+            JOIN pet_tag_assignments pta ON t.tag_id = pta.tag_id
+            WHERE pta.pet_id = $1
+        `;
+        const tagsResult = await client.query(tagsQuery, [pet_id]);
+        const tags = tagsResult.rows;
 
         // Base response object
         const response: any = {
@@ -136,8 +146,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             pet_breed: pet.pet_breed,
             city: pet.city,
             area: pet.area,
-            age: pet.age,
-            months: pet.months,
+            age_months: pet.age_months,
             description: pet.description,
             adoption_status: pet.adoption_status,
             price: pet.price,
@@ -153,8 +162,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             listing_type: pet.listing_type,
             vaccinated: pet.vaccinated,
             neutered: pet.neutered,
-            phone_number: pet.phone_number,
+            phone_number: pet.contact_number || pet.phone_number,
             images: images,
+            tags: tags,
         };
 
         // Add rescue-specific data for rescue pets

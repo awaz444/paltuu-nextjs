@@ -17,7 +17,8 @@ const ShelterProfileContent = dynamic(() => import('../../components/ShelterProf
   ssr: false,
   loading: () => <div className="py-6">Loading shelter profile...</div>
 });
-import { UploadOutlined, UnorderedListOutlined, UserOutlined, BellOutlined, FileTextOutlined, PlusOutlined, HomeOutlined } from "@ant-design/icons";
+import { formatAge } from "../../utils/formatAge";
+import { UploadOutlined, UnorderedListOutlined, UserOutlined, BellOutlined, FileTextOutlined, PlusOutlined, HomeOutlined, PhoneOutlined } from "@ant-design/icons";
 
 export default function RescuePanel() {
 
@@ -287,8 +288,8 @@ function InlineEditPetForm({ pet, onUpdated, onDeleted }: { pet: any, onUpdated:
   const [description, setDescription] = React.useState<string>(pet?.description || '');
   const [rescueStory, setRescueStory] = React.useState<string>(pet?.rescue_story || '');
   const [sex, setSex] = React.useState<string>(pet?.sex || 'male');
-  const [age, setAge] = React.useState<number>(pet?.age || 0);
-  const [months, setMonths] = React.useState<number>(pet?.months || 0);
+  const [ageMonths, setAgeMonths] = React.useState<number>(pet?.age_months || 0);
+  const [contactNumber, setContactNumber] = React.useState<string>(pet?.contact_number || '');
   const [vaccinated, setVaccinated] = React.useState<boolean>(!!pet?.vaccinated);
   const [neutered, setNeutered] = React.useState<boolean>(!!pet?.neutered);
   const [saving, setSaving] = React.useState<boolean>(false);
@@ -300,8 +301,8 @@ function InlineEditPetForm({ pet, onUpdated, onDeleted }: { pet: any, onUpdated:
     setDescription(pet?.description || '');
     setRescueStory(pet?.rescue_story || '');
     setSex(pet?.sex || 'male');
-    setAge(pet?.age || 0);
-    setMonths(pet?.months || 0);
+    setAgeMonths(pet?.age_months || 0);
+    setContactNumber(pet?.contact_number || '');
     setVaccinated(!!pet?.vaccinated);
     setNeutered(!!pet?.neutered);
   }, [pet?.pet_id]);
@@ -319,8 +320,8 @@ function InlineEditPetForm({ pet, onUpdated, onDeleted }: { pet: any, onUpdated:
           description,
           rescue_story: rescueStory,
           sex,
-          age,
-          months,
+          age_months: ageMonths,
+          contact_number: contactNumber,
           vaccinated,
           neutered,
         })
@@ -387,23 +388,23 @@ function InlineEditPetForm({ pet, onUpdated, onDeleted }: { pet: any, onUpdated:
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Age (Years)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Age (in months)</label>
           <input
             type="number"
             min={0}
-            value={age}
-            onChange={(e) => setAge(Number(e.target.value))}
+            value={ageMonths}
+            onChange={(e) => setAgeMonths(Number(e.target.value))}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+          <p className="text-[10px] text-gray-500 mt-1">Current: {formatAge(ageMonths)}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Age (Months)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Contact Number</label>
           <input
-            type="number"
-            min={0}
-            max={11}
-            value={months}
-            onChange={(e) => setMonths(Math.min(11, Math.max(0, Number(e.target.value))))}
+            type="text"
+            value={contactNumber}
+            onChange={(e) => setContactNumber(e.target.value)}
+            placeholder="+923..."
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -806,9 +807,7 @@ function MyListingsContent() {
                   {pet.pet_name}
                 </h3>
                   <p className="text-xs text-white/90 text-center">
-                  {pet.age > 0 && `${pet.age}y`}
-                  {pet.age > 0 && pet.months > 0 && ' '}
-                  {pet.months > 0 && `${pet.months}m`}
+                  {formatAge(pet.age_months)}
                 </p>
               </div>
               </div>

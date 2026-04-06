@@ -10,8 +10,8 @@ interface Pet {
     pet_breed: string | null;
     city_id: number;
     area: string;
-    age: number;
-    months: number;
+    age_months: number;
+    contact_number: string | null;
     description: string;
     adoption_status: string;
     price: string;

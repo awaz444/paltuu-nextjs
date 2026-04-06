@@ -6,8 +6,9 @@ export type PetWithImages = {
     pet_breed: string | null;
     city_id: number;
     area: string;
-    age: number;
-    months: number;
+    age?: number;
+    months?: number;
+    age_months: number;
     description: string;
     adoption_status: string;
     price: string | null;
@@ -57,5 +58,10 @@ export type PetWithImages = {
         condition: string;
         treatment_cost: string;
         treated: boolean;
+    }>;
+    tags?: Array<{
+        tag_id: number;
+        tag_name: string;
+        tag_category: string;
     }>;
 };

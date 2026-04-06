@@ -160,9 +160,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             created_at: pet.created_at,
             sex: pet.sex,
             listing_type: pet.listing_type,
-            vaccinated: pet.vaccinated,
-            neutered: pet.neutered,
-            phone_number: pet.contact_number || pet.phone_number,
+            phone_number: pet.contact_number, // Strictly use the listing-specific phone number
             images: images,
             tags: tags,
         };

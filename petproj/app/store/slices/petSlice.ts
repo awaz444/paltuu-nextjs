@@ -13,6 +13,7 @@ export type Pet = {
     area: string;
     age_months: number | null;
     contact_number?: string | null;
+    city?: string;
     tags?: number[];
     description: string | null;
     adoption_status: string;

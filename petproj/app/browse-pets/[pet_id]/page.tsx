@@ -289,19 +289,19 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
             case "adoption":
             case "sell":
                 return (
-                    <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                    <div className="flex items-center gap-4 p-5 bg-gray-50/50 rounded-3xl border border-gray-100 shadow-sm">
                         <Avatar
-                            size={48}
+                            size={64}
                             src={pet.owner?.profile_image_url}
                             icon={<UserOutlined />}
-                            className="bg-primary/10 text-primary"
+                            className="bg-white text-primary border-2 border-white shadow-md"
                         />
                         <div>
-                            <Text className="text-sm font-medium text-gray-500 block">
-                                Owner
+                            <Text className="text-[10px] uppercase tracking-[0.2em] font-black text-primary/40 block mb-1 leading-none">
+                                Listed By
                             </Text>
-                            <Text className="text-lg font-semibold text-gray-800">
-                                {pet.owner?.name || "Unknown Owner"}
+                            <Text className="text-xl font-black text-gray-900 leading-tight">
+                                {pet.owner?.name || "Member User"}
                             </Text>
                         </div>
                     </div>
@@ -452,7 +452,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                         </Button>
                     </div>
 
-                    <Card className="shadow-lg rounded-full overflow-hidden border-none">
+                    <Card className="shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] rounded-[3rem] overflow-hidden border border-gray-50">
                         <div className="flex flex-col lg:flex-row gap-8">
                             {/* Image Gallery */}
                             <div className="lg:w-1/2">
@@ -462,12 +462,11 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                             <img
                                                 src={
                                                     carouselImages[
-                                                        currentImageIndex
+                                                    currentImageIndex
                                                     ]
                                                 }
-                                                alt={`${pet.pet_name}-image-${
-                                                    currentImageIndex + 1
-                                                }`}
+                                                alt={`${pet.pet_name}-image-${currentImageIndex + 1
+                                                    }`}
                                                 className="w-full h-full object-cover rounded-xl"
                                             />
                                         </div>
@@ -520,12 +519,11 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                                             index
                                                         )
                                                     }
-                                                    className={`w-3 h-3 rounded-full ${
-                                                        index ===
-                                                        currentImageIndex
+                                                    className={`w-3 h-3 rounded-full ${index ===
+                                                            currentImageIndex
                                                             ? "bg-primary"
                                                             : "bg-gray-300"
-                                                    }`}
+                                                        }`}
                                                 />
                                             ))}
                                         </div>
@@ -564,14 +562,14 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                     </div>
 
                                     {/* Listing Type Tag */}
-                                    {pet.listing_type !== "shop" && (
+                                    {/* {pet.listing_type !== "shop" && (
                                         <Tag
                                             color={listingTypeInfo.color}
                                             className="rounded-full px-3 py-1 text-sm inline-flex items-center gap-1 w-fit"
                                             icon={listingTypeInfo.icon}>
                                             {listingTypeInfo.text}
                                         </Tag>
-                                    )}
+                                    )} */}
 
                                     {/* Adoption Status Tag */}
                                     {!isAvailable && (
@@ -588,16 +586,16 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                     {/* Information Grid - 2x2 layout */}
                                     <div className="grid grid-cols-2 gap-4">
                                         {/* Location */}
-                                        <div className="col-span-2 bg-gray-50 p-4 rounded-xl h-full">
-                                            <div className="flex items-center gap-3">
-                                                <div className="bg-primary text-white p-2 rounded-lg">
-                                                    <EnvironmentOutlined className="text-lg" />
+                                        <div className="col-span-2 bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 h-full group hover:bg-white hover:shadow-xl transition-all duration-300">
+                                            <div className="flex items-center gap-5">
+                                                <div className="bg-primary text-white p-4 rounded-2xl shadow-lg shadow-primary/20">
+                                                    <EnvironmentOutlined className="text-xl" />
                                                 </div>
                                                 <div>
-                                                    <Text className="text-sm font-semibold text-gray-500 block mb-1">
-                                                        Location
+                                                    <Text className="text-[10px] uppercase tracking-[0.2em] font-black text-primary/40 block mb-1">
+                                                        Residence
                                                     </Text>
-                                                    <Text className="text-base text-gray-800">
+                                                    <Text className="text-xl font-bold text-gray-900">
                                                         {pet.city}, {pet.area}
                                                     </Text>
                                                 </div>
@@ -606,19 +604,16 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
                                         {/* Price - Only show if applicable */}
                                         {hasValue(pet.price) && (
-                                            <div className="bg-gray-50 p-4 rounded-xl h-full">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="bg-primary text-white p-2 rounded-lg">
-                                                        <DollarOutlined className="text-lg" />
+                                            <div className="bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 h-full group hover:bg-white hover:shadow-xl transition-all duration-300">
+                                                <div className="flex items-center gap-5">
+                                                    <div className="bg-green-500 text-white p-4 rounded-2xl shadow-lg shadow-green-500/20">
+                                                        <DollarOutlined className="text-xl" />
                                                     </div>
                                                     <div>
-                                                        <Text className="text-sm font-semibold text-gray-500 block mb-1">
-                                                            {pet.listing_type ===
-                                                            "sell"
-                                                                ? "Price"
-                                                                : "Adoption Fee"}
+                                                        <Text className="text-[10px] uppercase tracking-[0.2em] font-black text-green-500/40 block mb-1">
+                                                            {pet.listing_type === "sell" ? "Price" : "Adoption Fee"}
                                                         </Text>
-                                                        <Text className="text-base text-gray-800">
+                                                        <Text className="text-xl font-black text-gray-900">
                                                             PKR {pet.price}
                                                         </Text>
                                                     </div>
@@ -628,20 +623,16 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
                                         {/* Sex */}
                                         {hasValue(pet.sex) && (
-                                            <div className="bg-gray-50 p-4 rounded-xl h-full">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="bg-primary text-white p-2 rounded-lg">
-                                                        {pet.sex === "male" ? (
-                                                            <ManOutlined className="text-lg" />
-                                                        ) : (
-                                                            <WomanOutlined className="text-lg" />
-                                                        )}
+                                            <div className="bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 h-full group hover:bg-white hover:shadow-xl transition-all duration-300">
+                                                <div className="flex items-center gap-5">
+                                                    <div className="bg-primary text-white p-4 rounded-2xl shadow-lg shadow-primary/20">
+                                                        {pet.sex === "male" ? <ManOutlined className="text-xl" /> : <WomanOutlined className="text-xl" />}
                                                     </div>
                                                     <div>
-                                                        <Text className="text-sm font-semibold text-gray-500 block mb-1">
+                                                        <Text className="text-[10px] uppercase tracking-[0.2em] font-black text-primary/40 block mb-1">
                                                             Sex
                                                         </Text>
-                                                        <Text className="text-base text-gray-800 capitalize">
+                                                        <Text className="text-xl font-bold text-gray-900 capitalize">
                                                             {pet.sex}
                                                         </Text>
                                                     </div>
@@ -652,13 +643,12 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                 </div>
 
                                 {/* Action Buttons - Fixed at bottom */}
-                                <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                                <div className="flex flex-col sm:flex-row gap-4 mt-12">
                                     <button
-                                        className={`flex-1 h-14 min-h-14 text-lg font-semibold rounded-xl flex items-center justify-center gap-2 ${
-                                            isAvailable
-                                                ? "bg-primary text-white hover:bg-primary/90 transition-colors"
+                                        className={`flex-1 h-16 text-lg font-black rounded-[2rem] flex items-center justify-center gap-3 shadow-2xl transition-all ${isAvailable
+                                                ? "bg-primary text-white hover:shadow-primary/30 hover:scale-[1.02]"
                                                 : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                        }`}
+                                            }`}
                                         onClick={handleAdoptClick}
                                         disabled={!isAvailable}>
                                         <HeartOutlined />
@@ -666,176 +656,94 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                     </button>
 
                                     <button
-                                        className={`flex-1 h-14 min-h-14 text-lg font-semibold rounded-xl flex items-center justify-center gap-2 ${
-                                            isAvailable
-                                                ? "border-2 border-primary text-primary hover:bg-primary/5 transition-colors"
-                                                : "border-2 border-gray-200 text-gray-500 cursor-not-allowed"
-                                        }`}
+                                        className={`flex-1 h-16 text-lg font-black rounded-[2rem] flex items-center justify-center gap-3 transition-all border-2 ${isAvailable
+                                                ? "border-primary text-primary hover:bg-primary/5 hover:scale-[1.02]"
+                                                : "border-gray-200 text-gray-500 cursor-not-allowed"
+                                            }`}
                                         onClick={handleContactClick}
                                         disabled={!isAvailable}>
                                         <PhoneOutlined />
-                                        {isAvailable
-                                            ? "Contact Owner"
-                                            : "Not Available"}
+                                        {isAvailable ? "Contact Listing" : "Unavailable"}
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <Divider className="my-8 border-gray-200" />
+                        <Divider className="my-10 border-gray-100" />
 
-                        <div className="space-y-6">
+                        <div className="space-y-10">
                             {hasValue(pet.description) && (
-                                <div className="p-5 rounded-lg border border-gray-200">
-                                    <Title
-                                        level={3}
-                                        className="text-gray-800 mb-3 flex items-center">
-                                        <InfoCircleOutlined className="mr-2" />{" "}
-                                        About {pet.pet_name}
-                                    </Title>
-                                    <Paragraph className="text-gray-700">
-                                        {pet.description}
+                                <div className="p-8 rounded-3xl border border-gray-100 bg-gray-50/30">
+                                    <h3 className="text-xl font-black text-gray-900 mb-4 flex items-center gap-2">
+                                        <InfoCircleOutlined className="text-primary" />
+                                        The Story
+                                    </h3>
+                                    <Paragraph className="text-gray-700 leading-relaxed text-lg font-medium italic">
+                                        "{pet.description}"
                                     </Paragraph>
                                 </div>
                             )}
+
                             {pet.tags && pet.tags.length > 0 && (
-                                <div className="p-5 rounded-lg border border-gray-200">
-                                    <Title
-                                        level={3}
-                                        className="text-gray-800 mb-4 flex items-center">
-                                        Pet Attributes
-                                    </Title>
-                                    <div className="flex flex-wrap gap-2">
-                                        {pet.tags.map((tag: any) => (
-                                            <Tag key={tag.tag_id} color="blue" className="rounded-full px-3 py-1">
-                                                {tag.tag_name}
-                                            </Tag>
-                                        ))}
+                                <div className="p-8 rounded-[2.5rem] border border-gray-100 bg-white shadow-sm">
+                                    <h3 className="text-xl font-black text-gray-900 mb-8 flex items-center gap-2">
+                                        <TeamOutlined className="text-primary" />
+                                        Attributes & Personality
+                                    </h3>
+
+                                    <div className="space-y-10 font-Montserrat">
+                                        {["personality", "lifestyle", "compatibility", "health"].map((cat) => {
+                                            const catTags = pet.tags?.filter(t => t.tag_category === cat);
+                                            if (!catTags || catTags.length === 0) return null;
+
+                                            return (
+                                                <div key={cat} className="space-y-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-[10px] uppercase tracking-[0.3em] font-black text-primary/40 leading-none">{cat}</span>
+                                                        <div className="h-[1px] flex-1 bg-gray-100"></div>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {catTags.map((tag) => (
+                                                            <div
+                                                                key={tag.tag_id}
+                                                                className="px-6 py-3 rounded-2xl text-xs font-bold transition-all border-2 bg-white border-gray-100 text-gray-400">
+                                                                {tag.tag_name}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}
 
-                            <div className="grid md:grid-cols-2 gap-4">
-                                {(hasValue(pet.vaccinated) ||
-                                    hasValue(pet.neutered) ||
-                                    hasValue(pet.health_issues)) && (
-                                    <div className="p-5 rounded-lg border border-gray-200">
-                                        <Title
-                                            level={3}
-                                            className="text-gray-800 mb-3 flex items-center">
-                                            <SafetyCertificateOutlined className="mr-2" />{" "}
-                                            Health & Care
-                                        </Title>
-                                        <div className="space-y-2">
-                                            {hasValue(pet.vaccinated) && (
-                                                <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                                    <span className="font-medium">
-                                                        Vaccinated
-                                                    </span>
-                                                    <span className="font-semibold">
-                                                        {pet.vaccinated
-                                                            ? "Yes"
-                                                            : "No"}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {hasValue(pet.neutered) && (
-                                                <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                                    <span className="font-medium">
-                                                        Neutered/Spayed
-                                                    </span>
-                                                    <span className="font-semibold">
-                                                        {pet.neutered
-                                                            ? "Yes"
-                                                            : "No"}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {hasValue(pet.health_issues) && (
-                                                <div className="p-2 bg-gray-50 rounded">
-                                                    <span className="font-medium block mb-1">
-                                                        Health Notes
-                                                    </span>
-                                                    <span className="text-gray-700">
-                                                        {pet.health_issues}
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {(hasValue(pet.can_live_with_dogs) ||
-                                    hasValue(pet.can_live_with_cats) ||
-                                    hasValue(pet.must_have_someone_home)) && (
-                                    <div className="p-5 rounded-lg border border-gray-200">
-                                        <Title
-                                            level={3}
-                                            className="text-gray-800 mb-3 flex items-center">
-                                            <HomeOutlined className="mr-2" />{" "}
-                                            Living Preferences
-                                        </Title>
-                                        <div className="space-y-2">
-                                            {hasValue(
-                                                pet.can_live_with_dogs
-                                            ) && (
-                                                <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                                    <span className="font-medium">
-                                                        Good with Dogs
-                                                    </span>
-                                                    <span className="font-semibold">
-                                                        {pet.can_live_with_dogs
-                                                            ? "Yes"
-                                                            : "No"}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {hasValue(
-                                                pet.can_live_with_cats
-                                            ) && (
-                                                <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                                    <span className="font-medium">
-                                                        Good with Cats
-                                                    </span>
-                                                    <span className="font-semibold">
-                                                        {pet.can_live_with_cats
-                                                            ? "Yes"
-                                                            : "No"}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {hasValue(
-                                                pet.must_have_someone_home
-                                            ) && (
-                                                <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                                    <span className="font-medium">
-                                                        Needs Company
-                                                    </span>
-                                                    <span className="font-semibold">
-                                                        {pet.must_have_someone_home
-                                                            ? "Yes"
-                                                            : "No"}
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            {/* Additional Details (Health Issues if any) */}
+                            {hasValue(pet.health_issues) && (
+                                <div className="p-8 rounded-3xl border border-red-50 bg-red-50/20">
+                                    <h3 className="text-xl font-black text-gray-900 mb-4 flex items-center gap-2">
+                                        <MedicineBoxOutlined className="text-red-500" />
+                                        Health Notes
+                                    </h3>
+                                    <Paragraph className="text-red-800 font-bold">
+                                        {pet.health_issues}
+                                    </Paragraph>
+                                </div>
+                            )}
                         </div>
                     </Card>
-                    <Card className="shadow-xl rounded-full overflow-hidden border-none mt-8">
+                    <Card className="shadow-2xl shadow-primary/5 rounded-[3rem] overflow-hidden border border-gray-50 mt-12">
                         <Title
                             level={3}
                             className="text-gray-800 mb-4 flex items-center">
                             {pet.listing_type === "adoption" ||
-                            pet.listing_type === "rescue" ? (
+                                pet.listing_type === "rescue" ? (
                                 <>
                                     <SafetyCertificateOutlined className="mr-2 text-primary" />
                                     Adoption Preparation Guide
                                 </>
                             ) : pet.listing_type === "sell" ||
-                              pet.listing_type === "shop" ? (
+                                pet.listing_type === "shop" ? (
                                 <>
                                     <DollarOutlined className="mr-2 text-green-600" />
                                     Purchase Information
@@ -853,12 +761,12 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                 <InfoCircleOutlined className="text-3xl mb-3 text-gray-400" />
                                 <p className="text-gray-500 mb-4">
                                     {pet.listing_type === "adoption" ||
-                                    pet.listing_type === "rescue"
+                                        pet.listing_type === "rescue"
                                         ? `Want to know if ${pet.pet_name} is the right fit for your home?`
                                         : pet.listing_type === "sell" ||
-                                          pet.listing_type === "shop"
-                                        ? `Considering buying ${pet.pet_name}? Get detailed information.`
-                                        : `Want to know more about ${pet.pet_name}?`}
+                                            pet.listing_type === "shop"
+                                            ? `Considering buying ${pet.pet_name}? Get detailed information.`
+                                            : `Want to know more about ${pet.pet_name}?`}
                                 </p>
                                 <Button
                                     type="primary"
@@ -874,27 +782,26 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                 <MoonLoader size={24} color={primaryColor} />
                                 <span className="ml-3 text-gray-600 mt-3">
                                     {pet.listing_type === "adoption" ||
-                                    pet.listing_type === "rescue"
+                                        pet.listing_type === "rescue"
                                         ? "Generating adoption guidance..."
                                         : pet.listing_type === "sell" ||
-                                          pet.listing_type === "shop"
-                                        ? "Generating purchase information..."
-                                        : "Generating pet summary..."}
+                                            pet.listing_type === "shop"
+                                            ? "Generating purchase information..."
+                                            : "Generating pet summary..."}
                                 </span>
                             </div>
                         ) : llmSummary ? (
                             <div
                                 className={`
                     rounded-lg p-6
-                    ${
-                        pet.listing_type === "adoption" ||
-                        pet.listing_type === "rescue"
-                            ? "bg-white border border-primary"
-                            : pet.listing_type === "sell" ||
-                              pet.listing_type === "shop"
-                            ? "bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200"
-                            : "bg-gray-50 border border-gray-200"
-                    }
+                    ${pet.listing_type === "adoption" ||
+                                        pet.listing_type === "rescue"
+                                        ? "bg-white border border-primary"
+                                        : pet.listing_type === "sell" ||
+                                            pet.listing_type === "shop"
+                                            ? "bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200"
+                                            : "bg-gray-50 border border-gray-200"
+                                    }
                 `}>
                                 <div className="flex items-start mb-4">
 
@@ -914,12 +821,12 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                         <InfoCircleOutlined className="mr-2" />
                                         <span>
                                             {pet.listing_type === "adoption" ||
-                                            pet.listing_type === "rescue"
+                                                pet.listing_type === "rescue"
                                                 ? "This AI-generated guidance helps prepare for adoption. Always verify details with the owner or veterinarian."
                                                 : pet.listing_type === "sell" ||
-                                                  pet.listing_type === "shop"
-                                                ? "This AI-generated information provides purchase guidance. Contact the seller for exact details and pricing."
-                                                : "This AI-generated summary provides general information about the pet."}
+                                                    pet.listing_type === "shop"
+                                                    ? "This AI-generated information provides purchase guidance. Contact the seller for exact details and pricing."
+                                                    : "This AI-generated summary provides general information about the pet."}
                                         </span>
                                     </div>
                                 </div>
@@ -929,12 +836,12 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                 <InfoCircleOutlined className="text-3xl mb-3 text-gray-400" />
                                 <p className="text-gray-500 mb-2">
                                     {pet.listing_type === "adoption" ||
-                                    pet.listing_type === "rescue"
+                                        pet.listing_type === "rescue"
                                         ? "Could not generate adoption guidance"
                                         : pet.listing_type === "sell" ||
-                                          pet.listing_type === "shop"
-                                        ? "Could not generate purchase information"
-                                        : "Could not generate pet summary"}
+                                            pet.listing_type === "shop"
+                                            ? "Could not generate purchase information"
+                                            : "Could not generate pet summary"}
                                 </p>
                                 <Button
                                     type="primary"

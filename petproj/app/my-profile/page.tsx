@@ -6,98 +6,31 @@ import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import { useAuth } from "@/context/AuthContext";
 import {
   CameraOutlined,
-  LoadingOutlined,
   LockOutlined,
   EditOutlined,
   CheckOutlined,
   CloseOutlined,
+  UserOutlined,
+  MailOutlined,
+  SafetyOutlined,
 } from "@ant-design/icons";
 import { format } from "date-fns";
 import { Modal, Input, Form, message } from "antd";
+import { MoonLoader } from "react-spinners";
+import { motion, AnimatePresence } from "framer-motion";
 import "./styles.css";
 
 interface UserProfileData {
   user_id: string;
   name: string;
-  dob: string;
   email: string;
   profile_image_url: string;
-  phone_number: string;
-  city: string;
   created_at: string;
 }
 
-interface City {
-  city_id: string;
-  city_name: string;
-}
 
 const passwordRegex =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
-interface ProfileFieldProps {
-  label: string;
-  name: string;
-  value: string;
-  type?: string;
-  editable?: boolean;
-  cities?: City[];
-  onChange?: (name: string, value: string) => void;
-  editing?: boolean;
-}
-
-const ProfileField: React.FC<ProfileFieldProps> = ({
-  label,
-  name,
-  value,
-  type = "text",
-  editable = true,
-  cities = [],
-  onChange,
-  editing = false,
-}) => {
-  const handleChange = (newValue: string) => {
-    onChange?.(name, newValue);
-  };
-
-  return (
-    <div className="space-y-1">
-      <label className="text-sm font-medium text-gray-600">{label}</label>
-      {editing && editable ? (
-        name === "city" ? (
-          <select
-            value={value || ""}
-            onChange={(e) => handleChange(e.target.value)}
-            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
-          >
-            <option value="">Select City</option>
-            {cities.map((city) => (
-              <option key={city.city_id} value={city.city_name}>
-                {city.city_name}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <input
-            type={type}
-            value={value || ""}
-            onChange={(e) => handleChange(e.target.value)}
-            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm lg:text-base"
-            disabled={!editable}
-          />
-        )
-      ) : (
-        <p className="p-2 bg-gray-50 rounded-lg text-sm lg:text-base">
-          {name === "city"
-            ? cities.find((city) => city.city_name === value)?.city_name ||
-              value ||
-              "Not provided"
-            : value || "Not provided"}
-        </p>
-      )}
-    </div>
-  );
-};
 
 const MyProfile = () => {
   const { user, isAuthenticated, refreshUser } = useAuth();
@@ -108,7 +41,6 @@ const MyProfile = () => {
   const [imageLoading, setImageLoading] = useState(false);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [passwordForm] = Form.useForm();
-  const [cities, setCities] = useState<City[]>([]);
 
   const handlePersonalInfoChange = (
     field: keyof UserProfileData,
@@ -117,9 +49,9 @@ const MyProfile = () => {
     setUpdatedData((prev) =>
       prev
         ? {
-            ...prev,
-            [field]: value,
-          }
+          ...prev,
+          [field]: value,
+        }
         : null
     );
   };
@@ -140,7 +72,7 @@ const MyProfile = () => {
         );
       }
 
-      const res = await fetch(`/api/change-password/${user?.id}`, {
+      const res = await fetch(`/api/change-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -170,50 +102,27 @@ const MyProfile = () => {
       }
 
       try {
-        // Fetch user profile data
-        const res = await fetch(`/api/my-profile/${user.id}`);
-
+        const res = await fetch(`/api/my-profile`);
         if (!res.ok) throw new Error("Failed to fetch profile");
         const profileData = await res.json();
 
-        // For Google users, use Google profile data as fallback if database data is missing or empty
         const finalProfileData = {
           ...profileData,
-          name:
-            (profileData.name && profileData.name.trim()) ||
-            user.name ||
-            "User",
-          profile_image_url:
-            (profileData.profile_image_url &&
-              profileData.profile_image_url.trim()) ||
-            user.profile_image_url ||
-            "/default-avatar.png",
+          name: (profileData.name && profileData.name.trim()) || user.name || "User",
+          profile_image_url: (profileData.profile_image_url && profileData.profile_image_url.trim()) || user.profile_image_url || "/default-avatar.png",
         };
 
         setData(finalProfileData);
         setUpdatedData(finalProfileData);
-
-        // Fetch cities data
-        const citiesRes = await fetch("/api/cities");
-        if (!citiesRes.ok) throw new Error("Failed to fetch cities");
-        const citiesData = await citiesRes.json();
-        setCities(citiesData);
       } catch (error) {
         console.error("Error loading data:", error);
-
-        // If database fetch fails, use user data as fallback
         const fallbackData = {
           user_id: user.id,
           name: user.name || "User",
-          dob: "",
           email: user.email || "",
-          profile_image_url:
-            user.profile_image_url || "/default-avatar.png",
-          phone_number: "",
-          city: "",
+          profile_image_url: user.profile_image_url || "/default-avatar.png",
           created_at: new Date().toISOString(),
         };
-
         setData(fallbackData);
         setUpdatedData(fallbackData);
       } finally {
@@ -232,7 +141,7 @@ const MyProfile = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      const uploadRes = await fetch(`/api/update-profile-image/${user.id}`, {
+      const uploadRes = await fetch(`/api/update-profile-image`, {
         method: "POST",
         body: formData,
       });
@@ -257,11 +166,21 @@ const MyProfile = () => {
     }
   };
 
+  const [primaryColor, setPrimaryColor] = useState("#A03048");
+
+  useEffect(() => {
+    const rootStyles = getComputedStyle(document.documentElement);
+    const color = rootStyles.getPropertyValue("--primary-color").trim();
+    if (color) {
+      setPrimaryColor(color);
+    }
+  }, []);
+
   const handleSaveChanges = async () => {
     if (!user?.id || !updatedData) return;
 
     try {
-      const res = await fetch(`/api/my-profile/${user.id}`, {
+      const res = await fetch(`/api/my-profile`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedData),
@@ -294,387 +213,301 @@ const MyProfile = () => {
     setEditing(false);
   };
 
-  // Show loading while checking authentication
-  if (!isAuthenticated || !user) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center">
-          <LoadingOutlined className="text-4xl text-primary animate-spin mb-4" />
-          <p className="text-gray-600">Please log in to view your profile</p>
-        </div>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <LoadingOutlined className="text-4xl text-primary animate-spin" />
+      <div className="flex flex-col justify-center items-center h-screen gap-6 bg-white font-Montserrat">
+        <MoonLoader size={30} color={primaryColor} />
+        <p className="text-gray-400 font-bold uppercase tracking-[0.3em] text-xs">Authenticating Profile</p>
       </div>
     );
   }
 
-  if (!data || !updatedData) {
+  if (!isAuthenticated || !user || !data || !updatedData) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-red-500">Failed to load profile data</p>
+      <div className="flex justify-center items-center h-screen bg-white font-Montserrat px-8 text-center">
+        <div className="max-w-md">
+          <h1 className="text-4xl font-black text-gray-900 mb-4">Unauthorized</h1>
+          <p className="text-gray-500 font-medium mb-8">Please log in to manage your premium profile settings.</p>
+          <button
+            onClick={() => window.location.href = '/auth'}
+            className="px-8 py-4 bg-primary text-white font-black rounded-3xl shadow-xl shadow-primary/20 hover:scale-105 transition-all">
+            Sign In Now
+          </button>
+        </div>
       </div>
     );
   }
   return (
     <>
-      {/* Page Container */}
-      <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
-        {/* Updated Header */}
-        <header className="bg-white text-primary border border-primary p-3 sm:p-4 md:p-6 lg:p-8 rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg mb-4 sm:mb-6 md:mb-8 lg:mb-10">
-          <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
-            {/* Logo - Much more compact on mobile */}
-            <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-lg sm:rounded-xl bg-primary flex items-center justify-center shadow-sm sm:shadow-md">
-              <img
-                className="p-1 sm:p-1.5 md:p-0 w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 object-contain"
-                src="/favicon-dark.png"
-                alt="paltuu logo"
-              />
-            </div>
+      <div className="min-h-screen bg-gray-50/50 pb-20 font-Montserrat">
+        <div className="max-w-5xl mx-auto px-6 pt-12">
 
-            {/* Text Section - Better mobile typography */}
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl text-black font-bold mb-0.5 sm:mb-1 md:mb-2 leading-tight">
-                My Profile
-              </h1>
-              <p className="text-xs sm:text-sm md:text-base lg:text-lg text-black/80 leading-relaxed">
-                Manage your personal information and security settings
-              </p>
-            </div>
-          </div>
-        </header>
-
-        <div className="bg-white rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg lg:shadow-xl p-4 sm:p-6 lg:p-8 border border-gray-100">
-          {/* Profile Content Header */}
-          <div className="flex flex-wrap justify-between items-center gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8 pb-4 sm:pb-6 border-b border-gray-100">
-            {/* Left Side: Name & Info */}
-            <div className="flex-1 min-w-0">
-              <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 truncate">
-                {data.name}
-              </h2>
-              <p className="text-gray-500 mt-1 sm:mt-2 flex items-center text-xs sm:text-sm lg:text-base">
-                <svg
-                  className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-primary flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Member since {format(new Date(data.created_at), "MMM yyyy")}
-              </p>
-            </div>
-
-            {/* Right Side: Buttons */}
-            <div className="flex flex-nowrap gap-2 sm:gap-3 justify-end">
-              {editing ? (
-                <>
-                  <button
-                    onClick={handleCancel}
-                    className="px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all flex items-center gap-1 sm:gap-2 font-medium text-sm sm:text-base"
-                  >
-                    <CloseOutlined className="text-xs sm:text-sm" />
-                    <span className="hidden xs:inline">Cancel</span>
-                  </button>
-                  <button
-                    onClick={handleSaveChanges}
-                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all flex items-center gap-1 sm:gap-2 font-medium text-sm sm:text-base shadow-md"
-                  >
-                    <CheckOutlined className="text-xs sm:text-sm" />
-                    <span className="hidden xs:inline">Save</span>
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => setEditing(true)}
-                  className="px-3 py-1.5 sm:px-4 sm:py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all flex items-center gap-1 sm:gap-2 font-medium text-sm sm:text-base shadow-md"
-                >
-                  <EditOutlined className="text-xs sm:text-sm" />
-                  <span>Edit Profile</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Profile Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-            {/* Profile Picture Section */}
-            <div className="lg:col-span-1 flex flex-col items-center">
-              <div className="relative group mb-3 sm:mb-4">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 xl:w-40 xl:h-40 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 p-1">
-                  <img
-                    className="w-full h-full rounded-full object-cover border-4 border-white shadow-lg"
-                    src={data.profile_image_url || "/placeholder.jpg"}
-                    alt={data.name}
-                  />
-                </div>
-                {editing && (
-                  <>
-                    <input
-                      type="file"
-                      id="profileImage"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) =>
-                        e.target.files?.[0] &&
-                        handleImageUpload(e.target.files[0])
-                      }
-                    />
-                    <label
-                      htmlFor="profileImage"
-                      className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-all duration-300"
-                    >
-                      {imageLoading ? (
-                        <LoadingOutlined className="text-lg sm:text-xl lg:text-2xl text-white" />
-                      ) : (
-                        <div className="bg-primary p-2 sm:p-3 rounded-full">
-                          <CameraOutlined className="text-base sm:text-lg lg:text-xl text-white" />
-                        </div>
-                      )}
-                    </label>
-                  </>
-                )}
+          {/* Header Section */}
+          <motion.header
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)] mb-12 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-8">
+              <div className="w-20 h-20 rounded-[1.5rem] bg-primary flex items-center justify-center p-4 shadow-2xl shadow-primary/30">
+                <img src="/favicon-dark.png" alt="logo" className="w-full h-full object-contain" />
               </div>
-              {editing && (
-                <p className="text-xs sm:text-sm text-gray-500 text-center mt-1 sm:mt-2">
-                  Click image to update
-                </p>
-              )}
+              <div>
+                <h1 className="text-4xl font-black text-gray-900 leading-tight">My Profile</h1>
+                <p className="text-gray-400 font-bold uppercase tracking-[0.2em] text-[10px] sm:text-xs">Security & Account Identity</p>
+              </div>
             </div>
 
-            {/* Profile Details */}
-            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
-                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg sm:rounded-xl">
-                  <label className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2 block">
-                    Full Name
-                  </label>
-                  {editing ? (
-                    <input
-                      type="text"
-                      value={updatedData?.name || ""}
-                      onChange={(e) =>
-                        handlePersonalInfoChange("name", e.target.value)
-                      }
-                      className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors text-sm sm:text-base"
+            <div className="flex items-center gap-4">
+              <AnimatePresence mode="wait">
+                {editing ? (
+                  <motion.div
+                    key="editing-btns"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="flex gap-4">
+                    <button
+                      onClick={handleCancel}
+                      className="h-14 px-8 rounded-3xl border-2 border-gray-100 text-gray-400 font-black hover:bg-gray-50 transition-all flex items-center gap-2">
+                      <CloseOutlined />
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveChanges}
+                      className="h-14 px-10 rounded-3xl bg-primary text-white font-black shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
+                      <CheckOutlined />
+                      Save Profile
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    key="edit-btn"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    onClick={() => setEditing(true)}
+                    className="h-14 px-12 rounded-3xl bg-primary text-white font-black shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
+                    <EditOutlined />
+                    Edit Personal Info
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.header>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
+            {/* Left Side: Identity */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="lg:col-span-12 xl:col-span-4 space-y-12">
+
+              <div className="bg-white rounded-[3rem] p-12 border border-gray-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)] text-center">
+                <div className="relative inline-block group">
+                  <div className="w-48 h-48 rounded-[3.5rem] bg-gradient-to-br from-primary/20 to-primary/5 p-2 shadow-inner">
+                    <img
+                      className="w-full h-full rounded-[3rem] object-cover border-8 border-white shadow-2xl"
+                      src={data.profile_image_url || "/placeholder.jpg"}
+                      alt={data.name}
                     />
-                  ) : (
-                    <p className="text-gray-900 font-medium text-sm sm:text-base">
-                      {updatedData?.name || "Not provided"}
-                    </p>
+                  </div>
+
+                  {editing && (
+                    <div className="absolute inset-4 rounded-[2.5rem] bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center cursor-pointer">
+                      <input
+                        type="file"
+                        id="profileImage"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                      />
+                      <label htmlFor="profileImage" className="cursor-pointer flex flex-col items-center">
+                        {imageLoading ? (
+                          <MoonLoader size={20} color={primaryColor} />
+                        ) : (
+                          <div className="bg-primary p-4 rounded-3xl shadow-xl shadow-primary/30 transform transition-transform hover:scale-110 active:scale-95">
+                            <CameraOutlined className="text-2xl text-white" />
+                          </div>
+                        )}
+                        <span className="text-white text-[10px] font-black uppercase tracking-widest mt-4">Change Photo</span>
+                      </label>
+                    </div>
                   )}
                 </div>
 
-                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg sm:rounded-xl">
-                  <label className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2 block">
-                    Email Address
-                  </label>
-                  <p className="text-gray-900 font-medium text-sm sm:text-base">
-                    {updatedData?.email || "Not provided"}
-                  </p>
+                <div className="mt-10">
+                  <h2 className="text-3xl font-black text-gray-900 truncate">{data.name}</h2>
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    <SafetyOutlined className="text-primary" />
+                    <span className="text-gray-400 font-bold uppercase tracking-[0.2em] text-[10px]">Verified Member</span>
+                  </div>
                 </div>
 
-                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg sm:rounded-xl">
-                  <label className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2 block">
-                    Phone Number
-                  </label>
-                  {editing ? (
-                    <div className="flex space-x-2">
-                      <div className="flex items-center px-2 sm:px-3 bg-gray-100 rounded-lg text-gray-600 border border-gray-300 text-sm sm:text-base">
-                        +92
-                      </div>
+                <div className="mt-12 pt-12 border-t border-gray-50 flex justify-center gap-12">
+                  <div className="text-center">
+                    <div className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Member Since</div>
+                    <div className="text-xl font-black text-gray-900">{format(new Date(data.created_at), "MMM yyyy")}</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Right Side: Account Details */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="lg:col-span-12 xl:col-span-8 flex flex-col gap-12">
+
+              <div className="bg-white rounded-[3rem] p-12 border border-gray-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)] h-full">
+                <div className="flex items-center gap-4 mb-12">
+                  <UserOutlined className="text-2xl text-primary" />
+                  <h3 className="text-2xl font-black text-gray-900">Personal Details</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="p-8 rounded-3xl bg-gray-50/50 border border-gray-50 space-y-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary/40 block leading-none">Full Account Name</label>
+                    {editing ? (
                       <input
                         type="text"
-                        value={updatedData?.phone_number || ""}
-                        onChange={(e) =>
-                          handlePersonalInfoChange(
-                            "phone_number",
-                            e.target.value
-                          )
-                        }
-                        placeholder="3338888666"
-                        className="flex-1 p-2 sm:p-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors text-sm sm:text-base"
+                        value={updatedData?.name || ""}
+                        onChange={(e) => handlePersonalInfoChange("name", e.target.value)}
+                        className="w-full bg-white px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-primary transition-all font-black"
                       />
+                    ) : (
+                      <div className="text-xl font-black text-gray-900">{updatedData?.name}</div>
+                    )}
+                  </div>
+
+                  <div className="p-8 rounded-3xl bg-gray-50/50 border border-gray-50 space-y-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary/40 block leading-none">Email Connectivity</label>
+                    <div className="flex items-center gap-3">
+                      <MailOutlined className="text-primary" />
+                      <div className="text-xl font-black text-gray-900">{data.email}</div>
                     </div>
-                  ) : (
-                    <p className="text-gray-900 font-medium text-sm sm:text-base">
-                      {updatedData?.phone_number
-                        ? `+92${updatedData.phone_number}`
-                        : "Not provided"}
-                    </p>
-                  )}
+                  </div>
                 </div>
 
-                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg sm:rounded-xl">
-                  <label className="text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2 block">
-                    City
-                  </label>
-                  {editing ? (
-                    <select
-                      value={updatedData?.city || ""}
-                      onChange={(e) =>
-                        handlePersonalInfoChange("city", e.target.value)
-                      }
-                      className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors text-sm sm:text-base"
-                    >
-                      <option value="">Select City</option>
-                      {cities.map((city) => (
-                        <option key={city.city_id} value={city.city_name}>
-                          {city.city_name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <p className="text-gray-900 font-medium text-sm sm:text-base">
-                      {cities.find(
-                        (city) => city.city_name === updatedData?.city
-                      )?.city_name ||
-                        updatedData?.city ||
-                        "Not provided"}
-                    </p>
-                  )}
+                {/* Security Section */}
+                <div className="mt-16 pt-12 border-t border-gray-50">
+                  <div className="flex items-center gap-4 mb-10">
+                    <LockOutlined className="text-2xl text-primary" />
+                    <h3 className="text-2xl font-black text-gray-900">Security Vault</h3>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row items-center gap-8 bg-black/[0.02] p-8 rounded-[2.5rem] border border-gray-50">
+                    <div className="text-gray-500 font-medium">Protect your account with a high-entropy password.</div>
+                    <button
+                      onClick={() => setPasswordModalVisible(true)}
+                      className="h-14 px-10 rounded-2xl bg-white border-2 border-gray-100 text-gray-900 font-black shadow-sm transition-all hover:shadow-xl hover:scale-[1.02] active:scale-95 flex items-center gap-3 whitespace-nowrap ml-auto">
+                      <LockOutlined className="text-primary" />
+                      Change Password
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              {/* Security Section */}
-              <div className="border-t border-gray-100 pt-4 sm:pt-6">
-                <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                  Security
-                </h3>
-                <button
-                  onClick={() => setPasswordModalVisible(true)}
-                  className="px-3 py-2 sm:px-4 sm:py-2 lg:px-5 lg:py-2.5 bg-primary/10 text-primary rounded-lg sm:rounded-xl hover:bg-primary/20 transition-all flex items-center gap-2 font-medium text-sm sm:text-base w-full sm:w-auto justify-center"
-                >
-                  <LockOutlined />
-                  Change Password
-                </button>
-              </div>
-            </div>
+            </motion.div>
           </div>
         </div>
 
-        {/* Password Change Modal */}
+        {/* Updated Password Modal */}
         <Modal
-          title={
-            <div className="text-lg sm:text-xl font-semibold text-gray-900">
-              Change Password
-            </div>
-          }
+          title={null}
           open={passwordModalVisible}
           onCancel={() => setPasswordModalVisible(false)}
           footer={null}
           destroyOnClose
-          width={400}
-          className="custom-modal"
-          styles={{
-            body: { padding: "16px 20px" },
-          }}
+          width={500}
+          className="premium-modal"
+          centered
         >
-          <Form
-            form={passwordForm}
-            layout="vertical"
-            onFinish={handlePasswordChange}
-            className="mt-4 sm:mt-6"
-          >
-            <Form.Item
-              label="Current Password"
-              name="currentPassword"
-              rules={[
-                {
-                  required: true,
-                  message: "Please input your current password!",
-                },
-              ]}
-            >
-              <Input.Password
-                placeholder="Enter current password"
-                size="large"
-                className="rounded-lg text-sm sm:text-base"
-              />
-            </Form.Item>
+          <div className="p-10 font-Montserrat">
+            <div className="flex items-center gap-4 mb-10">
+              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
+                <LockOutlined className="text-3xl text-primary" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black text-gray-900">Credentials Refactor</h2>
+                <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Update your security layer</p>
+              </div>
+            </div>
 
-            <Form.Item
-              label="New Password"
-              name="newPassword"
-              rules={[
-                { required: true, message: "Please input new password!" },
-                () => ({
-                  validator(_, value) {
-                    if (!value || passwordRegex.test(value)) {
-                      return Promise.resolve();
-                    }
-                    return Promise.reject(
-                      new Error(
-                        "Password must contain: 8+ characters, 1 uppercase, 1 lowercase, 1 number, 1 special character"
-                      )
-                    );
-                  },
-                }),
-              ]}
+            <Form
+              form={passwordForm}
+              layout="vertical"
+              onFinish={handlePasswordChange}
+              className="space-y-6"
             >
-              <Input.Password
-                placeholder="Enter new password"
-                size="large"
-                className="rounded-lg text-sm sm:text-base"
-              />
-            </Form.Item>
-
-            <Form.Item
-              label="Confirm New Password"
-              name="confirmPassword"
-              dependencies={["newPassword"]}
-              rules={[
-                {
-                  required: true,
-                  message: "Please confirm your new password!",
-                },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (!value || getFieldValue("newPassword") === value) {
-                      return Promise.resolve();
-                    }
-                    return Promise.reject(new Error("Passwords do not match!"));
-                  },
-                }),
-              ]}
-            >
-              <Input.Password
-                placeholder="Confirm new password"
-                size="large"
-                className="rounded-lg text-sm sm:text-base"
-              />
-            </Form.Item>
-
-            <Form.Item>
-              <button
-                type="submit"
-                className="w-full px-4 py-3 bg-primary text-white rounded-xl transition-all flex items-center justify-center gap-2 font-medium text-sm sm:text-base"
+              <Form.Item
+                name="currentPassword"
+                rules={[{ required: true, message: "Required" }]}
+                className="mb-0"
               >
-                Change Password
-              </button>
-            </Form.Item>
-          </Form>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-widest font-black text-primary/40">Current Security Key</label>
+                  <Input.Password
+                    placeholder="••••••••"
+                    size="large"
+                    className="h-16 rounded-2xl border-2 border-gray-50 bg-gray-50/50 focus:bg-white font-black"
+                  />
+                </div>
+              </Form.Item>
+
+              <Form.Item
+                name="newPassword"
+                rules={[
+                  { required: true, message: "Required" },
+                  { validator: (_, value) => !value || passwordRegex.test(value) ? Promise.resolve() : Promise.reject("Invalid complexity") }
+                ]}
+                className="mb-0"
+              >
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-widest font-black text-primary/40">New Security Key</label>
+                  <Input.Password
+                    placeholder="••••••••"
+                    size="large"
+                    className="h-16 rounded-2xl border-2 border-gray-50 bg-gray-50/50 focus:bg-white font-black"
+                  />
+                </div>
+              </Form.Item>
+
+              <Form.Item
+                name="confirmPassword"
+                dependencies={["newPassword"]}
+                rules={[
+                  { required: true, message: "Required" },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      return !value || getFieldValue("newPassword") === value ? Promise.resolve() : Promise.reject("Mismatch")
+                    },
+                  }),
+                ]}
+                className="mb-0"
+              >
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-widest font-black text-primary/40">Confirm Security Key</label>
+                  <Input.Password
+                    placeholder="••••••••"
+                    size="large"
+                    className="h-16 rounded-2xl border-2 border-gray-50 bg-gray-50/50 focus:bg-white font-black"
+                  />
+                </div>
+              </Form.Item>
+
+              <Form.Item className="pt-6">
+                <button
+                  type="submit"
+                  className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                >
+                  Update Credentials
+                </button>
+              </Form.Item>
+            </Form>
+          </div>
         </Modal>
       </div>
     </>

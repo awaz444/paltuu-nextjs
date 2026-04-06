@@ -221,7 +221,13 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     try {
         await withRetry(() => client.connect());
-        const result = await withRetry<any>(() => client.query("SELECT * FROM pets"));
+        const result = await withRetry<any>(() => 
+            client.query(`
+                SELECT pets.*, cities.city_name AS city 
+                FROM pets 
+                LEFT JOIN cities ON pets.city_id = cities.city_id
+            `)
+        );
         return NextResponse.json(result.rows, {
             status: 200,
             headers: { "Content-Type": "application/json" },

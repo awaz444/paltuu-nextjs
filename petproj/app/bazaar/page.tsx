@@ -31,6 +31,7 @@ import {
   isCategoryFresh,
   type Product,
 } from "@/app/store/slices/bazaarSlice";
+import { motion } from "framer-motion";
 
 // Category definitions matching database
 const categories = [
@@ -204,6 +205,7 @@ export default function BazaarPage() {
   const [loadingProductId, setLoadingProductId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [bannerLoaded, setBannerLoaded] = useState(false);
 
   // Prefetch batch endpoint on mount for faster subsequent loads
   useEffect(() => {
@@ -329,7 +331,7 @@ export default function BazaarPage() {
     return (
       <div className="min-h-screen bg-white font-Montserrat flex flex-col">
         <main className="flex-grow flex items-center justify-center px-6">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className="max-w-2xl w-full bg-gray-50 rounded-[4rem] p-12 sm:p-20 text-center border border-gray-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)]"
@@ -339,24 +341,24 @@ export default function BazaarPage() {
                 <Store size={48} className="text-primary" />
               </div>
             </div>
-            
+
             <h1 className="text-4xl sm:text-5xl font-black text-gray-900 mb-6 leading-tight">
               Bazaar is Refurbishing
             </h1>
-            
+
             <p className="text-gray-500 font-medium text-lg sm:text-xl mb-12 leading-relaxed">
               We're perfecting your shopping experience. We'll be back soon with something special for you and your furry friends!
             </p>
-            
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button 
+              <button
                 onClick={() => router.push('/')}
                 className="w-full sm:w-auto px-10 py-5 bg-primary text-white font-black rounded-3xl shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-lg"
               >
                 Return to Home
               </button>
             </div>
-            
+
             <div className="mt-16 pt-8 border-t border-gray-100 flex items-center justify-center gap-3">
               <PawPrint size={18} className="text-primary/40" />
               <span className="text-gray-400 font-bold uppercase tracking-[0.2em] text-xs">Paltuu Premium Bazaar</span>

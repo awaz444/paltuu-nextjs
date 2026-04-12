@@ -520,9 +520,9 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                                         )
                                                     }
                                                     className={`w-3 h-3 rounded-full ${index ===
-                                                            currentImageIndex
-                                                            ? "bg-primary"
-                                                            : "bg-gray-300"
+                                                        currentImageIndex
+                                                        ? "bg-primary"
+                                                        : "bg-gray-300"
                                                         }`}
                                                 />
                                             ))}
@@ -623,7 +623,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
                                         {/* Sex */}
                                         {hasValue(pet.sex) && (
-                                            <div className="bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 h-full group hover:bg-white hover:shadow-xl transition-all duration-300">
+                                            <div className="col-span-2 bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 h-full group hover:bg-white hover:shadow-xl transition-all duration-300">
                                                 <div className="flex items-center gap-5">
                                                     <div className="bg-primary text-white p-4 rounded-2xl shadow-lg shadow-primary/20">
                                                         {pet.sex === "male" ? <ManOutlined className="text-xl" /> : <WomanOutlined className="text-xl" />}
@@ -646,8 +646,8 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                 <div className="flex flex-col sm:flex-row gap-4 mt-12">
                                     <button
                                         className={`flex-1 h-16 text-lg font-black rounded-[2rem] flex items-center justify-center gap-3 shadow-2xl transition-all ${isAvailable
-                                                ? "bg-primary text-white hover:shadow-primary/30 hover:scale-[1.02]"
-                                                : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                            ? "bg-primary text-white hover:shadow-primary/30 hover:scale-[1.02]"
+                                            : "bg-gray-200 text-gray-500 cursor-not-allowed"
                                             }`}
                                         onClick={handleAdoptClick}
                                         disabled={!isAvailable}>
@@ -657,8 +657,8 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 
                                     <button
                                         className={`flex-1 h-16 text-lg font-black rounded-[2rem] flex items-center justify-center gap-3 transition-all border-2 ${isAvailable
-                                                ? "border-primary text-primary hover:bg-primary/5 hover:scale-[1.02]"
-                                                : "border-gray-200 text-gray-500 cursor-not-allowed"
+                                            ? "border-primary text-primary hover:bg-primary/5 hover:scale-[1.02]"
+                                            : "border-gray-200 text-gray-500 cursor-not-allowed"
                                             }`}
                                         onClick={handleContactClick}
                                         disabled={!isAvailable}>

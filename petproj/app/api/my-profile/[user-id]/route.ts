@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/my-profile/[user-id]:
+ *   get:
+ *     summary: Auto-generated summary for /api/my-profile/[user-id]
+ *     tags: [Auto-Generated]
+ *   patch:
+ *     summary: Auto-generated summary for /api/my-profile/[user-id]
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/index";
 import { getToken } from "next-auth/jwt";

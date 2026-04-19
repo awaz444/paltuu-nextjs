@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/newsletter:
+ *   get:
+ *     summary: Auto-generated summary for /api/newsletter
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/newsletter
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '../../../db/ecom';
 

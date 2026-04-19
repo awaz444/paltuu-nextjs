@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/mark-all-notifications-read:
+ *   put:
+ *     summary: Auto-generated summary for /api/mark-all-notifications-read
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../db/index";
 import { getServerSession } from "next-auth/next";

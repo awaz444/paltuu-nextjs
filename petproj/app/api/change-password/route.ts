@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/change-password:
+ *   post:
+ *     summary: Auto-generated summary for /api/change-password
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../db/index";
 import { getToken } from "next-auth/jwt";

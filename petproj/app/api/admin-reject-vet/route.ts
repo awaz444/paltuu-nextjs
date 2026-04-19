@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/admin-reject-vet:
+ *   post:
+ *     summary: Auto-generated summary for /api/admin-reject-vet
+ *     tags: [Auto-Generated]
+ */
+
 import { createClient } from "../../../db/index";
 import { NextRequest, NextResponse } from "next/server";
 

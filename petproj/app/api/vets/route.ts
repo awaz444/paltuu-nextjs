@@ -1,3 +1,20 @@
+/**
+ * @swagger
+ * /api/vets:
+ *   get:
+ *     summary: Fetch all approved vets
+ *     tags: [Vets]
+ *   post:
+ *     summary: Register a new vet profile
+ *     tags: [Vets]
+ *   put:
+ *     summary: Update a vet profile
+ *     tags: [Vets]
+ *   delete:
+ *     summary: Delete a vet and their user profile
+ *     tags: [Vets]
+ */
+
 export const revalidate = 0;
 
 // pages/api/vets/route.ts

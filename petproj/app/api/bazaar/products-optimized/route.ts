@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/bazaar/products-optimized:
+ *   get:
+ *     summary: Auto-generated summary for /api/bazaar/products-optimized
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "../../../../db/ecom";
 import { safeRedis } from "../../../../utils/redis";

@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/bazaar/categories-batch:
+ *   get:
+ *     summary: Auto-generated summary for /api/bazaar/categories-batch
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { safeRedis } from "../../../../utils/redis";
 

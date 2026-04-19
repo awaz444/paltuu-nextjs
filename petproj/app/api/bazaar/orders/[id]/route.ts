@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/bazaar/orders/[id]:
+ *   get:
+ *     summary: Auto-generated summary for /api/bazaar/orders/[id]
+ *     tags: [Auto-Generated]
+ *   put:
+ *     summary: Auto-generated summary for /api/bazaar/orders/[id]
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '../../../../../db/ecom';
 

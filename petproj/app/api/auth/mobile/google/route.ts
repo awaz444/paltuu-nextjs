@@ -6,6 +6,27 @@ import bcrypt from 'bcryptjs';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+/**
+ * @swagger
+ * /api/auth/mobile/google:
+ *   post:
+ *     summary: Google OAuth Exchange (Mobile)
+ *     description: Exchange a Google ID token for our local mobile JWT tokens.
+ *     tags: [Mobile Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               idToken: { type: string }
+ *     responses:
+ *       200:
+ *         description: Google login successful
+ *       401:
+ *         description: Invalid Google token
+ */
 export async function POST(req: Request) {
   try {
     const { idToken } = await req.json();

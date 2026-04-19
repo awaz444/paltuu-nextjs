@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/orders/[user_id]:
+ *   get:
+ *     summary: Auto-generated summary for /api/orders/[user_id]
+ *     tags: [Auto-Generated]
+ */
+
 // app/api/orders/[user_id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '../../../../db/ecom';

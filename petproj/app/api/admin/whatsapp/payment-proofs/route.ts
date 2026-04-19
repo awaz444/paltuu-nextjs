@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/admin/whatsapp/payment-proofs:
+ *   get:
+ *     summary: Auto-generated summary for /api/admin/whatsapp/payment-proofs
+ *     tags: [Auto-Generated]
+ */
+
 // app/api/whatsapp/payments/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { whatsappDb } from '@/db/whatsapp';

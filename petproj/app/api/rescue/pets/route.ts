@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/rescue/pets:
+ *   get:
+ *     summary: Auto-generated summary for /api/rescue/pets
+ *     tags: [Auto-Generated]
+ */
+
 export const revalidate = 0;
 
 import { NextRequest, NextResponse } from "next/server";

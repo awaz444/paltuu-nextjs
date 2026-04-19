@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/qurbani-animals/[id]:
+ *   put:
+ *     summary: Auto-generated summary for /api/qurbani-animals/[id]
+ *     tags: [Auto-Generated]
+ *   delete:
+ *     summary: Auto-generated summary for /api/qurbani-animals/[id]
+ *     tags: [Auto-Generated]
+ */
+
 // app/api/qurbani-animals/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/index";

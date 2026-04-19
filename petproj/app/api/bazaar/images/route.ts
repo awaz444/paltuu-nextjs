@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/bazaar/images:
+ *   post:
+ *     summary: Auto-generated summary for /api/bazaar/images
+ *     tags: [Auto-Generated]
+ */
+
 import { getPool } from '../../../../db/ecom';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';

@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/upload-lost-found-image:
+ *   post:
+ *     summary: Auto-generated summary for /api/upload-lost-found-image
+ *     tags: [Auto-Generated]
+ */
+
 import { v2 as cloudinary } from "cloudinary";
 import { createClient } from "../../../db/index";
 import { NextRequest, NextResponse } from "next/server";

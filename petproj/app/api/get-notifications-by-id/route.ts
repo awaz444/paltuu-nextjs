@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/get-notifications-by-id:
+ *   get:
+ *     summary: Auto-generated summary for /api/get-notifications-by-id
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/get-notifications-by-id
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../db/index";
 import { getServerSession } from "next-auth/next";

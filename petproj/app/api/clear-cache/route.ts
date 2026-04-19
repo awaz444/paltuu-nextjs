@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/clear-cache:
+ *   post:
+ *     summary: Auto-generated summary for /api/clear-cache
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { safeRedis } from '../../../utils/redis';
 

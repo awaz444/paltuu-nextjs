@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/listing-approvals:
+ *   get:
+ *     summary: Auto-generated summary for /api/listing-approvals
+ *     tags: [Auto-Generated]
+ *   put:
+ *     summary: Auto-generated summary for /api/listing-approvals
+ *     tags: [Auto-Generated]
+ */
+
 export const revalidate = 0;
 
 import { createClient } from '../../../db/index';

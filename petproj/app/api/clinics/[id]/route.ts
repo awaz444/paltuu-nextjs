@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/clinics/[id]:
+ *   get:
+ *     summary: Auto-generated summary for /api/clinics/[id]
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, db } from "../../../../db/index";
 

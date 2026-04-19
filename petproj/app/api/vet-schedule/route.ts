@@ -1,3 +1,17 @@
+/**
+ * @swagger
+ * /api/vet-schedule:
+ *   get:
+ *     summary: Auto-generated summary for /api/vet-schedule
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/vet-schedule
+ *     tags: [Auto-Generated]
+ *   put:
+ *     summary: Auto-generated summary for /api/vet-schedule
+ *     tags: [Auto-Generated]
+ */
+
 import { createClient } from "../../../db/index";
 import { NextRequest, NextResponse } from "next/server";
 

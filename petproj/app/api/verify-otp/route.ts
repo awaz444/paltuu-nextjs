@@ -1,3 +1,23 @@
+/**
+ * @swagger
+ * /api/verify-otp:
+ *   post:
+ *     summary: Verify email OTP
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email: { type: string }
+ *               otp: { type: string }
+ *     responses:
+ *       200:
+ *         description: OTP verified successfully
+ */
+
 import { PrismaClient } from "@prisma/client";
 import bcrypt from 'bcryptjs';
 

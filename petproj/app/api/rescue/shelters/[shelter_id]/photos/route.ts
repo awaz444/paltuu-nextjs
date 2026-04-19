@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/rescue/shelters/[shelter_id]/photos:
+ *   post:
+ *     summary: Auto-generated summary for /api/rescue/shelters/[shelter_id]/photos
+ *     tags: [Auto-Generated]
+ *   delete:
+ *     summary: Auto-generated summary for /api/rescue/shelters/[shelter_id]/photos
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../../db/index";
 

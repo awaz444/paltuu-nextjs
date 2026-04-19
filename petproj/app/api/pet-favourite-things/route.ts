@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/pet-favourite-things:
+ *   get:
+ *     summary: Auto-generated summary for /api/pet-favourite-things
+ *     tags: [Auto-Generated]
+ */
+
 import { createClient } from '../../../db/index'; 
 import { NextRequest, NextResponse } from 'next/server';
 

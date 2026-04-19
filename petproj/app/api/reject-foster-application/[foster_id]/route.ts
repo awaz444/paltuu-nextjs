@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/reject-foster-application/[foster_id]:
+ *   post:
+ *     summary: Auto-generated summary for /api/reject-foster-application/[foster_id]
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/index";
 

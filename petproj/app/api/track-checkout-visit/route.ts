@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/track-checkout-visit:
+ *   post:
+ *     summary: Auto-generated summary for /api/track-checkout-visit
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { sendCartActivityNotification } from '../../../utils/mailjet';
 

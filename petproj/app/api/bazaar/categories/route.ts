@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/bazaar/categories:
+ *   get:
+ *     summary: Auto-generated summary for /api/bazaar/categories
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '../../../../db/ecom';
 

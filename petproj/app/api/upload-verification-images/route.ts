@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/upload-verification-images:
+ *   post:
+ *     summary: Auto-generated summary for /api/upload-verification-images
+ *     tags: [Auto-Generated]
+ */
+
 import { v2 as cloudinary } from "cloudinary";
 import { createClient } from "../../../db/index";
 import { NextRequest, NextResponse } from "next/server";

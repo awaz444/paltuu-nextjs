@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/mark-notification-read/[notification_id]:
+ *   put:
+ *     summary: Auto-generated summary for /api/mark-notification-read/[notification_id]
+ *     tags: [Auto-Generated]
+ */
+
 import { createClient } from '../../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
 

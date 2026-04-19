@@ -1,3 +1,20 @@
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     summary: Auto-generated summary for /api/users
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/users
+ *     tags: [Auto-Generated]
+ *   put:
+ *     summary: Auto-generated summary for /api/users
+ *     tags: [Auto-Generated]
+ *   delete:
+ *     summary: Auto-generated summary for /api/users
+ *     tags: [Auto-Generated]
+ */
+
 // app/api/users/route.ts
 import { createClient } from '../../../db/index'; 
 import { NextRequest, NextResponse } from 'next/server';

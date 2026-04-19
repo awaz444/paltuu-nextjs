@@ -1,3 +1,20 @@
+/**
+ * @swagger
+ * /api/bazaar/cart:
+ *   get:
+ *     summary: Auto-generated summary for /api/bazaar/cart
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/bazaar/cart
+ *     tags: [Auto-Generated]
+ *   put:
+ *     summary: Auto-generated summary for /api/bazaar/cart
+ *     tags: [Auto-Generated]
+ *   delete:
+ *     summary: Auto-generated summary for /api/bazaar/cart
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool, query as dbQuery } from '../../../../db/ecom';
 import { sendCartActivityNotification } from '../../../../utils/mailjet';

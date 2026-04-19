@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Auto-generated summary for /api/auth/forgot-password
+ *     tags: [Auto-Generated]
+ */
+
 import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
 import { createClient } from "../../../../db";

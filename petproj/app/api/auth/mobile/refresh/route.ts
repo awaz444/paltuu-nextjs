@@ -2,6 +2,27 @@ import { db } from "@/db/index";
 import { generateMobileTokenPair, invalidateMobileRefreshToken, verifyRefreshTokenInDb } from "@/utils/mobileAuth";
 import { NextResponse } from "next/server";
 
+/**
+ * @swagger
+ * /api/auth/mobile/refresh:
+ *   post:
+ *     summary: Refresh Mobile Tokens
+ *     description: Exchange a valid refresh token for a new set of JWT tokens (access and refresh).
+ *     tags: [Mobile Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken: { type: string }
+ *     responses:
+ *       200:
+ *         description: Tokens refreshed successfully
+ *       401:
+ *         description: Invalid or expired refresh token
+ */
 export async function POST(req: Request) {
   try {
     const { refreshToken } = await req.json();

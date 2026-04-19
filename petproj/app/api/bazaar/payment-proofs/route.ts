@@ -1,3 +1,17 @@
+/**
+ * @swagger
+ * /api/bazaar/payment-proofs:
+ *   get:
+ *     summary: Auto-generated summary for /api/bazaar/payment-proofs
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/bazaar/payment-proofs
+ *     tags: [Auto-Generated]
+ *   patch:
+ *     summary: Auto-generated summary for /api/bazaar/payment-proofs
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/db/ecom';
 

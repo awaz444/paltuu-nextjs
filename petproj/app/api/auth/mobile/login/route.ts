@@ -3,6 +3,39 @@ import bcrypt from 'bcryptjs';
 import { generateMobileTokenPair } from "@/utils/mobileAuth";
 import { NextResponse } from "next/server";
 
+/**
+ * @swagger
+ * /api/auth/mobile/login:
+ *   post:
+ *     summary: Mobile Login
+ *     description: Authenticate a user with email and password to receive JWT tokens.
+ *     tags: [Mobile Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *                 refreshToken:
+ *                   type: string
+ *       401:
+ *         description: Invalid credentials
+ */
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();

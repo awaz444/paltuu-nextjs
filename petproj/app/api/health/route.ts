@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: Auto-generated summary for /api/health
+ *     tags: [Auto-Generated]
+ */
+
 // pages/api/health.ts
 import { createClient } from "../../../db/index"; 
 import { NextRequest, NextResponse } from 'next/server';

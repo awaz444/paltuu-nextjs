@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/users/vet-signup:
+ *   post:
+ *     summary: Auto-generated summary for /api/users/vet-signup
+ *     tags: [Auto-Generated]
+ */
+
 import { db } from "@/db/index"; // Your DB instance
 import { NextRequest, NextResponse } from "next/server";
 

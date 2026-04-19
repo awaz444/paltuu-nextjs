@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/my-listings/[user-id]:
+ *   get:
+ *     summary: Auto-generated summary for /api/my-listings/[user-id]
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/index";
 

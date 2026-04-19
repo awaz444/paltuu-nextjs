@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/llm:
+ *   post:
+ *     summary: Auto-generated summary for /api/llm
+ *     tags: [Auto-Generated]
+ */
+
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 

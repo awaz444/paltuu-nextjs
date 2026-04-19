@@ -1,3 +1,20 @@
+/**
+ * @swagger
+ * /api/admin/vets:
+ *   get:
+ *     summary: Auto-generated summary for /api/admin/vets
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/admin/vets
+ *     tags: [Auto-Generated]
+ *   delete:
+ *     summary: Auto-generated summary for /api/admin/vets
+ *     tags: [Auto-Generated]
+ *   patch:
+ *     summary: Auto-generated summary for /api/admin/vets
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/index";
 

@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/vet-qualification:
+ *   get:
+ *     summary: Auto-generated summary for /api/vet-qualification
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/vet-qualification
+ *     tags: [Auto-Generated]
+ */
+
 import { createClient } from "../../../db/index";
 import { NextRequest, NextResponse } from "next/server";
 

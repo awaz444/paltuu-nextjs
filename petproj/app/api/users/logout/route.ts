@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/users/logout:
+ *   get:
+ *     summary: Auto-generated summary for /api/users/logout
+ *     tags: [Auto-Generated]
+ */
+
 // /api/users/logout.js - Updated version
 import { NextResponse } from "next/server";
 

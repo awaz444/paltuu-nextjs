@@ -1,3 +1,20 @@
+/**
+ * @swagger
+ * /api/pets:
+ *   get:
+ *     summary: Fetch all pets
+ *     tags: [Pets]
+ *   post:
+ *     summary: Create a new pet listing
+ *     tags: [Pets]
+ *   put:
+ *     summary: Update an existing pet listing
+ *     tags: [Pets]
+ *   delete:
+ *     summary: Delete a pet listing
+ *     tags: [Pets]
+ */
+
 import { createClient } from "../../../db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { sendNewListingNotification } from "../../../utils/mailjet";

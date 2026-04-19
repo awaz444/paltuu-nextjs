@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/admin/whatsapp/delivery-requests:
+ *   get:
+ *     summary: Auto-generated summary for /api/admin/whatsapp/delivery-requests
+ *     tags: [Auto-Generated]
+ */
+
 // app/api/whatsapp/deliveries/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { whatsappDb } from '@/db/whatsapp';

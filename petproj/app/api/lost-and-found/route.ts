@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/lost-and-found:
+ *   get:
+ *     summary: Auto-generated summary for /api/lost-and-found
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/lost-and-found
+ *     tags: [Auto-Generated]
+ */
+
 export const revalidate = 0;
 
 import { NextRequest, NextResponse } from "next/server";

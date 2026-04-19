@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/clinics:
+ *   get:
+ *     summary: Fetch all pet clinics
+ *     tags: [Clinics]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../db/index";
 

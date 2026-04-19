@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/vet-register-complete:
+ *   post:
+ *     summary: Auto-generated summary for /api/vet-register-complete
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../db/index";
 import bcrypt from "bcryptjs";

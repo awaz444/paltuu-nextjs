@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/bazaar/reviews:
+ *   get:
+ *     summary: Auto-generated summary for /api/bazaar/reviews
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/bazaar/reviews
+ *     tags: [Auto-Generated]
+ */
+
 // app/api/bazaar/reviews/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "../../../../db/ecom";

@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/bazaar/coupons/apply:
+ *   post:
+ *     summary: Auto-generated summary for /api/bazaar/coupons/apply
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '../../../../../db/ecom';
 

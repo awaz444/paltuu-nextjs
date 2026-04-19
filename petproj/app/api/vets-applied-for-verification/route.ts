@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/vets-applied-for-verification:
+ *   get:
+ *     summary: Auto-generated summary for /api/vets-applied-for-verification
+ *     tags: [Auto-Generated]
+ */
+
 import { createClient } from "../../../db/index"; // Your custom database client
 import { NextRequest, NextResponse } from "next/server";
 

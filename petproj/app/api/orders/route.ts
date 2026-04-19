@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/orders:
+ *   get:
+ *     summary: Auto-generated summary for /api/orders
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '../../../db/ecom';
 import jwt from "jsonwebtoken";

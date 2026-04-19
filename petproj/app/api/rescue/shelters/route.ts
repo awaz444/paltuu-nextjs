@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/rescue/shelters:
+ *   post:
+ *     summary: Auto-generated summary for /api/rescue/shelters
+ *     tags: [Auto-Generated]
+ */
+
 // app/api/rescue/shelters/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { IncomingForm } from "formidable";

@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/user-shops-shelters:
+ *   get:
+ *     summary: Auto-generated summary for /api/user-shops-shelters
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../db/index";
 

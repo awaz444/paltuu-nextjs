@@ -1,3 +1,20 @@
+/**
+ * @swagger
+ * /api/admin/clinics:
+ *   get:
+ *     summary: Auto-generated summary for /api/admin/clinics
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/admin/clinics
+ *     tags: [Auto-Generated]
+ *   delete:
+ *     summary: Auto-generated summary for /api/admin/clinics
+ *     tags: [Auto-Generated]
+ *   patch:
+ *     summary: Auto-generated summary for /api/admin/clinics
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/index";
 

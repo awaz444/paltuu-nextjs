@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/qurbani-animals/images:
+ *   post:
+ *     summary: Auto-generated summary for /api/qurbani-animals/images
+ *     tags: [Auto-Generated]
+ */
+
 import { v2 as cloudinary } from "cloudinary";
 import { createClient } from "../../../../db/index"; // Import your custom database client
 import { NextRequest, NextResponse } from "next/server";

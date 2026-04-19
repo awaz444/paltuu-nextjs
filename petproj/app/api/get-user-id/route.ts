@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/get-user-id:
+ *   get:
+ *     summary: Auto-generated summary for /api/get-user-id
+ *     tags: [Auto-Generated]
+ */
+
 import { createClient } from '../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
 

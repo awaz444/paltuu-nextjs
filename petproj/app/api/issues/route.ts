@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/issues:
+ *   post:
+ *     summary: Auto-generated summary for /api/issues
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, supabase } from '../../../db/index';
 import { v4 as uuidv4 } from 'uuid';

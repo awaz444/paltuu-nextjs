@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/auth/verify-token:
+ *   get:
+ *     summary: Auto-generated summary for /api/auth/verify-token
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { getToken } from "next-auth/jwt";

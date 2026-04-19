@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Auto-generated summary for /api/auth/reset-password
+ *     tags: [Auto-Generated]
+ */
+
 import jwt from "jsonwebtoken";
 import { createClient } from "../../../../db";
 // import bcrypt from "bcryptjs"; // Uncomment and use bcrypt

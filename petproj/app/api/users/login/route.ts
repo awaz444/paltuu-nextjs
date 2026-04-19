@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/users/login:
+ *   post:
+ *     summary: Auto-generated summary for /api/users/login
+ *     tags: [Auto-Generated]
+ */
+
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";

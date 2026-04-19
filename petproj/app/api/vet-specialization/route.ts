@@ -1,3 +1,20 @@
+/**
+ * @swagger
+ * /api/vet-specialization:
+ *   get:
+ *     summary: Auto-generated summary for /api/vet-specialization
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/vet-specialization
+ *     tags: [Auto-Generated]
+ *   put:
+ *     summary: Auto-generated summary for /api/vet-specialization
+ *     tags: [Auto-Generated]
+ *   delete:
+ *     summary: Auto-generated summary for /api/vet-specialization
+ *     tags: [Auto-Generated]
+ */
+
 import { createClient } from '../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
 

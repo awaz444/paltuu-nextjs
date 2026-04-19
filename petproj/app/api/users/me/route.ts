@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/users/me:
+ *   get:
+ *     summary: Auto-generated summary for /api/users/me
+ *     tags: [Auto-Generated]
+ */
+
 import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";

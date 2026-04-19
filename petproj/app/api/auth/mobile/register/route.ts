@@ -3,6 +3,30 @@ import bcrypt from 'bcryptjs';
 import { generateMobileTokenPair } from "@/utils/mobileAuth";
 import { NextResponse } from "next/server";
 
+/**
+ * @swagger
+ * /api/auth/mobile/register:
+ *   post:
+ *     summary: Mobile Registration (with OTP)
+ *     description: Register a new user by providing email, password, name, and a valid OTP code.
+ *     tags: [Mobile Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email: { type: string }
+ *               password: { type: string }
+ *               name: { type: string }
+ *               otp: { type: string }
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: Missing fields or invalid/expired OTP
+ */
 export async function POST(req: Request) {
   try {
     const { email, password, name, otp } = await req.json();

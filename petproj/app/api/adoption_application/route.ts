@@ -1,3 +1,20 @@
+/**
+ * @swagger
+ * /api/adoption_application:
+ *   get:
+ *     summary: Fetch all pending adoption applications
+ *     tags: [Adoptions]
+ *   post:
+ *     summary: Submit a new adoption application
+ *     tags: [Adoptions]
+ *   put:
+ *     summary: Update an adoption application (e.g., status or details)
+ *     tags: [Adoptions]
+ *   delete:
+ *     summary: Delete an adoption application
+ *     tags: [Adoptions]
+ */
+
 import { createClient } from '../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
 import { sendAdoptionApplicationEmails } from '../../../utils/mailjet';

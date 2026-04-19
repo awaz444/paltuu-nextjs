@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/bazaar/orders/create-with-payment:
+ *   post:
+ *     summary: Auto-generated summary for /api/bazaar/orders/create-with-payment
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/db/ecom';
 import { sendOrderEmails } from '@/utils/mailjet';

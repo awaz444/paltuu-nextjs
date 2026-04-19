@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/users/sign-up:
+ *   post:
+ *     summary: Auto-generated summary for /api/users/sign-up
+ *     tags: [Auto-Generated]
+ */
+
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from 'bcryptjs';

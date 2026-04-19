@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/bazaar/products:
+ *   get:
+ *     summary: Fetch bazaar products with filters and pagination
+ *     tags: [Bazaar]
+ *   post:
+ *     summary: Create a new bazaar product (admin)
+ *     tags: [Bazaar]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "../../../../db/ecom";
 import { safeRedis } from "../../../../utils/redis";

@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/has-vet-applied/[user-id]:
+ *   get:
+ *     summary: Auto-generated summary for /api/has-vet-applied/[user-id]
+ *     tags: [Auto-Generated]
+ */
+
 import { createClient } from '../../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
 

@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/my-listings:
+ *   get:
+ *     summary: Auto-generated summary for /api/my-listings
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";
 import jwt from "jsonwebtoken";

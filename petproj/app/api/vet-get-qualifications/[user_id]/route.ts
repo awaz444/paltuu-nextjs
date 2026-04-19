@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/vet-get-qualifications/[user_id]:
+ *   get:
+ *     summary: Auto-generated summary for /api/vet-get-qualifications/[user_id]
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/index";
 

@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/foster_application/[pet_id]:
+ *   get:
+ *     summary: Auto-generated summary for /api/foster_application/[pet_id]
+ *     tags: [Auto-Generated]
+ */
+
 import { createClient } from '../../../../db/index'; 
 import { NextRequest, NextResponse } from 'next/server';
 

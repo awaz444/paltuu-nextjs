@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/update-profile-image/[user-id]:
+ *   post:
+ *     summary: Auto-generated summary for /api/update-profile-image/[user-id]
+ *     tags: [Auto-Generated]
+ */
+
 import { v2 as cloudinary } from "cloudinary";
 import { createClient } from "../../../../db/index";
 import { NextRequest, NextResponse } from "next/server";

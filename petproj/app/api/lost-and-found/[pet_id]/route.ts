@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/lost-and-found/[pet_id]:
+ *   get:
+ *     summary: Auto-generated summary for /api/lost-and-found/[pet_id]
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/index";
 

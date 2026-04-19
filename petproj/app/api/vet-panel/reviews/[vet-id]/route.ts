@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/vet-panel/reviews/[vet-id]:
+ *   get:
+ *     summary: Auto-generated summary for /api/vet-panel/reviews/[vet-id]
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../db/index";
 

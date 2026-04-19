@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/admin/whatsapp/lost-found:
+ *   get:
+ *     summary: Auto-generated summary for /api/admin/whatsapp/lost-found
+ *     tags: [Auto-Generated]
+ */
+
 // app/api/whatsapp/lost-found/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { whatsappDb } from '@/db/whatsapp';

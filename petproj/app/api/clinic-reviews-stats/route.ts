@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/clinic-reviews-stats:
+ *   get:
+ *     summary: Auto-generated summary for /api/clinic-reviews-stats
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/clinic-reviews-stats
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../db/index";
 import { getUserIdFromRequest } from "../../../utils/authServer";

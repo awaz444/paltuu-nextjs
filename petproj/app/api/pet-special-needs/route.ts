@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/pet-special-needs:
+ *   get:
+ *     summary: Auto-generated summary for /api/pet-special-needs
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/pet-special-needs
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../db/index";
 

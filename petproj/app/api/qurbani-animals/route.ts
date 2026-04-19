@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/qurbani-animals:
+ *   get:
+ *     summary: Auto-generated summary for /api/qurbani-animals
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/qurbani-animals
+ *     tags: [Auto-Generated]
+ */
+
 export const revalidate = 0;
 
 import { NextRequest, NextResponse } from 'next/server';

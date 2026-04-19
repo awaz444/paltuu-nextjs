@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/upload-vet-image:
+ *   post:
+ *     summary: Auto-generated summary for /api/upload-vet-image
+ *     tags: [Auto-Generated]
+ */
+
 import { v2 as cloudinary } from "cloudinary";
 import { NextRequest, NextResponse } from "next/server";
 

@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/vet-step-zero:
+ *   post:
+ *     summary: Auto-generated summary for /api/vet-step-zero
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../db/index";
 import bcrypt from "bcryptjs";

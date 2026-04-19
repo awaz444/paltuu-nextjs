@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/pets/bulk-upload:
+ *   post:
+ *     summary: Auto-generated summary for /api/pets/bulk-upload
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../db/index";
 import { sendNewListingNotification } from "../../../../utils/mailjet";

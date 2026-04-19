@@ -1,3 +1,22 @@
+/**
+ * @swagger
+ * /api/send-otp:
+ *   post:
+ *     summary: Send OTP to email
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email: { type: string }
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ */
+
 import { PrismaClient } from "@prisma/client";
 import bcrypt from 'bcryptjs';
 import Mailjet from "node-mailjet";

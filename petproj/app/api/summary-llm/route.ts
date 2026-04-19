@@ -1,3 +1,11 @@
+/**
+ * @swagger
+ * /api/summary-llm:
+ *   post:
+ *     summary: Auto-generated summary for /api/summary-llm
+ *     tags: [Auto-Generated]
+ */
+
 // route.ts - Updated with listing type specific prompts
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";

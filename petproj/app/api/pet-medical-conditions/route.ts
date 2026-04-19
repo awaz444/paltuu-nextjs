@@ -1,3 +1,14 @@
+/**
+ * @swagger
+ * /api/pet-medical-conditions:
+ *   get:
+ *     summary: Auto-generated summary for /api/pet-medical-conditions
+ *     tags: [Auto-Generated]
+ *   post:
+ *     summary: Auto-generated summary for /api/pet-medical-conditions
+ *     tags: [Auto-Generated]
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../db/index";
 

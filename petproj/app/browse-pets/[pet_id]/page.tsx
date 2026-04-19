@@ -602,25 +602,6 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                             </div>
                                         </div>
 
-                                        {/* Price - Only show if applicable */}
-                                        {hasValue(pet.price) && (
-                                            <div className="bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 h-full group hover:bg-white hover:shadow-xl transition-all duration-300">
-                                                <div className="flex items-center gap-5">
-                                                    <div className="bg-green-500 text-white p-4 rounded-2xl shadow-lg shadow-green-500/20">
-                                                        <DollarOutlined className="text-xl" />
-                                                    </div>
-                                                    <div>
-                                                        <Text className="text-[10px] uppercase tracking-[0.2em] font-black text-green-500/40 block mb-1">
-                                                            {pet.listing_type === "sell" ? "Price" : "Adoption Fee"}
-                                                        </Text>
-                                                        <Text className="text-xl font-black text-gray-900">
-                                                            PKR {pet.price}
-                                                        </Text>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-
                                         {/* Sex */}
                                         {hasValue(pet.sex) && (
                                             <div className="col-span-2 bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 h-full group hover:bg-white hover:shadow-xl transition-all duration-300">

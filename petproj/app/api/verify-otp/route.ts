@@ -57,3 +57,7 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ message: "Internal Server Error" }), { status: 500 });
   }
 }
+
+export async function OPTIONS() {
+  return new Response(null, { status: 200 });
+}

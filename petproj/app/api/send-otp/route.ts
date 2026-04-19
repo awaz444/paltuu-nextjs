@@ -49,3 +49,7 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ message: "Failed to Send OTP" }), { status: 500 });
   }
 }
+
+export async function OPTIONS() {
+  return new Response(null, { status: 200 });
+}

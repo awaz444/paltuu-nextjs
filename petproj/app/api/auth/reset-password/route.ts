@@ -67,3 +67,7 @@ export async function POST(request: Request) {
         await client.end();
     }
 }
+
+export async function OPTIONS() {
+    return new Response(null, { status: 200 });
+}

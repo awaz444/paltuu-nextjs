@@ -9,7 +9,7 @@ import { QueryResult } from "pg";
 export const authoptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 90 * 24 * 60 * 60, // 90 days
   },
   providers: [
     GoogleProvider({

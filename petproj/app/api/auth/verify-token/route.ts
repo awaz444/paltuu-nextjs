@@ -54,3 +54,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ valid: false, user: null }, { status: 200 });
   }
 }
+
+export async function OPTIONS() {
+  return new Response(null, { status: 200 });
+}

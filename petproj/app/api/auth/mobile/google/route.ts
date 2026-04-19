@@ -61,7 +61,8 @@ export async function POST(req: Request) {
     if (userResult.rowCount === 0) {
       // 3. Create new user if they don't exist
       const username = email.split('@')[0];
-      const placeholderPassword = await bcrypt.hash(Math.random().toString(36), 10);
+      // const placeholderPassword = await bcrypt.hash(Math.random().toString(36), 10);
+      const placeholderPassword = 'google-auth-placeholder';
       
       const newUserResult = await db.query(
         'INSERT INTO users (username, name, email, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING user_id, email, role',

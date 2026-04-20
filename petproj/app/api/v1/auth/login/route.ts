@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     // Schema Validation
     const validation = validate(body, {
       email: { required: true, type: 'email' },
-      password: { required: true, min: 6 }
+      password: { required: true, min: 3 }
     });
 
     if (!validation.success) {

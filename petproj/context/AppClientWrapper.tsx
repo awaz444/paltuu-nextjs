@@ -11,3 +11,4 @@ export default function AppClientWrapper({ children }: { children: React.ReactNo
     </SessionProvider>
   );
 }
+

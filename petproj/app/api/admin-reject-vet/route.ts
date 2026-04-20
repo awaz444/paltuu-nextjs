@@ -13,6 +13,7 @@ import { authoptions } from "@/app/api/auth/[...nextauth]/options";
 
 export const dynamic = "force-dynamic";
 
+
 export async function POST(req: NextRequest): Promise<NextResponse> {
     const session = await getServerSession(authoptions);
     if (!session || session.user.role !== 'admin') {

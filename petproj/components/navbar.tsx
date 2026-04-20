@@ -203,6 +203,7 @@ const Navbar = ({
     session?.user?.image || // next-auth google login usually gives `image`
     "/default-avatar.png"; // put your default icon in public folder
 
+
   // Cart state for navbar dropdown
   const [cartOpen, setCartOpen] = useState(false);
   const dispatch = useDispatch<AppDispatch>();

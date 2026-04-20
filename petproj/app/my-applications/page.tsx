@@ -51,7 +51,7 @@ export default function MyApplicationsPage() {
             setLoading(true);
             setError(null);
 
-            const response = await fetch("/api/get-my-applications", {
+            const response = await fetch("/api/v1/applications/my", {
                 method: "GET",
                 credentials: "include",
                 headers: {
@@ -103,7 +103,7 @@ export default function MyApplicationsPage() {
 
         try {
             const response = await fetch(
-                `/api/delete-application/${idToDelete}`,
+                `/api/v1/applications/my?application_id=${applicationId}&type=${applicationType}`,
                 {
                     method: "DELETE",
                     credentials: "include",

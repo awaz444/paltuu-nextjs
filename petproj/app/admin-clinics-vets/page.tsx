@@ -20,7 +20,7 @@ export default function AdminClinicsVets() {
     const fetchClinics = async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/admin/clinics");
+            const res = await fetch("/api/v1/admin/clinics");
             const data = await res.json();
             setClinics(data);
         } catch (error) {
@@ -33,7 +33,7 @@ export default function AdminClinicsVets() {
     const fetchVets = async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/admin/vets");
+            const res = await fetch("/api/v1/admin/vets");
             const data = await res.json();
             setVets(data);
         } catch (error) {
@@ -50,10 +50,9 @@ export default function AdminClinicsVets() {
 
     const handleDeleteClinic = async (clinic_id: string) => {
         try {
-            const res = await fetch("/api/admin/clinics", {
+            const res = await fetch(`/api/v1/admin/clinics?clinic_id=${clinic_id}`, {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ clinic_id })
+                headers: { "Content-Type": "application/json" }
             });
             if (res.ok) {
                 message.success("Clinic deleted");
@@ -68,10 +67,9 @@ export default function AdminClinicsVets() {
 
     const handleDeleteVet = async (vet_id: string) => {
         try {
-            const res = await fetch("/api/admin/vets", {
+            const res = await fetch(`/api/v1/admin/vets?vet_id=${vet_id}`, {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ vet_id })
+                headers: { "Content-Type": "application/json" }
             });
             if (res.ok) {
                 message.success("Vet deleted");

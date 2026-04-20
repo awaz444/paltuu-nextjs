@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       let retries = 2;
       while (retries > 0) {
         try {
-          const response = await fetch("/api/auth/verify-token", {
+          const response = await fetch("/api/v1/auth/verify", {
             credentials: 'include',
             cache: 'no-store',
             headers: {
@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // console.log("🔍 Attempting to hydrate user from server...");
 
         // Call server to verify token (server can read httpOnly cookies)
-        const verifyResponse = await fetch("/api/auth/verify-token", {
+        const verifyResponse = await fetch("/api/v1/auth/verify", {
           credentials: 'include',
           cache: 'no-store',
         });
@@ -109,8 +109,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         // console.log("✅ Token verified, userId:", tokenUser.id);
 
-        // Fetch full user profile from database
-        const profileResponse = await fetch(`/api/my-profile/${tokenUser.id}`);
+        // Fetch full user profile from database using V1
+        const profileResponse = await fetch(`/api/v1/profile`);
         if (profileResponse.ok) {
           const dbProfile = await profileResponse.json();
           const hydratedUser: User = {
@@ -158,7 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // First, try to fetch the user's database profile
       const fetchDatabaseProfile = async () => {
         try {
-          const response = await fetch(`/api/my-profile/${googleUserId}`);
+          const response = await fetch(`/api/v1/profile`);
           if (response.ok) {
             const dbProfile = await response.json();
             // Use database profile data if available, but fallback to Google data if empty
@@ -242,7 +242,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 }) => {
   // Try to fetch the user's database profile first
   try {
-    const response = await fetch(`/api/my-profile/${userData.id}`);
+    const response = await fetch(`/api/v1/profile`);
     if (response.ok) {
       const dbProfile = await response.json();
       // Use database profile data if available
@@ -334,7 +334,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user?.id) return;
 
     try {
-      const response = await fetch(`/api/my-profile/${user.id}`);
+      const response = await fetch(`/api/v1/profile`);
       if (!response.ok) throw new Error("Failed to fetch updated profile");
 
       const updatedProfile = await response.json();
@@ -376,7 +376,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // For API users, proceed with API logout
       //console.log("Executing API logout flow");
       try {
-        const response = await fetch("/api/users/logout", {
+        const response = await fetch("/api/v1/auth/logout", {
           method: "GET",
           credentials: "include",
         });

@@ -5,41 +5,24 @@ import { NextRequest, NextResponse } from "next/server";
  * @swagger
  * /api/v1/vets:
  *   get:
- *     summary: Get veterinarian directory (V1)
- *     tags: [v1 Services]
+ *     summary: Get all approved vets (V1)
+ *     tags: [v1 Professional]
  */
 
 export async function GET(req: NextRequest) {
     try {
-        const { searchParams } = new URL(req.url);
-        const cityId = searchParams.get("city");
-        const page = parseInt(searchParams.get("page") || "1", 10);
-        const limit = 20;
-        const offset = (page - 1) * limit;
-
-        const conditions = ["v.is_active = true"];
-        const values = [];
-        let pIdx = 1;
-
-        if (cityId) { values.push(parseInt(cityId)); conditions.push(`v.city_id = $${pIdx++}`); }
-
-        const query = `
+        const result = await db.query(`
             SELECT 
-                v.vet_id, v.clinic_name, v.vet_name, v.address, v.phone_number,
-                v.specialization, v.rating, v.image_url, v.latitude, v.longitude,
-                c.city_name as city
+                v.*, 
+                u.profile_image_url 
             FROM vets v
-            LEFT JOIN cities c ON v.city_id = c.city_id
-            WHERE ${conditions.join(" AND ")}
-            ORDER BY v.rating DESC, v.vet_name ASC
-            LIMIT $${pIdx++} OFFSET $${pIdx++}
-        `;
-
-        const result = await db.query(query, [...values, limit, offset]);
+            JOIN users u ON v.user_id = u.user_id
+            WHERE v.is_verified = true
+            ORDER BY v.created_at DESC
+        `);
         return NextResponse.json(result.rows);
-
     } catch (error) {
-        console.error("V1 Vets GET error:", error);
+        console.error("V1 Vets Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

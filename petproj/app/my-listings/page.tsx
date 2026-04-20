@@ -76,7 +76,7 @@ const UserListingsPage = () => {
                 setIsLoading(true);
 
                 // Fetch regular listings using token-based authentication
-                const listingsResponse = await fetch('/api/my-listings', {
+                const listingsResponse = await fetch('/api/v1/profile/listings', {
                     method: 'GET',
                     credentials: 'include', // Include cookies for authentication
                     headers: {

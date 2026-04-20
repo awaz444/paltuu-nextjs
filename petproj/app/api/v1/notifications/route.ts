@@ -6,11 +6,11 @@ import { getUserIdFromRequest } from "@/utils/authServer";
  * @swagger
  * /api/v1/notifications:
  *   get:
- *     summary: Get current user notifications (V1)
- *     tags: [v1 Notifications]
+ *     summary: Fetch current user notifications (V1 Hardened)
+ *     tags: [v1 Communications]
  *   patch:
- *     summary: Mark notifications as read (V1)
- *     tags: [v1 Notifications]
+ *     summary: Mark notifications as read (V1 Hardened)
+ *     tags: [v1 Communications]
  */
 
 export async function GET(req: NextRequest) {
@@ -18,34 +18,17 @@ export async function GET(req: NextRequest) {
         const userId = await getUserIdFromRequest(req);
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const { searchParams } = new URL(req.url);
-        const unreadOnly = searchParams.get("unread") === "true";
-        const countOnly = searchParams.get("count_only") === "true";
-
-        if (countOnly) {
-            const result = await db.query('SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND is_read = false', [userId]);
-            return NextResponse.json({ unread_count: parseInt(result.rows[0].count, 10) });
-        }
-
-        const conditions = ["user_id = $1"];
-        if (unreadOnly) conditions.push("is_read = false");
-
-        const query = `
-            SELECT notification_id, notification_content, notification_type, is_read, date_sent, entity_type, entity_id
+        const result = await db.query(`
+            SELECT notification_id, notification_content, notification_type, is_read, date_sent
             FROM notifications 
-            WHERE ${conditions.join(" AND ")}
+            WHERE user_id = $1 
             ORDER BY date_sent DESC 
             LIMIT 50
-        `;
+        `, [userId]);
 
-        const result = await db.query(query, [userId]);
-        return NextResponse.json({
-            notifications: result.rows,
-            unread_count: result.rows.filter(n => !n.is_read).length
-        });
-
+        return NextResponse.json(result.rows);
     } catch (error) {
-        console.error("V1 Notifications GET error:", error);
+        console.error("V1 Notifications GET Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
@@ -60,17 +43,18 @@ export async function PATCH(req: NextRequest) {
         if (mark_all_read) {
             await db.query('UPDATE notifications SET is_read = true WHERE user_id = $1', [userId]);
         } else if (notification_id) {
-            const result = await db.query(
-                'UPDATE notifications SET is_read = true WHERE notification_id = $1 AND user_id = $2 RETURNING *',
-                [notification_id, userId]
-            );
-            if (result.rowCount === 0) return NextResponse.json({ error: "Notification not found or access denied" }, { status: 404 });
+            const check = await db.query('SELECT user_id FROM notifications WHERE notification_id = $1', [notification_id]);
+            if (check.rowCount === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });
+            if (check.rows[0].user_id !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+            await db.query('UPDATE notifications SET is_read = true WHERE notification_id = $1', [notification_id]);
+        } else {
+            return NextResponse.json({ error: "Missing fields" }, { status: 400 });
         }
 
-        return NextResponse.json({ success: true, message: "Notifications updated" });
-
+        return NextResponse.json({ success: true });
     } catch (error) {
-        console.error("V1 Notifications PATCH error:", error);
+        console.error("V1 Notifications PATCH Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

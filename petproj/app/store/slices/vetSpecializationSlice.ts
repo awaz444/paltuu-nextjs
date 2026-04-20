@@ -25,7 +25,7 @@ const initialState: VetSpecializationState = {
 export const fetchVetSpecializations = createAsyncThunk(
   'vetSpecializations/fetchVetSpecializations',
   async () => {
-    const response = await fetch('/api/vet-specialization'); // Adjust API endpoint
+    const response = await fetch('/api/v1/vet-specialization'); // Adjust API endpoint
 
     if (!response.ok) {
       throw new Error('Failed to fetch vet specializations');
@@ -44,7 +44,7 @@ export const postVetSpecialization = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await fetch('/api/vet-specialization', {
+      const response = await fetch('/api/v1/vet-specialization', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(specializationData),
@@ -72,7 +72,7 @@ export const deleteVetSpecialization = createAsyncThunk(
   ) => {
     try {
       const response = await fetch(
-        `/api/vet-specialization?vet_id=${specializationData.vet_id}&category_id=${specializationData.category_id}`,
+        `/api/v1/vet-specialization?vet_id=${specializationData.vet_id}&category_id=${specializationData.category_id}`,
         {
           method: 'DELETE',
         }

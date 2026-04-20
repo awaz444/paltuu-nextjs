@@ -43,7 +43,7 @@ const FosterApplications = () => {
 
         const fetchApplications = async () => {
             try {
-                const response = await fetch(`/api/adoption_application/${petId}`);
+                const response = await fetch(`/api/v1/applications/foster?pet_id=${petId}`);
                 if (response.ok) {
                     const data = await response.json();
                     setApplications(Array.isArray(data) ? data : [data]);
@@ -67,8 +67,14 @@ const FosterApplications = () => {
     const handleApprove = async (fosterId: number) => {
         try {
             // Call the API to approve the foster application
-            const response = await fetch(`/api/accept-foster-application/${fosterId}`, {
-                method: 'POST',
+            const response = await fetch(`/api/v1/applications/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    application_id: fosterId, 
+                    type: 'foster', 
+                    status: 'approved' 
+                })
             });
     
             if (response.ok) {
@@ -92,8 +98,14 @@ const FosterApplications = () => {
     const handleReject = async (fosterId: number) => {
         try {
             console.log(fosterId);
-            const response = await fetch(`/api/reject-foster-application/${fosterId}`, {
-                method: 'POST',
+            const response = await fetch(`/api/v1/applications/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    application_id: fosterId, 
+                    type: 'foster', 
+                    status: 'rejected' 
+                })
             });
             if (response.ok) {
                 setApplications((prev) =>

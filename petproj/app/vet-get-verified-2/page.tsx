@@ -44,7 +44,7 @@ const VerificationInfoContent  = () => {
     const fetchUserId = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/get-user-id-by-vet-id?vet_id=${vetIdNumber}`);
+        const response = await fetch(`/api/v1/get-user-id-by-vet-id?vet_id=${vetIdNumber}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -67,7 +67,7 @@ const VerificationInfoContent  = () => {
     const fetchQualifications = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/vet-get-qualifications/${userId}`);
+        const response = await fetch(`/api/v1/vet-get-qualifications/${userId}`);
         if (!response.ok) {
           throw new Error("Failed to fetch qualifications");
         }

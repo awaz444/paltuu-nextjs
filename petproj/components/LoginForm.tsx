@@ -38,7 +38,7 @@ export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
         e.preventDefault();
         try {
             setLoading(true);
-            const response = await axios.post("/api/users/login", user);
+            const response = await axios.post("/api/v1/auth/login", user);
 
             if (response.data.success) {
                 const { id, name, email, role } = response.data.user;

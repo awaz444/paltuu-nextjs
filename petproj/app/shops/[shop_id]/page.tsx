@@ -53,7 +53,7 @@ const ShopProfilePage: React.FC = () => {
     useEffect(() => {
         const fetchShopDetails = async () => {
             try {
-                const res = await fetch(`/api/shops/${shop_id}`);
+                const res = await fetch(`/api/v1/shops/${shop_id}`);
                 if (!res.ok) throw new Error("Shop not found");
 
                 const shopData = await res.json();

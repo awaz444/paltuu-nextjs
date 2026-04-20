@@ -18,11 +18,20 @@ const initialState: PetCategoriesState = {
   error: null,
 };
 
-export const fetchPetCategories = createAsyncThunk('categories/fetchPetCategories', async () => {
-  const response = await fetch('/api/pet-categories');
-  const data = await response.json();
-  return data as PetCategory[];
-});
+export const fetchPetCategories = createAsyncThunk(
+  'categories/fetchPetCategories',
+  async () => {
+    const response = await fetch('/api/v1/pet-categories');
+    const data = await response.json();
+    return data as PetCategory[];
+  },
+  {
+    condition: (_, { getState }) => {
+      const { categories } = (getState() as RootState).categories;
+      if (categories && categories.length > 0) return false;
+    }
+  }
+);
 
 const petCategoriesSlice = createSlice({
   name: 'categories',

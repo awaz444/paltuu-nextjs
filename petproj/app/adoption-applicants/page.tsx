@@ -40,7 +40,7 @@ const AdoptionApplications = () => {
         const fetchApplications = async () => {
             try {
                 const response = await fetch(
-                    `/api/adoption_application/${petId}`
+                    `/api/v1/applications/adoption?pet_id=${petId}`
                 );
                 if (response.ok) {
                     const data = await response.json();
@@ -69,9 +69,15 @@ const AdoptionApplications = () => {
     const handleApprove = async (fosterId: number) => {
         try {
             const response = await fetch(
-                `/api/accept-adoption-application/${fosterId}`,
+                `/api/v1/applications/status`,
                 {
-                    method: "POST",
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        application_id: fosterId, 
+                        type: 'adoption', 
+                        status: 'approved' 
+                    })
                 }
             );
 
@@ -99,9 +105,15 @@ const AdoptionApplications = () => {
     const handleReject = async (adoptionId: number) => {
         try {
             const response = await fetch(
-                `/api/reject-adoption-application/${adoptionId}`,
+                `/api/v1/applications/status`,
                 {
-                    method: "POST",
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        application_id: adoptionId, 
+                        type: 'adoption', 
+                        status: 'rejected' 
+                    })
                 }
             );
             if (response.ok) {

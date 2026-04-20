@@ -18,7 +18,7 @@ const initialState: UserState = {
 
 // Async thunk for fetching users
 export const fetchUsers = createAsyncThunk('users/fetchUsers', async () => {
-    const response = await fetch('/api/users'); // Adjust to your API endpoint
+    const response = await fetch('/api/v1/users'); // Adjust to your API endpoint
 
     if (!response.ok) {
         throw new Error('Failed to fetch users');
@@ -32,7 +32,7 @@ export const postUser = createAsyncThunk<User, Omit<User, 'user_id'>>(
     'users/postUser',
     async (userData, { rejectWithValue }) => {
         try {
-            const response = await fetch('/api/users', {
+            const response = await fetch('/api/v1/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

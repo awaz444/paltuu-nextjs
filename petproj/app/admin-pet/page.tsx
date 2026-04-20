@@ -55,7 +55,7 @@ const AdminPetInteraction: React.FC = () => {
   useEffect(() => {
     const fetchPets = async () => {
       try {
-        const response = await fetch('/api/pets');
+        const response = await fetch('/api/v1/admin/pets');
         if (!response.ok) {
           throw new Error('Failed to fetch pets');
         }
@@ -117,12 +117,11 @@ const AdminPetInteraction: React.FC = () => {
     dispatch(fetchFosterPets());
 
     try {
-      const response = await fetch('/api/pets', {
+      const response = await fetch(`/api/v1/admin/pets?pet_id=${petId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ pet_id: petId }),
+        }
       });
 
       if (!response.ok) {
@@ -157,8 +156,8 @@ const AdminPetInteraction: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/pets', {
-        method: 'PUT',
+      const response = await fetch('/api/v1/admin/pets', {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },

@@ -68,7 +68,7 @@ function CreatePetList() {
       }
 
       // Send directly to our API route
-      const response = await axios.post("/api/upload-lost-found-image", formData, {
+      const response = await axios.post("/api/v1/lost-and-found/images", formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

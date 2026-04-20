@@ -72,8 +72,8 @@ const MyProfile = () => {
         );
       }
 
-      const res = await fetch(`/api/change-password`, {
-        method: "POST",
+      const res = await fetch(`/api/v1/profile/password`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           currentPassword: values.currentPassword,
@@ -102,7 +102,7 @@ const MyProfile = () => {
       }
 
       try {
-        const res = await fetch(`/api/my-profile`);
+        const res = await fetch(`/api/v1/profile`);
         if (!res.ok) throw new Error("Failed to fetch profile");
         const profileData = await res.json();
 
@@ -141,7 +141,7 @@ const MyProfile = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      const uploadRes = await fetch(`/api/update-profile-image`, {
+      const uploadRes = await fetch(`/api/v1/profile/avatar`, {
         method: "POST",
         body: formData,
       });
@@ -180,7 +180,7 @@ const MyProfile = () => {
     if (!user?.id || !updatedData) return;
 
     try {
-      const res = await fetch(`/api/my-profile`, {
+      const res = await fetch(`/api/v1/profile`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedData),
@@ -349,7 +349,11 @@ const MyProfile = () => {
                 <div className="mt-12 pt-12 border-t border-gray-50 flex justify-center gap-12">
                   <div className="text-center">
                     <div className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Member Since</div>
-                    <div className="text-xl font-black text-gray-900">{format(new Date(data.created_at), "MMM yyyy")}</div>
+                    <div className="text-xl font-black text-gray-900">
+                      {data.created_at && !isNaN(new Date(data.created_at).getTime()) 
+                        ? format(new Date(data.created_at), "MMM yyyy") 
+                        : "N/A"}
+                    </div>
                   </div>
                 </div>
               </div>

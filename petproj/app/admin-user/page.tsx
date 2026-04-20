@@ -24,7 +24,7 @@ const AdminUsersPage = () => {
         const fetchUsers = async () => {
             try {
                 setLoading(true);
-                const response = await fetch("/api/users");
+                const response = await fetch("/api/v1/admin/users");
                 if (!response.ok) {
                     throw new Error("Failed to fetch users");
                 }
@@ -76,7 +76,7 @@ const AdminUsersPage = () => {
     // Delete a user
     const deleteUser = async (userId: number) => {
         try {
-            const response = await fetch(`/api/users`, {
+            const response = await fetch(`/api/v1/admin/users`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",

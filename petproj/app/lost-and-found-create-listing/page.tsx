@@ -105,7 +105,7 @@ const LostFoundListingPage = () => {
 
 
         try {
-            const response = await fetch("/api/lost-and-found", {
+            const response = await fetch("/api/v1/lost-and-found", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

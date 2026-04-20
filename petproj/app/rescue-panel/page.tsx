@@ -483,7 +483,7 @@ function MyListingsContent() {
         
         // Fetch pets and applications in parallel
         const [petsRes, appsRes] = await Promise.all([
-          fetch(`/api/my-listings/${uid}`),
+          fetch(`/api/v1/profile/listings`),
           fetch(`/api/get-shelter-applications/${uid}`)
         ]);
         
@@ -788,9 +788,9 @@ function MyListingsContent() {
             <div className="relative w-32 h-32 md:w-36 md:h-36 shadow-none" style={{ boxShadow: 'none', filter: 'none' }}>
               {/* Circular Pet Image with Name Overlay */}
               <div className="w-full h-full rounded-full overflow-hidden transition-none shadow-none border-4 border-blue-200 bg-white" style={{ boxShadow: 'none', filter: 'none' }}>
-              {pet.image_url ? (
+              { (pet.primary_image || pet.image_url) ? (
                 <img 
-                  src={pet.image_url} 
+                  src={pet.primary_image || pet.image_url} 
                   alt={pet.pet_name}
                     className="w-full h-full object-cover"
                     style={{ boxShadow: 'none', filter: 'none' }}

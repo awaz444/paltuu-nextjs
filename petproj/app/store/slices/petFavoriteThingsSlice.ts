@@ -18,11 +18,20 @@ const initialState: PetFavoriteThingsState = {
   error: null,
 };
 
-export const fetchPetFavoriteThings = createAsyncThunk('favoriteThings/fetchPetFavoriteThings', async () => {
-  const response = await fetch('/api/pet-favorite-things');
-  const data = await response.json();
-  return data as FavoriteThing[];
-});
+export const fetchPetFavoriteThings = createAsyncThunk(
+  'favoriteThings/fetchPetFavoriteThings',
+  async () => {
+    const response = await fetch('/api/v1/pet-favorite-things');
+    const data = await response.json();
+    return data as FavoriteThing[];
+  },
+  {
+    condition: (_, { getState }) => {
+      const { favoriteThings } = (getState() as RootState).favoriteThings;
+      if (favoriteThings && favoriteThings.length > 0) return false;
+    }
+  }
+);
 
 const petFavoriteThingsSlice = createSlice({
   name: 'favoriteThings',

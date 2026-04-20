@@ -47,7 +47,7 @@ export const fetchCart = createAsyncThunk<
     // For guest users, we'll send sessionId as fallback
     try {
       // First, try without sessionId - backend will use userId from cookie if user is logged in
-      let res = await fetch('/api/bazaar/cart', {
+      let res = await fetch('/api/v1/bazaar/cart', {
         credentials: 'include',
       });
 
@@ -56,7 +56,7 @@ export const fetchCart = createAsyncThunk<
         const sessionId = getGuestSessionId() || getOrCreateGuestSessionId();
         if (sessionId) {
           //console.log('🔄 fetchCart - Retrying with sessionId for guest user');
-          res = await fetch(`/api/bazaar/cart?sessionId=${encodeURIComponent(sessionId)}`, {
+          res = await fetch(`/api/v1/bazaar/cart?sessionId=${encodeURIComponent(sessionId)}`, {
             credentials: 'include',
           });
         }
@@ -157,7 +157,7 @@ export const addToCart = createAsyncThunk<
       dispatch(addItem(newItem));
 
       // 🔹 2. Store in database
-      const res = await fetch("/api/bazaar/cart", {
+      const res = await fetch("/api/v1/bazaar/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
@@ -236,7 +236,7 @@ export const updateCartItem = createAsyncThunk<
   try {
     // Try updating on server first (server will check auth cookie)
     try {
-      const res = await fetch("/api/bazaar/cart", {
+      const res = await fetch("/api/v1/bazaar/cart", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -283,7 +283,7 @@ export const removeCartItem = createAsyncThunk<
   try {
     // Try removing from server first (server will check auth cookie)
     try {
-      const res = await fetch(`/api/bazaar/cart?cartItemId=${payload.cartItemId}`, {
+      const res = await fetch(`/api/v1/bazaar/cart?cartItemId=${payload.cartItemId}`, {
         method: "DELETE",
         credentials: 'include',
       });

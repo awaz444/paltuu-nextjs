@@ -47,7 +47,7 @@ const AdminPetApproval: React.FC = () => {
   useEffect(() => {
     const fetchPets = async () => {
       try {
-        const response = await fetch('/api/listing-approvals');
+        const response = await fetch('/api/v1/admin/listings');
         if (!response.ok) {
           throw new Error('Failed to fetch pets');
         }
@@ -118,8 +118,8 @@ const AdminPetApproval: React.FC = () => {
     dispatch(fetchFosterPets());
     setLoading(true);
     try {
-      const response = await fetch('/api/listing-approvals', {
-        method: 'PUT',
+      const response = await fetch('/api/v1/admin/listings', {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },

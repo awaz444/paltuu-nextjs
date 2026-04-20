@@ -1,46 +1,48 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
-import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
-import { validate } from "@/utils/validation";
+import { getUserIdFromRequest } from "@/utils/authServer";
 
 /**
  * @swagger
  * /api/v1/applications/foster:
- *   get:
- *     summary: Get foster applications (Role-based)
- *     tags: [v1 Applications]
  *   post:
- *     summary: Submit foster application
+ *     summary: Submit a new foster application (V1 Hardened)
  *     tags: [v1 Applications]
  */
 
 export async function GET(req: NextRequest) {
     try {
-        const user = await getUserFromRequest(req);
-        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userId = await getUserIdFromRequest(req);
+        if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const userId = user.user_id || user.id || user.sub;
-        const isAdmin = user.role === 'admin';
+        const { searchParams } = new URL(req.url);
+        const petId = searchParams.get('pet_id');
 
-        let query;
-        let values = [];
+        if (!petId) return NextResponse.json({ error: "Pet ID required" }, { status: 400 });
 
-        if (isAdmin) {
-            query = `SELECT fa.*, p.pet_name FROM foster_applications fa JOIN pets p ON fa.pet_id = p.pet_id ORDER BY fa.created_at DESC`;
-        } else {
-            query = `
-                SELECT fa.*, p.pet_name 
-                FROM foster_applications fa 
-                JOIN pets p ON fa.pet_id = p.pet_id 
-                WHERE p.owner_id = $1
-                ORDER BY fa.created_at DESC`;
-            values = [userId];
+        // Verify Ownership
+        const petCheck = await db.query('SELECT owner_id FROM pets WHERE pet_id = $1', [petId]);
+        if (petCheck.rowCount === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
+        
+        if (petCheck.rows[0].owner_id !== userId) {
+            return NextResponse.json({ error: "Forbidden: You do not own this pet" }, { status: 403 });
         }
 
-        const result = await db.query(query, values);
-        return NextResponse.json(result.rows);
+        const result = await db.query(`
+            SELECT 
+                f.*,
+                p.pet_name,
+                u.name as fosterer_name
+            FROM foster_applications f
+            JOIN pets p ON f.pet_id = p.pet_id
+            JOIN users u ON f.user_id = u.user_id
+            WHERE f.pet_id = $1
+            ORDER BY f.created_at DESC
+        `, [petId]);
 
+        return NextResponse.json(result.rows);
     } catch (error) {
+        console.error("V1 Foster Applications GET Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
@@ -51,53 +53,71 @@ export async function POST(req: NextRequest) {
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const body = await req.json();
-        
-        // Validation
-        const validation = validate(body, {
-            pet_id: { required: true },
-            fosterer_name: { required: true, min: 2 },
-            fosterer_address: { required: true }
-        });
-
-        if (!validation.success) return NextResponse.json({ errors: validation.errors }, { status: 400 });
-
         const {
-            pet_id, fosterer_name, fosterer_address, foster_start_date, foster_end_date,
-            fostering_experience, age_of_youngest_child, other_pets_details, 
-            other_pets_neutered, has_secure_outdoor_area, pet_sleep_location, 
-            pet_left_alone, additional_details
+            pet_id,
+            fosterer_name,
+            fosterer_address,
+            foster_start_date,
+            foster_end_date,
+            fostering_experience,
+            age_of_youngest_child,
+            other_pets_details,
+            other_pets_neutered,
+            has_secure_outdoor_area,
+            pet_sleep_location,
+            pet_left_alone,
+            time_at_home,
+            reason_for_fostering,
+            additional_details,
+            agree_to_terms,
         } = body;
 
-        await db.query('BEGIN');
-        try {
-            const appResult = await db.query(`
-                INSERT INTO foster_applications (
-                    user_id, pet_id, fosterer_name, fosterer_address, foster_start_date,
-                    foster_end_date, status, fostering_experience, age_of_youngest_child,
-                    other_pets_details, other_pets_neutered, has_secure_outdoor_area,
-                    pet_sleep_location, pet_left_alone, additional_details, created_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP)
-                RETURNING *
-            `, [userId, pet_id, fosterer_name, fosterer_address, foster_start_date, foster_end_date, fostering_experience, age_of_youngest_child, other_pets_details, other_pets_neutered, has_secure_outdoor_area, pet_sleep_location, pet_left_alone, additional_details]);
-
-            const petResult = await db.query('SELECT owner_id, pet_name FROM pets WHERE pet_id = $1', [pet_id]);
-            if (petResult.rowCount > 0) {
-                const { owner_id, pet_name } = petResult.rows[0];
-                await db.query(`
-                    INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent, entity_type, entity_id)
-                    VALUES ($1, $2, $3, false, CURRENT_TIMESTAMP, 'foster', $4)
-                `, [owner_id, `New foster request for ${pet_name}`, 'new_foster_application', appResult.rows[0].foster_id]);
-            }
-
-            await db.query('COMMIT');
-            return NextResponse.json(appResult.rows[0], { status: 201 });
-        } catch (e) {
-            await db.query('ROLLBACK');
-            throw e;
+        // Validation
+        if (!pet_id || !agree_to_terms) {
+            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
+        // 1. Check Pet Ownership
+        const petRes = await db.query('SELECT owner_id, pet_name FROM pets WHERE pet_id = $1', [pet_id]);
+        if (petRes.rowCount === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
+        const { owner_id: ownerId, pet_name: petName } = petRes.rows[0];
+
+        // 2. Insert Application
+        const result = await db.query(`
+            INSERT INTO foster_applications (
+                user_id, pet_id, fosterer_name, fosterer_address, foster_start_date, 
+                foster_end_date, status, fostering_experience, age_of_youngest_child, 
+                other_pets_details, other_pets_neutered, has_secure_outdoor_area, 
+                pet_sleep_location, pet_left_alone, time_at_home, reason_for_fostering, 
+                additional_details, agree_to_terms, created_at
+            ) VALUES (
+                $1, $2, $3, $4, $5, $6, 'pending', $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW()
+            ) RETURNING foster_id
+        `, [
+            userId, pet_id, fosterer_name, fosterer_address, foster_start_date,
+            foster_end_date, fostering_experience, age_of_youngest_child, 
+            other_pets_details, other_pets_neutered, has_secure_outdoor_area, 
+            pet_sleep_location, pet_left_alone, time_at_home, reason_for_fostering, 
+            additional_details, agree_to_terms
+        ]);
+
+        const fosterId = result.rows[0].foster_id;
+
+        // 3. Create Notifications
+        await db.query(`
+            INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+            VALUES ($1, $2, 'foster_application_submission', false, NOW())
+        `, [userId, `Your foster application for ${petName} has been submitted successfully!`]);
+
+        await db.query(`
+            INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+            VALUES ($1, $2, 'new_foster_application', false, NOW())
+        `, [ownerId, `New foster application received for ${petName}!`]);
+
+        return NextResponse.json({ success: true, fosterId });
+
     } catch (error) {
-        console.error("V1 Foster POST error:", error);
+        console.error("V1 Foster Application Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

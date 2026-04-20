@@ -53,7 +53,7 @@ export default function ShopPanel() {
       try {
         const userId = user.id || user.user_id;
         console.log('Fetching shop entity data for user ID:', userId);
-        const response = await fetch(`/api/user-shops-shelters?user_id=${userId}`);
+        const response = await fetch(`/api/v1/user-shops-shelters?user_id=${userId}`);
         const data = await response.json();
         console.log('Shop entity response:', data);
 
@@ -282,7 +282,7 @@ function MyListingsContent() {
       try {
         const uid = user?.id || user?.user_id;
         if (!uid) throw new Error('User not found');
-        const res = await fetch(`/api/my-listings/${uid}`);
+        const res = await fetch(`/api/v1/my-listings/${uid}`);
         if (!res.ok) throw new Error('Failed to load listings');
         const data = await res.json();
         setPets(data.listings || []);

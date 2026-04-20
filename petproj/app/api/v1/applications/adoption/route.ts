@@ -1,48 +1,49 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
-import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
-import { validate } from "@/utils/validation";
+import { getUserIdFromRequest } from "@/utils/authServer";
 
 /**
  * @swagger
  * /api/v1/applications/adoption:
- *   get:
- *     summary: Get adoption applications (Role-based)
- *     tags: [v1 Applications]
  *   post:
- *     summary: Submit adoption application
+ *     summary: Submit a new adoption application (V1 Hardened)
  *     tags: [v1 Applications]
  */
 
 export async function GET(req: NextRequest) {
     try {
-        const user = await getUserFromRequest(req);
-        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userId = await getUserIdFromRequest(req);
+        if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const userId = user.user_id || user.id || user.sub;
-        const isAdmin = user.role === 'admin';
+        const { searchParams } = new URL(req.url);
+        const petId = searchParams.get('pet_id');
 
-        let query;
-        let values = [];
+        if (!petId) return NextResponse.json({ error: "Pet ID required" }, { status: 400 });
 
-        if (isAdmin) {
-            // Admins see all pending
-            query = `SELECT aa.*, p.pet_name FROM adoption_applications aa JOIN pets p ON aa.pet_id = p.pet_id ORDER BY aa.created_at DESC`;
-        } else {
-            // Pet owners see apps for their pets
-            query = `
-                SELECT aa.*, p.pet_name 
-                FROM adoption_applications aa 
-                JOIN pets p ON aa.pet_id = p.pet_id 
-                WHERE p.owner_id = $1
-                ORDER BY aa.created_at DESC`;
-            values = [userId];
+        // Verify Ownership: Only the pet owner can see applications
+        const petCheck = await db.query('SELECT owner_id FROM pets WHERE pet_id = $1', [petId]);
+        if (petCheck.rowCount === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
+        
+        // Allow the owner OR the applicant to see their own? No, the legacy page is for pet owners.
+        if (petCheck.rows[0].owner_id !== userId) {
+            return NextResponse.json({ error: "Forbidden: You do not own this pet" }, { status: 403 });
         }
 
-        const result = await db.query(query, values);
-        return NextResponse.json(result.rows);
+        const result = await db.query(`
+            SELECT 
+                a.*,
+                p.pet_name,
+                u.name as adopter_name
+            FROM adoption_applications a
+            JOIN pets p ON a.pet_id = p.pet_id
+            JOIN users u ON a.user_id = u.user_id
+            WHERE a.pet_id = $1
+            ORDER BY a.created_at DESC
+        `, [petId]);
 
+        return NextResponse.json(result.rows);
     } catch (error) {
+        console.error("V1 Adoption Applications GET Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
@@ -53,54 +54,66 @@ export async function POST(req: NextRequest) {
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const body = await req.json();
-        
-        // Validation
-        const validation = validate(body, {
-            pet_id: { required: true },
-            adopter_name: { required: true, min: 2 },
-            adopter_address: { required: true }
-        });
-
-        if (!validation.success) return NextResponse.json({ errors: validation.errors }, { status: 400 });
-
         const {
-            pet_id, adopter_name, adopter_address, age_of_youngest_child, 
-            other_pets_details, other_pets_neutered, has_secure_outdoor_area,
-            pet_sleep_location, pet_left_alone, additional_details
+            pet_id,
+            adopter_name,
+            adopter_address,
+            age_of_youngest_child,
+            other_pets_details,
+            other_pets_neutered,
+            has_secure_outdoor_area,
+            pet_sleep_location,
+            pet_left_alone,
+            additional_details,
+            agree_to_terms,
         } = body;
 
-        // Transaction for Notification & Application
-        await db.query('BEGIN');
-        try {
-            const appResult = await db.query(`
-                INSERT INTO adoption_applications (
-                    user_id, pet_id, adopter_name, adopter_address, status,
-                    age_of_youngest_child, other_pets_details, other_pets_neutered,
-                    has_secure_outdoor_area, pet_sleep_location, pet_left_alone,
-                    additional_details, created_at
-                ) VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP)
-                RETURNING *
-            `, [userId, pet_id, adopter_name, adopter_address, age_of_youngest_child, other_pets_details, other_pets_neutered, has_secure_outdoor_area, pet_sleep_location, pet_left_alone, additional_details]);
-
-            const petResult = await db.query('SELECT owner_id, pet_name FROM pets WHERE pet_id = $1', [pet_id]);
-            if (petResult.rowCount > 0) {
-                const { owner_id, pet_name } = petResult.rows[0];
-                // Notify Owner
-                await db.query(`
-                    INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent, entity_type, entity_id)
-                    VALUES ($1, $2, $3, false, CURRENT_TIMESTAMP, 'adoption', $4)
-                `, [owner_id, `New adoption request for ${pet_name}`, 'new_application', appResult.rows[0].adoption_id]);
-            }
-
-            await db.query('COMMIT');
-            return NextResponse.json(appResult.rows[0], { status: 201 });
-        } catch (e) {
-            await db.query('ROLLBACK');
-            throw e;
+        // Validation
+        if (!pet_id || !agree_to_terms) {
+            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
+        // 1. Check Pet Ownership
+        const petRes = await db.query('SELECT owner_id, pet_name FROM pets WHERE pet_id = $1', [pet_id]);
+        if (petRes.rowCount === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
+        const { owner_id: ownerId, pet_name: petName } = petRes.rows[0];
+
+        // 2. Insert Application
+        const result = await db.query(`
+            INSERT INTO adoption_applications (
+                user_id, pet_id, adopter_name, adopter_address, status,
+                age_of_youngest_child, other_pets_details, other_pets_neutered,
+                has_secure_outdoor_area, pet_sleep_location, pet_left_alone,
+                additional_details, agree_to_terms, created_at
+            ) VALUES (
+                $1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9, $10, $11, $12, NOW()
+            ) RETURNING adoption_id
+        `, [
+            userId, pet_id, adopter_name, adopter_address, 
+            age_of_youngest_child, other_pets_details, other_pets_neutered,
+            has_secure_outdoor_area, pet_sleep_location, pet_left_alone,
+            additional_details, agree_to_terms
+        ]);
+
+        const applicationId = result.rows[0].adoption_id;
+
+        // 3. Create Notifications
+        // To Applicant
+        await db.query(`
+            INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+            VALUES ($1, $2, 'application_submission', false, NOW())
+        `, [userId, `Your adoption application for ${petName} has been submitted successfully!`]);
+
+        // To Owner
+        await db.query(`
+            INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
+            VALUES ($1, $2, 'new_application', false, NOW())
+        `, [ownerId, `New adoption application received for ${petName}!`]);
+
+        return NextResponse.json({ success: true, applicationId });
+
     } catch (error) {
-        console.error("V1 Adoption POST error:", error);
+        console.error("V1 Adoption Application Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

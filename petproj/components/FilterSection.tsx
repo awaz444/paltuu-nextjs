@@ -68,7 +68,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch, filters }) => {
                                 setSelectedSpecies(e.target.value)
                             }>
                             <option value="">Select Species</option>
-                            {categories.map((category) => (
+                            {Array.isArray(categories) && categories.map((category) => (
                                 <option
                                     key={category.category_id}
                                     value={category.category_id}>
@@ -96,7 +96,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch, filters }) => {
                             value={selectedCity}
                             onChange={(e) => setSelectedCity(e.target.value)}>
                             <option value="">Select City</option>
-                            {cities.map((city) => (
+                            {Array.isArray(cities) && cities.map((city) => (
                                 <option key={city.city_id} value={city.city_id}>
                                     {city.city_name}
                                 </option>
@@ -145,7 +145,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch, filters }) => {
                                     setSelectedSpecies(e.target.value)
                                 }>
                                 <option value="">Select Species</option>
-                                {categories.map((category) => (
+                                {Array.isArray(categories) && categories.map((category) => (
                                     <option
                                         key={category.category_id}
                                         value={category.category_id}>
@@ -175,7 +175,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({ onSearch, filters }) => {
                                     setSelectedCity(e.target.value)
                                 }>
                                 <option value="">Select City</option>
-                                {cities.map((city) => (
+                                {Array.isArray(cities) && cities.map((city) => (
                                     <option
                                         key={city.city_id}
                                         value={city.city_id}>

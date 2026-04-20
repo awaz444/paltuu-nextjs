@@ -35,7 +35,7 @@ const NotificationsPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch("/api/get-notifications-by-id", {
+        const response = await fetch("/api/v1/notifications", {
           method: "GET",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -87,10 +87,11 @@ const NotificationsPage = () => {
           )
         );
 
-        await fetch(`/api/mark-notification-read/${notification.notification_id}`, {
-          method: "PUT",
+        await fetch(`/api/v1/notifications`, {
+          method: "PATCH",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notification_id: notification.notification_id }),
         });
       }
 
@@ -123,10 +124,11 @@ const NotificationsPage = () => {
       // Optimistic update
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
 
-      const response = await fetch(`/api/mark-all-notifications-read`, {
-        method: "PUT",
+      const response = await fetch(`/api/v1/notifications`, {
+        method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mark_all_read: true }),
       });
 
       if (!response.ok) throw new Error("Failed to mark all as read");

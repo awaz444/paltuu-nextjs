@@ -44,7 +44,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
     e.preventDefault();
     try {
       setLoading(true);
-      const response = await axios.post("/api/users/login", user, {
+      const response = await axios.post("/api/v1/auth/login", user, {
         withCredentials: true,
       });
       if (response.data.success) {

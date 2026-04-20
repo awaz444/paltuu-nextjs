@@ -116,7 +116,7 @@ const ShopRegisterContent = () => {
       console.log("Submitting shop registration with data:", formDataToSend);
 
       // Make API call to create both user and shop
-      const response = await fetch("/api/shops/complete-registration", {
+      const response = await fetch("/api/v1/shops/complete-registration", {
         method: "POST",
         body: formDataToSend,
       });

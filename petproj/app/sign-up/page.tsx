@@ -178,6 +178,7 @@ const CreateUser = () => {
             password,
             phone_number,
             role: "regular user",
+            otp,
         };
 
         try {
@@ -219,7 +220,7 @@ const CreateUser = () => {
         }
 
         try {
-            const response = await fetch("/api/send-otp", {
+            const response = await fetch("/api/v1/auth/send-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
@@ -286,7 +287,7 @@ const CreateUser = () => {
     const handleSubmitOtp = async () => {
         try {
             setIsVerifying(true);
-            const response = await fetch("/api/verify-otp", {
+            const response = await fetch("/api/v1/auth/verify-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, otp }),

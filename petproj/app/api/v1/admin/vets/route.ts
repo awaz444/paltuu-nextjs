@@ -7,10 +7,16 @@ import bcrypt from "bcryptjs";
  * @swagger
  * /api/v1/admin/vets:
  *   get:
- *     summary: Admin view of all vets (V1)
+ *     summary: Admin view of all vets (V1 Hardened)
  *     tags: [v1 Admin]
  *   post:
- *     summary: Admin create new vet (V1)
+ *     summary: Admin create new vet (V1 Hardened)
+ *     tags: [v1 Admin]
+ *   patch:
+ *     summary: Update vet profile (V1 Hardened)
+ *     tags: [v1 Admin]
+ *   delete:
+ *     summary: Delete vet profile (V1 Hardened)
  *     tags: [v1 Admin]
  */
 
@@ -31,7 +37,6 @@ export async function GET(req: NextRequest) {
 
         const result = await db.query(query);
         return NextResponse.json(result.rows);
-
     } catch (error) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
@@ -51,8 +56,7 @@ export async function POST(req: NextRequest) {
 
         await db.query('BEGIN');
         try {
-            // 1. Create User with SECURE HASHED password
-            const tempPassword = Math.random().toString(36).slice(-10); // Random secure password
+            const tempPassword = Math.random().toString(36).slice(-10);
             const hashed = await bcrypt.hash(tempPassword, 10);
 
             const userRes = await db.query(`
@@ -64,7 +68,6 @@ export async function POST(req: NextRequest) {
 
             const userId = userRes.rows[0].user_id;
 
-            // 2. Create Vet Profile
             const vetRes = await db.query(`
                 INSERT INTO vets (user_id, clinic_name, license_number, profile_verified, created_at)
                 VALUES ($1, $2, $3, true, CURRENT_TIMESTAMP)
@@ -72,21 +75,57 @@ export async function POST(req: NextRequest) {
             `, [userId, clinic_name, license_number]);
 
             await db.query('COMMIT');
-            
-            // Note: In production, you would send an email to the vet here with their tempPassword
             return NextResponse.json({ 
-                message: "Vet account created securely", 
+                message: "Vet account created", 
                 vet: vetRes.rows[0],
-                temp_password: tempPassword // Returned once so admin can share it
+                temp_password: tempPassword 
             }, { status: 201 });
-
         } catch (e) {
             await db.query('ROLLBACK');
             throw e;
         }
-
     } catch (error) {
         console.error("V1 Admin Vet POST error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+export async function PATCH(req: NextRequest) {
+    try {
+        const user = await getUserFromRequest(req);
+        if (!user || user.role !== 'admin') return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+        const { vet_id, clinic_name, license_number, profile_verified } = await req.json();
+        if (!vet_id) return NextResponse.json({ error: "Vet ID required" }, { status: 400 });
+
+        const result = await db.query(`
+            UPDATE vets SET 
+                clinic_name = COALESCE($1, clinic_name),
+                license_number = COALESCE($2, license_number),
+                profile_verified = COALESCE($3, profile_verified)
+            WHERE vet_id = $4
+            RETURNING *
+        `, [clinic_name, license_number, profile_verified, vet_id]);
+
+        if (result.rowCount === 0) return NextResponse.json({ error: "Vet not found" }, { status: 404 });
+        return NextResponse.json(result.rows[0]);
+    } catch (error) {
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+export async function DELETE(req: NextRequest) {
+    try {
+        const user = await getUserFromRequest(req);
+        if (!user || user.role !== 'admin') return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+        const { searchParams } = new URL(req.url);
+        const vet_id = searchParams.get('vet_id');
+        if (!vet_id) return NextResponse.json({ error: "Vet ID required" }, { status: 400 });
+
+        await db.query('DELETE FROM vets WHERE vet_id = $1', [vet_id]);
+        return NextResponse.json({ success: true });
+    } catch (error) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

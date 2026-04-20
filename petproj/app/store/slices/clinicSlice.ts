@@ -14,7 +14,7 @@ const initialState: ClinicState = {
 };
 
 export const fetchClinics = createAsyncThunk('clinics/fetchClinics', async () => {
-    const response = await fetch('/api/clinics');
+    const response = await fetch('/api/v1/clinics');
     if (!response.ok) {
         throw new Error('Failed to fetch clinics');
     }

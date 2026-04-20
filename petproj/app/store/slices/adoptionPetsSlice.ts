@@ -66,7 +66,7 @@ export const fetchAdoptionPets = createAsyncThunk(
             ...filters,
         });
 
-        const response = await fetch(`/api/browse-pets?${queryParams.toString()}`);
+        const response = await fetch(`/api/v1/browse-pets?${queryParams.toString()}`);
         if (!response.ok) {
             throw new Error('Failed to fetch adoption pets');
         }

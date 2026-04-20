@@ -147,7 +147,7 @@ export const fetchCategoryProducts = createAsyncThunk(
 
       params.set('variants', 'true'); // Always fetch variants for pricing
 
-      const res = await fetch(`/api/bazaar/products-optimized?${params.toString()}`);
+      const res = await fetch(`/api/v1/bazaar/products?${params.toString()}`);
 
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -189,7 +189,7 @@ export const fetchAllBazaarCategories = createAsyncThunk(
     }
 
     // Use batch endpoint for faster loading
-    const res = await fetch('/api/bazaar/categories-batch');
+    const res = await fetch('/api/v1/bazaar/categories');
 
     if (!res.ok) {
       throw new Error(`Failed to fetch categories: ${res.status}`);

@@ -40,7 +40,7 @@ const VetScheduleForm = () => {
     const fetchUserId = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/get-user-id?vetId=${vetIdNumber}`);
+        const response = await fetch(`/api/v1/get-user-id?vetId=${vetIdNumber}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }

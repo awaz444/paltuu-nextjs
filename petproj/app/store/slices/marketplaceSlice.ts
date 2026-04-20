@@ -84,7 +84,7 @@ export const fetchProducts = createAsyncThunk(
       params.set('variants', 'true');
 
       // 🚀 USING OPTIMIZED ENDPOINT (5-10x faster!)
-      const endpoint = `/api/bazaar/products-optimized?${params.toString()}`;
+      const endpoint = `/api/v1/bazaar/products?${params.toString()}`;
 
       console.log(`[Marketplace] Fetching from: ${endpoint}`);
       const startTime = Date.now();

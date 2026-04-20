@@ -93,7 +93,7 @@ const VetRegisterContent = () => {
       console.log("Submitting vet registration with data:", formData);
 
       // Call the combined registration API
-      const response = await fetch("/api/vet-register-complete", {
+      const response = await fetch("/api/v1/vet-register-complete", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

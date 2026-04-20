@@ -45,17 +45,17 @@ const ReviewsSummary = () => {
         const userId = user?.id;
         if (!userId) throw new Error("User ID is missing");
 
-        const vetResponse = await fetch(`/api/get-vet-id?user_id=${userId}`);
+        const vetResponse = await fetch(`/api/v1/get-vet-id?user_id=${userId}`);
         if (!vetResponse.ok) throw new Error("Failed to fetch vet ID");
 
         const { vet_id } = await vetResponse.json();
         setVetId(vet_id);
 
-        const approvedResponse = await fetch(`/api/vet-reviews/approved-reviews/${vet_id}`);
+        const approvedResponse = await fetch(`/api/v1/vet-reviews/approved-reviews/${vet_id}`);
         if (!approvedResponse.ok) throw new Error("Failed to fetch approved reviews");
         setApprovedReviews(await approvedResponse.json());
 
-        const pendingResponse = await fetch(`/api/vet-reviews/pending-reviews/${vet_id}`);
+        const pendingResponse = await fetch(`/api/v1/vet-reviews/pending-reviews/${vet_id}`);
         if (!pendingResponse.ok) throw new Error("Failed to fetch pending reviews");
         setPendingReviews(await pendingResponse.json());
       } catch (error: unknown) {
@@ -73,7 +73,7 @@ const ReviewsSummary = () => {
 
   const acceptReview = async (review_id: number) => {
     try {
-      const response = await fetch(`/api/vet-approve-review/${review_id}`, { method: "POST" });
+      const response = await fetch(`/api/v1/vet-approve-review/${review_id}`, { method: "POST" });
 
       if (response.ok) {
         message.success("Review approved successfully!");
@@ -91,7 +91,7 @@ const ReviewsSummary = () => {
 
   const rejectReview = async (review_id: number) => {
     try {
-      const response = await fetch(`/api/vet-reject-review/${review_id}`, { method: "DELETE" });
+      const response = await fetch(`/api/v1/vet-reject-review/${review_id}`, { method: "DELETE" });
 
       if (response.ok) {
         message.success("Review rejected and deleted!");

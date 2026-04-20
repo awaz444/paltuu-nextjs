@@ -49,7 +49,7 @@ const initialState: FosterPetsState = {
 
 // Async thunk to fetch foster pets
 export const fetchFosterPets = createAsyncThunk('fosterPets/fetchFosterPets', async () => {
-  const response = await fetch('/api/foster-pets');
+  const response = await fetch('/api/v1/foster-pets');
   if (!response.ok) {
     throw new Error('Failed to fetch foster pets');
   }

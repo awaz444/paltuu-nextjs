@@ -42,7 +42,7 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
             };
 
             // Call the API to save the application
-            const response = await fetch('/api/adoption_application', {
+            const response = await fetch('/api/v1/applications/adoption', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

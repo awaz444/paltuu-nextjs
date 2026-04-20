@@ -19,11 +19,20 @@ const initialState: QualificationsState = {
   error: null,
 };
 
-export const fetchQualifications = createAsyncThunk('qualifications/fetchQualifications', async () => {
-  const response = await fetch('/api/qualifications');
-  const data = await response.json();
-  return data as Qualification[];
-});
+export const fetchQualifications = createAsyncThunk(
+  'qualifications/fetchQualifications',
+  async () => {
+    const response = await fetch('/api/v1/qualifications');
+    const data = await response.json();
+    return data as Qualification[];
+  },
+  {
+    condition: (_, { getState }) => {
+      const { qualifications } = (getState() as RootState).qualifications;
+      if (qualifications && qualifications.length > 0) return false;
+    }
+  }
+);
 
 const qualificationsSlice = createSlice({
   name: 'qualifications',

@@ -1,10 +1,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-export const fetchCities = createAsyncThunk('cities/fetchCities', async () => {
-    const response = await fetch('/api/cities');
-    const data = await response.json();
-    return data;
-});
+export const fetchCities = createAsyncThunk(
+    'cities/fetchCities', 
+    async () => {
+        const response = await fetch('/api/v1/cities');
+        const data = await response.json();
+        return data;
+    },
+    {
+        condition: (_, { getState }) => {
+            const { cities } = (getState() as any).cities;
+            if (cities && cities.length > 0) return false;
+        }
+    }
+);
 
 interface City {
     city_id: number;

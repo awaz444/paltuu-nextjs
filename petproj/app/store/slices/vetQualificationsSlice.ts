@@ -27,7 +27,7 @@ export const fetchVetQualifications = createAsyncThunk(
   'vetQualifications/fetchVetQualifications',
   async (vetId: string, thunkAPI) => {
     try {
-      const response = await fetch(`/api/vet-qualification?vet_id=${vetId}`);
+      const response = await fetch(`/api/v1/vet-qualification?vet_id=${vetId}`);
       if (!response.ok) {
         const errorDetail = await response.json();
         throw new Error(errorDetail?.message || 'Failed to fetch vet qualifications');
@@ -51,7 +51,7 @@ export const postVetQualification = createAsyncThunk(
   'vetQualifications/postVetQualification',
   async (qualificationData: { vet_id: string; qualification_id: number; year_acquired: string; note: string }, thunkAPI) => {
     try {
-      const response = await fetch(`/api/vet-qualification`, {
+      const response = await fetch(`/api/v1/vet-qualification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -85,7 +85,7 @@ export const updateVetQualification = createAsyncThunk(
   'vetQualifications/updateVetQualification',
   async (qualificationData: { qualification_id: number; year_acquired: string; note: string }, thunkAPI) => {
     try {
-      const response = await fetch(`/api/vet-qualification/${qualificationData.qualification_id}`, {
+      const response = await fetch(`/api/v1/vet-qualification/${qualificationData.qualification_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

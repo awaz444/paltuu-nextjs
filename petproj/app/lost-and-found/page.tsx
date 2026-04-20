@@ -45,7 +45,7 @@ export default function LostFound() {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get("/api/lost-and-found");
+            const response = await axios.get("/api/v1/lost-and-found");
             console.log("API Response:", response);
 
             if (!response.data || !Array.isArray(response.data)) {

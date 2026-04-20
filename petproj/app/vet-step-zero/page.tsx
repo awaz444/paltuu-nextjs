@@ -77,7 +77,7 @@ const VetStepZero = () => {
 
     try {
       // Create user account
-      const response = await fetch("/api/vet-step-zero", {
+      const response = await fetch("/api/v1/vet-step-zero", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

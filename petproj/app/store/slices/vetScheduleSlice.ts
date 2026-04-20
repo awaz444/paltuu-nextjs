@@ -29,7 +29,7 @@ export const fetchVetSchedules = createAsyncThunk<VetSchedule[], void>(
     "vetSchedules/fetchVetSchedules",
     async (_, { rejectWithValue }) => {
         try {
-            const response = await fetch("/api/vet-schedule", {
+            const response = await fetch("/api/v1/vet-schedule", {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             });
@@ -52,7 +52,7 @@ export const addVetSchedules = createAsyncThunk<
     { rejectValue: string }
 >("vetSchedules/addVetSchedules", async (schedules, { rejectWithValue }) => {
     try {
-        const response = await fetch("/api/vet-schedule", {
+        const response = await fetch("/api/v1/vet-schedule", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(schedules),

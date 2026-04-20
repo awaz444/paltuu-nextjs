@@ -30,7 +30,7 @@ const VetVerificationPage = () => {
         const fetchVets = async () => {
             try {
                 const response = await fetch(
-                    "/api/vets-applied-for-verification"
+                    "/api/v1/admin/vets/verify"
                 );
                 if (!response.ok) {
                     throw new Error("Failed to fetch vet data");
@@ -52,12 +52,12 @@ const VetVerificationPage = () => {
     // Button functions
     const handleAccept = async (vetId: number) => {
         try {
-            const response = await fetch("/api/admin-verify-vet", {
-                method: "POST",
+            const response = await fetch("/api/v1/admin/vets/verify", {
+                method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ vet_id: vetId }),
+                body: JSON.stringify({ vet_id: vetId, status: 'approved' }),
             });
 
             if (!response.ok) {
@@ -87,12 +87,12 @@ const VetVerificationPage = () => {
 
     const handleReject = async (vetId: number) => {
         try {
-            const response = await fetch("/api/admin-reject-vet", {
-                method: "POST",
+            const response = await fetch("/api/v1/admin/vets/verify", {
+                method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ vet_id: vetId }),
+                body: JSON.stringify({ vet_id: vetId, status: 'rejected' }),
             });
 
             if (!response.ok) {

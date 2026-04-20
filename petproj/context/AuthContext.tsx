@@ -110,7 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // console.log("✅ Token verified, userId:", tokenUser.id);
 
         // Fetch full user profile from database using V1
-        const profileResponse = await fetch(`/api/v1/profile`);
+        const profileResponse = await fetch(`/api/v1/profile`, { credentials: 'include' });
         if (profileResponse.ok) {
           const dbProfile = await profileResponse.json();
           const hydratedUser: User = {
@@ -158,7 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // First, try to fetch the user's database profile
       const fetchDatabaseProfile = async () => {
         try {
-          const response = await fetch(`/api/v1/profile`);
+          const response = await fetch(`/api/v1/profile`, { credentials: 'include' });
           if (response.ok) {
             const dbProfile = await response.json();
             // Use database profile data if available, but fallback to Google data if empty
@@ -242,7 +242,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 }) => {
   // Try to fetch the user's database profile first
   try {
-    const response = await fetch(`/api/v1/profile`);
+    const response = await fetch(`/api/v1/profile`, { credentials: 'include' });
     if (response.ok) {
       const dbProfile = await response.json();
       // Use database profile data if available
@@ -334,7 +334,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user?.id) return;
 
     try {
-      const response = await fetch(`/api/v1/profile`);
+      const response = await fetch(`/api/v1/profile`, { credentials: 'include' });
       if (!response.ok) throw new Error("Failed to fetch updated profile");
 
       const updatedProfile = await response.json();

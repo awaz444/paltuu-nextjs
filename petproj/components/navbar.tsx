@@ -242,11 +242,12 @@ const Navbar = ({
         const uid = user.id || user.user_id;
         console.log('Making API call to mark notifications as read for user:', uid);
 
-        const response = await fetch(`/api/notifications/${uid}/mark-read`, {
-          method: 'POST',
+        const response = await fetch(`/api/v1/notifications`, {
+          method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ mark_all_read: true }),
         });
 
         console.log('API response status:', response.status);
@@ -279,11 +280,11 @@ const Navbar = ({
       if (user?.role === 'shelter admin' && (user?.id || user?.user_id)) {
         try {
           const uid = user.id || user.user_id;
-          const response = await fetch(`/api/notifications/${uid}`);
+          const response = await fetch(`/api/v1/notifications`);
           if (response.ok) {
             const data = await response.json();
-            setNotifications(data.notifications || []);
-            setUnreadCount(data.notifications?.filter((n: any) => !n.is_read).length || 0);
+            setNotifications(data || []);
+            setUnreadCount(data?.filter((n: any) => !n.is_read).length || 0);
           }
         } catch (error) {
           console.error('Error fetching notifications:', error);

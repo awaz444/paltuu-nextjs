@@ -181,6 +181,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             password,
             phone_number,
             role: "regular user",
+            otp: otp, // Pass verified OTP for backend registration
         };
 
         try {
@@ -226,7 +227,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
 
         try {
             setIsEmailVerifying(true);
-            const response = await fetch("/api/send-otp", {
+            const response = await fetch("/api/v1/auth/otp/send", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
@@ -293,7 +294,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
     const handleSubmitOtp = async () => {
         try {
             setIsVerifying(true);
-            const response = await fetch("/api/verify-otp", {
+            const response = await fetch("/api/v1/auth/otp/verify", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, otp }),

@@ -74,12 +74,15 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({
+      success: true,
       ...tokens,
       user: {
         id: user.user_id,
+        user_id: user.user_id, // Backward compatibility
         email: user.email,
         name: user.name,
-        role: user.role
+        role: user.role,
+        profile_image_url: "/default-avatar.png"
       }
     }, { status: 201 });
 

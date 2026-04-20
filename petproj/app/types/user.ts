@@ -11,6 +11,7 @@ export interface User {
     role: 'admin' | 'regular user' | 'vet' | 'shelter admin' | 'shop admin';
     profile_image_url?: string; // Optional
     created_at?: string; // Date user was created
+    otp?: string; // One-time password for registration
 }
 
 

@@ -48,9 +48,9 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         withCredentials: true,
       });
       if (response.data.success) {
-        const { user_id, name, email, role, profile_image_url } = response.data.user;
+        const { id, name, email, role, profile_image_url } = response.data.user;
         const userDetails = {
-          id: user_id,
+          id,
           name,
           email,
           role,

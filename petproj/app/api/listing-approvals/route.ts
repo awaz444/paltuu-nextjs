@@ -11,8 +11,10 @@
 
 export const revalidate = 0;
 
-import { createClient } from '../../../db/index';
+import { createClient, sql } from '../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from "next-auth/next";
+import { authoptions } from "@/app/api/auth/[...nextauth]/options";
 import Mailjet from "node-mailjet";
 
 const mailjetClient = Mailjet.apiConnect(
@@ -22,6 +24,11 @@ const mailjetClient = Mailjet.apiConnect(
 
 // GET method to fetch all unapproved pets
 export async function GET(req: NextRequest): Promise<NextResponse> {
+    const session = await getServerSession(authoptions);
+    if (!session || session.user.role !== 'admin') {
+        return NextResponse.json({ error: "Unauthorized: Admin access required" }, { status: 403 });
+    }
+
     const client = createClient();
 
     try {
@@ -60,6 +67,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
 // PUT method to approve a pet
 export async function PUT(req: NextRequest): Promise<NextResponse> {
+    const session = await getServerSession(authoptions);
+    if (!session || session.user.role !== 'admin') {
+        return NextResponse.json({ error: "Unauthorized: Admin access required" }, { status: 403 });
+    }
+
     const client = createClient();
 
     try {

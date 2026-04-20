@@ -44,7 +44,6 @@ const Navbar = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [mobileView, setMobileView] = useState("navlinks"); // 'navlinks' or 'dropdown'
-  const [isFoundersClub, setIsFoundersClub] = useState<boolean>(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -325,21 +324,6 @@ const Navbar = ({
   ];
   const links = linksOverride || defaultLinks;
 
-  useEffect(() => {
-    const checkFoundersClub = async () => {
-      if (user?.id) {
-        try {
-          const res = await fetch(`/api/founders-club/?user_id=${user.id}`);
-          const data = await res.json();
-          setIsFoundersClub(data.isFoundersClub); // assuming response is { isFoundersClub: true }
-        } catch (error) {
-          console.error("Error checking Founders Club:", error);
-        }
-      }
-    };
-
-    checkFoundersClub();
-  }, [user?.id]);
 
   useEffect(() => {
     const currentPath = window.location.pathname.split("/")[1];
@@ -919,16 +903,6 @@ const Navbar = ({
 
                   {/* Badges */}
                   <div className="flex items-center gap-1">
-                    {/* {isFoundersClub && (
-                      <div className="bg-pink-100 p-1.5 rounded-full">
-                        <Image
-                          src="/primary_icon.svg"
-                          alt="Founders Club"
-                          width={16}
-                          height={16}
-                        />
-                      </div>
-                    )} */}
                     <svg
                       width="12"
                       height="12"

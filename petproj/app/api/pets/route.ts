@@ -18,6 +18,8 @@
 import { createClient } from "../../../db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { sendNewListingNotification } from "../../../utils/mailjet";
+import { getServerSession } from "next-auth/next";
+import { authoptions } from "@/app/api/auth/[...nextauth]/options";
 
 // Helper function for retrying database operations
 async function withRetry<T>(
@@ -269,6 +271,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
 // PUT method to update a pet by ID
 export async function PUT(req: NextRequest): Promise<NextResponse> {
+    const session = await getServerSession(authoptions);
+    if (!session) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const {
         pet_id,
         owner_id,
@@ -300,6 +307,21 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
 
     try {
         await withRetry(() => client.connect());
+
+        // Ownership Verification (IDOR Protection)
+        const ownershipResult = await client.query("SELECT owner_id FROM pets WHERE pet_id = $1", [pet_id]);
+        if (ownershipResult.rows.length === 0) {
+            return NextResponse.json({ error: "Pet not found" }, { status: 404 });
+        }
+        
+        const ownerOfPet = ownershipResult.rows[0].owner_id;
+        const isOwner = ownerOfPet === session.user.user_id;
+        const isAdmin = session.user.role === 'admin';
+
+        if (!isOwner && !isAdmin) {
+            return NextResponse.json({ error: "Forbidden: You do not own this listing" }, { status: 403 });
+        }
+
         const result = await withRetry<any>(() =>
             client.query(
                 `UPDATE pets SET owner_id = $1, pet_name = $2, pet_type = $3, pet_breed = $4, city_id = $5, area = $6,
@@ -334,25 +356,16 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
             )
         );
 
-        // Update tags if provided
+        // Update tags securely (Parameterized)
         if (tags && Array.isArray(tags)) {
             await withRetry(() => client.query("DELETE FROM pet_tag_assignments WHERE pet_id = $1", [pet_id]));
             if (tags.length > 0) {
-                const tagValues = tags.map((tagId: number) => `(${pet_id}, ${tagId})`).join(", ");
+                const flatValues = tags.flatMap((tagId: number) => [pet_id, tagId]);
+                const placeholders = tags.map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2})`).join(", ");
                 await withRetry(() => 
-                    client.query(`INSERT INTO pet_tag_assignments (pet_id, tag_id) VALUES ${tagValues}`)
+                    client.query(`INSERT INTO pet_tag_assignments (pet_id, tag_id) VALUES ${placeholders}`, flatValues)
                 );
             }
-        }
-
-        if (result.rows.length === 0) {
-            return NextResponse.json(
-                { error: "Pet not found" },
-                {
-                    status: 404,
-                    headers: { "Content-Type": "application/json" },
-                }
-            );
         }
 
         return NextResponse.json(result.rows[0], {
@@ -379,11 +392,30 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
 
 // DELETE method to delete a pet by ID
 export async function DELETE(req: NextRequest): Promise<NextResponse> {
+    const session = await getServerSession(authoptions);
+    if (!session) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { pet_id } = await req.json();
     const client = createClient();
 
     try {
         await withRetry(() => client.connect());
+
+        // Ownership Verification (IDOR Protection)
+        const ownershipResult = await client.query("SELECT owner_id FROM pets WHERE pet_id = $1", [pet_id]);
+        if (ownershipResult.rows.length === 0) {
+            return NextResponse.json({ error: "Pet not found" }, { status: 404 });
+        }
+        
+        const ownerOfPet = ownershipResult.rows[0].owner_id;
+        const isOwner = ownerOfPet === session.user.user_id;
+        const isAdmin = session.user.role === 'admin';
+
+        if (!isOwner && !isAdmin) {
+            return NextResponse.json({ error: "Forbidden: You do not own this listing" }, { status: 403 });
+        }
 
         // Start a transaction to ensure all related data is deleted
         await withRetry(() => client.query('BEGIN'));

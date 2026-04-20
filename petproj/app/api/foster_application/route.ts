@@ -15,8 +15,10 @@
  *     tags: [Auto-Generated]
  */
 
-import { createClient } from '../../../db/index';
+import { createClient, sql } from '../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from "next-auth/next";
+import { authoptions } from "@/app/api/auth/[...nextauth]/options";
 
 // POST: Create a new foster application
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -144,14 +146,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 }
 
-// GET: Fetch all foster applications
+// GET: Fetch all foster applications (Admin Only)
 export async function GET(req: NextRequest): Promise<NextResponse> {
+    const session = await getServerSession(authoptions);
+    if (!session || session.user.role !== 'admin') {
+        return NextResponse.json({ error: "Unauthorized: Admin access required" }, { status: 403 });
+    }
+
     const client = createClient();
 
     try {
         await client.connect();
 
-        const result = await client.query(`SELECT * FROM foster_applications WHERE status='pending' ORDER BY created_at DESC`);
+        const result = await client.query(sql`SELECT * FROM foster_applications WHERE status='pending' ORDER BY created_at DESC`);
 
         return NextResponse.json(result.rows, {
             status: 200,

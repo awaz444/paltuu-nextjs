@@ -8,6 +8,8 @@
 
 import { v2 as cloudinary } from "cloudinary";
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authoptions } from "@/app/api/auth/[...nextauth]/options";
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
@@ -16,6 +18,11 @@ cloudinary.config({
 });
 
 export async function POST(request: NextRequest) {
+    const session = await getServerSession(authoptions);
+    if (!session || session.user.role !== 'admin') {
+        return NextResponse.json({ error: "Unauthorized: Admin access required" }, { status: 403 });
+    }
+
     try {
         const data = await request.formData();
         const file = data.get("file") as File;

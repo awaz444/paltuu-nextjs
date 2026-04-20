@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -89,25 +89,36 @@ if (!globalForPool.pgPool) {
     globalForPool.pgPool = db;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Security: SQL Tagged Template Literal Helper
+// ─────────────────────────────────────────────────────────────────────────────
+// This helper converts: sql`SELECT * FROM users WHERE id = ${id}`
+// into a parameterized query: { text: 'SELECT * FROM users WHERE id = $1', values: [id] }
+// This prevents SQL injection by forcing all interpolated values to be parameters.
+export function sql(strings: TemplateStringsArray, ...values: any[]) {
+    let text = strings[0];
+    for (let i = 1; i < strings.length; i++) {
+        text += `$${i}${strings[i]}`;
+    }
+    return { text, values };
+}
+
+export type SafeQuery = { text: string; values: any[] };
+
 // Convenience helper to run queries directly on the pool without checking out a client.
-// Best for single-statement queries. For transactions, use createClient().
-export const query = (text: string, params?: unknown[]) => db.query(text, params as any);
+// Supports both raw text/params and the new 'sql' helper object.
+export const query = (text: string | SafeQuery, params?: unknown[]) => {
+    if (typeof text === 'object' && 'text' in text) {
+        return db.query(text.text, text.values);
+    }
+    return db.query(text, params as any);
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // createClient() — backwards-compatible helper
 // ─────────────────────────────────────────────────────────────────────────────
-// Many existing route handlers call:
-//   const client = createClient();
-//   await client.connect();
-//   await client.query(...);
-//   await client.end();
-//
-// This wraps the shared pool so those routes work without changes.
-// connect() checks out a dedicated client from the pool (useful for
-// multi-statement transactions). end() releases it back.
-// ─────────────────────────────────────────────────────────────────────────────
 export function createClient() {
-    let poolClient: Awaited<ReturnType<Pool['connect']>> | null = null;
+    let poolClient: PoolClient | null = null;
 
     return {
         async connect() {
@@ -115,7 +126,12 @@ export function createClient() {
                 poolClient = await db.connect();
             }
         },
-        async query(text: string, params?: unknown[]) {
+        async query(text: string | SafeQuery, params?: unknown[]) {
+            if (typeof text === 'object' && 'text' in text) {
+                if (poolClient) return poolClient.query(text.text, text.values);
+                return db.query(text.text, text.values);
+            }
+            
             if (poolClient) {
                 return poolClient.query(text, params as any);
             }

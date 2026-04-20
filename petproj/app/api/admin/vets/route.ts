@@ -16,9 +16,16 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "../../../../db/index";
+import { createClient, sql } from "../../../../db/index";
+import { getServerSession } from "next-auth/next";
+import { authoptions } from "@/app/api/auth/[...nextauth]/options";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
+    const session = await getServerSession(authoptions);
+    if (!session || session.user.role !== 'admin') {
+        return NextResponse.json({ error: "Unauthorized: Admin access required" }, { status: 403 });
+    }
+
     const client = createClient();
     try {
         await client.connect();
@@ -68,6 +75,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+    const session = await getServerSession(authoptions);
+    if (!session || session.user.role !== 'admin') {
+        return NextResponse.json({ error: "Unauthorized: Admin access required" }, { status: 403 });
+    }
+
     const client = createClient();
     try {
         const body = await req.json();
@@ -148,6 +160,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
+    const session = await getServerSession(authoptions);
+    if (!session || session.user.role !== 'admin') {
+        return NextResponse.json({ error: "Unauthorized: Admin access required" }, { status: 403 });
+    }
+
     const client = createClient();
     try {
         const body = await req.json();
@@ -229,6 +246,11 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function DELETE(req: NextRequest): Promise<NextResponse> {
+    const session = await getServerSession(authoptions);
+    if (!session || session.user.role !== 'admin') {
+        return NextResponse.json({ error: "Unauthorized: Admin access required" }, { status: 403 });
+    }
+
     const client = createClient();
     try {
         const body = await req.json();

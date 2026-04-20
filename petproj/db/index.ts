@@ -118,29 +118,29 @@ export const query = (text: string | SafeQuery, params?: unknown[]) => {
 // createClient() — backwards-compatible helper
 // ─────────────────────────────────────────────────────────────────────────────
 export function createClient() {
-    let poolClient: PoolClient | null = null;
+    let client: PoolClient | null = null;
 
     return {
-        async connect() {
-            if (!poolClient) {
-                poolClient = await db.connect();
+        async connect(): Promise<void> {
+            if (!client) {
+                client = await db.connect();
             }
         },
         async query(text: string | SafeQuery, params?: unknown[]) {
             if (typeof text === 'object' && 'text' in text) {
-                if (poolClient) return poolClient.query(text.text, text.values);
+                if (client) return client.query(text.text, text.values);
                 return db.query(text.text, text.values);
             }
             
-            if (poolClient) {
-                return poolClient.query(text, params as any);
+            if (client) {
+                return client.query(text, params as any);
             }
             return db.query(text, params as any);
         },
-        async end() {
-            if (poolClient) {
-                poolClient.release();
-                poolClient = null;
+        async end(): Promise<void> {
+            if (client) {
+                client.release();
+                client = null;
             }
         },
     };

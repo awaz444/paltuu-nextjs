@@ -14,6 +14,7 @@ export default function AdminClinicsVets() {
     const [isClinicModalVisible, setIsClinicModalVisible] = useState(false);
     const [editingClinic, setEditingClinic] = useState<any>(null);
 
+
     const [isVetModalVisible, setIsVetModalVisible] = useState(false);
     const [editingVet, setEditingVet] = useState<any>(null);
 
@@ -156,9 +157,9 @@ export default function AdminClinicsVets() {
                                             + Add New Clinic
                                         </Button>
                                     </div>
-                                    <Table 
-                                        dataSource={clinics} 
-                                        columns={clinicColumns} 
+                                    <Table
+                                        dataSource={clinics}
+                                        columns={clinicColumns}
                                         rowKey="clinic_id"
                                         loading={loading}
                                         scroll={{ x: true }}
@@ -176,9 +177,9 @@ export default function AdminClinicsVets() {
                                             + Add New Vet
                                         </Button>
                                     </div>
-                                    <Table 
-                                        dataSource={vets} 
-                                        columns={vetColumns} 
+                                    <Table
+                                        dataSource={vets}
+                                        columns={vetColumns}
                                         rowKey="vet_id"
                                         loading={loading}
                                         scroll={{ x: true }}
@@ -190,7 +191,7 @@ export default function AdminClinicsVets() {
                 </div>
             </div>
 
-            <ClinicModal 
+            <ClinicModal
                 visible={isClinicModalVisible}
                 onCancel={() => setIsClinicModalVisible(false)}
                 onSuccess={() => {
@@ -200,7 +201,7 @@ export default function AdminClinicsVets() {
                 initialData={editingClinic}
             />
 
-            <VetModal 
+            <VetModal
                 visible={isVetModalVisible}
                 onCancel={() => setIsVetModalVisible(false)}
                 onSuccess={() => {

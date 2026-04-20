@@ -3,8 +3,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("NEW_DATABASE_URL")
+  provider  = "postgresql"
+  // connection_limit=5 prevents Prisma from opening too many connections to
+  // AWS RDS on top of the pg.Pool connections (which are capped at 10).
+  // Total cap = pg.Pool(10) + Prisma(5) = 15 max connections from this app.
+  url       = env("DATABASE_URL")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

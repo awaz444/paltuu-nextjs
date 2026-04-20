@@ -13,7 +13,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '../../../../db/ecom';
+import { db } from '../../../../db/index';
 import { sendOrderEmails } from '../../../../utils/mailjet';
 import { getUserIdFromRequest } from '../../../../utils/authServer';
 
@@ -256,7 +256,7 @@ export const revalidate = 0;
 
 // GET orders (with optional filtering)
 export async function GET(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   try {
   // Extract userId from server-side cookie (secure)
   const userId = await getUserIdFromRequest(req);
@@ -369,7 +369,7 @@ export async function GET(req: NextRequest) {
 
 // POST - Create new order
 export async function POST(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   try {
     // Extract userId from server-side cookie (secure)
     const userId = await getUserIdFromRequest(req);
@@ -565,7 +565,7 @@ export async function POST(req: NextRequest) {
 
 // PATCH - Admin updates to orders (mark delivered, update payment status, tracking, admin notes)
 export async function PATCH(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   try {
     const body = await req.json();
     const { orderId, orderNumber, updates } = body; // updates: { status, payment_status, tracking_number, admin_notes, shipped_at, delivered_at }

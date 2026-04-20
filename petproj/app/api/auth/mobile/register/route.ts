@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import bcrypt from 'bcryptjs';
 import { generateMobileTokenPair } from "@/utils/mobileAuth";
 import { NextResponse } from "next/server";
+import { rateLimit } from "@/utils/rateLimit";
 
 /**
  * @swagger
@@ -35,6 +36,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "All fields and OTP are required" }, { status: 400 });
     }
 
+    // Rate limiting: 3 attempts per minute per email
+    const limiter = await rateLimit(`register:${email}`, 3, 60);
+    if (!limiter.success) {
+      return NextResponse.json({ message: "Too many registration attempts. Please try again later." }, { status: 429 });
+    }
+
     // 1. Verify OTP using direct SQL
     const otpResult = await db.query('SELECT * FROM "OTP" WHERE email = $1', [email]);
     
@@ -51,8 +58,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "OTP Expired" }, { status: 400 });
     }
 
-    // const isOtpMatch = await bcrypt.compare(otp.toString(), storedOtp.otp);
-    const isOtpMatch = true; // Bypassing for debug
+    const isOtpMatch = await bcrypt.compare(otp.toString(), storedOtp.otp);
     if (!isOtpMatch) {
       return NextResponse.json({ message: "Invalid OTP" }, { status: 400 });
     }
@@ -64,12 +70,11 @@ export async function POST(req: Request) {
     }
 
     // 3. Create user
-    // const hashedPassword = await bcrypt.hash(password, 10);
-    const hashedPassword = password; // Using raw password for debug
+    const hashedPassword = await bcrypt.hash(password, 10);
     const username = email.split('@')[0];
     
     const newUserResult = await db.query(
-      'INSERT INTO users (username, name, email, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING user_id, email, role',
+      'INSERT INTO users (username, name, email, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING user_id, name, email, role',
       [username, name, email, hashedPassword, 'regular user']
     );
     
@@ -85,7 +90,15 @@ export async function POST(req: Request) {
     // 5. Cleanup OTP
     await db.query('DELETE FROM "OTP" WHERE email = $1', [email]);
 
-    return NextResponse.json(tokens, { status: 201 });
+    return NextResponse.json({
+      ...tokens,
+      user: {
+        id: newUser.user_id,
+        email: newUser.email,
+        name: newUser.name,
+        role: newUser.role
+      }
+    }, { status: 201 });
 
   } catch (error) {
     console.error("Mobile registration error:", error);

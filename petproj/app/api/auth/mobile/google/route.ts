@@ -61,16 +61,18 @@ export async function POST(req: Request) {
     if (userResult.rowCount === 0) {
       // 3. Create new user if they don't exist
       const username = email.split('@')[0];
-      // const placeholderPassword = await bcrypt.hash(Math.random().toString(36), 10);
-      const placeholderPassword = 'google-auth-placeholder';
+      // Generate a secure random password for Google users
+      const placeholderPassword = await bcrypt.hash(Math.random().toString(36), 10);
       
       const newUserResult = await db.query(
-        'INSERT INTO users (username, name, email, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING user_id, email, role',
+        'INSERT INTO users (username, name, email, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING user_id, name, email, role',
         [username, name, email, placeholderPassword, 'regular user']
       );
       user = newUserResult.rows[0];
     } else {
-      user = userResult.rows[0];
+      // Fetch name for existing user
+      const fullUserResult = await db.query('SELECT user_id, name, email, role FROM users WHERE email = $1', [email]);
+      user = fullUserResult.rows[0];
     }
 
     // 4. Generate tokens
@@ -80,7 +82,15 @@ export async function POST(req: Request) {
       role: user.role
     });
 
-    return NextResponse.json(tokens, { status: 200 });
+    return NextResponse.json({
+      ...tokens,
+      user: {
+        id: user.user_id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
+    }, { status: 200 });
 
   } catch (error) {
     console.error("Mobile Google login error:", error);

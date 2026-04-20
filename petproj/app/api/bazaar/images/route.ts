@@ -6,7 +6,7 @@
  *     tags: [Auto-Generated]
  */
 
-import { getPool } from '../../../../db/ecom';
+import { db } from '../../../../db/index';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
@@ -20,7 +20,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 }
 
 export async function POST(request: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   try {
     const contentType = request.headers.get('content-type') || '';
 

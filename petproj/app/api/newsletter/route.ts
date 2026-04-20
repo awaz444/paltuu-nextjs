@@ -10,12 +10,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '../../../db/ecom';
+import { db } from '../../../db/index';
 
 export const revalidate = 0;
 
 export async function POST(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   let client: any = null;
   try {
     const body = await req.json();
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
 
 // Optional: GET endpoint to check subscription status
 export async function GET(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   let client: any = null;
   try {
     const { searchParams } = new URL(req.url);

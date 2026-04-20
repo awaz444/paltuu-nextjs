@@ -11,7 +11,7 @@
 
 // app/api/bazaar/reviews/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getPool } from "../../../../db/ecom";
+import { db } from "../../../../db/index";
 import { createClient as createMainClient } from "../../../../db/index";
 import jwt from "jsonwebtoken";
 import { getServerSession } from "next-auth/next";
@@ -27,7 +27,7 @@ interface JWTPayload {
 }
 
 export async function GET(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   const mainClient = createMainClient();
 
   try {
@@ -132,7 +132,7 @@ export async function GET(req: NextRequest) {
 
 // POST function remains the same as before
 export async function POST(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   let userId: string | null = null;
 
   try {

@@ -8,7 +8,7 @@
 
 // app/api/orders/[user_id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '../../../../db/ecom';
+import { db } from '../../../../db/index';
 
 export const revalidate = 0;
 
@@ -42,7 +42,7 @@ export async function GET(
       ORDER BY o.created_at DESC
     `;
 
-  const pool = getPool();
+  const pool = db;
   const ordersResult = await pool.query(ordersQuery, [userId]);
 
     if (ordersResult.rows.length === 0) {

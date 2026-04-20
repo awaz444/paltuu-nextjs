@@ -7,10 +7,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '../../../../db/ecom';
+import { db } from '../../../../db/index';
 
 export async function GET(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   try {
     const q = `
       SELECT collection_id, name, slug, description, image_url, sort_order, is_active, created_at

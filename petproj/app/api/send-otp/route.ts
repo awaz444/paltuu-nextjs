@@ -17,11 +17,10 @@
  *         description: OTP sent successfully
  */
 
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/prisma/index";
 import bcrypt from 'bcryptjs';
 import Mailjet from "node-mailjet";
-
-const prisma = new PrismaClient();
+import { rateLimit } from "@/utils/rateLimit";
 const mailjetClient = Mailjet.apiConnect(
   process.env.MAILJET_API_KEY!,
   process.env.MAILJET_SECRET_KEY!
@@ -32,6 +31,12 @@ export async function POST(req: Request) {
     const { email } = await req.json();
     if (!email) {
       return new Response(JSON.stringify({ message: "Email is required" }), { status: 400 });
+    }
+
+    // Rate limiting: 3 OTPs per minute
+    const limiter = await rateLimit(`otp:${email}`, 3, 60);
+    if (!limiter.success) {
+      return new Response(JSON.stringify({ message: "Too many OTP requests. Please wait a minute." }), { status: 429 });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000);

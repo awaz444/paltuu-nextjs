@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '@/db/ecom';
+import { db } from '@/db/index';
 import { sendOrderEmails } from '@/utils/mailjet';
 import { getUserIdFromRequest } from '@/utils/authServer';
 
@@ -15,7 +15,7 @@ export const revalidate = 0;
 
 // POST - Create order with payment proof (for bank transfer orders)
 export async function POST(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   try {
     // Extract userId from server-side cookie (secure)
     const userId = await getUserIdFromRequest(req);

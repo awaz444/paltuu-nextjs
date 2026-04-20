@@ -7,10 +7,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '../../../../../db/ecom';
+import { db } from '../../../../../db/index';
 
 export async function POST(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   try {
     const body = await req.json();
     const codeRaw: string = (body?.code || '').toString().trim();

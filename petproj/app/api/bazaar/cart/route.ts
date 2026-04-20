@@ -16,7 +16,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool, query as dbQuery } from '../../../../db/ecom';
+import { db, query as dbQuery } from '../../../../db/index';
 import { sendCartActivityNotification } from '../../../../utils/mailjet';
 import { getUserIdFromRequest } from '../../../../utils/authServer';
 
@@ -24,7 +24,7 @@ export const revalidate = 0;
 
 // GET cart for user or session
 export async function GET(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   try {
     // Extract userId from server-side cookie (secure)
     const userId = await getUserIdFromRequest(req);
@@ -118,7 +118,7 @@ export async function GET(req: NextRequest) {
 
 // POST - Add item to cart
 export async function POST(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   try {
     // Extract userId from server-side cookie (secure)
     const userId = await getUserIdFromRequest(req);
@@ -244,7 +244,7 @@ export async function POST(req: NextRequest) {
 
 // PUT - Update cart item quantity
 export async function PUT(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   try {
     const body = await req.json();
     const { cartItemId, quantity } = body;
@@ -282,7 +282,7 @@ export async function PUT(req: NextRequest) {
 
 // DELETE - Remove item from cart
 export async function DELETE(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   try {
     const { searchParams } = new URL(req.url);
     let cartItemId = searchParams.get('cartItemId');

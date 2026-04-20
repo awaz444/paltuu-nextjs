@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getPool } from "../../../../db/ecom";
+import { db } from "../../../../db/index";
 import { safeRedis } from "../../../../utils/redis";
 import pluralize from "pluralize";
 
@@ -29,7 +29,7 @@ const CACHE_TTL_SEC = 300; // 5 minutes
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now();
-  const pool = getPool();
+  const pool = db;
   let client;
 
   try {

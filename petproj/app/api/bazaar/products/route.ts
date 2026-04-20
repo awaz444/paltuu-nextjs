@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getPool } from "../../../../db/ecom";
+import { db } from "../../../../db/index";
 import { safeRedis } from "../../../../utils/redis";
 
 export const revalidate = 0;
@@ -74,7 +74,7 @@ export interface CreateBazaarProductDto {
 }
 
 export async function POST(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   let client: any = null;
   try {
     client = await pool.connect();
@@ -268,7 +268,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now();
-  const pool = getPool();
+  const pool = db;
   let client: any = null;
   try {
     client = await pool.connect();

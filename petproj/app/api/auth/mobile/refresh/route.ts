@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Fetch user details
-    const result = await db.query('SELECT user_id, email, role FROM users WHERE user_id = $1', [userId]);
+    const result = await db.query('SELECT user_id, name, email, role FROM users WHERE user_id = $1', [userId]);
     if (result.rowCount === 0) {
       return NextResponse.json({ message: "User not found" }, { status: 401 });
     }
@@ -56,7 +56,15 @@ export async function POST(req: Request) {
       role: user.role
     });
 
-    return NextResponse.json(tokens, { status: 200 });
+    return NextResponse.json({
+      ...tokens,
+      user: {
+        id: user.user_id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
+    }, { status: 200 });
 
   } catch (error) {
     console.error("Mobile refresh error:", error);

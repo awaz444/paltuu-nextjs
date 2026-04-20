@@ -13,7 +13,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '../../../../../db/ecom';
+import { db } from '../../../../../db/index';
 import { safeRedis } from '../../../../../utils/redis';
 
 // Helper to invalidate product cache keys
@@ -38,7 +38,7 @@ async function invalidateProductCache() {
 }
 
 export async function GET(req: NextRequest, { params }: any) {
-  const pool = getPool();
+  const pool = db;
   let client: any = null;
   try {
     client = await pool.connect();
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest, { params }: any) {
 }
 
 export async function PUT(req: NextRequest, { params }: any) {
-  const pool = getPool();
+  const pool = db;
   let client: any = null;
   try {
     const body = await req.json();
@@ -286,7 +286,7 @@ export async function PUT(req: NextRequest, { params }: any) {
 }
 
 export async function DELETE(req: NextRequest, { params }: any) {
-  const pool = getPool();
+  const pool = db;
   let client: any = null;
   try {
     const id = params.id;

@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '../../../db/ecom';
+import { db } from '../../../db/index';
 import jwt from "jsonwebtoken";
 import { getServerSession } from "next-auth/next";
 import { authoptions } from "../auth/[...nextauth]/options";
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     `;
 
     
-    const pool = getPool();
+    const pool = db;
     const ordersResult = await pool.query(ordersQuery, [userId]);
 
     if (ordersResult.rows.length === 0) {

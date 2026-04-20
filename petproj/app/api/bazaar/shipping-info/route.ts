@@ -10,14 +10,14 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getPool } from "../../../../db/ecom";
+import { db } from "../../../../db/index";
 import { getUserIdFromRequest } from "../../../../utils/authServer";
 
 export const revalidate = 0;
 
 // GET - Retrieve saved shipping info for a user
 export async function GET(request: NextRequest) {
-  const pool = getPool();
+  const pool = db;
 
   try {
     // Extract userId from server-side cookie (secure)
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
 
 // POST - Save or update shipping info for a user
 export async function POST(request: NextRequest) {
-  const pool = getPool();
+  const pool = db;
 
   try {
     // Extract userId from server-side cookie (secure)

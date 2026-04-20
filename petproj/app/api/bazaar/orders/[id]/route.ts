@@ -10,13 +10,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '../../../../../db/ecom';
+import { db } from '../../../../../db/index';
 
 export const revalidate = 0;
 
 // GET specific order
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const pool = getPool();
+  const pool = db;
   try {
     const orderId = params.id;
 
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
 // PUT - Update order status
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const pool = getPool();
+  const pool = db;
   try {
     const orderId = params.id;
     const body = await req.json();

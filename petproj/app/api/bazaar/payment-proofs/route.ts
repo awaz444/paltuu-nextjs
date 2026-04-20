@@ -13,13 +13,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '@/db/ecom';
+import { db } from '@/db/index';
 
 export const revalidate = 0;
 
 // POST - Upload payment proof
 export async function POST(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   try {
     const body = await req.json();
     const { orderId, orderNumber, userId, sessionId, imageUrl } = body;
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
 
 // GET - Get payment proof for an order
 export async function GET(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   try {
     const { searchParams } = new URL(req.url);
     const orderId = searchParams.get('orderId');
@@ -153,7 +153,7 @@ export async function GET(req: NextRequest) {
 
 // PATCH - Admin verify payment proof
 export async function PATCH(req: NextRequest) {
-  const pool = getPool();
+  const pool = db;
   try {
     const body = await req.json();
     const { proofId, orderId, status, adminNotes, adminUserId } = body;

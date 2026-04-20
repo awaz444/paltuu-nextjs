@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import jwt from 'jsonwebtoken';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -62,12 +63,13 @@ export async function middleware(request: NextRequest) {
 
     if (!isAdmin && customAuthToken) {
       try {
-        const [headerB64, payloadB64] = customAuthToken.split('.');
-        const payload = JSON.parse(Buffer.from(payloadB64, 'base64').toString());
-        if (payload.role !== 'admin') {
+        // Verify signature properly using the server secret
+        const decoded = jwt.verify(customAuthToken, process.env.TOKEN_SECRET!) as { role?: string };
+        if (decoded.role !== 'admin') {
           return NextResponse.redirect(new URL('/browse-pets', request.url));
         }
       } catch (error) {
+        console.warn('⚠️ [Middleware] Admin JWT verification failed:', error instanceof Error ? error.message : error);
         return NextResponse.redirect(new URL('/auth', request.url));
       }
     }

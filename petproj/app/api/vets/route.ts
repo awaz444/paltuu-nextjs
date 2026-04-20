@@ -48,8 +48,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         // Debugging: Log user_id and query result
         console.log("Received user_id:", user_id);
+        // Explicitly select only non-sensitive fields
         const userCheck = await client.query(
-            "SELECT * FROM users WHERE user_id = $1",
+            "SELECT user_id, name, email, role FROM users WHERE user_id = $1",
             [user_id]
         );
         console.log("User query result:", userCheck.rows);

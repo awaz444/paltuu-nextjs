@@ -26,7 +26,10 @@ export async function generateMobileTokenPair(user: { user_id: number; email: st
   const accessToken = jwt.sign(payload, accessSecret, { expiresIn: ACCESS_TOKEN_EXPIRY });
   const refreshToken = jwt.sign({ user_id: user.user_id }, refreshSecret, { expiresIn: REFRESH_TOKEN_EXPIRY });
 
-  // Save refresh token to DB
+  // 1. Delete old refresh tokens for this user to prevent bloat (Cleanup)
+  await db.query('DELETE FROM mobile_refresh_tokens WHERE user_id = $1', [user.user_id]);
+
+  // 2. Save new refresh token to DB
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 90);
 

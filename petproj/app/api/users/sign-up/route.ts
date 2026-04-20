@@ -28,14 +28,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash the password
-    // const salt = await bcrypt.genSalt(10);
-    // const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert the new user into the database
     const insertUserQuery = `
       INSERT INTO users (username, name, dob, city_id, email, password, phone_number, role)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING id, username, name, dob, city_id, email, phone_number, role
+      RETURNING user_id, username, name, dob, city_id, email, phone_number, role
     `;
     const { rows: savedUser } = await db.query(insertUserQuery, [
       username,
@@ -43,7 +42,7 @@ export async function POST(request: NextRequest) {
       DOB,
       city_id,
       emailNew,
-      password,
+      hashedPassword,
       phone_number,
       role,
     ]);

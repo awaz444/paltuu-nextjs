@@ -8,16 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../db/index";
-import jwt from "jsonwebtoken";
-import { getServerSession } from "next-auth/next";
-import { authoptions } from "../auth/[...nextauth]/options";
-
-interface JWTPayload {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-}
+import { getUserIdFromRequest } from "@/utils/authServer";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
@@ -26,24 +17,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     try {
         await client.connect();
 
-        // Try NextAuth session first
-        const session = await getServerSession(authoptions);
-        if (session?.user) {
-            userId = (session.user as any).user_id || (session.user as any).id;
-        }
-
-        // If no NextAuth session, try JWT token from cookies
-        if (!userId) {
-            const token = req.cookies.get("token")?.value;
-            if (token) {
-                try {
-                    const decoded = jwt.verify(token, process.env.TOKEN_SECRET!) as JWTPayload;
-                    userId = decoded.id;
-                } catch (jwtError) {
-                    console.error("JWT verification failed:", jwtError);
-                }
-            }
-        }
+        userId = await getUserIdFromRequest(req);
 
         if (!userId) {
             return NextResponse.json(

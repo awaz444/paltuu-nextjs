@@ -7,52 +7,22 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { getToken } from "next-auth/jwt";
+import { getUserFromRequest } from "@/utils/authServer";
 
 export async function GET(request: NextRequest) {
   try {
-    // 1️⃣ Check NextAuth token (Google / OAuth users)
-    const nextAuthToken = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const user = await getUserFromRequest(request);
 
-    if (nextAuthToken) {
-      return NextResponse.json({
-        valid: true,
-        user: {
-          id: nextAuthToken.user_id,
-          email: nextAuthToken.email,
-          role: nextAuthToken.role,
-        }
-      }, { status: 200 });
-    }
-
-    // 2️⃣ Check custom JWT token (API-based login)
-    const token = request.cookies.get("token")?.value;
-
-    if (!token) {
-      // ✅ No token, but still return 200 with valid: false
+    if (!user) {
       return NextResponse.json({ valid: false, user: null }, { status: 200 });
     }
 
-    // 3️⃣ Verify JWT
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.TOKEN_SECRET!) as any;
-    } catch {
-      // Invalid or expired token
-      return NextResponse.json({ valid: false, user: null }, { status: 200 });
-    }
-
-    // 4️⃣ Valid token
     return NextResponse.json({
       valid: true,
       user: {
-        id: decoded.id,
-        email: decoded.email,
-        role: decoded.role,
+        id: user.id || user.user_id || user.sub,
+        email: user.email,
+        role: user.role,
       }
     }, { status: 200 });
 

@@ -2,15 +2,13 @@
  * @swagger
  * /api/my-listings:
  *   get:
- *     summary: Auto-generated summary for /api/my-listings
- *     tags: [Auto-Generated]
+ *     summary: Get user pet listings
+ *     description: Returns a list of all pet listings owned by the authenticated user.
+ *     tags: [Listings]
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db/index";
-import jwt from "jsonwebtoken";
-import { getServerSession } from "next-auth/next";
-import { authoptions } from "@/app/api/auth/[...nextauth]/options";
+import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
 
 interface DecodedToken {
     id: string | number;
@@ -21,33 +19,7 @@ interface DecodedToken {
 
 export async function GET(request: NextRequest) {
     try {
-        let authenticatedUserId: string | null = null;
-
-        // First, try to get user from NextAuth session (Google OAuth)
-        const session = await getServerSession(authoptions);
-        if (session?.user?.user_id) {
-            authenticatedUserId = session.user.user_id.toString();
-        } else {
-            // If no NextAuth session, try to get user from custom JWT token
-            const token = request.cookies.get("token")?.value;
-            
-            if (!token) {
-                return NextResponse.json(
-                    { error: "Authentication required" },
-                    { status: 401 }
-                );
-            }
-
-            try {
-                const decoded = jwt.verify(token, process.env.TOKEN_SECRET!) as DecodedToken;
-                authenticatedUserId = decoded.id.toString();
-            } catch (jwtError) {
-                return NextResponse.json(
-                    { error: "Invalid token" },
-                    { status: 401 }
-                );
-            }
-        }
+        const authenticatedUserId = await getUserIdFromRequest(request);
 
         if (!authenticatedUserId) {
             return NextResponse.json(

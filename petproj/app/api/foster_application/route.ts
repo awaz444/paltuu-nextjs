@@ -15,15 +15,12 @@
  *     tags: [Auto-Generated]
  */
 
-import { createClient, sql } from '../../../db/index';
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from "next-auth/next";
-import { authoptions } from "@/app/api/auth/[...nextauth]/options";
+import { getUserIdFromRequest, getUserFromRequest } from '../../../utils/authServer';
 
 // POST: Create a new foster application
 export async function POST(req: NextRequest): Promise<NextResponse> {
+    const body = await req.json();
     const {
-        user_id,
         pet_id,
         fosterer_name,
         fosterer_address,
@@ -41,7 +38,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         reason_for_fostering,
         additional_details,
         agree_to_terms,
-    } = await req.json();
+    } = body;
+
+    const auth_user_id = await getUserIdFromRequest(req);
+    if (!auth_user_id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const client = createClient();
 
@@ -61,7 +63,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, CURRENT_TIMESTAMP
             ) RETURNING *`,
             [
-                user_id,
+                auth_user_id,
                 pet_id,
                 fosterer_name,
                 fosterer_address,
@@ -148,8 +150,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
 // GET: Fetch all foster applications (Admin Only)
 export async function GET(req: NextRequest): Promise<NextResponse> {
-    const session = await getServerSession(authoptions);
-    if (!session || session.user.role !== 'admin') {
+    const user = await getUserFromRequest(req);
+    if (!user || user.role !== 'admin') {
         return NextResponse.json({ error: "Unauthorized: Admin access required" }, { status: 403 });
     }
 

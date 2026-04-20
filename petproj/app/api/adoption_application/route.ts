@@ -15,14 +15,12 @@
  *     tags: [Adoptions]
  */
 
-import { createClient } from '../../../db/index';
-import { NextRequest, NextResponse } from 'next/server';
-import { sendAdoptionApplicationEmails } from '../../../utils/mailjet';
+import { getUserIdFromRequest } from '../../../utils/authServer';
 
 // POST: Create a new adoption application
 export async function POST(req: NextRequest): Promise<NextResponse> {
+    const body = await req.json();
     const {
-        user_id,
         pet_id,
         adopter_name,
         adopter_address,
@@ -35,7 +33,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         pet_left_alone,
         additional_details,
         agree_to_terms,
-    } = await req.json();
+    } = body;
+
+    const auth_user_id = await getUserIdFromRequest(req);
+    if (!auth_user_id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const client = createClient();
 
@@ -54,7 +57,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP
             ) RETURNING *`,
             [
-                user_id,
+                auth_user_id,
                 pet_id,
                 adopter_name,
                 adopter_address,
@@ -106,7 +109,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             `INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
              VALUES ($1, $2, $3, $4, $5)`,
             [
-                user_id,
+                auth_user_id,
                 `Your adoption application for ${petName} has been submitted successfully! The owner will review your application.`,
                 'application_submission',
                 false,

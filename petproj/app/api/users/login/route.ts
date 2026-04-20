@@ -9,6 +9,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,8 +34,8 @@ export async function POST(request: NextRequest) {
 
 
     // Check if password is correct
-    // const validPassword = await bcrypt.compare(password.trim(), user.password.trim());
-    if (password.trim() !== user.password.trim()) {
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
       return NextResponse.json({ error: "Invalid password" }, { status: 400 });
     }
     console.log("Password validated");

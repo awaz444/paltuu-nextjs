@@ -18,6 +18,7 @@
 // app/api/users/route.ts
 import { createClient } from '../../../db/index'; 
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 
 // Function to format phone number correctly
 function formatPhoneNumber(phone: string): string | null {
@@ -50,12 +51,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             );
         }
 
+        // Hash password before storage
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         const result = await client.query(
             "INSERT INTO users (username, name, DOB, city_id, email, password, phone_number, role, profile_image_url, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP) RETURNING *",
-            [username, name, DOB, city_id, email, password, formattedPhone, role, profile_image_url]
+            [username, name, DOB, city_id, email, hashedPassword, formattedPhone, role, profile_image_url]
         );
 
-        return NextResponse.json(result.rows[0], {
+        const newUser = result.rows[0];
+        delete newUser.password; // Don't return password in response
+
+        return NextResponse.json(newUser, {
             status: 201,
             headers: { "Content-Type": "application/json" },
         });
@@ -78,7 +85,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     try {
         await client.connect(); 
-        const result = await client.query('SELECT * FROM users');
+        // EXCLUDE password field from results
+        const result = await client.query('SELECT user_id, username, name, DOB, city_id, email, phone_number, role, profile_image_url, created_at FROM users');
         return NextResponse.json(result.rows, {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
@@ -106,9 +114,13 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
 
     try {
         await client.connect();
+        
+        // Hash password if it's being updated
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         const result = await client.query(
             'UPDATE users SET username = $1, name = $2, DOB = $3, city_id = $4, email = $5, password = $6, phone_number = $7, role = $8, profile_image_url = $9 WHERE user_id = $10 RETURNING *',
-            [username, name, DOB, city_id, email, password, phone_number, role, profile_image_url, user_id]
+            [username, name, DOB, city_id, email, hashedPassword, phone_number, role, profile_image_url, user_id]
         );
         
         if (result.rows.length === 0) {
@@ -118,7 +130,10 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
             });
         }
 
-        return NextResponse.json(result.rows[0], {
+        const updatedUser = result.rows[0];
+        delete updatedUser.password;
+
+        return NextResponse.json(updatedUser, {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
         });

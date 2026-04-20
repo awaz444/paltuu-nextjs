@@ -8,7 +8,7 @@
 
 import jwt from "jsonwebtoken";
 import { createClient } from "../../../../db";
-// import bcrypt from "bcryptjs"; // Uncomment and use bcrypt
+import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
     const client = createClient();
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
         }
 
         // Hash the new password before saving it
-        const hashedPassword = await newPassword;
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         // Update the user's password in the database
         const updateQuery = "UPDATE users SET password = $1 WHERE user_id = $2";

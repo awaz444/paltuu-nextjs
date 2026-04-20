@@ -2,48 +2,24 @@
  * @swagger
  * /api/my-profile:
  *   get:
- *     summary: Auto-generated summary for /api/my-profile
- *     tags: [Auto-Generated]
+ *     summary: Get current user profile
+ *     description: Returns the full profile details of the authenticated user. Supports both Web and Mobile auth.
+ *     tags: [Profile]
  *   patch:
- *     summary: Auto-generated summary for /api/my-profile
- *     tags: [Auto-Generated]
+ *     summary: Update user profile
+ *     description: Update specific fields of the user profile (name, profile image).
+ *     tags: [Profile]
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../db/index";
-import { getToken } from "next-auth/jwt";
-import jwt from "jsonwebtoken";
-
-async function getAuthenticatedUserId(req: NextRequest): Promise<string | null> {
-    // Check NextAuth token first (for Google OAuth users)
-    const nextAuthToken = await getToken({
-        req,
-        secret: process.env.NEXTAUTH_SECRET
-    });
-
-    if (nextAuthToken?.user_id) {
-        return nextAuthToken.user_id.toString();
-    }
-
-    // Check custom JWT token (for regular login users)
-    const customToken = req.cookies.get('token')?.value;
-    if (customToken) {
-        try {
-            const decoded = jwt.verify(customToken, process.env.TOKEN_SECRET!) as any;
-            return decoded.id?.toString();
-        } catch (error) {
-            return null;
-        }
-    }
-
-    return null;
-}
+import { getUserIdFromRequest } from "@/utils/authServer";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     
     try {
-        const authenticated_user_id = await getAuthenticatedUserId(req);
+        const authenticated_user_id = await getUserIdFromRequest(req);
 
         if (!authenticated_user_id) {
             return NextResponse.json(

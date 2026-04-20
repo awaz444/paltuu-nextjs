@@ -8,33 +8,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../db/index";
-import { getToken } from "next-auth/jwt";
-import jwt from "jsonwebtoken";
-
-async function getAuthenticatedUserId(req: NextRequest): Promise<string | null> {
-    const nextAuthToken = await getToken({
-        req,
-        secret: process.env.NEXTAUTH_SECRET
-    });
-    if (nextAuthToken?.user_id) return nextAuthToken.user_id.toString();
-
-    const customToken = req.cookies.get('token')?.value;
-    if (customToken) {
-        try {
-            const decoded = jwt.verify(customToken, process.env.TOKEN_SECRET!) as any;
-            return decoded.id?.toString();
-        } catch (error) {
-            return null;
-        }
-    }
-    return null;
-}
+import { getUserIdFromRequest } from "@/utils/authServer";
+import bcrypt from 'bcryptjs';
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
     const client = createClient();
     
     try {
-        const authenticated_user_id = await getAuthenticatedUserId(req);
+        const authenticated_user_id = await getUserIdFromRequest(req);
 
         if (!authenticated_user_id) {
             return NextResponse.json(
@@ -67,8 +48,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         const user = fetchResult.rows[0];
 
-        // 2. Verify current password (Direct comparison FOR NOW)
-        const isPasswordCorrect = currentPassword === user.password;
+        // 2. Verify current password
+        const isPasswordCorrect = await bcrypt.compare(currentPassword, user.password);
         if (!isPasswordCorrect) {
             return NextResponse.json(
                 { error: "Incorrect current password" },
@@ -76,9 +57,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             );
         }
 
-        // 3. Update password directly (No hashing FOR NOW)
+        // 3. Update password with hashing
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
         const updateQuery = "UPDATE users SET password = $1 WHERE user_id = $2";
-        await client.query(updateQuery, [newPassword, authenticated_user_id]);
+        await client.query(updateQuery, [hashedPassword, authenticated_user_id]);
 
         return NextResponse.json({
             message: "Password updated successfully"

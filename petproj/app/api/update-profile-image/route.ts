@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const client = createClient();
     
     try {
-        const user_id = await getAuthenticatedUserId(request);
+        const user_id = await getUserIdFromRequest(request);
         if (!user_id) {
             return NextResponse.json(
                 { error: "Unauthorized - Please login" },

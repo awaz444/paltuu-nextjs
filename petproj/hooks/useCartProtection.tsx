@@ -10,6 +10,7 @@ interface CartProtectionOptions {
   showMessage?: boolean;
 }
 
+
 export const useCartProtection = (options: CartProtectionOptions = {}) => {
   const { redirectTo = "/cart", showMessage = true } = options;
   const router = useRouter();

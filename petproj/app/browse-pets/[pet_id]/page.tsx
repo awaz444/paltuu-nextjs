@@ -292,7 +292,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                     <div className="flex items-center gap-4 p-5 bg-gray-50/50 rounded-3xl border border-gray-100 shadow-sm">
                         <Avatar
                             size={64}
-                            src={pet.owner?.profile_image_url}
+                            src={pet.owner_image || pet.profile_image_url}
                             icon={<UserOutlined />}
                             className="bg-white text-primary border-2 border-white shadow-md"
                         />
@@ -301,7 +301,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                 Listed By
                             </Text>
                             <Text className="text-xl font-black text-gray-900 leading-tight">
-                                {pet.owner?.name || "Member User"}
+                                {pet.owner_name || "Member User"}
                             </Text>
                         </div>
                     </div>
@@ -404,7 +404,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                     <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                         <div>
                             <p className="font-medium text-gray-700">
-                                {pet.phone_number}
+                                {pet.contact_number}
                             </p>
                             <p className="text-sm text-gray-500">
                                 Phone Number
@@ -413,7 +413,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                         <Button
                             icon={<CopyOutlined className="text-primary" />}
                             size="small"
-                            onClick={() => handleCopy(pet.phone_number)}
+                            onClick={() => handleCopy(pet.contact_number)}
                             className="border-none shadow-none"
                         />
                     </div>
@@ -423,7 +423,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                         block
                         icon={<WhatsAppOutlined />}
                         className="bg-green-500 hover:bg-green-600 text-white h-12 rounded-lg flex items-center justify-center"
-                        onClick={() => handleWhatsApp(pet.phone_number)}>
+                        onClick={() => handleWhatsApp(pet.contact_number)}>
                         Message via WhatsApp
                     </Button>
                 </div>

@@ -22,12 +22,17 @@ export type PetWithImages = {
     created_at: string;
     email: string;
     phone_number: string;
+    contact_number?: string;
     sex: string | null;
     listing_type: "adoption" | "sell" | "shop" | "rescue";
     vaccinated: boolean | null;
     neutered: boolean | null;
     city: string;
     profile_image_url: string | null;
+    owner_name?: string;
+    owner_email?: string;
+    owner_phone?: string;
+    owner_image?: string | null;
     image_id: number | null;
     image_url: string | null;
     additional_images: Array<{ image_url: string }>;

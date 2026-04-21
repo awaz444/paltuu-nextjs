@@ -17,7 +17,7 @@ const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL;
 /**
  * Send email using Brevo API (supports Gmail sender addresses)
  */
-async function sendEmailViaBrevo(to: string, toName: string, subject: string, htmlContent: string, textContent?: string) {
+export async function sendEmailViaBrevo(to: string, toName: string, subject: string, htmlContent: string, textContent?: string) {
   if (!BREVO_API_KEY) {
     throw new Error('BREVO_API_KEY not configured');
   }

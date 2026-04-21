@@ -13,6 +13,10 @@ export async function GET(req: NextRequest) {
     try {
         const user = await getUserFromRequest(req);
         
+        if (!user) {
+            return NextResponse.json({ valid: false }, { status: 401 });
+        }
+
         const userId = user.user_id || user.id;
         
         // Fetch full profile to avoid extra client-side calls

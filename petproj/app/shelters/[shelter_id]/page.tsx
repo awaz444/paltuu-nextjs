@@ -7,7 +7,6 @@ import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
 import "./styles.css";
 
-
 interface Shelter {
     shelter_id: number;
     shelter_name: string;

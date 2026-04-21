@@ -62,7 +62,7 @@ export default function ClinicPage() {
 
     const fetchClinicDetails = async () => {
         try {
-            const response = await fetch(`/api/clinics/${params.id}`);
+            const response = await fetch(`/api/v1/clinics/${params.id}`);
             if (!response.ok) {
                 throw new Error("Failed to fetch clinic details");
             }
@@ -77,7 +77,7 @@ export default function ClinicPage() {
 
     const fetchReviewStats = async () => {
         try {
-            const response = await fetch(`/api/clinic-reviews-stats?clinic_id=${params.id}`);
+            const response = await fetch(`/api/v1/clinics/reviews-stats?clinic_id=${params.id}`);
             if (!response.ok) {
                 throw new Error("Failed to fetch review stats");
             }

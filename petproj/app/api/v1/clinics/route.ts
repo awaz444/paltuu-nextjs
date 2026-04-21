@@ -16,8 +16,7 @@ export async function GET(req: NextRequest) {
                 c.*, 
                 u.profile_image_url as owner_image
             FROM clinics c
-            JOIN users u ON c.owner_id = u.user_id
-            WHERE c.is_paltuu_partner = true
+            LEFT JOIN users u ON c.owner_id = u.user_id
             ORDER BY c.created_at DESC
         `);
         return NextResponse.json(result.rows);

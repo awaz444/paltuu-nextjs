@@ -219,7 +219,7 @@ export default function CreatePetListing() {
                 city_id: cityId ? Number(cityId) : null,
                 area: area || "",
                 age_months: (age || 0) * 12 + (months || 0),
-                contact_number: contactNumber || null,
+                contact_number: contactNumber ? `+92${contactNumber}` : null,
                 description: description || null,
                 adoption_status: "available",
                 price: null,
@@ -445,14 +445,22 @@ export default function CreatePetListing() {
                                         <div className="grid grid-cols-2 gap-6">
                                             <div className="col-span-2">
                                                 <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Contact Phone *</label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    className="p-5 w-full border rounded-3xl input-field bg-gray-50/50"
-                                                    placeholder="+92 3..."
-                                                    value={contactNumber}
-                                                    onChange={(e) => setContactNumber(e.target.value)}
-                                                />
+                                                <div className="flex items-center p-5 w-full border rounded-3xl input-field bg-gray-50/50 focus-within:bg-white focus-within:border-primary transition-all group">
+                                                    <span className="text-gray-400 font-bold mr-2 select-none">+92</span>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        className="bg-transparent border-none outline-none w-full text-lg font-bold placeholder:text-gray-300"
+                                                        placeholder="3001234567"
+                                                        value={contactNumber}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value.replace(/\D/g, "");
+                                                            if (value.length <= 11) {
+                                                                setContactNumber(value);
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

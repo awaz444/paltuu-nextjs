@@ -35,6 +35,7 @@ export async function GET(
                 u.name, 
                 u.profile_image_url,
                 u.email,
+                COALESCE(v.contact_details, u.phone_number) as contact_details,
                 cv.consultation_fee,
                 cv.schedule_notes
             FROM vets v

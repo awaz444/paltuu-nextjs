@@ -1,6 +1,8 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 /**
  * @swagger
  * /api/v1/pet-favorite-things:

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
 
+export const dynamic = "force-dynamic";
+
 /**
  * @swagger
  * /api/v1/auth/verify:

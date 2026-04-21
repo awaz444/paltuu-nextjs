@@ -45,10 +45,13 @@ export async function getUserIdFromRequest(req: NextRequest): Promise<string | n
 
     if (nextAuthToken) {
       const userId = String(nextAuthToken.user_id || nextAuthToken.sub || nextAuthToken.id || '');
+      console.log('✅ [Server Auth] Extracted userId from NextAuth token:', userId, 'Full token keys:', Object.keys(nextAuthToken));
       if (userId) {
-        console.log('✅ [Server Auth] Extracted userId from NextAuth:', userId);
         return userId;
       }
+    } else {
+      const cookieCount = req.cookies.getAll().length;
+      console.log('❌ [Server Auth] getToken returned null. Cookies found:', cookieCount);
     }
 
     // 3. Check custom JWT token cookie (legacy/web)

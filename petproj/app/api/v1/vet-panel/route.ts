@@ -2,6 +2,8 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 
+export const dynamic = "force-dynamic";
+
 /**
  * @swagger
  * /api/v1/vet-panel:

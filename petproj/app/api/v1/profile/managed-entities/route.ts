@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({
             managed_shops: shopRes.rows,
             managed_shelters: shelterRes.rows,
-            is_admin: shopRes.rowCount > 0 || shelterRes.rowCount > 0
+            is_admin: (shopRes.rowCount ?? 0) > 0 || (shelterRes.rowCount ?? 0) > 0
         });
 
     } catch (error) {

@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({
             adoption: adoptionApps.rows,
             foster: fosterApps.rows,
-            total: adoptionApps.rowCount + fosterApps.rowCount
+            total: (adoptionApps.rowCount ?? 0) + (fosterApps.rowCount ?? 0)
         });
 
     } catch (error) {

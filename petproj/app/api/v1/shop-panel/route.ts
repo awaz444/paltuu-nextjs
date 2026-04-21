@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
         `;
 
         const result = await db.query(query, [userId]);
-        if (result.rowCount === 0) return NextResponse.json({ error: "Shop not found" }, { status: 404 });
+        if ((result.rowCount ?? 0) === 0) return NextResponse.json({ error: "Shop not found" }, { status: 404 });
 
         return NextResponse.json(result.rows[0]);
 
@@ -49,7 +49,7 @@ export async function PATCH(req: NextRequest) {
 
         // 1. Verify Ownership & Get Shop ID
         const shopCheck = await db.query('SELECT shop_id FROM shops WHERE user_id = $1', [userId]);
-        if (shopCheck.rowCount === 0) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        if ((shopCheck.rowCount ?? 0) === 0) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         const shopId = shopCheck.rows[0].shop_id;
 
         await db.query('BEGIN');
@@ -67,7 +67,7 @@ export async function PATCH(req: NextRequest) {
             // 3. Update Bank Info
             if (account_title || iban || bank_name) {
                 const bankExists = await db.query('SELECT 1 FROM shop_bank_info WHERE shop_id = $1', [shopId]);
-                if (bankExists.rowCount > 0) {
+                if ((bankExists.rowCount ?? 0) > 0) {
                     await db.query(`
                         UPDATE shop_bank_info SET 
                             account_title = COALESCE($1, account_title),

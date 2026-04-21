@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
         const result = await db.query(query, [userId]);
 
-        if (result.rowCount === 0) {
+        if ((result.rowCount ?? 0) === 0) {
             return NextResponse.json({ error: "Vet profile not found" }, { status: 404 });
         }
 

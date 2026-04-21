@@ -94,14 +94,17 @@ const MyProfile = () => {
     }
   };
 
+  const fetchedRef = React.useRef(false);
+
   useEffect(() => {
     const loadUserData = async () => {
-      if (!isAuthenticated || !user?.id) {
-        setLoading(false);
+      if (!isAuthenticated || !user?.id || fetchedRef.current) {
+        if (!isAuthenticated || !user?.id) setLoading(false);
         return;
       }
 
       try {
+        fetchedRef.current = true;
         const res = await fetch(`/api/v1/profile`);
         if (!res.ok) throw new Error("Failed to fetch profile");
         const profileData = await res.json();

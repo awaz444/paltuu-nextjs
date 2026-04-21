@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from 'bcryptjs';
 import { rateLimit } from "@/utils/rateLimit";
 // Helper to send email (reusing existing logic or standardizing)
-import { sendEmail } from "@/utils/email"; 
+import { sendEmail } from "../../../../../utils/email";
 
 /**
  * @swagger

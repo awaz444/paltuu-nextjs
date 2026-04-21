@@ -103,41 +103,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const { valid, user: tokenUser } = await verifyResponse.json();
         if (!valid || !tokenUser) {
-          // console.log("⚠️ Token validation failed");
           return;
         }
 
-        // console.log("✅ Token verified, userId:", tokenUser.id);
-
-        // Fetch full user profile from database using V1
-        const profileResponse = await fetch(`/api/v1/profile`, { credentials: 'include' });
-        if (profileResponse.ok) {
-          const dbProfile = await profileResponse.json();
-          const hydratedUser: User = {
-            id: tokenUser.id,
-            email: tokenUser.email,
-            name: dbProfile.name || tokenUser.email,
-            role: tokenUser.role || "guest",
-            profile_image_url: dbProfile.profile_image_url || "/default-avatar.png",
-            method: "api"
-          };
-          // console.log("✅ Hydrated user from database profile:", hydratedUser);
-          setUser(hydratedUser);
-          setIsAuthenticated(true);
-        } else {
-          // Fallback to minimal user data from token
-          const minimalUser: User = {
-            id: tokenUser.id,
-            email: tokenUser.email,
-            name: tokenUser.email,
-            role: tokenUser.role || "guest",
-            profile_image_url: "/default-avatar.png",
-            method: "api"
-          };
-          // console.log("✅ Hydrated user from token (no profile found):", minimalUser);
-          setUser(minimalUser);
-          setIsAuthenticated(true);
-        }
+        const hydratedUser: User = {
+          id: tokenUser.id,
+          email: tokenUser.email,
+          name: tokenUser.name,
+          role: tokenUser.role,
+          profile_image_url: tokenUser.profile_image_url,
+          method: "api"
+        };
+        setUser(hydratedUser);
+        setIsAuthenticated(true);
       } catch (e) {
         console.error("Failed to hydrate user from server:", e);
       }
@@ -157,48 +135,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user || user.method !== "google") {
       // First, try to fetch the user's database profile
       const fetchDatabaseProfile = async () => {
-        try {
-          const response = await fetch(`/api/v1/profile`, { credentials: 'include' });
-          if (response.ok) {
-            const dbProfile = await response.json();
-            // Use database profile data if available, but fallback to Google data if empty
-            const userWithDbData: User = {
-              id: googleUserId,
-              name: (dbProfile.name && dbProfile.name.trim()) || session.user.name || undefined,
-              email: session.user.email || "",
-              role: (session.user as any).role || "guest",
-              profile_image_url: (dbProfile.profile_image_url && dbProfile.profile_image_url.trim()) || session.user.image || undefined,
-              method: "google",
-            };
-
-            // Set in-memory user; do not persist to localStorage
-            setUser(userWithDbData);
-            setIsAuthenticated(true);
-
-            // console.log("✅ Using database profile data for Google user:", userWithDbData);
-            // console.log("🔍 AuthContext - Database profile_image_url:", dbProfile.profile_image_url);
-            return userWithDbData;
-          }
-        } catch (error) {
-          // console.log("No database profile found, using Google data");
-        }
-
-        // Fallback to Google data if no database profile exists
         const googleUser: User = {
           id: googleUserId,
           name: session.user.name || undefined,
           email: session.user.email || "",
           role: (session.user as any).role || "guest",
-          profile_image_url: session.user.image || undefined,
+          profile_image_url: session.user.image || "/default-avatar.png",
           method: "google",
         };
 
-            // Set in-memory user; do not persist to localStorage
-            setUser(googleUser);
-            setIsAuthenticated(true);
-
-        // console.log("✅ Using Google profile data:", googleUser);
-        // console.log("🔍 AuthContext - Google profile_image_url:", session.user.image);
+        setUser(googleUser);
+        setIsAuthenticated(true);
         return googleUser;
       };
 
@@ -234,100 +181,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const login = async (userData: {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  profile_image_url?: string; // backend field
-}) => {
-  // Try to fetch the user's database profile first
-  try {
-    const response = await fetch(`/api/v1/profile`, { credentials: 'include' });
-    if (response.ok) {
-      const dbProfile = await response.json();
-      // Use database profile data if available
-      const userWithDbData: User = {
-        id: userData.id,
-        name: dbProfile.name,
-        email: userData.email,
-        role: userData.role,
-        profile_image_url: dbProfile.profile_image_url || "/default-avatar.png",
-        method: "api",
-      };
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    profile_image_url?: string;
+  }) => {
+    const userWithMethod: User = {
+      id: userData.id,
+      name: userData.name,
+      email: userData.email,
+      role: userData.role,
+      profile_image_url: userData.profile_image_url || "/default-avatar.png",
+      method: "api",
+    };
 
-  setUser(userWithDbData);
-  setIsAuthenticated(true);
-  try {
-    clearGuestSessionId();
-    // console.log('✅ User logged in via API - guest session cleared');
-  } catch (e) {
-    console.error('Error clearing guest session on login:', e);
-  }
+    setUser(userWithMethod);
+    setIsAuthenticated(true);
 
-      // console.log("✅ Using database profile data for API user:", userWithDbData);      // Redirect on API login success - check for callback URL first
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const callbackUrl = urlParams.get('callbackUrl');
-
-        if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
-          router.push(decodeURIComponent(callbackUrl));
-        } else if (userWithDbData.role === "shop admin") {
-          router.push("/shop-panel");
-        } else if (userWithDbData.role === "shelter admin") {
-          router.push("/rescue-panel");
-        } else if (userWithDbData.role === "vet") {
-          router.push("/vet-panel");
-        } else if (userWithDbData.role === "admin") {
-          router.push("/admin-panel");
-        } else {
-          router.push("/browse-pets");
-        }
-      } catch {}
-      return;
+    try {
+      clearGuestSessionId();
+    } catch (e) {
+      console.error('Error clearing guest session on login:', e);
     }
-  } catch (error) {
-    //console.log("No database profile found, using login response data");
-  }
 
-  // Fallback to login response data if no database profile exists
-  const userWithMethod: User = {
-    id: userData.id,
-    name: userData.name,
-    email: userData.email,
-    role: userData.role,
-    profile_image_url: userData.profile_image_url || "/default-avatar.png",
-    method: "api",
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const callbackUrl = urlParams.get('callbackUrl');
+
+      if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
+        router.push(decodeURIComponent(callbackUrl));
+      } else if (userWithMethod.role === "shop admin") {
+        router.push("/shop-panel");
+      } else if (userWithMethod.role === "shelter admin") {
+        router.push("/rescue-panel");
+      } else if (userWithMethod.role === "vet") {
+        router.push("/vet-panel");
+      } else if (userWithMethod.role === "admin") {
+        router.push("/admin-panel");
+      } else {
+        router.push("/browse-pets");
+      }
+    } catch {}
   };
-
-  setUser(userWithMethod);
-  setIsAuthenticated(true);
-  try {
-    clearGuestSessionId();
-    //console.log('✅ User logged in via API (fallback) - guest session cleared');
-  } catch (e) {
-    console.error('Error clearing guest session on login:', e);
-  }
-
-  //console.log("✅ Using login response data for API user:", userWithMethod);  // Redirect on API login success - check for callback URL first
-  try {
-    const urlParams = new URLSearchParams(window.location.search);
-    const callbackUrl = urlParams.get('callbackUrl');
-
-    if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
-      router.push(decodeURIComponent(callbackUrl));
-    } else if (userWithMethod.role === "shop admin") {
-      router.push("/shop-panel");
-    } else if (userWithMethod.role === "shelter admin") {
-      router.push("/rescue-panel");
-    } else if (userWithMethod.role === "vet") {
-      router.push("/vet-panel");
-    } else if (userWithMethod.role === "admin") {
-      router.push("/admin-panel");
-    } else {
-      router.push("/browse-pets");
-    }
-  } catch {}
-};
 
 
   const refreshUser = async () => {
@@ -363,9 +259,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try { clearGuestSessionId(); } catch {}      // Clear session storage if used
       try { sessionStorage.clear(); } catch {}
 
-      // For Google users, handle NextAuth signOut correctly
+      // ALWAYS call the server-side V1 logout API to clear all cookies
+      try {
+        await fetch("/api/v1/auth/logout", {
+          method: "GET",
+          credentials: "include",
+        });
+      } catch (err) {
+        console.error("V1 API logout error:", err);
+      }
+
+      // Handle NextAuth signOut if Google method was used
       if (user?.method === "google") {
-        //console.log("Executing Google logout flow");
         await nextAuthSignOut({
           callbackUrl: "/auth",
           redirect: true,
@@ -373,23 +278,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // For API users, proceed with API logout
-      //console.log("Executing API logout flow");
-      try {
-        const response = await fetch("/api/v1/auth/logout", {
-          method: "GET",
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          throw new Error(`API logout failed with status: ${response.status}`);
-        }
-
-        //console.log("API logout successful");
-      } catch (err) {
-        console.error("API logout error:", err);
-      }
-
+      // Clear local state
       setUser(null);
       setIsAuthenticated(false);
 

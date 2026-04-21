@@ -16,13 +16,24 @@ import { invalidateMobileRefreshToken } from "@/utils/mobileAuth";
 export async function GET() {
     const response = NextResponse.json({ message: "Logged out successfully" });
     
-    // Clear the auth cookie
-    cookies().set("session_token", "", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        expires: new Date(0),
+    // Clear all possible auth cookies
+    const cookieNames = [
+        "token", 
+        "session_token", 
+        "next-auth.session-token", 
+        "__Secure-next-auth.session-token",
+        "next-auth.csrf-token",
+        "__Host-next-auth.csrf-token"
+    ];
+
+    cookieNames.forEach(name => {
+        cookies().set(name, "", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            expires: new Date(0),
+        });
     });
 
     return response;
@@ -38,12 +49,23 @@ export async function POST(req: Request) {
     }
 
     // Also clear cookies if any
-    cookies().set("session_token", "", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        expires: new Date(0),
+    const cookieNames = [
+        "token", 
+        "session_token", 
+        "next-auth.session-token", 
+        "__Secure-next-auth.session-token",
+        "next-auth.csrf-token",
+        "__Host-next-auth.csrf-token"
+    ];
+
+    cookieNames.forEach(name => {
+        cookies().set(name, "", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            expires: new Date(0),
+        });
     });
 
     return NextResponse.json({ message: "Logged out successfully" }, { status: 200 });

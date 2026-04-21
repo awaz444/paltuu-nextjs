@@ -13,16 +13,26 @@ export async function GET(req: NextRequest) {
     try {
         const user = await getUserFromRequest(req);
         
-        if (!user) {
-            return NextResponse.json({ valid: false }, { status: 401 });
+        const userId = user.user_id || user.id;
+        
+        // Fetch full profile to avoid extra client-side calls
+        const { db } = await import("@/db/index");
+        const result = await db.query('SELECT user_id, name, email, role, profile_image_url FROM users WHERE user_id = $1', [userId]);
+        
+        if (result.rowCount === 0) {
+            return NextResponse.json({ valid: false, error: "User not found" }, { status: 404 });
         }
+
+        const dbUser = result.rows[0];
 
         return NextResponse.json({
             valid: true,
             user: {
-                id: user.user_id || user.id,
-                email: user.email,
-                role: user.role
+                id: dbUser.user_id,
+                email: dbUser.email,
+                name: dbUser.name,
+                role: dbUser.role,
+                profile_image_url: dbUser.profile_image_url || "/default-avatar.png"
             }
         });
     } catch (error) {

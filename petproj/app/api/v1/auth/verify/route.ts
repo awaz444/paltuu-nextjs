@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
         const { db } = await import("@/db/index");
         const result = await db.query('SELECT user_id, name, email, role, profile_image_url FROM users WHERE user_id = $1', [userId]);
         
-        if (result.rowCount === 0) {
+        if ((result.rowCount ?? 0) === 0) {
             return NextResponse.json({ valid: false, error: "User not found" }, { status: 404 });
         }
 

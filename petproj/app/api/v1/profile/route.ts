@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
             WHERE user_id = $1
         `, [userId]);
 
-        if (result.rowCount === 0) return NextResponse.json({ error: "User not found" }, { status: 404 });
+        if ((result.rowCount ?? 0) === 0) return NextResponse.json({ error: "User not found" }, { status: 404 });
         return NextResponse.json(result.rows[0]);
     } catch (error) {
         console.error("V1 Profile GET Error:", error);

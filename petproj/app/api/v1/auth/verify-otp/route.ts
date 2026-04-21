@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
         if (!email || !otp) return NextResponse.json({ error: "Email and OTP required" }, { status: 400 });
 
         const result = await db.query('SELECT * FROM "OTP" WHERE email = $1', [email]);
-        if (result.rowCount === 0) return NextResponse.json({ error: "OTP not found or expired" }, { status: 400 });
+        if ((result.rowCount ?? 0) === 0) return NextResponse.json({ error: "OTP not found or expired" }, { status: 400 });
 
         const storedOtp = result.rows[0].otp;
         const isValid = await bcrypt.compare(otp.toString(), storedOtp);

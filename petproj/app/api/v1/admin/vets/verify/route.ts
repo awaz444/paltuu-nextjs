@@ -99,7 +99,7 @@ export async function PATCH(req: NextRequest) {
             `;
             const result = await db.query(updateQuery, [vet_id]);
 
-            if (result.rowCount === 0) return NextResponse.json({ error: "Vet not found" }, { status: 404 });
+            if ((result.rowCount ?? 0) === 0) return NextResponse.json({ error: "Vet not found" }, { status: 404 });
 
             await db.query(`UPDATE vet_verification_application SET status = 'approved' WHERE vet_id = $1`, [vet_id]);
 
@@ -112,7 +112,7 @@ export async function PATCH(req: NextRequest) {
         } else {
             // Rejection
             const vetResult = await db.query('SELECT user_id FROM vets WHERE vet_id = $1', [vet_id]);
-            if (vetResult.rowCount === 0) return NextResponse.json({ error: "Vet not found" }, { status: 404 });
+            if ((vetResult.rowCount ?? 0) === 0) return NextResponse.json({ error: "Vet not found" }, { status: 404 });
 
             await db.query(`UPDATE vet_verification_application SET status = 'rejected' WHERE vet_id = $1`, [vet_id]);
 

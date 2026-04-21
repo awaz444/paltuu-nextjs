@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     // 1. Fetch user
     const result = await db.query('SELECT user_id, name, email, password, role, profile_image_url FROM users WHERE email = $1', [email]);
     
-    if (result.rowCount === 0) {
+    if ((result.rowCount ?? 0) === 0) {
       return NextResponse.json({ message: "Invalid email or password" }, { status: 401 });
     }
 

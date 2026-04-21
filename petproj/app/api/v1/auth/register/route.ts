@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 
     // 1. Verify OTP
     const otpResult = await db.query('SELECT * FROM "OTP" WHERE email = $1', [email]);
-    if (otpResult.rowCount === 0) {
+    if ((otpResult.rowCount ?? 0) === 0) {
       return NextResponse.json({ message: "OTP not found for this email" }, { status: 400 });
     }
 
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 
     // 2. Check if user already exists
     const userExist = await db.query('SELECT user_id FROM users WHERE email = $1', [email]);
-    if (userExist.rowCount! > 0) {
+    if ((userExist.rowCount ?? 0) > 0) {
       return NextResponse.json({ message: "User already exists" }, { status: 400 });
     }
 

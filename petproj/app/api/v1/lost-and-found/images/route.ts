@@ -32,12 +32,12 @@ export async function POST(req: NextRequest) {
 
         // 1. Ownership Check
         const check = await db.query('SELECT user_id FROM lost_and_found_posts WHERE post_id = $1', [post_id]);
-        if (check.rowCount === 0) return NextResponse.json({ error: "Post not found" }, { status: 404 });
+        if ((check.rowCount ?? 0) === 0) return NextResponse.json({ error: "Post not found" }, { status: 404 });
         if (check.rows[0].user_id !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
         // 2. Limit: One image per post
         const imgCheck = await db.query('SELECT image_id FROM lost_and_found_post_images WHERE post_id = $1', [post_id]);
-        if (imgCheck.rowCount > 0) {
+        if ((imgCheck.rowCount ?? 0) > 0) {
             return NextResponse.json({ error: "Post already has an image. Delete it first." }, { status: 400 });
         }
 

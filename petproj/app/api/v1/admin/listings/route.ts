@@ -52,7 +52,7 @@ export async function PATCH(req: NextRequest) {
             RETURNING *
         `, [approved, pet_id]);
 
-        if (result.rowCount === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
+        if ((result.rowCount ?? 0) === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
         const pet = result.rows[0];
 
         if (approved) {

@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
             WHERE email = $1
         `, [email]);
 
-        if (result.rowCount === 0) return NextResponse.json({ subscribed: false });
+        if ((result.rowCount ?? 0) === 0) return NextResponse.json({ subscribed: false });
         return NextResponse.json({
             subscribed: result.rows[0].subscription_status === 'active',
             details: result.rows[0]
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
         // Check/Upsert
         const check = await db.query('SELECT id, subscription_status FROM newsletter_subscriptions WHERE email = $1', [email]);
 
-        if (check.rowCount > 0) {
+        if ((check.rowCount ?? 0) > 0) {
             if (check.rows[0].subscription_status === 'active') {
                 return NextResponse.json({ error: "Already subscribed" }, { status: 409 });
             }

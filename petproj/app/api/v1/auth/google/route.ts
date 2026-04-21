@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     let userResult = await db.query('SELECT user_id, name, email, role FROM users WHERE email = $1', [email]);
     let user;
 
-    if (userResult.rowCount === 0) {
+    if ((userResult.rowCount ?? 0) === 0) {
       const username = email.split('@')[0];
       const placeholderPassword = await bcrypt.hash(Math.random().toString(36), 10);
       

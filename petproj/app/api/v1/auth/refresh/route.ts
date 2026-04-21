@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     const result = await db.query('SELECT user_id, name, email, role FROM users WHERE user_id = $1', [userId]);
-    if (result.rowCount === 0) {
+    if ((result.rowCount ?? 0) === 0) {
       return NextResponse.json({ message: "User not found" }, { status: 401 });
     }
 

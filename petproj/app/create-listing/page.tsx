@@ -212,7 +212,6 @@ export default function CreatePetListing() {
 
         try {
             const newPet = {
-                owner_id: parseInt(user.id),
                 pet_name: title || null,
                 pet_type: petType ? Number(petType) : null,
                 pet_breed: breed || null,
@@ -312,7 +311,7 @@ export default function CreatePetListing() {
             <div
                 className="fullBody min-h-screen py-12 px-4 sm:px-6"
                 style={{ maxWidth: "1200px", margin: "0 auto" }}>
-                
+
                 {/* Progress Header */}
                 <div className="max-w-xl mx-auto mb-12">
                     <div className="flex justify-between items-center relative">
@@ -324,9 +323,8 @@ export default function CreatePetListing() {
                                         scale: currentStep === step ? 1.2 : 1,
                                         backgroundColor: currentStep >= step ? "var(--primary-color)" : "#e2e8f0",
                                     }}
-                                    className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white transition-all shadow-lg ${
-                                        currentStep >= step ? "shadow-primary/20" : ""
-                                    }`}>
+                                    className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white transition-all shadow-lg ${currentStep >= step ? "shadow-primary/20" : ""
+                                        }`}>
                                     {step}
                                 </motion.div>
                                 <span className={`text-[10px] uppercase tracking-widest mt-3 font-black ${currentStep >= step ? "text-primary" : "text-gray-400"}`}>
@@ -334,7 +332,7 @@ export default function CreatePetListing() {
                                 </span>
                             </div>
                         ))}
-                        <div className="absolute top-6 left-0 right-0 h-[2px] bg-gray-100 -z-0">
+                        <div className="absolute top-6 left-10 right-10 h-[2px] bg-gray-100 -z-0">
                             <motion.div
                                 className="h-full bg-primary"
                                 initial={{ width: "0%" }}
@@ -345,10 +343,10 @@ export default function CreatePetListing() {
                     </div>
                 </div>
 
-                <motion.div 
+                <motion.div
                     layout
                     className="bg-white p-8 sm:p-12 rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] w-full max-w-2xl mx-auto overflow-hidden relative border border-gray-50">
-                    
+
                     <form onSubmit={handleSubmit}>
                         <AnimatePresence mode="wait">
                             {currentStep === 1 && (
@@ -358,7 +356,7 @@ export default function CreatePetListing() {
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
                                     className="space-y-8">
-                                    
+
                                     <div className="text-center mb-10">
                                         <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">The Essentials</h2>
                                         <p className="text-gray-500 font-medium">Start with the fundamental details</p>
@@ -402,11 +400,10 @@ export default function CreatePetListing() {
                                                             key={s}
                                                             type="button"
                                                             onClick={() => setSex(s)}
-                                                            className={`flex-1 py-4 rounded-3xl text-sm font-bold capitalize border transition-all ${
-                                                                sex === s 
-                                                                    ? "border-primary bg-primary/5 text-primary" 
-                                                                    : "border-gray-100 bg-gray-50 text-gray-400"
-                                                            }`}>
+                                                            className={`flex-1 py-4 rounded-3xl text-sm font-bold capitalize border transition-all ${sex === s
+                                                                ? "border-primary bg-primary/5 text-primary"
+                                                                : "border-gray-100 bg-gray-50 text-gray-400"
+                                                                }`}>
                                                             {s}
                                                         </button>
                                                     ))}
@@ -483,7 +480,7 @@ export default function CreatePetListing() {
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
                                     className="space-y-10">
-                                    
+
                                     <div className="text-center mb-8">
                                         <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">Traits & Behavior</h2>
                                         <p className="text-gray-500 font-medium">Describe their unique personality</p>
@@ -539,7 +536,7 @@ export default function CreatePetListing() {
 
                                     <div className="space-y-8">
                                         <h3 className="text-sm font-black text-gray-300 uppercase tracking-[0.2em] text-center italic">Select all that apply</h3>
-                                        
+
                                         <div className="space-y-10">
                                             {["personality", "lifestyle", "compatibility", "health"].map((cat) => (
                                                 <div key={cat} className="space-y-4">
@@ -557,11 +554,10 @@ export default function CreatePetListing() {
                                                                     key={tag.tag_id}
                                                                     type="button"
                                                                     onClick={() => handleTagToggle(tag.tag_id)}
-                                                                    className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border-2 ${
-                                                                        selectedTags.includes(tag.tag_id)
-                                                                            ? "bg-primary border-primary text-white shadow-xl shadow-primary/20"
-                                                                            : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"
-                                                                    }`}>
+                                                                    className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border-2 ${selectedTags.includes(tag.tag_id)
+                                                                        ? "bg-primary border-primary text-white shadow-xl shadow-primary/20"
+                                                                        : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"
+                                                                        }`}>
                                                                     {tag.tag_name}
                                                                 </motion.button>
                                                             ))}
@@ -597,7 +593,7 @@ export default function CreatePetListing() {
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
                                     className="space-y-10">
-                                    
+
                                     <div className="text-center">
                                         <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">Final Details</h2>
                                         <p className="text-gray-500 font-medium">Add photos and a short description</p>

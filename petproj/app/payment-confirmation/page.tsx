@@ -119,13 +119,19 @@ function PaymentConfirmationClient() {
       const sessionId = getOrCreateGuestSessionId();
 
       // Create order with payment proof (server will extract userId from cookie)
-      const response = await fetch('/api/bazaar/orders/create-with-payment', {
+      const response = await fetch('/api/v1/bazaar/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: sessionId,
-          cartData: cartData,
-          paymentProofUrl: paymentProofUrl
+          cartId: cartData.cartId,
+          customerInfo: cartData.customerInfo,
+          shippingAddress: cartData.shippingAddress,
+          paymentMethod: cartData.paymentMethod,
+          paymentProofUrl: paymentProofUrl,
+          shippingAmount: cartData.shippingAmount,
+          discountAmount: cartData.discountAmount,
+          notes: cartData.notes
         }),
         credentials: 'include',
       });

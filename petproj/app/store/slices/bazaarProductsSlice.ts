@@ -7,7 +7,7 @@ export const fetchBazaarProducts = createAsyncThunk<Product[], { admin?: boolean
   async (opts, thunkAPI) => {
     try {
       const query = opts?.admin ? '?admin=true' : '';
-      const res = await fetch(`/api/bazaar/products${query}`);
+      const res = await fetch(`/api/v1/bazaar/products${query}`);
   const data = await res.json();
   // API may return { rows: [...], meta: {...} } or an array or { products: [...] }
   if (data?.rows && Array.isArray(data.rows)) return data.rows as Product[];

@@ -78,7 +78,7 @@ export default function BazaarAdminPage() {
       if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
       if (true) params.set('admin', 'true');
 
-      const res = await fetch(`/api/bazaar/products?${params.toString()}`);
+      const res = await fetch(`/api/v1/bazaar/products?${params.toString()}`);
       if (!res.ok) {
         const text = await res.text();
         message.error(text || 'Failed to fetch products');
@@ -157,7 +157,7 @@ export default function BazaarAdminPage() {
 
   const handleCreateSubmit = async (values: any) => {
     try {
-      const res = await fetch('/api/bazaar/products', {
+      const res = await fetch('/api/v1/bazaar/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values)
@@ -188,7 +188,7 @@ export default function BazaarAdminPage() {
     if (!editingProduct) return { productId: '' };
 
     try {
-      const res = await fetch(`/api/bazaar/products/${editingProduct.product_id}`, {
+      const res = await fetch(`/api/v1/bazaar/products/${editingProduct.product_id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values)

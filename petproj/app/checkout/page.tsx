@@ -92,7 +92,7 @@ const CheckoutPage = () => {
           const userName = user?.name;
           const userEmail = user?.email;
 
-          await fetch('/api/track-checkout-visit', {
+          await fetch('/api/v1/bazaar/track-visit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

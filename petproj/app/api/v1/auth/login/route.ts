@@ -71,8 +71,8 @@ export async function POST(req: Request) {
       role: user.role
     });
 
-    // 4. Return tokens + user info
-    return NextResponse.json({
+    // 4. Set httpOnly cookie for Web clients
+    const response = NextResponse.json({
       success: true,
       ...tokens,
       user: {
@@ -84,6 +84,17 @@ export async function POST(req: Request) {
         profile_image_url: user.profile_image_url || "/default-avatar.png"
       }
     }, { status: 200 });
+
+    // Set cookie
+    response.cookies.set('token', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7 // 7 days (independent of short-lived JWT for safety)
+    });
+
+    return response;
 
   } catch (error) {
     console.error("V1 Login error:", error);

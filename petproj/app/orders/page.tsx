@@ -27,7 +27,7 @@ const AdminOrdersPage = () => {
       const q = new URLSearchParams();
       q.set('admin', 'true');
       if (filter) q.set('status', filter);
-      const res = await fetch(`/api/bazaar/orders?${q.toString()}`);
+      const res = await fetch(`/api/v1/bazaar/orders?${q.toString()}`);
       const data = await res.json();
       setOrders(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -40,7 +40,7 @@ const AdminOrdersPage = () => {
 
   const updateOrder = async (orderId: string, updates: any) => {
     try {
-      const res = await fetch('/api/bazaar/orders', {
+      const res = await fetch('/api/v1/bazaar/orders', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId, updates })
@@ -94,7 +94,7 @@ const AdminOrdersPage = () => {
 
   const viewPaymentProof = async (orderId: number) => {
     try {
-      const res = await fetch(`/api/bazaar/payment-proofs?orderId=${orderId}`);
+      const res = await fetch(`/api/v1/bazaar/payment-proofs?orderId=${orderId}`);
       const data = await res.json();
       if (data.proof) {
         setPaymentProof(data.proof);
@@ -110,7 +110,7 @@ const AdminOrdersPage = () => {
 
   const verifyPaymentProof = async (proofId: number, status: 'approved' | 'rejected', notes: string = '') => {
     try {
-      const res = await fetch('/api/bazaar/payment-proofs', {
+      const res = await fetch('/api/v1/bazaar/payment-proofs', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -61,7 +61,7 @@ const AdminPetApproval: React.FC = () => {
 
     const fetchCities = async () => {
       try {
-        const response = await fetch('/api/cities');
+        const response = await fetch('/api/v1/cities');
         if (!response.ok) {
           throw new Error('Failed to fetch cities');
         }

@@ -73,7 +73,7 @@ export async function POST(req: Request) {
       role: user.role
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       ...tokens,
       user: {
@@ -85,6 +85,17 @@ export async function POST(req: Request) {
         profile_image_url: "/default-avatar.png"
       }
     }, { status: 201 });
+
+    // Set cookie for web clients
+    response.cookies.set('token', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7 // 7 days
+    });
+
+    return response;
 
   } catch (error) {
     console.error("V1 Register error:", error);

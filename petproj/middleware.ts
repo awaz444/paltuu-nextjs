@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
     '/',
   ];
 
-  const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/api/');
+  const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/api/v1/');
 
   // Define admin-only paths
   const adminOnlyPaths = [
@@ -45,7 +45,7 @@ export async function middleware(request: NextRequest) {
 
   const isAdminPath = adminOnlyPaths.includes(pathname);
 
-  if (pathname === '/api/users/logout') {
+  if (pathname === '/api/v1/auth/logout') {
     return NextResponse.next();
   }
 

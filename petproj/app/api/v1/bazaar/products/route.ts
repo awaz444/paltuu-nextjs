@@ -26,33 +26,45 @@ export async function GET(req: NextRequest) {
         const category = searchParams.get('category');
         const collection = searchParams.get('collection');
         const keyword = searchParams.get('keyword');
+        const isAdminRequest = searchParams.get('admin') === 'true';
 
-        // Dynamic Cache Key
-        const cacheKey = `v1:products:page=${page}:limit=${limit}:cat=${category || ''}:col=${collection || ''}:kw=${keyword || ''}`;
-
-        // Cache Hit Check
-        try {
-            const cached = await safeRedis.get(cacheKey);
-            if (cached) return NextResponse.json(JSON.parse(cached));
-        } catch (e) { console.warn("[Cache] Redis hit failure:", e); }
+        // Auth check for admin request
+        let finalIsAdmin = false;
+        if (isAdminRequest) {
+            const user = await getUserFromRequest(req);
+            if (user?.role === 'admin') finalIsAdmin = true;
+        }
 
         // Build Query
-        const conditions: string[] = ["p.status = 'published'"];
+        const conditions: string[] = [];
         const values: any[] = [];
         let pIdx = 1;
 
-        if (keyword) { values.push(`%${keyword}%`); conditions.push(`(p.title ILIKE $${pIdx} OR p.description ILIKE $${pIdx++})`); }
+        if (!finalIsAdmin) {
+            conditions.push("p.status = 'published'");
+        } else {
+            const status = searchParams.get('status');
+            if (status && status !== 'all') {
+                values.push(status);
+                conditions.push(`p.status = $${pIdx++}`);
+            }
+        }
+
+        if (keyword) { 
+            values.push(`%${keyword}%`); 
+            conditions.push(`(p.title ILIKE $${pIdx} OR p.description ILIKE $${pIdx++})`); 
+        }
         
         if (category) {
-            if (!isNaN(Number(category))) { values.push(Number(category)); conditions.push(`EXISTS (SELECT 1 FROM bazaar_product_categories bpc WHERE bpc.product_id = p.product_id AND bpc.category_id = $${pIdx++})`); }
-            else { values.push(category); conditions.push(`EXISTS (SELECT 1 FROM bazaar_product_categories bpc JOIN bazaar_categories bc ON bpc.category_id = bc.category_id WHERE bpc.product_id = p.product_id AND bc.name ILIKE $${pIdx++})`); }
+            values.push(category);
+            conditions.push(`EXISTS (SELECT 1 FROM bazaar_product_categories bpc JOIN bazaar_categories bc ON bpc.category_id = bc.category_id WHERE bpc.product_id = p.product_id AND (bc.name ILIKE $${pIdx} OR bc.slug = $${pIdx++}))`);
         }
 
         const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : "";
 
-        // Main Query (Simplified for V1)
+        // Main Query
         const query = `
-            SELECT p.product_id, p.title, p.slug, p.price, p.currency, p.featured,
+            SELECT p.*,
                 COALESCE((SELECT json_agg(url ORDER BY ordering) FROM bazaar_product_media m WHERE m.product_id = p.product_id), '[]'::json) AS images,
                 COALESCE((SELECT json_agg(json_build_object('category_id', c.category_id, 'name', c.name)) FROM bazaar_categories c JOIN bazaar_product_categories bpc ON c.category_id = bpc.category_id WHERE bpc.product_id = p.product_id), '[]'::json) AS categories
             FROM bazaar_products p
@@ -66,12 +78,9 @@ export async function GET(req: NextRequest) {
         const total = parseInt(countRes.rows[0].count, 10);
 
         const response = {
-            data: result.rows,
+            rows: result.rows,
             meta: { total, page, limit, totalPages: Math.ceil(total / limit) }
         };
-
-        // Cache Set
-        try { await safeRedis.set(cacheKey, JSON.stringify(response), 'EX', CACHE_TTL_SEC); } catch (e) {}
 
         return NextResponse.json(response);
 
@@ -88,13 +97,33 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized. Admin role required." }, { status: 403 });
         }
 
-        // Migration note: The full product creation logic is very long (variants, etc.).
-        // We'll keep this as a proxy to the main bazaar logic for now or implement a clean V1 version.
-        // For brevity in this turn, I'm providing the GET optimization. 
-        // Admin operations are usually handled by the web dashboard.
-        return NextResponse.json({ message: "Admin POST not yet implemented in V1" }, { status: 501 });
+        const body = await req.json();
+        const { title, description, price, sku, category_id, status = 'draft' } = body;
+
+        if (!title || !price) {
+            return NextResponse.json({ error: "Title and price are required" }, { status: 400 });
+        }
+
+        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+        const query = `
+            INSERT INTO bazaar_products (title, slug, description, price, sku, status, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+            RETURNING *
+        `;
+
+        const result = await db.query(query, [title, slug, description, price, sku, status]);
+        const product = result.rows[0];
+
+        if (category_id) {
+            await db.query(`INSERT INTO bazaar_product_categories (product_id, category_id) VALUES ($1, $2)`, [product.product_id, category_id]);
+        }
+
+        return NextResponse.json(product, { status: 201 });
 
     } catch (error) {
+        console.error("V1 Products POST error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+

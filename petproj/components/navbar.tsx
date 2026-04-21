@@ -930,7 +930,7 @@ const Navbar = ({
                   </div>
                 </button>
 
-                {(isAuthenticated || session) && isDropdownOpen && (
+                {isAuthenticated && isDropdownOpen && (
                   <div
                     className="dropdown-menu absolute right-0 bg-white shadow-lg z-20 rounded-2xl py-2 text-sm font-medium"
                     style={{

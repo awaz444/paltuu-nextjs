@@ -397,7 +397,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                         <Button
                             icon={<CopyOutlined className="text-primary" />}
                             size="small"
-                            onClick={() => handleCopy(pet.contact_number)}
+                            onClick={() => pet.contact_number && handleCopy(pet.contact_number)}
                             className="border-none shadow-none"
                         />
                     </div>
@@ -407,7 +407,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                         block
                         icon={<WhatsAppOutlined />}
                         className="bg-green-500 hover:bg-green-600 text-white h-12 rounded-lg flex items-center justify-center"
-                        onClick={() => handleWhatsApp(pet.contact_number)}>
+                        onClick={() => pet.contact_number && handleWhatsApp(pet.contact_number)}>
                         Message via WhatsApp
                     </Button>
                 </div>

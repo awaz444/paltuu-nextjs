@@ -92,13 +92,13 @@ const UserListingsPage = () => {
                         'Content-Type': 'application/json',
                     },
                 });
-                
+
                 if (!listingsResponse.ok) {
                     throw new Error("Failed to fetch listings");
                 }
                 const listingsData = await listingsResponse.json();
                 setListings(listingsData.listings || []);
-                lastFetchedUserId.current = user.id;
+                lastFetchedUserId.current = user.id!;
 
                 setIsLoading(false);
             } catch (err) {
@@ -150,7 +150,7 @@ const UserListingsPage = () => {
 
     return (
         <>
-            
+
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
                 <header className="bg-white text-primary border border-1 border-primary p-8 rounded-2xl shadow-lg mb-10">
                     <div className="flex flex-col md:flex-row items-center gap-6">

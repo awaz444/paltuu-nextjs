@@ -29,7 +29,10 @@ export async function GET(req: NextRequest) {
         return NextResponse.json(result.rows);
     } catch (error) {
         console.error("V1 Notifications GET Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ 
+            error: "Failed to fetch notifications", 
+            details: error instanceof Error ? error.message : String(error) 
+        }, { status: 500 });
     }
 }
 

@@ -5,7 +5,7 @@ import { RootState } from '../store'; // Ensure this path is correct
 // Assuming your Pet type is defined like this
 export type Pet = {
   pet_id: number; // assuming this exists
-  owner_id: number;
+  owner_id?: number;
     pet_name: string | null;
     pet_type: number | null;
     pet_breed: string | null;

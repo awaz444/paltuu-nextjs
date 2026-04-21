@@ -46,21 +46,31 @@ export const authOptions: NextAuthOptions = {
       // 2. Specialized handling for Google to get the database's integer user_id
       if (account?.provider === "google" && profile?.email) {
         try {
-          const res = await db.query(
+          let res = await db.query(
             "SELECT user_id, role FROM users WHERE email = $1", 
             [profile.email]
           );
           
+          // Auto-register Google users if they don't exist
+          if (res.rows.length === 0) {
+            console.log(`[Auth] Auto-registering Google user: ${profile.email}`);
+            const randomPassword = require('crypto').randomBytes(32).toString('hex');
+            const hashedPassword = await bcrypt.hash(randomPassword, 10);
+            
+            res = await db.query(
+              "INSERT INTO users (name, email, password, role, profile_image_url, oauth_provider, oauth_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING user_id, role",
+              [profile.name || "Google User", profile.email, hashedPassword, 'regular user', (profile as any).picture || null, "google", profile.sub]
+            );
+          }
+
           if (res.rows.length > 0) {
             token.id = res.rows[0].user_id;
             token.user_id = res.rows[0].user_id;
             token.role = res.rows[0].role || 'regular user';
             console.log(`[Auth] Mapped Google user ${profile.email} to DB ID ${token.id}`);
-          } else {
-            console.warn(`[Auth] Google user ${profile.email} not found in DB users table`);
           }
         } catch (dbError) {
-          console.error("[Auth] Database error mapping Google user:", dbError);
+          console.error("[Auth] Database error mapping/creating Google user:", dbError);
         }
       }
       return token;

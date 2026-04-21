@@ -33,6 +33,8 @@ export type PetWithImages = {
     owner_email?: string;
     owner_phone?: string;
     owner_image?: string | null;
+    shelter_id?: number | null;
+    shop_id?: number | null;
     image_id: number | null;
     image_url: string | null;
     additional_images: Array<{ image_url: string }>;

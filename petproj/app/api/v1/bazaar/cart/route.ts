@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
         `, [userId, sessionId]);
 
         let cartId;
-        if (cartRes.rowCount === 0) {
+        if ((cartRes.rowCount ?? 0) === 0) {
             // Auto-initialize cart to prevent frontend hydration issues
             const newCart = await db.query(`
                 INSERT INTO bazaar_carts (user_id, session_id, expires_at)
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
         `, [userId, sessionId]);
 
         let cartId;
-        if (cartRes.rowCount === 0) {
+        if ((cartRes.rowCount ?? 0) === 0) {
             const newCart = await db.query(`
                 INSERT INTO bazaar_carts (user_id, session_id, created_at, updated_at, expires_at)
                 VALUES ($1, $2, NOW(), NOW(), NOW() + INTERVAL '30 days') RETURNING cart_id
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
             WHERE cart_id = $1 AND product_id = $2 AND (variant_id = $3 OR (variant_id IS NULL AND $3 IS NULL))
         `, [cartId, productId, variantId]);
 
-        if (existing.rowCount > 0) {
+        if ((existing.rowCount ?? 0) > 0) {
             await db.query(`
                 UPDATE bazaar_cart_items SET quantity = quantity + $1, updated_at = NOW()
                 WHERE cart_item_id = $2

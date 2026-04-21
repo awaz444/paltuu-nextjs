@@ -95,4 +95,3 @@ export async function POST(req: Request) {
 export async function OPTIONS() {
   return new Response(null, { status: 200 });
 }
-

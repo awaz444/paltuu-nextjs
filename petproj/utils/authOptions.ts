@@ -47,16 +47,16 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "google" && profile?.email) {
         try {
           let res = await db.query(
-            "SELECT user_id, role FROM users WHERE email = $1", 
+            "SELECT user_id, role FROM users WHERE email = $1",
             [profile.email]
           );
-          
+
           // Auto-register Google users if they don't exist
           if (res.rows.length === 0) {
             console.log(`[Auth] Auto-registering Google user: ${profile.email}`);
             const randomPassword = require('crypto').randomBytes(32).toString('hex');
             const hashedPassword = await bcrypt.hash(randomPassword, 10);
-            
+
             res = await db.query(
               "INSERT INTO users (name, email, password, role, profile_image_url, oauth_provider, oauth_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING user_id, role",
               [profile.name || "Google User", profile.email, hashedPassword, 'regular user', (profile as any).picture || null, "google", profile.sub]
@@ -68,6 +68,28 @@ export const authOptions: NextAuthOptions = {
             token.user_id = res.rows[0].user_id;
             token.role = res.rows[0].role || 'regular user';
             console.log(`[Auth] Mapped Google user ${profile.email} to DB ID ${token.id}`);
+
+            // Also generate and set the mobile compatible JWT token cookie here so the rest of the app can read it
+            try {
+              const { generateMobileTokenPair } = require("@/utils/mobileAuth");
+              const { cookies } = require("next/headers");
+              const tokens = await generateMobileTokenPair({
+                user_id: res.rows[0].user_id,
+                email: profile.email,
+                role: res.rows[0].role || 'regular user'
+              });
+
+              cookies().set('token', tokens.accessToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/',
+                maxAge: 60 * 60 * 24 * 7 // 7 days
+              });
+              console.log(`[Auth] Set custom JWT token cookie for Google user ${profile.email}`);
+            } catch (err) {
+              console.error("[Auth] Failed to set custom JWT token for Google user", err);
+            }
           }
         } catch (dbError) {
           console.error("[Auth] Database error mapping/creating Google user:", dbError);

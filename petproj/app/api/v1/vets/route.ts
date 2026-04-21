@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
                 u.profile_image_url 
             FROM vets v
             JOIN users u ON v.user_id = u.user_id
-            WHERE v.is_verified = true
+            WHERE v.approved = true
             ORDER BY v.created_at DESC
         `);
         return NextResponse.json(result.rows);

@@ -1,8 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const apiKey = process.env.API_KEY as string;
-// const apiKey = process.env.GOOGLE_GEMINI_API_KEY as string;
+const apiKey = process.env.GOOGLE_GEMINI_API_KEY as string;
 const modelName = process.env.GOOGLE_GEMINI_MODEL || "gemini-1.5-flash";
 const genAI = new GoogleGenerativeAI(apiKey);
 
@@ -14,7 +13,7 @@ const genAI = new GoogleGenerativeAI(apiKey);
  *     tags: [v1 LLM]
  */
 
-async function generateWithRetry(model: any, content: any[], maxRetries: number = 3): Promise<string> {
+async function generateWithRetry(model: any, content: any, maxRetries: number = 3): Promise<string> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             const result = await model.generateContent(content);
@@ -50,16 +49,17 @@ You provide expert advice on:
 - Nutrition guidance
 - Common pet problems and solutions
 
-Be friendly, informative, and professional. Always recommend consulting a veterinarian for serious health issues.`;
+Be friendly, informative, and professional. Always recommend consulting a veterinarian for serious health issues.
+IMPORTANT: Respond directly using markdown. Do NOT use conversational filler like "Here is the response" or "Here is the answer".
+
+User Question:
+${prompt}`;
 
         const model = genAI.getGenerativeModel({ model: modelName });
 
-        const text = await generateWithRetry(model, [
-            { text: systemPrompt },
-            { text: prompt }
-        ]);
+        const text = await generateWithRetry(model, systemPrompt);
 
-        return NextResponse.json({ success: true, response: text });
+        return NextResponse.json({ success: true, data: text });
     } catch (error) {
         console.error("LLM Error:", error);
         const errorMessage = error instanceof Error ? error.message : "Internal Server Error";

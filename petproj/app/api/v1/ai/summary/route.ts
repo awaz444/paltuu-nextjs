@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
             - Why this pet is special
 
             Keep the tone professional and encouraging.
+            IMPORTANT: Output ONLY the markdown content. Do NOT include conversational filler like "Here is a response for ai summary for this product" or "Here is the summary you requested". Only output the generated markdown.
         `;
 
         const model = genAI.getGenerativeModel({ model: modelName });

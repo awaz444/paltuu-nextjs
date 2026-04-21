@@ -90,6 +90,7 @@ export async function getUserFromRequest(req: NextRequest): Promise<JWTPayload |
         id: nextAuthToken.user_id || nextAuthToken.sub || nextAuthToken.id,
         email: nextAuthToken.email,
         name: nextAuthToken.name,
+        role: nextAuthToken.role || 'regular user',
       } as JWTPayload;
     }
 

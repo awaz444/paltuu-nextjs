@@ -49,7 +49,7 @@ export default function ChatBot() {
         setLoading(true);
 
         try {
-            const response = await fetch("/api/llm", {
+            const response = await fetch("/api/v1/llm", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ prompt: userInput }),

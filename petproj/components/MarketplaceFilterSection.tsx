@@ -38,8 +38,8 @@ const MarketplaceFilterSection: React.FC<MarketplaceFilterSectionProps> = ({
         const loadFilterData = async () => {
             try {
                 const [categoriesRes, collectionsRes] = await Promise.all([
-                    fetch('/api/bazaar/categories'),
-                    fetch('/api/bazaar/collections')
+                    fetch('/api/v1/bazaar/categories'),
+                    fetch('/api/v1/bazaar/collections')
                 ]);
 
                 if (categoriesRes.ok) {

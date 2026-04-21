@@ -12,7 +12,7 @@ interface CatalogueFilterProps {
 const CatalogueFilter: React.FC<CatalogueFilterProps> = ({ onFilterChange }) => {
   const [categories, setCategories] = useState<any[]>([]);
   const [collections, setCollections] = useState<any[]>([]);
-  
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
   const [keyword, setKeyword] = useState<string>("");
@@ -22,10 +22,10 @@ const CatalogueFilter: React.FC<CatalogueFilterProps> = ({ onFilterChange }) => 
     const fetchData = async () => {
       try {
         const [catsRes, colsRes] = await Promise.all([
-          fetch("/api/bazaar/categories"),
-          fetch("/api/bazaar/collections")
+          fetch("/api/v1/bazaar/categories"),
+          fetch("/api/v1/bazaar/collections")
         ]);
-        
+
         if (catsRes.ok) setCategories(await catsRes.json());
         if (colsRes.ok) setCollections(await colsRes.json());
       } catch (err) {
@@ -48,7 +48,7 @@ const CatalogueFilter: React.FC<CatalogueFilterProps> = ({ onFilterChange }) => 
     <Card className="shadow-sm rounded-2xl border-none mb-6">
       <div className="flex flex-col lg:flex-row items-center gap-4">
         <div className="w-full lg:flex-1">
-          <Input 
+          <Input
             prefix={<SearchOutlined className="text-gray-400" />}
             size="large"
             placeholder="Search master catalogue by name, SKU or description..."
@@ -64,7 +64,7 @@ const CatalogueFilter: React.FC<CatalogueFilterProps> = ({ onFilterChange }) => 
         <Space className="w-full lg:w-auto" size="middle">
           <div className="flex items-center gap-2">
             <FilterOutlined className="text-[#a03048]" />
-            <Select 
+            <Select
               size="large"
               placeholder="Category"
               className="w-40 rounded-lg"
@@ -78,7 +78,7 @@ const CatalogueFilter: React.FC<CatalogueFilterProps> = ({ onFilterChange }) => 
             />
           </div>
 
-          <Select 
+          <Select
             size="large"
             placeholder="Animal Type"
             className="w-40 rounded-lg"

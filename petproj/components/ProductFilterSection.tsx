@@ -30,7 +30,7 @@ const ProductFilterSection: React.FC<ProductFilterSectionProps> = ({ filters, on
   ];
 
   useEffect(() => {
-    fetch("/api/bazaar/categories").then(res => res.json()).then(data => setCategories(data || [])).catch(console.error);
+    fetch("/api/v1/bazaar/categories").then(res => res.json()).then(data => setCategories(data || [])).catch(console.error);
   }, []);
 
   useEffect(() => {

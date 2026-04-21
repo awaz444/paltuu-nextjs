@@ -70,7 +70,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
     const handleDelete = async (petId: number) => {
         dispatch(fetchAdoptionPets({}));
         dispatch(fetchFosterPets());
-        const response = await fetch("/api/pets", {
+        const response = await fetch("/api/v1/pets", {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
@@ -112,7 +112,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
         dispatch(fetchAdoptionPets({}));
         dispatch(fetchFosterPets());
 
-        const response = await fetch("/api/pets", {
+        const response = await fetch("/api/v1/pets", {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",

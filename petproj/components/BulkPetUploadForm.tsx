@@ -1,15 +1,15 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { 
-  Form, 
-  Input, 
-  Select, 
-  Button, 
-  Upload, 
-  Card, 
-  Row, 
-  Col, 
-  Switch, 
+import {
+  Form,
+  Input,
+  Select,
+  Button,
+  Upload,
+  Card,
+  Row,
+  Col,
+  Switch,
   InputNumber,
   message,
   Progress,
@@ -18,11 +18,11 @@ import {
   Typography,
   Alert
 } from 'antd';
-import { 
-  PlusOutlined, 
-  DeleteOutlined, 
+import {
+  PlusOutlined,
+  DeleteOutlined,
   UploadOutlined,
-  InfoCircleOutlined 
+  InfoCircleOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 
@@ -53,10 +53,10 @@ interface BulkPetUploadFormProps {
   entityAddress?: string;
 }
 
-export default function BulkPetUploadForm({ 
-  entityType, 
-  entityId, 
-  entityName, 
+export default function BulkPetUploadForm({
+  entityType,
+  entityId,
+  entityName,
   showPrice,
   entityAddress
 }: BulkPetUploadFormProps) {
@@ -78,7 +78,7 @@ export default function BulkPetUploadForm({
       images: []
     }
   ]);
-  
+
   const [petCategories, setPetCategories] = useState<Array<{category_id: number, category_name: string}>>([]);
   const [cities, setCities] = useState<Array<{city_id: number, city_name: string}>>([]);
   const [uploading, setUploading] = useState(false);
@@ -92,7 +92,7 @@ export default function BulkPetUploadForm({
 
   const fetchPetCategories = async () => {
     try {
-      const response = await fetch('/api/pet-categories');
+      const response = await fetch('/api/v1/pet-categories');
       const data = await response.json();
       if (response.ok) {
         // Handle both old format (data.categories) and new format (data directly)
@@ -108,7 +108,7 @@ export default function BulkPetUploadForm({
 
   const fetchCities = async () => {
     try {
-      const response = await fetch('/api/cities');
+      const response = await fetch('/api/v1/cities');
       const data = await response.json();
       if (response.ok) {
         // Handle both old format (data.cities) and new format (data directly)
@@ -158,7 +158,7 @@ export default function BulkPetUploadForm({
 
   const validatePetForm = (petData: PetFormData): string[] => {
     const errors: string[] = [];
-    
+
     if (!petData.pet_name.trim()) errors.push('Pet name is required');
     if (!petData.pet_type) errors.push('Pet type is required');
     if (!petData.age && !petData.months) errors.push('Age or months is required');
@@ -166,7 +166,7 @@ export default function BulkPetUploadForm({
     if (showPrice && (!petData.price || petData.price <= 0)) errors.push('Price is required for shops');
     if (petData.images.length === 0) errors.push('At least one image is required');
     if (petData.images.length > 5) errors.push('Maximum 5 images allowed per pet');
-    
+
     return errors;
   };
 
@@ -202,7 +202,7 @@ export default function BulkPetUploadForm({
       // Process each pet
       for (let i = 0; i < petForms.length; i++) {
         const petData = petForms[i];
-        
+
         try {
           // Prepare pet data for bulk upload (without images first)
           const petRecord = {
@@ -233,7 +233,7 @@ export default function BulkPetUploadForm({
           };
 
           // Create pet first to get pet_id
-          const response = await fetch('/api/pets/bulk-upload', {
+          const response = await fetch('/api/v1/pets/bulk-upload', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -250,7 +250,7 @@ export default function BulkPetUploadForm({
           }
 
           const result = await response.json();
-          
+
           if (result.success) {
             // Upload images if pet was created successfully and has images
             if (petData.images && petData.images.length > 0) {
@@ -262,14 +262,14 @@ export default function BulkPetUploadForm({
                 message.warning(`Pet created but images failed to upload for ${petData.pet_name}`);
               }
             }
-            
+
             successCount++;
             setUploadedCount(successCount);
             setUploadProgress((successCount / totalPets) * 100);
           } else {
             throw new Error(result.error || 'Upload failed');
           }
-          
+
         } catch (error) {
           console.error(`Error uploading pet ${i + 1}:`, error);
           message.error(`Failed to upload pet ${i + 1}: ${petData.pet_name}`);
@@ -367,8 +367,8 @@ export default function BulkPetUploadForm({
         <Card>
           <div className="text-center">
             <Title level={4}>Uploading Pets...</Title>
-            <Progress 
-              percent={Math.round(uploadProgress)} 
+            <Progress
+              percent={Math.round(uploadProgress)}
               status={uploadProgress === 100 ? 'success' : 'active'}
             />
             <Text>{uploadedCount} of {petForms.length} pets uploaded</Text>

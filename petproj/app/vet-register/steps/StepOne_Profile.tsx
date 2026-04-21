@@ -33,7 +33,7 @@ const StepOne_Profile: React.FC<StepOneProps> = ({ formData, setFormData, next, 
         const uploadFormData = new FormData();
         uploadFormData.append('file', file.originFileObj);
 
-        const response = await fetch('/api/upload-vet-image', {
+        const response = await fetch('/api/v1/upload/vet', {
           method: 'POST',
           body: uploadFormData,
         });

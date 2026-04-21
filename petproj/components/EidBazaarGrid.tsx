@@ -68,7 +68,7 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
             setSelectedImageIndex(0);
         }
     }, [selectedAnimal]);
-    
+
 
     const handleCreateSubmit = async (
         values: any
@@ -98,7 +98,7 @@ const EidBazaarGrid: React.FC<EidBazaarGridProps> = ({ animals }) => {
                 city: values.city,
             };
 
-            const response = await fetch("/api/qurbani-animals", {
+            const response = await fetch("/api/v1/qurbani/animals", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -71,7 +71,7 @@ export default function ReportIssueModal({ onClose, visible }: Props) {
       formData.append('description', description.trim());
       if (file) formData.append('screenshot', file);
 
-      const res = await fetch('/api/issues', {
+      const res = await fetch('/api/v1/issues', {
         method: 'POST',
         body: formData,
       });
@@ -159,9 +159,9 @@ export default function ReportIssueModal({ onClose, visible }: Props) {
                     <div className="font-medium truncate">{file.name}</div>
                     <div className="text-xs text-gray-500">{formatBytes(file.size)}</div>
                   </div>
-                  <button 
-                    type="button" 
-                    onClick={removeFile} 
+                  <button
+                    type="button"
+                    onClick={removeFile}
                     className="text-gray-500 hover:text-gray-700"
                   >
                     <CloseOutlined />

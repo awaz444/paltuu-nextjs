@@ -6,8 +6,8 @@ import ReactMarkdown from 'react-markdown';
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 
 export default function ChatBot() {
-  
-  
+
+
 
   const [userInput, setUserInput] = useState('');
   const [chatLog, setChatLog] = useState<{ user: string; ai: string }[]>([]);
@@ -22,7 +22,7 @@ export default function ChatBot() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/llm', {
+      const response = await fetch('/api/v1/llm', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,7 +63,7 @@ export default function ChatBot() {
 
   return (
     <div className="h-screen flex flex-col">
-      
+
       <main className="flex-1 flex items-center justify-center bg-gray-100 p-4">
         {/* Chat Container (Fixed Height) */}
         <div className="w-full max-w-2xl bg-white rounded-xl shadow-md p-6 h-[80vh] flex flex-col">

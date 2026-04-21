@@ -10,10 +10,10 @@ interface AnimalPhotosUploadProps {
     onBack: () => void;
 }
 
-const AnimalPhotosUpload: React.FC<AnimalPhotosUploadProps> = ({ 
-    animalId, 
+const AnimalPhotosUpload: React.FC<AnimalPhotosUploadProps> = ({
+    animalId,
     onComplete,
-    onBack 
+    onBack
 }) => {
     const [fileList, setFileList] = useState<any[]>([]);
     const [uploading, setUploading] = useState(false);
@@ -23,13 +23,13 @@ const AnimalPhotosUpload: React.FC<AnimalPhotosUploadProps> = ({
             setUploading(true);
             const formData = new FormData();
             formData.append('animal_id', animalId); // No .toString() needed
-            
+
             fileList.forEach(file => {
                 formData.append('files', file.originFileObj);
             });
 
             // Updated endpoint to match your API
-            const response = await fetch('/api/qurbani-animals/images', {
+            const response = await fetch('/api/v1/qurbani/animals/images', {
                 method: 'POST',
                 body: formData,
             });
@@ -42,7 +42,7 @@ const AnimalPhotosUpload: React.FC<AnimalPhotosUploadProps> = ({
             message.success('Photos uploaded successfully!');
             onComplete();
         } catch (error) {
-            
+
         } finally {
             setUploading(false);
         }

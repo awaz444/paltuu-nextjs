@@ -310,7 +310,7 @@ function InlineEditPetForm({ pet, onUpdated, onDeleted }: { pet: any, onUpdated:
   const handleSave = async () => {
     try {
       setSaving(true);
-      const res = await fetch('/api/pets', {
+      const res = await fetch('/api/v1/pets', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -339,7 +339,7 @@ function InlineEditPetForm({ pet, onUpdated, onDeleted }: { pet: any, onUpdated:
   const handleDelete = async () => {
     try {
       setDeleting(true);
-      const res = await fetch('/api/pets', {
+      const res = await fetch('/api/v1/pets', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pet_id: pet.pet_id })
@@ -480,35 +480,35 @@ function MyListingsContent() {
       try {
         const uid = user?.id || user?.user_id;
         if (!uid) throw new Error('User not found');
-        
+
         // Fetch pets and applications in parallel
         const [petsRes, appsRes] = await Promise.all([
           fetch(`/api/v1/profile/listings`),
           fetch(`/api/get-shelter-applications/${uid}`)
         ]);
-        
+
         if (!petsRes.ok) throw new Error('Failed to load listings');
         const petsData = await petsRes.json();
         const pets = petsData.listings || [];
-        
+
         let applications = [];
         if (appsRes.ok) {
           const appsData = await appsRes.json();
           applications = appsData.applications || [];
         }
-        
+
         // Create a map of pet_id to application count
         const petAppCounts = applications.reduce((acc: Record<number, number>, app: any) => {
           acc[app.pet_id] = (acc[app.pet_id] || 0) + 1;
           return acc;
         }, {});
-        
+
         // Add application counts to pets
         const petsWithAppCounts = pets.map((pet: any) => ({
           ...pet,
           applicationCount: petAppCounts[pet.pet_id] || 0
         }));
-        
+
         setPets(petsWithAppCounts);
         setPetsWithApplications(petsWithAppCounts.filter((pet: any) => pet.applicationCount > 0));
         setTotalApplications(applications.length);
@@ -544,7 +544,7 @@ function MyListingsContent() {
       const response = await fetch(`/api/accept-adoption-application/${applicationId}`, {
         method: 'POST'
       });
-      
+
       if (response.ok) {
         message.success('Application accepted successfully!');
         // Refresh data
@@ -554,28 +554,28 @@ function MyListingsContent() {
             fetch(`/api/my-listings/${uid}`),
             fetch(`/api/get-shelter-applications/${uid}`)
           ]);
-          
+
           if (petsRes.ok && appsRes.ok) {
             const petsData = await petsRes.json();
             const appsData = await appsRes.json();
             const pets = petsData.listings || [];
             const applications = appsData.applications || [];
-            
+
             const petAppCounts = applications.reduce((acc: Record<number, number>, app: any) => {
               acc[app.pet_id] = (acc[app.pet_id] || 0) + 1;
               return acc;
             }, {});
-            
+
             const petsWithAppCounts = pets.map((pet: any) => ({
               ...pet,
               applicationCount: petAppCounts[pet.pet_id] || 0
             }));
-            
+
             setPets(petsWithAppCounts);
             setPetsWithApplications(petsWithAppCounts.filter((pet: any) => pet.applicationCount > 0));
             setTotalApplications(applications.length);
             setAllApplications(applications);
-            
+
             // Update modal data
             const updatedPetApps = applications.filter((app: any) => app.pet_id === selectedPet.pet_id);
             setPetApplications(updatedPetApps);
@@ -595,7 +595,7 @@ function MyListingsContent() {
       const response = await fetch(`/api/reject-adoption-application/${applicationId}`, {
         method: 'POST'
       });
-      
+
       if (response.ok) {
         message.success('Application rejected');
         // Refresh data
@@ -605,28 +605,28 @@ function MyListingsContent() {
             fetch(`/api/my-listings/${uid}`),
             fetch(`/api/get-shelter-applications/${uid}`)
           ]);
-          
+
           if (petsRes.ok && appsRes.ok) {
             const petsData = await petsRes.json();
             const appsData = await appsRes.json();
             const pets = petsData.listings || [];
             const applications = appsData.applications || [];
-            
+
             const petAppCounts = applications.reduce((acc: Record<number, number>, app: any) => {
               acc[app.pet_id] = (acc[app.pet_id] || 0) + 1;
               return acc;
             }, {});
-            
+
             const petsWithAppCounts = pets.map((pet: any) => ({
               ...pet,
               applicationCount: petAppCounts[pet.pet_id] || 0
             }));
-            
+
             setPets(petsWithAppCounts);
             setPetsWithApplications(petsWithAppCounts.filter((pet: any) => pet.applicationCount > 0));
             setTotalApplications(applications.length);
             setAllApplications(applications);
-            
+
             // Update modal data
             const updatedPetApps = applications.filter((app: any) => app.pet_id === selectedPet.pet_id);
             setPetApplications(updatedPetApps);
@@ -727,7 +727,7 @@ function MyListingsContent() {
       )}
       {/* Dashboard Stats */}
       <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6">
-        <div 
+        <div
           className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 md:p-5 rounded-xl border border-blue-200 cursor-pointer hover:shadow-md transition-all duration-200"
           onClick={() => setShowOnlyWithApplications(false)}
         >
@@ -741,7 +741,7 @@ function MyListingsContent() {
             </div>
           </div>
         </div>
-        <div 
+        <div
           className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 md:p-5 rounded-xl border border-purple-200 cursor-pointer hover:shadow-md transition-all duration-200 relative overflow-hidden"
           onClick={() => setShowOnlyWithApplications(true)}
         >
@@ -749,12 +749,12 @@ function MyListingsContent() {
             <div className="relative w-12 h-12 md:w-14 md:h-14 flex-shrink-0">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 48 48">
                 <circle cx="24" cy="24" r="20" fill="none" stroke="#e9d5ff" strokeWidth="4"/>
-                <circle 
-                  cx="24" 
-                  cy="24" 
-                  r="20" 
-                  fill="none" 
-                  stroke="#9333ea" 
+                <circle
+                  cx="24"
+                  cy="24"
+                  r="20"
+                  fill="none"
+                  stroke="#9333ea"
                   strokeWidth="4"
                   strokeDasharray={`${(totalApplications / Math.max(pets.length, 1)) * 125.6} 125.6`}
                   strokeLinecap="round"
@@ -778,8 +778,8 @@ function MyListingsContent() {
       {/* Pet Grid - Circular Floating Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-12 lg:gap-16 pl-4 md:pl-8">
         {displayPets.map((pet) => (
-          <div 
-            key={pet.pet_id} 
+          <div
+            key={pet.pet_id}
             className="flex flex-col items-center cursor-pointer group relative"
             style={{ boxShadow: 'none' }}
             onClick={() => handlePetClick(pet)}
@@ -789,8 +789,8 @@ function MyListingsContent() {
               {/* Circular Pet Image with Name Overlay */}
               <div className="w-full h-full rounded-full overflow-hidden transition-none shadow-none border-4 border-blue-200 bg-white" style={{ boxShadow: 'none', filter: 'none' }}>
               { (pet.primary_image || pet.image_url) ? (
-                <img 
-                  src={pet.primary_image || pet.image_url} 
+                <img
+                  src={pet.primary_image || pet.image_url}
                   alt={pet.pet_name}
                     className="w-full h-full object-cover"
                     style={{ boxShadow: 'none', filter: 'none' }}
@@ -800,7 +800,7 @@ function MyListingsContent() {
                   <Image src="/rescuepaw.png" alt="Pet" width={40} height={40} className="w-10 h-10 opacity-60" />
                 </div>
               )}
-              
+
                  {/* Pet Name and Age Overlay (no gradient/shadow) */}
                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-transparent">
                   <h3 className="text-sm font-semibold text-white text-center truncate">
@@ -819,9 +819,9 @@ function MyListingsContent() {
                 </div>
               )}
             </div>
-            
+
             {/* Edit Icon - Outside Circle */}
-            <div 
+            <div
               className="absolute -top-1 -left-1 bg-white rounded-full p-2 border-2 border-blue-200 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 z-50 cursor-pointer"
               onClick={(e) => handleEditPet(pet, e)}
             >
@@ -856,7 +856,7 @@ function MyListingsContent() {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6">
               {petApplications.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">

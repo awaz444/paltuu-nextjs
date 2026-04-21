@@ -19,9 +19,9 @@ const VerificationInfoContent  = () => {
   const [previewImage, setPreviewImage] = useState("");
   const [userId, setUserId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const router = useRouter();
-  
+
 
   const searchParams = useSearchParams();
   const vetId = searchParams.get("vet_id");
@@ -142,7 +142,7 @@ const VerificationInfoContent  = () => {
     formData.append("qualification_id", qualificationId.toString());
 
     try {
-      const response = await fetch("/api/upload-verification-images", {
+      const response = await fetch("/api/v1/upload/verification", {
         method: "POST",
         body: formData,
       });
@@ -280,7 +280,7 @@ const VerificationInfoContent  = () => {
                         >
                             {isLoading ? "Submitting..." : "Submit Certificate"}
                         </button>
-                        
+
                           )}
                         </li>
                       ))}

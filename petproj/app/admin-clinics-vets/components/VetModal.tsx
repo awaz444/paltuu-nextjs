@@ -61,7 +61,7 @@ export default function VetModal({ visible, onCancel, onSuccess, initialData, cl
                 const formData = new FormData();
                 formData.append("file", newFile as File);
 
-                const uploadRes = await fetch("/api/admin/upload-image", {
+                const uploadRes = await fetch("/api/v1/admin/upload-image", {
                     method: "POST",
                     body: formData,
                 });
@@ -81,7 +81,7 @@ export default function VetModal({ visible, onCancel, onSuccess, initialData, cl
             };
 
             const method = initialData ? "PATCH" : "POST";
-            const response = await fetch("/api/admin/vets", {
+            const response = await fetch("/api/v1/admin/vets", {
                 method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
@@ -112,7 +112,7 @@ export default function VetModal({ visible, onCancel, onSuccess, initialData, cl
             destroyOnClose
         >
             <Form form={form} layout="vertical" className="mt-4">
-                
+
                 <h3 className="text-lg font-bold text-gray-800 mb-2 border-b pb-2">User Details</h3>
                 <div className="grid grid-cols-2 gap-4">
                     <Form.Item name="name" label="Vet Full Name" rules={[{ required: true }]}>
@@ -203,10 +203,10 @@ export default function VetModal({ visible, onCancel, onSuccess, initialData, cl
                                         </Form.Item>
                                     </div>
                                     <div className="flex justify-end">
-                                        <Button 
-                                            type="text" 
-                                            danger 
-                                            icon={<DeleteOutlined />} 
+                                        <Button
+                                            type="text"
+                                            danger
+                                            icon={<DeleteOutlined />}
                                             onClick={() => remove(name)}
                                         >
                                             Remove Association

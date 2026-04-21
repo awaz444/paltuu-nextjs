@@ -87,10 +87,10 @@ const WhatsAppRequestsAdmin = () => {
     try {
       setLoading(true);
       const [newHomeRes, paymentRes, lostFoundRes, deliveryRes] = await Promise.all([
-        fetch("/api/admin/whatsapp/new-home"),
-        fetch("/api/admin/whatsapp/payment-proofs"),
-        fetch("/api/admin/whatsapp/lost-found"),
-        fetch("/api/admin/whatsapp/delivery-requests")
+        fetch("/api/v1/admin/whatsapp/new-home"),
+        fetch("/api/v1/admin/whatsapp/payment-proofs"),
+        fetch("/api/v1/admin/whatsapp/lost-found"),
+        fetch("/api/v1/admin/whatsapp/delivery-requests")
       ]);
 
       if (newHomeRes.ok) setNewHomeData(await newHomeRes.json());
@@ -493,7 +493,7 @@ const WhatsAppRequestsAdmin = () => {
             </div>
           </div>
         );
-      
+
       case "payment":
         return (
           <div className="space-y-4">
@@ -552,7 +552,7 @@ const WhatsAppRequestsAdmin = () => {
             </div>
           </div>
         );
-      
+
       case "lost-found":
         return (
           <div className="space-y-4">
@@ -629,7 +629,7 @@ const WhatsAppRequestsAdmin = () => {
             </div>
           </div>
         );
-      
+
       case "delivery":
         return (
           <div className="space-y-4">
@@ -697,7 +697,7 @@ const WhatsAppRequestsAdmin = () => {
             </div>
           </div>
         );
-      
+
       default:
         return null;
     }
@@ -760,10 +760,10 @@ const WhatsAppRequestsAdmin = () => {
 
   return (
     <>
-      
+
       <div className="container mx-auto p-6">
         <h1 className="text-2xl font-bold mb-6">WhatsApp Requests Management</h1>
-        
+
         <div className="bg-white rounded-lg shadow">
           <div className="border-b">
             <div className="flex">
@@ -795,9 +795,9 @@ const WhatsAppRequestsAdmin = () => {
             <Button key="cancel" onClick={() => setModalVisible(false)}>
               Cancel
             </Button>,
-            <Button 
-              key="submit" 
-              type="primary" 
+            <Button
+              key="submit"
+              type="primary"
               icon={<CheckCircleOutlined />}
               onClick={() => {
                 // Submit logic will go here later

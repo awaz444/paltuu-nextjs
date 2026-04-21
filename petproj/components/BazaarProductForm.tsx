@@ -68,7 +68,6 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
     }
   );
   const [status, setStatus] = useState<string>(initialValues?.status || "draft");
-  const [generating, setGenerating] = useState(false);
   const [titleValue, setTitleValue] = useState<string>(initialValues?.title || '');
 
   useEffect(() => {
@@ -76,8 +75,8 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
     (async () => {
       try {
         const [catRes, colRes] = await Promise.all([
-          fetch("/api/bazaar/categories"),
-          fetch("/api/bazaar/collections"),
+          fetch("/api/v1/bazaar/categories"),
+          fetch("/api/v1/bazaar/collections"),
         ]);
         if (catRes.ok) {
           const cats = await catRes.json();
@@ -402,7 +401,7 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
               fd.append('variant_id', String(variant.variant_id));
 
               console.log('Making API call to /api/bazaar/images...');
-              const uploadRes = await fetch('/api/bazaar/images', {
+              const uploadRes = await fetch('/api/v1/bazaar/images', {
                 method: 'POST',
                 body: fd
               });
@@ -445,7 +444,7 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
           });
         }
         if (attachments.length > 0) {
-          const attachRes = await fetch('/api/bazaar/images', {
+          const attachRes = await fetch('/api/v1/bazaar/images', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ attachments })
@@ -603,52 +602,6 @@ const BazaarProductForm: React.FC<BazaarProductFormProps> = ({
               placeholder="Detailed product description, ingredients, benefits, etc."
             />
           </Form.Item>
-          <div className="flex justify-end">
-            <Button
-              onClick={async () => {
-                const title = (form.getFieldValue('title') || '').toString().trim();
-                if (!title) {
-                  return message.info('Please enter a product title first');
-                }
-                setGenerating(true);
-                try {
-                  const res = await fetch('/api/llm/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productName: title })
-                  });
-                  const json = await res.json();
-                  console.log('LLM API Response:', json);
-                  if (res.ok && json?.text) {
-                    console.log('Setting description field to:', json.text);
-                    form.setFieldsValue({ description: json.text });
-                    console.log('Form field value after setting:', form.getFieldValue('description'));
-                    message.success('Description generated');
-                  } else {
-                    console.error('LLM API Error:', json);
-                    // Provide a bit more context to the user
-                    const details = [] as string[];
-                    if (json?.error) details.push(json.error);
-                    if (json?.message) details.push(json.message);
-                    if (json?.durationMs) details.push(`took ${json.durationMs}ms`);
-                    message.error(details.join(' — ') || 'LLM generation failed');
-                  }
-                } catch (e) {
-                  console.error('LLM fetch failed', e);
-                  message.error('LLM request failed');
-                } finally {
-                  setGenerating(false);
-                }
-              }}
-              loading={generating}
-              disabled={!String(form.getFieldValue('title') || '').trim()}
-              type="primary"
-              ghost
-              size="small"
-            >
-              Generate Description
-            </Button>
-          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

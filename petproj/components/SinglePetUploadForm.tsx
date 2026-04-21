@@ -1,22 +1,22 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { 
-  Form, 
-  Input, 
-  Select, 
-  Button, 
-  Upload, 
-  Card, 
-  Row, 
-  Col, 
-  Switch, 
+import {
+  Form,
+  Input,
+  Select,
+  Button,
+  Upload,
+  Card,
+  Row,
+  Col,
+  Switch,
   InputNumber,
   message,
   Collapse,
   Image
 } from 'antd';
-import { 
-  PlusOutlined, 
+import {
+  PlusOutlined,
   UploadOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
@@ -40,10 +40,10 @@ interface SinglePetUploadFormProps {
   entityAddress?: string;
 }
 
-export default function SinglePetUploadForm({ 
-  entityType, 
-  entityId, 
-  entityName, 
+export default function SinglePetUploadForm({
+  entityType,
+  entityId,
+  entityName,
   showPrice,
   entityAddress
 }: SinglePetUploadFormProps) {
@@ -51,11 +51,11 @@ export default function SinglePetUploadForm({
   const dispatch = useDispatch<AppDispatch>();
   const { cities } = useSelector((state: RootState) => state.cities);
   const { categories } = useSelector((state: RootState) => state.categories);
-  
+
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(1);
   const [uploading, setUploading] = useState(false);
-  
+
   // Form state
   const [title, setTitle] = useState("");
   const [petType, setPetType] = useState("");
@@ -79,7 +79,7 @@ export default function SinglePetUploadForm({
   const [rescueStory, setRescueStory] = useState("");
   const [ageError, setAgeError] = useState<string | null>(null);
   const [monthsError, setMonthsError] = useState<string | null>(null);
-  
+
   // Special needs and medical conditions for shelters
   const [specialNeeds, setSpecialNeeds] = useState<string[]>([]);
   const [medicalConditions, setMedicalConditions] = useState<Array<{condition: string, treatmentCost: number | null, treated: boolean}>>([]);
@@ -87,7 +87,7 @@ export default function SinglePetUploadForm({
   const [newMedicalCondition, setNewMedicalCondition] = useState("");
   const [newTreatmentCost, setNewTreatmentCost] = useState<number | null>(null);
   const [newTreated, setNewTreated] = useState(false);
-  
+
 
   // Image upload state
   const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -222,13 +222,13 @@ export default function SinglePetUploadForm({
     try {
       // Fix: Parse user ID to number
       const userId = parseInt(user.id || user.user_id || '0', 10);
-      
+
       if (userId === 0) {
         message.error("Invalid user ID. Please login again.");
         setUploading(false);
         return;
       }
-      
+
       // Determine listing type based on entity type and price
       const listingType = entityType === 'shop' ? 'shop' : 'rescue';
 
@@ -289,7 +289,7 @@ export default function SinglePetUploadForm({
         try {
           // Save special needs
           if (specialNeeds.length > 0) {
-            await axios.post("/api/pet-special-needs", {
+            await axios.post("/api/v1/pets/special-needs", {
               pet_id: petId,
               special_needs: specialNeeds
             });
@@ -297,7 +297,7 @@ export default function SinglePetUploadForm({
 
           // Save medical conditions
           if (medicalConditions.length > 0) {
-            await axios.post("/api/pet-medical-conditions", {
+            await axios.post("/api/v1/pets/medical-conditions", {
               pet_id: petId,
               medical_conditions: medicalConditions
             });
@@ -309,7 +309,7 @@ export default function SinglePetUploadForm({
       }
 
       message.success("Pet listing created successfully!");
-      
+
       // Reset form
       setTitle("");
       setPetType("");
@@ -335,7 +335,7 @@ export default function SinglePetUploadForm({
       setMonthsError(null);
       setFileList([]);
       setCurrentStep(1);
-      
+
       // Reset special needs and medical conditions
       setSpecialNeeds([]);
       setMedicalConditions([]);
@@ -343,7 +343,7 @@ export default function SinglePetUploadForm({
       setNewMedicalCondition("");
       setNewTreatmentCost(null);
       setNewTreated(false);
-      
+
     } catch (error) {
       console.error("Error creating pet listing:", error);
       message.error("Failed to create pet listing. Please try again.");
@@ -392,7 +392,7 @@ export default function SinglePetUploadForm({
   ];
 
   const toggleTag = (id: number) => {
-    setSelectedTags(prev => 
+    setSelectedTags(prev =>
       prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
     );
   };
@@ -797,9 +797,9 @@ export default function SinglePetUploadForm({
                               size="large"
                               className="flex-1"
                             />
-                            <Button 
-                              type="primary" 
-                              onClick={addSpecialNeed} 
+                            <Button
+                              type="primary"
+                              onClick={addSpecialNeed}
                               disabled={!newSpecialNeed.trim()}
                               size="large"
                               className="w-full sm:w-auto"
@@ -812,9 +812,9 @@ export default function SinglePetUploadForm({
                               {specialNeeds.map((need, index) => (
                                 <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded border">
                                   <span className="text-sm flex-1 pr-2">{need}</span>
-                                  <Button 
-                                    type="text" 
-                                    size="small" 
+                                  <Button
+                                    type="text"
+                                    size="small"
                                     danger
                                     onClick={() => removeSpecialNeed(need)}
                                     className="flex-shrink-0"
@@ -868,9 +868,9 @@ export default function SinglePetUploadForm({
                                   </div>
                                 </Col>
                               </Row>
-                              <Button 
-                                type="primary" 
-                                onClick={addMedicalCondition} 
+                              <Button
+                                type="primary"
+                                onClick={addMedicalCondition}
                                 disabled={!newMedicalCondition.trim()}
                                 className="w-full"
                               >
@@ -885,13 +885,13 @@ export default function SinglePetUploadForm({
                                   <div className="flex-1">
                                     <div className="font-medium text-sm">{condition.condition}</div>
                                     <div className="text-xs text-gray-600 mt-1">
-                                      Cost: {condition.treatmentCost ? `PKR ${condition.treatmentCost.toLocaleString()}` : 'Not specified'} | 
+                                      Cost: {condition.treatmentCost ? `PKR ${condition.treatmentCost.toLocaleString()}` : 'Not specified'} |
                                       Status: {condition.treated ? 'Treated' : 'Not treated'}
                                     </div>
                                   </div>
-                                  <Button 
-                                    type="text" 
-                                    size="small" 
+                                  <Button
+                                    type="text"
+                                    size="small"
                                     danger
                                     onClick={() => removeMedicalCondition(condition.condition)}
                                     className="flex-shrink-0 w-full sm:w-auto"

@@ -57,7 +57,7 @@ export default function ClinicModal({ visible, onCancel, onSuccess, initialData 
                 const formData = new FormData();
                 formData.append("file", newFile as File);
 
-                const uploadRes = await fetch("/api/admin/upload-image", {
+                const uploadRes = await fetch("/api/v1/admin/upload-image", {
                     method: "POST",
                     body: formData,
                 });
@@ -76,7 +76,7 @@ export default function ClinicModal({ visible, onCancel, onSuccess, initialData 
             };
 
             const method = initialData ? "PATCH" : "POST";
-            const response = await fetch("/api/admin/clinics", {
+            const response = await fetch("/api/v1/admin/clinics", {
                 method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)

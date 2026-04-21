@@ -28,7 +28,7 @@ const FosterFormModal: React.FC<FosterFormProps> = ({ petId, userId, visible, on
             };
 
             // Call the API to save the application
-            const response = await fetch('/api/foster_application', {
+            const response = await fetch('/api/v1/foster/applications', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

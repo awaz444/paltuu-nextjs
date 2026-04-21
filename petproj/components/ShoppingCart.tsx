@@ -75,7 +75,7 @@ const ShoppingCartComponent: React.FC<ShoppingCartProps> = ({
 
   const updateQuantity = async (cartItemId: number, newQuantity: number) => {
     try {
-      const response = await fetch('/api/bazaar/cart', {
+      const response = await fetch('/api/v1/bazaar/cart', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cartItemId, quantity: newQuantity }),

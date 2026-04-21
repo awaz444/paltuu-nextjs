@@ -44,13 +44,13 @@ export default function EidBazaar() {
     useEffect(() => {
         const fetchAnimals = async () => {
             try {
-                const response = await fetch("/api/qurbani-animals");
+                const response = await fetch("/api/v1/qurbani/animals");
                 if (!response.ok) {
                     throw new Error('Failed to fetch animals');
                 }
                 const data = await response.json();
 
-                
+
                 // Transform the data to match the expected format
                 const transformedData = data.map((animal: any) => ({
                     ...animal,
@@ -59,7 +59,7 @@ export default function EidBazaar() {
                     height: parseFloat(animal.height),     // Convert height string to number
                     price: animal.price ? parseFloat(animal.price) : null // Convert price string to number or null
                 }));
-                
+
                 setAnimals(transformedData);
                 setLoading(false);
             } catch (error) {
@@ -71,7 +71,7 @@ export default function EidBazaar() {
         fetchAnimals();
     }, []);
 
-    
+
 
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);
@@ -91,7 +91,7 @@ export default function EidBazaar() {
 
     return (
         <>
-            
+
             <div className="container mx-auto px-4 py-8 max-w-6xl">
 
                 {/* Simplified Filter */}

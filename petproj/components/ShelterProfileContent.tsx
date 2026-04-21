@@ -66,7 +66,7 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
       console.log('Fetching shelter profile for ID:', shelterId);
       const response = await fetch(`/api/v1/rescue/shelters/${shelterId}`);
       console.log('Response status:', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('Shelter profile data:', data);
@@ -74,7 +74,7 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
         setSocialMedia(data.social_media || []);
         setProfileImage(data.logo_url || '');
         setFacilityPhotos(data.facility_photos || []);
-        
+
         const formValues = {
           shelter_name: data.shelter_name || '',
           address: data.address || '',
@@ -91,7 +91,7 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
           vet_name: data.emergency_contacts?.vet_name || '',
           vet_phone: data.emergency_contacts?.vet_phone || '',
         };
-        
+
         console.log('Setting form values:', formValues);
         form.setFieldsValue(formValues);
       } else {
@@ -113,7 +113,7 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
       const formData = new FormData();
       formData.append('image', file);
 
-      const uploadRes = await fetch('/api/upload-shelter-image', { method: 'POST', body: formData });
+      const uploadRes = await fetch('/api/v1/upload/shelter', { method: 'POST', body: formData });
       if (!uploadRes.ok) {
         const err = await uploadRes.json();
         message.error(err.error || 'Failed to upload photo');
@@ -209,7 +209,7 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch('/api/upload-shelter-image', {
+      const response = await fetch('/api/v1/upload/shelter', {
         method: 'POST',
         body: formData,
       });
@@ -359,8 +359,8 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
                   accept="image/*"
                   disabled={uploadingImage}
                 >
-                  <Button 
-                    icon={<UploadOutlined />} 
+                  <Button
+                    icon={<UploadOutlined />}
                     loading={uploadingImage}
                     className="w-full sm:w-auto"
                   >

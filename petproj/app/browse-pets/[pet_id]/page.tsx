@@ -312,21 +312,25 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                     </Link>
                 );
             case "rescue":
+                const rescueName = pet.shelter?.shelter_name || pet.owner_name || "Paws Rescue";
+                const rescueLogo = pet.shelter?.logo_url || pet.owner_image || pet.profile_image_url;
+                const rescueId = pet.shelter?.shelter_id || pet.shelter_id;
+
                 return (
-                    <Link href={`/shelters/${pet.shelter?.shelter_id}`}>
-                        <div className="flex items-center gap-3 p-4 mt-6 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                    <Link href={rescueId ? `/shelters/${rescueId}` : "#"}>
+                        <div className="flex items-center gap-4 p-5 bg-red-50/30 rounded-3xl border border-red-100/50 shadow-sm transition-all hover:shadow-md group">
                             <Avatar
-                                size={48}
-                                src={pet.shelter?.logo_url}
-                                className="bg-red-100 text-red-600"
+                                size={64}
+                                src={rescueLogo}
+                                icon={<ShopOutlined />}
+                                className="bg-white text-red-500 border-2 border-white shadow-md group-hover:scale-105 transition-transform"
                             />
                             <div>
-                                <Text className="text-sm font-medium text-gray-500 block">
+                                <Text className="text-[10px] uppercase tracking-[0.2em] font-black text-red-400 block mb-1 leading-none">
                                     Rescue Shelter
                                 </Text>
-                                <Text className="text-lg font-semibold text-gray-800">
-                                    {pet.shelter?.shelter_name ||
-                                        "Unknown Shelter"}
+                                <Text className="text-xl font-black text-gray-900 leading-tight">
+                                    {rescueName}
                                 </Text>
                             </div>
                         </div>
@@ -406,7 +410,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                         type="primary"
                         block
                         icon={<WhatsAppOutlined />}
-                        className="bg-green-500 hover:bg-green-600 text-white h-12 rounded-lg flex items-center justify-center"
+                        className="bg-green-500 hover:bg-green-600 text-white h-16 rounded-2xl flex items-center justify-center text-base font-bold shadow-lg shadow-green-500/20"
                         onClick={() => pet.contact_number && handleWhatsApp(pet.contact_number)}>
                         Message via WhatsApp
                     </Button>
@@ -610,7 +614,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                 {/* Action Buttons - Fixed at bottom */}
                                 <div className="flex flex-col sm:flex-row gap-4 mt-12">
                                     <button
-                                        className={`flex-1 h-16 text-lg font-black rounded-[2rem] flex items-center justify-center gap-3 shadow-2xl transition-all ${isAvailable
+                                        className={`flex-1 h-[72px] text-lg font-black rounded-[2rem] flex items-center justify-center gap-3 shadow-2xl transition-all ${isAvailable
                                             ? "bg-primary text-white hover:shadow-primary/30 hover:scale-[1.02]"
                                             : "bg-gray-200 text-gray-500 cursor-not-allowed"
                                             }`}
@@ -621,7 +625,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                                     </button>
 
                                     <button
-                                        className={`flex-1 h-16 text-lg font-black rounded-[2rem] flex items-center justify-center gap-3 transition-all border-2 ${isAvailable
+                                        className={`flex-1 h-[72px] text-lg font-black rounded-[2rem] flex items-center justify-center gap-3 transition-all border-2 ${isAvailable
                                             ? "border-primary text-primary hover:bg-primary/5 hover:scale-[1.02]"
                                             : "border-gray-200 text-gray-500 cursor-not-allowed"
                                             }`}

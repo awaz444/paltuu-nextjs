@@ -274,6 +274,7 @@ const Navbar = ({
     }
   };
 
+
   // Fetch notifications for rescue panel users
   useEffect(() => {
     const fetchNotifications = async () => {

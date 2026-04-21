@@ -27,7 +27,7 @@ export const useCartProtection = (options: CartProtectionOptions = {}) => {
         const params = new URLSearchParams();
         params.append("sessionId", sessionId);
 
-        const res = await fetch(`/api/bazaar/cart?${params.toString()}`, {
+        const res = await fetch(`/api/v1/bazaar/cart?${params.toString()}`, {
           credentials: 'include',
         });
         if (!res.ok) throw new Error("Failed to fetch cart");

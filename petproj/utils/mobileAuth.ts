@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { db } from '@/db/index';
 
-const ACCESS_TOKEN_EXPIRY = '60m'; // Short-lived access token
+const ACCESS_TOKEN_EXPIRY = '7d'; // Extended for web persistence (matches cookie)
 const REFRESH_TOKEN_EXPIRY = '90d'; // Long-lived refresh token
 
 export interface MobileJWTPayload {

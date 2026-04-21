@@ -6,7 +6,7 @@ import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
-import { useSession } from "next-auth/react";
+// removed useSession import
 
 interface UserProfileData {
     user_id: string;
@@ -20,16 +20,15 @@ interface UserProfileData {
 
 
 const AdminPanel = () => {
-    const { user } = useAuth();
-    const { data: session, status } = useSession();
+    const { user, isHydrating } = useAuth();
 
     const [userId, setUserId] = useState<string | null>(null);
     const [data, setData] = useState<UserProfileData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        // Get user_id from session (NO localStorage)
-        const currentUserId = user?.id || (session?.user as any)?.user_id || null;
+        // Get user_id from AuthContext
+        const currentUserId = user?.id || null;
 
         if (!currentUserId) {
             console.error("No user ID found in session.");
@@ -63,10 +62,10 @@ const AdminPanel = () => {
         };
 
         fetchUserProfile();
-    }, [user, session]);
+    }, [user, isHydrating]);
 
 
-    if (loading) {
+    if (loading || isHydrating) {
         return (
             <div className="flex justify-center items-center h-screen">
                 <div className="loader"></div>

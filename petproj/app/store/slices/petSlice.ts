@@ -49,7 +49,7 @@ const initialState: PetState = {
 export const fetchPets = createAsyncThunk<Pet[], void>(
   'pets/fetchPets',
   async () => {
-    const response = await fetch('/api/v1/pets');
+    const response = await fetch('/api/v1/pets', { credentials: 'include' });
     if (!response.ok) {
       throw new Error('Failed to fetch pets');
     }
@@ -68,6 +68,7 @@ export const postPet = createAsyncThunk<Pet, Omit<Pet, 'pet_id'>>(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(newPet),
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -87,6 +88,7 @@ export const deletePet = createAsyncThunk<number, number>(
     try {
       const response = await fetch(`/api/v1/pets/${petId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (!response.ok) {

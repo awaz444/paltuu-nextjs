@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useState, useEffect, ReactNode, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 import { clearGuestSessionId } from "@/utils/guest";
@@ -27,6 +27,7 @@ interface AuthContextProps {
   }) => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  isHydrating: boolean;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -37,6 +38,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [isHydratingState, setIsHydratingState] = useState(true);
+  const isHydrating = useRef(false);
+  const hasHydrated = useRef(false);
 
   // Debug: Log state changes
   useEffect(() => {
@@ -84,9 +88,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Initial token hydration - verify with server since httpOnly cookies can't be read client-side
   useEffect(() => {
-    if (typeof window === "undefined" || user !== null) return;
+    if (typeof window === "undefined" || hasHydrated.current || isHydrating.current) return;
 
     const hydrateUser = async () => {
+      if (isHydrating.current) return;
+      isHydrating.current = true;
+      setIsHydratingState(true);
+
       try {
         // console.log("🔍 Attempting to hydrate user from server...");
 
@@ -98,26 +106,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (!verifyResponse.ok) {
           // console.log("⚠️ No valid token found on server");
+          hasHydrated.current = true;
           return;
         }
 
         const { valid, user: tokenUser } = await verifyResponse.json();
-        if (!valid || !tokenUser) {
-          return;
+        if (valid && tokenUser) {
+          const hydratedUser: User = {
+            id: tokenUser.id,
+            email: tokenUser.email,
+            name: tokenUser.name,
+            role: tokenUser.role,
+            profile_image_url: tokenUser.profile_image_url,
+            method: "api"
+          };
+          setUser(hydratedUser);
+          setIsAuthenticated(true);
         }
-
-        const hydratedUser: User = {
-          id: tokenUser.id,
-          email: tokenUser.email,
-          name: tokenUser.name,
-          role: tokenUser.role,
-          profile_image_url: tokenUser.profile_image_url,
-          method: "api"
-        };
-        setUser(hydratedUser);
-        setIsAuthenticated(true);
       } catch (e) {
         console.error("Failed to hydrate user from server:", e);
+      } finally {
+        isHydrating.current = false;
+        hasHydrated.current = true;
+        setIsHydratingState(false);
       }
     };
 
@@ -178,6 +189,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 }, [status, session]);
+
+  // Update hydrating state when session status changes
+  useEffect(() => {
+    if (status !== "loading") {
+      setIsHydratingState(false);
+    }
+  }, [status]);
 
 
   const login = async (userData: {
@@ -307,7 +325,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, refreshUser, isHydrating: isHydratingState }}>
       {children}
     </AuthContext.Provider>
   );

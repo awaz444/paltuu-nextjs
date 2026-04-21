@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import { useAuth } from "@/context/AuthContext";
-import { useSession } from "next-auth/react";
+// removed useSession import
 import {
   Check,
   Package,
@@ -50,8 +50,7 @@ interface Order {
 }
 
 const MyOrdersPage = () => {
-  const { user, isAuthenticated } = useAuth();
-    const { status } = useSession();
+  const { user, isAuthenticated, isHydrating } = useAuth();
   const router = useRouter();
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -67,13 +66,13 @@ const MyOrdersPage = () => {
 
   useEffect(() => {
     // Redirect to login if not authenticated
-    if (status !== "loading" && !isAuthenticated) {
+    if (!isHydrating && !isAuthenticated) {
       router.push("/auth?error=Please log in to view your orders");
       return;
     }
 
     // Only fetch orders if user is authenticated and we have user data
-    if (!isAuthenticated || !user?.id || status === "loading") return;
+    if (!isAuthenticated || !user?.id || isHydrating) return;
 
     const fetchOrders = async () => {
       try {
@@ -105,7 +104,7 @@ const MyOrdersPage = () => {
     };
 
     fetchOrders();
-  }, [user?.id, isAuthenticated, status, router]);
+  }, [user?.id, isAuthenticated, isHydrating, router]);
 
   const toggleOrderExpanded = (orderId: number) => {
     if (expandedOrders.includes(orderId)) {
@@ -214,7 +213,7 @@ const MyOrdersPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || isHydrating) {
     return (
       <main className="min-h-screen bg-gradient-to-b from-primary/5 to-white">
 

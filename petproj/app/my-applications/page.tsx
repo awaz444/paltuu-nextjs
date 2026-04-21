@@ -1,11 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Navbar from "@/components/navbar";
 import { MoonLoader } from "react-spinners";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { formatAge } from "@/utils/formatAge";
 import { useAuth } from "@/context/AuthContext";
-import { useSession } from "next-auth/react";
+// removed useSession import
 
 interface Application {
     application_type: "foster" | "adoption";
@@ -28,8 +28,9 @@ export default function MyApplicationsPage() {
     const [loading, setLoading] = useState<boolean>(true);
     const [primaryColor, setPrimaryColor] = useState("#000000");
     
-    const { user, isAuthenticated } = useAuth();
-    const { status } = useSession();
+    const { user, isAuthenticated, isHydrating } = useAuth();
+    const lastFetchedUserId = useRef<string | null>(null);
+    const isFetching = useRef(false);
 
     useEffect(() => {
         // Get the computed style of the `--primary-color` CSS variable
@@ -40,14 +41,23 @@ export default function MyApplicationsPage() {
         }
     }, []);
 
-    const fetchApplications = async () => {
+    const fetchApplications = useCallback(async () => {
         if (!isAuthenticated || !user) {
-            setError("You must be logged in to view your applications.");
-            setLoading(false);
+            // Only set error if auth status is definitive
+            if (!isHydrating) {
+                setError("You must be logged in to view your applications.");
+                setLoading(false);
+            }
+            return;
+        }
+
+        // Deduplication: Don't fetch if already fetching or if we already fetched for this user
+        if (isFetching.current || lastFetchedUserId.current === user.id) {
             return;
         }
 
         try {
+            isFetching.current = true;
             setLoading(true);
             setError(null);
 
@@ -63,28 +73,30 @@ export default function MyApplicationsPage() {
                 if (response.status === 401) {
                     setError("Authentication failed. Please log in again.");
                 } else {
-                    const { error } = await response.json();
-                    setError(error || "Failed to fetch applications");
+                    const errorData = await response.json();
+                    setError(errorData.error || "Failed to fetch applications");
                 }
                 return;
             }
 
             const data = await response.json();
             setApplications(data.applications || []);
+            lastFetchedUserId.current = user.id || null;
         } catch (err) {
             console.error("Error fetching applications:", err);
             setError("An unexpected error occurred");
         } finally {
             setLoading(false);
+            isFetching.current = false;
         }
-    };
+    }, [isAuthenticated, user, isHydrating]);
 
     useEffect(() => {
         // Only fetch applications when auth state is determined and user is authenticated
-        if (status !== "loading") {
+        if (!isHydrating) {
             fetchApplications();
         }
-    }, [isAuthenticated, user, status]);
+    }, [isAuthenticated, user, isHydrating, fetchApplications]);
 
     const handleDeleteApplication = async (
         applicationId: string,
@@ -142,7 +154,7 @@ export default function MyApplicationsPage() {
     };
 
     // Show loading state while authentication is being determined
-    if (status === "loading") {
+    if (isHydrating) {
         return (
             <div className="flex justify-center items-center min-h-screen">
                 <MoonLoader size={30} color={primaryColor} />

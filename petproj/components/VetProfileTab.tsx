@@ -44,14 +44,14 @@ const VetProfileTab = () => {
             setUserId(parsedUser.id);
             try {
                 // Fetch user profile data
-                const res = await fetch(`/api/my-profile/${parsedUser.id}`);
+                const res = await fetch(`/api/v1/profile`, { credentials: 'include' });
                 if (!res.ok) throw new Error('Failed to fetch profile');
                 const profileData = await res.json();
                 setData(profileData);
                 setUpdatedData(profileData);
 
                 // Fetch cities data
-                const citiesRes = await fetch('/api/cities');
+                const citiesRes = await fetch('/api/v1/cities', { credentials: 'include' });
                 if (!citiesRes.ok) throw new Error('Failed to fetch cities');
                 const citiesData = await citiesRes.json();
                 setCities(citiesData);
@@ -81,8 +81,9 @@ const VetProfileTab = () => {
                 );
             }
 
-            const res = await fetch(`/api/change-password/${userId}`, {
-                method: "POST",
+            const res = await fetch(`/api/v1/profile/password`, {
+                method: "PATCH",
+                credentials: 'include',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     currentPassword: values.currentPassword,
@@ -111,8 +112,9 @@ const VetProfileTab = () => {
             const formData = new FormData();
             formData.append('file', file);
 
-            const uploadRes = await fetch(`/api/update-profile-image/${userId}`, {
+            const uploadRes = await fetch(`/api/v1/profile/avatar`, {
                 method: 'POST',
+                credentials: 'include',
                 body: formData
             });
 
@@ -145,8 +147,9 @@ const VetProfileTab = () => {
         try {
             // Save personal info if changed
             if (updatedData) {
-                const res = await fetch(`/api/my-profile/${userId}`, {
+                const res = await fetch(`/api/v1/profile`, {
                     method: "PATCH",
+                    credentials: 'include',
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(updatedData)
                 });

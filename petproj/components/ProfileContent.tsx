@@ -156,7 +156,7 @@ export default function ProfileContent() {
         setData(profileData);
         setUpdatedData(profileData);
 
-        const citiesRes = await fetch("/api/cities");
+        const citiesRes = await fetch("/api/v1/cities", { credentials: 'include' });
         if (!citiesRes.ok) throw new Error("Failed to fetch cities");
         const citiesData = await citiesRes.json();
         setCities(citiesData);

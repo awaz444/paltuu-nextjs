@@ -39,7 +39,7 @@ export const useOrderProtection = (options: OrderProtectionOptions = {}) => {
         params.append('sessionId', sessionId);
 
         // Verify the order exists and belongs to current session/user
-        const response = await fetch(`/api/bazaar/orders?${params.toString()}`, {
+        const response = await fetch(`/api/v1/bazaar/orders?${params.toString()}`, {
           credentials: 'include',
         });
 
@@ -72,7 +72,7 @@ export const useOrderProtection = (options: OrderProtectionOptions = {}) => {
         const cartParams = new URLSearchParams();
         cartParams.append('sessionId', sessionId);
 
-        const cartResponse = await fetch(`/api/bazaar/cart?${cartParams.toString()}`, {
+        const cartResponse = await fetch(`/api/v1/bazaar/cart?${cartParams.toString()}`, {
           credentials: 'include',
         });
 

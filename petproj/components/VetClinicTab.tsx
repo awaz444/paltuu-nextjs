@@ -57,7 +57,7 @@ const VetClinicTab = () => {
             if (!parsedUser?.id) return;
 
             try {
-                const res = await fetch(`/api/get-vet-id?user_id=${parsedUser.id}`);
+                const res = await fetch(`/api/v1/vets/get-id?user_id=${parsedUser.id}`, { credentials: 'include' });
                 if (!res.ok) throw new Error('Failed to fetch vet ID');
                 const data = await res.json();
                 setVetId(data.vet_id);
@@ -74,7 +74,7 @@ const VetClinicTab = () => {
             if (!vetId) return;
 
             try {
-                const res = await fetch(`/api/vet-panel/clinic-details/${vetId}`);
+                const res = await fetch(`/api/v1/vet-panel/clinic-details/${vetId}`, { credentials: 'include' });
                 if (!res.ok) throw new Error('Failed to fetch clinic details');
                 const data = await res.json();
                 setClinicData(data);
@@ -104,8 +104,9 @@ const VetClinicTab = () => {
 
         setSaving(true);
         try {
-            const res = await fetch(`/api/vet-panel/clinic-details/${vetId}`, {
+            const res = await fetch(`/api/v1/vet-panel/clinic-details/${vetId}`, {
                 method: "PUT",
+                credentials: 'include',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(clinicForm)
             });
@@ -118,7 +119,7 @@ const VetClinicTab = () => {
             message.success("Clinic information updated successfully");
             setEditing(false);
             // Refresh data
-            const refreshRes = await fetch(`/api/vet-panel/clinic-details/${vetId}`);
+            const refreshRes = await fetch(`/api/v1/vet-panel/clinic-details/${vetId}`, { credentials: 'include' });
             if (refreshRes.ok) {
                 const data = await refreshRes.json();
                 setClinicData(data);

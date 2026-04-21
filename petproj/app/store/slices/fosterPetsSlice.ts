@@ -55,6 +55,13 @@ export const fetchFosterPets = createAsyncThunk('fosterPets/fetchFosterPets', as
   }
   const data = await response.json();
   return data as Pet[];
+}, {
+  condition: (_, { getState }) => {
+    const { fosterPets } = getState() as RootState;
+    if (fosterPets.loading) return false;
+    if (fosterPets.pets.length > 0) return false;
+    return true;
+  }
 });
 
 // Create slice

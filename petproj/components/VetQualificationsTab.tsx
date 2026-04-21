@@ -73,7 +73,7 @@ const VetQualificationsTab = () => {
             if (!parsedUser?.id) return;
 
             try {
-                const res = await fetch(`/api/get-vet-id?user_id=${parsedUser.id}`);
+                const res = await fetch(`/api/v1/vets/get-id?user_id=${parsedUser.id}`, { credentials: 'include' });
                 if (!res.ok) throw new Error('Failed to fetch vet ID');
                 const data = await res.json();
                 setVetId(data.vet_id);
@@ -91,8 +91,8 @@ const VetQualificationsTab = () => {
 
             try {
                 const [qualificationsRes, specializationsRes] = await Promise.all([
-                    fetch(`/api/vet-panel/qualifications/${vetId}`),
-                    fetch(`/api/vet-panel/specialization/${vetId}`)
+                    fetch(`/api/v1/vet-panel/qualifications/${vetId}`, { credentials: 'include' }),
+                    fetch(`/api/v1/vet-panel/specialization/${vetId}`, { credentials: 'include' })
                 ]);
 
                 if (!qualificationsRes.ok) throw new Error('Failed to fetch qualifications');
@@ -120,7 +120,7 @@ const VetQualificationsTab = () => {
 
     const fetchAvailableQualifications = async () => {
         try {
-            const response = await fetch('/api/qualifications');
+            const response = await fetch('/api/v1/qualifications', { credentials: 'include' });
             if (!response.ok) throw new Error('Failed to fetch qualifications');
             const data = await response.json();
             setAvailableQualifications(data);
@@ -132,7 +132,7 @@ const VetQualificationsTab = () => {
 
     const fetchPetCategories = async () => {
         try {
-            const response = await fetch('/api/pet-categories');
+            const response = await fetch('/api/v1/pet-categories', { credentials: 'include' });
             if (!response.ok) throw new Error('Failed to fetch pet categories');
             const data = await response.json();
             setPetCategories(data);
@@ -161,13 +161,11 @@ const VetQualificationsTab = () => {
         try {
             const values = await qualificationForm.validateFields();
 
-            const response = await fetch(`/api/vet-panel/qualifications/${vetId}`, {
+            const response = await fetch(`/api/v1/vet-panel/qualifications/${vetId}`, {
                 method: "POST",
+                credentials: 'include',
                 headers: {
-                    "Content-Type": "application/json",
-                    ...(localStorage.getItem("token") && {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`
-                    })
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     qualification_id: values.qualification_id,
@@ -186,7 +184,7 @@ const VetQualificationsTab = () => {
             qualificationForm.resetFields();
             
             // Refresh qualifications
-            const res = await fetch(`/api/vet-panel/qualifications/${vetId}`);
+            const res = await fetch(`/api/v1/vet-panel/qualifications/${vetId}`, { credentials: 'include' });
             if (res.ok) {
                 const data = await res.json();
                 setQualifications(data);
@@ -206,8 +204,9 @@ const VetQualificationsTab = () => {
             const values = await specializationForm.validateFields();
             message.loading({ content: 'Adding specialization...', key: 'spec' });
 
-            const res = await fetch(`/api/vet-panel/specialization/${vetId}`, {
+            const res = await fetch(`/api/v1/vet-panel/specialization/${vetId}`, {
                 method: "POST",
+                credentials: 'include',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ category_id: values.category_id })
             });
@@ -218,7 +217,7 @@ const VetQualificationsTab = () => {
             specializationForm.resetFields();
             
             // Refresh specializations
-            const refreshRes = await fetch(`/api/vet-panel/specialization/${vetId}`);
+            const refreshRes = await fetch(`/api/v1/vet-panel/specialization/${vetId}`, { credentials: 'include' });
             if (refreshRes.ok) {
                 const data = await refreshRes.json();
                 setSpecializations(data);
@@ -263,7 +262,7 @@ const VetQualificationsTab = () => {
         
         setDeleting(prev => ({ ...prev, qualifications: itemToDelete.id as number }));
         try {
-            const res = await fetch(`/api/vet-panel/qualifications/${vetId}`, {
+            const res = await fetch(`/api/v1/vet-panel/qualifications/${vetId}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ qualification_id: itemToDelete.id })
@@ -289,7 +288,7 @@ const VetQualificationsTab = () => {
         
         setDeleting(prev => ({ ...prev, specializations: itemToDelete.id as number }));
         try {
-            const res = await fetch(`/api/vet-panel/specialization/${vetId}`, {
+            const res = await fetch(`/api/v1/vet-panel/specialization/${vetId}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ category_id: itemToDelete.id })

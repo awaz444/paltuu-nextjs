@@ -7,7 +7,7 @@ import RescueDetails from "../../../components/RescueDetails";
 import { formatDistanceToNow } from "date-fns";
 import { formatAiResponse } from "@/utils/formatAiResponse";
 import { useAuth } from "@/context/AuthContext";
-import { useSession } from "next-auth/react";
+// removed useSession import
 import { useRouter } from "next/navigation";
 import { formatAge } from "@/utils/formatAge";
 
@@ -63,8 +63,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
 }) => {
     const { pet_id } = params;
     const router = useRouter();
-    const { user, isAuthenticated } = useAuth();
-    const { status } = useSession();
+    const { user, isAuthenticated, isHydrating } = useAuth();
     const searchParams = useSearchParams();
     const [pet, setPet] = useState<PetWithImages | null>(null);
     const [carouselImages, setCarouselImages] = useState<string[]>([]);
@@ -181,21 +180,6 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
             if (!res.ok) throw new Error("Failed to fetch profile");
 
             const profileData = await res.json();
-
-            const isPhoneMissing = !profileData.phone_number;
-            const isCityMissing = !profileData.city;
-
-            if (isPhoneMissing || isCityMissing) {
-                message.warning({
-                    content:
-                        "Please complete your profile by adding your phone number and city before applying.",
-                    duration: 5,
-                });
-                setTimeout(() => {
-                    window.location.href = "/my-profile";
-                }, 2000);
-                return;
-            }
 
             setIsModalVisible(true);
         } catch (error) {
@@ -362,11 +346,11 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
     }
 
     // Show loading while authentication is being determined
-    if (loading || status === "loading") {
+    if (isHydrating) {
         return (
             <div className="flex justify-center items-center min-h-screen">
                 <MoonLoader size={30} color={primaryColor} />
-                <span className="ml-3">Loading...</span>
+                <span className="ml-3">Loading authentication...</span>
             </div>
         );
     }

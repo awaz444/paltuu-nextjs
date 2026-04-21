@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Pet } from "@/components/MyListingGrid";
 import Navbar from "@/components/navbar";
 import MyListingGrid from "@/components/MyListingGrid";
@@ -64,6 +64,8 @@ const UserListingsPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [primaryColor, setPrimaryColor] = useState("#000000");
+    const lastFetchedUserId = useRef<string | null>(null);
+    const isFetching = useRef(false);
 
     useEffect(() => {
         if (!isAuthenticated || !user?.id) {
@@ -71,8 +73,15 @@ const UserListingsPage = () => {
             return;
         }
 
+        // Deduplication: Don't fetch if already fetching or if we already fetched for this user
+        if (isFetching.current || lastFetchedUserId.current === user.id) {
+            setIsLoading(false);
+            return;
+        }
+
         const fetchData = async () => {
             try {
+                isFetching.current = true;
                 setIsLoading(true);
 
                 // Fetch regular listings using token-based authentication
@@ -88,7 +97,8 @@ const UserListingsPage = () => {
                     throw new Error("Failed to fetch listings");
                 }
                 const listingsData = await listingsResponse.json();
-                setListings(listingsData.listings);
+                setListings(listingsData.listings || []);
+                lastFetchedUserId.current = user.id;
 
                 setIsLoading(false);
             } catch (err) {
@@ -98,6 +108,8 @@ const UserListingsPage = () => {
                     setError("An unknown error occurred");
                 }
                 setIsLoading(false);
+            } finally {
+                isFetching.current = false;
             }
         };
 

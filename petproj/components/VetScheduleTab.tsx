@@ -41,7 +41,7 @@ const VetScheduleTab = () => {
             if (!parsedUser?.id) return;
 
             try {
-                const res = await fetch(`/api/get-vet-id?user_id=${parsedUser.id}`);
+                const res = await fetch(`/api/v1/vets/get-id?user_id=${parsedUser.id}`, { credentials: 'include' });
                 if (!res.ok) throw new Error('Failed to fetch vet ID');
                 const data = await res.json();
                 setVetId(data.vet_id);
@@ -58,7 +58,7 @@ const VetScheduleTab = () => {
             if (!vetId) return;
 
             try {
-                const res = await fetch(`/api/vet-panel/schedule/${vetId}`);
+                const res = await fetch(`/api/v1/vet-panel/schedule/${vetId}`, { credentials: 'include' });
                 if (!res.ok) throw new Error('Failed to fetch schedule');
                 const data = await res.json();
                 setSchedule(data);
@@ -96,13 +96,11 @@ const VetScheduleTab = () => {
                 end_time: formatTime(values.end_time)
             }];
 
-            const response = await fetch(`/api/vet-panel/schedule/${vetId}`, {
+            const response = await fetch(`/api/v1/vet-panel/schedule/${vetId}`, {
                 method: "POST",
+                credentials: 'include',
                 headers: {
-                    "Content-Type": "application/json",
-                    ...(localStorage.getItem("token") && {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`
-                    })
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify(slots)
             });
@@ -117,7 +115,7 @@ const VetScheduleTab = () => {
             scheduleForm.resetFields();
             
             // Refresh schedule
-            const res = await fetch(`/api/vet-panel/schedule/${vetId}`);
+            const res = await fetch(`/api/v1/vet-panel/schedule/${vetId}`, { credentials: 'include' });
             if (res.ok) {
                 const data = await res.json();
                 setSchedule(data);
@@ -140,8 +138,9 @@ const VetScheduleTab = () => {
         
         setDeleting(slotToDelete);
         try {
-            const res = await fetch(`/api/vet-panel/schedule/${vetId}`, {
+            const res = await fetch(`/api/v1/vet-panel/schedule/${vetId}`, {
                 method: "DELETE",
+                credentials: 'include',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ availability_id: slotToDelete })
             });
@@ -179,8 +178,9 @@ const VetScheduleTab = () => {
         }
 
         try {
-            const res = await fetch(`/api/vet-panel/schedule/${vetId}`, {
+            const res = await fetch(`/api/v1/vet-panel/schedule/${vetId}`, {
                 method: "PUT",
+                credentials: 'include',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     availability: schedule.map(s => ({
@@ -205,7 +205,7 @@ const VetScheduleTab = () => {
     const handleCancel = () => {
         // Reload original data
         if (vetId) {
-            fetch(`/api/vet-panel/schedule/${vetId}`)
+            fetch(`/api/v1/vet-panel/schedule/${vetId}`, { credentials: 'include' })
                 .then(res => res.json())
                 .then(data => setSchedule(data))
                 .catch(error => console.error("Error reloading schedule:", error));

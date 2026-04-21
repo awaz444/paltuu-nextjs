@@ -18,7 +18,7 @@ const initialState: VetState = {
 
 // Async thunk to fetch vets
 export const fetchVets = createAsyncThunk('vets/fetchVets', async () => {
-  const response = await fetch('/api/v1/vets'); // Adjust API endpoint
+  const response = await fetch('/api/v1/vets', { credentials: 'include' }); // Adjust API endpoint
 
   if (!response.ok) {
     throw new Error('Failed to fetch vets');
@@ -51,6 +51,7 @@ export const postVet = createAsyncThunk(
           "Content-Type": "application/json",
         },
         body: JSON.stringify(vetData),
+        credentials: 'include',
       });
 
       if (!response.ok) {

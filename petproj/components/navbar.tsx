@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCart } from "@/app/store/slices/cartSlice";
 import type { RootState, AppDispatch } from "@/app/store/store";
-import { useSession, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -51,6 +51,8 @@ const Navbar = ({
   const [markingAsRead, setMarkingAsRead] = useState(false);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastFetchedNotificationUserId = useRef<string | null>(null);
+  const isFetchingNotifications = useRef(false);
 
   const handleMouseEnter = () => {
     if (hideTimeoutRef.current) {
@@ -89,11 +91,8 @@ const Navbar = ({
     };
   }, []);
 
-  // Use next-auth's useSession hook for Google login
-  const { data: session, status } = useSession();
-
-  // Use custom AuthContext for API-based login
-  const { isAuthenticated, user, logout: apiLogout } = useAuth();
+  // Authentication handled by AuthContext
+  const { isAuthenticated, user, logout: apiLogout, isHydrating } = useAuth();
 
   const router = useRouter(); // Router for navigation
 
@@ -116,9 +115,8 @@ const Navbar = ({
     | "shop admin"
     | "ecommerce admin";
 
-  // Determine role first
-  const userRole: UserRole =
-    (user?.role as UserRole) || (session?.user?.role as UserRole) || "guest";
+  // Determine role
+  const userRole: UserRole = (user?.role as UserRole) || "guest";
 
   const navbarBackground: Record<UserRole, string> = {
     guest: "#A03048",
@@ -191,17 +189,9 @@ const Navbar = ({
 
   const navbarStyle = { backgroundColor: navbarBackground[userRole] };
 
-  const displayName =
-    user?.name ||
-    user?.email ||
-    session?.user?.name ||
-    session?.user?.email ||
-    "User";
+  const displayName = user?.name || user?.email || "User";
 
-  const profileImage =
-    user?.profile_image_url ||
-    session?.user?.image || // next-auth google login usually gives `image`
-    "/default-avatar.png"; // put your default icon in public folder
+  const profileImage = user?.profile_image_url || "/default-avatar.png";
 
 
   // Cart state for navbar dropdown
@@ -213,10 +203,12 @@ const Navbar = ({
 
   const cartItemsNav = cartState.items ?? [];
   const cartLoading = cartState.loading ?? false;
-  // Fetch cart on mount
+  // Fetch cart on mount - Redux thunk now has a condition to prevent redundant fetches
   useEffect(() => {
-    dispatch(fetchCart());
-  }, [dispatch]);
+    if (!isHydrating) {
+      dispatch(fetchCart());
+    }
+  }, [dispatch, isHydrating]);
   // Bounce animation for cart button
   const [bounce, setBounce] = useState(false);
   const prevTotalRef = useRef(0);
@@ -278,24 +270,37 @@ const Navbar = ({
   // Fetch notifications for rescue panel users
   useEffect(() => {
     const fetchNotifications = async () => {
-      if (user?.role === 'shelter admin' && (user?.id || user?.user_id)) {
+      const uid = user?.id || user?.user_id;
+      if (user?.role === 'shelter admin' && uid) {
+        // Prevent redundant fetches if already fetching or already fetched for this user
+        if (isFetchingNotifications.current || lastFetchedNotificationUserId.current === uid) {
+          return;
+        }
+
         try {
-          const uid = user.id || user.user_id;
+          isFetchingNotifications.current = true;
           const response = await fetch(`/api/v1/notifications`);
           if (response.ok) {
             const data = await response.json();
             setNotifications(data || []);
             setUnreadCount(data?.filter((n: any) => !n.is_read).length || 0);
+            lastFetchedNotificationUserId.current = String(uid);
           }
         } catch (error) {
           console.error('Error fetching notifications:', error);
+        } finally {
+          isFetchingNotifications.current = false;
         }
       }
     };
 
     fetchNotifications();
     // Refresh notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
+    const interval = setInterval(() => {
+      // Allow periodic refresh even if already fetched
+      lastFetchedNotificationUserId.current = null;
+      fetchNotifications();
+    }, 30000);
     return () => clearInterval(interval);
   }, [user?.id, user?.user_id, user?.role]);
 
@@ -314,8 +319,7 @@ const Navbar = ({
     // console.log("AuthContext - User:", user);
     // console.log("AuthContext - Role:", userRole);
     // console.log("AuthContext - isAuthenticated:", isAuthenticated);
-    // console.log("NextAuth - Session:", session);
-  }, [user, isAuthenticated, session]); // Logs when these values update
+  }, [user, isAuthenticated]); // Logs when these values update
 
   // Navigation Links
   const defaultLinks = [
@@ -805,7 +809,7 @@ const Navbar = ({
             </div>
           )}
 
-          {isAuthenticated || session ? (
+          {isAuthenticated ? (
             <>
               {/* Notifications - Only for shelter admins */}
               {user?.role === 'shelter admin' && (

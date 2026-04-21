@@ -21,14 +21,21 @@ const initialState: PetCategoriesState = {
 export const fetchPetCategories = createAsyncThunk(
   'categories/fetchPetCategories',
   async () => {
-    const response = await fetch('/api/v1/pet-categories');
+    const response = await fetch('/api/v1/pet-categories', { credentials: 'include' });
     const data = await response.json();
     return data as PetCategory[];
   },
   {
     condition: (_, { getState }) => {
-      const { categories } = (getState() as RootState).categories;
+      const { categories, loading } = (getState() as RootState).categories;
+      
+      // Skip if already loading
+      if (loading) return false;
+      
+      // Skip if we already have data
       if (categories && categories.length > 0) return false;
+      
+      return true;
     }
   }
 );

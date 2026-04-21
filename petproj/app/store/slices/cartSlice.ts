@@ -37,7 +37,7 @@ const initialState: CartState = {
 export const fetchCart = createAsyncThunk<
   CartItem[],
   void,
-  { rejectValue: string }
+  { rejectValue: string; state: { cart: CartState } }
 >("cart/fetchCart", async (_, { rejectWithValue }) => {
     try {
     //console.log('🔍 fetchCart - Attempting to fetch cart (server will check authentication)...');
@@ -104,6 +104,18 @@ export const fetchCart = createAsyncThunk<
 
   } catch (err: any) {
     return rejectWithValue(err.message ?? "Unknown error");
+  }
+}, {
+  condition: (_, { getState }) => {
+    const { cart } = getState();
+    // Don't fetch if already loading
+    if (cart.loading) return false;
+    
+    // Don't fetch if fetched in the last 5 minutes (unless manually marked stale)
+    if (cart.lastFetched && (Date.now() - cart.lastFetched < 5 * 60 * 1000)) {
+      return false;
+    }
+    return true;
   }
 });
 

@@ -29,7 +29,7 @@ const VetReviewsTab = () => {
             if (!parsedUser?.id) return;
 
             try {
-                const res = await fetch(`/api/get-vet-id?user_id=${parsedUser.id}`);
+                const res = await fetch(`/api/v1/vets/get-id?user_id=${parsedUser.id}`, { credentials: 'include' });
                 if (!res.ok) throw new Error('Failed to fetch vet ID');
                 const data = await res.json();
                 setVetId(data.vet_id);
@@ -46,7 +46,7 @@ const VetReviewsTab = () => {
             if (!vetId) return;
 
             try {
-                const res = await fetch(`/api/vet-panel/reviews/${vetId}`);
+                const res = await fetch(`/api/v1/vet-panel/reviews/${vetId}`, { credentials: 'include' });
                 if (!res.ok) throw new Error('Failed to fetch reviews');
                 const data = await res.json();
                 setReviews(data);

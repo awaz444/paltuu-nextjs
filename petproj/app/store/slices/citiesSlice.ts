@@ -3,14 +3,22 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 export const fetchCities = createAsyncThunk(
     'cities/fetchCities', 
     async () => {
-        const response = await fetch('/api/v1/cities');
+        const response = await fetch('/api/v1/cities', { credentials: 'include' });
         const data = await response.json();
         return data;
     },
     {
         condition: (_, { getState }) => {
-            const { cities } = (getState() as any).cities;
+            const state = getState() as any;
+            const { cities, loading } = state.cities;
+            
+            // Skip if already loading
+            if (loading) return false;
+            
+            // Skip if we already have data
             if (cities && cities.length > 0) return false;
+            
+            return true;
         }
     }
 );

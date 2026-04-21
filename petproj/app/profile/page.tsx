@@ -25,8 +25,8 @@ export default function ProfilePage() {
     // Fetch User Details Function
     const getUserDetails = async () => {
         try {
-            const res = await axios.get('/api/users/me');
-            setUserData(res.data.data);
+            const res = await axios.get('/api/v1/profile', { withCredentials: true });
+            setUserData(res.data);
         } catch (error: any) {
             console.error("Error fetching user details:", error.message);
             toast.error("Unable to fetch user details. Please try again.");

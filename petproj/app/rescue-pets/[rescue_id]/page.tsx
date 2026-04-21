@@ -72,7 +72,7 @@ export default function RescuePetPage({
         const fetchPetData = async () => {
             try {
                 const response = await fetch(
-                    `/api/rescue/pets/${params.rescue_id}`
+                    `/api/v1/rescue/pets/${params.rescue_id}`
                 );
                 if (!response.ok) {
                     throw new Error("Pet not found");

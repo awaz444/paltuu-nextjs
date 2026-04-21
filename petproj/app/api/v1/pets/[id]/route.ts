@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
         // Fetch images and tags
         const [images, tags] = await Promise.all([
             db.query('SELECT image_id, image_url, "order" FROM pet_images WHERE pet_id = $1 ORDER BY "order" ASC', [id]),
-            db.query('SELECT t.tag_id, t.tag_name FROM pet_tag_assignments pta JOIN tags t ON pta.tag_id = t.tag_id WHERE pta.pet_id = $1', [id])
+            db.query('SELECT t.tag_id, t.tag_name FROM pet_tag_assignments pta JOIN pet_tags t ON pta.tag_id = t.tag_id WHERE pta.pet_id = $1', [id])
         ]);
 
         return NextResponse.json({

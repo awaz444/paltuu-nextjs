@@ -97,7 +97,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
         setSummaryLoading(true);
 
         try {
-            const response = await fetch("/api/summary-llm", {
+            const response = await fetch("/api/v1/ai/summary", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -126,7 +126,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
             try {
                 setLoading(true);
 
-                const res = await fetch(`/api/browse-pets/${pet_id}`);
+                const res = await fetch(`/api/v1/pets/${pet_id}`);
                 if (!res.ok) throw new Error("Pet not found");
 
                 const petData = await res.json();
@@ -177,7 +177,7 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
         }
 
         try {
-            const res = await fetch(`/api/my-profile/${user.id}`);
+            const res = await fetch(`/api/v1/profile`, { credentials: 'include' });
             if (!res.ok) throw new Error("Failed to fetch profile");
 
             const profileData = await res.json();

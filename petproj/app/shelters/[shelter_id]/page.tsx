@@ -73,7 +73,7 @@ const ShelterProfilePage: React.FC = () => {
     useEffect(() => {
         const fetchShelterDetails = async () => {
             try {
-                const res = await fetch(`/api/rescue/shelters/${shelter_id}`);
+                const res = await fetch(`/api/v1/rescue/shelters/${shelter_id}`);
                 if (!res.ok) throw new Error("Shelter not found");
 
                 const shelterData = await res.json();

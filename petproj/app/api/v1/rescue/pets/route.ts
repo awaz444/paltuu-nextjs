@@ -13,14 +13,15 @@ export async function GET(req: NextRequest) {
     try {
         const query = `
             SELECT 
-                rp.*,
-                COALESCE((SELECT json_agg(rmc.*) FROM rescue_medical_conditions rmc WHERE rmc.rescue_id = rp.rescue_id), '[]'::json) as medical_conditions,
-                COALESCE((SELECT json_agg(ri.image_url) FROM rescue_images ri WHERE ri.rescue_id = rp.rescue_id), '[]'::json) as images,
-                COALESCE((SELECT json_agg(rsn.special_need) FROM rescue_special_needs rsn WHERE rsn.rescue_id = rp.rescue_id), '[]'::json) as special_needs,
+                p.*,
+                COALESCE((SELECT json_agg(rmc.*) FROM rescue_medical_conditions rmc WHERE rmc.pet_id = p.pet_id), '[]'::json) as medical_conditions,
+                COALESCE((SELECT json_agg(ri.image_url) FROM rescue_images ri WHERE ri.pet_id = p.pet_id), '[]'::json) as images,
+                COALESCE((SELECT json_agg(rsn.special_need) FROM rescue_special_needs rsn WHERE rsn.pet_id = p.pet_id), '[]'::json) as special_needs,
                 (SELECT json_build_object('id', rs.shelter_id, 'name', rs.shelter_name, 'location', rs.address) 
-                 FROM rescue_shelters rs WHERE rs.shelter_id = rp.rescue_org_id) as shelter
-            FROM rescue_pets rp
-            ORDER BY rp.rescue_date DESC
+                 FROM rescue_shelters rs WHERE rs.shelter_id = p.shelter_id) as shelter
+            FROM pets p
+            WHERE p.listing_type = 'rescue'
+            ORDER BY p.created_at DESC
         `;
 
         const result = await db.query(query);

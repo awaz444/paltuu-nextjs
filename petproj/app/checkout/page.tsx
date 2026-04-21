@@ -127,7 +127,7 @@ const CheckoutPage = () => {
         const sessionId = getOrCreateGuestSessionId();
 
         // Server will extract userId from cookie automatically
-        const response = await fetch(`/api/bazaar/cart?sessionId=${sessionId}`, {
+        const response = await fetch(`/api/v1/bazaar/cart?sessionId=${sessionId}`, {
           credentials: 'include',
         });
         if (response.ok) {
@@ -153,7 +153,7 @@ const CheckoutPage = () => {
       setLoadingShippingInfo(true);
       try {
         // Server will extract userId from cookie automatically
-        const res = await fetch('/api/bazaar/shipping-info', {
+        const res = await fetch('/api/v1/bazaar/shipping-info', {
           credentials: 'include',
         });
         if (!res.ok) return;
@@ -265,7 +265,7 @@ const CheckoutPage = () => {
     const code = promoCode.trim().toUpperCase();
     if (!code) return;
     try {
-      const res = await fetch('/api/bazaar/coupons/apply', {
+      const res = await fetch('/api/v1/bazaar/coupons/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code, subtotal })
@@ -297,7 +297,7 @@ const CheckoutPage = () => {
       const cleanPhone = phone.replace(/\s/g, "");
 
       // Server will extract userId from cookie automatically
-      await fetch("/api/bazaar/shipping-info", {
+      await fetch("/api/v1/bazaar/shipping-info", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -847,7 +847,7 @@ const CheckoutPage = () => {
                         };
 
                         // Server will extract userId from cookie automatically
-                        const res = await fetch("/api/bazaar/orders", {
+                        const res = await fetch("/api/v1/bazaar/orders", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify(body),

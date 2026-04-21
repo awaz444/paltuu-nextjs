@@ -64,7 +64,7 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
     try {
       setLoading(true);
       console.log('Fetching shelter profile for ID:', shelterId);
-      const response = await fetch(`/api/rescue/shelters/${shelterId}`);
+      const response = await fetch(`/api/v1/rescue/shelters/${shelterId}`);
       console.log('Response status:', response.status);
       
       if (response.ok) {
@@ -121,7 +121,7 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
       }
       const { imageUrl } = await uploadRes.json();
 
-      const saveRes = await fetch(`/api/rescue/shelters/${shelterId}/photos`, {
+      const saveRes = await fetch(`/api/v1/rescue/shelters/${shelterId}/photos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ photo_url: imageUrl })
@@ -143,7 +143,7 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
 
   const handleRemoveFacilityPhoto = async (url: string) => {
     try {
-      const res = await fetch(`/api/rescue/shelters/${shelterId}/photos`, {
+      const res = await fetch(`/api/v1/rescue/shelters/${shelterId}/photos`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ photo_url: url })
@@ -163,7 +163,7 @@ export default function ShelterProfileContent({ shelterId }: ShelterProfileConte
   const handleSave = async (values: any) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/rescue/shelters/${shelterId}`, {
+      const response = await fetch(`/api/v1/rescue/shelters/${shelterId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

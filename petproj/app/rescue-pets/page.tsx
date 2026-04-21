@@ -63,7 +63,7 @@ export default function RescuePets() {
     useEffect(() => {
         const fetchPets = async () => {
             try {
-                const res = await fetch("/api/rescue/pets");
+                const res = await fetch("/api/v1/rescue/pets");
                 if (!res.ok) throw new Error("Failed to fetch pets");
                 const data = await res.json();
                 setPets(data);

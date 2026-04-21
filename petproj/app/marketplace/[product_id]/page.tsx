@@ -4,7 +4,7 @@ import ProductDetailsClient from "./ProductDetailsClient";
 export const dynamic = "force-dynamic";
 
 async function getProduct(product_id: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bazaar/products/${product_id}`);
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/bazaar/products/${product_id}`);
   if (!res.ok) return null;
   return res.json();
 }
@@ -46,7 +46,7 @@ export default async function ProductPage({ params }: { params: { product_id: st
   let reviews = [];
   if (product) {
     try {
-      const revRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bazaar/reviews?product_id=${product.product_id}`);
+      const revRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/reviews?target_id=${product.product_id}&type=product`);
       if (revRes.ok) {
         reviews = await revRes.json();
       }

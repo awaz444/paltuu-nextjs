@@ -78,7 +78,7 @@ const MyOrdersPage = () => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const res = await fetch('/api/orders', {
+        const res = await fetch('/api/v1/bazaar/orders', {
           method: 'GET',
           credentials: 'include',
           headers: {
@@ -179,18 +179,17 @@ const MyOrdersPage = () => {
 
     setSubmittingReview(true);
     try {
-      const res = await fetch('/api/bazaar/reviews', {
+      const res = await fetch('/api/v1/reviews', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
         body: JSON.stringify({
-          order_item_id: currentReviewItem.order_item_id,
-          product_id: currentReviewItem.product_id,
+          target_id: currentReviewItem.product_id,
+          type: 'product',
           rating: reviewRating,
-          title: reviewTitle,
-          body: reviewBody
+          comment: `${reviewTitle ? reviewTitle + ': ' : ''}${reviewBody}`
         }),
       });
 

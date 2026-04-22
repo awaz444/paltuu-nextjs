@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
             SELECT 
                 p.*, 
                 cat.category_name AS category,
-                (SELECT image_url FROM pet_images WHERE pet_id = p.pet_id LIMIT 1) AS primary_image
+                (SELECT image_url FROM pet_images WHERE pet_id = p.pet_id LIMIT 1) AS image_url
             FROM pets p
             LEFT JOIN pet_category cat ON p.pet_type = cat.category_id
             WHERE p.owner_id = $1

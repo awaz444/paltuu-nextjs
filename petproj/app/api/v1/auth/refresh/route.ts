@@ -1,55 +1,68 @@
 import { db } from "@/db/index";
-import { generateMobileTokenPair, invalidateMobileRefreshToken, verifyRefreshTokenInDb } from "@/utils/mobileAuth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export const dynamic = "force-dynamic";
 
 /**
- * @swagger
- * /api/v1/auth/refresh:
- *   post:
- *     summary: Refresh Tokens (v1)
- *     tags: [v1 Auth]
+ * POST /api/v1/auth/refresh
+ * Exchange a valid refresh token for a new access token
  */
-export async function POST(req: Request) {
-  try {
-    const { refreshToken } = await req.json();
+export async function POST(req: NextRequest) {
+    try {
+        const body = await req.json();
+        const { refreshToken } = body;
 
-    if (!refreshToken) {
-      return NextResponse.json({ message: "Refresh token is required" }, { status: 400 });
+        if (!refreshToken) {
+            return NextResponse.json({ error: "Refresh token is required" }, { status: 400 });
+        }
+
+        // 1. Verify token exists in DB and is not revoked
+        const res = await db.query(`
+            SELECT * FROM refresh_tokens 
+            WHERE token = $1 AND revoked = false AND expires_at > NOW()
+        `, [refreshToken]);
+
+        if ((res.rowCount ?? 0) === 0) {
+            return NextResponse.json({ error: "Invalid or expired refresh token" }, { status: 401 });
+        }
+
+        const rt = res.rows[0];
+
+        // 2. Fetch User
+        const userRes = await db.query("SELECT * FROM users WHERE user_id = $1", [rt.user_id]);
+        if ((userRes.rowCount ?? 0) === 0) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+        const user = userRes.rows[0];
+
+        // 3. Generate New Access Token
+        const accessToken = jwt.sign(
+            { 
+                id: user.user_id,
+                user_id: user.user_id,
+                email: user.email, 
+                name: user.name,
+                role: user.role 
+            },
+            process.env.TOKEN_SECRET!,
+            { expiresIn: '2h' }
+        );
+
+        return NextResponse.json({ 
+            success: true, 
+            accessToken,
+            user: {
+                id: user.user_id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                image: user.image
+            }
+        });
+
+    } catch (error) {
+        console.error("V1 Auth Refresh POST error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
-
-    const userId = await verifyRefreshTokenInDb(refreshToken);
-    if (!userId) {
-      return NextResponse.json({ message: "Invalid or expired refresh token" }, { status: 401 });
-    }
-
-    const result = await db.query('SELECT user_id, name, email, role FROM users WHERE user_id = $1', [userId]);
-    if ((result.rowCount ?? 0) === 0) {
-      return NextResponse.json({ message: "User not found" }, { status: 401 });
-    }
-
-    const user = result.rows[0];
-
-    // Invalidate old and issue new
-    await invalidateMobileRefreshToken(refreshToken);
-
-    const tokens = await generateMobileTokenPair({
-      user_id: user.user_id,
-      email: user.email,
-      role: user.role
-    });
-
-    return NextResponse.json({
-      ...tokens,
-      user: {
-        id: user.user_id,
-        email: user.email,
-        name: user.name,
-        role: user.role
-      }
-    }, { status: 200 });
-
-  } catch (error) {
-    console.error("V1 Refresh error:", error);
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
-  }
 }

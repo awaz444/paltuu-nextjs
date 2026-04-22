@@ -44,12 +44,16 @@ export async function GET(req: NextRequest) {
         const items = await db.query(`
             SELECT 
                 ci.cart_item_id, ci.product_id, ci.variant_id, ci.quantity,
-                p.title as product_title, p.price as product_price,
-                COALESCE(pv.price_override, p.price) as effective_price,
+                ci.vendor_id, ci.inventory_id,
+                p.title as product_title, p.sku as product_sku,
+                vi.selling_price as vendor_price,
+                COALESCE(vi.selling_price, p.price) as effective_price,
+                v.shop_name, v.logo_url as vendor_logo,
                 (SELECT url FROM bazaar_product_media WHERE product_id = p.product_id LIMIT 1) as image_url
             FROM bazaar_cart_items ci
             JOIN bazaar_products p ON ci.product_id = p.product_id
-            LEFT JOIN bazaar_product_variants pv ON ci.variant_id = pv.variant_id
+            LEFT JOIN vendor_inventory vi ON ci.inventory_id = vi.inventory_id
+            LEFT JOIN vendors v ON ci.vendor_id = v.vendor_id
             WHERE ci.cart_id = $1
         `, [cartId]);
 
@@ -72,7 +76,7 @@ export async function POST(req: NextRequest) {
     try {
         const userId = await getUserIdFromRequest(req);
         const body = await req.json();
-        const { sessionId, productId, variantId, quantity = 1 } = body;
+        const { sessionId, productId, variantId, vendorId, inventoryId, quantity = 1 } = body;
 
         if (!userId && !sessionId) return NextResponse.json({ error: "Auth required" }, { status: 401 });
 
@@ -97,8 +101,11 @@ export async function POST(req: NextRequest) {
         // 2. Add or Update Item
         const existing = await db.query(`
             SELECT cart_item_id FROM bazaar_cart_items 
-            WHERE cart_id = $1 AND product_id = $2 AND (variant_id = $3 OR (variant_id IS NULL AND $3 IS NULL))
-        `, [cartId, productId, variantId]);
+            WHERE cart_id = $1 AND product_id = $2 
+            AND (vendor_id = $3 OR (vendor_id IS NULL AND $3 IS NULL))
+            AND (inventory_id = $4 OR (inventory_id IS NULL AND $4 IS NULL))
+            AND (variant_id = $5 OR (variant_id IS NULL AND $5 IS NULL))
+        `, [cartId, productId, vendorId, inventoryId, variantId]);
 
         if ((existing.rowCount ?? 0) > 0) {
             await db.query(`
@@ -107,9 +114,9 @@ export async function POST(req: NextRequest) {
             `, [quantity, existing.rows[0].cart_item_id]);
         } else {
             await db.query(`
-                INSERT INTO bazaar_cart_items (cart_id, product_id, variant_id, quantity, added_at, updated_at)
-                VALUES ($1, $2, $3, $4, NOW(), NOW())
-            `, [cartId, productId, variantId, quantity]);
+                INSERT INTO bazaar_cart_items (cart_id, product_id, vendor_id, inventory_id, variant_id, quantity, added_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+            `, [cartId, productId, vendorId, inventoryId, variantId, quantity]);
         }
 
         return NextResponse.json({ success: true });

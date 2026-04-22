@@ -12,6 +12,7 @@ interface LoginFormProps {
   onSwitchToSignup: () => void;
 }
 
+
 export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const { isAuthenticated, login } = useAuth();
   const router = useRouter();

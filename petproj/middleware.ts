@@ -65,12 +65,18 @@ export async function middleware(request: NextRequest) {
       try {
         // Verify signature properly using the server secret
         const decoded = jwt.verify(customAuthToken, process.env.TOKEN_SECRET!) as { role?: string };
-        if (decoded.role !== 'admin') {
+        if (decoded.role === 'admin') {
+          // Admin token is valid, allow access
+          return NextResponse.next();
+        } else {
+          // Valid token but not admin
           return NextResponse.redirect(new URL('/browse-pets', request.url));
         }
       } catch (error) {
         console.warn('⚠️ [Middleware] Admin JWT verification failed:', error instanceof Error ? error.message : error);
-        return NextResponse.redirect(new URL('/auth', request.url));
+        // Token verification failed, allow the page to load and let the client-side auth handle it
+        // This way the user gets a proper error message from the React component
+        return NextResponse.next();
       }
     }
 

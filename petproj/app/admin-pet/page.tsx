@@ -50,11 +50,11 @@ const AdminPetInteraction: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { cities } = useSelector((state: RootState) => state.cities);
 
-
-
   useEffect(() => {
-    const fetchPets = async () => {
+    // Fetch cities and pets in parallel for better performance
+    const fetchData = async () => {
       try {
+        setLoading(true);
         const response = await fetch('/api/v1/admin/pets');
         if (!response.ok) {
           throw new Error('Failed to fetch pets');
@@ -64,12 +64,17 @@ const AdminPetInteraction: React.FC = () => {
         setFilteredPets(data);
       } catch (error) {
         console.error(error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    dispatch(fetchCities());
-    fetchPets();
-  }, []);
+    // Fetch cities if not already loaded in Redux
+    if (!cities || cities.length === 0) {
+      dispatch(fetchCities());
+    }
+    fetchData();
+  }, [dispatch, cities.length]);
 
   // Apply filters and sorting
   useEffect(() => {

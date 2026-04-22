@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import Link from "next/link";
@@ -21,10 +22,19 @@ interface UserProfileData {
 
 const AdminPanel = () => {
     const { user, isHydrating } = useAuth();
+    const router = useRouter();
 
     const [userId, setUserId] = useState<string | null>(null);
     const [data, setData] = useState<UserProfileData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+
+    // Check if user has admin role
+    useEffect(() => {
+        if (!isHydrating && user && user.role !== "admin") {
+            console.warn("Unauthorized access to admin panel");
+            router.push("/browse-pets");
+        }
+    }, [user, isHydrating, router]);
 
     useEffect(() => {
         // Get user_id from AuthContext
@@ -45,7 +55,7 @@ const AdminPanel = () => {
 
             setLoading(true);
             try {
-                const res = await fetch(`/api/my-profile/${currentUserId}`);
+                const res = await fetch(`/api/v1/users/profile/${currentUserId}`);
                 if (!res.ok) {
                     throw new Error(
                         `Failed to fetch user data. Status: ${res.status}`
@@ -69,6 +79,16 @@ const AdminPanel = () => {
         return (
             <div className="flex justify-center items-center h-screen">
                 <div className="loader"></div>
+            </div>
+        );
+    }
+
+    if (!user || user.role !== "admin") {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <p className="text-red-600">
+                    Unauthorized. Only admins can access this page.
+                </p>
             </div>
         );
     }

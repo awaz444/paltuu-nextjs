@@ -45,36 +45,40 @@ const AdminPetApproval: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   useEffect(() => {
-    const fetchPets = async () => {
+    // Fetch both listings and cities in parallel for better performance
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const response = await fetch('/api/v1/admin/listings');
-        if (!response.ok) {
-          throw new Error('Failed to fetch pets');
+        const [listingsRes, citiesRes] = await Promise.all([
+          fetch('/api/v1/admin/listings'),
+          fetch('/api/v1/cities')
+        ]);
+
+        const [listingsData, citiesData] = await Promise.all([
+          listingsRes.json(),
+          citiesRes.json()
+        ]);
+
+        if (listingsRes.ok) {
+          setPets(listingsData);
+          setFilteredPets(listingsData);
+        } else {
+          console.error('Failed to fetch listings');
         }
-        const data: Pet[] = await response.json();
-        setPets(data);
-        setFilteredPets(data);
+
+        if (citiesRes.ok) {
+          setCities(citiesData);
+        } else {
+          console.error('Failed to fetch cities');
+        }
       } catch (error) {
-        console.error('Error fetching pets:', error);
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    const fetchCities = async () => {
-      try {
-        const response = await fetch('/api/v1/cities');
-        if (!response.ok) {
-          throw new Error('Failed to fetch cities');
-        }
-        const data: City[] = await response.json();
-        setCities(data);
-      } catch (error) {
-        console.error('Error fetching cities:', error);
-      }
-    };
-
-
-    fetchCities();
-    fetchPets();
+    fetchData();
   }, []);
 
   // Apply filters and sorting

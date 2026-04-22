@@ -10,16 +10,55 @@ export default function AdminClinicsVets() {
     const [clinics, setClinics] = useState<any[]>([]);
     const [vets, setVets] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [clinicsLoading, setClinicsLoading] = useState(false);
+    const [vetsLoading, setVetsLoading] = useState(false);
 
     const [isClinicModalVisible, setIsClinicModalVisible] = useState(false);
     const [editingClinic, setEditingClinic] = useState<any>(null);
 
-
     const [isVetModalVisible, setIsVetModalVisible] = useState(false);
     const [editingVet, setEditingVet] = useState<any>(null);
 
-    const fetchClinics = async () => {
+    // Fetch both clinics and vets in parallel for better performance
+    const fetchData = async () => {
         setLoading(true);
+        setClinicsLoading(true);
+        setVetsLoading(true);
+        try {
+            const [clinicsRes, vetsRes] = await Promise.all([
+                fetch("/api/v1/admin/clinics"),
+                fetch("/api/v1/admin/vets")
+            ]);
+
+            const [clinicsData, vetsData] = await Promise.all([
+                clinicsRes.json(),
+                vetsRes.json()
+            ]);
+
+            if (clinicsRes.ok) {
+                setClinics(clinicsData);
+            } else {
+                message.error("Failed to fetch clinics");
+            }
+
+            if (vetsRes.ok) {
+                setVets(vetsData);
+            } else {
+                message.error("Failed to fetch vets");
+            }
+        } catch (error) {
+            message.error("Failed to fetch data");
+            console.error(error);
+        } finally {
+            setLoading(false);
+            setClinicsLoading(false);
+            setVetsLoading(false);
+        }
+    };
+
+    // Separate fetch functions for individual refresh
+    const fetchClinics = async () => {
+        setClinicsLoading(true);
         try {
             const res = await fetch("/api/v1/admin/clinics");
             const data = await res.json();
@@ -27,12 +66,12 @@ export default function AdminClinicsVets() {
         } catch (error) {
             message.error("Failed to fetch clinics");
         } finally {
-            setLoading(false);
+            setClinicsLoading(false);
         }
     };
 
     const fetchVets = async () => {
-        setLoading(true);
+        setVetsLoading(true);
         try {
             const res = await fetch("/api/v1/admin/vets");
             const data = await res.json();
@@ -40,13 +79,12 @@ export default function AdminClinicsVets() {
         } catch (error) {
             message.error("Failed to fetch vets");
         } finally {
-            setLoading(false);
+            setVetsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchClinics();
-        fetchVets();
+        fetchData();
     }, []);
 
     const handleDeleteClinic = async (clinic_id: string) => {

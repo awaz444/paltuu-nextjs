@@ -63,7 +63,6 @@ export async function POST(req: Request) {
 
     const user = result.rows[0];
     
-
     // 2. Compare password
     // Support both bcrypt-hashed and legacy plain-text passwords.
     // If a legacy password logs in, immediately migrate it to bcrypt.

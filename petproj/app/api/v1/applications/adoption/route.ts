@@ -66,6 +66,8 @@ export async function POST(req: NextRequest) {
             pet_left_alone,
             additional_details,
             agree_to_terms,
+            city_id,
+            contact_number,
         } = body;
 
         // Validation
@@ -84,15 +86,15 @@ export async function POST(req: NextRequest) {
                 user_id, pet_id, adopter_name, adopter_address, status,
                 age_of_youngest_child, other_pets_details, other_pets_neutered,
                 has_secure_outdoor_area, pet_sleep_location, pet_left_alone,
-                additional_details, agree_to_terms, created_at
+                additional_details, agree_to_terms, city_id, contact_number, created_at
             ) VALUES (
-                $1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9, $10, $11, $12, NOW()
+                $1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW()
             ) RETURNING adoption_id
         `, [
             userId, pet_id, adopter_name, adopter_address, 
             age_of_youngest_child, other_pets_details, other_pets_neutered,
             has_secure_outdoor_area, pet_sleep_location, pet_left_alone,
-            additional_details, agree_to_terms
+            additional_details, agree_to_terms, city_id, contact_number
         ]);
 
         const applicationId = result.rows[0].adoption_id;

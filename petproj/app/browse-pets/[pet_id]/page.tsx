@@ -834,7 +834,6 @@ const PetDetailsPage: React.FC<{ params: { pet_id: string } }> = ({
                     <AdoptionFormModal
                         petId={parseInt(pet_id)}
                         userId={user?.id || ""}
-                        city={pet.city}
                         visible={isModalVisible}
                         onClose={handleModalClose}
                         onSubmit={handleFormSubmit}

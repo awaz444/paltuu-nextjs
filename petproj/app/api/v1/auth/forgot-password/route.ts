@@ -26,15 +26,19 @@ export async function POST(req: NextRequest) {
 
         // 2. Generate a secure token
         const token = crypto.randomBytes(32).toString('hex');
-        
+
         // 3. Store in OTP table (overloading it for password reset)
         // We delete old entries for this email first
         await db.query('DELETE FROM "OTP" WHERE email = $1', [email]);
-        await db.query('INSERT INTO "OTP" (email, otp, createdat) VALUES ($1, $2, NOW())', [email, token]);
+        await db.query('INSERT INTO "OTP" (email, otp, created_at) VALUES ($1, $2, NOW())', [email, token]);
 
         // 4. Send Email
-        const resetLink = `${process.env.NEXTAUTH_URL || 'https://paltuu.pk'}/reset-password?token=${token}`;
-        
+        // Use production domain for email links, not localhost
+        const emailDomain = process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes('localhost')
+            ? process.env.NEXTAUTH_URL
+            : (process.env.NEXT_PUBLIC_APP_URL || 'https://paltuu.pk');
+        const resetLink = `${emailDomain}/reset-password?token=${token}`;
+
         await sendEmail({
             to: email,
             subject: "Reset your Paltuu Password",

@@ -15,13 +15,24 @@ export async function POST(req: NextRequest) {
         if (!token || !newPassword) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
 
         // 1. Verify token in OTP table
-        const otpRes = await db.query('SELECT email FROM "OTP" WHERE otp = $1 AND createdat > NOW() - INTERVAL \'1 hour\'', [token]);
-        
+        const otpRes = await db.query('SELECT email, created_at FROM "OTP" WHERE otp = $1', [token]);
+
         if ((otpRes.rowCount ?? 0) === 0) {
             return NextResponse.json({ error: "Invalid or expired reset token" }, { status: 400 });
         }
 
         const email = otpRes.rows[0].email;
+        const created_at = otpRes.rows[0].created_at;
+
+        // Check if token is expired (1 hour)
+        const tokenCreatedTime = new Date(created_at).getTime();
+        const currentTime = new Date().getTime();
+        const hourInMs = 60 * 60 * 1000;
+
+        if (currentTime - tokenCreatedTime > hourInMs) {
+            await db.query('DELETE FROM "OTP" WHERE otp = $1', [token]);
+            return NextResponse.json({ error: "Password reset link has expired" }, { status: 410 });
+        }
 
         // 2. Hash new password
         const hashed = await bcrypt.hash(newPassword, 10);

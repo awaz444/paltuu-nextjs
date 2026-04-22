@@ -68,7 +68,25 @@ export default function ForgotPassword() {
     return (
         <div className="min-h-screen flex flex-col sm:flex-row bg-gray-100">
             {/* Left Side */}
-            <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl">
+            <div className="sm:w-1/2 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-r-3xl relative">
+                <button
+                    onClick={() => router.push("/auth")}
+                    className="absolute top-4 left-4 text-white hover:text-gray-200 flex items-center transition-colors"
+                    title="Back to Login"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-1"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                    >
+                        <path
+                            fillRule="evenodd"
+                            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                            clipRule="evenodd"
+                        />
+                    </svg>
+                </button>
                 <img src="/paltu_logo.svg" alt="Paltu Logo" className="mb-6" />
             </div>
 

@@ -24,21 +24,28 @@ export async function GET(req: NextRequest) {
         if (!orderId) return NextResponse.json({ error: "Order ID required" }, { status: 400 });
 
         const query = `
-            SELECT 
-                order_id as proof_id, 
-                order_number, 
-                customer_name, 
-                customer_email, 
-                payment_proof_url as image_url, 
-                payment_status as verification_status,
-                notes as admin_notes,
-                created_at as uploaded_at
-            FROM bazaar_orders
-            WHERE order_id = $1 AND payment_proof_url IS NOT NULL
+            SELECT
+                pp.proof_id,
+                pp.order_id,
+                pp.user_id,
+                pp.image_url,
+                pp.uploaded_at,
+                pp.verification_status,
+                pp.verified_by,
+                pp.verified_at,
+                pp.admin_notes,
+                bo.order_number,
+                bo.customer_name,
+                bo.customer_email,
+                bo.payment_method,
+                bo.payment_status
+            FROM bazaar_payment_proofs pp
+            LEFT JOIN bazaar_orders bo ON pp.order_id = bo.order_id
+            WHERE pp.order_id = $1
         `;
 
         const result = await db.query(query, [orderId]);
-        
+
         if ((result.rowCount ?? 0) === 0) {
             return NextResponse.json({ proof: null });
         }
@@ -60,26 +67,44 @@ export async function PATCH(req: NextRequest) {
 
         if (!proofId || !status) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
 
-        // Map status to payment_status
-        const paymentStatus = status === 'approved' ? 'paid' : 'failed';
-
-        const query = `
-            UPDATE bazaar_orders
-            SET 
-                payment_status = $1,
-                notes = $2,
-                updated_at = NOW()
-            WHERE order_id = $3
+        // Update payment proof verification
+        const proofQuery = `
+            UPDATE bazaar_payment_proofs
+            SET
+                verification_status = $1,
+                admin_notes = $2,
+                verified_by = $3,
+                verified_at = NOW()
+            WHERE proof_id = $4
             RETURNING *
         `;
 
-        const result = await db.query(query, [paymentStatus, adminNotes, proofId]);
+        const proofResult = await db.query(proofQuery, [status, adminNotes, user.user_id, proofId]);
 
-        if ((result.rowCount ?? 0) === 0) {
-            return NextResponse.json({ error: "Order not found" }, { status: 404 });
+        if ((proofResult.rowCount ?? 0) === 0) {
+            return NextResponse.json({ error: "Payment proof not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ success: true, order: result.rows[0] });
+        // Update corresponding order's payment status
+        const proof = proofResult.rows[0];
+        const orderPaymentStatus = status === 'approved' ? 'paid' : 'failed';
+
+        const orderQuery = `
+            UPDATE bazaar_orders
+            SET
+                payment_status = $1,
+                updated_at = NOW()
+            WHERE order_id = $2
+            RETURNING *
+        `;
+
+        await db.query(orderQuery, [orderPaymentStatus, proof.order_id]);
+
+        return NextResponse.json({
+            success: true,
+            proof: proofResult.rows[0],
+            message: `Payment proof ${status === 'approved' ? 'verified' : 'rejected'} successfully`
+        });
 
     } catch (error) {
         console.error("V1 Payment Proof PATCH Error:", error);

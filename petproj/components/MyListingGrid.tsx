@@ -42,6 +42,7 @@ export interface Pet {
     profile_image_url: string | null;
     image_id: number | null;
     image_url: string | null;
+    primary_image?: string | null;
     approved: boolean | null;
 }
 
@@ -185,16 +186,17 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                         <div className="absolute top-2 left-2 flex gap-2">
                             <div
                                 className={`${pet.approved
-                                        ? "bg-green-600"
-                                        : "bg-orange-500"
+                                    ? "bg-green-600"
+                                    : "bg-orange-500"
                                     } text-white text-sm font-semibold px-3 py-1 rounded-full`}>
                                 {pet.approved ? "Approved" : "Pending"}
                             </div>
                         </div>
                         <img
-                            src={pet.image_url || "/dog-placeholder.png"}
+                            src={pet.primary_image || (pet as any).primaryImage || (pet as any).image_url || "/dog-placeholder.png"}
                             alt={pet.pet_name}
-                            className="w-full h-48 object-cover rounded-2xl"
+                            className="w-full h-48 object-cover rounded-2xl block"
+                            style={{ minHeight: '192px' }}
                         />
                     </div>
                     {/* Pet Details */}
@@ -359,8 +361,8 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                     <div className="flex justify-between mb-4">
                         <button
                             className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet.listing_type === "adoption"
-                                    ? "bg-primary text-white"
-                                    : "bg-gray-100"
+                                ? "bg-primary text-white"
+                                : "bg-gray-100"
                                 }`}
                             onClick={() =>
                                 setEditingPet({
@@ -372,8 +374,8 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                         </button>
                         <button
                             className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet.listing_type === "foster"
-                                    ? "bg-primary text-white"
-                                    : "bg-gray-100"
+                                ? "bg-primary text-white"
+                                : "bg-gray-100"
                                 }`}
                             onClick={() =>
                                 setEditingPet({

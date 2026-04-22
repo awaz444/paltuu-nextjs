@@ -16,9 +16,13 @@ import { validate } from "@/utils/validation";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    const email = body?.email?.toString().trim().toLowerCase();
+    const password = body?.password?.toString();
+    const name = body?.name?.toString().trim();
+    const otp = body?.otp;
 
     // Schema Validation
-    const validation = validate(body, {
+    const validation = validate({ email, password, name, otp }, {
       email: { required: true, type: 'email' },
       password: { required: true, min: 8 },
       name: { required: true, min: 2 },
@@ -28,8 +32,6 @@ export async function POST(req: Request) {
     if (!validation.success) {
       return NextResponse.json({ message: "Validation failed", errors: validation.errors }, { status: 400 });
     }
-
-    const { email, password, name, otp } = body;
 
     // Rate limiting
     const limiter = await rateLimit(`register:${email}`, 3, 60);

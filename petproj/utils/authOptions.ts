@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "@/db/index";
 import bcrypt from "bcryptjs";
+import { createHash } from "crypto";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -18,11 +19,84 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
+        const normalizedEmail = credentials.email.toString().trim().toLowerCase();
+        const rawPassword = credentials.password.toString();
 
-        const res = await db.query("SELECT * FROM users WHERE email = $1", [credentials.email]);
+        const res = await db.query("SELECT * FROM users WHERE LOWER(email) = LOWER($1)", [normalizedEmail]);
         const user = res.rows[0];
 
-        if (user && (await bcrypt.compare(credentials.password, user.password))) {
+        const inputCandidates = Array.from(new Set([rawPassword, rawPassword.trim()]));
+        const trimmedRawPassword = rawPassword.trim();
+        const emailVariants = Array.from(new Set([normalizedEmail, normalizedEmail.trim(), normalizedEmail.toLowerCase()]));
+        const legacyComposedCandidates = emailVariants.flatMap((mail) => [
+          `${rawPassword}${mail}`,
+          `${mail}${rawPassword}`,
+          `${trimmedRawPassword}${mail}`,
+          `${mail}${trimmedRawPassword}`,
+          `${rawPassword}:${mail}`,
+          `${mail}:${rawPassword}`,
+          `${trimmedRawPassword}:${mail}`,
+          `${mail}:${trimmedRawPassword}`,
+        ]);
+        const expandedInputCandidates = Array.from(
+          new Set([
+            ...inputCandidates,
+            ...legacyComposedCandidates,
+            createHash("sha256").update(rawPassword).digest("hex"),
+            createHash("sha256").update(trimmedRawPassword).digest("hex"),
+            ...legacyComposedCandidates.map((v) => createHash("sha256").update(v).digest("hex")),
+            createHash("md5").update(rawPassword).digest("hex"),
+            createHash("md5").update(trimmedRawPassword).digest("hex"),
+            ...legacyComposedCandidates.map((v) => createHash("md5").update(v).digest("hex")),
+          ])
+        );
+        const storedPassword = typeof user?.password === "string" ? user.password : "";
+        const storedPasswordTrimmed = storedPassword.trim();
+        const storedPasswordLower = storedPasswordTrimmed.toLowerCase();
+        let isValidPassword = false;
+        let matchedInput = rawPassword;
+        let didUpgradeHash = false;
+
+        if (storedPasswordTrimmed.startsWith("$2")) {
+          const normalizedBcryptHash =
+            storedPasswordTrimmed.startsWith("$2y$") || storedPasswordTrimmed.startsWith("$2x$")
+              ? `$2b$${storedPasswordTrimmed.slice(4)}`
+              : storedPasswordTrimmed;
+          for (const candidate of expandedInputCandidates) {
+            if (await bcrypt.compare(candidate, normalizedBcryptHash)) {
+              isValidPassword = true;
+              matchedInput = candidate;
+              break;
+            }
+          }
+        } else if (storedPassword) {
+          for (const candidate of expandedInputCandidates) {
+            const md5Hex = createHash("md5").update(candidate).digest("hex");
+            const sha256Hex = createHash("sha256").update(candidate).digest("hex");
+            if (
+              candidate === storedPassword ||
+              candidate === storedPasswordTrimmed ||
+              md5Hex === storedPasswordLower ||
+              sha256Hex === storedPasswordLower
+            ) {
+              isValidPassword = true;
+              matchedInput = candidate;
+              break;
+            }
+          }
+
+          if (isValidPassword) {
+            const upgradedHash = await bcrypt.hash(trimmedRawPassword || rawPassword, 10);
+            await db.query("UPDATE users SET password = $1 WHERE user_id = $2", [upgradedHash, user.user_id]);
+            didUpgradeHash = true;
+          }
+        }
+        if (!didUpgradeHash && isValidPassword && matchedInput !== rawPassword && matchedInput !== trimmedRawPassword) {
+          const upgradedHash = await bcrypt.hash(trimmedRawPassword || rawPassword, 10);
+          await db.query("UPDATE users SET password = $1 WHERE user_id = $2", [upgradedHash, user.user_id]);
+        }
+
+        if (user && isValidPassword) {
           return {
             id: user.user_id,
             name: user.name,

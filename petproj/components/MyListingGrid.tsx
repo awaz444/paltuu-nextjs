@@ -42,7 +42,6 @@ export interface Pet {
     profile_image_url: string | null;
     image_id: number | null;
     image_url: string | null;
-    primary_image?: string | null;
     approved: boolean | null;
 }
 
@@ -155,11 +154,10 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                     Create new listing
                 </Link>
             )}
-            {pets.map((pet, index) => {
-                return (
-                    <div
-                        key={pet.pet_id}
-                        className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 relative">
+            {pets.map((pet) => (
+                <div
+                    key={pet.pet_id}
+                    className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 relative">
                     <div className="relative">
                         <div className="absolute top-2 right-2 flex gap-2">
                             {/* Delete Button */}
@@ -194,10 +192,9 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                             </div>
                         </div>
                         <img
-                            src={pet.primary_image || (pet as any).primaryImage || (pet as any).image_url || "/dog-placeholder.png"}
+                            src={pet.image_url || "/dog-placeholder.png"}
                             alt={pet.pet_name}
-                            className="w-full h-48 object-cover rounded-2xl block"
-                            style={{ minHeight: '192px' }}
+                            className="w-full h-48 object-cover rounded-2xl"
                         />
                     </div>
                     {/* Pet Details */}
@@ -209,12 +206,12 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                             {formatAge(pet.age_months)}
                         </p>
                         <p className="text-gray-600 mb-1">
-                            {pet.area || "No location set"}
+                            {pet.city} - {pet.area}
                         </p>
                     </div>
+
                 </div>
-                );
-            })}
+            ))}
 
             {/* Confirmation Popup */}
             {showConfirm.show && (

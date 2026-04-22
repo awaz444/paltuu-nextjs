@@ -227,7 +227,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
 
         try {
             setIsEmailVerifying(true);
-            const response = await fetch("/api/v1/auth/otp/send", {
+            const response = await fetch("/api/v1/auth/send-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
@@ -294,7 +294,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
     const handleSubmitOtp = async () => {
         try {
             setIsVerifying(true);
-            const response = await fetch("/api/v1/auth/otp/verify", {
+            const response = await fetch("/api/v1/auth/verify-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, otp }),
@@ -462,10 +462,14 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                     <input
                         type="text"
                         value={phone_number}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, "");
+                            if (value.length <= 10) setPhoneNumber(value);
+                        }}
                         placeholder="3338888666"
                         className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                         required
+                        maxLength={10}
                     />
                 </div>
             </div>

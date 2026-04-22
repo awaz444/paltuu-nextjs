@@ -370,6 +370,7 @@ const CreateUser = () => {
 
                 <form
                     onSubmit={handleSubmit}
+                    noValidate
                     className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6 space-y-4">
                     <h2 className="text-3xl font-semibold text-center mb-2">
                         Sign Up
@@ -514,10 +515,14 @@ const CreateUser = () => {
                             <input
                                 type="text"
                                 value={phone_number}
-                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                onChange={(e) => {
+                                    const value = e.target.value.replace(/\D/g, "");
+                                    if (value.length <= 10) setPhoneNumber(value);
+                                }}
                                 placeholder="3338888666"
                                 className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                                 required
+                                maxLength={10}
                             />
                         </div>
                     </div>

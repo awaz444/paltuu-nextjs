@@ -66,12 +66,8 @@ export default function ApiDocs() {
       {/* Swagger UI */}
       <SwaggerUI
         url="/api/swagger.json"
-        swaggerOptions={{
-          deepLinking: true,
-          presets: ['swagger-ui/presets/apis', 'swagger-ui/swaggerUIBundle'],
-          plugins: ['swagger-ui/plugins/DownloadUrl'],
-          layout: 'BaseLayout',
-        }}
+        deepLinking={true}
+        layout="BaseLayout"
       />
     </div>
   );

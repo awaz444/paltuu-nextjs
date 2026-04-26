@@ -133,15 +133,14 @@ export async function getCachedFeedIds(
 
     try {
         const key = `feed:${userId}`;
-        const maxScore = cursor ?? "+inf";
 
-        // zrevrangebyscore returns members in descending score order
-        const ids = await redis.zrevrangebyscore(
-            key,
-            maxScore,
-            "-inf",
-            { offset: cursor ? 1 : 0, count: limit } // skip the cursor item itself
-        ) as string[];
+        // @upstash/redis uses zrange with rev + byScore instead of zrevrangebyscore
+        const ids = await redis.zrange(key, cursor ?? "+inf", "-inf", {
+            rev: true,
+            byScore: true,
+            offset: cursor ? 1 : 0, // skip the cursor item itself
+            count: limit,
+        }) as string[];
 
         return ids.length > 0 ? ids : null;
     } catch {

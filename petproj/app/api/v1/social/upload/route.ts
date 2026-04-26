@@ -5,11 +5,6 @@ import { uploadToS3 } from "@/lib/s3";
 
 export const dynamic = "force-dynamic";
 
-// Disable Next.js body parser — we handle the stream ourselves
-export const config = {
-    api: { bodyParser: false },
-};
-
 // ── BlurHash generator ──────────────────────────────────────────────────────
 const B83 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~";
 

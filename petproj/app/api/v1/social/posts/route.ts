@@ -1,44 +1,139 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import { fanOutPostToFollowers } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
 
 /**
  * GET /api/v1/social/posts
- * Fetch social feed (Following + Global)
+ * Fetch social feed — following users first, then global fallback
+ * Cursor-based pagination (no OFFSET)
  */
 export async function GET(req: NextRequest) {
     try {
         const userId = await getUserIdFromRequest(req);
         const { searchParams } = new URL(req.url);
-        const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
         const limit = Math.min(50, parseInt(searchParams.get("limit") || "20", 10));
-        const offset = (page - 1) * limit;
+        const cursor = searchParams.get("cursor"); // ISO timestamp or null for first page
+        const mode = searchParams.get("mode") || "following"; // 'following' | 'global'
 
-        // Base Query: Fetch posts with user and pet info
-        // Simple dynamic feed: Global posts ordered by date for now
-        // TODO: Filter by following if userId is present
-        const query = `
-            SELECT 
-                p.*,
-                u.name as author_name, u.image as author_image, u.social_username,
-                pet.pet_name, pet.image_url as pet_image,
-                COALESCE((SELECT json_agg(m.*) FROM social_post_media m WHERE m.post_id = p.post_id), '[]'::json) as media,
-                EXISTS(SELECT 1 FROM social_likes l WHERE l.post_id = p.post_id AND l.user_id = $1) as is_liked
-            FROM social_posts p
-            JOIN users u ON p.user_id = u.user_id
-            LEFT JOIN pets pet ON p.pet_id = pet.pet_id
-            WHERE p.is_deleted = false AND p.is_hidden = false
-            ORDER BY p.created_at DESC
-            LIMIT $2 OFFSET $3
-        `;
+        const cursorClause = cursor ? `AND p.created_at < $3` : "";
+        const cursorParam = cursor ? [cursor] : [];
 
-        const result = await db.query(query, [userId || 0, limit, offset]);
-        
+        let feedQuery: string;
+        let queryParams: any[];
+
+        if (userId && mode === "following") {
+            // Show posts from people the user follows
+            feedQuery = `
+                SELECT 
+                    p.*,
+                    u.name            AS author_name,
+                    u.profile_image_url AS author_image,
+                    u.social_username,
+                    COALESCE(
+                        (SELECT json_agg(m.* ORDER BY m.ordering) 
+                         FROM social_post_media m 
+                         WHERE m.post_id = p.post_id), 
+                        '[]'::json
+                    ) AS media,
+                    -- repost origin
+                    op.content         AS original_content,
+                    op.user_id         AS original_user_id,
+                    ou.name            AS original_author_name,
+                    ou.social_username  AS original_social_username,
+                    ou.profile_image_url AS original_author_image,
+                    COALESCE(
+                        (SELECT json_agg(om.* ORDER BY om.ordering) 
+                         FROM social_post_media om 
+                         WHERE om.post_id = op.post_id), 
+                        '[]'::json
+                    ) AS original_media,
+                    -- viewer context
+                    EXISTS(
+                        SELECT 1 FROM social_likes l 
+                        WHERE l.post_id = p.post_id AND l.user_id = $1
+                    ) AS is_liked,
+                    EXISTS(
+                        SELECT 1 FROM social_reposts r 
+                        WHERE r.post_id = p.post_id AND r.user_id = $1
+                    ) AS is_reposted
+                FROM social_posts p
+                JOIN users u ON p.user_id = u.user_id
+                LEFT JOIN social_posts op ON op.post_id = p.original_post_id
+                LEFT JOIN users ou ON ou.user_id = op.user_id
+                WHERE 
+                    p.is_deleted = false 
+                    AND p.is_hidden = false
+                    AND (
+                        p.user_id = $1
+                        OR p.user_id IN (
+                            SELECT following_id FROM social_follows WHERE follower_id = $1
+                        )
+                    )
+                    ${cursorClause}
+                ORDER BY p.created_at DESC
+                LIMIT $2
+            `;
+            queryParams = [userId, limit, ...cursorParam];
+        } else {
+            // Global feed (no auth or explicitly requested)
+            feedQuery = `
+                SELECT 
+                    p.*,
+                    u.name            AS author_name,
+                    u.profile_image_url AS author_image,
+                    u.social_username,
+                    COALESCE(
+                        (SELECT json_agg(m.* ORDER BY m.ordering) 
+                         FROM social_post_media m 
+                         WHERE m.post_id = p.post_id), 
+                        '[]'::json
+                    ) AS media,
+                    op.content         AS original_content,
+                    op.user_id         AS original_user_id,
+                    ou.name            AS original_author_name,
+                    ou.social_username  AS original_social_username,
+                    ou.profile_image_url AS original_author_image,
+                    COALESCE(
+                        (SELECT json_agg(om.* ORDER BY om.ordering) 
+                         FROM social_post_media om 
+                         WHERE om.post_id = op.post_id), 
+                        '[]'::json
+                    ) AS original_media,
+                    EXISTS(
+                        SELECT 1 FROM social_likes l 
+                        WHERE l.post_id = p.post_id AND l.user_id = $1
+                    ) AS is_liked,
+                    EXISTS(
+                        SELECT 1 FROM social_reposts r 
+                        WHERE r.post_id = p.post_id AND r.user_id = $1
+                    ) AS is_reposted
+                FROM social_posts p
+                JOIN users u ON p.user_id = u.user_id
+                LEFT JOIN social_posts op ON op.post_id = p.original_post_id
+                LEFT JOIN users ou ON ou.user_id = op.user_id
+                WHERE p.is_deleted = false AND p.is_hidden = false
+                ${cursorClause}
+                ORDER BY p.created_at DESC
+                LIMIT $2
+            `;
+            queryParams = [userId || 0, limit, ...cursorParam];
+        }
+
+        const result = await db.query(feedQuery, queryParams);
+        const posts = result.rows;
+
+        // Next cursor = created_at of last post
+        const nextCursor = posts.length === limit
+            ? posts[posts.length - 1].created_at
+            : null;
+
         return NextResponse.json({
-            posts: result.rows,
-            meta: { page, limit }
+            posts,
+            next_cursor: nextCursor,
+            has_more: nextCursor !== null,
         });
 
     } catch (error) {
@@ -82,13 +177,18 @@ export async function POST(req: NextRequest) {
                 `, [post.post_id, m.media_type, m.url, m.thumbnail_url || null, i]);
             }
 
-            // 3. Increment Post Count for user and pet
+            // 3. Increment Post Count
             await db.query("UPDATE users SET post_count = post_count + 1 WHERE user_id = $1", [userId]);
             if (pet_id) {
                 await db.query("UPDATE pets SET post_count = post_count + 1 WHERE pet_id = $1", [pet_id]);
             }
 
             await db.query('COMMIT');
+
+            // Fan-out to follower feed caches (fire and forget — non-blocking)
+            fanOutPostToFollowers(post.post_id, userId, post.created_at, db)
+                .catch(() => {}); // never block the response
+
             return NextResponse.json(post, { status: 201 });
 
         } catch (e) {
@@ -98,8 +198,8 @@ export async function POST(req: NextRequest) {
 
     } catch (error) {
         console.error("V1 Social Posts POST error:", error);
-        return NextResponse.json({ 
-            error: error instanceof Error ? error.message : "Internal Server Error" 
+        return NextResponse.json({
+            error: error instanceof Error ? error.message : "Internal Server Error"
         }, { status: 500 });
     }
 }

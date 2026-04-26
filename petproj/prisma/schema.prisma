@@ -191,6 +191,7 @@ model users {
   social_follows_social_follows_following_idTousers social_follows[]        @relation("social_follows_following_idTousers")
   social_likes                                      social_likes[]
   social_posts                                      social_posts[]
+  social_reposts                                    social_reposts[]
   cities                                            cities?                 @relation(fields: [city_id], references: [city_id], onDelete: Cascade, onUpdate: NoAction)
   vendors                                           vendors?
   vet_reviews                                       vet_reviews[]
@@ -865,24 +866,42 @@ model social_post_media {
 }
 
 model social_posts {
-  post_id           BigInt              @id @default(autoincrement())
-  user_id           Int
-  pet_id            Int?
-  post_type         String
-  content           String?
-  like_count        Int?                @default(0)
-  comment_count     Int?                @default(0)
-  repost_count      Int?                @default(0)
-  view_count        Int?                @default(0)
-  is_hidden         Boolean?            @default(false)
-  is_deleted        Boolean?            @default(false)
-  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime?           @default(now()) @db.Timestamptz(6)
-  social_comments   social_comments[]
-  social_likes      social_likes[]
-  social_post_media social_post_media[]
-  pets              pets?               @relation(fields: [pet_id], references: [pet_id], onUpdate: NoAction)
-  users             users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  post_id            BigInt              @id @default(autoincrement())
+  user_id            Int
+  pet_id             Int?
+  post_type          String
+  content            String?
+  is_repost          Boolean?            @default(false)
+  original_post_id   BigInt?
+  like_count         Int?                @default(0)
+  comment_count      Int?                @default(0)
+  repost_count       Int?                @default(0)
+  view_count         Int?                @default(0)
+  is_hidden          Boolean?            @default(false)
+  is_deleted         Boolean?            @default(false)
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  social_comments    social_comments[]
+  social_likes       social_likes[]
+  social_post_media  social_post_media[]
+  social_reposts     social_reposts[]
+  // Self-referential for reposts
+  original_post      social_posts?       @relation("repost_chain", fields: [original_post_id], references: [post_id], onDelete: SetNull, onUpdate: NoAction)
+  reposts_of_me      social_posts[]      @relation("repost_chain")
+  pets               pets?               @relation(fields: [pet_id], references: [pet_id], onUpdate: NoAction)
+  users              users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model social_reposts {
+  repost_id    BigInt       @id @default(autoincrement())
+  post_id      BigInt
+  user_id      Int
+  caption      String?
+  created_at   DateTime?    @default(now()) @db.Timestamptz(6)
+  social_posts social_posts @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction)
+  users        users        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([post_id, user_id])
 }
 
 model vendor_inventory {

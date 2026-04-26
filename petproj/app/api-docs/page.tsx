@@ -27,7 +27,7 @@ export default function ApiDocs() {
         </div>
         <div style={{ display: 'flex', gap: '16px' }}>
           <a
-            href="/api/swagger.json"
+            href="/api/v1/swagger.json"
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -65,7 +65,7 @@ export default function ApiDocs() {
 
       {/* Swagger UI */}
       <SwaggerUI
-        url="/api/swagger.json"
+        url="/api/v1/swagger.json"
         deepLinking={true}
         layout="BaseLayout"
       />

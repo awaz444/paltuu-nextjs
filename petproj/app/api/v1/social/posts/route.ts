@@ -169,8 +169,9 @@ export async function POST(req: NextRequest) {
         const limited = await rateLimit(req, LIMITS.POST_CREATE);
         if (limited) return limited;
 
-        const userId = await getUserIdFromRequest(req);
-        if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userIdRaw = await getUserIdFromRequest(req);
+        if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userId = parseInt(String(userIdRaw), 10);
 
         const body = await req.json();
         const { pet_id, post_type, content, media = [] } = body;

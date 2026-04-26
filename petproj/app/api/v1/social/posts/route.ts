@@ -2,138 +2,155 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { fanOutPostToFollowers } from "@/lib/redis";
+import { rateLimit, LIMITS } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
 /**
  * GET /api/v1/social/posts
- * Fetch social feed — following users first, then global fallback
- * Cursor-based pagination (no OFFSET)
+ * Fetch social feed
+ * Modes:
+ *   ?mode=following    (default) — algorithmic ranked feed from followed users + self
+ *   ?mode=global       — algorithmic ranked feed from all users
+ *   ?mode=chronological — pure newest-first (no ranking)
+ *
+ * Cursor-based pagination using the relevance score.
+ *
+ * Algorithm scoring (computed in SQL):
+ *   Recency    40% — EXP decay, half-life = 6 hours
+ *   Engagement 40% — (likes×1 + comments×2 + reposts×3) normalized
+ *   Relationship 20% — following = +0.2 boost, own post = +0.4 boost
  */
 export async function GET(req: NextRequest) {
     try {
+        const limited = await rateLimit(req, LIMITS.FEED);
+        if (limited) return limited;
+
         const userId = await getUserIdFromRequest(req);
         const { searchParams } = new URL(req.url);
         const limit = Math.min(50, parseInt(searchParams.get("limit") || "20", 10));
-        const cursor = searchParams.get("cursor"); // ISO timestamp or null for first page
-        const mode = searchParams.get("mode") || "following"; // 'following' | 'global'
+        const cursor = searchParams.get("cursor"); // stringified float score
+        const mode = searchParams.get("mode") || "following";
 
-        const cursorClause = cursor ? `AND p.created_at < $3` : "";
-        const cursorParam = cursor ? [cursor] : [];
+        const isChronological = mode === "chronological";
+        const isGlobal = mode === "global";
+
+        // ── Shared SELECT columns ──────────────────────────────────────────
+        const selectCols = `
+            p.*,
+            u.name              AS author_name,
+            u.profile_image_url AS author_image,
+            u.social_username,
+            COALESCE(
+                (SELECT json_agg(m.* ORDER BY m.ordering)
+                 FROM social_post_media m WHERE m.post_id = p.post_id),
+                '[]'::json
+            ) AS media,
+            op.content              AS original_content,
+            op.user_id              AS original_user_id,
+            ou.name                 AS original_author_name,
+            ou.social_username      AS original_social_username,
+            ou.profile_image_url    AS original_author_image,
+            COALESCE(
+                (SELECT json_agg(om.* ORDER BY om.ordering)
+                 FROM social_post_media om WHERE om.post_id = op.post_id),
+                '[]'::json
+            ) AS original_media,
+            EXISTS(SELECT 1 FROM social_likes l
+                WHERE l.post_id = p.post_id AND l.user_id = $1) AS is_liked,
+            EXISTS(SELECT 1 FROM social_reposts r
+                WHERE r.post_id = p.post_id AND r.user_id = $1) AS is_reposted
+        `;
+
+        // ── Algorithmic score expression ───────────────────────────────────
+        // Recency: exponential decay, half-life 6 hours (21600 seconds)
+        // Engagement: like×1 + comment×2 + repost×3, soft-capped via LOG
+        // Relationship: following = 0.2, own post = 0.4, stranger = 0
+        const scoreExpr = `(
+            -- Recency score (0..1, peaks now, ~0.5 after 6h)
+            EXP(-EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 21600.0) * 0.4
+
+            -- Engagement score (0..~0.4, LOG-dampened)
+            + LEAST(
+                LOG(1 + p.like_count * 1.0
+                      + p.comment_count * 2.0
+                      + p.repost_count  * 3.0) / 10.0,
+                0.4
+              ) * 0.4
+
+            -- Relationship bonus
+            + CASE
+                WHEN p.user_id = $1 THEN 0.4           -- own post
+                WHEN EXISTS(
+                    SELECT 1 FROM social_follows f
+                    WHERE f.follower_id = $1 AND f.following_id = p.user_id
+                ) THEN 0.2                              -- following
+                ELSE 0.0                                -- stranger
+              END * 0.2
+        )`;
+
+        // ── WHERE clause ───────────────────────────────────────────────────
+        const baseWhere = `p.is_deleted = false AND p.is_hidden = false`;
+        const followingWhere = `AND (
+            p.user_id = $1
+            OR p.user_id IN (SELECT following_id FROM social_follows WHERE follower_id = $1)
+        )`;
 
         let feedQuery: string;
         let queryParams: any[];
 
-        if (userId && mode === "following") {
-            // Show posts from people the user follows
+        if (isChronological) {
+            // Simple cursor: timestamp
+            const cursorClause = cursor ? `AND p.created_at < $3` : "";
             feedQuery = `
-                SELECT 
-                    p.*,
-                    u.name            AS author_name,
-                    u.profile_image_url AS author_image,
-                    u.social_username,
-                    COALESCE(
-                        (SELECT json_agg(m.* ORDER BY m.ordering) 
-                         FROM social_post_media m 
-                         WHERE m.post_id = p.post_id), 
-                        '[]'::json
-                    ) AS media,
-                    -- repost origin
-                    op.content         AS original_content,
-                    op.user_id         AS original_user_id,
-                    ou.name            AS original_author_name,
-                    ou.social_username  AS original_social_username,
-                    ou.profile_image_url AS original_author_image,
-                    COALESCE(
-                        (SELECT json_agg(om.* ORDER BY om.ordering) 
-                         FROM social_post_media om 
-                         WHERE om.post_id = op.post_id), 
-                        '[]'::json
-                    ) AS original_media,
-                    -- viewer context
-                    EXISTS(
-                        SELECT 1 FROM social_likes l 
-                        WHERE l.post_id = p.post_id AND l.user_id = $1
-                    ) AS is_liked,
-                    EXISTS(
-                        SELECT 1 FROM social_reposts r 
-                        WHERE r.post_id = p.post_id AND r.user_id = $1
-                    ) AS is_reposted
+                SELECT ${selectCols}
                 FROM social_posts p
                 JOIN users u ON p.user_id = u.user_id
                 LEFT JOIN social_posts op ON op.post_id = p.original_post_id
                 LEFT JOIN users ou ON ou.user_id = op.user_id
-                WHERE 
-                    p.is_deleted = false 
-                    AND p.is_hidden = false
-                    AND (
-                        p.user_id = $1
-                        OR p.user_id IN (
-                            SELECT following_id FROM social_follows WHERE follower_id = $1
-                        )
-                    )
-                    ${cursorClause}
-                ORDER BY p.created_at DESC
-                LIMIT $2
-            `;
-            queryParams = [userId, limit, ...cursorParam];
-        } else {
-            // Global feed (no auth or explicitly requested)
-            feedQuery = `
-                SELECT 
-                    p.*,
-                    u.name            AS author_name,
-                    u.profile_image_url AS author_image,
-                    u.social_username,
-                    COALESCE(
-                        (SELECT json_agg(m.* ORDER BY m.ordering) 
-                         FROM social_post_media m 
-                         WHERE m.post_id = p.post_id), 
-                        '[]'::json
-                    ) AS media,
-                    op.content         AS original_content,
-                    op.user_id         AS original_user_id,
-                    ou.name            AS original_author_name,
-                    ou.social_username  AS original_social_username,
-                    ou.profile_image_url AS original_author_image,
-                    COALESCE(
-                        (SELECT json_agg(om.* ORDER BY om.ordering) 
-                         FROM social_post_media om 
-                         WHERE om.post_id = op.post_id), 
-                        '[]'::json
-                    ) AS original_media,
-                    EXISTS(
-                        SELECT 1 FROM social_likes l 
-                        WHERE l.post_id = p.post_id AND l.user_id = $1
-                    ) AS is_liked,
-                    EXISTS(
-                        SELECT 1 FROM social_reposts r 
-                        WHERE r.post_id = p.post_id AND r.user_id = $1
-                    ) AS is_reposted
-                FROM social_posts p
-                JOIN users u ON p.user_id = u.user_id
-                LEFT JOIN social_posts op ON op.post_id = p.original_post_id
-                LEFT JOIN users ou ON ou.user_id = op.user_id
-                WHERE p.is_deleted = false AND p.is_hidden = false
+                WHERE ${baseWhere}
+                ${userId ? followingWhere : ""}
                 ${cursorClause}
                 ORDER BY p.created_at DESC
                 LIMIT $2
             `;
-            queryParams = [userId || 0, limit, ...cursorParam];
+            queryParams = [userId || 0, limit, ...(cursor ? [cursor] : [])];
+
+        } else {
+            // Algorithmic: score-based cursor
+            const cursorClause = cursor ? `AND ${scoreExpr} < $3` : "";
+            feedQuery = `
+                SELECT ${selectCols},
+                    ${scoreExpr} AS relevance_score
+                FROM social_posts p
+                JOIN users u ON p.user_id = u.user_id
+                LEFT JOIN social_posts op ON op.post_id = p.original_post_id
+                LEFT JOIN users ou ON ou.user_id = op.user_id
+                WHERE ${baseWhere}
+                ${!isGlobal && userId ? followingWhere : ""}
+                ${cursorClause}
+                ORDER BY relevance_score DESC, p.created_at DESC
+                LIMIT $2
+            `;
+            queryParams = [userId || 0, limit, ...(cursor ? [parseFloat(cursor)] : [])];
         }
 
         const result = await db.query(feedQuery, queryParams);
         const posts = result.rows;
 
-        // Next cursor = created_at of last post
+        // Next cursor
+        const lastPost = posts[posts.length - 1];
         const nextCursor = posts.length === limit
-            ? posts[posts.length - 1].created_at
+            ? (isChronological
+                ? String(lastPost.created_at)
+                : String(lastPost.relevance_score))
             : null;
 
         return NextResponse.json({
             posts,
             next_cursor: nextCursor,
             has_more: nextCursor !== null,
+            mode: isChronological ? "chronological" : "algorithmic",
         });
 
     } catch (error) {
@@ -148,6 +165,9 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
     try {
+        const limited = await rateLimit(req, LIMITS.POST_CREATE);
+        if (limited) return limited;
+
         const userId = await getUserIdFromRequest(req);
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

@@ -31,8 +31,24 @@ function getS3(): S3Client {
 export type S3Folder = "posts" | "covers" | "profile-pics";
 
 /**
+ * Converts a raw S3 URL to a CloudFront CDN URL.
+ * If AWS_CLOUDFRONT_DOMAIN is not set, returns the S3 URL unchanged.
+ */
+export function toCdnUrl(s3Url: string): string {
+    const cfDomain = process.env.AWS_CLOUDFRONT_DOMAIN;
+    if (!cfDomain) return s3Url; // CloudFront not configured yet
+
+    // Replace https://bucket.s3.region.amazonaws.com/ with https://cf-domain/
+    return s3Url.replace(
+        /^https:\/\/[^/]+\.amazonaws\.com\//,
+        `https://${cfDomain}/`
+    );
+}
+
+/**
  * Upload a buffer directly to S3.
- * Returns the public HTTPS URL.
+ * Returns a CloudFront CDN URL if AWS_CLOUDFRONT_DOMAIN is set,
+ * otherwise returns the raw S3 URL.
  */
 export async function uploadToS3(
     buffer: Buffer,
@@ -48,22 +64,31 @@ export async function uploadToS3(
             Key: key,
             Body: buffer,
             ContentType: mimeType,
-            // Public read — images served directly via S3 URL
-            // (set bucket policy to allow public GetObject instead of ACL)
         })
     );
 
-    return `https://${BUCKET}.s3.${REGION}.amazonaws.com/${key}`;
+    const s3Url = `https://${BUCKET}.s3.${REGION}.amazonaws.com/${key}`;
+    return toCdnUrl(s3Url); // ← automatically CDN URL when CloudFront is set
 }
 
 /**
- * Delete a file from S3 by its full URL or key.
+ * Delete a file from S3 by its full URL (S3 or CloudFront) or bare key.
  */
 export async function deleteFromS3(urlOrKey: string): Promise<void> {
-    // Extract key from full URL if needed
-    const key = urlOrKey.startsWith("https://")
-        ? urlOrKey.split(".amazonaws.com/")[1]
-        : urlOrKey;
+    let key: string | undefined;
+
+    if (urlOrKey.startsWith("https://")) {
+        const cfDomain = process.env.AWS_CLOUDFRONT_DOMAIN;
+        if (cfDomain && urlOrKey.includes(cfDomain)) {
+            // CloudFront URL: https://d123.cloudfront.net/posts/xyz.webp
+            key = new URL(urlOrKey).pathname.slice(1); // remove leading /
+        } else {
+            // S3 URL: https://bucket.s3.region.amazonaws.com/posts/xyz.webp
+            key = urlOrKey.split(".amazonaws.com/")[1];
+        }
+    } else {
+        key = urlOrKey; // bare key
+    }
 
     if (!key) return;
 
@@ -91,7 +116,9 @@ export async function getPresignedUploadUrl(
     });
 
     const uploadUrl = await getSignedUrl(getS3(), command, { expiresIn: expiresInSeconds });
-    const fileUrl = `https://${BUCKET}.s3.${REGION}.amazonaws.com/${key}`;
+    // Return CDN URL for the file so the caller stores the CDN URL, not raw S3
+    const s3FileUrl = `https://${BUCKET}.s3.${REGION}.amazonaws.com/${key}`;
+    const fileUrl = toCdnUrl(s3FileUrl);
 
     return { uploadUrl, fileUrl };
 }

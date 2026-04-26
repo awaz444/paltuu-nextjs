@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { emitFollow, emitNotification } from "@/utils/realtimeEmitter";
+import { rateLimit, LIMITS } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,9 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
     try {
+        const limited = await rateLimit(req, LIMITS.FOLLOW);
+        if (limited) return limited;
+
         const followerId = await getUserIdFromRequest(req);
         if (!followerId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

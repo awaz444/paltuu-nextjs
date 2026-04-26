@@ -263,6 +263,25 @@ const AdminPanel = () => {
                         <p className="text-sm text-gray-600">Manage all clinics and vets</p>
                     </div>
                     </Link>
+
+                    {/* Bazaar Portal */}
+                    <Link href="/admin">
+                    <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 relative border border-gray-200 hover:border-primary transition-all cursor-pointer">
+                        <button
+                            className="absolute top-4 right-4 w-6 h-6"
+                            title="Go to Bazaar Portal">
+                            <img
+                                src="/arrow-right.svg"
+                                alt="Details"
+                                className="hover:text-primary"
+                            />
+                        </button>
+                        <h4 className="text-base sm:text-lg font-bold text-primary mb-4">
+                            Go to Bazaar Portal
+                        </h4>
+                        <p className="text-sm text-gray-600">Update products, vet custom items, and track sellers</p>
+                    </div>
+                    </Link>
                 </div>
             </div>
         </>

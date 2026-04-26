@@ -35,7 +35,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
     else if (role === "shop admin") router.push("/shop-panel");
     else if (role === "shelter admin") router.push("/rescue-panel");
     else if (role === "vendor") router.push("/vendor-panel");
-    else if (role === "admin") router.push("/admin");
+    else if (role === "admin") router.push("/admin-panel");
     else router.push("/browse-pets");
   };
 

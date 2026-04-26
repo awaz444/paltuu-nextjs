@@ -41,9 +41,16 @@ export default function AdminDashboard() {
     return (
         <div className="max-w-6xl mx-auto pb-12">
             {/* Header */}
-            <div className="mb-10">
-                <h2 className="text-3xl font-extrabold text-[#065758] tracking-tight">Paltuu Master Admin</h2>
-                <p className="text-gray-500 text-sm mt-1">Overview of business operations and catalog state</p>
+            <div className="flex justify-between items-center mb-10">
+                <div>
+                    <h2 className="text-3xl font-extrabold text-[#065758] tracking-tight">Paltuu Master Admin</h2>
+                    <p className="text-gray-500 text-sm mt-1">Overview of business operations and catalog state</p>
+                </div>
+                <Link href="/admin-panel">
+                    <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-4 py-2 rounded-xl text-sm border border-gray-200 transition">
+                        ← Back to Admin Panel
+                    </button>
+                </Link>
             </div>
 
             {loading ? (

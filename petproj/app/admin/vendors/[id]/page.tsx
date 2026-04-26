@@ -141,117 +141,153 @@ export default function AdminVendorDetailPage({ params }: { params: { id: string
         }
     };
 
-    if (loading) return <div style={{ color: '#8b9bb4', textAlign: 'center', padding: '3rem' }}>Loading vendor details...</div>;
-    if (!vendor) return <div style={{ color: '#ff6b6b', textAlign: 'center', padding: '3rem' }}>Vendor not found.</div>;
-
-    const inputStyle = {
-        width: '100%',
-        padding: '0.75rem',
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: '10px',
-        color: '#ffffff',
-        outline: 'none',
-        fontSize: '0.95rem',
-    };
-
-    const tabStyle = (active: boolean) => ({
-        padding: '0.75rem 1.5rem',
-        cursor: 'pointer',
-        fontWeight: 600,
-        borderRadius: '10px',
-        background: active ? 'linear-gradient(135deg, rgba(249, 83, 198, 0.15), rgba(178, 36, 239, 0.15))' : 'transparent',
-        border: active ? '1px solid rgba(249, 83, 198, 0.3)' : '1px solid transparent',
-        color: active ? '#ffffff' : '#8b9bb4',
-        transition: 'all 0.3s ease',
-    });
+    if (loading) return <div className="text-center py-12 text-gray-500 font-medium animate-pulse">Loading vendor details...</div>;
+    if (!vendor) return <div className="text-center py-12 text-red-500 font-medium">Vendor not found.</div>;
 
     return (
-        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        <div className="max-w-4xl mx-auto pb-12">
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
-                <Link href="/admin/vendors" style={{ textDecoration: 'none', color: '#8b9bb4' }}>
+            <div className="flex items-center gap-4 mb-8">
+                <Link href="/admin/vendors" className="text-gray-500 hover:text-[#065758] font-medium text-sm">
                     ← Back to Vendors
                 </Link>
-                <h2 style={{ fontSize: '1.75rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+                <h2 className="text-2xl font-extrabold text-[#065758]">
                     {vendor.shop_name}
                 </h2>
             </div>
 
             {error && (
-                <div style={{
-                    padding: '1rem',
-                    background: error.includes('successfully') ? 'rgba(46, 213, 115, 0.15)' : 'rgba(240, 44, 44, 0.15)',
-                    border: `1px solid ${error.includes('successfully') ? '#2ed573' : '#ff6b6b'}`,
-                    color: error.includes('successfully') ? '#2ed573' : '#ff6b6b',
-                    borderRadius: '12px',
-                    marginBottom: '2rem',
-                    fontWeight: 600,
-                }}>{error}</div>
+                <div className={`p-4 rounded-xl mb-6 font-medium border text-sm ${
+                    error.includes('successfully') 
+                        ? 'bg-green-50 text-green-700 border-green-100' 
+                        : 'bg-red-50 text-red-600 border-red-100'
+                }`}>
+                    {error}
+                </div>
             )}
 
             {/* Tabs */}
-            <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '2.5rem' }}>
-                <div style={tabStyle(tab === 'settings')} onClick={() => setTab('settings')}>Settings</div>
-                <div style={tabStyle(tab === 'delivery')} onClick={() => setTab('delivery')}>Delivery Zone</div>
-                <div style={tabStyle(tab === 'inventory')} onClick={() => setTab('inventory')}>Inventory</div>
+            <div className="flex gap-2 p-1 bg-gray-100 rounded-2xl mb-8 max-w-sm">
+                {[
+                    { id: 'settings', label: 'Settings' },
+                    { id: 'delivery', label: 'Delivery Zone' },
+                    { id: 'inventory', label: 'Inventory' }
+                ].map((t) => (
+                    <button
+                        key={t.id}
+                        onClick={() => setTab(t.id)}
+                        className={`flex-1 py-2 text-xs font-semibold rounded-xl transition duration-150 ${
+                            tab === t.id 
+                                ? 'bg-white text-[#065758] shadow-sm' 
+                                : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        {t.label}
+                    </button>
+                ))}
             </div>
 
             {/* Tab 1: Settings */}
             {tab === 'settings' && (
-                <form onSubmit={handleSaveSettings} style={{
-                    background: 'rgba(22, 27, 34, 0.7)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                    borderRadius: '16px',
-                    padding: '2rem',
-                }}>
-                    <h3 style={{ margin: '0 0 1.5rem 0', color: '#ffffff' }}>General & Financial Settings</h3>
+                <form onSubmit={handleSaveSettings} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                    <h3 className="text-lg font-bold text-gray-800 mb-6 border-b border-gray-100 pb-3">General & Financial Settings</h3>
                     
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#8b9bb4' }}>Shop Name</label>
-                            <input type="text" value={shopName} onChange={(e) => setShopName(e.target.value)} style={inputStyle} required />
+                            <label className="block text-gray-600 font-semibold text-xs uppercase mb-1">Shop Name</label>
+                            <input 
+                                type="text" 
+                                value={shopName} 
+                                onChange={(e) => setShopName(e.target.value)} 
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] outline-none transition" 
+                                required 
+                            />
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#8b9bb4' }}>Address</label>
-                            <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} style={inputStyle} />
+                            <label className="block text-gray-600 font-semibold text-xs uppercase mb-1">Address</label>
+                            <input 
+                                type="text" 
+                                value={address} 
+                                onChange={(e) => setAddress(e.target.value)} 
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] outline-none transition" 
+                            />
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#8b9bb4' }}>Contact Number</label>
-                            <input type="text" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} style={inputStyle} />
+                            <label className="block text-gray-600 font-semibold text-xs uppercase mb-1">Contact Number</label>
+                            <input 
+                                type="text" 
+                                value={contactNumber} 
+                                onChange={(e) => setContactNumber(e.target.value)} 
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] outline-none transition" 
+                            />
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#8b9bb4' }}>WhatsApp Number</label>
-                            <input type="text" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} style={inputStyle} />
+                            <label className="block text-gray-600 font-semibold text-xs uppercase mb-1">WhatsApp Number</label>
+                            <input 
+                                type="text" 
+                                value={whatsappNumber} 
+                                onChange={(e) => setWhatsappNumber(e.target.value)} 
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] outline-none transition" 
+                            />
                         </div>
 
-                        <div style={{ gridColumn: 'span 2', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', margin: '1rem 0' }} />
+                        <div className="sm:col-span-2 border-b border-gray-100 my-2" />
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#8b9bb4' }}>Flat Delivery Fee (PKR)</label>
-                            <input type="number" value={flatFee} onChange={(e) => setFlatFee(e.target.value)} style={inputStyle} />
+                            <label className="block text-gray-600 font-semibold text-xs uppercase mb-1">Flat Delivery Fee (PKR)</label>
+                            <input 
+                                type="number" 
+                                value={flatFee} 
+                                onChange={(e) => setFlatFee(e.target.value)} 
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] outline-none transition" 
+                            />
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#8b9bb4' }}>Per KG Delivery Fee (PKR)</label>
-                            <input type="number" value={perKgFee} onChange={(e) => setPerKgFee(e.target.value)} style={inputStyle} />
+                            <label className="block text-gray-600 font-semibold text-xs uppercase mb-1">Per KG Delivery Fee (PKR)</label>
+                            <input 
+                                type="number" 
+                                value={perKgFee} 
+                                onChange={(e) => setPerKgFee(e.target.value)} 
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] outline-none transition" 
+                            />
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#8b9bb4' }}>Free Delivery Threshold (PKR)</label>
-                            <input type="number" value={freeThreshold} onChange={(e) => setFreeThreshold(e.target.value)} style={inputStyle} />
+                            <label className="block text-gray-600 font-semibold text-xs uppercase mb-1">Free Delivery Threshold (PKR)</label>
+                            <input 
+                                type="number" 
+                                value={freeThreshold} 
+                                onChange={(e) => setFreeThreshold(e.target.value)} 
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] outline-none transition" 
+                            />
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#8b9bb4' }}>Platform Fee (%)</label>
-                            <input type="number" step="0.1" value={platformFee} onChange={(e) => setPlatformFee(e.target.value)} style={inputStyle} />
+                            <label className="block text-gray-600 font-semibold text-xs uppercase mb-1">Platform Fee (%)</label>
+                            <input 
+                                type="number" 
+                                step="0.1" 
+                                value={platformFee} 
+                                onChange={(e) => setPlatformFee(e.target.value)} 
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] outline-none transition" 
+                            />
                         </div>
 
-                        <div style={{ display: 'flex', gap: '2rem', gridColumn: 'span 2', marginTop: '1rem' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff', cursor: 'pointer' }}>
-                                <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
+                        <div className="flex flex-col sm:flex-row gap-4 sm:col-span-2 mt-2">
+                            <label className="flex items-center gap-2 text-sm text-gray-700 font-medium cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    checked={isActive} 
+                                    onChange={(e) => setIsActive(e.target.checked)} 
+                                    className="rounded border-gray-300 text-[#065758] focus:ring-[#065758] cursor-pointer"
+                                />
                                 Active Account
                             </label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff', cursor: 'pointer' }}>
-                                <input type="checkbox" checked={isVerified} onChange={(e) => setIsVerified(e.target.checked)} />
+                            <label className="flex items-center gap-2 text-sm text-gray-700 font-medium cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    checked={isVerified} 
+                                    onChange={(e) => setIsVerified(e.target.checked)} 
+                                    className="rounded border-gray-300 text-[#065758] focus:ring-[#065758] cursor-pointer"
+                                />
                                 Verified Vendor
                             </label>
                         </div>
@@ -260,17 +296,7 @@ export default function AdminVendorDetailPage({ params }: { params: { id: string
                     <button 
                         type="submit" 
                         disabled={saving}
-                        style={{
-                            width: '100%',
-                            padding: '0.85rem',
-                            background: 'linear-gradient(135deg, #f953c6, #b224ef)',
-                            border: 'none',
-                            borderRadius: '10px',
-                            color: '#ffffff',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            marginTop: '2rem'
-                        }}
+                        className={`w-full py-3 bg-[#065758] hover:bg-[#043b3c] text-white font-semibold rounded-xl mt-8 shadow-sm transition ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         {saving ? 'Saving...' : 'Save Vendor Settings'}
                     </button>
@@ -279,88 +305,62 @@ export default function AdminVendorDetailPage({ params }: { params: { id: string
 
             {/* Tab 2: Delivery Zone */}
             {tab === 'delivery' && (
-                <div style={{
-                    background: 'rgba(22, 27, 34, 0.7)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                    borderRadius: '16px',
-                    padding: '2rem',
-                }}>
-                    <h3 style={{ margin: '0 0 1.5rem 0', color: '#ffffff' }}>Delivery Polygon Representation</h3>
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4">Delivery Polygon Representation</h3>
                     {vendor.delivery_polygon ? (
-                        <pre style={{
-                            background: 'rgba(0,0,0,0.3)',
-                            padding: '1.25rem',
-                            borderRadius: '12px',
-                            overflowX: 'auto',
-                            color: '#2ed573',
-                            fontSize: '0.85rem'
-                        }}>
+                        <pre className="bg-gray-50 p-4 rounded-xl overflow-x-auto text-xs text-gray-600 font-mono">
                             {JSON.stringify(vendor.delivery_polygon, null, 2)}
                         </pre>
                     ) : (
-                        <p style={{ color: '#8b9bb4', fontStyle: 'italic' }}>No delivery polygon mapped yet by the vendor.</p>
+                        <p className="text-gray-400 italic text-sm">No delivery polygon mapped yet by the vendor.</p>
                     )}
                 </div>
             )}
 
             {/* Tab 3: Inventory */}
             {tab === 'inventory' && (
-                <div style={{
-                    background: 'rgba(22, 27, 34, 0.7)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                }}>
+                <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
                     {inventory.length === 0 ? (
-                        <p style={{ color: '#8b9bb4', fontStyle: 'italic', padding: '2rem', margin: 0 }}>Vendor has not added items to inventory.</p>
+                        <p className="text-gray-400 italic text-center py-12 text-sm">Vendor has not added items to inventory.</p>
                     ) : (
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr style={{ background: 'rgba(255, 255, 255, 0.02)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                                        <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem' }}>Product Title</th>
-                                        <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem' }}>Original (PKR)</th>
-                                        <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem' }}>Selling (PKR)</th>
-                                        <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem' }}>Stock</th>
-                                        <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem' }}>Status</th>
-                                        <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem' }}>Actions</th>
+                                    <tr className="bg-gray-50/75 border-b border-gray-200 text-gray-500 font-semibold text-xs tracking-wider uppercase">
+                                        <th className="p-4">Product Title</th>
+                                        <th className="p-4">Original (PKR)</th>
+                                        <th className="p-4">Selling (PKR)</th>
+                                        <th className="p-4">Stock</th>
+                                        <th className="p-4">Status</th>
+                                        <th className="p-4 text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="divide-y divide-gray-100 text-sm">
                                     {inventory.map((item) => (
-                                        <tr key={item.inventory_id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)' }}>
-                                            <td style={{ padding: '1rem', color: '#ffffff', fontWeight: 600 }}>
+                                        <tr key={item.inventory_id} className="hover:bg-gray-50/50 transition">
+                                            <td className="p-4 font-semibold text-gray-800">
                                                 {item.product_title || item.custom_title}
                                             </td>
-                                            <td style={{ padding: '1rem', color: '#8b9bb4' }}>{item.original_price || '-'}</td>
-                                            <td style={{ padding: '1rem', color: '#ffffff' }}>{item.selling_price}</td>
-                                            <td style={{ padding: '1rem', color: '#8b9bb4' }}>{item.stock_count ?? '∞'}</td>
-                                            <td style={{ padding: '1rem' }}>
-                                                <span style={{
-                                                    padding: '0.25rem 0.5rem',
-                                                    borderRadius: '6px',
-                                                    fontSize: '0.75rem',
-                                                    fontWeight: 600,
-                                                    background: item.is_available ? 'rgba(46, 213, 115, 0.15)' : 'rgba(240, 44, 44, 0.15)',
-                                                    color: item.is_available ? '#2ed573' : '#ff6b6b'
-                                                }}>
+                                            <td className="p-4 text-gray-500">{item.original_price || '-'}</td>
+                                            <td className="p-4 font-semibold text-gray-800">{item.selling_price}</td>
+                                            <td className="p-4 text-gray-500">{item.stock_count ?? '∞'}</td>
+                                            <td className="p-4">
+                                                <span className={`inline-block px-2.5 py-1 rounded-full font-bold text-xs ${
+                                                    item.is_available 
+                                                        ? 'bg-green-100 text-green-700' 
+                                                        : 'bg-red-100 text-red-700'
+                                                }`}>
                                                     {item.is_available ? 'Available' : 'Unavailable'}
                                                 </span>
                                             </td>
-                                            <td style={{ padding: '1rem' }}>
+                                            <td className="p-4 text-right">
                                                 <button 
                                                     onClick={() => handleDeactivateInventoryItem(item.inventory_id, item.is_available)}
-                                                    style={{
-                                                        background: 'rgba(255, 255, 255, 0.05)',
-                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        padding: '0.4rem 0.8rem',
-                                                        borderRadius: '6px',
-                                                        color: item.is_available ? '#ff6b6b' : '#2ed573',
-                                                        cursor: 'pointer',
-                                                        fontSize: '0.8rem',
-                                                    }}
+                                                    className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition duration-150 ${
+                                                        item.is_available 
+                                                            ? 'bg-red-50 hover:bg-red-100 text-red-600 border-red-100' 
+                                                            : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-100'
+                                                    }`}
                                                 >
                                                     {item.is_available ? 'Deactivate' : 'Activate'}
                                                 </button>

@@ -47,6 +47,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // console.log("🔄 Auth state changed:", { isAuthenticated, user: user?.email, method: user?.method });
   }, [isAuthenticated, user]);
 
+  // Restrict vendor users to the vendor panel routes
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'vendor') {
+      if (!pathname.startsWith('/vendor-panel') && pathname !== '/auth') {
+        router.push('/vendor-panel');
+      }
+    }
+  }, [isAuthenticated, user, pathname, router]);
+
   // Function to validate token exists and is valid (checks server since httpOnly cookies can't be read client-side)
   const validateToken = async () => {
     if (typeof window === "undefined") return false;
@@ -181,7 +190,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (role === "shop admin") router.push("/shop-panel");
             else if (role === "shelter admin") router.push("/rescue-panel");
             else if (role === "vet") router.push("/vet-panel");
-            else if (role === "admin") router.push("/admin-panel");
+            else if (role === "vendor") router.push("/vendor-panel");
+            else if (role === "admin") router.push("/admin");
             else router.push("/browse-pets");
           }
         } catch {}
@@ -235,8 +245,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         router.push("/rescue-panel");
       } else if (userWithMethod.role === "vet") {
         router.push("/vet-panel");
+      } else if (userWithMethod.role === "vendor") {
+        router.push("/vendor-panel");
       } else if (userWithMethod.role === "admin") {
-        router.push("/admin-panel");
+        router.push("/admin");
       } else {
         router.push("/browse-pets");
       }

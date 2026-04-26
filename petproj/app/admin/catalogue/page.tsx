@@ -52,232 +52,126 @@ export default function AdminCataloguePage() {
     };
 
     return (
-        <div style={{ paddingBottom: '2rem' }}>
+        <div className="pb-12">
             {/* Header */}
-            <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '2.5rem',
-            }}>
+            <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h2 style={{ fontSize: '1.75rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>Product Catalogue</h2>
-                    <p style={{ fontSize: '0.9rem', color: '#8b9bb4', marginTop: '0.5rem', margin: 0 }}>Manage your master product list</p>
+                    <h2 className="text-2xl font-extrabold text-[#065758] tracking-tight">Product Catalogue</h2>
+                    <p className="text-gray-500 text-sm mt-1">Manage your master product list</p>
                 </div>
-                <Link href="/admin/catalogue/new" style={{ textDecoration: 'none' }}>
-                    <button style={{
-                        background: 'linear-gradient(135deg, #f953c6, #b224ef)',
-                        color: '#ffffff',
-                        border: 'none',
-                        padding: '0.75rem 1.5rem',
-                        borderRadius: '12px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 15px rgba(249, 83, 198, 0.4)',
-                        transition: 'all 0.3s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(249, 83, 198, 0.6)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(249, 83, 198, 0.4)';
-                    }}>
+                <Link href="/admin/catalogue/new">
+                    <button className="bg-[#065758] hover:bg-[#043b3c] text-white font-semibold py-2.5 px-5 rounded-xl shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition duration-200">
                         + New Product
                     </button>
                 </Link>
             </div>
 
             {/* Filter / Search Bar */}
-            <div style={{
-                background: 'rgba(22, 27, 34, 0.7)',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255, 255, 255, 0.05)',
-                borderRadius: '16px',
-                padding: '1.25rem',
-                marginBottom: '2rem',
-                display: 'flex',
-                gap: '1rem',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-            }}>
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-8 flex flex-col md:flex-row gap-4 items-center shadow-sm">
                 {/* Search */}
-                <form onSubmit={handleSearch} style={{ display: 'flex', flex: 1, gap: '0.5rem', minWidth: '250px' }}>
+                <form onSubmit={handleSearch} className="flex flex-1 gap-2 w-full md:w-auto">
                     <input 
                         type="text" 
                         placeholder="Search products, brands..." 
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        style={{
-                            flex: 1,
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '10px',
-                            padding: '0.75rem 1rem',
-                            color: '#ffffff',
-                            outline: 'none',
-                            fontSize: '0.9rem',
-                        }}
+                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] focus:ring-0 outline-none transition"
                     />
-                    <button type="submit" style={{
-                        background: '#302b63',
-                        color: '#ffffff',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        padding: '0.75rem 1.25rem',
-                        borderRadius: '10px',
-                        cursor: 'pointer',
-                        fontWeight: 600,
-                    }}>Search</button>
+                    <button type="submit" className="bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 font-semibold px-5 py-2.5 rounded-xl text-sm transition">
+                        Search
+                    </button>
                 </form>
 
                 {/* Filters */}
-                <select 
-                    value={status} 
-                    onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-                    style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '10px',
-                        padding: '0.75rem',
-                        color: '#ffffff',
-                        cursor: 'pointer',
-                        outline: 'none',
-                    }}
-                >
-                    <option value="all">All Statuses</option>
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                </select>
+                <div className="flex gap-4 w-full md:w-auto">
+                    <select 
+                        value={status} 
+                        onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 cursor-pointer outline-none focus:border-[#065758] transition"
+                    >
+                        <option value="all">All Statuses</option>
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                    </select>
 
-                <select 
-                    value={animalType} 
-                    onChange={(e) => { setAnimalType(e.target.value); setPage(1); }}
-                    style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '10px',
-                        padding: '0.75rem',
-                        color: '#ffffff',
-                        cursor: 'pointer',
-                        outline: 'none',
-                    }}
-                >
-                    <option value="all">All Animals</option>
-                    <option value="cat">Cat</option>
-                    <option value="dog">Dog</option>
-                    <option value="bird">Bird</option>
-                    <option value="fish">Fish</option>
-                </select>
+                    <select 
+                        value={animalType} 
+                        onChange={(e) => { setAnimalType(e.target.value); setPage(1); }}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 cursor-pointer outline-none focus:border-[#065758] transition"
+                    >
+                        <option value="all">All Animals</option>
+                        <option value="cat">Cat</option>
+                        <option value="dog">Dog</option>
+                        <option value="bird">Bird</option>
+                        <option value="fish">Fish</option>
+                    </select>
+                </div>
             </div>
 
             {/* Product Table */}
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '3rem', color: '#8b9bb4' }}>Loading products...</div>
+                <div className="text-center py-12 text-gray-500 font-medium animate-pulse">Loading products...</div>
             ) : products.length === 0 ? (
-                <div style={{
-                    textAlign: 'center', 
-                    padding: '3rem', 
-                    background: 'rgba(22, 27, 34, 0.5)', 
-                    border: '1px solid rgba(255, 255, 255, 0.05)', 
-                    borderRadius: '16px',
-                    color: '#8b9bb4'
-                }}>
+                <div className="text-center py-12 bg-white border border-gray-200 rounded-2xl text-gray-400">
                     No products found. Add a new product to get started.
                 </div>
             ) : (
-                <div style={{
-                    background: 'rgba(22, 27, 34, 0.7)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                }}>
-                    <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr style={{ background: 'rgba(255, 255, 255, 0.02)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>Image</th>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>Title</th>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>Brand</th>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>Animal</th>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>SKU</th>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>Status</th>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>Variants</th>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>Weight</th>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>Actions</th>
+                                <tr className="bg-gray-50/75 border-b border-gray-200 text-gray-500 font-semibold text-xs tracking-wider uppercase">
+                                    <th className="p-4">Image</th>
+                                    <th className="p-4">Title</th>
+                                    <th className="p-4">Brand</th>
+                                    <th className="p-4">Animal</th>
+                                    <th className="p-4">SKU</th>
+                                    <th className="p-4">Status</th>
+                                    <th className="p-4">Variants</th>
+                                    <th className="p-4">Weight</th>
+                                    <th className="p-4 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-gray-100 text-sm">
                                 {products.map((p) => (
-                                    <tr key={p.product_id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)', transition: 'background 0.2s' }}
-                                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.01)'; }}
-                                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
-                                        <td style={{ padding: '1rem' }}>
-                                            <div style={{
-                                                width: '45px',
-                                                height: '45px',
-                                                borderRadius: '8px',
-                                                overflow: 'hidden',
-                                                background: 'rgba(255, 255, 255, 0.05)',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                            }}>
+                                    <tr key={p.product_id} className="hover:bg-gray-50/50 transition">
+                                        <td className="p-4">
+                                            <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center">
                                                 {p.images && p.images[0] ? (
-                                                    <img src={p.images[0]} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <span style={{ opacity: 0.3 }}>📦</span>
+                                                    <span className="text-xl opacity-40">📦</span>
                                                 )}
                                             </div>
                                         </td>
-                                        <td style={{ padding: '1rem', fontWeight: 600, color: '#ffffff' }}>{p.title}</td>
-                                        <td style={{ padding: '1rem', color: '#8b9bb4' }}>{p.brand || '-'}</td>
-                                        <td style={{ padding: '1rem', color: '#8b9bb4', textTransform: 'capitalize' }}>{p.animal_type || '-'}</td>
-                                        <td style={{ padding: '1rem', color: '#8b9bb4' }}>{p.sku || '-'}</td>
-                                        <td style={{ padding: '1rem' }}>
-                                            <span style={{
-                                                padding: '0.25rem 0.6rem',
-                                                borderRadius: '6px',
-                                                fontSize: '0.75rem',
-                                                fontWeight: 600,
-                                                background: p.status === 'published' ? 'rgba(46, 213, 115, 0.15)' : p.status === 'draft' ? 'rgba(255, 171, 0, 0.15)' : 'rgba(240, 44, 44, 0.15)',
-                                                color: p.status === 'published' ? '#2ed573' : p.status === 'draft' ? '#ffab00' : '#ff6b6b',
-                                                textTransform: 'capitalize',
-                                            }}>
+                                        <td className="p-4 font-semibold text-gray-800">{p.title}</td>
+                                        <td className="p-4 text-gray-500">{p.brand || '-'}</td>
+                                        <td className="p-4 text-gray-500 capitalize">{p.animal_type || '-'}</td>
+                                        <td className="p-4 text-gray-500 font-mono text-xs">{p.sku || '-'}</td>
+                                        <td className="p-4">
+                                            <span className={`inline-block px-2.5 py-1 rounded-full font-bold text-xs capitalize ${
+                                                p.status === 'published' 
+                                                    ? 'bg-green-100 text-green-700' 
+                                                    : p.status === 'draft' 
+                                                    ? 'bg-amber-100 text-amber-700' 
+                                                    : 'bg-red-100 text-red-700'
+                                            }`}>
                                                 {p.status}
                                             </span>
                                         </td>
-                                        <td style={{ padding: '1rem', color: '#ffffff', fontWeight: 600 }}>{p.variants_count}</td>
-                                        <td style={{ padding: '1rem' }}>
+                                        <td className="p-4 font-semibold text-gray-800">{p.variants_count}</td>
+                                        <td className="p-4">
                                             {p.shipping_weight ? (
-                                                <span style={{ color: '#8b9bb4' }}>{p.shipping_weight}g</span>
+                                                <span className="text-gray-500">{p.shipping_weight}g</span>
                                             ) : (
-                                                <span style={{
-                                                    padding: '0.25rem 0.5rem',
-                                                    background: 'rgba(255, 171, 0, 0.1)',
-                                                    border: '1px solid rgba(255, 171, 0, 0.2)',
-                                                    color: '#ffab00',
-                                                    borderRadius: '6px',
-                                                    fontSize: '0.75rem',
-                                                    fontWeight: 600,
-                                                }}>⚠️ Needs Weight</span>
+                                                <span className="px-2 py-0.5 bg-amber-50 border border-amber-200 text-amber-600 rounded text-xs font-semibold">
+                                                    Needs Weight
+                                                </span>
                                             )}
                                         </td>
-                                        <td style={{ padding: '1rem' }}>
-                                            <Link href={`/admin/catalogue/${p.product_id}`} style={{ textDecoration: 'none' }}>
-                                                <button style={{
-                                                    background: 'rgba(255, 255, 255, 0.05)',
-                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                    padding: '0.4rem 0.8rem',
-                                                    borderRadius: '8px',
-                                                    color: '#ffffff',
-                                                    cursor: 'pointer',
-                                                    fontSize: '0.85rem',
-                                                    transition: 'all 0.2s',
-                                                }}
-                                                onMouseEnter={(e) => { e.currentTarget.style.background = '#302b63'; }}
-                                                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; }}>
+                                        <td className="p-4 text-right">
+                                            <Link href={`/admin/catalogue/${p.product_id}`}>
+                                                <button className="bg-white hover:bg-[#065758] hover:text-white border border-gray-200 hover:border-[#065758] font-medium px-3.5 py-1.5 rounded-lg text-xs transition duration-150 shadow-sm">
                                                     Edit
                                                 </button>
                                             </Link>
@@ -290,39 +184,26 @@ export default function AdminCataloguePage() {
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            gap: '1rem',
-                            padding: '1.25rem',
-                            borderTop: '1px solid rgba(255, 255, 255, 0.05)'
-                        }}>
+                        <div className="flex justify-between items-center px-6 py-4 bg-gray-50/50 border-t border-gray-200 text-sm">
                             <button 
                                 disabled={page === 1}
                                 onClick={() => setPage(p => Math.max(1, p - 1))}
-                                style={{
-                                    background: 'rgba(255, 255, 255, 0.05)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    padding: '0.5rem 1rem',
-                                    borderRadius: '8px',
-                                    color: page === 1 ? 'rgba(255, 255, 255, 0.2)' : '#ffffff',
-                                    cursor: page === 1 ? 'not-allowed' : 'pointer'
-                                }}
-                            >Previous</button>
-                            <span style={{ fontSize: '0.9rem', color: '#8b9bb4' }}>Page {page} of {totalPages}</span>
+                                className={`px-4 py-2 border border-gray-200 rounded-xl bg-white font-medium shadow-sm transition ${
+                                    page === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-50'
+                                }`}
+                            >
+                                Previous
+                            </button>
+                            <span className="text-gray-500 font-medium">Page {page} of {totalPages}</span>
                             <button 
                                 disabled={page === totalPages}
                                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                style={{
-                                    background: 'rgba(255, 255, 255, 0.05)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    padding: '0.5rem 1rem',
-                                    borderRadius: '8px',
-                                    color: page === totalPages ? 'rgba(255, 255, 255, 0.2)' : '#ffffff',
-                                    cursor: page === totalPages ? 'not-allowed' : 'pointer'
-                                }}
-                            >Next</button>
+                                className={`px-4 py-2 border border-gray-200 rounded-xl bg-white font-medium shadow-sm transition ${
+                                    page === totalPages ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-50'
+                                }`}
+                            >
+                                Next
+                            </button>
                         </div>
                     )}
                 </div>

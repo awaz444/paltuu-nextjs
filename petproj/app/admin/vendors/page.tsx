@@ -100,102 +100,41 @@ export default function AdminVendorsPage() {
         }
     };
 
-    const inputStyle = {
-        width: '100%',
-        padding: '0.75rem',
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: '10px',
-        color: '#ffffff',
-        outline: 'none',
-        fontSize: '0.95rem',
-        marginBottom: '1rem',
-    };
-
     return (
-        <div style={{ paddingBottom: '2rem' }}>
+        <div className="pb-12">
             {/* Header */}
-            <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '2.5rem',
-            }}>
+            <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h2 style={{ fontSize: '1.75rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>Vendor Accounts</h2>
-                    <p style={{ fontSize: '0.9rem', color: '#8b9bb4', marginTop: '0.5rem', margin: 0 }}>Manage the sellers active on Paltuu</p>
+                    <h2 className="text-2xl font-extrabold text-[#065758] tracking-tight">Vendor Accounts</h2>
+                    <p className="text-gray-500 text-sm mt-1">Manage the sellers active on Paltuu</p>
                 </div>
                 <button 
                     onClick={() => setIsCreateModalOpen(true)}
-                    style={{
-                        background: 'linear-gradient(135deg, #f953c6, #b224ef)',
-                        color: '#ffffff',
-                        border: 'none',
-                        padding: '0.75rem 1.5rem',
-                        borderRadius: '12px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 15px rgba(249, 83, 198, 0.4)',
-                        transition: 'all 0.3s ease',
-                    }}
+                    className="bg-[#065758] hover:bg-[#043b3c] text-white font-semibold py-2.5 px-5 rounded-xl shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition duration-200"
                 >
                     + Create Vendor
                 </button>
             </div>
 
             {/* Filter / Search Bar */}
-            <div style={{
-                background: 'rgba(22, 27, 34, 0.7)',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255, 255, 255, 0.05)',
-                borderRadius: '16px',
-                padding: '1.25rem',
-                marginBottom: '2rem',
-                display: 'flex',
-                gap: '1rem',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-            }}>
-                <form onSubmit={handleSearch} style={{ display: 'flex', flex: 1, gap: '0.5rem', minWidth: '250px' }}>
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-8 flex flex-col md:flex-row gap-4 items-center shadow-sm">
+                <form onSubmit={handleSearch} className="flex flex-1 gap-2 w-full md:w-auto">
                     <input 
                         type="text" 
                         placeholder="Search vendors by shop name or email..." 
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        style={{
-                            flex: 1,
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '10px',
-                            padding: '0.75rem 1rem',
-                            color: '#ffffff',
-                            outline: 'none',
-                            fontSize: '0.9rem',
-                        }}
+                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] focus:ring-0 outline-none transition"
                     />
-                    <button type="submit" style={{
-                        background: '#302b63',
-                        color: '#ffffff',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        padding: '0.75rem 1.25rem',
-                        borderRadius: '10px',
-                        cursor: 'pointer',
-                        fontWeight: 600,
-                    }}>Search</button>
+                    <button type="submit" className="bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 font-semibold px-5 py-2.5 rounded-xl text-sm transition">
+                        Search
+                    </button>
                 </form>
 
                 <select 
                     value={status} 
                     onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-                    style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '10px',
-                        padding: '0.75rem',
-                        color: '#ffffff',
-                        cursor: 'pointer',
-                        outline: 'none',
-                    }}
+                    className="w-full md:w-auto bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 cursor-pointer outline-none focus:border-[#065758] transition"
                 >
                     <option value="all">All Vendors</option>
                     <option value="active">Active</option>
@@ -206,68 +145,48 @@ export default function AdminVendorsPage() {
 
             {/* Vendor List Table */}
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '3rem', color: '#8b9bb4' }}>Loading vendors...</div>
+                <div className="text-center py-12 text-gray-500 font-medium animate-pulse">Loading vendors...</div>
             ) : vendors.length === 0 ? (
-                <div style={{
-                    textAlign: 'center', 
-                    padding: '3rem', 
-                    background: 'rgba(22, 27, 34, 0.5)', 
-                    border: '1px solid rgba(255, 255, 255, 0.05)', 
-                    borderRadius: '16px',
-                    color: '#8b9bb4'
-                }}>
+                <div className="text-center py-12 bg-white border border-gray-200 rounded-2xl text-gray-400">
                     No vendors found.
                 </div>
             ) : (
-                <div style={{
-                    background: 'rgba(22, 27, 34, 0.7)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                }}>
-                    <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr style={{ background: 'rgba(255, 255, 255, 0.02)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>Shop Name</th>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>Owner Email</th>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>Status</th>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>Products</th>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>Joined</th>
-                                    <th style={{ padding: '1rem', color: '#8b9bb4', fontSize: '0.85rem', fontWeight: 600 }}>Actions</th>
+                                <tr className="bg-gray-50/75 border-b border-gray-200 text-gray-500 font-semibold text-xs tracking-wider uppercase">
+                                    <th className="p-4">Shop Name</th>
+                                    <th className="p-4">Owner Email</th>
+                                    <th className="p-4">Status</th>
+                                    <th className="p-4">Products</th>
+                                    <th className="p-4">Joined</th>
+                                    <th className="p-4 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-gray-100 text-sm">
                                 {vendors.map((v) => (
-                                    <tr key={v.vendor_id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.03)', transition: 'background 0.2s' }}>
-                                        <td style={{ padding: '1rem', fontWeight: 600, color: '#ffffff' }}>{v.shop_name}</td>
-                                        <td style={{ padding: '1rem', color: '#8b9bb4' }}>{v.owner_email}</td>
-                                        <td style={{ padding: '1rem' }}>
-                                            <span style={{
-                                                padding: '0.25rem 0.6rem',
-                                                borderRadius: '6px',
-                                                fontSize: '0.75rem',
-                                                fontWeight: 600,
-                                                background: v.is_active && v.is_verified ? 'rgba(46, 213, 115, 0.15)' : !v.is_active ? 'rgba(240, 44, 44, 0.15)' : 'rgba(255, 171, 0, 0.15)',
-                                                color: v.is_active && v.is_verified ? '#2ed573' : !v.is_active ? '#ff6b6b' : '#ffab00',
-                                            }}>
+                                    <tr key={v.vendor_id} className="hover:bg-gray-50/50 transition">
+                                        <td className="p-4 font-semibold text-gray-800">{v.shop_name}</td>
+                                        <td className="p-4 text-gray-500">{v.owner_email}</td>
+                                        <td className="p-4">
+                                            <span className={`inline-block px-2.5 py-1 rounded-full font-bold text-xs ${
+                                                v.is_active && v.is_verified 
+                                                    ? 'bg-green-100 text-green-700' 
+                                                    : !v.is_active 
+                                                    ? 'bg-red-100 text-red-700' 
+                                                    : 'bg-amber-100 text-amber-700'
+                                            }`}>
                                                 {v.is_active && v.is_verified ? 'Active' : !v.is_active ? 'Inactive' : 'Unverified'}
                                             </span>
                                         </td>
-                                        <td style={{ padding: '1rem', color: '#ffffff', fontWeight: 600 }}>{v.products_count}</td>
-                                        <td style={{ padding: '1rem', color: '#8b9bb4' }}>{new Date(v.created_at).toLocaleDateString()}</td>
-                                        <td style={{ padding: '1rem' }}>
-                                            <Link href={`/admin/vendors/${v.vendor_id}`} style={{ textDecoration: 'none' }}>
-                                                <button style={{
-                                                    background: 'rgba(255, 255, 255, 0.05)',
-                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                    padding: '0.4rem 0.8rem',
-                                                    borderRadius: '8px',
-                                                    color: '#ffffff',
-                                                    cursor: 'pointer',
-                                                    fontSize: '0.85rem',
-                                                }}>View</button>
+                                        <td className="p-4 font-semibold text-gray-800">{v.products_count}</td>
+                                        <td className="p-4 text-gray-500">{new Date(v.created_at).toLocaleDateString()}</td>
+                                        <td className="p-4 text-right">
+                                            <Link href={`/admin/vendors/${v.vendor_id}`}>
+                                                <button className="bg-white hover:bg-[#065758] hover:text-white border border-gray-200 hover:border-[#065758] font-medium px-3.5 py-1.5 rounded-lg text-xs transition duration-150 shadow-sm">
+                                                    View
+                                                </button>
                                             </Link>
                                         </td>
                                     </tr>
@@ -280,66 +199,84 @@ export default function AdminVendorsPage() {
 
             {/* Create Vendor Modal */}
             {isCreateModalOpen && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.8)',
-                    backdropFilter: 'blur(8px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 200,
-                    padding: '1rem',
-                }}>
-                    <div style={{
-                        background: '#161b22',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '16px',
-                        width: '100%',
-                        maxWidth: '500px',
-                        padding: '2rem',
-                        position: 'relative'
-                    }}>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-md p-6 relative shadow-xl">
                         <button 
                             onClick={() => setIsCreateModalOpen(false)}
-                            style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: '#8b9bb4', fontSize: '1.5rem', cursor: 'pointer' }}
-                        >×</button>
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-medium text-xl"
+                        >
+                            ×
+                        </button>
 
-                        <h3 style={{ margin: '0 0 1.5rem 0', color: '#ffffff', fontSize: '1.5rem' }}>Create Vendor Account</h3>
+                        <h3 className="text-xl font-bold text-gray-800 mb-6">Create Vendor Account</h3>
                         
-                        {error && <div style={{ color: '#ff6b6b', background: 'rgba(240, 44, 44, 0.1)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontWeight: 600 }}>{error}</div>}
+                        {error && (
+                            <div className="bg-red-50 text-red-600 border border-red-100 text-sm font-medium p-3 rounded-xl mb-4">
+                                {error}
+                            </div>
+                        )}
 
-                        <form onSubmit={handleCreateVendor}>
-                            <label style={{ display: 'block', marginBottom: '0.25rem', color: '#8b9bb4', fontSize: '0.85rem' }}>Shop Name *</label>
-                            <input type="text" value={shopName} onChange={(e) => setShopName(e.target.value)} style={inputStyle} required />
+                        <form onSubmit={handleCreateVendor} className="space-y-4">
+                            <div>
+                                <label className="block text-gray-600 font-semibold text-xs uppercase mb-1">Shop Name *</label>
+                                <input 
+                                    type="text" 
+                                    value={shopName} 
+                                    onChange={(e) => setShopName(e.target.value)} 
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] outline-none transition" 
+                                    required 
+                                />
+                            </div>
 
-                            <label style={{ display: 'block', marginBottom: '0.25rem', color: '#8b9bb4', fontSize: '0.85rem' }}>Owner Email *</label>
-                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
+                            <div>
+                                <label className="block text-gray-600 font-semibold text-xs uppercase mb-1">Owner Email *</label>
+                                <input 
+                                    type="email" 
+                                    value={email} 
+                                    onChange={(e) => setEmail(e.target.value)} 
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] outline-none transition" 
+                                    required 
+                                />
+                            </div>
 
-                            <label style={{ display: 'block', marginBottom: '0.25rem', color: '#8b9bb4', fontSize: '0.85rem' }}>Temporary Password *</label>
-                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required />
+                            <div>
+                                <label className="block text-gray-600 font-semibold text-xs uppercase mb-1">Temporary Password *</label>
+                                <input 
+                                    type="password" 
+                                    value={password} 
+                                    onChange={(e) => setPassword(e.target.value)} 
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] outline-none transition" 
+                                    required 
+                                />
+                            </div>
 
-                            <label style={{ display: 'block', marginBottom: '0.25rem', color: '#8b9bb4', fontSize: '0.85rem' }}>Contact Number</label>
-                            <input type="text" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} style={inputStyle} />
+                            <div>
+                                <label className="block text-gray-600 font-semibold text-xs uppercase mb-1">Contact Number</label>
+                                <input 
+                                    type="text" 
+                                    value={contactNumber} 
+                                    onChange={(e) => setContactNumber(e.target.value)} 
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] outline-none transition" 
+                                />
+                            </div>
 
-                            <label style={{ display: 'block', marginBottom: '0.25rem', color: '#8b9bb4', fontSize: '0.85rem' }}>Address</label>
-                            <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} style={inputStyle} />
+                            <div>
+                                <label className="block text-gray-600 font-semibold text-xs uppercase mb-1">Address</label>
+                                <input 
+                                    type="text" 
+                                    value={address} 
+                                    onChange={(e) => setAddress(e.target.value)} 
+                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:border-[#065758] outline-none transition" 
+                                />
+                            </div>
 
                             <button 
                                 type="submit" 
                                 disabled={saving}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    background: 'linear-gradient(135deg, #f953c6, #b224ef)',
-                                    border: 'none',
-                                    color: '#ffffff',
-                                    fontWeight: 600,
-                                    borderRadius: '10px',
-                                    cursor: 'pointer',
-                                    marginTop: '0.5rem',
-                                }}
-                            >{saving ? 'Creating...' : 'Create Vendor'}</button>
+                                className={`w-full py-3 bg-[#065758] hover:bg-[#043b3c] text-white font-semibold rounded-xl mt-6 shadow-sm transition ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                {saving ? 'Creating...' : 'Create Vendor'}
+                            </button>
                         </form>
                     </div>
                 </div>

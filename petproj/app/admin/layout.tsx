@@ -19,70 +19,47 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     if (isHydrating || !isAuthenticated || user?.role !== 'admin') {
         return (
-            <div style={{
-                minHeight: '100vh',
-                background: '#0d1117',
-                color: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontFamily: 'Inter, sans-serif'
-            }}>
-                <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>Verifying credentials...</div>
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center font-sans">
+                <div className="flex flex-col items-center space-y-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#065758]"></div>
+                    <div className="text-gray-600 font-semibold text-lg">Verifying credentials...</div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            background: '#0d1117',
-            color: '#c9d1d9',
-            fontFamily: 'Inter, sans-serif',
-            display: 'flex',
-            flexDirection: 'column'
-        }}>
+        <div data-role="admin" className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col">
             {/* Top Navigation */}
-            <header style={{
-                background: 'rgba(22, 27, 34, 0.8)',
-                backdropFilter: 'blur(12px)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                padding: '1rem 2rem',
-                position: 'sticky',
-                top: 0,
-                zIndex: 100,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                    <Link href="/admin" style={{ textDecoration: 'none' }}>
-                        <h1 style={{
-                            margin: 0,
-                            fontSize: '1.5rem',
-                            fontWeight: 900,
-                            background: 'linear-gradient(135deg, #f953c6, #b224ef)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                        }}>Paltuu Admin</h1>
+            <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 px-6 py-4 flex justify-between items-center shadow-sm">
+                <div className="flex items-center gap-8">
+                    <Link href="/admin">
+                        <h1 className="text-2xl font-bold bg-gradient-to-r from-[#065758] to-[#043b3c] bg-clip-text text-transparent">
+                            Paltuu Admin
+                        </h1>
                     </Link>
 
-                    <nav style={{ display: 'flex', gap: '1.5rem' }}>
-                        <Link href="/admin/catalogue" style={{ color: '#8b9bb4', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600 }}>Catalogue</Link>
-                        <Link href="/admin/vendors" style={{ color: '#8b9bb4', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600 }}>Vendors</Link>
-                        <Link href="/admin/custom-products" style={{ color: '#8b9bb4', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600 }}>Custom Items</Link>
+                    <nav className="flex gap-6">
+                        <Link href="/admin/catalogue" className="text-gray-600 hover:text-[#065758] font-semibold text-sm transition duration-200">
+                            Catalogue
+                        </Link>
+                        <Link href="/admin/vendors" className="text-gray-600 hover:text-[#065758] font-semibold text-sm transition duration-200">
+                            Vendors
+                        </Link>
+                        <Link href="/admin/custom-products" className="text-gray-600 hover:text-[#065758] font-semibold text-sm transition duration-200">
+                            Custom Items
+                        </Link>
                     </nav>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <span style={{ fontSize: '0.85rem', color: '#8b9bb4' }}>Logged in as: <strong style={{ color: '#ffffff' }}>Admin</strong></span>
+                <div className="flex items-center gap-4 bg-gray-100 px-4 py-2 rounded-full text-sm">
+                    <span className="text-gray-500">Logged in as:</span>
+                    <strong className="text-[#065758] font-bold">Admin</strong>
                 </div>
             </header>
 
             {/* Content Body */}
-            <main style={{ flex: 1, padding: '3rem 2rem' }}>
+            <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-10">
                 {children}
             </main>
         </div>

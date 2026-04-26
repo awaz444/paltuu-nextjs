@@ -219,31 +219,31 @@ export default function AdminProductForm({ params }: { params: { id: string } })
     const inputStyle = {
         width: '100%',
         padding: '0.75rem',
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        background: '#f9fafb',
+        border: '1px solid #e5e7eb',
         borderRadius: '10px',
-        color: '#ffffff',
+        color: '#1f2937',
         outline: 'none',
         fontSize: '0.95rem',
     };
 
     const sectionStyle = {
-        background: 'rgba(22, 27, 34, 0.7)',
-        backdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255, 255, 255, 0.05)',
+        background: '#ffffff',
+        border: '1px solid #e5e7eb',
         borderRadius: '16px',
         padding: '1.5rem',
         marginBottom: '2rem',
+        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
     };
 
     return (
-        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        <div className="max-w-4xl mx-auto">
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
-                <Link href="/admin/catalogue" style={{ textDecoration: 'none', color: '#8b9bb4' }}>
+            <div className="flex items-center gap-4 mb-8">
+                <Link href="/admin/catalogue" className="text-gray-500 hover:text-[#065758] font-medium text-sm">
                     ← Back to Catalogue
                 </Link>
-                <h2 style={{ fontSize: '1.75rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+                <h2 className="text-2xl font-extrabold text-[#065758]">
                     {isNew ? 'Create Master Product' : 'Edit Product'}
                 </h2>
             </div>
@@ -263,7 +263,7 @@ export default function AdminProductForm({ params }: { params: { id: string } })
             <form onSubmit={handleSaveProduct}>
                 {/* Section 1: Basic Info */}
                 <div style={sectionStyle}>
-                    <h3 style={{ margin: '0 0 1.25rem 0', color: '#ffffff', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '0.5rem' }}>
+                    <h3 style={{ margin: '0 0 1.25rem 0', color: '#065758', fontWeight: 700, borderBottom: '1px solid #e5e7eb', paddingBottom: '0.5rem' }}>
                         Section 1 — Basic Info
                     </h3>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem' }}>
@@ -306,7 +306,7 @@ export default function AdminProductForm({ params }: { params: { id: string } })
 
                 {/* Section 2: Weight & Shipping */}
                 <div style={sectionStyle}>
-                    <h3 style={{ margin: '0 0 1.25rem 0', color: '#ffffff', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '0.5rem' }}>
+                    <h3 style={{ margin: '0 0 1.25rem 0', color: '#065758', fontWeight: 700, borderBottom: '1px solid #e5e7eb', paddingBottom: '0.5rem' }}>
                         Section 2 — Weight & Shipping
                     </h3>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
@@ -359,7 +359,7 @@ export default function AdminProductForm({ params }: { params: { id: string } })
                 <>
                     {/* Section 3: Media */}
                     <div style={sectionStyle}>
-                        <h3 style={{ margin: '0 0 1.25rem 0', color: '#ffffff', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '0.5rem' }}>
+                        <h3 style={{ margin: '0 0 1.25rem 0', color: '#065758', fontWeight: 700, borderBottom: '1px solid #e5e7eb', paddingBottom: '0.5rem' }}>
                             Section 3 — Media
                         </h3>
                         <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem' }}>
@@ -433,7 +433,7 @@ export default function AdminProductForm({ params }: { params: { id: string } })
                     {/* Section 4: Variants */}
                     <div style={sectionStyle}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '0.5rem' }}>
-                            <h3 style={{ margin: 0, color: '#ffffff' }}>Section 4 — Variants</h3>
+                            <h3 style={{ margin: 0, color: '#065758', fontWeight: 700 }}>Section 4 — Variants</h3>
                             <button 
                                 type="button" 
                                 onClick={handleAddVariant}

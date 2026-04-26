@@ -89,7 +89,6 @@ export async function GET(req: NextRequest) {
               END * 0.2
         )`;
 
-        
         // ── WHERE clause ───────────────────────────────────────────────────
         const baseWhere = `p.is_deleted = false AND p.is_hidden = false`;
         const followingWhere = `AND (

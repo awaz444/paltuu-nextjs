@@ -6,13 +6,15 @@ import { db } from "@/db/index";
 
 export const dynamic = "force-dynamic";
 
+const ACCEPTED_TYPES = new Set([
+    "image/jpeg", "image/jpg", "image/png", "image/webp",
+    "image/heic", "image/heif", "image/avif",
+]);
+
 /**
  * POST /api/v1/social/profile/avatar
- * Upload a profile picture → stored in S3 paltuu-social/profile-pics/
- * Automatically updates the user's profile_image_url in the DB.
- *
- * Request: multipart/form-data, field "file" (single image)
- * Response: { url: string }
+ * Accepts: JPEG, PNG, WebP, HEIC/HEIF (common on iPhone)
+ * Outputs: 400×400 WebP stored in S3 paltuu-social/profile-pics/
  */
 export async function POST(req: NextRequest) {
     try {
@@ -22,42 +24,67 @@ export async function POST(req: NextRequest) {
         const formData = await req.formData();
         const file = formData.get("file") as File | null;
 
-        if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
-        if (!file.type.startsWith("image/")) return NextResponse.json({ error: "File must be an image" }, { status: 400 });
+        if (!file) {
+            return NextResponse.json({ error: "No file provided" }, { status: 400 });
+        }
+
+        const mimeType = file.type.toLowerCase();
+        if (!mimeType.startsWith("image/") || !ACCEPTED_TYPES.has(mimeType)) {
+            return NextResponse.json(
+                { error: `Unsupported format "${file.type}". Use JPEG, PNG, HEIC, or WebP.` },
+                { status: 400 }
+            );
+        }
 
         const buffer = Buffer.from(await file.arrayBuffer());
 
-        // Resize to 400x400 square (standard profile picture size), convert to WebP
-        const optimized = await sharp(buffer)
-            .resize(400, 400, { fit: "cover", position: "centre" })
-            .webp({ quality: 90 })
-            .toBuffer();
+        // failOnError: false → tolerates minor HEIC/HEIF header quirks without crashing
+        // .rotate()         → auto-corrects EXIF orientation (critical for iPhone photos)
+        let optimized: Buffer;
+        try {
+            optimized = await sharp(buffer, { failOnError: false })
+                .rotate()
+                .resize(400, 400, { fit: "cover", position: "centre" })
+                .webp({ quality: 90 })
+                .toBuffer();
+        } catch (sharpErr: any) {
+            console.error("[avatar] sharp processing failed:", sharpErr?.message);
+            return NextResponse.json(
+                { error: "Could not process image. Try saving it as JPEG and re-uploading." },
+                { status: 400 }
+            );
+        }
 
-        // Fetch existing profile_image_url to delete old file from S3
         const existing = await db.query(
             "SELECT profile_image_url FROM users WHERE user_id = $1",
             [userId]
         );
         const oldUrl: string | null = existing.rows[0]?.profile_image_url;
 
-        // Upload new image
-        const url = await uploadToS3(optimized, "profile-pics", "image/webp", "webp");
+        let url: string;
+        try {
+            url = await uploadToS3(optimized, "profile-pics", "image/webp", "webp");
+        } catch (s3Err: any) {
+            const code = s3Err?.Code || s3Err?.name;
+            const status = s3Err?.$metadata?.httpStatusCode;
+            console.error(`[avatar] S3 PutObject failed [HTTP ${status} | Code: ${code}]:`, s3Err?.message);
+            // HTTP 403 from S3 = IAM user missing s3:PutObject on this bucket/prefix
+            return NextResponse.json({ error: "Storage upload failed. Please try again." }, { status: 500 });
+        }
 
-        // Update DB
         await db.query(
             "UPDATE users SET profile_image_url = $1 WHERE user_id = $2",
             [url, userId]
         );
 
-        // Delete old S3 file (if it was in our bucket)
-        if (oldUrl?.includes("paltuu-social.s3")) {
-            deleteFromS3(oldUrl).catch(() => {}); // fire and forget
+        if (oldUrl) {
+            deleteFromS3(oldUrl).catch(() => {});
         }
 
         return NextResponse.json({ url });
 
     } catch (error) {
-        console.error("Avatar Upload Error:", error);
+        console.error("[avatar] Unhandled error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

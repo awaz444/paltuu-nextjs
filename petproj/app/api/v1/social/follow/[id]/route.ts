@@ -15,10 +15,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         const limited = await rateLimit(req, LIMITS.FOLLOW);
         if (limited) return limited;
 
-        const followerId = await getUserIdFromRequest(req);
-        if (!followerId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const followerIdRaw = await getUserIdFromRequest(req);
+        if (!followerIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const followingId = parseInt(params.id);
+        const followerId = parseInt(String(followerIdRaw), 10);
+        const followingId = parseInt(params.id, 10);
 
         if (followerId === followingId) {
             return NextResponse.json({ error: "You cannot follow yourself" }, { status: 400 });

@@ -10,7 +10,8 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
     try {
-        const userId = await getUserIdFromRequest(req);
+        const userIdRaw = await getUserIdFromRequest(req);
+        const userId = userIdRaw ? parseInt(String(userIdRaw), 10) : 0;
         const postId = params.id;
 
         const result = await db.query(`
@@ -83,8 +84,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
  */
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
     try {
-        const userId = await getUserIdFromRequest(req);
-        if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userIdRaw = await getUserIdFromRequest(req);
+        if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userId = parseInt(String(userIdRaw), 10);
 
         const postId = params.id;
 

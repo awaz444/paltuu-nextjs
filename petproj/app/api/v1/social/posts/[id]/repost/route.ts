@@ -17,8 +17,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         const limited = await rateLimit(req, LIMITS.REPOST);
         if (limited) return limited;
 
-        const userId = await getUserIdFromRequest(req);
-        if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userIdRaw = await getUserIdFromRequest(req);
+        if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userId = parseInt(String(userIdRaw), 10);
 
         const originalPostId = params.id;
         const body = await req.json().catch(() => ({}));
@@ -121,8 +122,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
  */
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
     try {
-        const userId = await getUserIdFromRequest(req);
-        if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userIdRaw = await getUserIdFromRequest(req);
+        if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userId = parseInt(String(userIdRaw), 10);
 
         const originalPostId = params.id;
 

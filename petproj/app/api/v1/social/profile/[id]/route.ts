@@ -61,7 +61,7 @@ export async function GET(
         let posts: any[] = [];
         if (!isPrivate) {
             const postsRes = await db.query(`
-                SELECT 
+                SELECT
                     p.post_id, p.content, p.like_count, p.comment_count,
                     p.repost_count, p.view_count, p.created_at, p.post_type,
                     p.is_repost, p.original_post_id,
@@ -78,6 +78,7 @@ export async function GET(
                 WHERE p.user_id = $1
                   AND p.is_deleted = false
                   AND p.is_hidden = false
+                  AND p.is_repost = false
                 ORDER BY p.created_at DESC
                 LIMIT 18
             `, [targetId, viewerId || 0]);

@@ -1,9 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { initialMockVendorData, VendorData } from "../../lib/mockVendorData";
-import { Button, Input, Select, InputNumber, Card, message, Divider } from "antd";
-import { SyncOutlined } from "@ant-design/icons";
+import { Button, Input, Select, InputNumber, Card, message, Divider, Spin } from "antd";
 
 const MapDrawingTool = dynamic(() => import("./MapDrawingTool"), {
   ssr: false,
@@ -11,18 +9,72 @@ const MapDrawingTool = dynamic(() => import("./MapDrawingTool"), {
 });
 
 const VendorSettings: React.FC = () => {
-  const [data, setData] = useState<VendorData>(initialMockVendorData);
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    setSaving(true);
-    // Simulate API call
-    setTimeout(() => {
-      setSaving(false);
-      message.success("Official settings saved successfully (Mock)");
-      console.log("Saved Official Vendor Data:", data);
-    }, 1000);
+  const fetchVendorProfile = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/v1/vendors/me');
+      const profile = await res.json();
+      if (res.ok) {
+        setData(profile);
+      }
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to load vendor profile");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchVendorProfile();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/v1/vendors/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shop_name: data.shop_name,
+          city_id: data.city_id,
+          area: data.area,
+          contact_number: data.contact_number,
+          whatsapp_number: data.whatsapp_number,
+          address: data.address,
+          flat_delivery_fee: Number(data.flat_delivery_fee || 0),
+          per_kg_delivery_fee: Number(data.per_kg_delivery_fee || 0),
+          max_delivery_weight_kg: Number(data.max_delivery_weight_kg || 0),
+          free_delivery_threshold: Number(data.free_delivery_threshold || 0)
+        })
+      });
+
+      if (!res.ok) throw new Error();
+
+      // Save polygon separately
+      if (data.delivery_polygon) {
+        await fetch('/api/v1/vendors/me/polygon', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ delivery_polygon: data.delivery_polygon })
+        });
+      }
+
+      message.success("Settings saved successfully!");
+      fetchVendorProfile();
+    } catch {
+      message.error("Failed to save settings");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div className="p-20 text-center"><Spin tip="Loading profile..." /></div>;
+  if (!data) return <div className="p-20 text-center text-red-500">Error loading profile data</div>;
 
   return (
     <div className="space-y-6">
@@ -34,7 +86,6 @@ const VendorSettings: React.FC = () => {
               size="large"
               value={data.shop_name} 
               onChange={(e) => setData({ ...data, shop_name: e.target.value })} 
-              placeholder="e.g. Paltuu Pet Marketplace"
               className="rounded-lg"
             />
           </div>
@@ -58,7 +109,6 @@ const VendorSettings: React.FC = () => {
               size="large"
               value={data.area} 
               onChange={(e) => setData({ ...data, area: e.target.value })} 
-              placeholder="e.g. DHA Phase 6"
               className="rounded-lg"
             />
           </div>
@@ -68,7 +118,6 @@ const VendorSettings: React.FC = () => {
               size="large"
               value={data.contact_number} 
               onChange={(e) => setData({ ...data, contact_number: e.target.value })} 
-              placeholder="+92 333 1122334"
               className="rounded-lg"
             />
           </div>
@@ -78,7 +127,6 @@ const VendorSettings: React.FC = () => {
               size="large"
               value={data.whatsapp_number} 
               onChange={(e) => setData({ ...data, whatsapp_number: e.target.value })} 
-              placeholder="+92 300 5566778"
               className="rounded-lg"
             />
           </div>
@@ -88,7 +136,6 @@ const VendorSettings: React.FC = () => {
               size="large"
               value={data.address} 
               onChange={(e) => setData({ ...data, address: e.target.value })} 
-              placeholder="Full physical address for delivery pickup"
               rows={3}
               className="rounded-lg"
             />
@@ -136,7 +183,6 @@ const VendorSettings: React.FC = () => {
               min={0}
               value={data.free_delivery_threshold} 
               onChange={(val) => setData({ ...data, free_delivery_threshold: val || 0 })} 
-              placeholder="e.g. 5000"
             />
           </div>
         </div>
@@ -146,7 +192,7 @@ const VendorSettings: React.FC = () => {
         <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 flex items-center justify-between mb-8">
           <div>
             <h4 className="font-bold text-gray-800">Platform Fee</h4>
-            <p className="text-sm text-gray-500">Standard commission on every sale</p>
+            <p className="text-sm text-gray-500">Standard commission on every sale (Controlled by Admin)</p>
           </div>
           <div className="text-2xl font-black text-[#a03048]">
             {data.platform_fee_percent}%
@@ -154,14 +200,23 @@ const VendorSettings: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Delivery Boundary (Draw on Map)</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Delivery Boundary (GeoJSON Format)</label>
           <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-4 flex items-center gap-3">
             <div className="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">!</div>
-            <p className="text-sm text-blue-700">Define your service area by drawing a boundary on the map. Orders from outside this area will not be accepted.</p>
+            <p className="text-sm text-blue-700">Currently drawn polygon object saved in database.</p>
           </div>
-          <MapDrawingTool 
-            initialArea={data.delivery_polygon} 
-            onChange={(area) => setData({ ...data, delivery_polygon: area })} 
+          <Input.TextArea 
+             rows={5}
+             value={data.delivery_polygon ? JSON.stringify(data.delivery_polygon, null, 2) : ''}
+             onChange={(e) => {
+                try {
+                   setData({ ...data, delivery_polygon: JSON.parse(e.target.value) });
+                } catch {
+                   // Allow typing, but don't parse invalid json
+                }
+             }}
+             placeholder="Paste your GeoJSON polygon here"
+             className="font-mono text-xs p-3 rounded-lg bg-gray-50 border-gray-200"
           />
         </div>
       </Card>

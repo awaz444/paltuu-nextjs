@@ -1,18 +1,16 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
-import { Card, Button, Spin, Empty, Pagination, Tag, Typography, Badge } from "antd";
-import { ShoppingCartOutlined, UnorderedListOutlined, AppstoreOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { Card, Button, Spin, Empty, Pagination, Tag, Typography, Badge, message } from "antd";
+import { ShoppingCartOutlined, UnorderedListOutlined, AppstoreOutlined } from "@ant-design/icons";
 import CatalogueFilter from "./CatalogueFilter";
 import AddProductModal from "./AddProductModal";
-import { VendorInventoryItem } from "../../lib/mockVendorData";
 
 const { Text, Title } = Typography;
 
 interface CatalogueBrowserProps {
-  onAddToStore: (item: VendorInventoryItem) => void;
+  onAddToStore: () => void;
   addedProductIds: number[];
 }
-
 
 const CatalogueBrowser: React.FC<CatalogueBrowserProps> = ({ onAddToStore, addedProductIds }) => {
   const [products, setProducts] = useState<any[]>([]);
@@ -29,12 +27,11 @@ const CatalogueBrowser: React.FC<CatalogueBrowserProps> = ({ onAddToStore, added
       const params = new URLSearchParams({
         page: pagination.current.toString(),
         limit: pagination.pageSize.toString(),
-        ...(filters.category && { category: filters.category }),
-        ...(filters.collection && { collection: filters.collection }),
+        ...(filters.animal_type && filters.animal_type !== 'all' && { animal_type: filters.animal_type }),
         ...(filters.keyword && { keyword: filters.keyword }),
       });
 
-      const res = await fetch(`/api/bazaar/products?${params}`);
+      const res = await fetch(`/api/v1/vendors/catalogue?${params}`);
       const data = await res.json();
 
       if (res.ok) {
@@ -43,6 +40,7 @@ const CatalogueBrowser: React.FC<CatalogueBrowserProps> = ({ onAddToStore, added
       }
     } catch (err) {
       console.error("Error fetching catalogue products:", err);
+      message.error("Failed to load catalogue items");
     } finally {
       setLoading(false);
     }
@@ -103,7 +101,7 @@ const CatalogueBrowser: React.FC<CatalogueBrowserProps> = ({ onAddToStore, added
         <>
           <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" : "space-y-4"}>
             {products.map((product) => {
-              const isAlreadyAdded = addedProductIds.includes(product.product_id);
+              const isAlreadyAdded = product.in_inventory || addedProductIds.includes(product.product_id);
 
               if (viewMode === 'grid') {
                 return (
@@ -123,7 +121,6 @@ const CatalogueBrowser: React.FC<CatalogueBrowserProps> = ({ onAddToStore, added
                           <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold">PALTUU</div>
                         )}
                         <div className="absolute top-2 right-2 flex flex-col gap-2">
-                          <Badge status={product.status === 'published' ? "success" : "default"} text={product.status} className="bg-white/80 backdrop-blur px-2 py-0.5 rounded-full text-[10px] font-bold uppercase" />
                           {isAlreadyAdded && <Badge status="processing" text="In My Store" className="bg-[#a03048]/10 backdrop-blur px-2 py-0.5 rounded-full text-[10px] font-bold text-[#a03048]" />}
                         </div>
                       </div>
@@ -135,7 +132,7 @@ const CatalogueBrowser: React.FC<CatalogueBrowserProps> = ({ onAddToStore, added
                       </div>
                       <Text type="secondary" className="block text-xs uppercase font-bold tracking-wider mb-2">{product.sku}</Text>
                       <div className="flex justify-between items-center pt-2">
-                        <Text strong className="text-lg text-[#a03048]">PKR {product.price}</Text>
+                        <Text strong className="text-lg text-[#a03048]">PKR {product.price || 0}</Text>
                         <Button
                           type="primary"
                           shape="circle"
@@ -163,12 +160,9 @@ const CatalogueBrowser: React.FC<CatalogueBrowserProps> = ({ onAddToStore, added
                         <Text type="secondary" className="text-[10px] uppercase font-bold tracking-widest">{product.sku}</Text>
                         <Title level={5} className="!mb-1 truncate">{product.title}</Title>
                         <p className="text-xs text-gray-500 line-clamp-1 mb-2">{product.description}</p>
-                        <div className="flex items-center gap-2">
-                          {product.categories?.map((c: any) => <Tag key={c.category_id} className="text-[10px]">{c.name}</Tag>)}
-                        </div>
                       </div>
                       <div className="text-right flex flex-col items-end gap-3 min-w-[120px]">
-                        <Text strong className="text-xl">PKR {product.price}</Text>
+                        <Text strong className="text-xl">PKR {product.price || 0}</Text>
                         <Button
                           type="primary"
                           disabled={isAlreadyAdded}

@@ -3,24 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  // connection_limit=5 prevents Prisma from opening too many connections to
-  // AWS RDS on top of the pg.Pool connections (which are capped at 10).
-  // Total cap = pg.Pool(10) + Prisma(5) = 15 max connections from this app.
-  url       = env("DATABASE_URL")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model accepted_adoptions {
-  adoption_id     Int       @id @default(autoincrement())
-  user_id         Int?
-  pet_id          Int?
-  adoption_date   DateTime? @db.Timestamp(6)
-  adopter_address String?   @db.VarChar(255)
-  adoption_status String?   @db.VarChar(255)
-  created_at      DateTime? @default(now()) @db.Timestamp(6)
-  pets            pets?     @relation(fields: [pet_id], references: [pet_id], onDelete: NoAction, onUpdate: NoAction)
-  users           users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -43,8 +27,6 @@ model adoption_applications {
   adopter_address         String?   @db.VarChar(255)
   created_at              DateTime? @default(now()) @db.Timestamp(6)
   status                  String?   @db.VarChar(255)
-  city_id                 Int?
-  contact_number          String?   @db.VarChar(255)
   age_of_youngest_child   Int?
   other_pets_details      String?
   other_pets_neutered     Boolean?
@@ -53,48 +35,22 @@ model adoption_applications {
   pet_left_alone          String?
   additional_details      String?
   agree_to_terms          Boolean?
+  delivery                Boolean   @default(false)
+  city_id                 Int?
+  contact_number          String?   @db.VarChar
+  cities                  cities?   @relation(fields: [city_id], references: [city_id], onDelete: NoAction, onUpdate: NoAction)
   pets                    pets?     @relation(fields: [pet_id], references: [pet_id], onDelete: Cascade)
   users                   users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model cities {
-  city_id              Int                    @id @default(autoincrement())
-  city_name            String                 @db.VarChar(255)
-  lost_and_found_posts lost_and_found_posts[]
-  pets                 pets[]
-  users                users[]
-}
-
-model favorite_things {
-  fav_thing_id        Int                   @id @default(autoincrement())
-  fav_thing_name      String                @db.VarChar(255)
-  pet_favorite_things pet_favorite_things[]
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model foster_applications {
-  foster_id               Int       @id @default(autoincrement())
-  user_id                 Int?
-  pet_id                  Int?
-  fosterer_name           String?   @db.VarChar(255)
-  fosterer_address        String?   @db.VarChar(255)
-  foster_start_date       DateTime? @db.Timestamp(6)
-  foster_end_date         DateTime? @db.Timestamp(6)
-  created_at              DateTime? @default(now()) @db.Timestamp(6)
-  status                  String?   @db.VarChar(255)
-  fostering_experience    String?
-  age_of_youngest_child   Int?
-  other_pets_details      String?
-  other_pets_neutered     Boolean?
-  has_secure_outdoor_area Boolean?
-  pet_sleep_location      String?   @db.VarChar(255)
-  pet_left_alone          String?
-  time_at_home            String?
-  reason_for_fostering    String?
-  additional_details      String?
-  agree_to_terms          Boolean?
-  pets                    pets?     @relation(fields: [pet_id], references: [pet_id], onDelete: NoAction, onUpdate: NoAction)
-  users                   users?    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  city_id               Int                     @id @default(autoincrement())
+  city_name             String                  @db.VarChar(255)
+  adoption_applications adoption_applications[]
+  lost_and_found_posts  lost_and_found_posts[]
+  pets                  pets[]
+  users                 users[]
+  vendors               vendors[]
 }
 
 model lost_and_found_post_images {
@@ -131,34 +87,8 @@ model notifications {
   notification_type    String?   @db.VarChar(255)
   date_sent            DateTime? @default(now()) @db.Timestamp(6)
   is_read              Boolean?  @default(false)
-  entity_type          String?   @db.VarChar(255)
+  entity_type          String?   @db.VarChar
   entity_id            Int?
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model ongoing_fosters {
-  foster_id         Int       @id @default(autoincrement())
-  user_id           Int?
-  pet_id            Int?
-  foster_start_date DateTime? @db.Timestamp(6)
-  foster_end_date   DateTime? @db.Timestamp(6)
-  foster_duration   String?   @db.VarChar(255)
-  status            String?   @db.VarChar(255)
-  created_at        DateTime? @default(now()) @db.Timestamp(6)
-  pets              pets?     @relation(fields: [pet_id], references: [pet_id], onDelete: NoAction, onUpdate: NoAction)
-  users             users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model ongoing_sponsorships {
-  sponsorship_id         Int       @id @default(autoincrement())
-  user_id                Int?
-  pet_id                 Int?
-  sponsorship_start_date DateTime? @db.Timestamp(6)
-  sponsorship_end_date   DateTime? @db.Timestamp(6)
-  sponsorship_amount     Decimal?  @db.Decimal(10, 2)
-  created_at             DateTime? @default(now()) @db.Timestamp(6)
-  pets                   pets?     @relation(fields: [pet_id], references: [pet_id], onDelete: NoAction, onUpdate: NoAction)
-  users                  users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model pet_category {
@@ -166,16 +96,7 @@ model pet_category {
   category_name        String                 @db.VarChar(255)
   lost_and_found_posts lost_and_found_posts[]
   pets                 pets[]
-  vet_specializations  vet_specializations[]
-}
-
-model pet_favorite_things {
-  pet_id          Int
-  fav_thing_id    Int
-  favorite_things favorite_things @relation(fields: [fav_thing_id], references: [fav_thing_id], onDelete: Cascade, onUpdate: NoAction)
-  pets            pets            @relation(fields: [pet_id], references: [pet_id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@id([pet_id, fav_thing_id])
+  shelter_animals      shelter_animals[]
 }
 
 model pet_images {
@@ -189,122 +110,91 @@ model pet_images {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model pets {
-  pet_id                 Int                     @id @default(autoincrement())
-  owner_id               Int?
-  pet_name               String                  @db.VarChar(255)
-  pet_type               Int?
-  pet_breed              String?                 @db.VarChar(255)
-  city_id                Int?
-  area                   String?                 @db.VarChar(255)
-  age                    Int?
-  description            String?                 @db.VarChar(255)
-  adoption_status        String?                 @db.VarChar(255)
-  price                  Decimal?                @default(0) @db.Decimal(10, 2)
-  min_age_of_children    Int?
-  can_live_with_dogs     Boolean?
-  can_live_with_cats     Boolean?
-  must_have_someone_home Boolean?
-  energy_level           Int?
-  cuddliness_level       Int?
-  health_issues          String?                 @db.VarChar(255)
-  created_at             DateTime?               @default(now()) @db.Timestamp(6)
-  sex                    String?                 @db.VarChar(255)
-  listing_type           String?                 @db.VarChar(255)
-  vaccinated             Boolean?
-  neutered               Boolean?
-  approved               Boolean?                @default(false)
-  age_months             Int?
-  contact_number         String?                 @db.VarChar(255)
-  pet_tag_assignments    pet_tag_assignments[]
-  accepted_adoptions     accepted_adoptions[]
-  adoption_applications  adoption_applications[]
-  foster_applications    foster_applications[]
-  ongoing_fosters        ongoing_fosters[]
-  ongoing_sponsorships   ongoing_sponsorships[]
-  pet_favorite_things    pet_favorite_things[]
-  pet_images             pet_images[]
-  cities                 cities?                 @relation(fields: [city_id], references: [city_id], onDelete: Cascade, onUpdate: NoAction)
-  users                  users?                  @relation(fields: [owner_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
-  pet_category           pet_category?           @relation(fields: [pet_type], references: [category_id], onUpdate: NoAction)
-  sponsor_applications   sponsor_applications[]
-}
-
-model qualifications {
-  qualification_id             Int                            @id @default(autoincrement())
-  qualification_name           String?                        @db.VarChar(255)
-  description                  String?
-  created_at                   DateTime?                      @default(now()) @db.Timestamp(6)
-  vet_qualifications           vet_qualifications[]
-  vet_verification_application vet_verification_application[]
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model sponsor_applications {
-  sponsorship_id           Int       @id @default(autoincrement())
-  user_id                  Int?
-  pet_id                   Int?
-  sponsorship_start_date   DateTime? @db.Timestamp(6)
-  sponsorship_amount       Decimal?  @db.Decimal(10, 2)
-  created_at               DateTime? @default(now()) @db.Timestamp(6)
-  status                   String?   @db.VarChar(255)
-  reason_for_sponsorship   String?
-  sponsorship_duration     String?   @db.VarChar(255)
-  are_you_able_to_meet_pet Boolean?
-  updates_preference       String?   @db.VarChar(255)
-  additional_details       String?
-  agree_to_terms           Boolean?
-  pets                     pets?     @relation(fields: [pet_id], references: [pet_id], onDelete: NoAction, onUpdate: NoAction)
-  users                    users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  pet_id                    Int                         @id @default(autoincrement())
+  owner_id                  Int?
+  pet_name                  String                      @db.VarChar(255)
+  pet_type                  Int?
+  pet_breed                 String?                     @db.VarChar(255)
+  city_id                   Int?
+  area                      String?                     @db.VarChar(255)
+  description               String?                     @db.VarChar(255)
+  adoption_status           String?                     @db.VarChar(255)
+  price                     Decimal?                    @default(0) @db.Decimal(10, 2)
+  min_age_of_children       Int?
+  can_live_with_dogs        Boolean?
+  can_live_with_cats        Boolean?
+  must_have_someone_home    Boolean?
+  energy_level              Int?
+  cuddliness_level          Int?
+  health_issues             String?                     @db.VarChar(255)
+  created_at                DateTime?                   @default(now()) @db.Timestamp(6)
+  sex                       String?                     @db.VarChar(255)
+  listing_type              String?                     @db.VarChar(255)
+  vaccinated                Boolean?
+  neutered                  Boolean?
+  approved                  Boolean?                    @default(false)
+  shelter_id                Int?
+  shop_id                   Int?
+  rescue_story              String?
+  contact_number            String?                     @db.VarChar
+  age_months                Int?
+  post_count                Int?                        @default(0)
+  adoption_applications     adoption_applications[]
+  pet_images                pet_images[]
+  pet_tag_assignments       pet_tag_assignments[]
+  cities                    cities?                     @relation(fields: [city_id], references: [city_id], onDelete: Cascade, onUpdate: NoAction)
+  users                     users?                      @relation(fields: [owner_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  pet_category              pet_category?               @relation(fields: [pet_type], references: [category_id], onUpdate: NoAction)
+  rescue_shelters           rescue_shelters?            @relation(fields: [shelter_id], references: [shelter_id], onDelete: NoAction, onUpdate: NoAction)
+  rescue_images             rescue_images[]
+  rescue_medical_conditions rescue_medical_conditions[]
+  rescue_special_needs      rescue_special_needs[]
+  social_posts              social_posts[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model users {
-  user_id               Int                     @id @default(autoincrement()) // This is the correct primary key
-  name                  String                  @db.VarChar(255)
-  dob                   DateTime?               @db.Date
-  city_id               Int?
-  email                 String                  @unique @db.VarChar(255)
-  password              String                  @db.VarChar(255)
-  phone_number          String?                 @db.VarChar(255)
-  profile_image_url     String?                 @db.VarChar(255)
-  role                  String?                 @db.VarChar(255)
-  created_at            DateTime?               @default(now()) @db.Timestamp(6)
-  oauth_provider        String?
-  oauth_id              String?
-  // REMOVE THIS LINE: id Int? @unique
-  username              String?
-  phone_verified        Boolean?                @default(false)
-  accepted_adoptions    accepted_adoptions[]
-  admin_action_logs     admin_action_logs[]
-  adoption_applications adoption_applications[]
-  foster_applications   foster_applications[]
-  lost_and_found_posts  lost_and_found_posts[]
-  ongoing_fosters       ongoing_fosters[]
-  ongoing_sponsorships  ongoing_sponsorships[]
-  pets                  pets[]
-  sponsor_applications  sponsor_applications[]
-  cities                cities?                 @relation(fields: [city_id], references: [city_id], onDelete: Cascade, onUpdate: NoAction)
-  vet_reviews           vet_reviews[]
-  vets                  vets[]
-}
-
-model vet_availability {
-  availability_id Int       @id @default(autoincrement())
-  vet_id          Int?
-  day_of_week     String?   @db.VarChar(255)
-  start_time      DateTime? @db.Time(6)
-  end_time        DateTime? @db.Time(6)
-  vets            vets?     @relation(fields: [vet_id], references: [vet_id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-model vet_qualifications {
-  vet_id                Int
-  qualification_id      Int
-  year_acquired         Int?
-  note                  String?
-  vet_qualifications_id Int            @id @default(autoincrement())
-  qualifications        qualifications @relation(fields: [qualification_id], references: [qualification_id], onDelete: Cascade, map: "fk_qualification")
-  vets                  vets           @relation(fields: [vet_id], references: [vet_id], onDelete: Cascade, map: "fk_vet")
+  user_id                                           Int                     @id @default(autoincrement())
+  name                                              String                  @db.VarChar(255)
+  dob                                               DateTime?               @db.Date
+  city_id                                           Int?
+  email                                             String                  @unique @db.VarChar(255)
+  password                                          String                  @db.VarChar(255)
+  phone_number                                      String?                 @db.VarChar(255)
+  profile_image_url                                 String?                 @db.VarChar(255)
+  role                                              String?                 @db.VarChar(255)
+  created_at                                        DateTime?               @default(now()) @db.Timestamp(6)
+  oauth_provider                                    String?
+  oauth_id                                          String?
+  username                                          String?
+  phone_verified                                    Boolean?                @default(false)
+  founding_club                                     Boolean?                @default(false)
+  social_username                                   String?                 @unique
+  bio                                               String?
+  follower_count                                    Int?                    @default(0)
+  following_count                                   Int?                    @default(0)
+  post_count                                        Int?                    @default(0)
+  is_private                                        Boolean?                @default(false)
+  cover_photo_url                                   String?                 @db.VarChar
+  admin_action_logs                                 admin_action_logs[]
+  adoption_applications                             adoption_applications[]
+  carts                                             carts[]
+  clinics                                           clinics[]
+  issues                                            issues[]
+  lost_and_found_posts                              lost_and_found_posts[]
+  mobile_refresh_tokens                             mobile_refresh_tokens[]
+  pets                                              pets[]
+  refresh_tokens                                    refresh_tokens[]
+  rescue_shelters                                   rescue_shelters[]
+  social_comments                                   social_comments[]
+  social_follows_social_follows_follower_idTousers  social_follows[]        @relation("social_follows_follower_idTousers")
+  social_follows_social_follows_following_idTousers social_follows[]        @relation("social_follows_following_idTousers")
+  social_likes                                      social_likes[]
+  social_posts                                      social_posts[]
+  cities                                            cities?                 @relation(fields: [city_id], references: [city_id], onDelete: Cascade, onUpdate: NoAction)
+  vendors                                           vendors?
+  vet_reviews                                       vet_reviews[]
+  vets                                              vets[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -315,77 +205,747 @@ model vet_reviews {
   rating         Int?
   review_content String?
   review_date    DateTime? @default(now()) @db.Timestamp(6)
-  approved       Boolean?  @default(false)
+  clinic_id      BigInt?
+  clinics        clinics?  @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade, onUpdate: NoAction)
   users          users?    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   vets           vets?     @relation(fields: [vet_id], references: [vet_id], onDelete: Cascade)
 }
 
-model vet_specializations {
-  vet_id       Int
-  category_id  Int
-  pet_category pet_category @relation(fields: [category_id], references: [category_id], onDelete: Cascade, onUpdate: NoAction)
-  vets         vets         @relation(fields: [vet_id], references: [vet_id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@id([vet_id, category_id])
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model vet_verification_application {
-  application_id   Int            @id @default(autoincrement())
-  vet_id           Int
-  qualification_id Int
-  image_url        String?        @db.VarChar(255)
-  created_at       DateTime?      @default(now()) @db.Timestamp(6)
-  status           String?        @default("pending") @db.VarChar(10)
-  qualifications   qualifications @relation(fields: [qualification_id], references: [qualification_id], onDelete: NoAction, onUpdate: NoAction)
-  vets             vets           @relation(fields: [vet_id], references: [vet_id], onDelete: Cascade)
-}
-
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model vets {
-  vet_id                       Int                            @id @default(autoincrement())
-  user_id                      Int?
-  clinic_name                  String?                        @db.VarChar(255)
-  location                     String?                        @db.VarChar(255)
-  minimum_fee                  Int?
-  contact_details              String?                        @db.VarChar(255)
-  profile_verified             Boolean?                       @default(false)
-  created_at                   DateTime?                      @default(now()) @db.Timestamp(6)
-  bio                          String?
-  clinic_whatsapp              String?                        @db.VarChar(15)
-  clinic_email                 String?                        @db.VarChar(255)
-  applied                      Boolean?                       @default(false)
-  approved                     Boolean?                       @default(false)
-  vet_availability             vet_availability[]
-  vet_qualifications           vet_qualifications[]
-  vet_reviews                  vet_reviews[]
-  vet_specializations          vet_specializations[]
-  vet_verification_application vet_verification_application[]
-  users                        users?                         @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  vet_id          Int           @id @default(autoincrement())
+  user_id         Int?
+  minimum_fee     Int?
+  contact_details String?       @db.VarChar(255)
+  created_at      DateTime?     @default(now()) @db.Timestamp(6)
+  bio             String?
+  is_active       Boolean?      @default(true)
+  schedule        String?
+  qualifications  String?
+  license_number  String?       @db.VarChar
+  specialization  String?
+  clinic_vets     clinic_vets[]
+  vet_reviews     vet_reviews[]
+  users           users?        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model OTP {
-  id        String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  email     String    @unique @db.VarChar(255)
-  otp       String    @db.VarChar(255)
-  attempts  Int?      @default(0)
-  createdat DateTime? @default(now()) @db.Timestamp(6)
+  id         String    @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
+  email      String    @unique @db.VarChar(255)
+  otp        String    @db.VarChar(255)
+  attempts   Int?      @default(0)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
 
   @@map("OTP")
 }
 
 model pet_tags {
   tag_id              Int                   @id @default(autoincrement())
-  tag_name            String                @unique @db.VarChar(255)
-  tag_category        String                @db.VarChar(255)
+  tag_name            String                @unique @db.VarChar
+  tag_category        String?               @db.VarChar
   pet_tag_assignments pet_tag_assignments[]
 }
 
 model pet_tag_assignments {
   pet_id   Int
   tag_id   Int
-  pets     pets     @relation(fields: [pet_id], references: [pet_id], onDelete: Cascade)
-  pet_tags pet_tags @relation(fields: [tag_id], references: [tag_id], onDelete: Cascade)
+  pets     pets     @relation(fields: [pet_id], references: [pet_id], onDelete: Cascade, onUpdate: NoAction)
+  pet_tags pet_tags @relation(fields: [tag_id], references: [tag_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([pet_id, tag_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model bazaar_cart_items {
+  cart_item_id            Int                      @id @default(autoincrement())
+  cart_id                 Int
+  product_id              Int
+  variant_id              Int?
+  quantity                Int                      @default(1)
+  added_at                DateTime?                @default(now()) @db.Timestamp(6)
+  updated_at              DateTime?                @default(now()) @db.Timestamp(6)
+  vendor_id               BigInt?
+  inventory_id            BigInt?
+  vendor_inventory        vendor_inventory?        @relation(fields: [inventory_id], references: [inventory_id], onUpdate: NoAction)
+  vendors                 vendors?                 @relation(fields: [vendor_id], references: [vendor_id], onUpdate: NoAction)
+  bazaar_carts            bazaar_carts             @relation(fields: [cart_id], references: [cart_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cart_item_cart")
+  bazaar_products         bazaar_products          @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cart_item_product")
+  bazaar_product_variants bazaar_product_variants? @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cart_item_variant")
+
+  @@unique([cart_id, product_id, variant_id])
+  @@index([cart_id], map: "idx_bazaar_cart_items_cart_id")
+  @@index([product_id], map: "idx_bazaar_cart_items_product_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model bazaar_carts {
+  cart_id           Int                 @id @default(autoincrement())
+  user_id           Int?
+  session_id        String?             @db.VarChar(255)
+  created_at        DateTime?           @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamp(6)
+  expires_at        DateTime?           @default(dbgenerated("(CURRENT_TIMESTAMP + '30 days'::interval)")) @db.Timestamp(6)
+  bazaar_cart_items bazaar_cart_items[]
+
+  @@index([expires_at], map: "idx_bazaar_carts_expires_at")
+  @@index([session_id], map: "idx_bazaar_carts_session_id")
+  @@index([user_id], map: "idx_bazaar_carts_user_id")
+}
+
+model bazaar_categories {
+  category_id               Int                         @id @default(autoincrement())
+  name                      String                      @db.VarChar
+  slug                      String?                     @unique @db.VarChar
+  description               String?
+  image_url                 String?                     @db.VarChar
+  parent_id                 Int?
+  sort_order                Int?                        @default(0)
+  is_active                 Boolean?                    @default(true)
+  created_at                DateTime?                   @default(now()) @db.Timestamp(6)
+  bazaar_categories         bazaar_categories?          @relation("bazaar_categoriesTobazaar_categories", fields: [parent_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_bazaar_category_parent")
+  other_bazaar_categories   bazaar_categories[]         @relation("bazaar_categoriesTobazaar_categories")
+  bazaar_product_categories bazaar_product_categories[]
+
+  @@index([name], map: "idx_categories_name")
+}
+
+model bazaar_collections {
+  collection_id              Int                          @id @default(autoincrement())
+  name                       String                       @db.VarChar
+  slug                       String?                      @unique @db.VarChar
+  description                String?
+  image_url                  String?                      @db.VarChar
+  sort_order                 Int?                         @default(0)
+  is_active                  Boolean?                     @default(true)
+  created_at                 DateTime?                    @default(now()) @db.Timestamp(6)
+  bazaar_product_collections bazaar_product_collections[]
+
+  @@index([name], map: "idx_collections_name")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model bazaar_coupons {
+  coupon_id           Int       @id @default(autoincrement())
+  code                String    @unique @db.VarChar(50)
+  description         String?
+  discount_type       String    @db.VarChar
+  discount_value      Decimal   @db.Decimal(12, 2)
+  min_order_amount    Decimal?  @db.Decimal(12, 2)
+  max_discount_amount Decimal?  @db.Decimal(12, 2)
+  usage_limit         Int?
+  used_count          Int?      @default(0)
+  is_active           Boolean?  @default(true)
+  valid_from          DateTime? @default(now()) @db.Timestamp(6)
+  valid_until         DateTime? @db.Timestamp(6)
+  created_at          DateTime? @default(now()) @db.Timestamp(6)
+  created_by          Int?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model bazaar_order_items {
+  order_item_id           Int                      @id @default(autoincrement())
+  order_id                Int
+  product_id              Int
+  variant_id              Int?
+  quantity                Int
+  unit_price              Decimal                  @db.Decimal(12, 2)
+  total_price             Decimal                  @db.Decimal(12, 2)
+  product_title           String                   @db.VarChar
+  product_sku             String?                  @db.VarChar
+  variant_title           String?                  @db.VarChar
+  variant_sku             String?                  @db.VarChar
+  variant_attributes      Json?
+  created_at              DateTime?                @default(now()) @db.Timestamp(6)
+  compare_at_price        Int?
+  is_reviewed             Boolean?                 @default(false)
+  vendor_id               BigInt?
+  inventory_id            BigInt?
+  vendor_order_id         BigInt?
+  vendor_inventory        vendor_inventory?        @relation(fields: [inventory_id], references: [inventory_id], onDelete: NoAction, onUpdate: NoAction)
+  vendors                 vendors?                 @relation(fields: [vendor_id], references: [vendor_id], onDelete: NoAction, onUpdate: NoAction)
+  vendor_orders           vendor_orders?           @relation(fields: [vendor_order_id], references: [vendor_order_id], onDelete: NoAction, onUpdate: NoAction)
+  bazaar_orders           bazaar_orders            @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_order_item_order")
+  bazaar_products         bazaar_products          @relation(fields: [product_id], references: [product_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_item_product")
+  bazaar_product_variants bazaar_product_variants? @relation(fields: [variant_id], references: [variant_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_order_item_variant")
+
+  @@index([order_id], map: "idx_bazaar_order_items_order_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model bazaar_orders {
+  order_id              Int                    @id @default(autoincrement())
+  user_id               Int?
+  session_id            String?                @db.VarChar(255)
+  order_number          String                 @unique @default("") @db.VarChar(50)
+  status                String?                @default("pending") @db.VarChar
+  subtotal              Decimal                @default(0) @db.Decimal(12, 2)
+  shipping_amount       Decimal?               @default(0) @db.Decimal(12, 2)
+  discount_amount       Decimal?               @default(0) @db.Decimal(12, 2)
+  total_amount          Decimal                @db.Decimal(12, 2)
+  currency              String?                @default("PKR") @db.VarChar
+  customer_email        String?                @db.VarChar
+  customer_phone        String?                @db.VarChar
+  customer_name         String?                @db.VarChar
+  shipping_address      Json?
+  billing_address       Json?
+  payment_method        String?                @db.VarChar
+  payment_status        String?                @default("pending") @db.VarChar
+  payment_reference     String?                @db.VarChar
+  notes                 String?
+  admin_notes           String?
+  tracking_number       String?                @db.VarChar
+  created_at            DateTime?              @default(now()) @db.Timestamp(6)
+  updated_at            DateTime?              @default(now()) @db.Timestamp(6)
+  shipped_at            DateTime?              @db.Timestamp(6)
+  delivered_at          DateTime?              @db.Timestamp(6)
+  bazaar_order_items    bazaar_order_items[]
+  bazaar_payment_proofs bazaar_payment_proofs?
+  vendor_orders         vendor_orders[]
+
+  @@index([created_at(sort: Desc)], map: "idx_bazaar_orders_created_at")
+  @@index([order_number], map: "idx_bazaar_orders_order_number")
+  @@index([session_id], map: "idx_bazaar_orders_session_id")
+  @@index([status], map: "idx_bazaar_orders_status")
+  @@index([user_id], map: "idx_bazaar_orders_user_id")
+  @@index([payment_status], map: "idx_orders_payment_status")
+  @@index([status], map: "idx_orders_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model bazaar_payment_proofs {
+  proof_id            Int           @id @default(autoincrement())
+  order_id            Int           @unique(map: "unique_order_proof")
+  user_id             Int?
+  session_id          String?       @db.VarChar
+  image_url           String        @db.VarChar
+  uploaded_at         DateTime?     @default(now()) @db.Timestamp(6)
+  verified_by         Int?
+  verified_at         DateTime?     @db.Timestamp(6)
+  verification_status String?       @default("pending") @db.VarChar
+  admin_notes         String?
+  bazaar_orders       bazaar_orders @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([order_id], map: "idx_payment_proofs_order")
+  @@index([verification_status], map: "idx_payment_proofs_status")
+}
+
+model bazaar_product_categories {
+  product_id        Int
+  category_id       Int
+  bazaar_categories bazaar_categories @relation(fields: [category_id], references: [category_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_bpc_category")
+  bazaar_products   bazaar_products   @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_bpc_product")
+
+  @@id([product_id, category_id])
+  @@index([category_id], map: "idx_product_categories_category")
+  @@index([product_id, category_id], map: "idx_product_categories_composite")
+  @@index([product_id], map: "idx_product_categories_product")
+}
+
+model bazaar_product_collections {
+  product_id         Int
+  collection_id      Int
+  created_at         DateTime?          @default(now()) @db.Timestamp(6)
+  bazaar_collections bazaar_collections @relation(fields: [collection_id], references: [collection_id], onDelete: Cascade, onUpdate: NoAction)
+  bazaar_products    bazaar_products    @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([product_id, collection_id])
+  @@index([collection_id], map: "idx_bazaar_product_collections_collection_id")
+  @@index([product_id], map: "idx_bazaar_product_collections_product_id")
+}
+
+model bazaar_product_media {
+  media_id                Int                      @id @default(autoincrement())
+  product_id              Int
+  url                     String                   @db.VarChar
+  alt_text                String?                  @db.VarChar
+  ordering                Int?                     @default(0)
+  is_primary              Boolean?                 @default(false)
+  created_at              DateTime?                @default(now()) @db.Timestamp(6)
+  variant_id              Int?
+  bazaar_product_variants bazaar_product_variants? @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade, onUpdate: NoAction)
+  bazaar_products         bazaar_products          @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_product_media_product")
+
+  @@index([variant_id], map: "idx_bazaar_product_media_variant_id")
+  @@index([is_primary], map: "idx_media_primary")
+  @@index([product_id], map: "idx_media_product")
+  @@index([product_id, ordering], map: "idx_media_product_ordering")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model bazaar_product_reviews {
+  review_id       Int             @id @default(autoincrement())
+  product_id      Int
+  user_id         Int?
+  rating          Int
+  title           String?         @db.VarChar
+  body            String?
+  status          String?         @default("pending") @db.VarChar
+  helpful_count   Int?            @default(0)
+  created_at      DateTime?       @default(now()) @db.Timestamp(6)
+  updated_at      DateTime?       @default(now()) @db.Timestamp(6)
+  bazaar_products bazaar_products @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_review_product")
+
+  @@index([product_id], map: "idx_reviews_product")
+  @@index([status], map: "idx_reviews_status")
+  @@index([user_id], map: "idx_reviews_user")
+}
+
+model bazaar_product_variants {
+  variant_id           Int                    @id @default(autoincrement())
+  product_id           Int
+  title                String?                @db.VarChar
+  sku                  String?                @unique @db.VarChar
+  price_override       Decimal?               @db.Decimal(12, 2)
+  stock                Int                    @default(0)
+  weight_override      Decimal?               @db.Decimal(10, 3)
+  attributes           Json?
+  is_default           Boolean?               @default(false)
+  sort_order           Int?                   @default(0)
+  created_at           DateTime?              @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?              @default(now()) @db.Timestamp(6)
+  compare_at_price     Decimal?               @db.Decimal
+  bazaar_cart_items    bazaar_cart_items[]
+  bazaar_order_items   bazaar_order_items[]
+  bazaar_product_media bazaar_product_media[]
+  bazaar_products      bazaar_products        @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_variant_product")
+  bazaar_wishlists     bazaar_wishlists[]
+
+  @@index([product_id], map: "idx_variants_product")
+  @@index([sku], map: "idx_variants_sku")
+  @@index([stock], map: "idx_variants_stock")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model bazaar_products {
+  product_id                 Int                          @id @default(autoincrement())
+  title                      String                       @db.VarChar
+  slug                       String?                      @unique @db.VarChar
+  description                String?
+  status                     String?                      @default("draft") @db.VarChar
+  price                      Decimal                      @default(0) @db.Decimal(12, 2)
+  currency                   String?                      @default("PKR") @db.VarChar
+  sku                        String?                      @unique @db.VarChar
+  shipping_weight            Decimal?                     @db.Decimal(10, 3)
+  featured                   Boolean?                     @default(false)
+  min_order_qty              Int?                         @default(1)
+  max_order_qty              Int?
+  has_variants               Boolean?                     @default(false)
+  variant_attributes         Json?
+  seo_title                  String?                      @db.VarChar
+  seo_description            String?
+  created_at                 DateTime?                    @default(now()) @db.Timestamp(6)
+  updated_at                 DateTime?                    @default(now()) @db.Timestamp(6)
+  company_name               String?
+  inventory_id               BigInt?
+  is_master                  Boolean?                     @default(true)
+  is_master_catalogue        Boolean?                     @default(true)
+  animal_type                String?
+  brand                      String?
+  bazaar_cart_items          bazaar_cart_items[]
+  bazaar_order_items         bazaar_order_items[]
+  bazaar_product_categories  bazaar_product_categories[]
+  bazaar_product_collections bazaar_product_collections[]
+  bazaar_product_media       bazaar_product_media[]
+  bazaar_product_reviews     bazaar_product_reviews[]
+  bazaar_product_variants    bazaar_product_variants[]
+  bazaar_wishlists           bazaar_wishlists[]
+  vendor_inventory           vendor_inventory[]
+
+  @@index([created_at(sort: Desc)], map: "idx_bazaar_products_created_at")
+  @@index([featured], map: "idx_bazaar_products_featured")
+  @@index([status], map: "idx_bazaar_products_status")
+  @@index([title(ops: raw("gin_trgm_ops"))], map: "idx_bazaar_products_title_trgm", type: Gin)
+  @@index([created_at(sort: Desc)], map: "idx_products_created")
+  @@index([sku], map: "idx_products_sku")
+  @@index([status], map: "idx_products_status")
+  @@index([status, created_at(sort: Desc)], map: "idx_products_status_created")
+}
+
+model bazaar_shipping_rates {
+  rate_id                 Int                   @id @default(autoincrement())
+  zone_id                 Int
+  name                    String                @db.VarChar
+  description             String?
+  price                   Decimal               @db.Decimal(12, 2)
+  free_shipping_threshold Decimal?              @db.Decimal(12, 2)
+  estimated_days_min      Int?
+  estimated_days_max      Int?
+  is_active               Boolean?              @default(true)
+  created_at              DateTime?             @default(now()) @db.Timestamp(6)
+  bazaar_shipping_zones   bazaar_shipping_zones @relation(fields: [zone_id], references: [zone_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_shipping_rate_zone")
+}
+
+model bazaar_shipping_zones {
+  zone_id               Int                     @id @default(autoincrement())
+  name                  String                  @db.VarChar
+  description           String?
+  cities                Json?
+  is_active             Boolean?                @default(true)
+  created_at            DateTime?               @default(now()) @db.Timestamp(6)
+  bazaar_shipping_rates bazaar_shipping_rates[]
+}
+
+model bazaar_user_shipping_info {
+  shipping_info_id Int       @id @default(autoincrement())
+  user_id          Int
+  email            String    @db.VarChar(255)
+  full_name        String    @db.VarChar(255)
+  phone            String    @db.VarChar(20)
+  city             String?   @db.VarChar(100)
+  postal_code      String?   @db.VarChar(20)
+  address          String
+  is_default       Boolean?  @default(true)
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  updated_at       DateTime? @default(now()) @db.Timestamp(6)
+
+  @@index([user_id], map: "idx_user_shipping_info_user_id")
+}
+
+model bazaar_wishlists {
+  wishlist_id             Int                      @id @default(autoincrement())
+  user_id                 Int
+  product_id              Int
+  variant_id              Int?
+  created_at              DateTime?                @default(now()) @db.Timestamp(6)
+  bazaar_products         bazaar_products          @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_wishlist_product")
+  bazaar_product_variants bazaar_product_variants? @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_wishlist_variant")
+
+  @@unique([user_id, product_id, variant_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model cart_items {
+  cart_item_id BigInt    @id @default(autoincrement())
+  cart_id      BigInt
+  product_id   BigInt
+  quantity     Int
+  price        Decimal   @db.Decimal(10, 2)
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @default(now()) @db.Timestamptz(6)
+  carts        carts     @relation(fields: [cart_id], references: [cart_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model carts {
+  cart_id     BigInt       @id @default(autoincrement())
+  user_id     Int?
+  guest_token String?
+  status      String?      @default("active")
+  created_at  DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?    @default(now()) @db.Timestamptz(6)
+  cart_items  cart_items[]
+  users       users?       @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model clinic_vets {
+  clinic_id           BigInt
+  vet_id              Int
+  consultation_fee    Int?
+  is_primary_location Boolean?  @default(false)
+  schedule_notes      String?
+  created_at          DateTime? @default(now()) @db.Timestamptz(6)
+  clinics             clinics   @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade, onUpdate: NoAction)
+  vets                vets      @relation(fields: [vet_id], references: [vet_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([clinic_id, vet_id])
+}
+
+model clinics {
+  clinic_id         BigInt        @id @default(autoincrement())
+  name              String
+  address           String
+  google_maps_link  String?
+  contact_number    String?
+  whatsapp_number   String?
+  logo_url          String?
+  operating_hours   String?
+  discount_details  String?
+  is_paltuu_partner Boolean?      @default(false)
+  created_at        DateTime      @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  owner_id          Int?
+  clinic_vets       clinic_vets[]
+  users             users?        @relation(fields: [owner_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  vet_reviews       vet_reviews[]
+}
+
+model issues {
+  id          BigInt   @id @default(autoincrement())
+  user_id     Int?
+  title       String   @db.VarChar(255)
+  description String?
+  image_url   String?
+  status      String   @default("open") @db.VarChar(30)
+  priority    Int      @default(0) @db.SmallInt
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  users       users?   @relation(fields: [user_id], references: [user_id], onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_issues_created_at")
+  @@index([status], map: "idx_issues_status")
+  @@index([user_id], map: "idx_issues_user_id")
+}
+
+model mobile_refresh_tokens {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  token      String    @unique
+  expires_at DateTime  @db.Timestamp(6)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  users      users     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([token], map: "idx_mobile_refresh_tokens_token")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model newsletter_subscriptions {
+  id                  Int       @id @default(autoincrement())
+  email               String    @unique @db.VarChar(255)
+  subscription_status String?   @default("active") @db.VarChar(20)
+  created_at          DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([email], map: "idx_newsletter_email")
+  @@index([subscription_status], map: "idx_newsletter_status")
+}
+
+model refresh_tokens {
+  id         BigInt    @id @default(autoincrement())
+  user_id    Int
+  token      String    @unique
+  expires_at DateTime  @db.Timestamptz(6)
+  revoked    Boolean?  @default(false)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  users      users     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model rescue_images {
+  image_id  Int    @id @default(autoincrement())
+  pet_id    Int?
+  image_url String
+  pets      pets?  @relation(fields: [pet_id], references: [pet_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model rescue_medical_conditions {
+  condition_id   Int      @id @default(autoincrement())
+  pet_id         Int?
+  condition      String
+  treatment_cost Decimal? @db.Decimal(10, 2)
+  treated        Boolean? @default(false)
+  pets           pets?    @relation(fields: [pet_id], references: [pet_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model rescue_shelters {
+  shelter_id                 Int                          @id @default(autoincrement())
+  user_id                    Int?
+  shelter_name               String                       @db.VarChar(100)
+  address                    String
+  description                String?
+  logo_url                   String?
+  capacity                   Int?
+  created_at                 DateTime?                    @default(now()) @db.Timestamp(6)
+  approved                   Boolean                      @default(false)
+  pets                       pets[]
+  users                      users?                       @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  shelter_animals            shelter_animals[]
+  shelter_bank_info          shelter_bank_info[]
+  shelter_emergency_contacts shelter_emergency_contacts[]
+  shelter_photos             shelter_photos[]
+  shelter_socials            shelter_socials[]
+  shelter_verification       shelter_verification[]
+}
+
+model rescue_special_needs {
+  need_id      Int    @id @default(autoincrement())
+  pet_id       Int?
+  special_need String
+  pets         pets?  @relation(fields: [pet_id], references: [pet_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model shelter_animals {
+  id              Int              @id @default(autoincrement())
+  shelter_id      Int?
+  animal_type     Int?
+  pet_category    pet_category?    @relation(fields: [animal_type], references: [category_id], onDelete: Cascade, onUpdate: NoAction)
+  rescue_shelters rescue_shelters? @relation(fields: [shelter_id], references: [shelter_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model shelter_bank_info {
+  bank_id         Int              @id @default(autoincrement())
+  shelter_id      Int?
+  account_title   String           @db.VarChar(100)
+  iban            String           @db.VarChar(34)
+  bank_name       String           @db.VarChar(100)
+  rescue_shelters rescue_shelters? @relation(fields: [shelter_id], references: [shelter_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model shelter_emergency_contacts {
+  contact_id      Int              @id @default(autoincrement())
+  shelter_id      Int?
+  primary_phone   String           @db.VarChar(20)
+  backup_phone    String?          @db.VarChar(20)
+  vet_name        String?          @db.VarChar(100)
+  vet_phone       String?          @db.VarChar(20)
+  rescue_shelters rescue_shelters? @relation(fields: [shelter_id], references: [shelter_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model shelter_photos {
+  photo_id        Int              @id @default(autoincrement())
+  shelter_id      Int?
+  photo_url       String
+  rescue_shelters rescue_shelters? @relation(fields: [shelter_id], references: [shelter_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model shelter_socials {
+  social_id       Int              @id @default(autoincrement())
+  shelter_id      Int?
+  platform        String?          @db.VarChar(50)
+  url             String?
+  rescue_shelters rescue_shelters? @relation(fields: [shelter_id], references: [shelter_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model shelter_verification {
+  verification_id     Int              @id @default(autoincrement())
+  shelter_id          Int?
+  reg_certificate_url String?
+  cnic_front_url      String
+  cnic_back_url       String
+  rescue_shelters     rescue_shelters? @relation(fields: [shelter_id], references: [shelter_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model social_comments {
+  comment_id                                                               BigInt            @id @default(autoincrement())
+  post_id                                                                  BigInt
+  user_id                                                                  Int
+  parent_comment_id                                                        BigInt?
+  root_comment_id                                                          BigInt?
+  content                                                                  String
+  depth                                                                    Int?              @default(0)
+  is_deleted                                                               Boolean?          @default(false)
+  created_at                                                               DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at                                                               DateTime?         @default(now()) @db.Timestamptz(6)
+  social_comments_social_comments_parent_comment_idTosocial_comments       social_comments?  @relation("social_comments_parent_comment_idTosocial_comments", fields: [parent_comment_id], references: [comment_id], onDelete: NoAction, onUpdate: NoAction)
+  other_social_comments_social_comments_parent_comment_idTosocial_comments social_comments[] @relation("social_comments_parent_comment_idTosocial_comments")
+  social_posts                                                             social_posts      @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction)
+  social_comments_social_comments_root_comment_idTosocial_comments         social_comments?  @relation("social_comments_root_comment_idTosocial_comments", fields: [root_comment_id], references: [comment_id], onDelete: NoAction, onUpdate: NoAction)
+  other_social_comments_social_comments_root_comment_idTosocial_comments   social_comments[] @relation("social_comments_root_comment_idTosocial_comments")
+  users                                                                    users             @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model social_follows {
+  follow_id                                BigInt    @id @default(autoincrement())
+  follower_id                              Int
+  following_id                             Int
+  created_at                               DateTime? @default(now()) @db.Timestamptz(6)
+  users_social_follows_follower_idTousers  users     @relation("social_follows_follower_idTousers", fields: [follower_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  users_social_follows_following_idTousers users     @relation("social_follows_following_idTousers", fields: [following_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([follower_id, following_id])
+}
+
+model social_likes {
+  like_id      BigInt       @id @default(autoincrement())
+  user_id      Int
+  post_id      BigInt
+  created_at   DateTime?    @default(now()) @db.Timestamptz(6)
+  social_posts social_posts @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction)
+  users        users        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, post_id])
+}
+
+model social_post_media {
+  media_id      BigInt       @id @default(autoincrement())
+  post_id       BigInt
+  media_type    String
+  url           String
+  thumbnail_url String?
+  ordering      Int?         @default(0)
+  social_posts  social_posts @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model social_posts {
+  post_id           BigInt              @id @default(autoincrement())
+  user_id           Int
+  pet_id            Int?
+  post_type         String
+  content           String?
+  like_count        Int?                @default(0)
+  comment_count     Int?                @default(0)
+  repost_count      Int?                @default(0)
+  view_count        Int?                @default(0)
+  is_hidden         Boolean?            @default(false)
+  is_deleted        Boolean?            @default(false)
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  social_comments   social_comments[]
+  social_likes      social_likes[]
+  social_post_media social_post_media[]
+  pets              pets?               @relation(fields: [pet_id], references: [pet_id], onUpdate: NoAction)
+  users             users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model vendor_inventory {
+  inventory_id       BigInt               @id @default(autoincrement())
+  vendor_id          BigInt
+  product_id         Int?
+  custom_title       String?
+  custom_sku         String?
+  custom_image_url   String?
+  selling_price      Decimal              @db.Decimal
+  original_price     Decimal?             @db.Decimal
+  discount_percent   Decimal?             @default(0) @db.Decimal
+  stock_count        Int?                 @default(0)
+  is_available       Boolean?             @default(true)
+  created_at         DateTime?            @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?            @default(now()) @db.Timestamptz(6)
+  bazaar_cart_items  bazaar_cart_items[]
+  bazaar_order_items bazaar_order_items[]
+  bazaar_products    bazaar_products?     @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction)
+  vendors            vendors              @relation(fields: [vendor_id], references: [vendor_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([vendor_id, product_id])
+}
+
+model vendor_orders {
+  vendor_order_id    BigInt               @id @default(autoincrement())
+  order_id           Int
+  vendor_id          BigInt
+  status             String?              @default("pending")
+  subtotal           Decimal              @db.Decimal
+  delivery_fee       Decimal?             @default(0) @db.Decimal
+  total              Decimal              @db.Decimal
+  created_at         DateTime?            @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?            @default(now()) @db.Timestamptz(6)
+  bazaar_order_items bazaar_order_items[]
+  bazaar_orders      bazaar_orders        @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction)
+  vendors            vendors              @relation(fields: [vendor_id], references: [vendor_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model vendors {
+  vendor_id               BigInt               @id @default(autoincrement())
+  user_id                 Int                  @unique
+  shop_name               String
+  address                 String
+  area                    String?
+  city_id                 Int?
+  contact_number          String?
+  whatsapp_number         String?
+  logo_url                String?
+  delivery_polygon        Json?
+  flat_delivery_fee       Decimal?             @default(0) @db.Decimal
+  per_kg_delivery_fee     Decimal?             @default(0) @db.Decimal
+  max_delivery_weight_kg  Decimal?             @default(30) @db.Decimal
+  free_delivery_threshold Decimal?             @db.Decimal
+  platform_fee_percent    Decimal?             @default(9) @db.Decimal
+  is_active               Boolean?             @default(false)
+  is_verified             Boolean?             @default(false)
+  created_at              DateTime?            @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime?            @default(now()) @db.Timestamptz(6)
+  bazaar_cart_items       bazaar_cart_items[]
+  bazaar_order_items      bazaar_order_items[]
+  vendor_inventory        vendor_inventory[]
+  vendor_orders           vendor_orders[]
+  cities                  cities?              @relation(fields: [city_id], references: [city_id], onDelete: NoAction, onUpdate: NoAction)
+  users                   users                @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 }

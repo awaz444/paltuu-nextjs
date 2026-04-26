@@ -1,14 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Modal, InputNumber, Switch, Button, Divider, Space, Typography } from "antd";
-import { VendorInventoryItem } from "../../lib/mockVendorData";
+import { Modal, InputNumber, Switch, Button, Divider, Space, Typography, message } from "antd";
 
 const { Text, Title } = Typography;
 
 interface AddProductModalProps {
   visible: boolean;
   onCancel: () => void;
-  onAdd: (item: VendorInventoryItem) => void;
+  onAdd: () => void;
   product: any; // The master product from the catalogue
 }
 
@@ -17,6 +16,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ visible, onCancel, on
   const [originalPrice, setOriginalPrice] = useState<number>(0);
   const [isAvailable, setIsAvailable] = useState<boolean>(true);
   const [stockCount, setStockCount] = useState<number | undefined>(undefined);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (product) {
@@ -30,24 +30,37 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ visible, onCancel, on
     ? Math.round(((originalPrice - sellingPrice) / originalPrice) * 100) 
     : 0;
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!product) return;
+    setLoading(true);
 
-    const newItem: VendorInventoryItem = {
-      inventory_id: Date.now(), // Mock ID
-      product_id: product.product_id,
-      title: product.title,
-      image_url: product.images?.[0] || "",
-      sku: product.sku,
-      selling_price: sellingPrice,
-      original_price: originalPrice,
-      discount_percent: Math.max(0, discountPercent),
-      is_available: isAvailable,
-      stock_count: stockCount
-    };
+    try {
+      const res = await fetch('/api/v1/vendors/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: product.product_id,
+          selling_price: sellingPrice,
+          original_price: originalPrice,
+          discount_percent: Math.max(0, discountPercent),
+          is_available: isAvailable,
+          stock_count: stockCount || null
+        })
+      });
 
-    onAdd(newItem);
-    onCancel();
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to add to store");
+      }
+
+      message.success(`${product.title} added to your shop inventory!`);
+      onAdd();
+      onCancel();
+    } catch (err: any) {
+      message.error(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -57,7 +70,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ visible, onCancel, on
       onCancel={onCancel}
       footer={[
         <Button key="cancel" onClick={onCancel}>Cancel</Button>,
-        <Button key="submit" type="primary" className="bg-[#a03048] border-none" onClick={handleAdd}>
+        <Button key="submit" type="primary" className="bg-[#a03048] border-none" loading={loading} onClick={handleAdd}>
           Confirm Addition
         </Button>
       ]}

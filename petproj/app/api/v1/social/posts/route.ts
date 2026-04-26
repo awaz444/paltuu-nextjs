@@ -35,7 +35,6 @@ export async function GET(req: NextRequest) {
         const isChronological = mode === "chronological";
         const isGlobal = mode === "global";
 
-        
         // ── Shared SELECT columns ──────────────────────────────────────────
         const selectCols = `
             p.*,

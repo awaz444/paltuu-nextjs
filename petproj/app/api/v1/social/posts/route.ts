@@ -6,7 +6,6 @@ import { rateLimit, LIMITS } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
-
 /**
  * GET /api/v1/social/posts
  * Fetch social feed

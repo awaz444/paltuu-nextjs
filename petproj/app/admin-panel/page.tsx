@@ -28,6 +28,8 @@ const AdminPanel = () => {
     const [data, setData] = useState<UserProfileData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
+    const fetchedRef = React.useRef(false);
+
     // Check if user has admin role
     useEffect(() => {
         if (!isHydrating && user && user.role !== "admin") {
@@ -40,11 +42,9 @@ const AdminPanel = () => {
         // Get user_id from AuthContext
         const currentUserId = user?.id || null;
 
-        if (!currentUserId) {
-            console.error("No user ID found in session.");
-            setLoading(false);
-            return;
-        }
+        if (!currentUserId || isHydrating) return;
+
+        if (fetchedRef.current) return;
 
         setUserId(currentUserId);
         console.log(`Fetched user ID: ${currentUserId}`);
@@ -55,6 +55,7 @@ const AdminPanel = () => {
 
             setLoading(true);
             try {
+                fetchedRef.current = true;
                 const res = await fetch(`/api/v1/users/profile/${currentUserId}`);
                 if (!res.ok) {
                     throw new Error(
@@ -66,6 +67,7 @@ const AdminPanel = () => {
                 setData(responseData);
             } catch (error) {
                 console.error("Error fetching user profile data:", error);
+                fetchedRef.current = false;
             } finally {
                 setLoading(false);
             }

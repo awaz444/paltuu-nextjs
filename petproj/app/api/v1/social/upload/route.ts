@@ -104,11 +104,11 @@ export async function POST(req: NextRequest) {
                 });
 
             } else {
-                // 1. Optimize image: resize to max 1200px, convert to WebP
+                // 1. Optimize image: resize to max 1200px, convert to JPEG
                 const [optimizedBuffer, meta] = await Promise.all([
                     sharp(buffer)
                         .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
-                        .webp({ quality: 88 })
+                        .jpeg({ quality: 85 })
                         .toBuffer(),
                     sharp(buffer).metadata(),
                 ]);
@@ -118,14 +118,14 @@ export async function POST(req: NextRequest) {
                     generateBlurHash(buffer),
                     sharp(buffer)
                         .resize(600, 600, { fit: "inside", withoutEnlargement: true })
-                        .webp({ quality: 75 })
+                        .jpeg({ quality: 70 })
                         .toBuffer(),
                 ]);
 
                 // 3. Upload full + thumbnail to S3 posts/ folder
                 const [url, thumbnail_url] = await Promise.all([
-                    uploadToS3(optimizedBuffer, "posts", "image/webp", "webp"),
-                    uploadToS3(thumbnailBuffer, "posts", "image/webp", "webp"),
+                    uploadToS3(optimizedBuffer, "posts", "image/jpeg", "jpg"),
+                    uploadToS3(thumbnailBuffer, "posts", "image/jpeg", "jpg"),
                 ]);
 
                 results.push({

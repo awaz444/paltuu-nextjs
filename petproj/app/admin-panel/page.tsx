@@ -111,11 +111,13 @@ const AdminPanel = () => {
             <div className="bg-gray-100 min-h-screen px-4 sm:px-6 lg:px-8 py-8">
                 {/* Personal Info Box */}
                 <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 mb-6 relative border border-gray-200 hover:border-primary">
-                    <button
-                        className="absolute top-4 right-4 w-6 h-6"
-                        title="Edit Personal Info">
-                        <img src="/pen.svg" alt="Edit" />
-                    </button>
+                    <Link href="/my-profile">
+                        <button
+                            className="absolute top-4 right-4 w-6 h-6"
+                            title="Edit Personal Info">
+                            <img src="/pen.svg" alt="Edit" />
+                        </button>
+                    </Link>
                     <h3 className="text-lg sm:text-xl font-bold mb-4 text-primary">
                         Personal Information
                     </h3>

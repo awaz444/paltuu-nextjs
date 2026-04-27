@@ -1,14 +1,13 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
-import { v2 as cloudinary } from "cloudinary";
-import bcrypt from "bcryptjs";
+import sharp from "sharp";
+import { uploadToS3, deleteFromS3 } from "@/lib/s3";
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-  api_key: process.env.CLOUDINARY_API_KEY!,
-  api_secret: process.env.CLOUDINARY_API_SECRET!,
-});
+const ACCEPTED_TYPES = new Set([
+    "image/jpeg", "image/jpg", "image/png", "image/webp",
+    "image/heic", "image/heif", "image/avif",
+]);
 
 /**
  * @swagger
@@ -19,8 +18,9 @@ cloudinary.config({
  */
 export async function GET(req: NextRequest) {
     try {
-        const userId = await getUserIdFromRequest(req);
-        if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userIdRaw = await getUserIdFromRequest(req);
+        if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userId = parseInt(String(userIdRaw), 10);
 
         const result = await db.query(`
             SELECT user_id, name, email, profile_image_url, role, created_at, phone_number, dob, city_id
@@ -40,32 +40,65 @@ export async function GET(req: NextRequest) {
  * @swagger
  * /api/v1/profile/avatar:
  *   post:
- *     summary: Update user profile avatar (V1 Hardened)
+ *     summary: Update user profile avatar via AWS S3 (V1 Hardened)
  *     tags: [v1 Profile]
  */
 export async function POST(req: NextRequest) {
     try {
-        const userId = await getUserIdFromRequest(req);
-        if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userIdRaw = await getUserIdFromRequest(req);
+        if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userId = parseInt(String(userIdRaw), 10);
 
         const data = await req.formData();
         const file = data.get("file") as File;
         if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
 
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const imageUrl = await new Promise<string>((resolve, reject) => {
-            const upload = cloudinary.uploader.upload_stream(
-                { resource_type: "image", folder: "profile-images" },
-                (error, result) => {
-                    if (error) reject(error);
-                    else resolve(result!.secure_url);
-                }
+        const mimeType = file.type.toLowerCase();
+        if (!mimeType.startsWith("image/") || !ACCEPTED_TYPES.has(mimeType)) {
+            return NextResponse.json(
+                { error: `Unsupported format "${file.type}". Use JPEG, PNG, HEIC, or WebP.` },
+                { status: 400 }
             );
-            upload.end(buffer);
-        });
+        }
 
-        await db.query('UPDATE users SET profile_image_url = $1 WHERE user_id = $2', [imageUrl, userId]);
-        return NextResponse.json({ success: true, url: imageUrl });
+        const buffer = Buffer.from(await file.arrayBuffer());
+
+        let optimized: Buffer;
+        try {
+            optimized = await sharp(buffer, { failOnError: false })
+                .rotate()
+                .resize(400, 400, { fit: "cover", position: "centre" })
+                .webp({ quality: 90 })
+                .toBuffer();
+        } catch (sharpErr: any) {
+            console.error("[avatar] sharp processing failed:", sharpErr?.message);
+            return NextResponse.json(
+                { error: "Could not process image. Try saving it as JPEG and re-uploading." },
+                { status: 400 }
+            );
+        }
+
+        const existing = await db.query(
+            "SELECT profile_image_url FROM users WHERE user_id = $1",
+            [userId]
+        );
+        const oldUrl: string | null = existing.rows[0]?.profile_image_url;
+
+        let url: string;
+        try {
+            url = await uploadToS3(optimized, "profile-pics", "image/webp", "webp");
+        } catch (s3Err: any) {
+            console.error("[avatar] S3 PutObject failed:", s3Err?.message);
+            return NextResponse.json({ error: "Storage upload failed. Please try again." }, { status: 500 });
+        }
+
+        await db.query('UPDATE users SET profile_image_url = $1 WHERE user_id = $2', [url, userId]);
+
+        if (oldUrl) {
+            deleteFromS3(oldUrl).catch(() => {});
+        }
+
+        return NextResponse.json({ success: true, url });
     } catch (error) {
         console.error("V1 Profile Avatar Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

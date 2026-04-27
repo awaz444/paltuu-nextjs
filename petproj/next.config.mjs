@@ -11,7 +11,7 @@ const nextConfig = {
       "lfiwvlicdkdheqynvjxb.supabase.co",
       "fjxezewxjsyyfuehnlko.supabase.co",
       "images.unsplash.com",
-      // add more supabase project URLs as needed
+      "djw7hbeqkm7bf.cloudfront.net",
     ],
   },
   async headers() {

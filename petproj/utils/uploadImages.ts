@@ -2,7 +2,7 @@ export const uploadImagesToCloudinary = async (files: File[]): Promise<string[]>
     const formData = new FormData();
     files.forEach((file) => formData.append('files', file));
   
-    const response = await fetch('/api/upload-image', {
+    const response = await fetch('/api/v1/upload-image', {
       method: 'POST',
       body: formData,
     });

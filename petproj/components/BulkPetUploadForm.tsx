@@ -311,7 +311,7 @@ export default function BulkPetUploadForm({
       formData.append('files', image);
     });
 
-    const response = await fetch('/api/upload-image', {
+    const response = await fetch('/api/v1/upload-image', {
       method: 'POST',
       body: formData,
     });
@@ -331,7 +331,7 @@ export default function BulkPetUploadForm({
     });
     formData.append('pet_id', petId.toString());
 
-    const response = await fetch('/api/upload-image', {
+    const response = await fetch('/api/v1/upload-image', {
       method: 'POST',
       body: formData,
     });

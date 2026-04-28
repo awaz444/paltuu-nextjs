@@ -68,7 +68,7 @@ function CreatePetList() {
       formData.append("pet_id", String(petId)); // Use petId from URL query
 
       // Send images to the backend API for uploading
-      const response = await axios.post("/api/upload-image", formData, {
+      const response = await axios.post("/api/v1/upload-image", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

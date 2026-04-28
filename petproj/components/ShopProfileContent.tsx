@@ -135,7 +135,7 @@ export default function ShopProfileContent({ shopId }: ShopProfileContentProps) 
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch('/api/upload-image', {
+      const response = await fetch('/api/v1/upload-image', {
         method: 'POST',
         body: formData,
       });

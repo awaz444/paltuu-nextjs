@@ -277,7 +277,7 @@ export default function SinglePetUploadForm({
         });
         formData.append("pet_id", String(petId));
 
-        await axios.post("/api/upload-image", formData, {
+        await axios.post("/api/v1/upload-image", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },

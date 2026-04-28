@@ -68,7 +68,11 @@ export async function GET(req: NextRequest) {
                     ou.profile_image_url AS original_author_image,
                     COALESCE(opm.media, '[]'::json) AS original_media,
                     (sl.post_id IS NOT NULL)  AS is_liked,
-                    (sr.post_id IS NOT NULL)  AS is_reposted
+                    (sr.post_id IS NOT NULL)  AS is_reposted,
+                    EXISTS(
+                        SELECT 1 FROM social_follows f
+                        WHERE f.follower_id = $1 AND f.following_id = p.user_id
+                    ) AS is_following
                 FROM social_posts p
                 JOIN users u ON u.user_id = p.user_id
                 LEFT JOIN post_media pm  ON pm.post_id  = p.post_id
@@ -115,6 +119,7 @@ export async function GET(req: NextRequest) {
                         COALESCE(opm.media, '[]'::json) AS original_media,
                         (sl.post_id IS NOT NULL)  AS is_liked,
                         (sr.post_id IS NOT NULL)  AS is_reposted,
+                        (fs.following_id IS NOT NULL) AS is_following,
                         (
                             EXP(-EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 21600.0) * 0.4
                             + LEAST(

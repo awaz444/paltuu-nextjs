@@ -80,15 +80,39 @@ model lost_and_found_posts {
   users                      users?                       @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
+model user_devices {
+  device_id       BigInt    @id @default(autoincrement())
+  user_id         Int
+  fcm_token       String    @unique @db.VarChar(255) // Required for Firebase Push
+  device_platform String?   @db.VarChar(20)          // 'ios', 'android'
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
+
+  users           users     @relation("UserDevices", fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id], map: "idx_user_devices_user_id")
+}
+
 model notifications {
-  notification_id      Int       @id @default(autoincrement())
-  user_id              Int?
-  notification_content String?
-  notification_type    String?   @db.VarChar(255)
-  date_sent            DateTime? @default(now()) @db.Timestamp(6)
-  is_read              Boolean?  @default(false)
-  entity_type          String?   @db.VarChar
-  entity_id            Int?
+  notification_id Int       @id @default(autoincrement())
+  user_id         Int?      // Nullable for Global Broadcasts
+  sender_id       Int?      // Who triggered it? (e.g., who liked the post)
+  title           String    @default("Notification") @db.VarChar(255) // Firebase requires a Title
+  body            String    @default("") @db.Text         // Firebase requires a Body
+  type            String    @default("SYSTEM") @db.VarChar(50)  // e.g., 'SOCIAL_LIKE', 'ORDER_SHIPPED'
+  entity_type     String?   @db.VarChar(50)  // e.g., 'social_posts', 'bazaar_orders'
+  entity_id       Int?      // The actual ID of the post/order
+  deep_link       String?   @db.VarChar(255) // e.g., 'paltuu://bazaar/orders/123'
+  image_url       String?   @db.VarChar(255) // For rich notifications (pet pic, product pic)
+  is_read         Boolean   @default(false)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  recipient       users?    @relation("ReceivedNotifications", fields: [user_id], references: [user_id], onDelete: Cascade)
+  sender          users?    @relation("SentNotifications", fields: [sender_id], references: [user_id], onDelete: SetNull)
+
+  @@index([user_id, is_read], map: "idx_notifications_user_read")
+  @@index([created_at], map: "idx_notifications_created")
 }
 
 model pet_category {
@@ -192,6 +216,9 @@ model users {
   social_likes                                      social_likes[]
   social_posts                                      social_posts[]
   social_reposts                                    social_reposts[]
+  user_devices                                      user_devices[]          @relation("UserDevices")
+  ReceivedNotifications                             notifications[]         @relation("ReceivedNotifications")
+  SentNotifications                                 notifications[]         @relation("SentNotifications")
   cities                                            cities?                 @relation(fields: [city_id], references: [city_id], onDelete: Cascade, onUpdate: NoAction)
   vendors                                           vendors?
   vet_reviews                                       vet_reviews[]

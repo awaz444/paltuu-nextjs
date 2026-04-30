@@ -912,6 +912,7 @@ model social_posts {
   social_likes       social_likes[]
   social_post_media  social_post_media[]
   social_reposts     social_reposts[]
+  post_hashtags      post_hashtags[]
   // Self-referential for reposts
   original_post      social_posts?       @relation("repost_chain", fields: [original_post_id], references: [post_id], onDelete: SetNull, onUpdate: NoAction)
   reposts_of_me      social_posts[]      @relation("repost_chain")
@@ -994,4 +995,28 @@ model vendors {
   vendor_orders           vendor_orders[]
   cities                  cities?              @relation(fields: [city_id], references: [city_id], onDelete: NoAction, onUpdate: NoAction)
   users                   users                @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+// ─── Search & Explore ────────────────────────────────────────────────────────
+
+model hashtags {
+  hashtag_id    BigInt          @id @default(autoincrement())
+  tag           String          @unique @db.VarChar(100)
+  post_count    Int             @default(0)
+  created_at    DateTime?       @default(now()) @db.Timestamptz(6)
+  post_hashtags post_hashtags[]
+
+  @@index([post_count(sort: Desc)], map: "idx_hashtags_trending")
+}
+
+model post_hashtags {
+  post_id    BigInt
+  hashtag_id BigInt
+  created_at DateTime?    @default(now()) @db.Timestamptz(6)
+  hashtags   hashtags     @relation(fields: [hashtag_id], references: [hashtag_id], onDelete: Cascade, onUpdate: NoAction)
+  social_posts social_posts @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([post_id, hashtag_id])
+  @@index([hashtag_id], map: "idx_post_hashtags_hashtag_id")
+  @@index([created_at(sort: Desc)], map: "idx_post_hashtags_created_at")
 }

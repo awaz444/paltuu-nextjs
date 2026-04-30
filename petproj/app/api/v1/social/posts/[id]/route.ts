@@ -100,6 +100,15 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
         await db.query('BEGIN');
         try {
+            // Decrement post_count for all hashtags linked to this post
+            await db.query(`
+                UPDATE hashtags h
+                SET post_count = GREATEST(0, h.post_count - 1)
+                FROM post_hashtags ph
+                WHERE ph.hashtag_id = h.hashtag_id
+                  AND ph.post_id = $1
+            `, [postId]);
+
             await db.query(
                 "UPDATE social_posts SET is_deleted = true WHERE post_id = $1",
                 [postId]

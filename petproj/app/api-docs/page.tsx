@@ -4,6 +4,7 @@ import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
 import Link from 'next/link';
 
+
 export default function ApiDocs() {
   return (
     <div style={{ backgroundColor: 'white', minHeight: '100vh' }}>

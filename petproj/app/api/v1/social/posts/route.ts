@@ -36,6 +36,7 @@ export async function GET(req: NextRequest) {
         const isGlobal        = mode === "global";
         const viewerId        = userId || 0;
 
+        
         /*
          * Strategy: use a CTE so:
          *  1. The following-set is materialised once (not re-queried per row)

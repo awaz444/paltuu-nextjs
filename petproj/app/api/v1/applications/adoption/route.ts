@@ -70,6 +70,10 @@ export async function POST(req: NextRequest) {
             contact_number,
         } = body;
 
+        // Sanitize integer inputs (convert empty strings to null)
+        const sanitizedAgeOfYoungestChild = age_of_youngest_child === "" ? null : age_of_youngest_child;
+        const sanitizedCityId = city_id === "" ? null : city_id;
+
         // Validation
         if (!pet_id || !agree_to_terms) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -92,9 +96,9 @@ export async function POST(req: NextRequest) {
             ) RETURNING adoption_id
         `, [
             userId, pet_id, adopter_name, adopter_address, 
-            age_of_youngest_child, other_pets_details, other_pets_neutered,
+            sanitizedAgeOfYoungestChild, other_pets_details, other_pets_neutered,
             has_secure_outdoor_area, pet_sleep_location, pet_left_alone,
-            additional_details, agree_to_terms, city_id, contact_number
+            additional_details, agree_to_terms, sanitizedCityId, contact_number
         ]);
 
         const applicationId = result.rows[0].adoption_id;

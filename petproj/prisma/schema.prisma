@@ -1,22 +1,6 @@
-generator client {
-  provider = "prisma-client-js"
-}
+// This project uses raw SQL with pg Pool directly
+// Prisma is NOT used - schema removed
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model admin_action_logs {
-  log_id           Int       @id @default(autoincrement())
-  admin_id         Int?
-  action_performed String?
-  target_entity    String?   @db.VarChar(255)
-  date_performed   DateTime? @default(now()) @db.Timestamp(6)
-  status           String?   @db.VarChar(255)
-  users            users?    @relation(fields: [admin_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
-}
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model adoption_applications {
@@ -62,6 +46,7 @@ model lost_and_found_post_images {
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model lost_and_found_posts {
   post_id                    Int                          @id @default(autoincrement())
   user_id                    Int?
@@ -80,41 +65,18 @@ model lost_and_found_posts {
   users                      users?                       @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-model user_devices {
-  device_id       BigInt    @id @default(autoincrement())
-  user_id         Int
-  fcm_token       String    @unique @db.VarChar(255) // Required for Firebase Push
-  device_platform String?   @db.VarChar(20)          // 'ios', 'android'
-  created_at      DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
-
-  users           users     @relation("UserDevices", fields: [user_id], references: [user_id], onDelete: Cascade)
-
-  @@index([user_id], map: "idx_user_devices_user_id")
-}
-
 model notifications {
-  notification_id Int       @id @default(autoincrement())
-  user_id         Int?      // Nullable for Global Broadcasts
-  sender_id       Int?      // Who triggered it? (e.g., who liked the post)
-  title           String    @default("Notification") @db.VarChar(255) // Firebase requires a Title
-  body            String    @default("") @db.Text         // Firebase requires a Body
-  type            String    @default("SYSTEM") @db.VarChar(50)  // e.g., 'SOCIAL_LIKE', 'ORDER_SHIPPED'
-  entity_type     String?   @db.VarChar(50)  // e.g., 'social_posts', 'bazaar_orders'
-  entity_id       Int?      // The actual ID of the post/order
-  deep_link       String?   @db.VarChar(255) // e.g., 'paltuu://bazaar/orders/123'
-  image_url       String?   @db.VarChar(255) // For rich notifications (pet pic, product pic)
-  is_read         Boolean   @default(false)
-  created_at      DateTime  @default(now()) @db.Timestamptz(6)
-
-  // Relations
-  recipient       users?    @relation("ReceivedNotifications", fields: [user_id], references: [user_id], onDelete: Cascade)
-  sender          users?    @relation("SentNotifications", fields: [sender_id], references: [user_id], onDelete: SetNull)
-
-  @@index([user_id, is_read], map: "idx_notifications_user_read")
-  @@index([created_at], map: "idx_notifications_created")
+  notification_id      Int       @id @default(autoincrement())
+  user_id              Int?
+  is_read              Boolean?  @default(false)
+  entity_type          String?   @db.VarChar
+  entity_id            Int?
+  date_sent            DateTime? @default(now()) @db.Timestamp(6)
+  notification_content String?
+  notification_type    String?   @db.VarChar(255)
 }
 
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model pet_category {
   category_id          Int                    @id @default(autoincrement())
   category_name        String                 @db.VarChar(255)
@@ -133,6 +95,7 @@ model pet_images {
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model pets {
   pet_id                    Int                         @id @default(autoincrement())
   owner_id                  Int?
@@ -177,6 +140,7 @@ model pets {
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model users {
   user_id                                           Int                     @id @default(autoincrement())
   name                                              String                  @db.VarChar(255)
@@ -216,9 +180,6 @@ model users {
   social_likes                                      social_likes[]
   social_posts                                      social_posts[]
   social_reposts                                    social_reposts[]
-  user_devices                                      user_devices[]          @relation("UserDevices")
-  ReceivedNotifications                             notifications[]         @relation("ReceivedNotifications")
-  SentNotifications                                 notifications[]         @relation("SentNotifications")
   cities                                            cities?                 @relation(fields: [city_id], references: [city_id], onDelete: Cascade, onUpdate: NoAction)
   vendors                                           vendors?
   vet_reviews                                       vet_reviews[]
@@ -240,6 +201,7 @@ model vet_reviews {
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model vets {
   vet_id          Int           @id @default(autoincrement())
   user_id         Int?
@@ -267,6 +229,7 @@ model OTP {
   @@map("OTP")
 }
 
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model pet_tags {
   tag_id              Int                   @id @default(autoincrement())
   tag_name            String                @unique @db.VarChar
@@ -320,6 +283,7 @@ model bazaar_carts {
   @@index([user_id], map: "idx_bazaar_carts_user_id")
 }
 
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model bazaar_categories {
   category_id               Int                         @id @default(autoincrement())
   name                      String                      @db.VarChar
@@ -337,6 +301,7 @@ model bazaar_categories {
   @@index([name], map: "idx_categories_name")
 }
 
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model bazaar_collections {
   collection_id              Int                          @id @default(autoincrement())
   name                       String                       @db.VarChar
@@ -679,6 +644,7 @@ model clinic_vets {
   @@id([clinic_id, vet_id])
 }
 
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model clinics {
   clinic_id         BigInt        @id @default(autoincrement())
   name              String
@@ -763,6 +729,7 @@ model rescue_medical_conditions {
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model rescue_shelters {
   shelter_id                 Int                          @id @default(autoincrement())
   user_id                    Int?
@@ -841,6 +808,7 @@ model shelter_verification {
   rescue_shelters     rescue_shelters? @relation(fields: [shelter_id], references: [shelter_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model social_comments {
   comment_id                                                               BigInt            @id @default(autoincrement())
   post_id                                                                  BigInt
@@ -892,33 +860,35 @@ model social_post_media {
   social_posts  social_posts @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model social_posts {
-  post_id            BigInt              @id @default(autoincrement())
-  user_id            Int
-  pet_id             Int?
-  post_type          String
-  content            String?
-  is_repost          Boolean?            @default(false)
-  original_post_id   BigInt?
-  like_count         Int?                @default(0)
-  comment_count      Int?                @default(0)
-  repost_count       Int?                @default(0)
-  view_count         Int?                @default(0)
-  is_hidden          Boolean?            @default(false)
-  is_deleted         Boolean?            @default(false)
-  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
-  social_comments    social_comments[]
-  social_likes       social_likes[]
-  social_post_media  social_post_media[]
-  social_reposts     social_reposts[]
-  // Self-referential for reposts
-  original_post      social_posts?       @relation("repost_chain", fields: [original_post_id], references: [post_id], onDelete: SetNull, onUpdate: NoAction)
-  reposts_of_me      social_posts[]      @relation("repost_chain")
-  pets               pets?               @relation(fields: [pet_id], references: [pet_id], onUpdate: NoAction)
-  users              users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  post_id           BigInt              @id @default(autoincrement())
+  user_id           Int
+  pet_id            Int?
+  post_type         String
+  content           String?
+  like_count        Int?                @default(0)
+  comment_count     Int?                @default(0)
+  repost_count      Int?                @default(0)
+  view_count        Int?                @default(0)
+  is_hidden         Boolean?            @default(false)
+  is_deleted        Boolean?            @default(false)
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  is_repost         Boolean?            @default(false)
+  original_post_id  BigInt?
+  post_hashtags     post_hashtags[]
+  social_comments   social_comments[]
+  social_likes      social_likes[]
+  social_post_media social_post_media[]
+  original_post     social_posts?       @relation("repost_chain", fields: [original_post_id], references: [post_id], onUpdate: NoAction)
+  reposts_of_me     social_posts[]      @relation("repost_chain")
+  pets              pets?               @relation(fields: [pet_id], references: [pet_id], onUpdate: NoAction)
+  users             users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  social_reposts    social_reposts[]
 }
 
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model social_reposts {
   repost_id    BigInt       @id @default(autoincrement())
   post_id      BigInt
@@ -968,6 +938,7 @@ model vendor_orders {
   vendors            vendors              @relation(fields: [vendor_id], references: [vendor_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model vendors {
   vendor_id               BigInt               @id @default(autoincrement())
   user_id                 Int                  @unique
@@ -994,4 +965,27 @@ model vendors {
   vendor_orders           vendor_orders[]
   cities                  cities?              @relation(fields: [city_id], references: [city_id], onDelete: NoAction, onUpdate: NoAction)
   users                   users                @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model hashtags {
+  hashtag_id    BigInt          @id @default(autoincrement())
+  tag           String          @unique @db.VarChar(100)
+  post_count    Int             @default(0)
+  created_at    DateTime?       @default(now()) @db.Timestamptz(6)
+  post_hashtags post_hashtags[]
+
+  @@index([tag], map: "idx_hashtags_tag")
+  @@index([post_count(sort: Desc)], map: "idx_hashtags_trending")
+}
+
+model post_hashtags {
+  post_id      BigInt
+  hashtag_id   BigInt
+  created_at   DateTime?    @default(now()) @db.Timestamptz(6)
+  hashtags     hashtags     @relation(fields: [hashtag_id], references: [hashtag_id], onDelete: Cascade, onUpdate: NoAction)
+  social_posts social_posts @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([post_id, hashtag_id])
+  @@index([created_at(sort: Desc)], map: "idx_post_hashtags_created_at")
+  @@index([hashtag_id], map: "idx_post_hashtags_hashtag_id")
 }

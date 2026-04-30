@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
+import { AdoptionNotifications } from "@/lib/notifications";
 
 /**
  * @swagger
@@ -19,8 +20,8 @@ export async function PATCH(req: NextRequest) {
         const body = await req.json();
         const { status } = body;
 
-        if (!['approved', 'rejected', 'pending'].includes(status)) {
-            return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+        if (!id || !['approved', 'rejected', 'pending'].includes(status)) {
+            return NextResponse.json({ error: "Invalid status or missing ID" }, { status: 400 });
         }
 
         const userId = user.user_id || user.id || user.sub;
@@ -36,7 +37,11 @@ export async function PATCH(req: NextRequest) {
 
         if (check.rowCount === 0) return NextResponse.json({ error: "Application not found" }, { status: 404 });
 
-        const { owner_id, applicant_id, pet_name } = check.rows[0];
+        const { owner_id, applicant_id, pet_name } = check.rows[0] as {
+            owner_id: number;
+            applicant_id: number;
+            pet_name: string;
+        };
 
         if (String(owner_id) !== String(userId) && !isAdmin) {
             return NextResponse.json({ error: "Forbidden. Only the pet owner can update application status." }, { status: 403 });
@@ -50,11 +55,20 @@ export async function PATCH(req: NextRequest) {
                 WHERE adoption_id = $2 RETURNING *
             `, [status, id]);
 
-            // 3. Notify Applicant
-            await db.query(`
-                INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent, entity_type, entity_id)
-                VALUES ($1, $2, $3, false, CURRENT_TIMESTAMP, 'adoption', $4)
-            `, [applicant_id, `Your adoption request for ${pet_name} has been ${status}.`, 'application_update', id]);
+            // 3. Notify Applicant using new trigger system
+            if (status === 'approved') {
+                AdoptionNotifications.onApplicationApproved(
+                    applicant_id,
+                    parseInt(id),
+                    pet_name
+                ).catch(() => {});
+            } else if (status === 'rejected') {
+                AdoptionNotifications.onApplicationRejected(
+                    applicant_id,
+                    parseInt(id),
+                    pet_name
+                ).catch(() => {});
+            }
 
             await db.query('COMMIT');
             return NextResponse.json(result.rows[0]);

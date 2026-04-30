@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/utils/authServer";
+import { BazaarNotifications } from "@/lib/notifications";
 
 /**
  * @swagger
@@ -95,10 +96,20 @@ export async function PATCH(req: NextRequest) {
                 payment_status = $1,
                 updated_at = NOW()
             WHERE order_id = $2
-            RETURNING *
+            RETURNING user_id, order_number
         `;
 
-        await db.query(orderQuery, [orderPaymentStatus, proof.order_id]);
+        const orderRes = await db.query(orderQuery, [orderPaymentStatus, proof.order_id]);
+        const order = orderRes.rows[0];
+
+        // Send notification (fire-and-forget)
+        if (status === 'approved' && order?.user_id) {
+            BazaarNotifications.onPaymentVerified(
+                order.user_id,
+                proof.order_id,
+                order.order_number
+            ).catch(() => {});
+        }
 
         return NextResponse.json({
             success: true,

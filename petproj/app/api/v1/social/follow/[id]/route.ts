@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { emitFollow, emitNotification } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
+import { SocialNotifications } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
                 // Notification to the followed user
                 await db.query(`
-                    INSERT INTO notifications 
+                    INSERT INTO notifications
                         (user_id, notification_content, notification_type, entity_type, entity_id)
                     VALUES ($1, $2, 'social_follow', 'user', $3)
                 `, [
@@ -84,6 +85,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                     `Someone started following you`,
                     followerId
                 ]);
+
+                // Send FCM push notification
+                const followerRes = await db.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [followerId]);
+                const follower = followerRes.rows[0];
+                SocialNotifications.onNewFollower(
+                    followingId,
+                    followerId,
+                    follower?.name || 'User',
+                    follower?.profile_image_url
+                ).catch(() => {});
 
                 await db.query('COMMIT');
 

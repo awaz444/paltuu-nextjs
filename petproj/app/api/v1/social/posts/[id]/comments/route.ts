@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { emitComment, emitNotification } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
+import { SocialNotifications } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         const queryParams: any[] = [postId, limit, ...(cursor ? [cursor] : [])];
 
         const result = await db.query(`
-            SELECT 
+            SELECT
                 c.*,
                 u.name              AS author_name,
                 u.profile_image_url AS author_image,
@@ -104,7 +105,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             }
 
             const result = await db.query(`
-                INSERT INTO social_comments 
+                INSERT INTO social_comments
                     (post_id, user_id, parent_comment_id, root_comment_id, content, depth)
                 VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING *
@@ -118,22 +119,33 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 [postId]
             );
 
+            // Send notifications (fire-and-forget)
+            const commenterRes = await db.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]);
+            const commenter = commenterRes.rows[0];
+            const postImageRes = await db.query(`SELECT (SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1) as image_url`, [postId]);
+            const postImage = postImageRes.rows[0]?.image_url;
+
             // Notification: post author (if commenting on someone else's post)
             if (postAuthorId !== userId) {
-                await db.query(`
-                    INSERT INTO notifications 
-                        (user_id, notification_content, notification_type, entity_type, entity_id)
-                    VALUES ($1, $2, 'social_comment', 'social_post', $3)
-                `, [postAuthorId, `Someone commented on your post`, postId]);
+                SocialNotifications.onPostCommented(
+                    postAuthorId,
+                    userId,
+                    parseInt(postId),
+                    commenter?.name || 'User',
+                    commenter?.profile_image_url,
+                    postImage
+                ).catch(() => {});
             }
 
             // Notification: parent comment author (if replying to someone else's comment)
             if (parentAuthorId && parentAuthorId !== userId && parentAuthorId !== postAuthorId) {
-                await db.query(`
-                    INSERT INTO notifications 
-                        (user_id, notification_content, notification_type, entity_type, entity_id)
-                    VALUES ($1, $2, 'social_reply', 'social_comment', $3)
-                `, [parentAuthorId, `Someone replied to your comment`, comment.comment_id]);
+                SocialNotifications.onCommentReplied(
+                    parentAuthorId,
+                    userId,
+                    comment.comment_id,
+                    commenter?.name || 'User',
+                    commenter?.profile_image_url
+                ).catch(() => {});
             }
 
             await db.query('COMMIT');

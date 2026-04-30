@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { emitLike } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
+import { SocialNotifications } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -56,17 +57,26 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 await db.query("INSERT INTO social_likes (post_id, user_id) VALUES ($1, $2)", [postId, userId]);
                 await db.query("UPDATE social_posts SET like_count = like_count + 1 WHERE post_id = $1", [postId]);
 
-                // Notify post author (skip if liking own post)
+                // Send notification (fire-and-forget, non-blocking)
                 if (postAuthorId !== userId) {
-                    await db.query(`
-                        INSERT INTO notifications 
-                            (user_id, notification_content, notification_type, entity_type, entity_id)
-                        VALUES ($1, $2, 'social_like', 'social_post', $3)
-                    `, [
-                        postAuthorId,
-                        `Someone liked your post`,
-                        postId
+                    // Fetch liker and post details for notification
+                    const [likerRes, postRes] = await Promise.all([
+                        db.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]),
+                        db.query(`SELECT
+                            (SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1) as image_url
+                            FROM social_posts WHERE post_id = $1`, [postId])
                     ]);
+                    const liker = likerRes.rows[0];
+                    const post = postRes.rows[0];
+
+                    SocialNotifications.onPostLiked(
+                        postAuthorId,
+                        userId,
+                        parseInt(postId),
+                        liker?.name || 'User',
+                        liker?.profile_image_url,
+                        post?.image_url
+                    ).catch(() => {}); // Non-blocking
                 }
 
                 await db.query('COMMIT');

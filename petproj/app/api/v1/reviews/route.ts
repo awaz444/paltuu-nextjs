@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { validate } from "@/utils/validation";
+import { PetCareNotifications } from "@/lib/notifications";
 
 /**
  * @swagger
@@ -73,7 +74,13 @@ export async function POST(req: NextRequest) {
         }
 
         const result = await db.query(query, [target_id, userId, rating, comment]);
-        return NextResponse.json({ message: "Review submitted and pending approval", review: result.rows[0] }, { status: 201 });
+        const review = result.rows[0];
+
+        // Get reviewer details for notification (fire-and-forget - send when approved by admin)
+        // Note: We're NOT sending notification yet since is_approved = false
+        // The admin will trigger the notification when they approve it
+
+        return NextResponse.json({ message: "Review submitted and pending approval", review }, { status: 201 });
 
     } catch (error) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

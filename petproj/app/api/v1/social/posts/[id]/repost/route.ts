@@ -3,13 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { emitRepost, emitNotification } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
+import { SocialNotifications } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
 /**
  * POST /api/v1/social/posts/[id]/repost
  * Repost a post (with optional caption). Idempotent — ignores duplicate reposts.
- * 
+ *
  * Body: { caption?: string }
  */
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
             // 4. Create a new post entry (the repost in feed)
             const repostEntry = await db.query(`
-                INSERT INTO social_posts 
+                INSERT INTO social_posts
                     (user_id, post_type, content, original_post_id, is_repost)
                 VALUES ($1, 'repost', $2, $3, true)
                 RETURNING *
@@ -74,15 +75,21 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
             // 7. Create notification for original author (if not reposting own post)
             if (originalAuthorId !== userId) {
-                await db.query(`
-                    INSERT INTO notifications 
-                        (user_id, notification_content, notification_type, entity_type, entity_id)
-                    VALUES ($1, $2, 'social_repost', 'social_post', $3)
-                `, [
-                    originalAuthorId,
-                    `Someone reposted your post`,
-                    originalPostId
+                // Fetch reposter and post details
+                const [reposterRes, postImageRes] = await Promise.all([
+                    db.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]),
+                    db.query(`SELECT (SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1) as image_url`, [originalPostId])
                 ]);
+                const reposter = reposterRes.rows[0];
+                const postImage = postImageRes.rows[0]?.image_url;
+
+                SocialNotifications.onPostReposted(
+                    originalAuthorId,
+                    userId,
+                    parseInt(originalPostId),
+                    reposter?.name || 'User',
+                    postImage
+                ).catch(() => {});
             }
 
             await db.query('COMMIT');
@@ -146,8 +153,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
             // Soft-delete the repost post entry
             await db.query(`
-                UPDATE social_posts 
-                SET is_deleted = true 
+                UPDATE social_posts
+                SET is_deleted = true
                 WHERE original_post_id = $1 AND user_id = $2 AND is_repost = true
             `, [originalPostId, userId]);
 

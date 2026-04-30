@@ -91,6 +91,7 @@ export async function GET(req: NextRequest) {
             `;
             queryParams = [viewerId, limit, offset];
 
+            
         } else {
             // ── Algorithmic ───────────────────────────────────────────────
             // Score = recency 40% + engagement 40% + relationship 20%

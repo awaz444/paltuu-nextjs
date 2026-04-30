@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
         const isChronological = mode === "chronological";
         const isGlobal        = mode === "global";
         const viewerId        = userId || 0;
+        
 
         /*
          * Strategy: use a CTE so:

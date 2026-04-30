@@ -862,6 +862,7 @@ model social_post_media {
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model social_posts {
+<<<<<<< HEAD
   post_id           BigInt              @id @default(autoincrement())
   user_id           Int
   pet_id            Int?
@@ -886,6 +887,33 @@ model social_posts {
   pets              pets?               @relation(fields: [pet_id], references: [pet_id], onUpdate: NoAction)
   users             users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
   social_reposts    social_reposts[]
+=======
+  post_id            BigInt              @id @default(autoincrement())
+  user_id            Int
+  pet_id             Int?
+  post_type          String
+  content            String?
+  is_repost          Boolean?            @default(false)
+  original_post_id   BigInt?
+  like_count         Int?                @default(0)
+  comment_count      Int?                @default(0)
+  repost_count       Int?                @default(0)
+  view_count         Int?                @default(0)
+  is_hidden          Boolean?            @default(false)
+  is_deleted         Boolean?            @default(false)
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  social_comments    social_comments[]
+  social_likes       social_likes[]
+  social_post_media  social_post_media[]
+  social_reposts     social_reposts[]
+  post_hashtags      post_hashtags[]
+  // Self-referential for reposts
+  original_post      social_posts?       @relation("repost_chain", fields: [original_post_id], references: [post_id], onDelete: SetNull, onUpdate: NoAction)
+  reposts_of_me      social_posts[]      @relation("repost_chain")
+  pets               pets?               @relation(fields: [pet_id], references: [pet_id], onUpdate: NoAction)
+  users              users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+>>>>>>> c8d3290aec45ab9ab2f544d586dff9eddb0b02f3
 }
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
@@ -967,6 +995,11 @@ model vendors {
   users                   users                @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
+<<<<<<< HEAD
+=======
+// ─── Search & Explore ────────────────────────────────────────────────────────
+
+>>>>>>> c8d3290aec45ab9ab2f544d586dff9eddb0b02f3
 model hashtags {
   hashtag_id    BigInt          @id @default(autoincrement())
   tag           String          @unique @db.VarChar(100)
@@ -974,11 +1007,15 @@ model hashtags {
   created_at    DateTime?       @default(now()) @db.Timestamptz(6)
   post_hashtags post_hashtags[]
 
+<<<<<<< HEAD
   @@index([tag], map: "idx_hashtags_tag")
+=======
+>>>>>>> c8d3290aec45ab9ab2f544d586dff9eddb0b02f3
   @@index([post_count(sort: Desc)], map: "idx_hashtags_trending")
 }
 
 model post_hashtags {
+<<<<<<< HEAD
   post_id      BigInt
   hashtag_id   BigInt
   created_at   DateTime?    @default(now()) @db.Timestamptz(6)
@@ -988,4 +1025,15 @@ model post_hashtags {
   @@id([post_id, hashtag_id])
   @@index([created_at(sort: Desc)], map: "idx_post_hashtags_created_at")
   @@index([hashtag_id], map: "idx_post_hashtags_hashtag_id")
+=======
+  post_id    BigInt
+  hashtag_id BigInt
+  created_at DateTime?    @default(now()) @db.Timestamptz(6)
+  hashtags   hashtags     @relation(fields: [hashtag_id], references: [hashtag_id], onDelete: Cascade, onUpdate: NoAction)
+  social_posts social_posts @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([post_id, hashtag_id])
+  @@index([hashtag_id], map: "idx_post_hashtags_hashtag_id")
+  @@index([created_at(sort: Desc)], map: "idx_post_hashtags_created_at")
+>>>>>>> c8d3290aec45ab9ab2f544d586dff9eddb0b02f3
 }

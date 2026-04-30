@@ -221,6 +221,29 @@ export async function POST(req: NextRequest) {
                 await db.query("UPDATE pets SET post_count = post_count + 1 WHERE pet_id = $1", [pet_id]);
             }
 
+            // 4. Parse & upsert hashtags from content
+            if (content) {
+                const tagMatches = content.match(/#([a-zA-Z0-9_]+)/g) || [];
+                const uniqueTags = [...new Set(tagMatches.map((t: string) => t.slice(1).toLowerCase()))];
+                for (const tag of uniqueTags) {
+                    // Upsert: insert tag if new, increment post_count if exists
+                    const tagRes = await db.query(`
+                        INSERT INTO hashtags (tag, post_count)
+                        VALUES ($1, 1)
+                        ON CONFLICT (tag) DO UPDATE
+                            SET post_count = hashtags.post_count + 1
+                        RETURNING hashtag_id
+                    `, [tag]);
+                    const hashtagId = tagRes.rows[0].hashtag_id;
+                    // Link post → hashtag (ignore duplicate if somehow re-run)
+                    await db.query(`
+                        INSERT INTO post_hashtags (post_id, hashtag_id)
+                        VALUES ($1, $2)
+                        ON CONFLICT DO NOTHING
+                    `, [post.post_id, hashtagId]);
+                }
+            }
+
             await db.query('COMMIT');
 
             // Fan-out to follower feed caches (fire and forget — non-blocking)

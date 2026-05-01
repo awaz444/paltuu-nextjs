@@ -277,7 +277,6 @@ CREATE TABLE public.user_notification_reads (
   CONSTRAINT fk_notification FOREIGN KEY (notification_id) REFERENCES public.notifications(id),
   CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
-
 CREATE TABLE public.users (
   id uuid NOT NULL,
   email character varying NOT NULL,

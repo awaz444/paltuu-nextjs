@@ -353,8 +353,8 @@ const MyProfile = () => {
                   <div className="text-center">
                     <div className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Member Since</div>
                     <div className="text-xl font-black text-gray-900">
-                      {data.created_at && !isNaN(new Date(data.created_at).getTime()) 
-                        ? format(new Date(data.created_at), "MMM yyyy") 
+                      {data.created_at && !isNaN(new Date(data.created_at).getTime())
+                        ? format(new Date(data.created_at), "MMM yyyy")
                         : "N/A"}
                     </div>
                   </div>
@@ -375,7 +375,7 @@ const MyProfile = () => {
                   <h3 className="text-2xl font-black text-gray-900">Personal Details</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="flex flex-col gap-8">
                   <div className="p-8 rounded-3xl bg-gray-50/50 border border-gray-50 space-y-2">
                     <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary/40 block leading-none">Full Account Name</label>
                     {editing ? (
@@ -386,15 +386,17 @@ const MyProfile = () => {
                         className="w-full bg-white px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-primary transition-all font-black"
                       />
                     ) : (
-                      <div className="text-xl font-black text-gray-900">{updatedData?.name}</div>
+                      <div className="text-xl font-black text-gray-900 truncate" title={updatedData?.name}>{updatedData?.name}</div>
                     )}
                   </div>
 
                   <div className="p-8 rounded-3xl bg-gray-50/50 border border-gray-50 space-y-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary/40 block leading-none">Email Connectivity</label>
+                    <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary/40 block leading-none">Email</label>
                     <div className="flex items-center gap-3">
-                      <MailOutlined className="text-primary" />
-                      <div className="text-xl font-black text-gray-900">{data.email}</div>
+                      <MailOutlined className="text-primary flex-shrink-0" />
+                      <div className="text-xl font-black text-gray-900" title={data.email}>
+                        {data.email}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -403,11 +405,11 @@ const MyProfile = () => {
                 <div className="mt-16 pt-12 border-t border-gray-50">
                   <div className="flex items-center gap-4 mb-10">
                     <LockOutlined className="text-2xl text-primary" />
-                    <h3 className="text-2xl font-black text-gray-900">Security Vault</h3>
+                    <h3 className="text-2xl font-black text-gray-900">Password Settings</h3>
                   </div>
 
                   <div className="flex flex-col md:flex-row items-center gap-8 bg-black/[0.02] p-8 rounded-[2.5rem] border border-gray-50">
-                    <div className="text-gray-500 font-medium">Protect your account with a high-entropy password.</div>
+                    <div className="text-gray-500 font-medium">Protect your account with a strong password.</div>
                     <button
                       onClick={() => setPasswordModalVisible(true)}
                       className="h-14 px-10 rounded-2xl bg-white border-2 border-gray-100 text-gray-900 font-black shadow-sm transition-all hover:shadow-xl hover:scale-[1.02] active:scale-95 flex items-center gap-3 whitespace-nowrap ml-auto">

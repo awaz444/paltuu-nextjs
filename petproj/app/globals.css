@@ -89,6 +89,13 @@ html, body {
   .hover\\:border-primary:hover {
     border-color: var(--primary-color);
   }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 /* PWA Install Prompt Animation */

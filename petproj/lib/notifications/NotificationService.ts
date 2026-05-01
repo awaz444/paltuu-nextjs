@@ -246,7 +246,7 @@ export class NotificationService {
         FROM notifications n
         LEFT JOIN users u ON u.user_id = n.sender_id
         WHERE n.user_id = $1 ${filterCondition}
-        ORDER BY n.created_at DESC
+        ORDER BY COALESCE(n.created_at, n.date_sent) DESC
         LIMIT $2 OFFSET $3
         `,
         [userId, limit + 1, cursor]
@@ -256,15 +256,15 @@ export class NotificationService {
       const hasMore = rows.length > limit;
       const notifications = rows.slice(0, limit).map((row: any) => ({
         notification_id: row.notification_id,
-        type: row.type,
-        title: row.title,
-        body: row.body,
+        type: row.type || row.notification_type || 'system_broadcast',
+        title: row.title || (row.notification_type === 'new_listing' ? 'New Listing' : 'Notification'),
+        body: row.body || row.notification_content || '',
         entity_type: row.entity_type,
         entity_id: row.entity_id,
         deep_link: row.deep_link,
         image_url: row.image_url,
         is_read: row.is_read,
-        created_at: row.created_at,
+        created_at: row.created_at || row.date_sent,
         sender: row.sender_user_id
           ? {
               user_id: row.sender_user_id,

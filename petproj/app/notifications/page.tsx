@@ -10,10 +10,11 @@ import { MoonLoader } from "react-spinners";
 
 interface Notification {
   notification_id: string;
-  notification_content: string;
-  date_sent: string;
+  title: string;
+  body: string;
+  created_at: string;
   is_read: boolean;
-  notification_type: string;
+  type: string;
 }
 
 const NotificationsPage = () => {
@@ -95,7 +96,7 @@ const NotificationsPage = () => {
         });
       }
 
-      switch (notification.notification_type) {
+      switch (notification.type) {
         case "new_listing":
           router.push("/admin-pet-approval");
           break;
@@ -109,7 +110,7 @@ const NotificationsPage = () => {
           router.push("/admin-approve-vets");
           break;
         default:
-          console.warn(`Unknown notification type: ${notification.notification_type}`);
+          console.warn(`Unknown notification type: ${notification.type}`);
       }
     } catch (err) {
       console.error("Error handling notification click:", err);
@@ -226,14 +227,17 @@ const NotificationsPage = () => {
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <p className={`text-gray-900 ${!notification.is_read ? 'font-semibold' : ''}`}>
-                      {notification.notification_content}
+                    <p className={`text-gray-900 ${!notification.is_read ? 'font-bold' : 'font-semibold'}`}>
+                      {notification.title}
+                    </p>
+                    <p className={`text-gray-700 mt-1 ${!notification.is_read ? 'font-semibold' : ''}`}>
+                      {notification.body}
                     </p>
                     <time 
                       className="text-sm text-gray-500 mt-1 block"
-                      title={parseISO(notification.date_sent).toLocaleString()}
+                      title={parseISO(notification.created_at).toLocaleString()}
                     >
-                      {formatTimestamp(notification.date_sent)}
+                      {formatTimestamp(notification.created_at)}
                     </time>
                   </div>
                   {!notification.is_read && (

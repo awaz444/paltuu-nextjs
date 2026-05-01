@@ -54,6 +54,13 @@ export const fetchPets = createAsyncThunk<Pet[], void>(
       throw new Error('Failed to fetch pets');
     }
     return await response.json();
+  },
+  {
+    condition: (_, { getState }) => {
+      const state = getState() as RootState;
+      if (state.pets.loading) return false;
+      return true;
+    }
   }
 );
 

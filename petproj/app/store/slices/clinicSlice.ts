@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { Clinic } from '../../types/clinic';
+import { RootState } from '../store';
 
 interface ClinicState {
     clinics: Clinic[];
@@ -20,6 +21,12 @@ export const fetchClinics = createAsyncThunk('clinics/fetchClinics', async () =>
     }
     const data: Clinic[] = await response.json();
     return data;
+}, {
+    condition: (_, { getState }) => {
+        const { clinics } = getState() as RootState;
+        if (clinics.loading) return false;
+        return true;
+    }
 });
 
 const clinicSlice = createSlice({

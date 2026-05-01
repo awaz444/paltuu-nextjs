@@ -58,6 +58,7 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
         show: boolean;
     }>({ pet_id: null, show: false });
     const [loading, setLoading] = useState(false);
+    const [updateLoading, setUpdateLoading] = useState(false);
     const [editingPet, setEditingPet] = useState<Pet | null>(null);
     const [successMessage, setSuccessMessage] = useState(false);
 
@@ -71,12 +72,11 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
     const handleDelete = async (petId: number) => {
         dispatch(fetchAdoptionPets({}));
         dispatch(fetchFosterPets());
-        const response = await fetch("/api/v1/pets", {
+        const response = await fetch(`/api/v1/pets/${petId}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ pet_id: petId }),
         });
 
         setLoading(false);
@@ -109,27 +109,34 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
 
     const handleUpdate = async () => {
         if (!editingPet) return;
+        setUpdateLoading(true);
 
         dispatch(fetchAdoptionPets({}));
         dispatch(fetchFosterPets());
 
-        const response = await fetch("/api/v1/pets", {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(editingPet),
-        });
+        try {
+            const response = await fetch(`/api/v1/pets/${editingPet.pet_id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(editingPet),
+            });
 
-        if (!response.ok) {
-            console.error("Update failed:", await response.json());
-        } else {
-            console.log("Update successful");
-            setSuccessMessage(true); // Show success message
-            setTimeout(() => setSuccessMessage(false), 3000); // Hide after 3 seconds
+            if (!response.ok) {
+                console.error("Update failed:", await response.json());
+            } else {
+                console.log("Update successful");
+                setSuccessMessage(true); // Show success message
+                setTimeout(() => setSuccessMessage(false), 3000); // Hide after 3 seconds
+            }
+
+            setEditingPet(null);
+        } catch (error) {
+            console.error("Update error:", error);
+        } finally {
+            setUpdateLoading(false);
         }
-
-        setEditingPet(null);
     };
 
     const handleCancel = () => {
@@ -618,8 +625,9 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                         </button>
                         <button
                             onClick={handleUpdate}
-                            className="px-5 py-2 bg-primary text-white rounded-3xl font-semibold border border-primary transition-colors duration-200">
-                            Update
+                            disabled={updateLoading}
+                            className={`px-5 py-2 text-white rounded-3xl font-semibold border border-primary transition-colors duration-200 ${updateLoading ? 'bg-primary opacity-70 cursor-not-allowed' : 'bg-primary'}`}>
+                            {updateLoading ? "Updating..." : "Update"}
                         </button>
                     </div>
                 </Modal>

@@ -42,6 +42,13 @@ export const fetchVetSchedules = createAsyncThunk<VetSchedule[], void>(
         } catch (error: any) {
             return rejectWithValue(error.message);
         }
+    },
+    {
+        condition: (_, { getState }) => {
+            const { vetSchedules } = getState() as RootState;
+            if (vetSchedules.status === "loading") return false;
+            return true;
+        }
     }
 );
 

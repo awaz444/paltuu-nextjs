@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { RootState } from '../store';
 
 type Product = any;
 
@@ -19,6 +20,13 @@ export const fetchBazaarProducts = createAsyncThunk<Product[], { admin?: boolean
       return normalized as Product[];
     } catch (e) {
       return [];
+    }
+  },
+  {
+    condition: (_, { getState }) => {
+      const state = getState() as RootState;
+      if (state.bazaarProducts.loading) return false;
+      return true;
     }
   }
 );

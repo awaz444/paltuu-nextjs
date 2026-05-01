@@ -78,7 +78,8 @@ export async function PUT(req: NextRequest) {
         const {
             pet_name, pet_type, pet_breed, city_id, area, age_months, contact_number,
             description, sex, listing_type, vaccinated, neutered, price, rescue_story,
-            energy_level, cuddliness_level, adoption_status
+            energy_level, cuddliness_level, adoption_status, health_issues, min_age_of_children,
+            can_live_with_dogs, can_live_with_cats, must_have_someone_home
         } = body;
 
         const result = await db.query(
@@ -100,14 +101,19 @@ export async function PUT(req: NextRequest) {
                 energy_level = COALESCE($15, energy_level),
                 cuddliness_level = COALESCE($16, cuddliness_level),
                 adoption_status = COALESCE($17, adoption_status),
-                updated_at = CURRENT_TIMESTAMP
-            WHERE pet_id = $18
+                health_issues = COALESCE($18, health_issues),
+                min_age_of_children = COALESCE($19, min_age_of_children),
+                can_live_with_dogs = COALESCE($20, can_live_with_dogs),
+                can_live_with_cats = COALESCE($21, can_live_with_cats),
+                must_have_someone_home = COALESCE($22, must_have_someone_home)
+            WHERE pet_id = $23
             RETURNING *`,
             [
                 pet_name, pet_type, pet_breed, city_id, area, age_months, contact_number,
-                description, sex, listing_type, vaccinated, neutered, price, rescue_story,
-                energy_level, cuddliness_level, adoption_status, id
-            ]
+                description, sex, listing_type, vaccinated, neutered, price === "" ? null : price, rescue_story,
+                energy_level, cuddliness_level, adoption_status, health_issues, min_age_of_children,
+                can_live_with_dogs, can_live_with_cats, must_have_someone_home, id
+            ].map(v => v === undefined ? null : v)
         );
 
         return NextResponse.json(result.rows[0]);

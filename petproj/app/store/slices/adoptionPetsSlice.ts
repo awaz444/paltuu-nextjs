@@ -77,8 +77,6 @@ export const fetchAdoptionPets = createAsyncThunk(
         condition: (_, { getState }) => {
             const { adoptionPets } = getState() as RootState;
             if (adoptionPets.loading) return false;
-            // Only skip if we already have pets (for initial mount deduplication)
-            if (adoptionPets.pets.length > 0) return false;
             return true;
         }
     }

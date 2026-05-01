@@ -26,6 +26,12 @@ export const fetchUsers = createAsyncThunk('users/fetchUsers', async () => {
 
     const data: User[] = await response.json();
     return data;
+}, {
+    condition: (_, { getState }) => {
+        const { users } = getState() as RootState;
+        if (users.status === 'loading') return false;
+        return true;
+    }
 });
 
 export const postUser = createAsyncThunk<User, Omit<User, 'user_id'>>(

@@ -26,6 +26,12 @@ export const fetchVets = createAsyncThunk('vets/fetchVets', async () => {
 
   const data: Vet[] = await response.json();
   return data;
+}, {
+  condition: (_, { getState }) => {
+    const { vets } = getState() as RootState;
+    if (vets.loading) return false;
+    return true;
+  }
 });
 
 // Async thunk to post vet details

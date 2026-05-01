@@ -59,7 +59,6 @@ export const fetchFosterPets = createAsyncThunk('fosterPets/fetchFosterPets', as
   condition: (_, { getState }) => {
     const { fosterPets } = getState() as RootState;
     if (fosterPets.loading) return false;
-    if (fosterPets.pets.length > 0) return false;
     return true;
   }
 });

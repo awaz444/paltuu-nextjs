@@ -20,7 +20,7 @@ import {
     SafetyCertificateOutlined,
 } from "@ant-design/icons";
 
-const { Panel } = Collapse;
+
 
 const ADOPTION_CHECKLIST = [
     {
@@ -232,43 +232,47 @@ const UserListingsPage = () => {
                                 <Collapse
                                     bordered={false}
                                     className="bg-transparent mt-6"
-                                    expandIconPosition="end">
-                                    <Panel
-                                        header={
-                                            <span className="font-medium text-primary">
-                                                Why are these checks important?
-                                            </span>
+                                    expandIconPosition="end"
+                                    items={[
+                                        {
+                                            key: "1",
+                                            className: "border-0",
+                                            label: (
+                                                <span className="font-medium text-primary">
+                                                    Why are these checks important?
+                                                </span>
+                                            ),
+                                            children: (
+                                                <div className="text-gray-600 text-sm pl-5">
+                                                    <ul className="list-disc space-y-2">
+                                                        <li>
+                                                            These requirements help
+                                                            ensure pets are placed in
+                                                            safe, loving, and permanent
+                                                            homes
+                                                        </li>
+                                                        <li>
+                                                            They minimize the risk of
+                                                            pets being returned or
+                                                            rehomed
+                                                        </li>
+                                                        <li>
+                                                            They help match pets with
+                                                            owners who can properly care
+                                                            for them
+                                                        </li>
+                                                        <li>
+                                                            They ensure adopters
+                                                            understand the
+                                                            responsibilities of pet
+                                                            ownership
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            )
                                         }
-                                        key="1"
-                                        className="border-0">
-                                        <div className="text-gray-600 text-sm pl-5">
-                                            <ul className="list-disc space-y-2">
-                                                <li>
-                                                    These requirements help
-                                                    ensure pets are placed in
-                                                    safe, loving, and permanent
-                                                    homes
-                                                </li>
-                                                <li>
-                                                    They minimize the risk of
-                                                    pets being returned or
-                                                    rehomed
-                                                </li>
-                                                <li>
-                                                    They help match pets with
-                                                    owners who can properly care
-                                                    for them
-                                                </li>
-                                                <li>
-                                                    They ensure adopters
-                                                    understand the
-                                                    responsibilities of pet
-                                                    ownership
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </Panel>
-                                </Collapse>
+                                    ]}
+                                />
                             </div>
                         </div>
 

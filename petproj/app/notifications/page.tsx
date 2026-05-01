@@ -52,8 +52,8 @@ const NotificationsPage = () => {
           return;
         }
 
-        const data: Notification[] = await response.json();
-        setNotifications(data);
+        const data = await response.json();
+        setNotifications(data.notifications || []);
       } catch (err) {
         console.error("Error fetching notifications:", err);
         setError("Failed to fetch notifications");

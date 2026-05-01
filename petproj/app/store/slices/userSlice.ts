@@ -28,8 +28,8 @@ export const fetchUsers = createAsyncThunk('users/fetchUsers', async () => {
     return data;
 }, {
     condition: (_, { getState }) => {
-        const { users } = getState() as RootState;
-        if (users.status === 'loading') return false;
+        const { user } = getState() as RootState;
+        if (user.status === 'loading') return false;
         return true;
     }
 });

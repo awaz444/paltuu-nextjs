@@ -33,7 +33,7 @@ const Navbar = ({
   linksOverride,
   dropdownOverride,
   logoHref,
-  hideCart,
+  hideCart = true,
 }: {
   linksOverride?: OverrideLink[];
   dropdownOverride?: OverrideDropdownItem[];

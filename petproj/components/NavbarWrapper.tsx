@@ -36,7 +36,7 @@ export default function NavbarWrapper() {
 
   return (
     <div className={isBazaarPage ? "no-navbar-radius" : ""}>
-      <Navbar />
+      <Navbar hideCart={true} />
     </div>
   );
 }

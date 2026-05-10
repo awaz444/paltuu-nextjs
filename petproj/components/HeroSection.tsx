@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
 import {
@@ -92,23 +93,23 @@ const HeroSection = () => {
                             {/* Tagline */}
                             <h3 className="text-xl md:text-xl lg:text-2xl font-medium mb-0 md:mb-1">
                                 Get the Best for Your Pet —{" "}
-                                <a href="/bazaar" className="underline decoration-gray-400 hover:decoration-black text-black">
+                                <Link href="/bazaar" className="underline decoration-gray-400 hover:decoration-black text-black">
                                     Shop Bazaar
-                                </a>
+                                </Link>
                             </h3>
                             <p className="text-base md:text-md text-gray-700 mb-6 mt-2 md:mb-8 max-w-lg">
                                 <span className="font-bold">Paltuu.pk</span> is Pakistan's first pet adoption and pet care platform, helping you{" "}
-                                <a href="/browse-pets" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                <Link href="/browse-pets" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
                                     adopt dogs and cats
-                                </a>
+                                </Link>
                                 ,{" "}
-                                <a href="/pet-care" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                <Link href="/pet-care" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
                                     connect with vets
-                                </a>
+                                </Link>
                                 , and{" "}
-                                <a href="/bazaar" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                <Link href="/bazaar" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
                                     shop pet products online
-                                </a>.
+                                </Link>.
                             </p>
                         </div>
                     </div>
@@ -164,39 +165,39 @@ const HeroSection = () => {
                                 <ul className="space-y-3">
                                     <li>
                                         Find and{" "}
-                                        <a href="/browse-pets" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                        <Link href="/browse-pets" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
                                             adopt pets in Pakistan
-                                        </a>{" "}
+                                        </Link>{" "}
                                         from trusted shelters.
                                     </li>
                                     <li>
                                         Connect with{" "}
-                                        <a href="/browse-pets" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                        <Link href="/browse-pets" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
                                             shelters in Karachi, Lahore, and Islamabad
-                                        </a>.
+                                        </Link>.
                                     </li>
                                     <li>
-                                        <a href="/bazaar" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                        <Link href="/bazaar" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
                                             Shop pet food & accessories
-                                        </a>{" "}
+                                        </Link>{" "}
                                         online with nationwide delivery.
                                     </li>
                                     <li>
-                                        <a href="/pet-care" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                        <Link href="/pet-care" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
                                             Find vets in Pakistan
-                                        </a>{" "}
+                                        </Link>{" "}
                                         and get expert pet care guidance.
                                     </li>
                                     <li>
-                                        <a href="/browse-pets" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                        <Link href="/browse-pets" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
                                             Adopt pets near you
-                                        </a>{" "}
+                                        </Link>{" "}
                                         with our matching algorithm.
                                     </li>
                                 </ul>
                             </ul>
 
-                            <a
+                            <Link
                                 href="/browse-pets"
                                 className="inline-flex items-center justify-center gap-2 bg-primary text-white font-bold px-6 py-3 md:px-10 md:py-4 rounded-full text-sm md:text-lg shadow-lg hover:scale-105 transition-transform duration-300 relative z-10 whitespace-nowrap">
                                 <Image
@@ -207,7 +208,7 @@ const HeroSection = () => {
                                     className="w-4 h-4 md:w-5 md:h-5"
                                 />
                                 <span className="truncate">Go To Paltuu</span>
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -399,17 +400,13 @@ const HeroSection = () => {
                                     <p className="text-gray-600 mb-4">
                                         {feature.text}
                                     </p>
-                                    <button
+                                    <Link
+                                        href={feature.link}
                                         className="text-sm font-semibold bg-primary text-white px-4 py-2 rounded-full
-            hover:bg-primary/90 transition-colors duration-300 shadow-sm">
+            hover:bg-primary/90 transition-colors duration-300 shadow-sm inline-block">
                                         {feature.buttonText}
-                                    </button>
+                                    </Link>
                                 </div>
-
-                                {/* Hidden SEO link */}
-                                <a href={feature.link} className="sr-only">
-                                    {feature.title} on Paltuu.pk
-                                </a>
                             </div>
                         ))}
                     </div>
@@ -484,20 +481,20 @@ const HeroSection = () => {
 
                         {/* Visible Micro-CTAs */}
                         <div className="flex flex-wrap gap-3 mt-auto pt-4 border-t border-primary/10 justify-center">
-                            <a
+                            <Link
                                 href="/browse-pets"
                                 className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
                             >
                                 <FontAwesomeIcon icon={faDog} className="mr-2 text-sm" />
                                 <span className="whitespace-nowrap">Adopt Pets</span>
-                            </a>
-                            <a
+                            </Link>
+                            <Link
                                 href="/pet-care"
                                 className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
                             >
                                 <FontAwesomeIcon icon={faStethoscope} className="mr-2 text-sm" />
                                 <span className="whitespace-nowrap">Find Vets</span>
-                            </a>
+                            </Link>
                         </div>
                     </div>
 
@@ -530,20 +527,20 @@ const HeroSection = () => {
 
                         {/* Visible Micro-CTAs */}
                         <div className="flex flex-wrap gap-3 mt-auto pt-4 border-t border-primary/10 justify-center">
-                            <a
+                            <Link
                                 href="/bazaar"
                                 className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
                             >
                                 <FontAwesomeIcon icon={faShoppingCart} className="mr-2 text-sm" />
                                 <span className="whitespace-nowrap">Shop Bazaar</span>
-                            </a>
-                            <a
+                            </Link>
+                            <Link
                                 href="/lost-and-found"
                                 className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
                             >
                                 <FontAwesomeIcon icon={faSearch} className="mr-2 text-sm" />
                                 <span className="whitespace-nowrap">Lost & Found</span>
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 </div>

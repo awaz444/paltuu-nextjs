@@ -824,13 +824,21 @@ model social_likes {
 }
 
 model social_post_media {
-  media_id      BigInt       @id @default(autoincrement())
-  post_id       BigInt
-  media_type    String
-  url           String
-  thumbnail_url String?
-  ordering      Int?         @default(0)
-  social_posts  social_posts @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction)
+  media_id            BigInt       @id @default(autoincrement())
+  post_id             BigInt
+  media_type          String
+  url                 String
+  thumbnail_url       String?
+  ordering            Int?         @default(0)
+  video_status        String?      @default("ready")
+  hls_url             String?
+  video_key           String?
+  mediaconvert_job_id String?
+  duration_seconds    Int?
+  social_posts        social_posts @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([mediaconvert_job_id], map: "idx_social_post_media_job_id")
+  @@index([video_status], map: "idx_social_post_media_video_status", where: raw("(media_type = 'video'::text)"))
 }
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.

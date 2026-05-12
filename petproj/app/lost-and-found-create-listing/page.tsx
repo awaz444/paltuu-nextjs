@@ -5,9 +5,11 @@ import "./styles.css";
 import Navbar from "@/components/navbar";
 import { useRouter } from "next/navigation";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
+import { useAuth } from "@/context/AuthContext";
 import LoginModal from "@/components/LoginModal"; // Import your login modal component
 
 const LostFoundListingPage = () => {
+    const { user, isAuthenticated, isHydrating } = useAuth();
     const [categoryId, setCategoryId] = useState<number | string>(""); // Updated to categoryId
     const [cityId, setCityId] = useState("");
     const [location, setLocation] = useState("");
@@ -15,36 +17,28 @@ const LostFoundListingPage = () => {
     const [date, setDate] = useState("");
     const [contactInfo, setContactInfo] = useState("");
     const [activeTab, setActiveTab] = useState<"lost" | "found">("lost");
-    const [userId, setUserId] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
     
     const router = useRouter();
-    // **Retrieve user ID from localStorage**
+
+    // Re-calculate userId from auth context
+    const userId = user?.id || (user as any)?.user_id;
+
+    // **Check authentication state**
     useEffect(() => {
-        const checkUser = () => {
-            const userString = localStorage.getItem("user");
-            if (!userString) {
+        // console.log("LostFoundListingPage Auth State:", { isAuthenticated, isHydrating, userId });
+        if (!isHydrating) {
+            if (!isAuthenticated) {
+                // console.log("Setting showLoginModal to true");
                 setShowLoginModal(true);
-                return;
+            } else {
+                // console.log("Setting showLoginModal to false");
+                setShowLoginModal(false);
             }
-
-            try {
-                const user = JSON.parse(userString);
-                const user_id = user?.id;
-                if (!user_id) {
-                    setShowLoginModal(true);
-                    return;
-                }
-                setUserId(user_id);
-            } catch (error) {
-                setShowLoginModal(true);
-            }
-        };
-
-        checkUser();
-    }, []);
+        }
+    }, [isAuthenticated, isHydrating]);
 
     // **City Options**
     const cities = [
@@ -95,12 +89,6 @@ const LostFoundListingPage = () => {
 
         const handleLoginSuccess = () => {
             setShowLoginModal(false);
-            // Re-check user after successful login
-            const userString = localStorage.getItem("user");
-            if (userString) {
-                const user = JSON.parse(userString);
-                setUserId(user?.id);
-            }
         };
 
 
@@ -154,12 +142,6 @@ const LostFoundListingPage = () => {
 
     const handleLoginSuccess = () => {
         setShowLoginModal(false);
-        // Re-check user after successful login
-        const userString = localStorage.getItem("user");
-        if (userString) {
-            const user = JSON.parse(userString);
-            setUserId(user?.id);
-        }
     };
 
     return (
@@ -168,7 +150,7 @@ const LostFoundListingPage = () => {
   visible={showLoginModal}
   onSuccess={handleLoginSuccess}
   onClose={() => setShowLoginModal(false)}
-  mandatory // Add this prop to make it non-closable
+  mandatory={!isAuthenticated} // Only mandatory if not authenticated
 />
             
             <div

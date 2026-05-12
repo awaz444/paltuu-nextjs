@@ -86,8 +86,10 @@ const ProfileField: React.FC<ProfileFieldProps> = ({
   );
 };
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function ProfileContent() {
-  
+  const { user, isHydrating } = useAuth();
   const [userId, setUserId] = useState<string | null>(null);
   const [data, setData] = useState<UserProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -142,15 +144,17 @@ export default function ProfileContent() {
 
   useEffect(() => {
     const loadUserData = async () => {
-      const storedUser = localStorage.getItem("user");
-      if (!storedUser) return;
+      if (isHydrating) return;
+      
+      const currentUserId = user?.id;
+      if (!currentUserId) {
+        setLoading(false);
+        return;
+      }
 
-      const parsedUser = JSON.parse(storedUser);
-      if (!parsedUser?.id) return;
-
-      setUserId(parsedUser.id);
+      setUserId(currentUserId);
       try {
-        const res = await fetch(`/api/my-profile/${parsedUser.id}`);
+        const res = await fetch(`/api/my-profile/${currentUserId}`);
         if (!res.ok) throw new Error("Failed to fetch profile");
         const profileData = await res.json();
         setData(profileData);
@@ -168,7 +172,7 @@ export default function ProfileContent() {
     };
 
     loadUserData();
-  }, []);
+  }, [user, isHydrating]);
 
   const handleImageUpload = async (file: File) => {
     if (!userId) return;

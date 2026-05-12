@@ -200,9 +200,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 }, [status, session]);
 
-  // Update hydrating state when session status changes
+  // Update hydrating state - only set to false when both NextAuth and our custom hydration are done
   useEffect(() => {
-    if (status !== "loading") {
+    if (status !== "loading" && hasHydrated.current) {
       setIsHydratingState(false);
     }
   }, [status]);

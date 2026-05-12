@@ -16,7 +16,10 @@ type Review = {
   review_date: string;
 };
 
+import { useAuth } from "@/context/AuthContext";
+
 const ReviewsSummary = () => {
+  const { user, isHydrating } = useAuth();
   const [approvedReviews, setApprovedReviews] = useState<Review[]>([]);
   const [pendingReviews, setPendingReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -26,8 +29,6 @@ const ReviewsSummary = () => {
   const [primaryColor, setPrimaryColor] = useState("#A03048");
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  
-
   useEffect(() => {
     const rootStyles = getComputedStyle(document.documentElement);
     const color = rootStyles.getPropertyValue("--primary-color").trim();
@@ -36,15 +37,17 @@ const ReviewsSummary = () => {
 
   useEffect(() => {
     const fetchVetIdAndReviews = async () => {
+      if (isHydrating) return;
+      
+      const userId = user?.id;
+      if (!userId) {
+        setLoading(false);
+        setError("User not authenticated");
+        return;
+      }
+
       setLoading(true);
       try {
-        const userString = localStorage.getItem("user");
-        if (!userString) throw new Error("User data not found in local storage");
-
-        const user = JSON.parse(userString);
-        const userId = user?.id;
-        if (!userId) throw new Error("User ID is missing");
-
         const vetResponse = await fetch(`/api/v1/vets/get-id?user_id=${userId}`, { credentials: 'include' });
         if (!vetResponse.ok) throw new Error("Failed to fetch vet ID");
 
@@ -69,7 +72,7 @@ const ReviewsSummary = () => {
     };
 
     fetchVetIdAndReviews();
-  }, []);
+  }, [user, isHydrating]);
 
   const acceptReview = async (review_id: number) => {
     try {

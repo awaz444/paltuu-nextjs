@@ -129,3 +129,73 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
+/**
+ * PATCH /api/v1/social/posts/[id]
+ * Update post metadata (content, pet_id, post_type)
+ */
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+    try {
+        const userIdRaw = await getUserIdFromRequest(req);
+        if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const userId = parseInt(String(userIdRaw), 10);
+        const postId = params.id;
+
+        const body = await req.json();
+        const { content, pet_id, post_type } = body;
+
+        // Verify ownership
+        const postCheck = await db.query(
+            "SELECT user_id, content FROM social_posts WHERE post_id = $1 AND is_deleted = false",
+            [postId]
+        );
+        if (postCheck.rowCount === 0) return NextResponse.json({ error: "Post not found" }, { status: 404 });
+        if (postCheck.rows[0].user_id !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+        const oldContent = postCheck.rows[0].content;
+
+        await db.query('BEGIN');
+        try {
+            // Update the post
+            await db.query(`
+                UPDATE social_posts 
+                SET content = COALESCE($1, content),
+                    pet_id = $2,
+                    post_type = COALESCE($3, post_type),
+                    updated_at = NOW()
+                WHERE post_id = $4
+            `, [content, pet_id || null, post_type, postId]);
+
+            // If content changed, update hashtags
+            if (content !== undefined && content !== oldContent) {
+                // 1. Remove old hashtag links
+                await db.query("DELETE FROM post_hashtags WHERE post_id = $1", [postId]);
+
+                // 2. Parse & upsert new hashtags
+                const tagMatches = content.match(/#([a-zA-Z0-9_]+)/g) || [];
+                const uniqueTags = [...new Set(tagMatches.map((t: string) => t.slice(1).toLowerCase()))];
+                for (const tag of uniqueTags) {
+                    const tagRes = await db.query(`
+                        INSERT INTO hashtags (tag, post_count)
+                        VALUES ($1, 1)
+                        ON CONFLICT (tag) DO UPDATE SET post_count = hashtags.post_count + 1
+                        RETURNING hashtag_id
+                    `, [tag]);
+                    await db.query(`
+                        INSERT INTO post_hashtags (post_id, hashtag_id)
+                        VALUES ($1, $2) ON CONFLICT DO NOTHING
+                    `, [postId, tagRes.rows[0].hashtag_id]);
+                }
+            }
+
+            await db.query('COMMIT');
+            return NextResponse.json({ updated: true });
+        } catch (e) {
+            await db.query('ROLLBACK');
+            throw e;
+        }
+    } catch (error) {
+        console.error("V1 Social Post PATCH error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}

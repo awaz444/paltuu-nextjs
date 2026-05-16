@@ -168,7 +168,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
             // If content changed, update hashtags
             if (content !== undefined && content !== oldContent) {
-                // 1. Remove old hashtag links
+                // 1. Decrement old hashtag counts
+                await db.query(`
+                    UPDATE hashtags h
+                    SET post_count = GREATEST(0, h.post_count - 1)
+                    FROM post_hashtags ph
+                    WHERE ph.hashtag_id = h.hashtag_id
+                      AND ph.post_id = $1
+                `, [postId]);
+
+                // 2. Remove old hashtag links
                 await db.query("DELETE FROM post_hashtags WHERE post_id = $1", [postId]);
 
                 // 2. Parse & upsert new hashtags

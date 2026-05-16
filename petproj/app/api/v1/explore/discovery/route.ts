@@ -5,21 +5,33 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 export const dynamic = "force-dynamic";
 
 /**
+ * Standard Error Envelope
+ */
+function errorResponse(code: string, message: string, status: number) {
+    return NextResponse.json(
+        {
+            error: {
+                code,
+                message,
+                status,
+            },
+        },
+        { status }
+    );
+}
+
+/**
  * GET /api/v1/explore/discovery
- * Returns idle-state data for the explore screen:
- *   - trending_hashtags  (last 7 days, top 15)
- *   - suggested_users    (not followed, ranked by mutual follows then follower_count, top 10)
- *
- * Cache: 5 minutes (handled by client via React Query staleTime)
+ * Returns idle-state data for the explore screen
  */
 export async function GET(req: NextRequest) {
     try {
         const userIdRaw = await getUserIdFromRequest(req);
-        if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        if (!userIdRaw) return errorResponse("UNAUTHORIZED", "Missing or invalid JWT", 401);
         const userId = parseInt(String(userIdRaw), 10);
 
-        const [hashtagsRes, usersRes] = await Promise.all([
-            // Trending hashtags — posts tagged in the last 7 days
+        const [hashtagsRes, usersRes, breedsRes] = await Promise.all([
+            // Trending hashtags — top 15 by recent activity in last 7 days
             db.query(`
                 SELECT
                     h.tag,
@@ -33,7 +45,7 @@ export async function GET(req: NextRequest) {
                 LIMIT 15
             `),
 
-            // Suggested users — not followed, not self, ranked by mutual follows then follower_count
+            // Suggested users — mutual follows first, then follower count
             db.query(`
                 WITH my_following AS (
                     SELECT following_id FROM social_follows WHERE follower_id = $1
@@ -54,16 +66,32 @@ export async function GET(req: NextRequest) {
                     u.social_username,
                     u.profile_image_url,
                     u.follower_count,
-                    u.bio,
                     COALESCE(m.mutual_count, 0) AS mutual_follows,
                     false AS is_following
                 FROM users u
                 LEFT JOIN mutual m ON m.user_id = u.user_id
                 WHERE u.user_id != $1
+                  AND u.is_deleted = false
                   AND u.user_id NOT IN (SELECT following_id FROM my_following)
                 ORDER BY mutual_follows DESC, u.follower_count DESC
                 LIMIT 10
             `, [userId]),
+
+            // Trending breeds — derived from pets + adoption_listings
+            db.query(`
+                SELECT breed, 
+                       COUNT(*) FILTER (WHERE source='pet') AS pet_count,
+                       COUNT(*) FILTER (WHERE source='adoption') AS adoption_count
+                FROM (
+                    SELECT pet_breed AS breed, 'pet' AS source FROM pets WHERE is_deleted = false
+                    UNION ALL
+                    SELECT pet_breed AS breed, 'adoption' FROM pets WHERE listing_type = 'adoption' AND is_deleted = false
+                ) t
+                WHERE breed IS NOT NULL
+                GROUP BY breed 
+                ORDER BY COUNT(*) DESC 
+                LIMIT 10
+            `),
         ]);
 
         return NextResponse.json({
@@ -72,10 +100,11 @@ export async function GET(req: NextRequest) {
                 post_count: r.post_count,
             })),
             suggested_users: usersRes.rows,
+            trending_breeds: breedsRes.rows,
         });
 
     } catch (error) {
         console.error("V1 Explore Discovery error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return errorResponse("INTERNAL_ERROR", "An unhandled exception occurred", 500);
     }
 }

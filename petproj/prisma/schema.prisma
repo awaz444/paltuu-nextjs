@@ -867,6 +867,7 @@ model social_posts {
   pets               pets?               @relation(fields: [pet_id], references: [pet_id], onUpdate: NoAction)
   users              users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
   social_reposts     social_reposts[]
+  saved_posts        saved_posts[]
 }
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
@@ -946,6 +947,49 @@ model users {
   vendors                                           vendors?
   vet_reviews                                       vet_reviews[]
   vets                                              vets[]
+  save_collections                                  save_collections[]
+  saved_posts                                       saved_posts[]
+}
+
+model save_collections {
+  collection_id    BigInt             @id @default(autoincrement())
+  user_id          Int
+  name             String             @db.VarChar(100)
+  is_default       Boolean?           @default(false)
+  cover_image_url  String?
+  post_count       Int?               @default(0)
+  created_at       DateTime?          @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?          @default(now()) @db.Timestamptz(6)
+  users            users              @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  collection_posts collection_posts[]
+
+  @@unique([user_id, name])
+  @@index([user_id, created_at(sort: Desc)], map: "idx_collections_user")
+}
+
+model saved_posts {
+  save_id          BigInt             @id @default(autoincrement())
+  user_id          Int
+  post_id          BigInt
+  created_at       DateTime?          @default(now()) @db.Timestamptz(6)
+  users            users              @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  social_posts     social_posts       @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+  collection_posts collection_posts[]
+
+  @@unique([user_id, post_id])
+  @@index([user_id, created_at(sort: Desc)], map: "idx_saved_posts_user")
+  @@index([user_id, post_id], map: "idx_saved_posts_lookup")
+}
+
+model collection_posts {
+  collection_id    BigInt
+  save_id          BigInt
+  added_at         DateTime?        @default(now()) @db.Timestamptz(6)
+  save_collections save_collections @relation(fields: [collection_id], references: [collection_id], onDelete: Cascade)
+  saved_posts      saved_posts      @relation(fields: [save_id], references: [save_id], onDelete: Cascade)
+
+  @@id([collection_id, save_id])
+  @@index([collection_id, added_at(sort: Desc)], map: "idx_collection_posts")
 }
 
 model vendor_inventory {

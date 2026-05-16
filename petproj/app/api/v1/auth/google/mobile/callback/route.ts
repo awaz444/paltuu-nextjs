@@ -91,6 +91,12 @@ export async function GET(req: NextRequest) {
         [username, name, email, placeholderPassword, 'regular user']
       );
       user = newUserResult.rows[0];
+
+      // 3b. Create Default "All Posts" Collection
+      await db.query(
+        'INSERT INTO save_collections (user_id, name, is_default) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+        [user.user_id, 'All Posts', true]
+      );
     } else {
       user = userResult.rows[0];
     }

@@ -69,6 +69,14 @@ export async function GET(req: NextRequest) {
                     COALESCE(opm.media, '[]'::json) AS original_media,
                     (sl.post_id IS NOT NULL)  AS is_liked,
                     (sr.post_id IS NOT NULL)  AS is_reposted,
+                    (sp.save_id IS NOT NULL)  AS is_saved,
+                    COALESCE(
+                      (SELECT json_agg(sc.collection_id)
+                       FROM collection_posts cp
+                       JOIN save_collections sc ON sc.collection_id = cp.collection_id
+                       WHERE cp.save_id = sp.save_id),
+                      '[]'::json
+                    ) AS saved_to_collections,
                     EXISTS(
                         SELECT 1 FROM social_follows f
                         WHERE f.follower_id = $1 AND f.following_id = p.user_id
@@ -81,6 +89,7 @@ export async function GET(req: NextRequest) {
                 LEFT JOIN post_media opm   ON opm.post_id = op.post_id
                 LEFT JOIN social_likes  sl ON sl.post_id = p.post_id AND sl.user_id = $1
                 LEFT JOIN social_reposts sr ON sr.post_id = p.post_id AND sr.user_id = $1
+                LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
                 WHERE p.is_deleted = false AND p.is_hidden = false
                 ${!isGlobal && userId ? `AND (
                     p.user_id = $1
@@ -120,6 +129,14 @@ export async function GET(req: NextRequest) {
                         COALESCE(opm.media, '[]'::json) AS original_media,
                         (sl.post_id IS NOT NULL)  AS is_liked,
                         (sr.post_id IS NOT NULL)  AS is_reposted,
+                        (sp.save_id IS NOT NULL)  AS is_saved,
+                        COALESCE(
+                          (SELECT json_agg(sc.collection_id)
+                           FROM collection_posts cp
+                           JOIN save_collections sc ON sc.collection_id = cp.collection_id
+                           WHERE cp.save_id = sp.save_id),
+                          '[]'::json
+                        ) AS saved_to_collections,
                         (fs.following_id IS NOT NULL) AS is_following,
                         (
                             EXP(-EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 21600.0) * 0.4
@@ -144,6 +161,7 @@ export async function GET(req: NextRequest) {
                     LEFT JOIN post_media opm    ON opm.post_id = op.post_id
                     LEFT JOIN social_likes   sl ON sl.post_id = p.post_id AND sl.user_id = $1
                     LEFT JOIN social_reposts sr ON sr.post_id = p.post_id AND sr.user_id = $1
+                    LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
                     WHERE p.is_deleted = false AND p.is_hidden = false
                     ${!isGlobal && userId ? `AND (
                         p.user_id = $1

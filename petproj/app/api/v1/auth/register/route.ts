@@ -65,6 +65,12 @@ export async function POST(req: Request) {
     );
     const user = newUserResult.rows[0];
 
+    // 3b. Create Default "All Posts" Collection
+    await db.query(
+      'INSERT INTO save_collections (user_id, name, is_default) VALUES ($1, $2, $3)',
+      [user.user_id, 'All Posts', true]
+    );
+
     // 4. Clean up OTP
     await db.query('DELETE FROM "OTP" WHERE email = $1', [email]);
 

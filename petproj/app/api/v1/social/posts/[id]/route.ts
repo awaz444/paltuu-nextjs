@@ -49,6 +49,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                     SELECT 1 FROM social_reposts r 
                     WHERE r.post_id = p.post_id AND r.user_id = $2
                 ) AS is_reposted,
+                (sp.save_id IS NOT NULL) AS is_saved,
+                COALESCE(
+                  (SELECT json_agg(sc.collection_id)
+                   FROM collection_posts cp
+                   JOIN save_collections sc ON sc.collection_id = cp.collection_id
+                   WHERE cp.save_id = sp.save_id),
+                  '[]'::json
+                ) AS saved_to_collections,
                 EXISTS(
                     SELECT 1 FROM social_follows f
                     WHERE f.follower_id = $2 AND f.following_id = p.user_id
@@ -57,6 +65,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             JOIN users u ON p.user_id = u.user_id
             LEFT JOIN social_posts op ON op.post_id = p.original_post_id
             LEFT JOIN users ou ON ou.user_id = op.user_id
+            LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $2
             WHERE p.post_id = $1 AND p.is_deleted = false
         `, [postId, userId || 0]);
 

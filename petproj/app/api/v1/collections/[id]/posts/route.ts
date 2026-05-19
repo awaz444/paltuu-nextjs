@@ -121,6 +121,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   try {
     const userIdRaw = await getUserIdFromRequest(req);
     if (!userIdRaw) return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Unauthorized", status: 401 } }, { status: 401 });
+    const userId = parseInt(String(userIdRaw), 10);
     const collectionId = parseInt(params.id, 10);
     if (isNaN(collectionId)) {
       return NextResponse.json({ error: { code: "BAD_REQUEST", message: "Invalid Collection ID", status: 400 } }, { status: 400 });
@@ -152,7 +153,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       [collectionId, saveId]
     );
 
-    if (result.rowCount > 0) {
+    if (result.rowCount !== null && result.rowCount > 0) {
       await db.query("UPDATE save_collections SET post_count = post_count + 1 WHERE collection_id = $1", [collectionId]);
     }
 

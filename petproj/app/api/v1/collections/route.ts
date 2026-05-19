@@ -14,6 +14,19 @@ export async function GET(req: NextRequest) {
     if (!userIdRaw) return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Unauthorized", status: 401 } }, { status: 401 });
     const userId = parseInt(String(userIdRaw), 10);
 
+    // Verify default collection exists (helps pre-existing users registered before this feature)
+    const defaultCheck = await db.query(
+      "SELECT collection_id FROM save_collections WHERE user_id = $1 AND is_default = true",
+      [userId]
+    );
+
+    if (defaultCheck.rowCount === 0) {
+      await db.query(
+        "INSERT INTO save_collections (user_id, name, is_default) VALUES ($1, 'All Posts', true) ON CONFLICT DO NOTHING",
+        [userId]
+      );
+    }
+
     const result = await db.query(`
       SELECT collection_id, name, is_default, post_count, cover_image_url, created_at
       FROM save_collections

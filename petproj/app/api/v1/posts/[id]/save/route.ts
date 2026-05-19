@@ -39,19 +39,25 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         saveId = newSave.rows[0].save_id;
 
         // 4. Auto-add to "All Posts" collection
-        const defaultCollection = await db.query(
+        let defaultCollection = await db.query(
           "SELECT collection_id FROM save_collections WHERE user_id = $1 AND is_default = true",
           [userId]
         );
 
-        if (defaultCollection.rowCount > 0) {
-          const allPostsId = defaultCollection.rows[0].collection_id;
-          await db.query(
-            "INSERT INTO collection_posts (collection_id, save_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-            [allPostsId, saveId]
+        if (defaultCollection.rowCount === 0) {
+          const createCol = await db.query(
+            "INSERT INTO save_collections (user_id, name, is_default) VALUES ($1, 'All Posts', true) RETURNING collection_id",
+            [userId]
           );
-          await db.query("UPDATE save_collections SET post_count = post_count + 1 WHERE collection_id = $1", [allPostsId]);
+          defaultCollection = createCol;
         }
+
+        const allPostsId = defaultCollection.rows[0].collection_id;
+        await db.query(
+          "INSERT INTO collection_posts (collection_id, save_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+          [allPostsId, saveId]
+        );
+        await db.query("UPDATE save_collections SET post_count = post_count + 1 WHERE collection_id = $1", [allPostsId]);
       } else {
         saveId = existingSave.rows[0].save_id;
       }

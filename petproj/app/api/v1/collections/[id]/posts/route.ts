@@ -27,7 +27,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const userIdRaw = await getUserIdFromRequest(req);
     if (!userIdRaw) return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Unauthorized", status: 401 } }, { status: 401 });
     const userId = parseInt(String(userIdRaw), 10);
-    const collectionId = params.id;
+    const collectionId = parseInt(params.id, 10);
+    if (isNaN(collectionId)) {
+      return NextResponse.json({ error: { code: "BAD_REQUEST", message: "Invalid Collection ID", status: 400 } }, { status: 400 });
+    }
 
     const { searchParams } = new URL(req.url);
     const limit = Math.min(40, parseInt(searchParams.get("limit") || "20", 10));
@@ -42,35 +45,46 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     // 2. Fetch posts
     let query = `
       SELECT 
-        p.post_id,
-        p.content,
-        p.like_count,
-        p.comment_count,
-        u.name as author_name,
-        u.user_id as author_id,
+        p.*,
+        u.name               AS author_name,
+        u.profile_image_url  AS author_image,
         u.social_username,
-        u.profile_image_url as author_image,
         sp.save_id,
         cp.added_at,
-        p.created_at as created_at,
         COALESCE(
           (SELECT json_agg(m.* ORDER BY m.ordering) 
            FROM social_post_media m 
            WHERE m.post_id = p.post_id), 
           '[]'::json
-        ) AS media
+        ) AS media,
+        op.content           AS original_content,
+        op.user_id           AS original_user_id,
+        ou.name              AS original_author_name,
+        ou.social_username   AS original_social_username,
+        ou.profile_image_url AS original_author_image,
+        COALESCE(
+          (SELECT json_agg(opm.* ORDER BY opm.ordering) 
+           FROM social_post_media opm 
+           WHERE opm.post_id = op.post_id), 
+          '[]'::json
+        ) AS original_media,
+        EXISTS(SELECT 1 FROM social_likes WHERE post_id = p.post_id AND user_id = $2) AS is_liked,
+        EXISTS(SELECT 1 FROM social_reposts WHERE post_id = p.post_id AND user_id = $2) AS is_reposted,
+        EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $2 AND following_id = p.user_id) AS is_following
       FROM collection_posts cp
       JOIN saved_posts sp ON sp.save_id = cp.save_id
       JOIN social_posts p ON p.post_id = sp.post_id
       JOIN users u ON u.user_id = p.user_id
+      LEFT JOIN social_posts op  ON op.post_id = p.original_post_id
+      LEFT JOIN users ou         ON ou.user_id = op.user_id
       WHERE cp.collection_id = $1 
         AND p.is_deleted = false
     `;
 
-    const queryParams: any[] = [collectionId];
+    const queryParams: any[] = [collectionId, userId];
 
     if (cursor) {
-      query += ` AND (cp.added_at < $2 OR (cp.added_at = $2 AND sp.save_id < $3))`;
+      query += ` AND (cp.added_at < $3 OR (cp.added_at = $3 AND sp.save_id < $4))`;
       queryParams.push(cursor.added_at, cursor.id);
     }
 
@@ -107,8 +121,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   try {
     const userIdRaw = await getUserIdFromRequest(req);
     if (!userIdRaw) return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Unauthorized", status: 401 } }, { status: 401 });
-    const userId = parseInt(String(userIdRaw), 10);
-    const collectionId = params.id;
+    const collectionId = parseInt(params.id, 10);
+    if (isNaN(collectionId)) {
+      return NextResponse.json({ error: { code: "BAD_REQUEST", message: "Invalid Collection ID", status: 400 } }, { status: 400 });
+    }
 
     const body = await req.json();
     const postId = body.post_id;

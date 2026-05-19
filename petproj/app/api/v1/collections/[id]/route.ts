@@ -13,7 +13,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const userIdRaw = await getUserIdFromRequest(req);
     if (!userIdRaw) return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Unauthorized", status: 401 } }, { status: 401 });
     const userId = parseInt(String(userIdRaw), 10);
-    const collectionId = params.id;
+    const collectionId = parseInt(params.id, 10);
+    if (isNaN(collectionId)) {
+      return NextResponse.json({ error: { code: "BAD_REQUEST", message: "Invalid Collection ID", status: 400 } }, { status: 400 });
+    }
 
     const body = await req.json();
     const name = body.name?.toString().trim();
@@ -53,7 +56,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const userIdRaw = await getUserIdFromRequest(req);
     if (!userIdRaw) return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Unauthorized", status: 401 } }, { status: 401 });
     const userId = parseInt(String(userIdRaw), 10);
-    const collectionId = params.id;
+    
+    const collectionId = parseInt(params.id, 10);
+    if (isNaN(collectionId)) {
+      return NextResponse.json({ error: { code: "BAD_REQUEST", message: "Invalid Collection ID", status: 400 } }, { status: 400 });
+    }
 
     // 1. Verify ownership and check if default
     const colRes = await db.query("SELECT is_default FROM save_collections WHERE collection_id = $1 AND user_id = $2", [collectionId, userId]);

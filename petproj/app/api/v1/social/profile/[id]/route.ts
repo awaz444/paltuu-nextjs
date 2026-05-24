@@ -86,7 +86,7 @@ export async function GET(
                 FROM social_posts p
                 WHERE p.user_id = $1
                   AND p.is_deleted = false
-                  AND p.is_hidden = false
+                  AND (p.is_hidden = false OR p.user_id = $2)
                   AND p.is_repost = false
                 ORDER BY p.created_at DESC
                 LIMIT 18

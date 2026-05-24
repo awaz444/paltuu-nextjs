@@ -60,12 +60,16 @@ export async function GET(req: NextRequest) {
                     u.name               AS author_name,
                     u.profile_image_url  AS author_image,
                     u.social_username,
+                    false                AS is_blocked_by_me,
+                    false                AS is_blocking_me,
                     COALESCE(pm.media, '[]'::json)  AS media,
                     op.content           AS original_content,
                     op.user_id           AS original_user_id,
                     ou.name              AS original_author_name,
                     ou.social_username   AS original_social_username,
                     ou.profile_image_url AS original_author_image,
+                    false                AS original_author_is_blocked_by_me,
+                    false                AS original_author_is_blocking_me,
                     COALESCE(opm.media, '[]'::json) AS original_media,
                     (sl.post_id IS NOT NULL)  AS is_liked,
                     (sr.post_id IS NOT NULL)  AS is_reposted,
@@ -90,12 +94,17 @@ export async function GET(req: NextRequest) {
                 LEFT JOIN social_likes  sl ON sl.post_id = p.post_id AND sl.user_id = $1
                 LEFT JOIN social_reposts sr ON sr.post_id = p.post_id AND sr.user_id = $1
                 LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
-                WHERE p.is_deleted = false AND p.is_hidden = false
+                WHERE p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $1)
                 AND NOT EXISTS (
                     SELECT 1 FROM user_blocks b 
                     WHERE (b.blocker_id = $1 AND b.blocked_id = p.user_id)
                        OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
                 )
+                AND (p.original_post_id IS NULL OR NOT EXISTS (
+                    SELECT 1 FROM user_blocks b 
+                    WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
+                       OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
+                ))
                 ${!isGlobal && userId ? `AND (
                     p.user_id = $1
                     OR p.user_id IN (SELECT following_id FROM social_follows WHERE follower_id = $1)
@@ -125,12 +134,16 @@ export async function GET(req: NextRequest) {
                         u.name               AS author_name,
                         u.profile_image_url  AS author_image,
                         u.social_username,
+                        false                AS is_blocked_by_me,
+                        false                AS is_blocking_me,
                         COALESCE(pm.media, '[]'::json)  AS media,
                         op.content           AS original_content,
                         op.user_id           AS original_user_id,
                         ou.name              AS original_author_name,
                         ou.social_username   AS original_social_username,
                         ou.profile_image_url AS original_author_image,
+                        false                AS original_author_is_blocked_by_me,
+                        false                AS original_author_is_blocking_me,
                         COALESCE(opm.media, '[]'::json) AS original_media,
                         (sl.post_id IS NOT NULL)  AS is_liked,
                         (sr.post_id IS NOT NULL)  AS is_reposted,
@@ -167,12 +180,17 @@ export async function GET(req: NextRequest) {
                     LEFT JOIN social_likes   sl ON sl.post_id = p.post_id AND sl.user_id = $1
                     LEFT JOIN social_reposts sr ON sr.post_id = p.post_id AND sr.user_id = $1
                     LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
-                    WHERE p.is_deleted = false AND p.is_hidden = false
+                    WHERE p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $1)
                     AND NOT EXISTS (
                         SELECT 1 FROM user_blocks b 
                         WHERE (b.blocker_id = $1 AND b.blocked_id = p.user_id)
                            OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
                     )
+                    AND (p.original_post_id IS NULL OR NOT EXISTS (
+                        SELECT 1 FROM user_blocks b 
+                        WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
+                           OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
+                    ))
                     ${!isGlobal && userId ? `AND (
                         p.user_id = $1
                         OR fs.following_id IS NOT NULL

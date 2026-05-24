@@ -1,4 +1,5 @@
-import { Pool } from 'pg';
+import pg from 'pg';
+const { Pool } = pg;
 import * as dotenv from 'dotenv';
 import path from 'path';
 

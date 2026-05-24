@@ -4,6 +4,7 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 import { emitComment, emitNotification } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { SocialNotifications } from "@/lib/notifications";
+import { assertNotBlocked } from "@/lib/moderation";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 c.*,
                 u.name              AS author_name,
                 u.profile_image_url AS author_image,
-                u.social_username
+                u.social_username,
+                false               AS is_blocked_by_me,
+                false               AS is_blocking_me
             FROM social_comments c
             JOIN users u ON c.user_id = u.user_id
             WHERE c.post_id = $1 AND c.is_deleted = false
@@ -93,6 +96,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         }
         const postAuthorId = postInfo.rows[0].user_id;
 
+        await assertNotBlocked(userId, postAuthorId);
+
         let depth = 0;
         let root_comment_id = null;
         let parentAuthorId: number | null = null;
@@ -109,6 +114,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                     depth = (parent.rows[0].depth || 0) + 1;
                     root_comment_id = parent.rows[0].root_comment_id || parent.rows[0].comment_id;
                     parentAuthorId = parent.rows[0].user_id;
+                    await assertNotBlocked(userId, parentAuthorId as number);
                 }
             }
 
@@ -180,7 +186,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             throw e;
         }
 
-    } catch (error) {
+    } catch (error: any) {
+        if (error.message === 'BLOCKED') {
+            return NextResponse.json({ error: "BLOCKED" }, { status: 403 });
+        }
         console.error("V1 Social Comments POST error:", error);
         return NextResponse.json({
             error: error instanceof Error ? error.message : "Internal Server Error"

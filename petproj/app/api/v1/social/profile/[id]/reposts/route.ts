@@ -1,5 +1,6 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
+import { getUserIdFromRequest } from "@/utils/authServer";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,9 @@ export async function GET(
             return NextResponse.json({ error: "User ID is required" }, { status: 400 });
         }
 
+        const viewerIdRaw = await getUserIdFromRequest(req);
+        const viewerIdNum = viewerIdRaw ? parseInt(String(viewerIdRaw), 10) : 0;
+
         const page = Math.max(1, parseInt(req.nextUrl.searchParams.get("page") || "1", 10));
         const limit = 20;
         const offset = (page - 1) * limit;
@@ -33,12 +37,12 @@ export async function GET(
                 -- If later a linking column is added, join with original post here.
                 'repost' as display_type
             FROM social_posts p
-            WHERE p.user_id = $1 AND p.is_deleted = false AND p.is_hidden = false
+            WHERE p.user_id = $1 AND p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $4)
             AND p.post_type = 'repost'
             ORDER BY p.created_at DESC
             LIMIT $2 OFFSET $3
         `;
-        const result = await db.query(repostsQuery, [userId, limit, offset]);
+        const result = await db.query(repostsQuery, [userId, limit, offset, viewerIdNum]);
 
         return NextResponse.json({
             reposts: result.rows,

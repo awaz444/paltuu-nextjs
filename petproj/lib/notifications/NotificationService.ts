@@ -5,6 +5,7 @@
  */
 
 import { db } from "@/db/index";
+import { checkIsBlocked } from "@/lib/moderation";
 import { getMessaging } from "./firebase";
 import {
   NotificationType,
@@ -50,6 +51,15 @@ export class NotificationService {
           `⚠️ Skipping self-notification: sender=${params.senderId} user=${params.userId}`
         );
         return null;
+      }
+
+      // 1.5. Validate block
+      if (params.senderId && params.userId) {
+        const isBlocked = await checkIsBlocked(params.userId, params.senderId);
+        if (isBlocked) {
+          console.log(`⚠️ Skipping blocked notification: sender=${params.senderId} user=${params.userId}`);
+          return null;
+        }
       }
 
       // 2. Get notification template

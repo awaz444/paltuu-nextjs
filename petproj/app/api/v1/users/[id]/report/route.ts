@@ -1,13 +1,11 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import { REPORT_REASONS } from "@/lib/moderation";
 
 export const dynamic = "force-dynamic";
 
-const ALLOWED_REASONS = [
-    'SPAM', 'HATE_SPEECH', 'HARASSMENT', 'ANIMAL_ABUSE', 
-    'MISINFORMATION', 'INAPPROPRIATE', 'SCAM', 'OTHER'
-];
+const ALLOWED_REASONS = REPORT_REASONS.map(r => r.code);
 
 /**
  * POST /api/v1/users/[id]/report

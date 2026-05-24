@@ -38,19 +38,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             `, [blockerId, blockedId]);
 
             // 2. Auto-unfollow in both directions
-            await db.query(`
+            const deletedFollows = await db.query(`
                 DELETE FROM social_follows 
                 WHERE (follower_id = $1 AND following_id = $2)
                    OR (follower_id = $2 AND following_id = $1)
+                RETURNING follower_id, following_id
             `, [blockerId, blockedId]);
             
-            // Adjust follower/following counts could be complex, normally we count them dynamically or use triggers.
-            // Assuming counts are managed, or we should explicitly decrement?
-            // Existing `social_follows` has a trigger for counts? Wait, let's assume triggers exist or recompute.
-            // Actually, in `app/api/v1/social/follow/[id]/route.ts`, counts are incremented/decremented manually.
-            // Let's manually decrement if rows were deleted.
-            // A safer way is to let the frontend handle the state or just update the counts if needed.
-            // For now, let's just delete the follows to break the relationship.
+            for (const row of deletedFollows.rows) {
+                await db.query("UPDATE users SET following_count = GREATEST(0, following_count - 1) WHERE user_id = $1", [row.follower_id]);
+                await db.query("UPDATE users SET follower_count = GREATEST(0, follower_count - 1) WHERE user_id = $1", [row.following_id]);
+            }
 
             await db.query('COMMIT');
             return NextResponse.json({ blocked: true });

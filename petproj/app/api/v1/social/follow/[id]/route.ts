@@ -4,6 +4,7 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 import { emitFollow, emitNotification } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { SocialNotifications } from "@/lib/notifications";
+import { assertNotBlocked } from "@/lib/moderation";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         if (targetUser.rowCount === 0) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
+
+        await assertNotBlocked(followerId, followingId);
 
         const existing = await db.query(
             "SELECT follow_id FROM social_follows WHERE follower_id = $1 AND following_id = $2",
@@ -103,7 +106,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             await client.end();
         }
 
-    } catch (error) {
+    } catch (error: any) {
+        if (error.message === 'BLOCKED') {
+            return NextResponse.json({ error: "BLOCKED" }, { status: 403 });
+        }
         console.error("V1 Social Follow POST error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }

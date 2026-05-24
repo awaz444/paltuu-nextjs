@@ -4,6 +4,7 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 import { emitLike } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { SocialNotifications } from "@/lib/notifications";
+import { assertNotBlocked } from "@/lib/moderation";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             return NextResponse.json({ error: "Post not found" }, { status: 404 });
         }
         const postAuthorId = postInfo.rows[0].user_id;
+
+        await assertNotBlocked(userId, postAuthorId);
 
         // Check if already liked
         const existing = await db.query(
@@ -92,7 +95,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             throw e;
         }
 
-    } catch (error) {
+    } catch (error: any) {
+        if (error.message === 'BLOCKED') {
+            return NextResponse.json({ error: "BLOCKED" }, { status: 403 });
+        }
         console.error("V1 Social Likes POST error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }

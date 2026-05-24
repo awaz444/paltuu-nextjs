@@ -21,7 +21,12 @@ export async function GET(req: NextRequest) {
 
         const conditions: string[] = [
             "n.user_id = $1",
-            "n.notification_type LIKE 'social_%'"
+            "n.notification_type LIKE 'social_%'",
+            `(n.sender_id IS NULL OR NOT EXISTS (
+                SELECT 1 FROM user_blocks b 
+                WHERE (b.blocker_id = $1 AND b.blocked_id = n.sender_id)
+                   OR (b.blocker_id = n.sender_id AND b.blocked_id = $1)
+            ))`
         ];
         const queryParams: any[] = [userId, limit];
         let paramIndex = 3;
@@ -73,7 +78,12 @@ export async function GET(req: NextRequest) {
         // Get unread count
         const unreadRes = await db.query(
             `SELECT COUNT(*) AS count FROM notifications 
-             WHERE user_id = $1 AND is_read = false AND notification_type LIKE 'social_%'`,
+             WHERE user_id = $1 AND is_read = false AND notification_type LIKE 'social_%'
+             AND (sender_id IS NULL OR NOT EXISTS (
+                 SELECT 1 FROM user_blocks b 
+                 WHERE (b.blocker_id = $1 AND b.blocked_id = sender_id)
+                    OR (b.blocker_id = sender_id AND b.blocked_id = $1)
+             ))`,
             [userId]
         );
 

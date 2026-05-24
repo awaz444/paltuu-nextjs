@@ -97,6 +97,7 @@ export async function GET(req: NextRequest) {
             let query = `
                 SELECT 'user' AS entity_type, u.user_id, u.name, u.social_username, u.profile_image_url, 
                        u.follower_count, u.created_at,
+                       false AS is_blocked_by_me, false AS is_blocking_me,
                        EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $3 AND following_id = u.user_id) AS is_following
                 FROM users u
                 WHERE to_tsvector('english', u.name || ' ' || coalesce(u.social_username, '')) @@ plainto_tsquery('english', $1)
@@ -150,6 +151,7 @@ export async function GET(req: NextRequest) {
             let query = `
                 SELECT 'post' AS entity_type, p.post_id, p.content, p.like_count, p.created_at,
                        u.name AS author_name,
+                       false AS is_blocked_by_me, false AS is_blocking_me,
                        COALESCE((SELECT json_agg(m.*) FROM social_post_media m WHERE m.post_id = p.post_id), '[]'::json) AS media
                 FROM social_posts p
                 JOIN users u ON u.user_id = p.user_id

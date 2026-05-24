@@ -4,6 +4,7 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 import { emitRepost, emitNotification } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { SocialNotifications } from "@/lib/notifications";
+import { assertNotBlocked } from "@/lib/moderation";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         if ((existing.rowCount ?? 0) > 0) {
             return NextResponse.json({ reposted: true, message: "Already reposted" });
         }
+
+        // 3. Ensure no blocking relationship exists
+        await assertNotBlocked(userId, originalAuthorId);
 
         await db.query('BEGIN');
         try {
@@ -117,7 +121,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             throw e;
         }
 
-    } catch (error) {
+    } catch (error: any) {
+        if (error.message === 'BLOCKED') {
+            return NextResponse.json({ error: "BLOCKED" }, { status: 403 });
+        }
         console.error("V1 Social Repost POST error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }

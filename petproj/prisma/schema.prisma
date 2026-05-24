@@ -1,5 +1,5 @@
 generator client {
-  provider        = "prisma-client"
+  provider        = "prisma-client-js"
   output          = "../generated/prisma"
   previewFeatures = ["partialIndexes"]
 }
@@ -559,27 +559,23 @@ model newsletter_subscriptions {
 }
 
 model notifications {
-  notification_id      Int       @id @default(autoincrement())
-  user_id              Int?
-  is_read              Boolean?  @default(false)
-  entity_type          String?   @db.VarChar
-  entity_id            Int?
-  date_sent            DateTime? @default(now()) @db.Timestamp(6)
-  notification_content String?
-  notification_type    String?   @db.VarChar(255)
-  sender_id            Int?
-  title                String?   @db.VarChar(255)
-  body                 String?
-  type                 String?   @db.VarChar(50)
-  deep_link            String?   @db.VarChar(500)
-  image_url            String?   @db.VarChar(500)
-  created_at           DateTime? @default(now()) @db.Timestamptz(6)
-  users                users?    @relation(fields: [sender_id], references: [user_id], onUpdate: NoAction)
+  notification_id                    BigInt    @id @default(autoincrement())
+  user_id                            Int?
+  sender_id                          Int?
+  title                              String    @db.VarChar(255)
+  body                               String
+  type                               String    @db.VarChar(50)
+  entity_type                        String?   @db.VarChar(50)
+  entity_id                          BigInt?
+  deep_link                          String?   @db.VarChar(255)
+  image_url                          String?   @db.VarChar(255)
+  is_read                            Boolean?  @default(false)
+  created_at                         DateTime? @default(now()) @db.Timestamptz(6)
+  users                              users?    @relation(fields: [sender_id], references: [user_id], onUpdate: NoAction)
+  users_notifications_user_idTousers users?    @relation("notifications_user_idTousers", fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([created_at], map: "idx_notifications_created_at")
-  @@index([sender_id], map: "idx_notifications_sender_id")
-  @@index([type], map: "idx_notifications_type")
-  @@index([user_id], map: "idx_notifications_user_id")
+  @@index([created_at(sort: Desc)], map: "idx_notifications_created_at")
+  @@index([user_id, is_read], map: "idx_notifications_user_id_is_read")
 }
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
@@ -858,7 +854,9 @@ model social_posts {
   updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
   is_repost          Boolean?            @default(false)
   original_post_id   BigInt?
+  report_count       Int?                @default(0)
   post_hashtags      post_hashtags[]
+  saved_posts        saved_posts[]
   social_comments    social_comments[]
   social_likes       social_likes[]
   social_post_media  social_post_media[]
@@ -867,7 +865,6 @@ model social_posts {
   pets               pets?               @relation(fields: [pet_id], references: [pet_id], onUpdate: NoAction)
   users              users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
   social_reposts     social_reposts[]
-  saved_posts        saved_posts[]
 }
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
@@ -933,22 +930,26 @@ model users {
   lost_and_found_posts                              lost_and_found_posts[]
   mobile_refresh_tokens                             mobile_refresh_tokens[]
   notifications                                     notifications[]
+  notifications_notifications_user_idTousers        notifications[]         @relation("notifications_user_idTousers")
   pets                                              pets[]
   refresh_tokens                                    refresh_tokens[]
+  reports                                           reports[]
   rescue_shelters                                   rescue_shelters[]
+  save_collections                                  save_collections[]
+  saved_posts                                       saved_posts[]
   social_comments                                   social_comments[]
   social_follows_social_follows_follower_idTousers  social_follows[]        @relation("social_follows_follower_idTousers")
   social_follows_social_follows_following_idTousers social_follows[]        @relation("social_follows_following_idTousers")
   social_likes                                      social_likes[]
   social_posts                                      social_posts[]
   social_reposts                                    social_reposts[]
+  user_blocks_user_blocks_blocked_idTousers         user_blocks[]           @relation("user_blocks_blocked_idTousers")
+  user_blocks_user_blocks_blocker_idTousers         user_blocks[]           @relation("user_blocks_blocker_idTousers")
   user_devices                                      user_devices[]
   cities                                            cities?                 @relation(fields: [city_id], references: [city_id], onDelete: Cascade, onUpdate: NoAction)
   vendors                                           vendors?
   vet_reviews                                       vet_reviews[]
   vets                                              vets[]
-  save_collections                                  save_collections[]
-  saved_posts                                       saved_posts[]
 }
 
 model save_collections {
@@ -960,8 +961,8 @@ model save_collections {
   post_count       Int?               @default(0)
   created_at       DateTime?          @default(now()) @db.Timestamptz(6)
   updated_at       DateTime?          @default(now()) @db.Timestamptz(6)
-  users            users              @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   collection_posts collection_posts[]
+  users            users              @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_collections_user")
 
   @@unique([user_id, name])
   @@index([user_id, created_at(sort: Desc)], map: "idx_collections_user")
@@ -972,9 +973,9 @@ model saved_posts {
   user_id          Int
   post_id          BigInt
   created_at       DateTime?          @default(now()) @db.Timestamptz(6)
-  users            users              @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  social_posts     social_posts       @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
   collection_posts collection_posts[]
+  social_posts     social_posts       @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_saved_post")
+  users            users              @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_saved_user")
 
   @@unique([user_id, post_id])
   @@index([user_id, created_at(sort: Desc)], map: "idx_saved_posts_user")
@@ -985,8 +986,8 @@ model collection_posts {
   collection_id    BigInt
   save_id          BigInt
   added_at         DateTime?        @default(now()) @db.Timestamptz(6)
-  save_collections save_collections @relation(fields: [collection_id], references: [collection_id], onDelete: Cascade)
-  saved_posts      saved_posts      @relation(fields: [save_id], references: [save_id], onDelete: Cascade)
+  save_collections save_collections @relation(fields: [collection_id], references: [collection_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cp_collection")
+  saved_posts      saved_posts      @relation(fields: [save_id], references: [save_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cp_save")
 
   @@id([collection_id, save_id])
   @@index([collection_id, added_at(sort: Desc)], map: "idx_collection_posts")
@@ -1088,4 +1089,45 @@ model vets {
   clinic_vets     clinic_vets[]
   vet_reviews     vet_reviews[]
   users           users?        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model app_settings {
+  setting_key   String    @id @db.VarChar(100)
+  setting_value Json
+  description   String?
+  updated_at    DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reports {
+  report_id       BigInt    @id @default(autoincrement())
+  reporter_id     Int
+  target_type     String    @db.VarChar(20)
+  target_id       BigInt
+  reason_code     String    @db.VarChar(30)
+  additional_note String?
+  status          String?   @default("pending") @db.VarChar(20)
+  admin_note      String?
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  reviewed_at     DateTime? @db.Timestamptz(6)
+  users           users     @relation(fields: [reporter_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([reporter_id, target_type, target_id])
+  @@index([reporter_id], map: "idx_reports_reporter")
+  @@index([status, created_at(sort: Desc)], map: "idx_reports_status")
+  @@index([target_type, target_id], map: "idx_reports_target")
+}
+
+model user_blocks {
+  block_id                            BigInt    @id @default(autoincrement())
+  blocker_id                          Int
+  blocked_id                          Int
+  created_at                          DateTime? @default(now()) @db.Timestamptz(6)
+  users_user_blocks_blocked_idTousers users     @relation("user_blocks_blocked_idTousers", fields: [blocked_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  users_user_blocks_blocker_idTousers users     @relation("user_blocks_blocker_idTousers", fields: [blocker_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([blocker_id, blocked_id])
+  @@index([blocked_id], map: "idx_blocks_blocked")
+  @@index([blocker_id], map: "idx_blocks_blocker")
+  @@index([blocker_id, blocked_id], map: "idx_blocks_pair")
 }

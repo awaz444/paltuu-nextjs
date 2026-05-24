@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
             SELECT
                 p.post_id, p.content, p.like_count, p.comment_count, p.created_at,
                 u.name AS author_name, u.profile_image_url AS author_image, u.user_id AS author_id,
+                false AS is_blocked_by_me, false AS is_blocking_me,
                 COALESCE((SELECT json_agg(m.* ORDER BY m.ordering) FROM social_post_media m WHERE m.post_id = p.post_id), '[]'::json) AS media,
                 ((p.like_count * 2) + (p.comment_count * 3) + GREATEST(0, 10 - EXTRACT(EPOCH FROM (NOW() - p.created_at))/3600)) AS rank_score
             FROM social_posts p

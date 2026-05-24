@@ -72,6 +72,11 @@ export async function GET(req: NextRequest) {
               AND u.is_private = false -- Rule: No private posts in explore
               AND p.user_id NOT IN (SELECT following_id FROM social_follows WHERE follower_id = $1) -- Rule: Exclude followed
               AND p.created_at >= NOW() - INTERVAL '30 days'
+              AND NOT EXISTS (
+                  SELECT 1 FROM user_blocks b 
+                  WHERE (b.blocker_id = $1 AND b.blocked_id = p.user_id)
+                     OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
+              )
         `;
         const params: any[] = [userId, limit + 1];
 

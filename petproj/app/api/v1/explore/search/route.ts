@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
 
         // 3. Input Validation
         const { searchParams } = new URL(req.url);
-        const q = searchParams.get("q")?.trim();
+        const q = searchParams.get("q")?.trim() as string;
         const type = searchParams.get("type") || "all";
         const cursorStr = searchParams.get("cursor");
         const cursor = decodeCursor(cursorStr);
@@ -100,7 +100,11 @@ export async function GET(req: NextRequest) {
                        EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $3 AND following_id = u.user_id) AS is_following
                 FROM users u
                 WHERE to_tsvector('english', u.name || ' ' || coalesce(u.social_username, '')) @@ plainto_tsquery('english', $1)
-                  AND u.is_deleted = false
+                  AND NOT EXISTS (
+                      SELECT 1 FROM user_blocks b 
+                      WHERE (b.blocker_id = $3 AND b.blocked_id = u.user_id)
+                         OR (b.blocker_id = u.user_id AND b.blocked_id = $3)
+                  )
             `;
             const params: any[] = [plainTsQuery, lim + 1, userId];
 
@@ -123,11 +127,16 @@ export async function GET(req: NextRequest) {
                 JOIN users u ON u.user_id = p.owner_id
                 WHERE to_tsvector('english', p.pet_name || ' ' || coalesce(p.pet_breed, '')) @@ plainto_tsquery('english', $1)
                   AND p.is_deleted = false
+                  AND NOT EXISTS (
+                      SELECT 1 FROM user_blocks b 
+                      WHERE (b.blocker_id = $3 AND b.blocked_id = p.owner_id)
+                         OR (b.blocker_id = p.owner_id AND b.blocked_id = $3)
+                  )
             `;
-            const params: any[] = [plainTsQuery, lim + 1];
+            const params: any[] = [plainTsQuery, lim + 1, userId];
 
             if (cur) {
-                query += ` AND (p.created_at, p.pet_id) < ($3, $4)`;
+                query += ` AND (p.created_at, p.pet_id) < ($4, $5)`;
                 params.push(cur.created_at, cur.id);
             }
 
@@ -146,11 +155,17 @@ export async function GET(req: NextRequest) {
                 JOIN users u ON u.user_id = p.user_id
                 WHERE to_tsvector('english', coalesce(p.content, '')) @@ plainto_tsquery('english', $1)
                   AND p.is_deleted = false
+                  AND p.is_hidden = false
+                  AND NOT EXISTS (
+                      SELECT 1 FROM user_blocks b 
+                      WHERE (b.blocker_id = $3 AND b.blocked_id = p.user_id)
+                         OR (b.blocker_id = p.user_id AND b.blocked_id = $3)
+                  )
             `;
-            const params: any[] = [plainTsQuery, lim + 1];
+            const params: any[] = [plainTsQuery, lim + 1, userId];
 
             if (cur) {
-                query += ` AND (p.created_at, p.post_id) < ($3, $4)`;
+                query += ` AND (p.created_at, p.post_id) < ($4, $5)`;
                 params.push(cur.created_at, cur.id);
             }
 
@@ -189,11 +204,16 @@ export async function GET(req: NextRequest) {
                 WHERE p.listing_type = 'adoption'
                   AND p.is_deleted = false
                   AND to_tsvector('english', p.pet_name || ' ' || coalesce(p.pet_breed, '') || ' ' || coalesce(p.location, '')) @@ plainto_tsquery('english', $1)
+                  AND NOT EXISTS (
+                      SELECT 1 FROM user_blocks b 
+                      WHERE (b.blocker_id = $3 AND b.blocked_id = p.owner_id)
+                         OR (b.blocker_id = p.owner_id AND b.blocked_id = $3)
+                  )
             `;
-            const params: any[] = [plainTsQuery, lim + 1];
+            const params: any[] = [plainTsQuery, lim + 1, userId];
 
             if (cur) {
-                query += ` AND (p.created_at, p.pet_id) < ($3, $4)`;
+                query += ` AND (p.created_at, p.pet_id) < ($4, $5)`;
                 params.push(cur.created_at, cur.id);
             }
 
@@ -344,35 +364,5 @@ export async function GET(req: NextRequest) {
     } catch (error) {
         console.error("V1 Explore Search error:", error);
         return errorResponse("INTERNAL_ERROR", "An unhandled exception occurred", 500);
-    }
-}
-us: 400 });
-
-            const nextCursor = results.length === limit ? String(cursor + limit) : null;
-            return NextResponse.json({ query: q, type, results, next_cursor: nextCursor });
-        }
-
-        // type === "all" — run all in parallel, cap at limit each
-        const [users, pets, posts, products, adoptions, lost_found, hashtags, vets] = await Promise.all([
-            searchUsers(limit, 0),
-            searchPets(limit, 0),
-            searchPosts(limit, 0),
-            searchProducts(limit, 0),
-            searchAdoptions(limit, 0),
-            searchLostFound(limit, 0),
-            searchHashtags(limit, 0),
-            searchVets(limit, 0),
-        ]);
-
-        return NextResponse.json({
-            query: q,
-            type: "all",
-            results: { users, pets, posts, products, adoptions, lost_found, hashtags, vets },
-            next_cursor: null,
-        });
-
-    } catch (error) {
-        console.error("V1 Explore Search error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

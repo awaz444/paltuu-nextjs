@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { checkVendor } from "../../vendorAuth";
+import { BazaarNotifications } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,22 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
         if ((result.rowCount ?? 0) === 0) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
-        return NextResponse.json(result.rows[0]);
+        const updatedOrder = result.rows[0];
+
+        // Send Notifications
+        if (status === 'dispatched' || status === 'delivered') {
+            const parentOrderRes = await db.query('SELECT user_id, order_number FROM bazaar_orders WHERE order_id = $1', [updatedOrder.order_id]);
+            const parentOrder = parentOrderRes.rows[0];
+            if (parentOrder?.user_id) {
+                if (status === 'dispatched') {
+                    BazaarNotifications.onOrderShipped(parentOrder.user_id, parentOrder.order_id).catch(() => {});
+                } else if (status === 'delivered') {
+                    BazaarNotifications.onOrderDelivered(parentOrder.user_id, parentOrder.order_id).catch(() => {});
+                }
+            }
+        }
+
+        return NextResponse.json(updatedOrder);
 
     } catch (error: any) {
         console.error("Vendor Order PUT error:", error);

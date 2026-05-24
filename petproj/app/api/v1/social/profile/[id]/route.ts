@@ -45,6 +45,14 @@ export async function GET(
                     SELECT 1 FROM social_follows f
                     WHERE f.follower_id = $2 AND f.following_id = u.user_id
                 ) AS is_following,
+                EXISTS(
+                    SELECT 1 FROM user_blocks b
+                    WHERE b.blocker_id = $2 AND b.blocked_id = u.user_id
+                ) AS is_blocked_by_me,
+                EXISTS(
+                    SELECT 1 FROM user_blocks b
+                    WHERE b.blocker_id = u.user_id AND b.blocked_id = $2
+                ) AS is_blocking_me,
                 ($2 = u.user_id) AS is_own_profile
             FROM users u
             WHERE u.user_id = $1
@@ -55,11 +63,12 @@ export async function GET(
         }
 
         const user = userRes.rows[0];
+        const isBlocked = user.is_blocked_by_me || user.is_blocking_me;
         const isPrivate = user.is_private && !user.is_own_profile && !user.is_following;
 
-        // 2. Fetch posts (hidden if private account and not following)
+        // 2. Fetch posts (hidden if private account and not following, or if blocked)
         let posts: any[] = [];
-        if (!isPrivate) {
+        if (!isPrivate && !isBlocked) {
             const postsRes = await db.query(`
                 SELECT
                     p.post_id, p.content, p.like_count, p.comment_count,
@@ -100,10 +109,12 @@ export async function GET(
                 is_private: user.is_private,
                 is_following: user.is_following,
                 is_own_profile: user.is_own_profile,
+                is_blocked_by_me: user.is_blocked_by_me,
+                is_blocking_me: user.is_blocking_me,
                 joined_at: user.created_at,
             },
             posts,
-            is_private_locked: isPrivate, // true = profile is locked, posts hidden
+            is_private_locked: isPrivate || isBlocked, // true = profile is locked, posts hidden
         });
 
     } catch (error) {

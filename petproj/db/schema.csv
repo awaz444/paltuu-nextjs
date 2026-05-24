@@ -284,14 +284,24 @@
 "newsletter_subscriptions","subscription_status","character varying","YES","'active'::character varying"
 "newsletter_subscriptions","created_at","timestamp with time zone","YES","CURRENT_TIMESTAMP"
 "newsletter_subscriptions","updated_at","timestamp with time zone","YES","CURRENT_TIMESTAMP"
-"notifications","notification_id","integer","NO","nextval('notifications_notification_id_seq'::regclass)"
+"notifications","notification_id","bigint","NO","nextval('notifications_notification_id_seq'::regclass)"
 "notifications","user_id","integer","YES",NULL
-"notifications","notification_content","text","YES",NULL
-"notifications","notification_type","character varying","YES",NULL
-"notifications","date_sent","timestamp without time zone","YES","CURRENT_TIMESTAMP"
-"notifications","is_read","boolean","YES","false"
+"notifications","sender_id","integer","YES",NULL
+"notifications","title","character varying","NO",NULL
+"notifications","body","text","NO",NULL
+"notifications","type","character varying","NO",NULL
 "notifications","entity_type","character varying","YES",NULL
-"notifications","entity_id","integer","YES",NULL
+"notifications","entity_id","bigint","YES",NULL
+"notifications","deep_link","character varying","YES",NULL
+"notifications","image_url","character varying","YES",NULL
+"notifications","is_read","boolean","YES","false"
+"notifications","created_at","timestamp with time zone","YES","CURRENT_TIMESTAMP"
+"user_devices","device_id","bigint","NO","nextval('user_devices_device_id_seq'::regclass)"
+"user_devices","user_id","integer","NO",NULL
+"user_devices","fcm_token","character varying","NO",NULL
+"user_devices","device_platform","character varying","NO",NULL
+"user_devices","created_at","timestamp with time zone","YES","CURRENT_TIMESTAMP"
+"user_devices","updated_at","timestamp with time zone","YES","CURRENT_TIMESTAMP"
 "pet_category","category_id","integer","NO","nextval('pet_category_category_id_seq'::regclass)"
 "pet_category","category_name","character varying","NO",NULL
 "pet_images","image_id","integer","NO","nextval('pet_images_image_id_seq'::regclass)"

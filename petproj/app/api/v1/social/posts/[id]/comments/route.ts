@@ -14,13 +14,16 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
     try {
+        const userIdRaw = await getUserIdFromRequest(req);
+        const userId = userIdRaw ? parseInt(String(userIdRaw), 10) : 0;
+
         const postId = params.id;
         const { searchParams } = new URL(req.url);
         const limit = Math.min(50, parseInt(searchParams.get("limit") || "20", 10));
         const cursor = searchParams.get("cursor");
 
-        const cursorClause = cursor ? `AND c.created_at > $3` : "";
-        const queryParams: any[] = [postId, limit, ...(cursor ? [cursor] : [])];
+        const cursorClause = cursor ? `AND c.created_at > $4` : "";
+        const queryParams: any[] = [postId, userId, limit, ...(cursor ? [cursor] : [])];
 
         const result = await db.query(`
             SELECT
@@ -31,9 +34,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             FROM social_comments c
             JOIN users u ON c.user_id = u.user_id
             WHERE c.post_id = $1 AND c.is_deleted = false
+            AND NOT EXISTS (
+                SELECT 1 FROM user_blocks b 
+                WHERE (b.blocker_id = $2 AND b.blocked_id = c.user_id)
+                   OR (b.blocker_id = c.user_id AND b.blocked_id = $2)
+            )
             ${cursorClause}
             ORDER BY c.root_comment_id NULLS FIRST, c.created_at ASC
-            LIMIT $2
+            LIMIT $3
         `, queryParams);
 
         const comments = result.rows;

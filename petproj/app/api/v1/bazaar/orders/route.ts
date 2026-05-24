@@ -239,6 +239,14 @@ export async function POST(req: NextRequest) {
                         RETURNING vendor_order_id
                     `, [parentOrder.order_id, vid, group.subtotal, group.delivery_fee, group.subtotal + group.delivery_fee]);
                     vendorOrderId = vOrderRes.rows[0].vendor_order_id;
+
+                    // Notify the vendor
+                    BazaarNotifications.onNewVendorOrder(
+                        parseInt(vid as string, 10),
+                        vendorOrderId,
+                        customerInfo.name,
+                        group.items.length
+                    ).catch(() => {});
                 }
 
                 for (const item of group.items) {

@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import { AdoptionNotifications } from "@/lib/notifications";
 
 /**
  * @swagger
@@ -103,18 +104,14 @@ export async function POST(req: NextRequest) {
 
         const applicationId = result.rows[0].adoption_id;
 
-        // 3. Create Notifications
-        // To Applicant
-        await db.query(`
-            INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
-            VALUES ($1, $2, 'application_submission', false, NOW())
-        `, [userId, `Your adoption application for ${petName} has been submitted successfully!`]);
-
-        // To Owner
-        await db.query(`
-            INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
-            VALUES ($1, $2, 'new_application', false, NOW())
-        `, [ownerId, `New adoption application received for ${petName}!`]);
+        // 3. Create Notification
+        AdoptionNotifications.onApplicationSubmitted(
+            ownerId,
+            userId,
+            applicationId,
+            petName,
+            adopter_name || 'Someone'
+        ).catch(console.error);
 
         return NextResponse.json({ success: true, applicationId });
 

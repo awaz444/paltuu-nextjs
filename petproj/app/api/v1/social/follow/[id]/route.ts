@@ -1,4 +1,4 @@
-import { db } from "@/db/index";
+import { db, createClient } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { emitFollow, emitNotification } from "@/utils/realtimeEmitter";
@@ -40,54 +40,46 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             [followerId, followingId]
         );
 
-        await db.query('BEGIN');
+        const client = createClient();
+        await client.connect();
+        await client.query('BEGIN');
+        
         try {
             if ((existing.rowCount ?? 0) > 0) {
                 // Unfollow
-                await db.query(
+                await client.query(
                     "DELETE FROM social_follows WHERE follower_id = $1 AND following_id = $2",
                     [followerId, followingId]
                 );
-                await db.query(
+                await client.query(
                     "UPDATE users SET following_count = GREATEST(0, following_count - 1) WHERE user_id = $1",
                     [followerId]
                 );
-                await db.query(
+                await client.query(
                     "UPDATE users SET follower_count = GREATEST(0, follower_count - 1) WHERE user_id = $1",
                     [followingId]
                 );
-                await db.query('COMMIT');
+                await client.query('COMMIT');
 
                 return NextResponse.json({ following: false });
 
             } else {
                 // Follow
-                await db.query(
+                await client.query(
                     "INSERT INTO social_follows (follower_id, following_id) VALUES ($1, $2)",
                     [followerId, followingId]
                 );
-                await db.query(
+                await client.query(
                     "UPDATE users SET following_count = following_count + 1 WHERE user_id = $1",
                     [followerId]
                 );
-                await db.query(
+                await client.query(
                     "UPDATE users SET follower_count = follower_count + 1 WHERE user_id = $1",
                     [followingId]
                 );
 
-                // Notification to the followed user
-                await db.query(`
-                    INSERT INTO notifications
-                        (user_id, notification_content, notification_type, entity_type, entity_id)
-                    VALUES ($1, $2, 'social_follow', 'user', $3)
-                `, [
-                    followingId,
-                    `Someone started following you`,
-                    followerId
-                ]);
-
                 // Send FCM push notification
-                const followerRes = await db.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [followerId]);
+                const followerRes = await client.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [followerId]);
                 const follower = followerRes.rows[0];
                 SocialNotifications.onNewFollower(
                     followingId,
@@ -96,7 +88,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                     follower?.profile_image_url
                 ).catch(() => {});
 
-                await db.query('COMMIT');
+                await client.query('COMMIT');
 
                 // Real-time: push follow event and notification (fire and forget)
                 emitFollow(followingId, { follower_id: followerId }).catch(() => {});
@@ -105,8 +97,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 return NextResponse.json({ following: true });
             }
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            await client.end();
         }
 
     } catch (error) {

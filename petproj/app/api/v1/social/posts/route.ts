@@ -91,6 +91,11 @@ export async function GET(req: NextRequest) {
                 LEFT JOIN social_reposts sr ON sr.post_id = p.post_id AND sr.user_id = $1
                 LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
                 WHERE p.is_deleted = false AND p.is_hidden = false
+                AND NOT EXISTS (
+                    SELECT 1 FROM user_blocks b 
+                    WHERE (b.blocker_id = $1 AND b.blocked_id = p.user_id)
+                       OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
+                )
                 ${!isGlobal && userId ? `AND (
                     p.user_id = $1
                     OR p.user_id IN (SELECT following_id FROM social_follows WHERE follower_id = $1)
@@ -163,6 +168,11 @@ export async function GET(req: NextRequest) {
                     LEFT JOIN social_reposts sr ON sr.post_id = p.post_id AND sr.user_id = $1
                     LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
                     WHERE p.is_deleted = false AND p.is_hidden = false
+                    AND NOT EXISTS (
+                        SELECT 1 FROM user_blocks b 
+                        WHERE (b.blocker_id = $1 AND b.blocked_id = p.user_id)
+                           OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
+                    )
                     ${!isGlobal && userId ? `AND (
                         p.user_id = $1
                         OR fs.following_id IS NOT NULL

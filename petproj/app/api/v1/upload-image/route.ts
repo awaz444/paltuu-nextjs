@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-  api_key: process.env.CLOUDINARY_API_KEY!,
-  api_secret: process.env.CLOUDINARY_API_SECRET!,
-});
+import { uploadToS3Main } from "@/lib/s3";
 
 /**
  * @swagger
  * /api/upload-image:
  *   post:
- *     summary: Upload images to Cloudinary
+ *     summary: Upload images to AWS S3 (paltuu-main/adoption)
  *     description: Upload multiple images and return their URLs
  *     tags: [Upload]
  */
@@ -28,22 +22,8 @@ export async function POST(req: NextRequest) {
 
         for (const file of files) {
             const buffer = Buffer.from(await file.arrayBuffer());
-
-            const imageUrl = await new Promise<string>((resolve, reject) => {
-                const upload = cloudinary.uploader.upload_stream(
-                    {
-                        resource_type: "image",
-                        folder: "pet-images",
-                        format: "webp" // Convert to WebP for better compression
-                    },
-                    (error, result) => {
-                        if (error) reject(error);
-                        else resolve(result!.secure_url);
-                    }
-                );
-                upload.end(buffer);
-            });
-
+            const ext = file.type.split("/")[1] || "jpg";
+            const imageUrl = await uploadToS3Main(buffer, "adoption", file.type, ext);
             urls.push(imageUrl);
         }
 

@@ -66,12 +66,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       for (const cId of collectionIds) {
         // Verify collection belongs to user
         const colCheck = await db.query("SELECT collection_id FROM save_collections WHERE collection_id = $1 AND user_id = $2", [cId, userId]);
-        if (colCheck.rowCount > 0) {
+        if ((colCheck.rowCount ?? 0) > 0) {
           const res = await db.query(
             "INSERT INTO collection_posts (collection_id, save_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
             [cId, saveId]
           );
-          if (res.rowCount > 0) {
+          if ((res.rowCount ?? 0) > 0) {
             await db.query("UPDATE save_collections SET post_count = post_count + 1 WHERE collection_id = $1", [cId]);
           }
         }
@@ -104,7 +104,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     try {
       const existingSave = await db.query("SELECT save_id FROM saved_posts WHERE user_id = $1 AND post_id = $2", [userId, postId]);
 
-      if (existingSave.rowCount > 0) {
+      if ((existingSave.rowCount ?? 0) > 0) {
         const saveId = existingSave.rows[0].save_id;
 
         // 1. Decrement post_count for all affected collections

@@ -42,7 +42,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       [collectionId, saveId]
     );
 
-    if (result.rowCount > 0) {
+    if ((result.rowCount ?? 0) > 0) {
       await db.query("UPDATE save_collections SET post_count = GREATEST(0, post_count - 1) WHERE collection_id = $1", [collectionId]);
     }
 

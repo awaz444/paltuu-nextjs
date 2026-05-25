@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
         // 3. In-app Notification
         AdoptionNotifications.onApplicationSubmitted(
             ownerId,
-            userId,
+            Number(userId),
             applicationId,
             petName,
             adopter_name || 'Someone'

@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     // Check unique name
     const existing = await db.query("SELECT collection_id FROM save_collections WHERE user_id = $1 AND LOWER(name) = LOWER($2)", [userId, name]);
-    if (existing.rowCount > 0) {
+    if ((existing.rowCount ?? 0) > 0) {
       return NextResponse.json({ error: { code: "NAME_TAKEN", message: "You already have a collection with this name", status: 409 } }, { status: 409 });
     }
 

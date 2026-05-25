@@ -1,19 +1,13 @@
-import { v2 as cloudinary } from "cloudinary";
+import { uploadToS3Main } from "@/lib/s3";
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-  api_key: process.env.CLOUDINARY_API_KEY!,
-  api_secret: process.env.CLOUDINARY_API_SECRET!,
-});
 
 /**
  * @swagger
  * /api/v1/lost-and-found/images:
  *   post:
- *     summary: Upload image for a lost/found post with ownership check (V1 Hardened)
+ *     summary: Upload image for a lost/found post to AWS S3 (paltuu-main/lostandfound)
  *     tags: [v1 Community]
  */
 
@@ -41,18 +35,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Post already has an image. Delete it first." }, { status: 400 });
         }
 
-        // 3. Upload to Cloudinary
+        // 3. Upload to AWS S3 (paltuu-main/lostandfound)
         const buffer = Buffer.from(await file.arrayBuffer());
-        const imageUrl = await new Promise<string>((resolve, reject) => {
-            const upload = cloudinary.uploader.upload_stream(
-                { resource_type: "image", folder: "lost-and-found" },
-                (error, result) => {
-                    if (error) reject(error);
-                    else resolve(result!.secure_url);
-                }
-            );
-            upload.end(buffer);
-        });
+        const ext = file.type.split("/")[1] || "jpg";
+        const imageUrl = await uploadToS3Main(buffer, "lostandfound", file.type, ext);
 
         // 4. Save to DB
         const result = await db.query(`

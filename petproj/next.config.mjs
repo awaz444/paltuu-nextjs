@@ -4,7 +4,7 @@ const nextConfig = {
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
   images: {
     domains: [
-      "res.cloudinary.com",
+      "res.cloudinary.com",                          // ← keep: existing Cloudinary images
       "lh3.googleusercontent.com",
       "media.istockphoto.com",
       "qufdjlaxzyarnrsiimfw.supabase.co",
@@ -12,8 +12,10 @@ const nextConfig = {
       "fjxezewxjsyyfuehnlko.supabase.co",
       "images.unsplash.com",
       "djw7hbeqkm7bf.cloudfront.net",
+      "paltuu-main.s3.ap-south-1.amazonaws.com",     // ← new: paltuu-main S3 direct URLs
     ],
   },
+
   async headers() {
     return [
       {

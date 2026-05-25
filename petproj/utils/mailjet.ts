@@ -87,17 +87,15 @@ function generateOrderEmailHtml(order: OrderEmailData, isAdmin: boolean = false)
         : "";
       const skuInfo =
         item.variant_sku || item.product_sku
-          ? `<div style="font-size:12px;color:#999;margin-top:2px;">SKU: ${
-              item.variant_sku || item.product_sku
-            }</div>`
+          ? `<div style="font-size:12px;color:#999;margin-top:2px;">SKU: ${item.variant_sku || item.product_sku
+          }</div>`
           : "";
 
       return `
         <tr>
           <td style="padding:15px 20px;border-bottom:1px solid #eee;">
-            <div style="font-weight:500;color:#333;font-size:15px;">${
-              item.product_title || "Product"
-            }</div>
+            <div style="font-weight:500;color:#333;font-size:15px;">${item.product_title || "Product"
+        }</div>
             ${variantDetails}
             ${skuInfo}
           </td>
@@ -178,9 +176,8 @@ function generateOrderEmailHtml(order: OrderEmailData, isAdmin: boolean = false)
             <table style="width:100%;border-collapse:collapse;">
               <tr>
                 <td style="padding:8px 0;color:#666;font-size:14px;width:40%;">Order Number:</td>
-                <td style="padding:8px 0;color:#333;font-size:14px;font-weight:600;">${
-                  order.order_number
-                }</td>
+                <td style="padding:8px 0;color:#333;font-size:14px;font-weight:600;">${order.order_number
+    }</td>
               </tr>
               <tr>
                 <td style="padding:8px 0;color:#666;font-size:14px;">Order Date:</td>
@@ -188,18 +185,15 @@ function generateOrderEmailHtml(order: OrderEmailData, isAdmin: boolean = false)
               </tr>
               <tr>
                 <td style="padding:8px 0;color:#666;font-size:14px;">Payment Method:</td>
-                <td style="padding:8px 0;color:#333;font-size:14px;text-transform:uppercase;">${
-                  order.payment_method || "COD"
-                }</td>
+                <td style="padding:8px 0;color:#333;font-size:14px;text-transform:uppercase;">${order.payment_method || "COD"
+    }</td>
               </tr>
               <tr>
                 <td style="padding:8px 0;color:#666;font-size:14px;">Payment Status:</td>
                 <td style="padding:8px 0;color:#333;font-size:14px;">
-                  <span style="background-color:${
-                    order.payment_status === "paid" ? "#d4edda" : "#fff3cd"
-                  };color:${
-    order.payment_status === "paid" ? "#155724" : "#856404"
-  };padding:4px 8px;border-radius:3px;font-size:12px;font-weight:600;text-transform:uppercase;">
+                  <span style="background-color:${order.payment_status === "paid" ? "#d4edda" : "#fff3cd"
+    };color:${order.payment_status === "paid" ? "#155724" : "#856404"
+    };padding:4px 8px;border-radius:3px;font-size:12px;font-weight:600;text-transform:uppercase;">
                     ${order.payment_status || "PENDING"}
                   </span>
                 </td>
@@ -216,39 +210,35 @@ function generateOrderEmailHtml(order: OrderEmailData, isAdmin: boolean = false)
           </div>
 
           <!-- Customer Info (Only for Admin) -->
-          ${
-            isAdmin
-              ? `
+          ${isAdmin
+      ? `
           <div style="margin-bottom:30px;padding:20px;background-color:#fff9e6;border-left:4px solid #ffc107;border-radius:5px;">
             <h2 style="color:#8B1538;font-size:18px;margin:0 0 15px 0;font-weight:600;">Customer Information</h2>
             <table style="width:100%;border-collapse:collapse;">
               <tr>
                 <td style="padding:8px 0;color:#666;font-size:14px;width:40%;">Name:</td>
-                <td style="padding:8px 0;color:#333;font-size:14px;font-weight:600;">${
-                  order.customer_name || "N/A"
-                }</td>
+                <td style="padding:8px 0;color:#333;font-size:14px;font-weight:600;">${order.customer_name || "N/A"
+      }</td>
               </tr>
               <tr>
                 <td style="padding:8px 0;color:#666;font-size:14px;">Email:</td>
                 <td style="padding:8px 0;color:#333;font-size:14px;">
-                  <a href="mailto:${order.customer_email}" style="color:#8B1538;text-decoration:none;">${
-                  order.customer_email
-                }</a>
+                  <a href="mailto:${order.customer_email}" style="color:#8B1538;text-decoration:none;">${order.customer_email
+      }</a>
                 </td>
               </tr>
               <tr>
                 <td style="padding:8px 0;color:#666;font-size:14px;">Phone:</td>
                 <td style="padding:8px 0;color:#333;font-size:14px;">
-                  <a href="tel:${order.customer_phone}" style="color:#8B1538;text-decoration:none;">${
-                  order.customer_phone
-                }</a>
+                  <a href="tel:${order.customer_phone}" style="color:#8B1538;text-decoration:none;">${order.customer_phone
+      }</a>
                 </td>
               </tr>
             </table>
           </div>
           `
-              : ""
-          }
+      : ""
+    }
 
           ${isAdmin ? addressHtml : ""}
 
@@ -276,47 +266,43 @@ function generateOrderEmailHtml(order: OrderEmailData, isAdmin: boolean = false)
               <div style="margin-bottom:8px;">
                 <span style="color:#666;font-size:14px;">Subtotal: </span>
                 <span style="color:#333;font-size:14px;font-weight:500;">Rs ${Number(
-                  order.subtotal || 0
-                ).toLocaleString()}</span>
+      order.subtotal || 0
+    ).toLocaleString()}</span>
               </div>
-              ${
-                order.shipping_amount > 0
-                  ? `
+              ${order.shipping_amount > 0
+      ? `
               <div style="margin-bottom:8px;">
                 <span style="color:#666;font-size:14px;">Shipping: </span>
                 <span style="color:#333;font-size:14px;font-weight:500;">Rs ${Number(
-                  order.shipping_amount
-                ).toLocaleString()}</span>
+        order.shipping_amount
+      ).toLocaleString()}</span>
               </div>`
-                  : ""
-              }
-              ${
-                order.discount_amount > 0
-                  ? `
+      : ""
+    }
+              ${order.discount_amount > 0
+      ? `
               <div style="margin-bottom:8px;">
                 <span style="color:#666;font-size:14px;">Discount: </span>
                 <span style="color:#27AE60;font-size:14px;font-weight:500;">-Rs ${Number(
-                  order.discount_amount
-                ).toLocaleString()}</span>
+        order.discount_amount
+      ).toLocaleString()}</span>
               </div>`
-                  : ""
-              }
+      : ""
+    }
               <div style="border-top:1px solid #ddd;padding-top:15px;margin-top:15px;">
                 <span style="color:#8B1538;font-size:18px;font-weight:700;">Total: Rs ${Number(
-                  order.total_amount || 0
-                ).toLocaleString()}</span>
+      order.total_amount || 0
+    ).toLocaleString()}</span>
               </div>
             </div>
           </div>
 
-          ${
-            !isAdmin
-              ? `
+          ${!isAdmin
+      ? `
           <!-- Action Buttons -->
           <div style="text-align:center;margin:30px 0;">
-            <a href="${
-              process.env.NEXT_PUBLIC_SITE_URL || "https://www.paltuu.pk"
-            }/order-confirmed?orderNumber=${encodeURIComponent(order.order_number)}"
+            <a href="${process.env.NEXT_PUBLIC_SITE_URL || "https://www.paltuu.pk"
+      }/order-confirmed?orderNumber=${encodeURIComponent(order.order_number)}"
                style="display:inline-block;background-color:#8B1538;color:#ffffff;text-decoration:none;padding:12px 25px;border-radius:5px;font-weight:600;font-size:14px;margin:0 10px 15px 0;">
               View Order Details
             </a>
@@ -326,28 +312,26 @@ function generateOrderEmailHtml(order: OrderEmailData, isAdmin: boolean = false)
             </a>
           </div>
           `
-              : `
+      : `
           <!-- Admin Action Button -->
           <div style="text-align:center;margin:30px 0;">
-            <a href="${
-              process.env.NEXT_PUBLIC_SITE_URL || "https://www.paltuu.pk"
-            }/orders"
+            <a href="${process.env.NEXT_PUBLIC_SITE_URL || "https://www.paltuu.pk"
+      }/orders"
                style="display:inline-block;background-color:#8B1538;color:#ffffff;text-decoration:none;padding:14px 30px;border-radius:5px;font-weight:600;font-size:15px;">
               Manage Order in Admin Panel
             </a>
           </div>
           `
-          }
+    }
 
           <!-- Contact Info -->
           <div style="text-align:center;padding:20px;background-color:#f8f8f8;border-radius:5px;">
             <p style="margin:0 0 10px 0;color:#333;font-size:15px;font-weight:600;">Need Help?</p>
             <p style="margin:0;color:#666;font-size:14px;">
-              ${
-                isAdmin
-                  ? "Manage this order from your admin panel"
-                  : 'Have questions about your order? Contact us at <a href="mailto:support@paltuu.com" style="color:#8B1538;text-decoration:none;">support@paltuu.com</a>'
-              }
+              ${isAdmin
+      ? "Manage this order from your admin panel"
+      : 'Have questions about your order? Contact us at <a href="mailto:support@paltuu.com" style="color:#8B1538;text-decoration:none;">support@paltuu.com</a>'
+    }
             </p>
           </div>
         </div>
@@ -382,17 +366,14 @@ export async function sendOrderConfirmationEmail(
 
     const html = generateOrderEmailHtml(order, false);
     const subject = `Order Confirmed: ${order.order_number} - Paltuu`;
-    const textContent = `Order Confirmation\n\nThank you for your order, ${
-      order.customer_name || "valued customer"
-    }!\n\nOrder Number: ${
-      order.order_number
-    }\nTotal Amount: Rs ${Number(
-      order.total_amount || 0
-    ).toLocaleString()}\n\nView your order: ${
-      process.env.NEXT_PUBLIC_SITE_URL || "https://www.paltuu.pk"
-    }/order-confirmed?orderNumber=${encodeURIComponent(
-      order.order_number
-    )}`;
+    const textContent = `Order Confirmation\n\nThank you for your order, ${order.customer_name || "valued customer"
+      }!\n\nOrder Number: ${order.order_number
+      }\nTotal Amount: Rs ${Number(
+        order.total_amount || 0
+      ).toLocaleString()}\n\nView your order: ${process.env.NEXT_PUBLIC_SITE_URL || "https://www.paltuu.pk"
+      }/order-confirmed?orderNumber=${encodeURIComponent(
+        order.order_number
+      )}`;
 
     // Use Brevo API instead of Mailjet
     await sendEmailViaBrevo(
@@ -425,17 +406,13 @@ export async function sendOrderNotificationToAdmin(
     const subject = `🛍️ New Order Received: ${order.order_number} - Rs ${Number(
       order.total_amount || 0
     ).toLocaleString()}`;
-    const textContent = `New Order Received!\n\nOrder Number: ${
-      order.order_number
-    }\nCustomer: ${order.customer_name} (${
-      order.customer_email
-    })\nPhone: ${order.customer_phone}\nTotal Amount: Rs ${Number(
-      order.total_amount || 0
-    ).toLocaleString()}\nPayment Method: ${
-      order.payment_method
-    }\n\nManage order: ${
-      process.env.NEXT_PUBLIC_SITE_URL || "https://www.paltuu.pk"
-    }/orders`;
+    const textContent = `New Order Received!\n\nOrder Number: ${order.order_number
+      }\nCustomer: ${order.customer_name} (${order.customer_email
+      })\nPhone: ${order.customer_phone}\nTotal Amount: Rs ${Number(
+        order.total_amount || 0
+      ).toLocaleString()}\nPayment Method: ${order.payment_method
+      }\n\nManage order: ${process.env.NEXT_PUBLIC_SITE_URL || "https://www.paltuu.pk"
+      }/orders`;
 
     // Use Brevo API instead of Mailjet
     await sendEmailViaBrevo(

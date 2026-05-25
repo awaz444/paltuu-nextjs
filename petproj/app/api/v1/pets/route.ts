@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
 import { validate } from "@/utils/validation";
+import { sendNewListingNotification } from "@/utils/mailjet";
 
 /**
  * @swagger
@@ -127,7 +128,30 @@ export async function POST(req: NextRequest) {
             ]
         );
 
-        return NextResponse.json(result.rows[0], { status: 201 });
+        const newPet = result.rows[0];
+
+        // Fire-and-forget: notify admin of new listing awaiting approval.
+        // Fetch owner info first, then send — all in background, never blocks the response.
+        Promise.resolve().then(async () => {
+            try {
+                const ownerRes = await db.query(
+                    'SELECT name, email FROM users WHERE user_id = $1',
+                    [userId]
+                );
+                await sendNewListingNotification({
+                    pet_id: newPet.pet_id,
+                    pet_name: newPet.pet_name,
+                    pet_type: String(newPet.pet_type),
+                    listing_type: newPet.listing_type,
+                    owner_name: ownerRes.rows[0]?.name,
+                    owner_email: ownerRes.rows[0]?.email,
+                });
+            } catch (err) {
+                console.error('❌ [pets/POST] listing notification email failed:', err);
+            }
+        });
+
+        return NextResponse.json(newPet, { status: 201 });
 
     } catch (error) {
         console.error("V1 Pets POST error:", error);

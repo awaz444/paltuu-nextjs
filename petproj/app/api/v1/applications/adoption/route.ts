@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { AdoptionNotifications } from "@/lib/notifications";
+import { sendAdoptionApplicationEmails } from "@/utils/mailjet";
 
 /**
  * @swagger
@@ -104,7 +105,7 @@ export async function POST(req: NextRequest) {
 
         const applicationId = result.rows[0].adoption_id;
 
-        // 3. Create Notification
+        // 3. In-app Notification
         AdoptionNotifications.onApplicationSubmitted(
             ownerId,
             userId,
@@ -112,6 +113,29 @@ export async function POST(req: NextRequest) {
             petName,
             adopter_name || 'Someone'
         ).catch(console.error);
+
+        // 4. Email notifications (fire-and-forget — never blocks the response)
+        Promise.resolve().then(async () => {
+            try {
+                // Fetch owner email and applicant email in parallel
+                const [ownerRes, applicantRes] = await Promise.all([
+                    db.query('SELECT name, email FROM users WHERE user_id = $1', [ownerId]),
+                    db.query('SELECT name, email FROM users WHERE user_id = $1', [userId]),
+                ]);
+
+                await sendAdoptionApplicationEmails({
+                    pet_name: petName,
+                    pet_id: pet_id,
+                    adopter_name: adopter_name || applicantRes.rows[0]?.name || 'Someone',
+                    adopter_email: applicantRes.rows[0]?.email,
+                    owner_name: ownerRes.rows[0]?.name,
+                    owner_email: ownerRes.rows[0]?.email,
+                    application_id: applicationId,
+                });
+            } catch (err) {
+                console.error('❌ [adoption/POST] application email failed:', err);
+            }
+        });
 
         return NextResponse.json({ success: true, applicationId });
 

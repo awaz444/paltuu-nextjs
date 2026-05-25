@@ -11,7 +11,7 @@ import { validate } from "@/utils/validation";
  * /api/v1/auth/login:
  *   post:
  *     summary: Mobile Login (v1)
- *     description: Authenticate user and return JWT token pair for mobile application.
+ *     description: Authenticate user and return JWT token pair for mobile application. Accepts either email or username as the login identifier.
  *     tags: [v1 Auth]
  *     requestBody:
  *       required: true
@@ -20,7 +20,7 @@ import { validate } from "@/utils/validation";
  *           schema:
  *             type: object
  *             properties:
- *               email: { type: string }
+ *               email: { type: string, description: 'Email address OR username' }
  *               password: { type: string }
  *     responses:
  *       200:
@@ -31,34 +31,42 @@ import { validate } from "@/utils/validation";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const email = body?.email?.toString().trim().toLowerCase();
+    // Accept 'email' field as either an email address or a username (Instagram-style)
+    const rawIdentifier = (body?.email ?? body?.username)?.toString().trim();
     const password = body?.password?.toString();
-    
-    // Schema Validation
-    const validation = validate({ email, password }, {
-      email: { required: true, type: 'email' },
-      password: { required: true, min: 3 }
-    });
 
-    if (!validation.success) {
-      return NextResponse.json({ message: "Validation failed", errors: validation.errors }, { status: 400 });
+    if (!rawIdentifier || !password) {
+      return NextResponse.json({ message: "Validation failed", errors: { identifier: 'Email/username and password are required' } }, { status: 400 });
     }
 
-    // Rate limiting: 5 attempts per minute per email
-    const limiter = await rateLimit(`login:${email}`, 5, 60);
+    if (password.length < 3) {
+      return NextResponse.json({ message: "Validation failed", errors: { password: 'Password is too short' } }, { status: 400 });
+    }
+
+    // Determine if the identifier is an email or a username
+    const isEmail = rawIdentifier.includes('@');
+    const identifier = isEmail ? rawIdentifier.toLowerCase() : rawIdentifier.toLowerCase();
+
+    // Rate limiting: 5 attempts per minute per identifier
+    const limiter = await rateLimit(`login:${identifier}`, 5, 60);
     if (!limiter.success) {
       return NextResponse.json({ message: "Too many login attempts. Please try again later." }, { status: 429 });
     }
 
-    // 1. Fetch user
-    const result = await db.query(
-      'SELECT user_id, name, email, password, role, profile_image_url FROM users WHERE LOWER(email) = LOWER($1)',
-      [email]
-    );
-    
+    // 1. Fetch user by email OR username
+    const result = isEmail
+      ? await db.query(
+          'SELECT user_id, name, email, password, role, profile_image_url FROM users WHERE LOWER(email) = LOWER($1)',
+          [identifier]
+        )
+      : await db.query(
+          'SELECT user_id, name, email, password, role, profile_image_url FROM users WHERE LOWER(username) = LOWER($1)',
+          [identifier]
+        );
+
     if ((result.rowCount ?? 0) === 0) {
-      console.warn(`[auth/login] user_not_found email=${email}`);
-      return NextResponse.json({ message: "Invalid email or password" }, { status: 401 });
+      console.warn(`[auth/login] user_not_found identifier=${identifier} isEmail=${isEmail}`);
+      return NextResponse.json({ message: "Invalid email/username or password" }, { status: 401 });
     }
 
     const user = result.rows[0];
@@ -68,7 +76,7 @@ export async function POST(req: Request) {
     // If a legacy password logs in, immediately migrate it to bcrypt.
     const rawInputPassword = typeof password === "string" ? password : "";
     const trimmedInputPassword = rawInputPassword.trim();
-    const emailVariants = Array.from(new Set([email, email.trim(), email.toLowerCase()]));
+    const emailVariants = Array.from(new Set([identifier, identifier.trim(), identifier.toLowerCase()]));
     const legacyComposedCandidates = emailVariants.flatMap((mail) => [
       `${rawInputPassword}${mail}`,
       `${mail}${rawInputPassword}`,
@@ -136,7 +144,7 @@ export async function POST(req: Request) {
     if (!didUpgradeHash && isMatch && matchedInput !== rawInputPassword && matchedInput !== trimmedInputPassword) {
       const upgradedHash = await bcrypt.hash(trimmedInputPassword || rawInputPassword, 10);
       await db.query("UPDATE users SET password = $1 WHERE user_id = $2", [upgradedHash, user.user_id]);
-      console.log(`[auth/login] upgraded_legacy_strategy email=${email} user_id=${user.user_id}`);
+      console.log(`[auth/login] upgraded_legacy_strategy identifier=${identifier} user_id=${user.user_id}`);
     }
     if (!isMatch) {
       const kind = storedPasswordTrimmed.startsWith("$2y$")
@@ -151,8 +159,8 @@ export async function POST(req: Request) {
             ? "sha256"
             : "plain_or_unknown";
       console.warn(`[auth/login] stored_password kind=${kind} len=${storedPasswordTrimmed.length}`);
-      console.warn(`[auth/login] password_mismatch email=${email} user_id=${user.user_id}`);
-      return NextResponse.json({ message: "Invalid email or password" }, { status: 401 });
+      console.warn(`[auth/login] password_mismatch identifier=${identifier} user_id=${user.user_id}`);
+      return NextResponse.json({ message: "Invalid email/username or password" }, { status: 401 });
     }
 
     // 3. Generate tokens

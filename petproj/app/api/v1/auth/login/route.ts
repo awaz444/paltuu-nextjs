@@ -60,7 +60,7 @@ export async function POST(req: Request) {
           [identifier]
         )
       : await db.query(
-          'SELECT user_id, name, email, password, role, profile_image_url FROM users WHERE LOWER(username) = LOWER($1)',
+          'SELECT user_id, name, email, password, role, profile_image_url FROM users WHERE LOWER(social_username) = LOWER($1)',
           [identifier]
         );
 

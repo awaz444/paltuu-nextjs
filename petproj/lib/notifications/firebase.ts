@@ -7,7 +7,7 @@ import * as admin from "firebase-admin";
 
 let firebaseApp: admin.app.App | null = null;
 
-export function initializeFirebase(): admin.app.App {
+export function initializeFirebase(): admin.app.App | null {
   // Return cached instance if already initialized
   if (firebaseApp) {
     return firebaseApp;
@@ -16,10 +16,11 @@ export function initializeFirebase(): admin.app.App {
   const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT;
 
   if (!serviceAccountBase64) {
-    throw new Error(
-      "FIREBASE_SERVICE_ACCOUNT environment variable is not set. " +
-      "Please set it to your Firebase service account JSON (base64 encoded)."
+    console.warn(
+      "⚠️ FIREBASE_SERVICE_ACCOUNT environment variable is not set. " +
+      "Push notifications will be disabled."
     );
+    return null;
   }
 
   try {
@@ -36,24 +37,24 @@ export function initializeFirebase(): admin.app.App {
     return firebaseApp;
   } catch (error) {
     console.error("❌ Failed to initialize Firebase Admin SDK:", error);
-    throw new Error(
-      `Firebase initialization failed: ${error instanceof Error ? error.message : String(error)}`
-    );
+    return null;
   }
 }
 
 /**
  * Get Firebase Messaging instance
  */
-export function getMessaging(): admin.messaging.Messaging {
+export function getMessaging(): admin.messaging.Messaging | null {
   const app = initializeFirebase();
+  if (!app) return null;
   return admin.messaging(app);
 }
 
 /**
  * Get Firebase Admin instance
  */
-export function getFirebaseAdmin(): typeof admin {
-  initializeFirebase();
+export function getFirebaseAdmin(): typeof admin | null {
+  const app = initializeFirebase();
+  if (!app) return null;
   return admin;
 }

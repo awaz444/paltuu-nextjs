@@ -105,14 +105,24 @@ export async function POST(req: NextRequest) {
 
         // 3. Create Notifications
         await db.query(`
-            INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
-            VALUES ($1, $2, 'foster_application_submission', false, NOW())
-        `, [userId, `Your foster application for ${petName} has been submitted successfully!`]);
+            INSERT INTO notifications (user_id, title, body, type, is_read, created_at)
+            VALUES ($1, $2, $3, $4, false, NOW())
+        `, [
+            userId,
+            'Application Submitted',
+            `Your foster application for ${petName} has been submitted successfully!`,
+            'foster_application_submission'
+        ]);
 
         await db.query(`
-            INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
-            VALUES ($1, $2, 'new_foster_application', false, NOW())
-        `, [ownerId, `New foster application received for ${petName}!`]);
+            INSERT INTO notifications (user_id, title, body, type, is_read, created_at)
+            VALUES ($1, $2, $3, $4, false, NOW())
+        `, [
+            ownerId,
+            'New Application Received',
+            `New foster application received for ${petName}!`,
+            'new_foster_application'
+        ]);
 
         return NextResponse.json({ success: true, fosterId });
 

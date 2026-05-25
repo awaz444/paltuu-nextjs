@@ -104,9 +104,9 @@ export async function PATCH(req: NextRequest) {
             await db.query(`UPDATE vet_verification_application SET status = 'approved' WHERE vet_id = $1`, [vet_id]);
 
             await db.query(`
-                INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
-                VALUES ($1, 'Your professional profile has been verified!', 'vet_verification', false, NOW())
-            `, [result.rows[0].user_id]);
+                INSERT INTO notifications (user_id, title, body, type, is_read, created_at)
+                VALUES ($1, $2, $3, $4, false, NOW())
+            `, [result.rows[0].user_id, 'Vet Profile Verified', 'Your professional profile has been verified!', 'vet_verification']);
 
             return NextResponse.json({ success: true, message: "Vet approved" });
         } else {
@@ -117,9 +117,9 @@ export async function PATCH(req: NextRequest) {
             await db.query(`UPDATE vet_verification_application SET status = 'rejected' WHERE vet_id = $1`, [vet_id]);
 
             await db.query(`
-                INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
-                VALUES ($1, 'Your professional verification request was not approved. Please review your details and try again.', 'vet_verification', false, NOW())
-            `, [vetResult.rows[0].user_id]);
+                INSERT INTO notifications (user_id, title, body, type, is_read, created_at)
+                VALUES ($1, $2, $3, $4, false, NOW())
+            `, [vetResult.rows[0].user_id, 'Verification Status Update', 'Your professional verification request was not approved. Please review your details and try again.', 'vet_verification']);
 
             return NextResponse.json({ success: true, message: "Vet rejected" });
         }

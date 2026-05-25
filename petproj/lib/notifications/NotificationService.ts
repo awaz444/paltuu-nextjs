@@ -146,6 +146,10 @@ export class NotificationService {
 
       // 3. Build FCM payload
       const messaging = getMessaging();
+      if (!messaging) {
+        console.log(`ℹ️ FCM push skipped for user ${userId}: Firebase is not configured`);
+        return;
+      }
       const fcmPayload = {
         tokens,
         notification: {
@@ -256,7 +260,12 @@ export class NotificationService {
         FROM notifications n
         LEFT JOIN users u ON u.user_id = n.sender_id
         WHERE n.user_id = $1 ${filterCondition}
-        ORDER BY COALESCE(n.created_at, n.date_sent) DESC
+          AND (n.sender_id IS NULL OR NOT EXISTS (
+              SELECT 1 FROM user_blocks b 
+              WHERE (b.blocker_id = $1 AND b.blocked_id = n.sender_id)
+                 OR (b.blocker_id = n.sender_id AND b.blocked_id = $1)
+          ))
+        ORDER BY n.created_at DESC
         LIMIT $2 OFFSET $3
         `,
         [userId, limit + 1, cursor]
@@ -274,13 +283,14 @@ export class NotificationService {
         deep_link: row.deep_link,
         image_url: row.image_url,
         is_read: row.is_read,
-        created_at: row.created_at || row.date_sent,
+        created_at: row.created_at,
+        date_sent: row.created_at,
         sender: row.sender_user_id
           ? {
-              user_id: row.sender_user_id,
-              name: row.sender_name,
-              profile_image_url: row.sender_image,
-            }
+            user_id: row.sender_user_id,
+            name: row.sender_name,
+            profile_image_url: row.sender_image,
+          }
           : null,
       }));
 
@@ -364,7 +374,12 @@ export class NotificationService {
   static async getUnreadCount(userId: number): Promise<number> {
     try {
       const result = await db.query(
-        `SELECT COUNT(*) as count FROM notifications WHERE user_id = $1 AND is_read = false`,
+        `SELECT COUNT(*) as count FROM notifications n WHERE n.user_id = $1 AND n.is_read = false
+          AND (n.sender_id IS NULL OR NOT EXISTS (
+              SELECT 1 FROM user_blocks b 
+              WHERE (b.blocker_id = $1 AND b.blocked_id = n.sender_id)
+                 OR (b.blocker_id = n.sender_id AND b.blocked_id = $1)
+          ))`,
         [userId]
       );
       return parseInt(result.rows[0]?.count || "0", 10);
@@ -435,6 +450,10 @@ export class NotificationService {
   ): Promise<boolean> {
     try {
       const messaging = getMessaging();
+      if (!messaging) {
+        console.log(`ℹ️ FCM topic notification skipped for topic '${topic}': Firebase is not configured`);
+        return false;
+      }
 
       const fcmPayload = {
         topic,

@@ -4,7 +4,7 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 import { emitComment, emitNotification } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { SocialNotifications } from "@/lib/notifications";
-import { assertNotBlocked } from "@/lib/moderation";
+import { assertNotBlocked, checkIsBlocked } from "@/lib/moderation";
 
 export const dynamic = "force-dynamic";
 
@@ -102,11 +102,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         let root_comment_id = null;
         let parentAuthorId: number | null = null;
 
-        await db.query('BEGIN');
+        // Check out a dedicated client so BEGIN/INSERT/COMMIT all run on ONE connection
+        const client = await db.connect();
+        let comment: any;
         try {
+            await client.query('BEGIN');
+
             // Find depth + root if reply
             if (parent_comment_id) {
-                const parent = await db.query(
+                const parent = await client.query(
                     "SELECT depth, root_comment_id, comment_id, user_id FROM social_comments WHERE comment_id = $1",
                     [parent_comment_id]
                 );
@@ -114,77 +118,86 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                     depth = (parent.rows[0].depth || 0) + 1;
                     root_comment_id = parent.rows[0].root_comment_id || parent.rows[0].comment_id;
                     parentAuthorId = parent.rows[0].user_id;
-                    await assertNotBlocked(userId, parentAuthorId as number);
+                    // Block check for parent comment author
+                    const blocked = await checkIsBlocked(userId, parentAuthorId as number);
+                    if (blocked) {
+                        await client.query('ROLLBACK');
+                        client.release();
+                        return NextResponse.json({ error: "BLOCKED" }, { status: 403 });
+                    }
                 }
             }
 
-            const result = await db.query(`
+            const result = await client.query(`
                 INSERT INTO social_comments
                     (post_id, user_id, parent_comment_id, root_comment_id, content, depth)
                 VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING *
             `, [postId, userId, parent_comment_id || null, root_comment_id, content.trim(), depth]);
 
-            const comment = result.rows[0];
+            comment = result.rows[0];
 
             // Increment comment count on post
-            await db.query(
+            await client.query(
                 "UPDATE social_posts SET comment_count = comment_count + 1 WHERE post_id = $1",
                 [postId]
             );
 
-            // Send notifications (fire-and-forget)
-            const commenterRes = await db.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]);
-            const commenter = commenterRes.rows[0];
-            const postImageRes = await db.query(`SELECT (SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1) as image_url`, [postId]);
-            const postImage = postImageRes.rows[0]?.image_url;
-
-            // Notification: post author (if commenting on someone else's post)
-            if (postAuthorId !== userId) {
-                SocialNotifications.onPostCommented(
-                    postAuthorId,
-                    userId,
-                    parseInt(postId),
-                    commenter?.name || 'User',
-                    commenter?.profile_image_url,
-                    postImage
-                ).catch(() => {});
-            }
-
-            // Notification: parent comment author (if replying to someone else's comment)
-            if (parentAuthorId && parentAuthorId !== userId && parentAuthorId !== postAuthorId) {
-                SocialNotifications.onCommentReplied(
-                    parentAuthorId,
-                    userId,
-                    comment.comment_id,
-                    commenter?.name || 'User',
-                    commenter?.profile_image_url
-                ).catch(() => {});
-            }
-
-            await db.query('COMMIT');
-
-            // Real-time: push comment to all viewers of the post (fire and forget)
-            emitComment(postId, {
-                ...comment,
-                author_name: undefined, // fetched client-side
-            }).catch(() => {});
-
-            // Real-time: push notification to post author
-            if (postAuthorId !== userId) {
-                emitNotification(postAuthorId, {
-                    type: 'social_comment',
-                    post_id: postId,
-                    comment_id: comment.comment_id,
-                }).catch(() => {});
-            }
-
-            return NextResponse.json(comment, { status: 201 });
-
+            await client.query('COMMIT');
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
+            client.release();
             throw e;
         }
+        client.release();
+
+        // Fetch notification metadata AFTER the transaction (pool queries, non-blocking)
+        const commenterRes = await db.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]);
+        const commenter = commenterRes.rows[0];
+        const postImageRes = await db.query(`SELECT (SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1) as image_url`, [postId]);
+        const postImage = postImageRes.rows[0]?.image_url;
+
+        // Notification: post author (if commenting on someone else's post)
+        if (postAuthorId !== userId) {
+            SocialNotifications.onPostCommented(
+                postAuthorId,
+                userId,
+                parseInt(postId),
+                commenter?.name || 'User',
+                content.trim(),
+                postImage
+            ).catch(() => {});
+        }
+
+        // Notification: parent comment author (if replying to someone else's comment)
+        if (parentAuthorId && parentAuthorId !== userId && parentAuthorId !== postAuthorId) {
+            SocialNotifications.onCommentReplied(
+                parentAuthorId,
+                userId,
+                parseInt(postId),
+                commenter?.name || 'User',
+                postImage
+            ).catch(() => {});
+        }
+
+        // Real-time: push comment to all viewers of the post (fire and forget)
+        emitComment(postId, {
+            ...comment,
+            author_name: commenter?.name,
+            author_image: commenter?.profile_image_url ?? null,
+            social_username: null,
+        }).catch(() => {});
+
+        // Real-time: push notification to post author
+        if (postAuthorId !== userId) {
+            emitNotification(postAuthorId, {
+                type: 'social_comment',
+                post_id: postId,
+                comment_id: comment.comment_id,
+            }).catch(() => {});
+        }
+
+        return NextResponse.json(comment, { status: 201 });
 
     } catch (error: any) {
         if (error.message === 'BLOCKED') {

@@ -52,9 +52,15 @@ export async function PATCH(req: NextRequest) {
 
             // 3. Notify Applicant
             await db.query(`
-                INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent, entity_type, entity_id)
-                VALUES ($1, $2, $3, false, CURRENT_TIMESTAMP, 'foster', $4)
-            `, [applicant_id, `Your foster request for ${pet_name} has been ${status}.`, 'foster_application_update', id]);
+                INSERT INTO notifications (user_id, title, body, type, is_read, created_at, entity_type, entity_id)
+                VALUES ($1, $2, $3, $4, false, NOW(), 'foster', $5)
+            `, [
+                applicant_id,
+                'Foster Request Status Update',
+                `Your foster request for ${pet_name} has been ${status}.`,
+                'foster_application_update',
+                id
+            ]);
 
             await db.query('COMMIT');
             return NextResponse.json(result.rows[0]);

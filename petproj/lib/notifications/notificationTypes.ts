@@ -19,6 +19,7 @@ export enum NotificationType {
   ADOPTION_APPLICATION_APPROVED = "adoption_application_approved",
   ADOPTION_APPLICATION_REJECTED = "adoption_application_rejected",
   ADOPTION_NEW_LISTING_MATCH = "adoption_new_listing_match",
+  ADOPTION_LISTING_APPROVED = "adoption_listing_approved",
 
   // Bazaar
   BAZAAR_ORDER_CONFIRMED = "bazaar_order_confirmed",
@@ -69,7 +70,7 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
   [NotificationType.SOCIAL_POST_COMMENT]: {
     type: NotificationType.SOCIAL_POST_COMMENT,
     title: (data) => data.sender_name || "Someone",
-    body: (data) => `commented: "${data.preview || ''}"`,
+    body: "commented on your post",
     deepLinkPattern: "paltuu://social/post/{entity_id}",
   },
   [NotificationType.SOCIAL_COMMENT_REPLY]: {
@@ -132,6 +133,12 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
     type: NotificationType.ADOPTION_NEW_LISTING_MATCH,
     title: "New Match Found",
     body: "A new rescue matching your preferences was listed",
+    deepLinkPattern: "paltuu://adoptions/{entity_id}",
+  },
+  [NotificationType.ADOPTION_LISTING_APPROVED]: {
+    type: NotificationType.ADOPTION_LISTING_APPROVED,
+    title: "Listing Approved 🎉",
+    body: (data) => `Your listing "${data.pet_name}" has been approved!`,
     deepLinkPattern: "paltuu://adoptions/{entity_id}",
   },
 

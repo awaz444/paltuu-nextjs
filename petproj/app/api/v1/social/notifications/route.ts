@@ -6,8 +6,8 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/v1/social/notifications
- * Fetch social notifications for the logged-in user
- * ?cursor=timestamp&limit=20&unread_only=true
+ * Fetch notifications for the logged-in user
+ * ?cursor=timestamp&limit=20&filter=social|adoptions|orders&unread_only=true
  */
 export async function GET(req: NextRequest) {
     try {
@@ -17,11 +17,11 @@ export async function GET(req: NextRequest) {
         const { searchParams } = new URL(req.url);
         const limit = Math.min(50, parseInt(searchParams.get("limit") || "20", 10));
         const cursor = searchParams.get("cursor");
+        const filter = searchParams.get("filter"); // social | adoptions | orders
         const unreadOnly = searchParams.get("unread_only") === "true";
 
         const conditions: string[] = [
             "n.user_id = $1",
-            "n.notification_type LIKE 'social_%'",
             `(n.sender_id IS NULL OR NOT EXISTS (
                 SELECT 1 FROM user_blocks b 
                 WHERE (b.blocker_id = $1 AND b.blocked_id = n.sender_id)
@@ -31,8 +31,22 @@ export async function GET(req: NextRequest) {
         const queryParams: any[] = [userId, limit];
         let paramIndex = 3;
 
+        // Type filter
+        if (filter && filter !== 'all') {
+            const typeMap: Record<string, string> = {
+                social: 'social_%',
+                adoptions: 'adoption_%',
+                orders: 'bazaar_%',
+            };
+            const pattern = typeMap[filter];
+            if (pattern) {
+                conditions.push(`n.type LIKE $${paramIndex++}`);
+                queryParams.push(pattern);
+            }
+        }
+
         if (cursor) {
-            conditions.push(`n.date_sent < $${paramIndex++}`);
+            conditions.push(`n.created_at < $${paramIndex++}`);
             queryParams.push(cursor);
         }
         if (unreadOnly) {
@@ -44,41 +58,43 @@ export async function GET(req: NextRequest) {
         const result = await db.query(`
             SELECT 
                 n.*,
-                -- actor info (entity_id holds actor user_id for follow notifs)
-                CASE 
-                    WHEN n.notification_type = 'social_follow' THEN actor.name
-                    ELSE actor2.name
-                END AS actor_name,
-                CASE 
-                    WHEN n.notification_type = 'social_follow' THEN actor.profile_image_url
-                    ELSE actor2.profile_image_url
-                END AS actor_image,
-                CASE 
-                    WHEN n.notification_type = 'social_follow' THEN actor.social_username
-                    ELSE actor2.social_username
-                END AS actor_social_username
+                u.name              AS sender_name,
+                u.profile_image_url AS sender_image,
+                u.social_username   AS sender_social_username
             FROM notifications n
-            -- For follow notifs, entity_id = follower user_id
-            LEFT JOIN users actor ON n.notification_type = 'social_follow' 
-                AND actor.user_id = n.entity_id
-            -- For post notifs, join via the post's user_id
-            LEFT JOIN social_posts sp ON n.notification_type != 'social_follow' 
-                AND sp.post_id::text = n.entity_id::text
-            LEFT JOIN users actor2 ON actor2.user_id = sp.user_id
+            LEFT JOIN users u ON u.user_id = n.sender_id
             WHERE ${whereClause}
-            ORDER BY n.date_sent DESC
+            ORDER BY n.created_at DESC
             LIMIT $2
         `, queryParams);
 
-        const notifications = result.rows;
+        const notifications = result.rows.map((row: any) => ({
+            notification_id: row.notification_id,
+            type: row.type,
+            title: row.title,
+            body: row.body,
+            entity_type: row.entity_type,
+            entity_id: row.entity_id,
+            deep_link: row.deep_link,
+            image_url: row.image_url,
+            is_read: row.is_read,
+            created_at: row.created_at,
+            sender: row.sender_id ? {
+                user_id: row.sender_id,
+                name: row.sender_name,
+                profile_image_url: row.sender_image,
+                social_username: row.sender_social_username,
+            } : null,
+        }));
+
         const nextCursor = notifications.length === limit
-            ? notifications[notifications.length - 1].date_sent
+            ? notifications[notifications.length - 1].created_at
             : null;
 
-        // Get unread count
+        // Unread count (all types, not just filtered)
         const unreadRes = await db.query(
             `SELECT COUNT(*) AS count FROM notifications 
-             WHERE user_id = $1 AND is_read = false AND notification_type LIKE 'social_%'
+             WHERE user_id = $1 AND is_read = false
              AND (sender_id IS NULL OR NOT EXISTS (
                  SELECT 1 FROM user_blocks b 
                  WHERE (b.blocker_id = $1 AND b.blocked_id = sender_id)
@@ -102,7 +118,7 @@ export async function GET(req: NextRequest) {
 
 /**
  * PATCH /api/v1/social/notifications
- * Mark all social notifications as read
+ * Mark all notifications as read
  */
 export async function PATCH(req: NextRequest) {
     try {
@@ -110,9 +126,7 @@ export async function PATCH(req: NextRequest) {
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         await db.query(
-            `UPDATE notifications 
-             SET is_read = true 
-             WHERE user_id = $1 AND is_read = false AND notification_type LIKE 'social_%'`,
+            `UPDATE notifications SET is_read = true WHERE user_id = $1 AND is_read = false`,
             [userId]
         );
 

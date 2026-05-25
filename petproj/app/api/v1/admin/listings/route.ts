@@ -1,6 +1,8 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/utils/authServer";
+import { NotificationService } from "@/lib/notifications/NotificationService";
+import { NotificationType, EntityType } from "@/lib/notifications/notificationTypes";
 
 /**
  * @swagger
@@ -56,10 +58,16 @@ export async function PATCH(req: NextRequest) {
         const pet = result.rows[0];
 
         if (approved) {
-            await db.query(`
-                INSERT INTO notifications (user_id, notification_content, notification_type, is_read, date_sent)
-                VALUES ($1, $2, 'listing_approval', false, NOW())
-            `, [pet.owner_id, `Your listing "${pet.pet_name}" has been approved!`]);
+            await NotificationService.createAndSend({
+                userId: pet.owner_id,
+                senderId: null, // System/admin notification, prevents self-notification skip during tests
+                type: NotificationType.ADOPTION_LISTING_APPROVED,
+                entityType: EntityType.ADOPTION_PET,
+                entityId: pet.pet_id,
+                customData: {
+                    pet_name: pet.pet_name
+                }
+            });
         }
 
         return NextResponse.json({ success: true, pet });

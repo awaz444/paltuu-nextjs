@@ -22,7 +22,7 @@ import {
     faHome,
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
-import PaltuuBazaarSection from "./PaltuuBazaarSection";
+// import PaltuuBazaarSection from "./PaltuuBazaarSection"; // Phase 1: Bazaar paused
 {
     /* Add this to your global CSS */
 }
@@ -93,8 +93,11 @@ const HeroSection = () => {
                             {/* Tagline */}
                             <h3 className="text-xl md:text-xl lg:text-2xl font-medium mb-0 md:mb-1">
                                 Get the Best for Your Pet —{" "}
-                                <Link href="/bazaar" className="underline decoration-gray-400 hover:decoration-black text-black">
+                                {/* <Link href="/bazaar" className="underline decoration-gray-400 hover:decoration-black text-black">
                                     Shop Bazaar
+                                </Link> */}
+                                <Link href="/marketplace" className="underline decoration-gray-400 hover:decoration-black text-black">
+                                    Shop Now
                                 </Link>
                             </h3>
                             <p className="text-base md:text-md text-gray-700 mb-6 mt-2 md:mb-8 max-w-lg">
@@ -107,7 +110,7 @@ const HeroSection = () => {
                                     connect with vets
                                 </Link>
                                 , and{" "}
-                                <Link href="/bazaar" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                <Link href="/marketplace" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
                                     shop pet products online
                                 </Link>.
                             </p>
@@ -177,7 +180,7 @@ const HeroSection = () => {
                                         </Link>.
                                     </li>
                                     <li>
-                                        <Link href="/bazaar" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                        <Link href="/marketplace" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
                                             Shop pet food & accessories
                                         </Link>{" "}
                                         online with nationwide delivery.
@@ -215,7 +218,7 @@ const HeroSection = () => {
             </section>
 
             {/* Paltuu Bazaar Section */}
-            <PaltuuBazaarSection />
+            {/* <PaltuuBazaarSection /> */}{/* Phase 1: Bazaar paused */}
 
             {/* How Paltuu Works Section */}
             <section className="pt-10 pb-20 px-6 lg:px-20 bg-white">
@@ -312,7 +315,7 @@ const HeroSection = () => {
                                 icon: faCat,
                                 title: "Cat Food",
                                 text: "Premium cat food, treats & nutrition for your feline",
-                                link: "/bazaar?category=cat-food",
+                                link: "/marketplace?category=cat-food", // Phase 1: was /bazaar?category=cat-food
                                 delay: "150",
                                 buttonText: "Shop Cat Food",
                             },
@@ -320,7 +323,7 @@ const HeroSection = () => {
                                 icon: faDog,
                                 title: "Dog Food",
                                 text: "Quality dog food & treats for your canine",
-                                link: "/bazaar?category=dog-food",
+                                link: "/marketplace?category=dog-food", // Phase 1: was /bazaar?category=dog-food
                                 delay: "200",
                                 buttonText: "Shop Dog Food",
                             },
@@ -328,7 +331,7 @@ const HeroSection = () => {
                                 icon: faShoppingCart,
                                 title: "Pet Litter",
                                 text: "Cat litter, training pads & hygiene products",
-                                link: "/bazaar?category=litter",
+                                link: "/marketplace?category=litter", // Phase 1: was /bazaar?category=litter
                                 delay: "250",
                                 buttonText: "Buy Litter",
                             },
@@ -336,7 +339,7 @@ const HeroSection = () => {
                                 icon: faHeart,
                                 title: "Pet Grooming",
                                 text: "Shampoos, brushes & grooming essentials",
-                                link: "/bazaar?category=grooming",
+                                link: "/marketplace?category=grooming", // Phase 1: was /bazaar?category=grooming
                                 delay: "300",
                                 buttonText: "Shop Grooming",
                             },
@@ -344,7 +347,7 @@ const HeroSection = () => {
                                 icon: faGift,
                                 title: "Pet Accessories",
                                 text: "Toys, collars, beds & fun accessories for pets",
-                                link: "/bazaar?category=accessories",
+                                link: "/marketplace?category=accessories", // Phase 1: was /bazaar?category=accessories
                                 delay: "350",
                                 buttonText: "Shop Accessories",
                             },
@@ -527,12 +530,20 @@ const HeroSection = () => {
 
                         {/* Visible Micro-CTAs */}
                         <div className="flex flex-wrap gap-3 mt-auto pt-4 border-t border-primary/10 justify-center">
-                            <Link
+                            {/* Phase 1: Bazaar paused — was linking to /bazaar */}
+                            {/* <Link
                                 href="/bazaar"
                                 className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
                             >
                                 <FontAwesomeIcon icon={faShoppingCart} className="mr-2 text-sm" />
                                 <span className="whitespace-nowrap">Shop Bazaar</span>
+                            </Link> */}
+                            <Link
+                                href="/marketplace"
+                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
+                            >
+                                <FontAwesomeIcon icon={faShoppingCart} className="mr-2 text-sm" />
+                                <span className="whitespace-nowrap">Shop Now</span>
                             </Link>
                             <Link
                                 href="/lost-and-found"

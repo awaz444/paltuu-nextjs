@@ -166,12 +166,13 @@ const Navbar = ({
       icon: "bi-file-earmark-text",
       isAction: false,
     },
-    {
-      href: "/my-orders",
-      label: "My Orders",
-      icon: "bi-bag",
-      isAction: false,
-    },
+    // Phase 1: My Orders hidden while Bazaar is paused
+    // {
+    //   href: "/my-orders",
+    //   label: "My Orders",
+    //   icon: "bi-bag",
+    //   isAction: false,
+    // },
     {
       href: "/notifications",
       label: "Notifications",
@@ -324,7 +325,7 @@ const Navbar = ({
   // Navigation Links
   const defaultLinks = [
     { name: "Pets", href: "browse-pets" },
-    { name: "Bazaar", href: "bazaar" },
+    // { name: "Bazaar", href: "bazaar" }, // Phase 1: Bazaar paused
     { name: "Pet Care", href: "pet-care" },
     { name: "Lost & Found", href: "lost-and-found" },
     //{ name: "Paltuu AI", href: "llm" },
@@ -386,8 +387,8 @@ const Navbar = ({
           <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} priority />
         </Link>
 
-        {/* Right: Cart */}
-        <div className="flex items-center right-2">
+        {/* Right: Cart — Phase 1: hidden while Bazaar is paused */}
+        {/* <div className="flex items-center right-2">
           {!hideCart && (
             <button
               onClick={() => setIsCartModalOpen(true)}
@@ -402,7 +403,8 @@ const Navbar = ({
               )}
             </button>
           )}
-        </div>
+        </div> */}
+        <div className="w-8" />
       </div>
 
       {/* Mobile Drawer + Backdrop */}
@@ -608,8 +610,8 @@ const Navbar = ({
         </div>
 
         <div className="hidden lg:flex items-center gap-8 mr-14">
-          {/* Cart */}
-          {!hideCart && (
+          {/* Cart — Phase 1: hidden while Bazaar is paused */}
+          {false && !hideCart && (
             <div
               className="relative"
               onMouseEnter={handleCartMouseEnter}
@@ -1007,11 +1009,12 @@ const Navbar = ({
                             My Applications
                           </div>
                         </Link>
-                        <Link href="/my-orders">
+                        {/* Phase 1: My Orders hidden while Bazaar is paused */}
+                        {/* <Link href="/my-orders">
                           <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
                             <i className="bi bi-bag text-gray-600"></i> My Orders
                           </div>
-                        </Link>
+                        </Link> */}
                         <Link href="/notifications">
                           <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
                             <i className="bi bi-bell text-gray-600"></i>{" "}
@@ -1040,10 +1043,11 @@ const Navbar = ({
           )}
         </div>
       </div>
-      <MobileCartModal
+      {/* Phase 1: MobileCartModal hidden while Bazaar is paused */}
+      {/* <MobileCartModal
         isOpen={isCartModalOpen}
         onClose={() => setIsCartModalOpen(false)}
-      />
+      /> */}
     </nav>
   );
 };

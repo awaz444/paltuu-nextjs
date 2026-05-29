@@ -149,6 +149,13 @@ function MarketplaceClient() {
 
   return (
     <div className="fullBody">
+      {/* Phase 1: Bazaar temporarily paused notice */}
+      <div className="bg-amber-50 border-b border-amber-200 py-3 px-4 text-center">
+        <p className="text-amber-800 text-sm font-medium">
+          🚧 Paltuu Bazaar is temporarily paused while we upgrade our shopping experience.
+          You can still browse all products — online ordering will be back soon.
+        </p>
+      </div>
 
       <ProductFilterSection
         filters={filters}

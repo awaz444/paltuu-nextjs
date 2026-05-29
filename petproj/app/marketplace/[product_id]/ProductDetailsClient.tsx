@@ -378,6 +378,15 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         />
         <meta name="twitter:image" content={product?.images?.[0] || ""} />
       </Head>
+      {/* Phase 1: Bazaar temporarily paused notice — keep for SEO, remove when Bazaar relaunches */}
+      <div className="bg-amber-50 border-b border-amber-200 py-3 px-4 text-center">
+        <p className="text-amber-800 text-sm font-medium">
+          🚧 Paltuu Bazaar is temporarily paused while we upgrade our shopping experience.
+          Product pages are still live so you can browse — online ordering will be back soon.
+          For urgent orders, reach us on Instagram{" "}
+          <a href="https://instagram.com/paltuu.pk" className="underline font-semibold">@paltuu.pk</a>.
+        </p>
+      </div>
       <div className="product-details min-h-screen bg-gray-50 py-8 px-4 md:px-8">
         <div className="mx-auto max-w-6xl">
           {/* Back Button */}

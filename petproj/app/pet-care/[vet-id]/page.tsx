@@ -115,5 +115,60 @@ export default async function VetPage({
     params: { "vet-id": string };
 }) {
     const vet = await getVet(params["vet-id"]);
-    return <VetDetailsClient params={params} initialVet={vet ?? undefined} />;
+
+    const vetJsonLd = vet
+        ? {
+              "@context": "https://schema.org",
+              "@type": ["Veterinarian", "MedicalBusiness"],
+              "name": vet.vet_name,
+              "description": vet.bio || `Veterinarian at ${vet.clinic_name || "a clinic"} in ${vet.city || "Pakistan"}`,
+              "image": vet.profile_image_url || undefined,
+              "url": `https://paltuu.pk/pet-care/${params["vet-id"]}`,
+              "telephone": vet.contact_details || undefined,
+              "email": vet.email || undefined,
+              "priceRange": vet.minimum_fee ? `PKR ${vet.minimum_fee}+` : "PKR",
+              "address": {
+                  "@type": "PostalAddress",
+                  "streetAddress": vet.location || undefined,
+                  "addressLocality": vet.city || undefined,
+                  "addressCountry": "PK"
+              },
+              ...(vet.clinic_name && {
+                  "parentOrganization": {
+                      "@type": "MedicalClinic",
+                      "name": vet.clinic_name,
+                      ...(vet.google_maps_link && { "hasMap": vet.google_maps_link })
+                  }
+              }),
+              "knowsAbout": ["Veterinary medicine", "Pet care", "Animal health"],
+              "areaServed": {
+                  "@type": "City",
+                  "name": vet.city || "Pakistan"
+              },
+              ...(vet.reviews?.length > 0 && {
+                  "aggregateRating": {
+                      "@type": "AggregateRating",
+                      "ratingValue": (
+                          vet.reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) /
+                          vet.reviews.length
+                      ).toFixed(1),
+                      "reviewCount": vet.reviews.length,
+                      "bestRating": 5,
+                      "worstRating": 1
+                  }
+              })
+          }
+        : null;
+
+    return (
+        <>
+            {vetJsonLd && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(vetJsonLd) }}
+                />
+            )}
+            <VetDetailsClient params={params} initialVet={vet ?? undefined} />
+        </>
+    );
 }

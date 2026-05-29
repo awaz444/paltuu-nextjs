@@ -109,7 +109,12 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         "@type": "Article",
         "headline": metadata.title,
         "description": metadata.description,
-        "image": metadata.featuredImage,
+        "image": {
+            "@type": "ImageObject",
+            "url": metadata.featuredImage,
+            "width": 1200,
+            "height": 630
+        },
         "datePublished": metadata.date,
         "dateModified": metadata.date,
         "author": {
@@ -120,16 +125,25 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         "publisher": {
             "@type": "Organization",
             "name": "Paltuu.pk",
+            "url": "https://paltuu.pk",
             "logo": {
                 "@type": "ImageObject",
-                "url": "https://paltuu.pk/logo.png"
+                "url": "https://paltuu.pk/paltu_logo.svg",
+                "width": 200,
+                "height": 80
             }
         },
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": `https://paltuu.pk/blogs/${metadata.slug}`
         },
-        "keywords": metadata.tags.join(', '),
+        "keywords": metadata.tags.join(", "),
+        "articleSection": metadata.category,
+        "inLanguage": "en-PK",
+        "about": {
+            "@type": "Thing",
+            "name": "Pet care in Pakistan"
+        }
     };
 
     return (

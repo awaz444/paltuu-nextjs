@@ -85,5 +85,53 @@ export default async function PetPage({
     params: { pet_id: string };
 }) {
     const pet = await getPet(params.pet_id);
-    return <PetDetailsClient params={params} initialPet={pet ?? undefined} />;
+
+    const firstImage =
+        pet?.images?.length > 0
+            ? [...pet.images].sort((a: any, b: any) => a.order - b.order)[0]?.image_url
+            : null;
+
+    const petJsonLd = pet
+        ? {
+              "@context": "https://schema.org",
+              "@type": "Product",
+              "name": `${pet.pet_name} — ${pet.pet_breed || "Mixed Breed"} for ${pet.listing_type === "adoption" || pet.listing_type === "rescue" ? "adoption" : "sale"} in ${pet.city || "Pakistan"}`,
+              "description": pet.description || `${pet.pet_name} is a ${pet.pet_breed || "mixed breed"} ${pet.listing_type === "adoption" ? "available for adoption" : "pet"} in ${pet.city || "Pakistan"}, Pakistan.`,
+              "image": firstImage ? [firstImage] : [],
+              "url": `https://paltuu.pk/browse-pets/${params.pet_id}`,
+              "offers": {
+                  "@type": "Offer",
+                  "availability":
+                      pet.adoption_status === "available"
+                          ? "https://schema.org/InStock"
+                          : "https://schema.org/SoldOut",
+                  "price": pet.price ?? 0,
+                  "priceCurrency": "PKR",
+                  "seller": {
+                      "@type": "Organization",
+                      "name": "Paltuu.pk",
+                      "url": "https://paltuu.pk"
+                  }
+              },
+              "additionalProperty": [
+                  { "@type": "PropertyValue", "name": "Species", "value": pet.pet_type },
+                  { "@type": "PropertyValue", "name": "Breed", "value": pet.pet_breed || "Mixed Breed" },
+                  { "@type": "PropertyValue", "name": "Sex", "value": pet.sex },
+                  { "@type": "PropertyValue", "name": "City", "value": pet.city },
+                  { "@type": "PropertyValue", "name": "Vaccinated", "value": pet.vaccinated ? "Yes" : "No" },
+              ].filter((p) => p.value),
+          }
+        : null;
+
+    return (
+        <>
+            {petJsonLd && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(petJsonLd) }}
+                />
+            )}
+            <PetDetailsClient params={params} initialPet={pet ?? undefined} />
+        </>
+    );
 }

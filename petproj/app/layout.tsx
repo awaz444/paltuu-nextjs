@@ -47,6 +47,61 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon-maroon.png" id="favicon" />
 
+        {/* Organization + WebSite JSON-LD — GEO signal for AI engines */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                "name": "Paltuu",
+                "alternateName": ["Paltuu.pk", "Paltu"],
+                "url": "https://paltuu.pk",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "https://paltuu.pk/paltu_logo.svg",
+                  "width": 200,
+                  "height": 80
+                },
+                "description": "Pakistan's first pet adoption and pet care platform — connecting pets with loving homes, verified vets, and quality pet products across Pakistan.",
+                "foundingDate": "2023",
+                "areaServed": {
+                  "@type": "Country",
+                  "name": "Pakistan"
+                },
+                "knowsAbout": [
+                  "Pet adoption",
+                  "Cat care",
+                  "Dog care",
+                  "Veterinary services",
+                  "Pet food",
+                  "Animal rescue"
+                ],
+                "sameAs": [
+                  "https://www.instagram.com/paltuu.pk",
+                  "https://www.facebook.com/paltuu.pk"
+                ]
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                "name": "Paltuu.pk",
+                "url": "https://paltuu.pk",
+                "description": "Pakistan's first pet adoption and care platform",
+                "potentialAction": {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "https://paltuu.pk/browse-pets?search={search_term_string}"
+                  },
+                  "query-input": "required name=search_term_string"
+                }
+              }
+            ])
+          }}
+        />
+
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1403927121021328"

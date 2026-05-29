@@ -989,7 +989,8 @@ const Navbar = ({
                                   : "Home"}
                           </div>
                         </Link>
-                        {userRole === "admin" && (
+                        {/* Phase 1: Orders hidden while Bazaar is paused */}
+                        {false && userRole === "admin" && (
                           <Link href="/orders">
                             <div className="dropdown-item flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer">
                               <i className="bi bi-card-list text-gray-600"></i>{" "}

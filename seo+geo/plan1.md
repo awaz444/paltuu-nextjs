@@ -40,6 +40,8 @@ Each vet should have:
 
 Title: "Dr. [Name] — Vet in [City] | Paltuu.pk"
 Keywords: vet + city name
+
+
 Phase 2 — GEO (Generative Engine Optimization)
 GEO = getting cited by ChatGPT, Gemini, Perplexity, Claude when someone asks about pets in Pakistan. These AIs pull from:
 

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Modal, Input, Select, Checkbox, Button } from "antd";
+import { Modal, Input, Select, Checkbox, Button, Upload } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/app/store/store";
 import { useRouter } from "next/navigation";
@@ -62,6 +63,10 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
     const [editingPet, setEditingPet] = useState<Pet | null>(null);
     const [successMessage, setSuccessMessage] = useState(false);
 
+    // Photo edit states
+    const [editingPetImages, setEditingPetImages] = useState<{ image_id: number; image_url: string; order: number }[]>([]);
+    const [loadingImages, setLoadingImages] = useState(false);
+    const [newFileList, setNewFileList] = useState<any[]>([]);
 
     const router = useRouter(); // Initialize router for navigation
 
@@ -103,8 +108,24 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
         setShowConfirm({ pet_id: null, show: false });
     };
 
-    const handleEdit = (pet: Pet) => {
+    const handleEdit = async (pet: Pet) => {
         setEditingPet(pet);
+        setEditingPetImages([]);
+        setNewFileList([]);
+        setLoadingImages(true);
+        try {
+            const response = await fetch(`/api/v1/pets/${pet.pet_id}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.images) {
+                    setEditingPetImages(data.images);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to load pet images:", error);
+        } finally {
+            setLoadingImages(false);
+        }
     };
 
     const handleUpdate = async () => {
@@ -115,12 +136,50 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
         dispatch(fetchFosterPets());
 
         try {
+            let uploadedUrls: string[] = [];
+            // 1. Upload new files if there are any
+            const filesToUpload = newFileList.filter(f => f.originFileObj);
+            if (filesToUpload.length > 0) {
+                const formData = new FormData();
+                filesToUpload.forEach((file) => {
+                    formData.append("files", file.originFileObj);
+                });
+                const uploadRes = await fetch("/api/v1/upload-image", {
+                    method: "POST",
+                    body: formData
+                });
+                if (uploadRes.ok) {
+                    const uploadData = await uploadRes.json();
+                    if (uploadData.urls) {
+                        uploadedUrls = uploadData.urls;
+                    }
+                } else {
+                    console.error("Failed to upload new images");
+                }
+            }
+
+            // 2. Combine and order final images
+            const finalImages = [
+                ...editingPetImages.map((img, index) => ({
+                    image_id: img.image_id,
+                    image_url: img.image_url,
+                    order: index
+                })),
+                ...uploadedUrls.map((url, index) => ({
+                    image_url: url,
+                    order: editingPetImages.length + index
+                }))
+            ];
+
             const response = await fetch(`/api/v1/pets/${editingPet.pet_id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(editingPet),
+                body: JSON.stringify({
+                    ...editingPet,
+                    images: finalImages
+                }),
             });
 
             if (!response.ok) {
@@ -132,6 +191,8 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
             }
 
             setEditingPet(null);
+            setNewFileList([]);
+            setEditingPetImages([]);
         } catch (error) {
             console.error("Update error:", error);
         } finally {
@@ -141,6 +202,8 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
 
     const handleCancel = () => {
         setEditingPet(null);
+        setNewFileList([]);
+        setEditingPetImages([]);
     };
 
     return (
@@ -255,6 +318,57 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
                     onCancel={handleCancel}
                     footer={null} // Hide default buttons
                     className="rounded-2xl">
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Pictures
+                        </label>
+                        {loadingImages ? (
+                            <div className="text-gray-500 text-sm py-2">Loading current photos...</div>
+                        ) : (
+                            <div className="space-y-4">
+                                {editingPetImages.length > 0 && (
+                                    <div className="grid grid-cols-3 gap-2 mb-2">
+                                        {editingPetImages.map((img) => (
+                                            <div key={img.image_id} className="relative aspect-square rounded-lg overflow-hidden border">
+                                                <img
+                                                    src={img.image_url}
+                                                    alt="Pet"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition shadow text-xs font-bold"
+                                                    onClick={() => {
+                                                        setEditingPetImages(prev => prev.filter(i => i.image_id !== img.image_id));
+                                                    }}
+                                                >
+                                                    &times;
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <Upload
+                                    listType="picture-card"
+                                    fileList={newFileList}
+                                    onChange={({ fileList }) => setNewFileList(fileList)}
+                                    beforeUpload={() => false}
+                                    multiple
+                                    accept="image/*"
+                                >
+                                    {newFileList.length + editingPetImages.length < 5 && (
+                                        <div>
+                                            <PlusOutlined />
+                                            <div style={{ marginTop: 8 }}>Upload</div>
+                                        </div>
+                                    )}
+                                </Upload>
+                                <p className="text-[10px] text-gray-500">Maximum 5 photos total.</p>
+                            </div>
+                        )}
+                    </div>
+
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700">
                             Pet Name

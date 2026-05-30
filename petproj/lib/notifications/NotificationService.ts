@@ -116,7 +116,8 @@ export class NotificationService {
   }
 
   /**
-   * Send FCM push to all devices of a user
+   * Send push notification to all devices of a user
+   * Automatically routes Expo Push Tokens to Expo Push API, and FCM tokens to Firebase
    */
   private static async sendPushToUser(
     userId: number,
@@ -124,7 +125,7 @@ export class NotificationService {
     template: ReturnType<typeof getNotificationTemplate>
   ): Promise<void> {
     try {
-      // 1. Fetch all FCM tokens for user
+      // 1. Fetch all tokens for user
       const devicesResult = await db.query(
         `SELECT fcm_token FROM user_devices WHERE user_id = $1`,
         [userId]
@@ -144,78 +145,142 @@ export class NotificationService {
       );
       const unreadCount = parseInt(unreadResult.rows[0]?.count || "0", 10);
 
-      // 3. Build FCM payload
-      const messaging = getMessaging();
-      if (!messaging) {
-        console.log(`ℹ️ FCM push skipped for user ${userId}: Firebase is not configured`);
-        return;
-      }
-      const fcmPayload = {
-        tokens,
-        notification: {
-          title: template.title.substring(0, 255),
-          body: template.body.substring(0, 255),
-        },
-        data: {
-          notification_id: String(notification.notification_id),
-          type: notification.type,
-          deep_link: template.deepLink || "",
-          entity_id: String(notification.entity_id || ""),
-          entity_type: notification.entity_type || "",
-        },
-        apns: {
-          payload: {
-            aps: {
-              badge: unreadCount,
-              sound: "default",
-            },
+      // Separate Expo push tokens from raw FCM tokens
+      const expoTokens = tokens.filter((t: string) => t.startsWith("ExponentPushToken") || t.startsWith("ExpoPushToken"));
+      const fcmTokens = tokens.filter((t: string) => !t.startsWith("ExponentPushToken") && !t.startsWith("ExpoPushToken"));
+
+      // 3. Send via Expo Push API if there are Expo tokens
+      if (expoTokens.length > 0) {
+        const expoPayload = expoTokens.map((token: string) => ({
+          to: token,
+          sound: "default",
+          title: template.title,
+          body: template.body,
+          badge: unreadCount,
+          data: {
+            notification_id: String(notification.notification_id),
+            type: notification.type,
+            deep_link: template.deepLink || "",
+            entity_id: String(notification.entity_id || ""),
+            entity_type: notification.entity_type || "",
           },
-        },
-        android: {
-          priority: "high" as const,
-          notification: {
-            sound: "default",
-            channel_id: "paltuu_default",
-          },
-        },
-      };
+        }));
 
-      // 4. Send multicast message
-      const response = await messaging.sendEachForMulticast({
-        tokens,
-        notification: fcmPayload.notification,
-        data: fcmPayload.data as Record<string, string>,
-        apns: fcmPayload.apns as any,
-        android: fcmPayload.android as any,
-      } as any);
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (process.env.EXPO_ACCESS_TOKEN) {
+          headers["Authorization"] = `Bearer ${process.env.EXPO_ACCESS_TOKEN}`;
+        }
 
-      console.log(`✅ FCM push sent to ${response.successCount}/${tokens.length} devices for user ${userId}`);
+        try {
+          const expoResponse = await fetch("https://exp.host/--/api/v2/push/send", {
+            method: "POST",
+            headers,
+            body: JSON.stringify(expoPayload),
+          });
 
-      // 5. Delete invalid tokens
-      if (response.failureCount > 0) {
-        const failedTokens: string[] = [];
-        response.responses.forEach((resp: any, idx: number) => {
-          if (!resp.success && tokens[idx]) {
-            const errorCode = (resp.error as any)?.code;
-            if (
-              errorCode === "messaging/invalid-registration-token" ||
-              errorCode === "messaging/registration-token-not-registered"
-            ) {
-              failedTokens.push(tokens[idx]);
+          const expoData = await expoResponse.json() as any;
+          console.log(`✅ Expo push sent to ${expoTokens.length} devices for user ${userId}`);
+
+          // Cleanup invalid Expo tokens
+          if (expoData?.data && Array.isArray(expoData.data)) {
+            const invalidTokens: string[] = [];
+            expoData.data.forEach((receipt: any, idx: number) => {
+              if (receipt.status === "error" && receipt.details?.error === "DeviceNotRegistered") {
+                if (expoTokens[idx]) {
+                  invalidTokens.push(expoTokens[idx]);
+                }
+              }
+            });
+
+            if (invalidTokens.length > 0) {
+              await db.query(
+                `DELETE FROM user_devices WHERE fcm_token = ANY($1)`,
+                [invalidTokens]
+              );
+              console.log(`🗑️ Deleted ${invalidTokens.length} invalid Expo tokens`);
             }
           }
-        });
+        } catch (expoErr) {
+          console.error("❌ Failed to send via Expo Push API:", expoErr);
+        }
+      }
 
-        if (failedTokens.length > 0) {
-          await db.query(
-            `DELETE FROM user_devices WHERE fcm_token = ANY($1)`,
-            [failedTokens]
-          );
-          console.log(`🗑️ Deleted ${failedTokens.length} invalid FCM tokens`);
+      // 4. Send via Firebase FCM if there are native FCM tokens
+      if (fcmTokens.length > 0) {
+        const messaging = getMessaging();
+        if (!messaging) {
+          console.log(`ℹ️ FCM push skipped for user ${userId}: Firebase is not configured`);
+          return;
+        }
+
+        const fcmPayload = {
+          tokens: fcmTokens,
+          notification: {
+            title: template.title.substring(0, 255),
+            body: template.body.substring(0, 255),
+          },
+          data: {
+            notification_id: String(notification.notification_id),
+            type: notification.type,
+            deep_link: template.deepLink || "",
+            entity_id: String(notification.entity_id || ""),
+            entity_type: notification.entity_type || "",
+          },
+          apns: {
+            payload: {
+              aps: {
+                badge: unreadCount,
+                sound: "default",
+              },
+            },
+          },
+          android: {
+            priority: "high" as const,
+            notification: {
+              sound: "default",
+              channel_id: "paltuu_default",
+            },
+          },
+        };
+
+        const response = await messaging.sendEachForMulticast({
+          tokens: fcmTokens,
+          notification: fcmPayload.notification,
+          data: fcmPayload.data as Record<string, string>,
+          apns: fcmPayload.apns as any,
+          android: fcmPayload.android as any,
+        } as any);
+
+        console.log(`✅ FCM push sent to ${response.successCount}/${fcmTokens.length} devices for user ${userId}`);
+
+        // Delete invalid FCM tokens
+        if (response.failureCount > 0) {
+          const failedTokens: string[] = [];
+          response.responses.forEach((resp: any, idx: number) => {
+            if (!resp.success && fcmTokens[idx]) {
+              const errorCode = (resp.error as any)?.code;
+              if (
+                errorCode === "messaging/invalid-registration-token" ||
+                errorCode === "messaging/registration-token-not-registered"
+              ) {
+                failedTokens.push(fcmTokens[idx]);
+              }
+            }
+          });
+
+          if (failedTokens.length > 0) {
+            await db.query(
+              `DELETE FROM user_devices WHERE fcm_token = ANY($1)`,
+              [failedTokens]
+            );
+            console.log(`🗑️ Deleted ${failedTokens.length} invalid FCM tokens`);
+          }
         }
       }
     } catch (error) {
-      console.error("❌ Failed to send FCM push:", error);
+      console.error("❌ Failed to send push notification:", error);
     }
   }
 

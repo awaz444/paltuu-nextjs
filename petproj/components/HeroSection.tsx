@@ -75,22 +75,11 @@ const HeroSection = () => {
 
                         {/* Hero Headings */}
                         <div className="-mt-4 md:mt-0">
-                            {" "}
-                            {/* Reduced from -mt-6 */}
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-0 md:mb-1">
-                                {" "}
-                                {/* Removed mb on mobile */}
-                                PAKISTAN'S
-                            </h1>
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-0 md:mb-1">
-                                {" "}
-                                {/* Removed mb on mobile */}
-                                <span className="text-primary">FIRST EVER</span>
-                            </h1>
                             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-2 md:mb-4">
-                                {" "}
-                                {/* Reduced mb on mobile */}
-                                PAW PORTAL
+                                <span className="block mb-0 md:mb-1">PAKISTAN'S</span>
+                                <span className="block text-primary mb-0 md:mb-1">FIRST EVER</span>
+                                <span className="block">PET ADOPTION</span>
+                                <span className="block">PLATFORM</span>
                             </h1>
                             {/* Tagline */}
                             <h3 className="text-xl md:text-xl lg:text-2xl font-medium mb-0 md:mb-1">

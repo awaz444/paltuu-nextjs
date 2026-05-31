@@ -306,7 +306,7 @@ const HeroSection = () => {
                                 icon: faCat,
                                 title: "Cat Food",
                                 text: "Premium cat food, treats & nutrition for your feline",
-                                link: "/marketplace?category=cat-food", // Phase 1: was /bazaar?category=cat-food
+                                link: "/marketplace/cat-food",
                                 delay: "150",
                                 buttonText: "Shop Cat Food",
                             },
@@ -314,7 +314,7 @@ const HeroSection = () => {
                                 icon: faDog,
                                 title: "Dog Food",
                                 text: "Quality dog food & treats for your canine",
-                                link: "/marketplace?category=dog-food", // Phase 1: was /bazaar?category=dog-food
+                                link: "/marketplace/dog-food",
                                 delay: "200",
                                 buttonText: "Shop Dog Food",
                             },
@@ -322,7 +322,7 @@ const HeroSection = () => {
                                 icon: faShoppingCart,
                                 title: "Pet Litter",
                                 text: "Cat litter, training pads & hygiene products",
-                                link: "/marketplace?category=litter", // Phase 1: was /bazaar?category=litter
+                                link: "/marketplace/litter",
                                 delay: "250",
                                 buttonText: "Buy Litter",
                             },

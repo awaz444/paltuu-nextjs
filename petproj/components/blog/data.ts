@@ -131,7 +131,7 @@ export const BLOG_POSTS: BlogPost[] = [
         content: `
             <h2>Physical Exam</h2>
             <p>The vet will check your pet's eyes, ears, teeth, and listen to their heart and lungs.</p>
-            
+
             <h2>Vaccinations</h2>
             <p>Keeping vaccinations up to date protects your pet from common and deadly diseases.</p>
         `,
@@ -140,6 +140,30 @@ export const BLOG_POSTS: BlogPost[] = [
         author: "Dr. Bilal",
         date: "January 15, 2024",
         readTime: "4 min read"
+    },
+    {
+        id: "7",
+        slug: "how-to-adopt-a-dog-pakistan",
+        title: "How to Adopt a Dog in Pakistan (Step-by-Step Guide)",
+        excerpt: "Learn the complete process of adopting a dog in Pakistan, from choosing the right breed to vaccination, costs, and preparation tips for your home.",
+        content: `
+            <h2>Why Adopt Instead of Buying?</h2>
+            <p>Adopting a dog in Pakistan saves a life and helps reduce the stray animal population in cities like Karachi, Lahore, and Islamabad. Adoption is more affordable than buying from breeders and most rescue dogs are already vaccinated and health-checked.</p>
+
+            <h2>The Adoption Process in Pakistan</h2>
+            <p>Browse available dogs on Paltuu's adoption section, fill out an adoption application, meet the dog, and sign an adoption agreement. Most shelters charge a fee of PKR 2,000–8,000 which covers vaccinations and care.</p>
+
+            <h2>Vaccination & Medical Requirements</h2>
+            <p>Ensure your adopted dog has received core vaccines including Rabies, Parvovirus, and Distemper. Schedule a vet visit within the first week. Find trusted vets near you on Paltuu's vet listings.</p>
+
+            <h2>Cost of Adopting a Dog in Pakistan</h2>
+            <p>First-year costs typically range from PKR 40,000–80,000 including adoption fee, vaccinations, food, and supplies. Monthly ongoing costs are PKR 4,000–14,000 for food, preventive medications, and grooming.</p>
+        `,
+        image: "https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&q=80&w=800",
+        category: "Adoption Stories",
+        author: "Paltuu Team",
+        date: "February 15, 2026",
+        readTime: "8 min read"
     }
 
 ];

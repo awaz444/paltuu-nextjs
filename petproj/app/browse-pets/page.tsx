@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { RootState, AppDispatch } from "../store/store";
 import { fetchAdoptionPets, clearAdoptionPets } from "../store/slices/adoptionPetsSlice";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
@@ -14,7 +14,9 @@ import "./styles.css";
 function BrowsePetsContent() {
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
+    const pathname = usePathname();
     const searchParams = useSearchParams();
+    const isFirstRender = useRef(true);
     const { pets, loading, error, meta } = useSelector((state: RootState) => state.adoptionPets);
 
     // Initialize state from URL params
@@ -70,25 +72,30 @@ function BrowsePetsContent() {
 
         dispatch(fetchAdoptionPets({ page, limit: 11, filters: apiFilters }));
 
-        // Update URL
-        const params = new URLSearchParams();
-        if (page > 1) params.set("page", page.toString());
-        if (filters.selectedSex) params.set("sex", filters.selectedSex);
-        if (filters.minAge) params.set("minAge", filters.minAge);
-        if (filters.maxAge) params.set("maxAge", filters.maxAge);
-        if (filters.minPrice) params.set("minPrice", filters.minPrice);
-        if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
-        if (filters.area) params.set("area", filters.area);
-        if (filters.minChildAge) params.set("minChildAge", filters.minChildAge);
-        if (filters.canLiveWithDogs) params.set("dogs", "true");
-        if (filters.canLiveWithCats) params.set("cats", "true");
-        if (filters.vaccinated) params.set("vaccinated", "true");
-        if (filters.neutered) params.set("neutered", "true");
-        if (filters.selectedCity) params.set("city", filters.selectedCity);
-        if (filters.selectedSpecies) params.set("species", filters.selectedSpecies);
-        if (filters.breed) params.set("breed", filters.breed);
+        // Update URL — skip on the very first render so Googlebot sees a clean URL
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+        } else {
+            const params = new URLSearchParams();
+            if (page > 1) params.set("page", page.toString());
+            if (filters.selectedSex) params.set("sex", filters.selectedSex);
+            if (filters.minAge) params.set("minAge", filters.minAge);
+            if (filters.maxAge) params.set("maxAge", filters.maxAge);
+            if (filters.minPrice) params.set("minPrice", filters.minPrice);
+            if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
+            if (filters.area) params.set("area", filters.area);
+            if (filters.minChildAge) params.set("minChildAge", filters.minChildAge);
+            if (filters.canLiveWithDogs) params.set("dogs", "true");
+            if (filters.canLiveWithCats) params.set("cats", "true");
+            if (filters.vaccinated) params.set("vaccinated", "true");
+            if (filters.neutered) params.set("neutered", "true");
+            if (filters.selectedCity) params.set("city", filters.selectedCity);
+            if (filters.selectedSpecies) params.set("species", filters.selectedSpecies);
+            if (filters.breed) params.set("breed", filters.breed);
 
-        router.replace(`?${params.toString()}`, { scroll: false });
+            const queryString = params.toString();
+            router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
+        }
 
     }, [page, filters, dispatch, router]);
 

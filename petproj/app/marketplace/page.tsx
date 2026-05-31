@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { MoonLoader } from "react-spinners";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,7 +8,7 @@ import {
   fetchProducts,
   clearProducts,
 } from "@/app/store/slices/marketplaceSlice";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import ProductFilterSection from "@/components/ProductFilterSection";
 import ProductGrid from "@/components/ProductGrid";
 import { ArrowLeft } from "lucide-react";
@@ -36,6 +36,8 @@ interface Product {
 function MarketplaceClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
+  const isFirstRender = useRef(true);
   const dispatch = useDispatch<AppDispatch>();
   const { products, loading, error, meta } = useSelector(
     (s: RootState) => s.marketplace
@@ -70,14 +72,20 @@ function MarketplaceClient() {
     dispatch(clearProducts());
     dispatch(fetchProducts({ page, limit: 25, filters }));
 
-    const params = new URLSearchParams({
-      page: page.toString(),
-      ...(filters.keyword && { keyword: filters.keyword }),
-      ...(filters.categorySlug && { categorySlug: filters.categorySlug }),
-      ...(filters.sortBy && { sortBy: filters.sortBy }),
-      ...(filters.petType && { petType: filters.petType }),
-    });
-    router.replace(`?${params.toString()}`, { scroll: false });
+    // Skip URL update on first render so Googlebot sees a clean /marketplace URL
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+    } else {
+      const params = new URLSearchParams({
+        ...(page > 1 && { page: page.toString() }),
+        ...(filters.keyword && { keyword: filters.keyword }),
+        ...(filters.categorySlug && { categorySlug: filters.categorySlug }),
+        ...(filters.sortBy && { sortBy: filters.sortBy }),
+        ...(filters.petType && { petType: filters.petType }),
+      });
+      const queryString = params.toString();
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
+    }
   }, [page, filters, dispatch]);
 
   // ✅ Scroll management: restore exact scroll after returning from product page

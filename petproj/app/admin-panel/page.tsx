@@ -249,8 +249,8 @@ const AdminPanel = () => {
                     </div>
                     </Link>
 
-                    {/* Clinics & Vets */}
-                    <Link href="/admin-clinics-vets">
+                    {/* Clinics & Vets → now /manage-clinics */}
+                    <Link href="/manage-clinics">
                     <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 relative border border-gray-200 hover:border-primary transition-all cursor-pointer">
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
@@ -262,9 +262,9 @@ const AdminPanel = () => {
                             />
                         </button>
                         <h4 className="text-base sm:text-lg font-bold text-primary mb-4">
-                            Go to Clinics & Vets
+                            Manage Clinics & Vets
                         </h4>
-                        <p className="text-sm text-gray-600">Manage all clinics and vets</p>
+                        <p className="text-sm text-gray-600">Add / edit clinics, create vets, link vets to clinics</p>
                     </div>
                     </Link>
 

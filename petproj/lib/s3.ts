@@ -45,7 +45,7 @@ export type S3Folder = "posts" | "covers" | "profile-pics";
 const MAIN_REGION = process.env.AWS_S3_REGION_MAIN || process.env.AWS_S3_REGION || "ap-south-1";
 const MAIN_BUCKET = process.env.AWS_S3_BUCKET_MAIN || "paltuu-main";
 
-export type S3MainFolder = "adoption" | "vets" | "shelter" | "kyc" | "lostandfound" | "users";
+export type S3MainFolder = "adoption" | "vets" | "shelter" | "kyc" | "lostandfound" | "users" | "clinics";
 
 let _s3Main: S3Client | null = null;
 

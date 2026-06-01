@@ -57,14 +57,14 @@ export default function ClinicModal({ visible, onCancel, onSuccess, initialData 
                 const formData = new FormData();
                 formData.append("file", newFile as File);
 
-                const uploadRes = await fetch("/api/v1/admin/upload-image", {
+                const uploadRes = await fetch("/api/v1/admin/upload-clinic-logo", {
                     method: "POST",
                     body: formData,
                 });
 
                 if (!uploadRes.ok) throw new Error("Image upload failed");
                 const uploadData = await uploadRes.json();
-                logo_url = uploadData.image_url;
+                logo_url = uploadData.url;
             } else if (fileList.length === 0) {
                 logo_url = null;
             }

@@ -466,18 +466,25 @@ model clinics {
   clinic_id         BigInt        @id @default(autoincrement())
   name              String
   address           String
+  city              String?       @db.VarChar(100)
+  category          String?       @db.VarChar(255)
   google_maps_link  String?
   contact_number    String?
   whatsapp_number   String?
+  website           String?       @db.VarChar(500)
   logo_url          String?
   operating_hours   String?
   discount_details  String?
+  rating            Decimal?      @db.Decimal(3, 1)
+  total_reviews     Int?          @default(0)
   is_paltuu_partner Boolean?      @default(false)
   created_at        DateTime      @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
   owner_id          Int?
   clinic_vets       clinic_vets[]
   users             users?        @relation(fields: [owner_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
   vet_reviews       vet_reviews[]
+
+  @@index([city], map: "idx_clinics_city")
 }
 
 model hashtags {

@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next';
-import { BLOG_POSTS } from '@/components/blog/data';
+import { getAllBlogsMetadata } from '@/lib/mdx';
 import { db } from '@/db/index';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -35,8 +35,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ];
     const routes = staticRoutes;
 
-    // Dynamic blog posts
-    const blogPosts = BLOG_POSTS.map((post) => ({
+    // Dynamic blog posts from MDX filesystem
+    const allBlogs = getAllBlogsMetadata();
+    const blogPosts = allBlogs.map((post) => ({
         url: `${baseUrl}/blogs/${post.slug}`,
         lastModified: new Date(post.date),
         changeFrequency: 'monthly' as const,

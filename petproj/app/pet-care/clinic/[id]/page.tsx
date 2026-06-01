@@ -276,7 +276,7 @@ export default function ClinicPage() {
                                             </div>
                                             <div className="flex gap-2 ml-13">
                                                 <button
-                                                    onClick={() => handleCopy(clinic.contact_number)}
+                                                    onClick={() => handleCopy(clinic.contact_number || '')}
                                                     className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm"
                                                 >
                                                     <FaCopy className="text-gray-600 text-xs" />
@@ -284,7 +284,7 @@ export default function ClinicPage() {
                                                 </button>
                                                 {clinic.whatsapp_number && (
                                                     <button
-                                                        onClick={() => handleWhatsApp(clinic.whatsapp_number)}
+                                                        onClick={() => handleWhatsApp(clinic.whatsapp_number || '')}
                                                         className="flex-1 py-2 px-3 rounded-lg bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center gap-2 text-sm"
                                                     >
                                                         <FaWhatsapp className="text-white text-sm" />

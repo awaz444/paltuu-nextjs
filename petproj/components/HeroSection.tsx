@@ -29,6 +29,7 @@ import Image from "next/image";
     /* Add this to your global CSS */
 }
 import "./HeroSection.css";
+import RecentPetsSection from "./RecentPetsSection";
 
 const HeroSection = () => {
 
@@ -210,6 +211,9 @@ const HeroSection = () => {
 
             {/* Paltuu Bazaar Section */}
             {/* <PaltuuBazaarSection /> */}{/* Phase 1: Bazaar paused */}
+
+            {/* Recent Pets for Adoption Section */}
+            <RecentPetsSection />
 
             {/* How Paltuu Works Section */}
             <section className="pt-10 pb-20 px-6 lg:px-20 bg-white">

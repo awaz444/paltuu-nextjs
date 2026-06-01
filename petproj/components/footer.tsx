@@ -91,7 +91,6 @@ export default function Footer() {
           <h3 className="text-lg font-semibold mb-4">Explore Paltuu</h3>
           <ul className="space-y-2 text-sm">
             <li><Link href="/browse-pets" className="hover:text-gray-300">Adopt a Pet</Link></li>
-            <li><Link href="/rescue-pets" className="hover:text-gray-300">Rescue Pets</Link></li>
             <li><Link href="/pet-care" className="hover:text-gray-300">Find a Vet</Link></li>
             <li><Link href="/lost-and-found" className="hover:text-gray-300">Lost &amp; Found</Link></li>
             <li><Link href="/blogs" className="hover:text-gray-300">Pet Care Blog</Link></li>

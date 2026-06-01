@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import PetDetailsClient from "./PetDetailsClient";
 
 export const dynamic = "force-dynamic";
@@ -86,13 +87,16 @@ export default async function PetPage({
 }) {
     const pet = await getPet(params.pet_id);
 
+    if (!pet) {
+        notFound();
+    }
+
     const firstImage =
-        pet?.images?.length > 0
+        pet.images?.length > 0
             ? [...pet.images].sort((a: any, b: any) => a.order - b.order)[0]?.image_url
             : null;
 
-    const petJsonLd = pet
-        ? {
+    const petJsonLd = {
               "@context": "https://schema.org",
               "@type": "Product",
               "name": `${pet.pet_name} — ${pet.pet_breed || "Mixed Breed"} for ${pet.listing_type === "adoption" || pet.listing_type === "rescue" ? "adoption" : "sale"} in ${pet.city || "Pakistan"}`,
@@ -120,18 +124,15 @@ export default async function PetPage({
                   { "@type": "PropertyValue", "name": "City", "value": pet.city },
                   { "@type": "PropertyValue", "name": "Vaccinated", "value": pet.vaccinated ? "Yes" : "No" },
               ].filter((p) => p.value),
-          }
-        : null;
+    };
 
     return (
         <>
-            {petJsonLd && (
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(petJsonLd) }}
-                />
-            )}
-            <PetDetailsClient params={params} initialPet={pet ?? undefined} />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(petJsonLd) }}
+            />
+            <PetDetailsClient params={params} initialPet={pet} />
         </>
     );
 }

@@ -56,8 +56,8 @@ export default function Footer() {
 
   return (
     <footer className="bg-primary text-white px-6 md:px-16 py-10 rounded-t-3xl mt-6">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
-        {/* Left - Logo, About & Address */}
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10">
+        {/* Col 1 - Logo, About & Address */}
         <div className="text-center md:text-left">
           <img
             src="paltuu bilkul tight.svg"
@@ -67,57 +67,60 @@ export default function Footer() {
             className="mx-auto md:mx-0 text-white brightness-0 invert"
           />
 
-          {/* Address */}
           <p className="mt-3 text-sm text-gray-300">
             National Incubation Center, Karachi, Pakistan
           </p>
-          <p className="text-sm text-gray-300">Karachi, Pakistan</p>
           <p className="text-sm text-gray-300">Phone: +92 3394022468</p>
           <p className="text-sm text-gray-300">Email: contact@paltuu.pk</p>
 
-          {/* Social Media Icons */}
           <div className="flex justify-center md:justify-start gap-4 mt-5">
-            <Link href="https://instagram.com/paltuupk" target="_blank">
+            <Link href="https://instagram.com/paltuupk" target="_blank" aria-label="Paltuu on Instagram">
               <Instagram className="w-5 h-5 hover:text-gray-300 transition" />
             </Link>
-            <Link href="https://twitter.com/paltuupk" target="_blank">
+            <Link href="https://twitter.com/paltuupk" target="_blank" aria-label="Paltuu on Twitter">
               <Twitter className="w-5 h-5 hover:text-gray-300 transition" />
             </Link>
-            <Link href="https://facebook.com" target="_blank">
+            <Link href="https://facebook.com/paltuu.pk" target="_blank" aria-label="Paltuu on Facebook">
               <Facebook className="w-5 h-5 hover:text-gray-300 transition" />
             </Link>
           </div>
         </div>
 
-        {/* Middle - Quick Links */}
+        {/* Col 2 - Explore */}
         <div className="text-center md:text-left">
-          <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+          <h3 className="text-lg font-semibold mb-4">Explore Paltuu</h3>
           <ul className="space-y-2 text-sm">
-            <li>
-              <Link href="/about" className="hover:text-gray-300">
-                About Us
-              </Link>
-            </li>
-            <li>
-              <Link href="/shipping-policy" className="hover:text-gray-300">
-                Shipping Policy
-              </Link>
-            </li>
-            <li>
-              <Link href="/refund&return-policy" className="hover:text-gray-300">
-                Return Policy
-              </Link>
-            </li>
-            <li>
-              <Link href="/terms-and-conditions" className="hover:text-gray-300">
-                Terms & Conditions
-              </Link>
-            </li>
+            <li><Link href="/browse-pets" className="hover:text-gray-300">Adopt a Pet</Link></li>
+            <li><Link href="/rescue-pets" className="hover:text-gray-300">Rescue Pets</Link></li>
+            <li><Link href="/pet-care" className="hover:text-gray-300">Find a Vet</Link></li>
+            <li><Link href="/lost-and-found" className="hover:text-gray-300">Lost &amp; Found</Link></li>
+            <li><Link href="/blogs" className="hover:text-gray-300">Pet Care Blog</Link></li>
+            <li><Link href="/about-us" className="hover:text-gray-300">About Us</Link></li>
           </ul>
         </div>
 
-        {/* Right - Newsletter */}
+        {/* Col 3 - Shop */}
         <div className="text-center md:text-left">
+          <h3 className="text-lg font-semibold mb-4">Shop Pet Products</h3>
+          <ul className="space-y-2 text-sm">
+            <li><Link href="/marketplace/cat-food" className="hover:text-gray-300">Cat Food</Link></li>
+            <li><Link href="/marketplace/dog-food" className="hover:text-gray-300">Dog Food</Link></li>
+            <li><Link href="/marketplace/litter" className="hover:text-gray-300">Cat Litter</Link></li>
+            <li><Link href="/marketplace?category=grooming" className="hover:text-gray-300">Grooming</Link></li>
+            <li><Link href="/marketplace?category=accessories" className="hover:text-gray-300">Accessories</Link></li>
+            <li><Link href="/marketplace/brands" className="hover:text-gray-300">All Brands</Link></li>
+          </ul>
+        </div>
+
+        {/* Col 4 - Newsletter + Policies */}
+        <div className="text-center md:text-left">
+          <h3 className="text-lg font-semibold mb-2">Policies</h3>
+          <ul className="space-y-1 text-sm mb-6">
+            <li><Link href="/shipping-policy" className="hover:text-gray-300">Shipping Policy</Link></li>
+            <li><Link href="/refund&return-policy" className="hover:text-gray-300">Return Policy</Link></li>
+            <li><Link href="/terms-and-conditions" className="hover:text-gray-300">Terms &amp; Conditions</Link></li>
+            <li><Link href="/privacy-policy" className="hover:text-gray-300">Privacy Policy</Link></li>
+          </ul>
           <h3 className="text-lg font-semibold mb-4">Newsletter</h3>
           <p className="text-sm text-gray-200 mb-3">
             Subscribe to stay updated on the latest pets and offers.

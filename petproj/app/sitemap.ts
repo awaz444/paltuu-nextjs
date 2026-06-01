@@ -5,22 +5,35 @@ import { db } from '@/db/index';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://paltuu.pk';
 
-    // Static pages
-    const routes = [
-        '',
-        '/about-us',
-        '/blogs',
-        '/browse-pets',
-        '/pet-care',
-        '/marketplace',
-        '/rescue-pets',
-        '/lost-and-found',
-    ].map((route) => ({
-        url: `${baseUrl}${route}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly' as const,
-        priority: route === '' ? 1 : 0.8,
-    }));
+    // Static pages — fixed dates so Google doesn't think every page changed today
+    const staticRoutes: MetadataRoute.Sitemap = [
+        { url: baseUrl,                         lastModified: new Date('2026-05-01'), changeFrequency: 'weekly',  priority: 1.0 },
+        { url: `${baseUrl}/browse-pets`,        lastModified: new Date('2026-05-01'), changeFrequency: 'daily',   priority: 0.9 },
+        { url: `${baseUrl}/pet-care`,           lastModified: new Date('2026-05-01'), changeFrequency: 'weekly',  priority: 0.9 },
+        { url: `${baseUrl}/rescue-pets`,        lastModified: new Date('2026-04-01'), changeFrequency: 'weekly',  priority: 0.8 },
+        { url: `${baseUrl}/marketplace`,        lastModified: new Date('2026-05-01'), changeFrequency: 'weekly',  priority: 0.8 },
+        { url: `${baseUrl}/marketplace/cat-food`,  lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.8 },
+        { url: `${baseUrl}/marketplace/dog-food`,  lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.8 },
+        { url: `${baseUrl}/marketplace/litter`,    lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.8 },
+        { url: `${baseUrl}/marketplace/brands`,    lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.7 },
+        { url: `${baseUrl}/marketplace/brands/royal-canin`,  lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.7 },
+        { url: `${baseUrl}/marketplace/brands/pedigree`,     lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.7 },
+        { url: `${baseUrl}/marketplace/brands/whiskas`,      lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.7 },
+        { url: `${baseUrl}/marketplace/brands/gourmet`,      lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.6 },
+        { url: `${baseUrl}/marketplace/brands/brit-care`,    lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.6 },
+        { url: `${baseUrl}/marketplace/brands/prochoice`,    lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.6 },
+        { url: `${baseUrl}/marketplace/brands/felicia`,      lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.6 },
+        { url: `${baseUrl}/marketplace/brands/petline`,      lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.6 },
+        { url: `${baseUrl}/marketplace/brands/jungle`,       lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.6 },
+        { url: `${baseUrl}/marketplace/brands/nourvet`,      lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.6 },
+        { url: `${baseUrl}/marketplace/brands/fluff-n-bluff`,lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.6 },
+        { url: `${baseUrl}/marketplace/brands/homie`,        lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.6 },
+        { url: `${baseUrl}/marketplace/brands/la-mito`,      lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.6 },
+        { url: `${baseUrl}/lost-and-found`,     lastModified: new Date('2026-04-01'), changeFrequency: 'daily',   priority: 0.7 },
+        { url: `${baseUrl}/blogs`,              lastModified: new Date('2026-05-01'), changeFrequency: 'weekly',  priority: 0.8 },
+        { url: `${baseUrl}/about-us`,           lastModified: new Date('2025-01-01'), changeFrequency: 'monthly', priority: 0.5 },
+    ];
+    const routes = staticRoutes;
 
     // Dynamic blog posts
     const blogPosts = BLOG_POSTS.map((post) => ({

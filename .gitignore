@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Environment files — NEVER commit
+.env
+.env.*
+!.env.example
+
+# Credentials & service accounts
+service-account.json
+*-service-account.json
+firebase-adminsdk*.json
+google-services.json
+GoogleService-Info.plist
+credentials.json
+*.p12
+*.jks
+*.p8
+*.pem
+*.key
+
+# Confidential internal documents
+petproj/Paltuu_Report_Block_Spec_v1.docx
+petproj/app/Supabase*
+petproj/db/*.csv
+schema.txt
+seo+geo/
+
+# Build artifacts
+*.tsbuildinfo
+node_modules/

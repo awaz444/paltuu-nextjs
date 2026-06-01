@@ -39,3 +39,16 @@ next-env.d.ts
 /generated/prisma
 
 service-account.json
+*-service-account.json
+firebase-adminsdk*.json
+google-services.json
+GoogleService-Info.plist
+credentials.json
+*.p12
+*.jks
+*.p8
+*.key
+.env.production
+.env.staging
+.env.development
+.env.production.local

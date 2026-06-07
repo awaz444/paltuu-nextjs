@@ -17,4 +17,6 @@ export interface Clinic {
     vet_count?: number;
     owner_email?: string;
     created_at?: string;
+    latitude?: number;
+    longitude?: number;
 }

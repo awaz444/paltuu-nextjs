@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Space, message, Popconfirm, Form, Select, Modal, Input } from 'antd';
+import { Table, Button, Space, message, Popconfirm, Form, Select, Modal, Input, Upload, Image } from 'antd';
+import type { UploadFile, UploadProps } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import Navbar from '@/components/navbar';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
 import { formatAge } from '@/utils/formatAge';
@@ -34,6 +36,7 @@ type Pet = {
   vaccinated: boolean;
   neutered: boolean;
   approved: boolean;
+  images?: { image_id?: number; image_url: string; order?: number }[];
 };
 
 const AdminPetInteraction: React.FC = () => {
@@ -47,8 +50,27 @@ const AdminPetInteraction: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState("");
+
   const dispatch = useDispatch<AppDispatch>();
   const { cities } = useSelector((state: RootState) => state.cities);
+
+  useEffect(() => {
+    if (editingPet && editingPet.images) {
+      setFileList(
+        editingPet.images.map((img) => ({
+          uid: String(img.image_id || img.image_url),
+          name: img.image_url.split('/').pop() || 'image.png',
+          status: 'done',
+          url: img.image_url,
+        }))
+      );
+    } else {
+      setFileList([]);
+    }
+  }, [editingPet]);
 
   useEffect(() => {
     // Fetch cities and pets in parallel for better performance
@@ -156,17 +178,88 @@ const AdminPetInteraction: React.FC = () => {
     setShowConfirm({ pet_id: null, show: false });
   };
 
+  const beforeUpload = (file: File) => {
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      message.error("You can only upload image files!");
+      return Upload.LIST_IGNORE;
+    }
+    const isSmallEnough = file.size / 1024 / 1024 < 5; // 5MB max size
+    if (!isSmallEnough) {
+      message.error("Image must be smaller than 5MB!");
+      return Upload.LIST_IGNORE;
+    }
+    return false;
+  };
+
+  const getBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+
+  const handlePreview = async (file: UploadFile) => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj as File);
+    }
+
+    setPreviewImage(file.url || (file.preview as string));
+    setPreviewOpen(true);
+  };
+
+  const handleChange: UploadProps["onChange"] = ({ fileList: newFileList }) =>
+    setFileList(newFileList);
+
   const handleUpdate = async () => {
     if (!editingPet) return;
 
     setLoading(true);
     try {
+      const newFiles = fileList.filter(file => file.originFileObj);
+      const existingFiles = fileList.filter(file => !file.originFileObj);
+
+      let uploadedUrls: string[] = [];
+      if (newFiles.length > 0) {
+        const formData = new FormData();
+        newFiles.forEach((file) => {
+          if (file.originFileObj) {
+            formData.append("files", file.originFileObj);
+          }
+        });
+        
+        const uploadRes = await fetch("/api/v1/upload-image", {
+          method: "POST",
+          body: formData,
+        });
+        
+        if (!uploadRes.ok) {
+          throw new Error("Failed to upload new images");
+        }
+        const uploadData = await uploadRes.json();
+        uploadedUrls = uploadData.urls || [];
+      }
+
+      const finalImages = [
+        ...existingFiles.map(file => ({
+          image_id: isNaN(Number(file.uid)) ? undefined : Number(file.uid),
+          image_url: file.url!,
+        })),
+        ...uploadedUrls.map(url => ({
+          image_url: url,
+        }))
+      ];
+
       const response = await fetch('/api/v1/admin/pets', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editingPet),
+        body: JSON.stringify({
+          ...editingPet,
+          images: finalImages,
+        }),
       });
 
       if (!response.ok) {
@@ -174,17 +267,18 @@ const AdminPetInteraction: React.FC = () => {
         message.error(`Update failed: ${errorData.message || 'Unknown error'}`);
       } else {
         message.success('Pet updated successfully.');
+        const updatedData = await response.json();
         setPets((prevPets) =>
           prevPets.map((pet) =>
-            pet.pet_id === editingPet.pet_id ? { ...pet, ...editingPet } : pet
+            pet.pet_id === editingPet.pet_id ? { ...pet, ...updatedData } : pet
           )
         );
+        setEditingPet(null); // Close the edit modal
       }
-    } catch (error) {
-      message.error('Error updating pet.');
+    } catch (error: any) {
+      message.error(error.message || 'Error updating pet.');
     } finally {
       setLoading(false);
-      setEditingPet(null); // Close the edit modal
     }
   };
 
@@ -200,6 +294,28 @@ const AdminPetInteraction: React.FC = () => {
       responsive: ['md'] as any,
     },
     {
+      title: 'Image',
+      dataIndex: 'images',
+      key: 'images',
+      render: (images: any[]) => {
+        const url = images && images.length > 0 ? images[0].image_url : null;
+        return url ? (
+          <Image
+            src={url}
+            alt="Pet"
+            width={50}
+            height={50}
+            className="object-cover rounded-md"
+            fallback="/placeholder-pet.png"
+          />
+        ) : (
+          <div className="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center text-xs text-gray-400">
+            No Image
+          </div>
+        );
+      },
+    },
+    {
       title: 'Pet Name',
       dataIndex: 'pet_name',
       key: 'pet_name',
@@ -210,6 +326,12 @@ const AdminPetInteraction: React.FC = () => {
       dataIndex: 'pet_type',
       key: 'pet_type',
       responsive: ['sm'] as any,
+      render: (type: number | null) => {
+        if (type === 1) return 'Dog';
+        if (type === 2) return 'Cat';
+        if (type === 3) return 'Bird';
+        return 'N/A';
+      }
     },
     {
       title: 'Breed',
@@ -375,6 +497,36 @@ const AdminPetInteraction: React.FC = () => {
           cancelText="Cancel"
         >
           <Form layout="vertical" initialValues={editingPet || undefined}>
+            <Form.Item label="Upload Pictures (Maximum 5)">
+              <Upload
+                action=""
+                listType="picture-card"
+                fileList={fileList}
+                beforeUpload={beforeUpload}
+                onPreview={handlePreview}
+                onChange={handleChange}
+                maxCount={5}
+              >
+                {fileList.length >= 5 ? null : (
+                  <button style={{ border: 0, background: "none" }} type="button">
+                    <PlusOutlined />
+                    <div style={{ marginTop: 8 }}>Upload</div>
+                  </button>
+                )}
+              </Upload>
+              {previewImage && (
+                <Image
+                  wrapperStyle={{ display: "none" }}
+                  preview={{
+                    visible: previewOpen,
+                    onVisibleChange: (visible) => setPreviewOpen(visible),
+                    afterOpenChange: (visible) => !visible && setPreviewImage(""),
+                  }}
+                  src={previewImage}
+                />
+              )}
+            </Form.Item>
+
             <Form.Item label="Pet Name" required>
               <Input
                 placeholder="Pet Name"

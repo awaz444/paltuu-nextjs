@@ -202,6 +202,11 @@ export default function CreatePetListing() {
             return;
         }
 
+        if (fileList.length === 0) {
+            message.error("Please add at least one picture of the pet.");
+            return;
+        }
+
         if (!user?.id) {
             message.error("Authentication required. Please log in.");
             router.push("/auth");

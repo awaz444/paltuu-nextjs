@@ -236,7 +236,7 @@ export async function POST(req: NextRequest) {
         const userId = parseInt(String(userIdRaw), 10);
 
         const body = await req.json();
-        const { pet_id, post_type, content, media = [] } = body;
+        const { pet_id, post_type, content, media = [], pet_profile_tags = [] } = body;
 
         if (!post_type || (!content && media.length === 0)) {
             return NextResponse.json({ error: "Post content or media is required" }, { status: 400 });
@@ -287,6 +287,34 @@ export async function POST(req: NextRequest) {
                         VALUES ($1, $2)
                         ON CONFLICT DO NOTHING
                     `, [post.post_id, hashtagId]);
+                }
+            }
+
+            // 5. Tag personal pet profiles (not adoption listings)
+            if (Array.isArray(pet_profile_tags) && pet_profile_tags.length > 0) {
+                const tagIds = pet_profile_tags
+                    .map((id: any) => parseInt(String(id), 10))
+                    .filter((id: number) => !isNaN(id));
+
+                if (tagIds.length > 0) {
+                    // Validate all tagged pet_profile_ids belong to the posting user
+                    const ownerCheck = await db.query(
+                        `SELECT COUNT(*) FROM pet_profiles
+                         WHERE pet_profile_id = ANY($1::int[]) AND owner_id = $2`,
+                        [tagIds, userId]
+                    );
+                    if (parseInt(ownerCheck.rows[0].count, 10) !== tagIds.length) {
+                        throw new Error('One or more tagged pet profiles do not belong to you');
+                    }
+
+                    for (const profileId of tagIds) {
+                        await db.query(
+                            `INSERT INTO post_pet_tags (post_id, pet_profile_id)
+                             VALUES ($1, $2)
+                             ON CONFLICT DO NOTHING`,
+                            [post.post_id, profileId]
+                        );
+                    }
                 }
             }
 

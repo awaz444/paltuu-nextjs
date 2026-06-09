@@ -63,6 +63,18 @@ export async function GET(req: NextRequest) {
                     false                AS is_blocked_by_me,
                     false                AS is_blocking_me,
                     COALESCE(pm.media, '[]'::json)  AS media,
+                    COALESCE(
+                        (SELECT json_agg(json_build_object(
+                            'pet_profile_id', pp.pet_profile_id,
+                            'name', pp.name,
+                            'avatar_url', pp.avatar_url,
+                            'species', pp.species
+                         ))
+                         FROM post_pet_tags ppt
+                         JOIN pet_profiles pp ON pp.pet_profile_id = ppt.pet_profile_id
+                         WHERE ppt.post_id = p.post_id),
+                        '[]'::json
+                    ) AS tagged_pets,
                     op.content           AS original_content,
                     op.user_id           AS original_user_id,
                     ou.name              AS original_author_name,
@@ -137,6 +149,18 @@ export async function GET(req: NextRequest) {
                         false                AS is_blocked_by_me,
                         false                AS is_blocking_me,
                         COALESCE(pm.media, '[]'::json)  AS media,
+                        COALESCE(
+                            (SELECT json_agg(json_build_object(
+                                'pet_profile_id', pp.pet_profile_id,
+                                'name', pp.name,
+                                'avatar_url', pp.avatar_url,
+                                'species', pp.species
+                             ))
+                             FROM post_pet_tags ppt
+                             JOIN pet_profiles pp ON pp.pet_profile_id = ppt.pet_profile_id
+                             WHERE ppt.post_id = p.post_id),
+                            '[]'::json
+                        ) AS tagged_pets,
                         op.content           AS original_content,
                         op.user_id           AS original_user_id,
                         ou.name              AS original_author_name,
@@ -236,7 +260,7 @@ export async function POST(req: NextRequest) {
         const userId = parseInt(String(userIdRaw), 10);
 
         const body = await req.json();
-        const { pet_id, post_type, content, media = [], pet_profile_tags = [] } = body;
+        const { post_type, content, media = [], pet_profile_tags = [] } = body;
 
         if (!post_type || (!content && media.length === 0)) {
             return NextResponse.json({ error: "Post content or media is required" }, { status: 400 });
@@ -246,10 +270,10 @@ export async function POST(req: NextRequest) {
         try {
             // 1. Create Post
             const postRes = await db.query(`
-                INSERT INTO social_posts (user_id, pet_id, post_type, content)
-                VALUES ($1, $2, $3, $4)
+                INSERT INTO social_posts (user_id, post_type, content)
+                VALUES ($1, $2, $3)
                 RETURNING *
-            `, [userId, pet_id || null, post_type, content]);
+            `, [userId, post_type, content]);
             const post = postRes.rows[0];
 
             // 2. Add Media
@@ -263,9 +287,6 @@ export async function POST(req: NextRequest) {
 
             // 3. Increment Post Count
             await db.query("UPDATE users SET post_count = post_count + 1 WHERE user_id = $1", [userId]);
-            if (pet_id) {
-                await db.query("UPDATE pets SET post_count = post_count + 1 WHERE pet_id = $1", [pet_id]);
-            }
 
             // 4. Parse & upsert hashtags from content
             if (content) {

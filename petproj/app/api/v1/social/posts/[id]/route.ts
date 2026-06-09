@@ -27,6 +27,18 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                      WHERE m.post_id = p.post_id), 
                     '[]'::json
                 ) AS media,
+                COALESCE(
+                    (SELECT json_agg(json_build_object(
+                        'pet_profile_id', pp.pet_profile_id,
+                        'name', pp.name,
+                        'avatar_url', pp.avatar_url,
+                        'species', pp.species
+                     ))
+                     FROM post_pet_tags ppt
+                     JOIN pet_profiles pp ON pp.pet_profile_id = ppt.pet_profile_id
+                     WHERE ppt.post_id = p.post_id),
+                    '[]'::json
+                ) AS tagged_pets,
                 -- repost context
                 op.content          AS original_content,
                 op.post_id          AS original_post_id_ref,
@@ -141,7 +153,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
 /**
  * PATCH /api/v1/social/posts/[id]
- * Update post metadata (content, pet_id, post_type)
+ * Update post metadata (content, post_type, pet_profile_tags)
  */
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
     try {
@@ -151,7 +163,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         const postId = params.id;
 
         const body = await req.json();
-        const { content, pet_id, post_type } = body;
+        const { content, post_type, pet_profile_tags } = body;
 
         // Verify ownership
         const postCheck = await db.query(
@@ -169,11 +181,42 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             await db.query(`
                 UPDATE social_posts 
                 SET content = COALESCE($1, content),
-                    pet_id = $2,
-                    post_type = COALESCE($3, post_type),
+                    post_type = COALESCE($2, post_type),
                     updated_at = NOW()
-                WHERE post_id = $4
-            `, [content, pet_id || null, post_type, postId]);
+                WHERE post_id = $3
+            `, [content, post_type, postId]);
+
+            // If pet_profile_tags is passed, update tags
+            if (pet_profile_tags !== undefined && Array.isArray(pet_profile_tags)) {
+                const tagIds = pet_profile_tags
+                    .map((id: any) => parseInt(String(id), 10))
+                    .filter((id: number) => !isNaN(id));
+
+                if (tagIds.length > 0) {
+                    // Validate ownership of all tagged profiles
+                    const ownerCheck = await db.query(
+                        `SELECT COUNT(*) FROM pet_profiles
+                         WHERE pet_profile_id = ANY($1::int[]) AND owner_id = $2`,
+                        [tagIds, userId]
+                    );
+                    if (parseInt(ownerCheck.rows[0].count, 10) !== tagIds.length) {
+                        throw new Error('One or more tagged pet profiles do not belong to you');
+                    }
+                }
+
+                // Delete existing tags
+                await db.query("DELETE FROM post_pet_tags WHERE post_id = $1", [postId]);
+
+                // Insert new ones
+                for (const profileId of tagIds) {
+                    await db.query(
+                        `INSERT INTO post_pet_tags (post_id, pet_profile_id)
+                         VALUES ($1, $2)
+                         ON CONFLICT DO NOTHING`,
+                        [postId, profileId]
+                    );
+                }
+            }
 
             // If content changed, update hashtags
             if (content !== undefined && content !== oldContent) {

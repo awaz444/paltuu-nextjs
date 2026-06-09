@@ -19,7 +19,7 @@ export const metadata: Metadata = {
         title: "Adopt Pets in Pakistan — Dogs, Cats & More | Paltuu.pk",
         description:
             "Find dogs, cats and other pets for adoption from verified shelters and owners across Pakistan.",
-        url: "https://paltuu.pk/browse-pets",
+        url: "https://www.paltuu.pk/browse-pets",
         type: "website",
         images: [{ url: "https://paltuu.pk/paltu_logo.svg", width: 800, height: 400, alt: "Paltuu — Adopt Pets in Pakistan" }],
     },
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
         title: "Adopt Pets in Pakistan | Paltuu.pk",
         description: "Find pets for adoption from verified shelters and owners across Pakistan.",
     },
-    alternates: { canonical: "https://paltuu.pk/browse-pets" },
+    alternates: { canonical: "https://www.paltuu.pk/browse-pets" },
 };
 
 export default function BrowsePetsLayout({

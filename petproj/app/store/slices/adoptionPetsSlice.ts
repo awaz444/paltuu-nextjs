@@ -91,7 +91,13 @@ const adoptionPetsSlice = createSlice({
             state.pets = [];
             state.meta = null;
             state.error = null;
-        }
+        },
+        setAdoptionPets: (state, action) => {
+            state.pets = action.payload.pets;
+            state.meta = action.payload.meta;
+            state.loading = false;
+            state.error = null;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -111,7 +117,7 @@ const adoptionPetsSlice = createSlice({
     },
 });
 
-export const { clearAdoptionPets } = adoptionPetsSlice.actions;
+export const { clearAdoptionPets, setAdoptionPets } = adoptionPetsSlice.actions;
 
 // Selectors
 export const selectAdoptionPets = (state: RootState) => state.adoptionPets.pets;

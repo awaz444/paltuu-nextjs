@@ -51,6 +51,7 @@ export default function ClinicPage() {
     const { isAuthenticated, user } = useAuth();
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [form] = Form.useForm();
+    const [activeGuideTab, setActiveGuideTab] = useState<"prep" | "emergency" | "schedule">("prep");
 
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);
@@ -359,8 +360,166 @@ export default function ClinicPage() {
                                     location: clinic.address
                                 }))} />
                             ) : (
-                                <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                                    <p className="text-gray-500 text-sm">No veterinarians listed yet.</p>
+                                <div className="space-y-8">
+                                    {/* Roster update info card */}
+                                    <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl p-6 border border-primary/10">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
+                                                <FaClinicMedical className="text-primary text-xl" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-base font-bold text-gray-900 mb-1">
+                                                    Veterinarian Directory Updating
+                                                </h3>
+                                                <p className="text-sm text-gray-600 leading-relaxed mb-0">
+                                                    We are currently refreshing the registered veterinarians directory for <strong>{clinic.name}</strong>. In the meantime, you can reach out directly via phone or WhatsApp to book appointments, verify doctor availability, or inquire about emergency walk-ins.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Interactive Guides Section */}
+                                    <div className="border border-gray-100 rounded-2xl p-6 bg-gray-50/30">
+                                        <div className="mb-6">
+                                            <h3 className="text-base font-bold text-gray-900 mb-1">
+                                                Helpful Pet Care Resources
+                                            </h3>
+                                            <p className="text-xs text-gray-500 mb-0">
+                                                Prepare for your next clinic visit or check crucial health milestones.
+                                            </p>
+                                        </div>
+
+                                        {/* Tabs Navigation */}
+                                        <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-100 pb-4">
+                                            <button
+                                                onClick={() => setActiveGuideTab("prep")}
+                                                className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
+                                                    activeGuideTab === "prep"
+                                                        ? "bg-primary text-white shadow-md shadow-primary/10"
+                                                        : "bg-white text-gray-600 border border-gray-150 hover:bg-gray-50"
+                                                }`}
+                                            >
+                                                <FaCheckCircle className="text-sm" />
+                                                Visit Preparation
+                                            </button>
+                                            <button
+                                                onClick={() => setActiveGuideTab("emergency")}
+                                                className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
+                                                    activeGuideTab === "emergency"
+                                                        ? "bg-primary text-white shadow-md shadow-primary/10"
+                                                        : "bg-white text-gray-600 border border-gray-150 hover:bg-gray-50"
+                                                }`}
+                                            >
+                                                <FaClinicMedical className="text-sm" />
+                                                Emergency Signs
+                                            </button>
+                                            <button
+                                                onClick={() => setActiveGuideTab("schedule")}
+                                                className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
+                                                    activeGuideTab === "schedule"
+                                                        ? "bg-primary text-white shadow-md shadow-primary/10"
+                                                        : "bg-white text-gray-600 border border-gray-150 hover:bg-gray-50"
+                                                }`}
+                                            >
+                                                <FaCalendarAlt className="text-sm" />
+                                                Vaccination Guide
+                                            </button>
+                                        </div>
+
+                                        {/* Tab Content */}
+                                        <div className="transition-all duration-300">
+                                            {activeGuideTab === "prep" && (
+                                                <div className="grid sm:grid-cols-2 gap-4">
+                                                    <div className="bg-white p-4 rounded-xl border border-gray-100">
+                                                        <h4 className="text-xs font-bold text-gray-900 mb-1 flex items-center gap-2">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                                            Medical Records
+                                                        </h4>
+                                                        <p className="text-xs text-gray-500 mb-0 leading-relaxed">
+                                                            Bring files of past checkups, surgery histories, and a list of any current medications your pet takes.
+                                                        </p>
+                                                    </div>
+                                                    <div className="bg-white p-4 rounded-xl border border-gray-100">
+                                                        <h4 className="text-xs font-bold text-gray-900 mb-1 flex items-center gap-2">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                                            Symptom Checklist
+                                                            </h4>
+                                                        <p className="text-xs text-gray-500 mb-0 leading-relaxed">
+                                                            Note down changes in appetite, behavior, lethargy, or breathing to share clearly with the doctor.
+                                                        </p>
+                                                    </div>
+                                                    <div className="bg-white p-4 rounded-xl border border-gray-100">
+                                                        <h4 className="text-xs font-bold text-gray-900 mb-1 flex items-center gap-2">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                                            Secure Carrier / Leash
+                                                        </h4>
+                                                        <p className="text-xs text-gray-500 mb-0 leading-relaxed">
+                                                            Keep dogs secure on a short leash and transport cats inside a sturdy carrier to prevent vet-waiting stress.
+                                                        </p>
+                                                    </div>
+                                                    <div className="bg-white p-4 rounded-xl border border-gray-100">
+                                                        <h4 className="text-xs font-bold text-gray-900 mb-1 flex items-center gap-2">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                                            Comfort Treats
+                                                        </h4>
+                                                        <p className="text-xs text-gray-500 mb-0 leading-relaxed">
+                                                            Bring small pieces of their absolute favorite treats to build positive associations with clinical environments.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {activeGuideTab === "emergency" && (
+                                                <div className="space-y-3">
+                                                    <div className="bg-red-50/50 border border-red-100 p-4 rounded-xl">
+                                                        <h4 className="text-xs font-bold text-red-700 mb-1 flex items-center gap-2">
+                                                            ⚠️ Red Flags: Immediate Action Required
+                                                        </h4>
+                                                        <p className="text-xs text-red-600 mb-0 leading-relaxed">
+                                                            If your pet is experiencing difficulty breathing, sudden collapse, deep wounds with active bleeding, ingestion of toxic items (like chocolate, onions, or human pills), or repeated vomiting, take them to emergency care immediately.
+                                                        </p>
+                                                    </div>
+                                                    <div className="bg-white p-4 rounded-xl border border-gray-100">
+                                                        <h4 className="text-xs font-bold text-gray-900 mb-1">
+                                                            What to do during transport:
+                                                        </h4>
+                                                        <ul className="list-disc list-inside text-xs text-gray-500 space-y-1 pl-1">
+                                                            <li>Call the clinic ahead so they can prepare the triage room.</li>
+                                                            <li>Keep your pet warm, calm, and wrapped in a clean blanket if they are in shock.</li>
+                                                            <li>Avoid giving them any food, water, or human painkillers.</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {activeGuideTab === "schedule" && (
+                                                <div className="grid sm:grid-cols-2 gap-6">
+                                                    <div className="bg-white p-4 rounded-xl border border-gray-100">
+                                                        <h4 className="text-xs font-bold text-gray-900 mb-3 border-b border-gray-100 pb-2">
+                                                            🐶 Puppy & Dog Core Vaccines
+                                                        </h4>
+                                                        <div className="space-y-2 text-xs text-gray-600">
+                                                            <div className="flex justify-between"><span className="font-semibold text-gray-500">6-8 Weeks:</span> <span>DHPP 1st Dose</span></div>
+                                                            <div className="flex justify-between"><span className="font-semibold text-gray-500">10-12 Weeks:</span> <span>DHPP 2nd + Bordetella</span></div>
+                                                            <div className="flex justify-between"><span className="font-semibold text-gray-500">14-16 Weeks:</span> <span>DHPP 3rd + Rabies</span></div>
+                                                            <div className="flex justify-between"><span className="font-semibold text-gray-500">Every 1-3 Years:</span> <span>DHPP + Rabies Booster</span></div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-white p-4 rounded-xl border border-gray-100">
+                                                        <h4 className="text-xs font-bold text-gray-900 mb-3 border-b border-gray-100 pb-2">
+                                                            🐱 Kitten & Cat Core Vaccines
+                                                        </h4>
+                                                        <div className="space-y-2 text-xs text-gray-600">
+                                                            <div className="flex justify-between"><span className="font-semibold text-gray-500">6-8 Weeks:</span> <span>FVRCP 1st Dose</span></div>
+                                                            <div className="flex justify-between"><span className="font-semibold text-gray-500">10-12 Weeks:</span> <span>FVRCP 2nd + FeLV</span></div>
+                                                            <div className="flex justify-between"><span className="font-semibold text-gray-500">14-16 Weeks:</span> <span>FVRCP 3rd + Rabies</span></div>
+                                                            <div className="flex justify-between"><span className="font-semibold text-gray-500">Every 1-3 Years:</span> <span>FVRCP + Rabies Booster</span></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>

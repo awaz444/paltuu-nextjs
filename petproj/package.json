@@ -87,7 +87,8 @@
     "swagger-ui-react": "^5.32.4",
     "swr": "^2.3.3",
     "tailwind-scrollbar": "^3.0.5",
-    "uuid": "^11.0.3"
+    "uuid": "^11.0.3",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@svgr/webpack": "^8.1.0",

@@ -21,7 +21,10 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 
 export async function GET(req: NextRequest) {
     try {
-        const query = `
+        const { searchParams } = new URL(req.url);
+        const type = searchParams.get("type");
+
+        let query = `
             SELECT 
                 p.*, 
                 c.city_name AS city,
@@ -36,9 +39,15 @@ export async function GET(req: NextRequest) {
             JOIN users u ON p.user_id = u.user_id
             LEFT JOIN lost_and_found_post_images img ON p.post_id = img.post_id
             WHERE p.status != 'resolved'
-            ORDER BY p.date DESC, p.post_id DESC;
         `;
-        const result = await db.query(query);
+        const values: any[] = [];
+        if (type) {
+            query += ` AND p.post_type = $1`;
+            values.push(type);
+        }
+        query += ` ORDER BY p.date DESC, p.post_id DESC;`;
+
+        const result = await db.query(query, values);
         return NextResponse.json(result.rows);
     } catch (error) {
         console.error("V1 Lost and Found GET Error:", error);

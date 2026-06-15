@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Table, Button, Space, message, Select, Input, Modal, Image, Spin } from 'antd';
+import NextImage from 'next/image';
 import Navbar from '@/components/navbar';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
 import { fetchAdoptionPets } from '../store/slices/adoptionPetsSlice';
@@ -9,6 +10,7 @@ import { UseDispatch, useDispatch } from 'react-redux';
 import { fetchFosterPets } from '../store/slices/fosterPetsSlice';
 import { AppDispatch } from '../store/store';
 import { formatAge } from '@/utils/formatAge';
+import { getOptimizedImageUrl, BLUR_DATA_URL } from '@/utils/imageOptimizer';
 
 const { Option } = Select;
 
@@ -85,6 +87,27 @@ const AdminPetApproval: React.FC = () => {
   const [petDetail, setPetDetail] = useState<PetDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+
+  // Prefetch cache: maps petId → in-flight or resolved fetch Promise
+  const prefetchCache = useRef<Map<number, Promise<PetDetail>>>(new Map());
+
+  const fetchPetDetail = (petId: number): Promise<PetDetail> => {
+    if (prefetchCache.current.has(petId)) {
+      return prefetchCache.current.get(petId)!;
+    }
+    const promise = fetch(`/api/v1/pets/${petId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load');
+        return res.json() as Promise<PetDetail>;
+      })
+      .catch((err) => {
+        // Remove from cache on error so a retry is possible
+        prefetchCache.current.delete(petId);
+        throw err;
+      });
+    prefetchCache.current.set(petId, promise);
+    return promise;
+  };
 
   useEffect(() => {
     // Fetch both listings and cities in parallel for better performance
@@ -168,13 +191,10 @@ const AdminPetApproval: React.FC = () => {
     setDetailLoading(true);
     setPetDetail(null);
     try {
-      const response = await fetch(`/api/v1/pets/${petId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setPetDetail(data);
-      } else {
-        message.error('Failed to load pet details');
-      }
+      // Use the prefetch cache — if hover already started the request, this
+      // resolves immediately instead of firing a brand-new network call.
+      const data = await fetchPetDetail(petId);
+      setPetDetail(data);
     } catch (error) {
       console.error('Error fetching pet details:', error);
       message.error('Failed to load pet details');
@@ -288,6 +308,8 @@ const AdminPetApproval: React.FC = () => {
         <Space size="small">
           <Button
             size="small"
+            // Start fetching pet detail on hover so data is ready before click
+            onMouseEnter={() => fetchPetDetail(record.pet_id)}
             onClick={() => handleView(record.pet_id)}
           >
             View
@@ -420,20 +442,30 @@ const AdminPetApproval: React.FC = () => {
             <div>
               <h3 className="text-lg font-semibold mb-3">Photos</h3>
               {petDetail.images && petDetail.images.length > 0 ? (
-                <Image.PreviewGroup>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {petDetail.images.map((img) => (
-                      <div key={img.image_id} className="relative aspect-square w-full h-32 overflow-hidden rounded-lg border">
-                        <Image
-                          src={img.image_url}
-                          alt="Pet photo"
-                          className="object-cover w-full h-full"
-                          style={{ objectFit: 'cover', height: '100%', width: '100%' }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </Image.PreviewGroup>
+                // Image.PreviewGroup is kept for the Ant Design lightbox/zoom on click.
+                // The actual thumbnail rendered is next/image for WebP conversion,
+                // correct sizing, and blur-up placeholder.
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {petDetail.images.map((img, idx) => (
+                    <div
+                      key={img.image_id}
+                      className="relative aspect-square w-full h-32 overflow-hidden rounded-lg border cursor-pointer"
+                    >
+                      <NextImage
+                        src={getOptimizedImageUrl(img.image_url, 400)}
+                        alt="Pet photo"
+                        fill
+                        sizes="(max-width: 640px) 50vw, 200px"
+                        className="object-cover"
+                        // First image loads eagerly; rest are lazy
+                        priority={idx === 0}
+                        loading={idx === 0 ? 'eager' : 'lazy'}
+                        placeholder="blur"
+                        blurDataURL={BLUR_DATA_URL}
+                      />
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="bg-gray-50 border border-dashed rounded-lg p-6 text-center text-gray-500">
                   No images uploaded

@@ -3,17 +3,23 @@ const nextConfig = {
   reactStrictMode: true,
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
   images: {
-    domains: [
-      "res.cloudinary.com",                          // ← keep: existing Cloudinary images
-      "lh3.googleusercontent.com",
-      "media.istockphoto.com",
-      "qufdjlaxzyarnrsiimfw.supabase.co",
-      "lfiwvlicdkdheqynvjxb.supabase.co",
-      "fjxezewxjsyyfuehnlko.supabase.co",
-      "images.unsplash.com",
-      "djw7hbeqkm7bf.cloudfront.net",
-      "paltuu-main.s3.ap-south-1.amazonaws.com",     // ← new: paltuu-main S3 direct URLs
+    // remotePatterns replaces the deprecated `domains` field (Next.js 13+).
+    // This is required for the image optimization pipeline (WebP conversion,
+    // resizing, caching) to work for external hosts.
+    remotePatterns: [
+      { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "media.istockphoto.com" },
+      { protocol: "https", hostname: "qufdjlaxzyarnrsiimfw.supabase.co" },
+      { protocol: "https", hostname: "lfiwvlicdkdheqynvjxb.supabase.co" },
+      { protocol: "https", hostname: "fjxezewxjsyyfuehnlko.supabase.co" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "djw7hbeqkm7bf.cloudfront.net" },
+      { protocol: "https", hostname: "paltuu-main.s3.ap-south-1.amazonaws.com" },
     ],
+    // Serve smaller srcset steps for thumbnail grids (128px, 200px, 400px)
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 200, 256, 384, 400],
   },
 
   async headers() {

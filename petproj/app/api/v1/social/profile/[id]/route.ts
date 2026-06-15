@@ -82,7 +82,11 @@ export async function GET(
                     EXISTS(
                         SELECT 1 FROM social_likes l
                         WHERE l.post_id = p.post_id AND l.user_id = $2
-                    ) AS is_liked
+                    ) AS is_liked,
+                    EXISTS(
+                        SELECT 1 FROM social_comments c
+                        WHERE c.post_id = p.post_id AND c.user_id = $2 AND c.is_deleted = false
+                    ) AS is_commented
                 FROM social_posts p
                 WHERE p.user_id = $1
                   AND p.is_deleted = false

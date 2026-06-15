@@ -85,6 +85,7 @@ export async function GET(req: NextRequest) {
                     COALESCE(opm.media, '[]'::json) AS original_media,
                     (sl.post_id IS NOT NULL)  AS is_liked,
                     (sr.post_id IS NOT NULL)  AS is_reposted,
+                    EXISTS(SELECT 1 FROM social_comments WHERE post_id = p.post_id AND user_id = $1 AND is_deleted = false) AS is_commented,
                     (sp.save_id IS NOT NULL)  AS is_saved,
                     COALESCE(
                       (SELECT json_agg(sc.collection_id)
@@ -171,6 +172,7 @@ export async function GET(req: NextRequest) {
                         COALESCE(opm.media, '[]'::json) AS original_media,
                         (sl.post_id IS NOT NULL)  AS is_liked,
                         (sr.post_id IS NOT NULL)  AS is_reposted,
+                        EXISTS(SELECT 1 FROM social_comments WHERE post_id = p.post_id AND user_id = $1 AND is_deleted = false) AS is_commented,
                         (sp.save_id IS NOT NULL)  AS is_saved,
                         COALESCE(
                           (SELECT json_agg(sc.collection_id)

@@ -61,6 +61,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                     SELECT 1 FROM social_reposts r 
                     WHERE r.post_id = p.post_id AND r.user_id = $2
                 ) AS is_reposted,
+                EXISTS(
+                    SELECT 1 FROM social_comments c
+                    WHERE c.post_id = p.post_id AND c.user_id = $2 AND c.is_deleted = false
+                ) AS is_commented,
                 (sp.save_id IS NOT NULL) AS is_saved,
                 COALESCE(
                   (SELECT json_agg(sc.collection_id)

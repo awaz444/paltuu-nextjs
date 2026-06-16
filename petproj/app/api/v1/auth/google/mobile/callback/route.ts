@@ -15,7 +15,10 @@ import bcrypt from "bcryptjs";
  * paltuu:// deep link and returns control to the React Native app.
  */
 export async function GET(req: NextRequest) {
-  const baseUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, '') || 'http://localhost:3000';
+  let baseUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, '') || 'http://localhost:3000';
+  if (!baseUrl.includes('localhost') && !baseUrl.includes('127.0.0.1')) {
+    baseUrl = baseUrl.replace(/^http:/, 'https:');
+  }
   const redirectUri = `${baseUrl}/api/v1/auth/google/mobile/callback`;
 
   // Build the deep link prefix — works in both Expo Go (exp://) and standalone (paltuu://)

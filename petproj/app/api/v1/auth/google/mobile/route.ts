@@ -9,7 +9,10 @@ import { NextResponse, NextRequest } from "next/server";
  */
 export async function GET(req: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID!;
-  const baseUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, '') || 'http://localhost:3000';
+  let baseUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, '') || 'http://localhost:3000';
+  if (!baseUrl.includes('localhost') && !baseUrl.includes('127.0.0.1')) {
+    baseUrl = baseUrl.replace(/^http:/, 'https:');
+  }
   const redirectUri = `${baseUrl}/api/v1/auth/google/mobile/callback`;
 
   const params = new URLSearchParams({

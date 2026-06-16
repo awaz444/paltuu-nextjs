@@ -21,15 +21,17 @@ export async function GET(req: NextRequest) {
   }
   const redirectUri = `${baseUrl}/api/v1/auth/google/mobile/callback`;
 
-  // Build the deep link prefix — works in both Expo Go (exp://) and standalone (paltuu://)
-  // The RN app uses Linking.createURL('oauth2redirect') which matches this scheme
-  const appScheme = 'paltuu';
-  const deepLinkBase = `${appScheme}://oauth2redirect`;
+  let deepLinkBase = 'paltuu://oauth2redirect';
 
   try {
     const { searchParams } = new URL(req.url);
     const code = searchParams.get('code');
     const error = searchParams.get('error');
+    const state = searchParams.get('state');
+
+    if (state) {
+      deepLinkBase = decodeURIComponent(state);
+    }
 
     if (error || !code) {
       const msg = encodeURIComponent(error || 'Google sign-in was cancelled');

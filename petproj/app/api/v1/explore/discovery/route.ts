@@ -45,10 +45,15 @@ export async function GET(req: NextRequest) {
                 LIMIT 15
             `),
 
-            // Suggested users — mutual follows first, then follower count
+            // Suggested users — mutual follows first, then follower count; excludes blocked users
             db.query(`
                 WITH my_following AS (
                     SELECT following_id FROM social_follows WHERE follower_id = $1
+                ),
+                blocked AS (
+                    SELECT blocked_id AS user_id FROM user_blocks WHERE blocker_id = $1
+                    UNION
+                    SELECT blocker_id AS user_id FROM user_blocks WHERE blocked_id = $1
                 ),
                 mutual AS (
                     SELECT
@@ -58,6 +63,7 @@ export async function GET(req: NextRequest) {
                     WHERE sf.follower_id IN (SELECT following_id FROM my_following)
                       AND sf.following_id != $1
                       AND sf.following_id NOT IN (SELECT following_id FROM my_following)
+                      AND sf.following_id NOT IN (SELECT user_id FROM blocked)
                     GROUP BY sf.following_id
                 )
                 SELECT
@@ -73,6 +79,7 @@ export async function GET(req: NextRequest) {
                 WHERE u.user_id != $1
                   AND u.is_deleted = false
                   AND u.user_id NOT IN (SELECT following_id FROM my_following)
+                  AND u.user_id NOT IN (SELECT user_id FROM blocked)
                 ORDER BY mutual_follows DESC, u.follower_count DESC
                 LIMIT 10
             `, [userId]),

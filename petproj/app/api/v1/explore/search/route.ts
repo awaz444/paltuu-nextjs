@@ -345,15 +345,23 @@ export async function GET(req: NextRequest) {
         }
 
         // type === "all" — run all in parallel, cap at limit each
+        // Each sub-search is individually fail-safe so one bad query doesn't 500 the whole response
+        const safe = async (fn: () => Promise<any[]>) => {
+            try { return (await fn()).slice(0, limit); } catch (e) {
+                console.error('Search sub-query failed:', e instanceof Error ? e.message : e);
+                return [];
+            }
+        };
+
         const [users, pets, posts, products, adoptions, lost_found, hashtags, vets] = await Promise.all([
-            searchUsers(limit, null).then(r => r.slice(0, limit)),
-            searchPets(limit, null).then(r => r.slice(0, limit)),
-            searchPosts(limit, null).then(r => r.slice(0, limit)),
-            searchProducts(limit, null).then(r => r.slice(0, limit)),
-            searchAdoptions(limit, null).then(r => r.slice(0, limit)),
-            searchLostFound(limit, null).then(r => r.slice(0, limit)),
-            searchHashtags(limit, null).then(r => r.slice(0, limit)),
-            searchVets(limit, null).then(r => r.slice(0, limit)),
+            safe(() => searchUsers(limit, null)),
+            safe(() => searchPets(limit, null)),
+            safe(() => searchPosts(limit, null)),
+            safe(() => searchProducts(limit, null)),
+            safe(() => searchAdoptions(limit, null)),
+            safe(() => searchLostFound(limit, null)),
+            safe(() => searchHashtags(limit, null)),
+            safe(() => searchVets(limit, null)),
         ]);
 
         return NextResponse.json({

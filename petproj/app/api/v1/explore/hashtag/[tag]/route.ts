@@ -67,6 +67,8 @@ export async function GET(req: NextRequest, { params }: { params: { tag: string 
             return errorResponse("NOT_FOUND", "Hashtag not found", 404);
         }
 
+        const userId = parseInt(String(userIdRaw), 10);
+
         // Fetch posts for this hashtag
         let query = `
             SELECT
@@ -80,15 +82,20 @@ export async function GET(req: NextRequest, { params }: { params: { tag: string 
             WHERE h.tag = $1
               AND p.is_deleted = false
               AND p.is_hidden = false
+              AND NOT EXISTS (
+                  SELECT 1 FROM user_blocks b
+                  WHERE (b.blocker_id = $2 AND b.blocked_id = p.user_id)
+                     OR (b.blocker_id = p.user_id AND b.blocked_id = $2)
+              )
         `;
-        const queryParams: any[] = [tag, limit + 1];
+        const queryParams: any[] = [tag, userId, limit + 1];
 
         if (cursor) {
-            query += ` AND (p.created_at, p.post_id) < ($3, $4)`;
+            query += ` AND (p.created_at, p.post_id) < ($4, $5)`;
             queryParams.push(cursor.created_at, cursor.id);
         }
 
-        query += ` ORDER BY p.created_at DESC, p.post_id DESC LIMIT $2`;
+        query += ` ORDER BY p.created_at DESC, p.post_id DESC LIMIT $3`;
 
         const postsRes = await db.query(query, queryParams);
         

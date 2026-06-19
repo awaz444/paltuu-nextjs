@@ -73,14 +73,16 @@ export async function GET(req: NextRequest) {
     const googleUser = await userInfoResponse.json();
     const email: string = googleUser.email;
     const name: string = googleUser.name || 'Google User';
+    const picture: string | null = googleUser.picture || null;
+    const oauthId: string | null = googleUser.sub || null;
 
     if (!email) {
       return NextResponse.redirect(`${deepLinkBase}?error=${encodeURIComponent('No email returned from Google')}`);
     }
 
-    // 3. Find or create the user in your DB
+    // 3. Find or create the user in your DB (mirrors web NextAuth jwt callback)
     let userResult = await db.query(
-      'SELECT user_id, name, email, role FROM users WHERE email = $1',
+      'SELECT user_id, name, email, role, profile_image_url, phone_number FROM users WHERE email = $1',
       [email]
     );
 
@@ -92,8 +94,10 @@ export async function GET(req: NextRequest) {
       const placeholderPassword = await bcrypt.hash(Math.random().toString(36), 10);
 
       const newUserResult = await db.query(
-        'INSERT INTO users (username, name, email, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING user_id, name, email, role',
-        [username, name, email, placeholderPassword, 'regular user']
+        `INSERT INTO users (username, name, email, password, role, profile_image_url, oauth_provider, oauth_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING user_id, name, email, role, profile_image_url, phone_number`,
+        [username, name, email, placeholderPassword, 'regular user', picture, 'google', oauthId]
       );
       user = newUserResult.rows[0];
 
@@ -115,9 +119,17 @@ export async function GET(req: NextRequest) {
 
     console.log(`[Mobile Google Callback] ✅ Authenticated user ${email} (id: ${user.user_id})`);
 
-    // 5. Deep-link back to the app with the access token
-    const deepLink = `${deepLinkBase}?token=${encodeURIComponent(tokens.accessToken)}&refreshToken=${encodeURIComponent(tokens.refreshToken)}`;
-    return NextResponse.redirect(deepLink);
+    // 5. Deep-link back with tokens + full user info so the app needs no extra API call
+    const params = new URLSearchParams({
+      token: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      userId: String(user.user_id),
+      name: user.name,
+      email: user.email,
+      role: user.role || 'regular user',
+      ...(user.profile_image_url ? { profile_image_url: user.profile_image_url } : {}),
+    });
+    return NextResponse.redirect(`${deepLinkBase}?${params.toString()}`);
 
   } catch (error) {
     console.error('[Mobile Google Callback] Unhandled error:', error);

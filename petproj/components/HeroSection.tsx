@@ -617,7 +617,7 @@ const HeroSection = () => {
                             Browse Pets & Care Services in Your City
                         </h2>
                         <p className="text-gray-600">
-                            Find dog adoption, cat adoption, and professional pet care services in Karachi, Lahore, Islamabad, and across Pakistan.
+                            Find dog, cat, puppy, and kitten adoption, along with professional pet care services in Karachi, Lahore, Islamabad, and across Pakistan.
                         </p>
                     </div>
 
@@ -641,6 +641,16 @@ const HeroSection = () => {
                                 <li>
                                     <Link href="/browse-pets?city=karachi&type=dog" className="hover:text-primary hover:underline">
                                         Dog in Karachi / Dog Adoption
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/browse-pets?city=karachi&type=puppy" className="hover:text-primary hover:underline">
+                                        Puppy Adoption in Karachi
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/browse-pets?city=karachi&type=kitten" className="hover:text-primary hover:underline">
+                                        Kitten Adoption in Karachi
                                     </Link>
                                 </li>
                                 <li>
@@ -673,6 +683,16 @@ const HeroSection = () => {
                                     </Link>
                                 </li>
                                 <li>
+                                    <Link href="/browse-pets?city=lahore&type=puppy" className="hover:text-primary hover:underline">
+                                        Puppy Adoption in Lahore
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/browse-pets?city=lahore&type=kitten" className="hover:text-primary hover:underline">
+                                        Kitten Adoption in Lahore
+                                    </Link>
+                                </li>
+                                <li>
                                     <Link href="/pet-care?city=lahore" className="hover:text-primary hover:underline">
                                         Vets & Pet Care in Lahore
                                     </Link>
@@ -702,6 +722,16 @@ const HeroSection = () => {
                                     </Link>
                                 </li>
                                 <li>
+                                    <Link href="/browse-pets?city=islamabad&type=puppy" className="hover:text-primary hover:underline">
+                                        Puppy Adoption in Islamabad
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/browse-pets?city=islamabad&type=kitten" className="hover:text-primary hover:underline">
+                                        Kitten Adoption in Islamabad
+                                    </Link>
+                                </li>
+                                <li>
                                     <Link href="/pet-care?city=islamabad" className="hover:text-primary hover:underline">
                                         Vets & Pet Care in Islamabad
                                     </Link>
@@ -728,6 +758,16 @@ const HeroSection = () => {
                                 <li>
                                     <Link href="/browse-pets?type=dog" className="hover:text-primary hover:underline">
                                         Dog in My City / Dog Adoption
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/browse-pets?type=puppy" className="hover:text-primary hover:underline">
+                                        Puppy in My City / Puppy Adoption
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/browse-pets?type=kitten" className="hover:text-primary hover:underline">
+                                        Kitten in My City / Kitten Adoption
                                     </Link>
                                 </li>
                                 <li>

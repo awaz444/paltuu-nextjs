@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     absolute: "Paltuu — Pakistan's First Pet Super App & #1 Pet Adoption Platform | Paltuu.pk",
   },
   description:
-    "Paltuu (also spelled Paltu or Paaltuu) is Pakistan's first pet super app and #1 pet adoption platform. Adopt dogs and cats, connect with verified vets, and shop pet products in Karachi, Lahore, Islamabad, and across Pakistan. Join our growing pet community.",
+    "Paltuu (also spelled Paltu or Paaltuu) is Pakistan's first pet super app and #1 pet adoption platform. Adopt dogs, cats, puppies, and kittens, connect with verified vets, and shop pet products in Karachi, Lahore, Islamabad, and across Pakistan. Join our growing pet community.",
   keywords: [
     "paltuu",
     "paltu",
@@ -17,6 +17,14 @@ export const metadata: Metadata = {
     "pakistan pet platform",
     "adopt dog pakistan",
     "adopt cat pakistan",
+    "puppy adoption pakistan",
+    "kitten adoption pakistan",
+    "adopt puppy",
+    "adopt kitten",
+    "puppy karachi",
+    "kitten karachi",
+    "puppies for adoption lahore",
+    "kittens for adoption lahore",
     "cat adoption karachi",
     "dog adoption karachi",
     "cat adoption lahore",

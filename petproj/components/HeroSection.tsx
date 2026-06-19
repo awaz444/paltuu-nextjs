@@ -146,9 +146,12 @@ const HeroSection = () => {
                             {/* Heading with primary_icon.svg */}
                             <h4 className="text-xl md:text-2xl font-semibold text-primary flex justify-center items-center gap-3 relative z-10">
                                 Why choose
-                                <img
+                                <Image
                                     src="/paltuu.png"
                                     alt="Paltuu"
+                                    width={150}
+                                    height={96}
+                                    style={{ width: "auto" }}
                                     className="h-16 md:h-24 inline-block relative md:-top-2 md:-left-2 -top-1 -left-2"
                                 />
                             </h4>
@@ -219,9 +222,12 @@ const HeroSection = () => {
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-4 flex items-center justify-center gap-2 md:gap-4">
                             How
-                            <img
+                            <Image
                                 src="/paltuu.png"
                                 alt="Paltuu"
+                                width={200}
+                                height={160}
+                                style={{ width: "auto" }}
                                 className="h-24 md:h-40 object-contain pb-4"
                             />
                             Works

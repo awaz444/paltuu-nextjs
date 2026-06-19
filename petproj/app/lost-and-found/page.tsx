@@ -140,10 +140,19 @@ export default function LostFound() {
 
     return (
         <>
-            
             <div
                 className="fullBody"
                 style={{ maxWidth: "90%", margin: "0 auto" }}>
+                
+                {/* SEO Headers for Server-Side Rendering & Soft 404 Fix */}
+                <div className="text-center py-8 md:py-12 bg-white border border-gray-100 mb-6 rounded-2xl shadow-sm px-4">
+                    <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
+                        Lost and Found Pets in Pakistan
+                    </h1>
+                    <p className="text-gray-600 text-base md:text-lg max-w-4xl mx-auto">
+                        Have you lost your pet or found a stray animal? Paltuu.pk is Pakistan's largest community for reuniting missing pets with their families. Search our database of lost and found dogs, cats, and other animals in Karachi, Lahore, Islamabad, and nationwide. Report a missing pet or list a found animal to help them get back home safely.
+                    </p>
+                </div>
                 <LostAndFoundFilter
                     onSearch={(filters) => {
                         console.log("Filters updated:", filters);

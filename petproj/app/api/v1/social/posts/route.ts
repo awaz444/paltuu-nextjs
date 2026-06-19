@@ -3,6 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { fanOutPostToFollowers } from "@/lib/redis";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
+import {
+    parseMentions,
+    validateMentions,
+    persistMentions,
+    notifyNewMentions,
+    MAX_MENTIONS_PER_CONTENT,
+    type ParsedMention,
+} from "@/lib/mentions";
 
 export const dynamic = "force-dynamic";
 
@@ -268,6 +276,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Post content or media is required" }, { status: 400 });
         }
 
+        let parsedMentions: ParsedMention[] = [];
+
         await db.query('BEGIN');
         try {
             // 1. Create Post
@@ -313,6 +323,16 @@ export async function POST(req: NextRequest) {
                 }
             }
 
+            // 4.5. Parse, validate & persist @mentions from content
+            if (content) {
+                parsedMentions = parseMentions(content);
+                if (parsedMentions.length > MAX_MENTIONS_PER_CONTENT) {
+                    throw new Error(`A post can mention at most ${MAX_MENTIONS_PER_CONTENT} users/pets`);
+                }
+                await validateMentions(db, parsedMentions, userId);
+                await persistMentions(db, { postId: post.post_id }, parsedMentions, userId);
+            }
+
             // 5. Tag personal pet profiles (not adoption listings)
             if (Array.isArray(pet_profile_tags) && pet_profile_tags.length > 0) {
                 const tagIds = pet_profile_tags
@@ -347,6 +367,18 @@ export async function POST(req: NextRequest) {
             fanOutPostToFollowers(post.post_id, userId, post.created_at, db)
                 .catch(() => {}); // never block the response
 
+            // Notify mentioned users/pet-owners (fire and forget — non-blocking)
+            if (parsedMentions.length > 0) {
+                const authorRes = await db.query(`SELECT name FROM users WHERE user_id = $1`, [userId]);
+                notifyNewMentions(parsedMentions, {
+                    mentionerId: userId,
+                    mentionerName: authorRes.rows[0]?.name || 'User',
+                    postId: Number(post.post_id),
+                    isComment: false,
+                    postImageUrl: media[0]?.url,
+                }).catch(() => {});
+            }
+
             return NextResponse.json(post, { status: 201 });
 
         } catch (e) {
@@ -356,8 +388,14 @@ export async function POST(req: NextRequest) {
 
     } catch (error) {
         console.error("V1 Social Posts POST error:", error);
-        return NextResponse.json({
-            error: error instanceof Error ? error.message : "Internal Server Error"
-        }, { status: 500 });
+        const message = error instanceof Error ? error.message : "Internal Server Error";
+        const isValidationError =
+            message.includes('do not belong to you') ||
+            message.includes('do not exist') ||
+            message.includes('mention at most');
+        return NextResponse.json(
+            { error: message },
+            { status: isValidationError ? 400 : 500 }
+        );
     }
 }

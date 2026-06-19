@@ -1,6 +1,14 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import {
+    parseMentions,
+    validateMentions,
+    deleteMentions,
+    persistMentions,
+    notifyNewMentions,
+    type ParsedMention,
+} from "@/lib/mentions";
 
 export const dynamic = "force-dynamic";
 
@@ -178,6 +186,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         if (postCheck.rows[0].user_id !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
         const oldContent = postCheck.rows[0].content;
+        let newlyAddedMentions: ParsedMention[] = [];
 
         await db.query('BEGIN');
         try {
@@ -253,7 +262,34 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                 }
             }
 
+            // If content changed, update mentions (same delete-old/reparse/reinsert
+            // pattern as hashtags above, but diffed so we only notify NEWLY added
+            // mentions — re-saving a post shouldn't re-notify retained mentions).
+            if (content !== undefined && content !== oldContent) {
+                const oldMentions = parseMentions(oldContent);
+                const newMentions = parseMentions(content);
+
+                await validateMentions(db, newMentions, userId);
+
+                await deleteMentions(db, { postId });
+                await persistMentions(db, { postId }, newMentions, userId);
+
+                const oldKeys = new Set(oldMentions.map((m) => `${m.type}:${m.id}`));
+                newlyAddedMentions = newMentions.filter((m) => !oldKeys.has(`${m.type}:${m.id}`));
+            }
+
             await db.query('COMMIT');
+
+            if (newlyAddedMentions.length > 0) {
+                const authorRes = await db.query(`SELECT name FROM users WHERE user_id = $1`, [userId]);
+                notifyNewMentions(newlyAddedMentions, {
+                    mentionerId: userId,
+                    mentionerName: authorRes.rows[0]?.name || 'User',
+                    postId: Number(postId),
+                    isComment: false,
+                }).catch(() => {});
+            }
+
             return NextResponse.json({ updated: true });
         } catch (e) {
             await db.query('ROLLBACK');
@@ -261,6 +297,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         }
     } catch (error) {
         console.error("V1 Social Post PATCH error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        const message = error instanceof Error ? error.message : "Internal Server Error";
+        const isValidationError =
+            message.includes('do not belong to you') ||
+            message.includes('do not exist') ||
+            message.includes('mention at most');
+        return NextResponse.json(
+            { error: message },
+            { status: isValidationError ? 400 : 500 }
+        );
     }
 }

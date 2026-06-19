@@ -807,6 +807,7 @@ model social_comments {
   social_comments_social_comments_root_comment_idTosocial_comments         social_comments?  @relation("social_comments_root_comment_idTosocial_comments", fields: [root_comment_id], references: [comment_id], onDelete: NoAction, onUpdate: NoAction)
   other_social_comments_social_comments_root_comment_idTosocial_comments   social_comments[] @relation("social_comments_root_comment_idTosocial_comments")
   users                                                                    users             @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  social_mentions                                                         social_mentions[]
 }
 
 model social_follows {
@@ -878,6 +879,7 @@ model social_posts {
   users              users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
   social_reposts     social_reposts[]
   post_pet_tags      post_pet_tags[]
+  social_mentions    social_mentions[]
 }
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
@@ -964,6 +966,8 @@ model users {
   vet_reviews                                       vet_reviews[]
   vets                                              vets[]
   pet_profiles                                      pet_profiles[]
+  social_mentions_mentioned                         social_mentions[] @relation("social_mentions_mentioned_userTousers")
+  social_mentions_by                                social_mentions[] @relation("social_mentions_mentioned_byTousers")
 }
 
 model save_collections {
@@ -1165,6 +1169,7 @@ model pet_profiles {
   pets                   pets?                @relation(fields: [adoption_listing_id], references: [pet_id], onDelete: SetNull, onUpdate: NoAction)
   pet_profile_photos     pet_profile_photos[]
   post_pet_tags          post_pet_tags[]
+  social_mentions        social_mentions[]
 
   @@index([owner_id], map: "idx_pet_profiles_owner_id")
   @@index([species], map: "idx_pet_profiles_species")
@@ -1187,7 +1192,7 @@ model pet_profile_photos {
 
 /// Join table: links social posts to personal pet profiles (many-to-many).
 model post_pet_tags {
-  post_id        BigInt       
+  post_id        BigInt
   pet_profile_id Int
   created_at     DateTime     @default(now()) @db.Timestamptz(6)
   social_posts   social_posts @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction)
@@ -1196,4 +1201,31 @@ model post_pet_tags {
   @@id([post_id, pet_profile_id])
   @@index([pet_profile_id], map: "idx_post_pet_tags_pet_profile_id")
   @@index([post_id], map: "idx_post_pet_tags_post_id")
+}
+
+/// Index of @mentions parsed out of social_posts/social_comments content
+/// (bracket-encoded, e.g. @[alice_w](user:7)). NOT used for rendering —
+/// content already carries the frozen display text. Used for notification
+/// fan-out and mention lookups. Exactly one of mentioned_user_id /
+/// mentioned_pet_id, and exactly one of post_id / comment_id, is set
+/// (enforced by CHECK constraints — see migrations/006_add_social_mentions.sql).
+model social_mentions {
+  mention_id         BigInt           @id @default(autoincrement())
+  post_id            BigInt?
+  comment_id         BigInt?
+  mentioned_user_id  Int?
+  mentioned_pet_id   Int?
+  mentioned_by       Int
+  created_at         DateTime         @default(now()) @db.Timestamptz(6)
+  social_posts       social_posts?    @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction)
+  social_comments    social_comments? @relation(fields: [comment_id], references: [comment_id], onDelete: Cascade, onUpdate: NoAction)
+  mentioned_user     users?           @relation("social_mentions_mentioned_userTousers", fields: [mentioned_user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  mentioned_pet      pet_profiles?    @relation(fields: [mentioned_pet_id], references: [pet_profile_id], onDelete: Cascade, onUpdate: NoAction)
+  mentioning_user    users            @relation("social_mentions_mentioned_byTousers", fields: [mentioned_by], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([post_id], map: "idx_social_mentions_post_id")
+  @@index([comment_id], map: "idx_social_mentions_comment_id")
+  @@index([mentioned_user_id, created_at(sort: Desc)], map: "idx_social_mentions_user")
+  @@index([mentioned_pet_id], map: "idx_social_mentions_pet")
+  @@index([mentioned_by], map: "idx_social_mentions_by")
 }

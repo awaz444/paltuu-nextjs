@@ -5,6 +5,14 @@ import { emitComment, emitNotification } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { SocialNotifications } from "@/lib/notifications";
 import { assertNotBlocked, checkIsBlocked } from "@/lib/moderation";
+import {
+    parseMentions,
+    validateMentions,
+    persistMentions,
+    notifyNewMentions,
+    MAX_MENTIONS_PER_CONTENT,
+    type ParsedMention,
+} from "@/lib/mentions";
 
 export const dynamic = "force-dynamic";
 
@@ -105,6 +113,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         // Check out a dedicated client so BEGIN/INSERT/COMMIT all run on ONE connection
         const client = await db.connect();
         let comment: any;
+        let parsedMentions: ParsedMention[] = [];
         try {
             await client.query('BEGIN');
 
@@ -136,6 +145,20 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             `, [postId, userId, parent_comment_id || null, root_comment_id, content.trim(), depth]);
 
             comment = result.rows[0];
+
+            // Parse, validate & persist @mentions from content (covers both
+            // top-level comments and replies — both are social_comments rows)
+            parsedMentions = parseMentions(content.trim());
+            if (parsedMentions.length > MAX_MENTIONS_PER_CONTENT) {
+                await client.query('ROLLBACK');
+                client.release();
+                return NextResponse.json(
+                    { error: `A comment can mention at most ${MAX_MENTIONS_PER_CONTENT} users/pets` },
+                    { status: 400 }
+                );
+            }
+            await validateMentions(client, parsedMentions, userId);
+            await persistMentions(client, { commentId: comment.comment_id }, parsedMentions, userId);
 
             // Increment comment count on post
             await client.query(
@@ -197,6 +220,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             }).catch(() => {});
         }
 
+        // Notify mentioned users/pet-owners (fire and forget — non-blocking)
+        if (parsedMentions.length > 0) {
+            notifyNewMentions(parsedMentions, {
+                mentionerId: userId,
+                mentionerName: commenter?.name || 'User',
+                postId: parseInt(postId),
+                isComment: true,
+                postImageUrl: postImage,
+            }).catch(() => {});
+        }
+
         return NextResponse.json(comment, { status: 201 });
 
     } catch (error: any) {
@@ -204,8 +238,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             return NextResponse.json({ error: "BLOCKED" }, { status: 403 });
         }
         console.error("V1 Social Comments POST error:", error);
-        return NextResponse.json({
-            error: error instanceof Error ? error.message : "Internal Server Error"
-        }, { status: 500 });
+        const message = error instanceof Error ? error.message : "Internal Server Error";
+        const isValidationError =
+            message.includes('do not belong to you') ||
+            message.includes('do not exist') ||
+            message.includes('mention at most');
+        return NextResponse.json(
+            { error: message },
+            { status: isValidationError ? 400 : 500 }
+        );
     }
 }

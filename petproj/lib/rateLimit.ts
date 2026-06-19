@@ -35,6 +35,7 @@ export const LIMITS = {
     UPLOAD:               [20,  3600],  // 20 uploads per hour
     FEED:                 [120, 60],    // 120 feed loads per minute (generous)
     NOTIFICATION_READ:    [30,  60],    // 30 mark-reads per minute
+    MENTION_SUGGEST:      [120, 60],    // 120 suggestion fetches per minute (debounced keystrokes)
 } as const;
 
 type LimitPreset = (typeof LIMITS)[keyof typeof LIMITS];

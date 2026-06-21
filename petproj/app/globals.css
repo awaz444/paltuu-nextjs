@@ -67,6 +67,7 @@
 /* Apply the theme colors */
 body {
   font-family: var(--font-family);
+  font-weight: 400;
   color: rgb(var(--foreground-rgb));
   background-color: var(--background-color);
 }

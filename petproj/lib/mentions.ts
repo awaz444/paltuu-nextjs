@@ -81,10 +81,10 @@ export function parseMentions(content: string | null | undefined): ParsedMention
  *    there's nothing stable to have frozen into the token).
  *  - A `pet`-type mention must reference a pet_profile that exists.
  *
- * Deliberately does NOT check blocks — a mention of a blocked/blocking user
- * is allowed to persist (it just won't generate a notification; see
- * notifyNewMentions below, and the suggestion endpoint already excludes
- * blocked users so this only arises from a manually-constructed mention).
+ * Block enforcement: if the author has blocked a mentioned user, or the
+ * mentioned user has blocked the author, the mention is rejected with a 400.
+ * The suggestion UI already excludes blocked users, so this only catches
+ * manually-crafted payloads.
  */
 export async function validateMentions(
     client: QueryClient,
@@ -114,6 +114,17 @@ export async function validateMentions(
         if (parseInt(userCheck.rows[0].count, 10) !== userIds.length) {
             throw new Error("One or more mentioned users do not exist or have no username set");
         }
+
+        // Reject if any mentioned user is in a block relationship with the author
+        const blockCheck = await client.query(
+            `SELECT COUNT(*) FROM user_blocks
+             WHERE (blocker_id = $1 AND blocked_id = ANY($2::int[]))
+                OR (blocker_id = ANY($2::int[]) AND blocked_id = $1)`,
+            [authorUserId, userIds]
+        );
+        if (parseInt(blockCheck.rows[0].count, 10) > 0) {
+            throw new Error("You cannot mention a user you have blocked or who has blocked you");
+        }
     }
 }
 
@@ -125,6 +136,10 @@ export async function validateMentions(
  * row outliving a rolled-back parent, or referencing a parent that never
  * commits). Duplicate-safe via ON CONFLICT DO NOTHING against the partial
  * unique indexes (parseMentions already de-dupes, this is just a backstop).
+ *
+ * User-type mentions where a bidirectional block exists are silently dropped —
+ * the suggestion UI already excludes blocked users, so this only guards
+ * against hand-crafted payloads.
  */
 export async function persistMentions(
     client: QueryClient,
@@ -137,7 +152,25 @@ export async function persistMentions(
     const postId = target.postId ?? null;
     const commentId = target.commentId ?? null;
 
+    // Resolve which user-mention targets are blocked (bidirectional) so we
+    // never write a social_mentions row for a blocked pair.
+    const userMentionIds = mentions.filter((m) => m.type === "user").map((m) => m.id);
+    const blockedUserIds = new Set<number>();
+    if (userMentionIds.length > 0) {
+        const blockRes = await client.query(
+            `SELECT DISTINCT
+                CASE WHEN blocker_id = $1 THEN blocked_id ELSE blocker_id END AS other_user_id
+             FROM user_blocks
+             WHERE (blocker_id = $1 AND blocked_id = ANY($2::int[]))
+                OR (blocker_id = ANY($2::int[]) AND blocked_id = $1)`,
+            [mentionedBy, userMentionIds]
+        );
+        for (const row of blockRes.rows) blockedUserIds.add(row.other_user_id);
+    }
+
     for (const mention of mentions) {
+        if (mention.type === "user" && blockedUserIds.has(mention.id)) continue;
+
         const mentionedUserId = mention.type === "user" ? mention.id : null;
         const mentionedPetId = mention.type === "pet" ? mention.id : null;
 

@@ -9,6 +9,7 @@ import {
     notifyNewMentions,
     type ParsedMention,
 } from "@/lib/mentions";
+import { checkIsBlocked } from "@/lib/moderation";
 
 export const dynamic = "force-dynamic";
 
@@ -95,6 +96,16 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
         if (result.rowCount === 0) {
             return NextResponse.json({ error: "Post not found" }, { status: 404 });
+        }
+
+        // Block check: if viewer is authenticated and either side has blocked the other,
+        // return 404 — same as "post not found" — so we don't reveal the block relationship.
+        const postAuthorId: number = result.rows[0].user_id;
+        if (userId > 0 && postAuthorId !== userId) {
+            const blocked = await checkIsBlocked(userId, postAuthorId);
+            if (blocked) {
+                return NextResponse.json({ error: "Post not found" }, { status: 404 });
+            }
         }
 
         // Increment view count (fire and forget, non-blocking)

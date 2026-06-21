@@ -97,7 +97,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     } catch (error: any) {
         if (error.message === 'BLOCKED') {
-            return NextResponse.json({ error: "BLOCKED" }, { status: 403 });
+            // 404, not 403 — don't confirm to the blocked user that the post exists
+            return NextResponse.json({ error: "Post not found" }, { status: 404 });
         }
         console.error("V1 Social Likes POST error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

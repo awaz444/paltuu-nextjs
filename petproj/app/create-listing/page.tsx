@@ -19,6 +19,11 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const { Panel } = Collapse;
 
+// Only allow letters (Latin + Urdu range), digits, spaces and basic punctuation
+const TITLE_RE = /^[a-zA-Z0-9؀-ۿ\s\-,.'&()]+$/;
+const LETTERS_RE = /^[a-zA-Z؀-ۿ\s\-']+$/;
+const PHONE_RE = /^3\d{9}$/; // 10 digits starting with 3
+
 export default function CreatePetListing() {
 
     const router = useRouter();
@@ -26,13 +31,10 @@ export default function CreatePetListing() {
     const { cities } = useSelector((state: RootState) => state.cities);
     const { categories } = useSelector((state: RootState) => state.categories);
 
-    // Auth hooks
     const { isAuthenticated, user } = useAuth();
     const { status } = useSession();
 
-    // Step state
     const [currentStep, setCurrentStep] = useState(1);
-    // Form state
     const [title, setTitle] = useState("");
     const [petType, setPetType] = useState("");
     const [cityId, setCityId] = useState("");
@@ -48,14 +50,10 @@ export default function CreatePetListing() {
     const [ageError, setAgeError] = useState<string | null>(null);
     const [monthsError, setMonthsError] = useState<string | null>(null);
 
-    // Image upload state
     const [fileList, setFileList] = useState<UploadFile[]>([]);
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState("");
-
-    // Loading states
     const [isSubmitting, setIsSubmitting] = useState(false);
-
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
     const petTags = [
@@ -91,23 +89,51 @@ export default function CreatePetListing() {
         dispatch(fetchPetCategories());
     }, [dispatch]);
 
-    // Authentication check - redirect if not authenticated
     useEffect(() => {
         if (status !== "loading" && !isAuthenticated) {
             router.push("/auth");
         }
     }, [isAuthenticated, status, router]);
 
+    // ── Input handlers with validation ──────────────────────────────────────
+
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const v = e.target.value;
+        if (v === "" || (TITLE_RE.test(v) && v.length <= 80)) setTitle(v);
+    };
+
+    const handleAreaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const v = e.target.value;
+        if (v === "" || (TITLE_RE.test(v) && v.length <= 100)) setArea(v);
+    };
+
+    const handleBreedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const v = e.target.value;
+        if (v === "" || (LETTERS_RE.test(v) && v.length <= 60)) setBreed(v);
+    };
+
+    const handleHealthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const v = e.target.value;
+        if (v.length <= 200) setHealthIssues(v);
+    };
+
+    const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const v = e.target.value;
+        if (v.length <= 1000) setDescription(v);
+    };
+
+    // Phone: digits only, max 10, must start with 3
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const v = e.target.value.replace(/\D/g, "");
+        if (v.length <= 10) setContactNumber(v);
+    };
+
     const handleAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        if (value === "" || (!isNaN(Number(value)) && Number(value) >= 0)) {
-            const numberValue = value ? Number(value) : null;
-            setAge(numberValue);
-
-            if (
-                (numberValue === null || numberValue === 0) &&
-                (months === null || months === 0)
-            ) {
+        if (value === "" || (!isNaN(Number(value)) && Number(value) >= 0 && Number(value) <= 30)) {
+            const n = value ? Number(value) : null;
+            setAge(n);
+            if ((n === null || n === 0) && (months === null || months === 0)) {
                 setAgeError("Either age or months must be filled");
                 setMonthsError("Either age or months must be filled");
             } else {
@@ -119,15 +145,10 @@ export default function CreatePetListing() {
 
     const handleMonthsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        const parsedMonth = value ? parseInt(value) : null;
-
-        if (parsedMonth === null || (parsedMonth >= 0 && parsedMonth <= 11)) {
-            setMonths(parsedMonth);
-
-            if (
-                (parsedMonth === null || parsedMonth === 0) &&
-                (age === null || age === 0)
-            ) {
+        const n = value ? parseInt(value) : null;
+        if (n === null || (n >= 0 && n <= 11)) {
+            setMonths(n);
+            if ((n === null || n === 0) && (age === null || age === 0)) {
                 setAgeError("Either age or months must be filled");
                 setMonthsError("Either age or months must be filled");
             } else {
@@ -137,16 +158,13 @@ export default function CreatePetListing() {
         }
     };
 
+    // ── Image upload ─────────────────────────────────────────────────────────
 
     const beforeUpload = (file: File) => {
         const isImage = file.type.startsWith("image/");
-        if (!isImage) {
-            message.error("You can only upload image files!");
-        }
+        if (!isImage) message.error("You can only upload image files!");
         const isSmallEnough = file.size / 1024 / 1024 < 5;
-        if (!isSmallEnough) {
-            message.error("Image must be smaller than 5MB!");
-        }
+        if (!isSmallEnough) message.error("Image must be smaller than 5MB!");
         return isImage && isSmallEnough;
     };
 
@@ -162,7 +180,6 @@ export default function CreatePetListing() {
         if (!file.url && !file.preview) {
             file.preview = await getBase64(file.originFileObj as File);
         }
-
         setPreviewImage(file.url || (file.preview as string));
         setPreviewOpen(true);
     };
@@ -177,44 +194,56 @@ export default function CreatePetListing() {
         </button>
     );
 
-    const validateForm = () => {
-        const errors: Record<string, string> = {};
+    // ── Validation ───────────────────────────────────────────────────────────
 
-        if (!title) errors.title = "Title is required";
+    const validateStep1 = (): boolean => {
+        const errors: Record<string, string> = {};
+        if (!title.trim()) errors.title = "Title is required";
         if (!petType) errors.petType = "Pet type is required";
         if (!cityId) errors.cityId = "City is required";
-        if (!contactNumber) errors.contactNumber = "Contact number is required";
+        if (!contactNumber) {
+            errors.contactNumber = "Contact number is required";
+        } else if (!PHONE_RE.test(contactNumber)) {
+            errors.contactNumber = "Enter a valid 10-digit number starting with 3 (e.g. 3001234567)";
+        }
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
 
+    const validateForm = () => {
+        const errors: Record<string, string> = {};
+        if (!title.trim()) errors.title = "Title is required";
+        if (!petType) errors.petType = "Pet type is required";
+        if (!cityId) errors.cityId = "City is required";
+        if (!contactNumber) {
+            errors.contactNumber = "Contact number is required";
+        } else if (!PHONE_RE.test(contactNumber)) {
+            errors.contactNumber = "Enter a valid 10-digit number starting with 3";
+        }
         if ((age === null || age === 0) && (months === null || months === 0)) {
             errors.age = "Either age or months must be filled";
             errors.months = "Either age or months must be filled";
         }
-
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
         if (!validateForm()) {
             message.error("Please fix the form errors before submitting");
             return;
         }
-
         if (fileList.length === 0) {
             message.error("Please add at least one picture of the pet.");
             return;
         }
-
         if (!user?.id) {
             message.error("Authentication required. Please log in.");
             router.push("/auth");
             return;
         }
-
         setIsSubmitting(true);
-
         try {
             const newPet = {
                 pet_name: title || null,
@@ -232,31 +261,19 @@ export default function CreatePetListing() {
                 listing_type: "adoption",
                 tags: selectedTags,
             };
-
             const petResult = await dispatch(postPet(newPet)).unwrap();
             const petId = petResult?.pet_id;
-
-            if (!petId) {
-                throw new Error("Failed to get pet ID from response");
-            }
-
-            // Then upload images if any
+            if (!petId) throw new Error("Failed to get pet ID from response");
             if (fileList.length > 0) {
                 const formData = new FormData();
                 fileList.forEach((file) => {
-                    if (file.originFileObj) {
-                        formData.append("files", file.originFileObj);
-                    }
+                    if (file.originFileObj) formData.append("files", file.originFileObj);
                 });
                 formData.append("pet_id", String(petId));
-
                 await axios.post("/api/v1/upload-image", formData, {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
+                    headers: { "Content-Type": "multipart/form-data" },
                 });
             }
-
             router.push("/listing-created");
         } catch (error) {
             console.error("Error creating pet listing:", error);
@@ -273,10 +290,9 @@ export default function CreatePetListing() {
     };
 
     const nextStep = () => {
-        // Validate based on current step
         if (currentStep === 1) {
-            if (!title || !petType || !cityId || !contactNumber) {
-                message.error("Please fill in all required fields");
+            if (!validateStep1()) {
+                message.error("Please fix the errors before continuing");
                 return;
             }
             setCurrentStep(2);
@@ -289,11 +305,8 @@ export default function CreatePetListing() {
         }
     };
 
-    const prevStep = () => {
-        setCurrentStep((prev) => prev - 1);
-    };
+    const prevStep = () => setCurrentStep((prev) => prev - 1);
 
-    // Show loading state while authentication is being determined
     if (status === "loading") {
         return (
             <div className="flex justify-center items-center min-h-screen">
@@ -301,8 +314,6 @@ export default function CreatePetListing() {
             </div>
         );
     }
-
-    // Show loading state if not authenticated (will redirect)
     if (!isAuthenticated || !user) {
         return (
             <div className="flex justify-center items-center min-h-screen">
@@ -328,11 +339,10 @@ export default function CreatePetListing() {
                                         scale: currentStep === step ? 1.2 : 1,
                                         backgroundColor: currentStep >= step ? "var(--primary-color)" : "#e2e8f0",
                                     }}
-                                    className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white transition-all shadow-lg ${currentStep >= step ? "shadow-primary/20" : ""
-                                        }`}>
+                                    className={`w-12 h-12 rounded-2xl flex items-center justify-center font-semibold text-white transition-all shadow-lg ${currentStep >= step ? "shadow-primary/20" : ""}`}>
                                     {step}
                                 </motion.div>
-                                <span className={`text-[10px] uppercase tracking-widest mt-3 font-black ${currentStep >= step ? "text-primary" : "text-gray-400"}`}>
+                                <span className={`text-[10px] uppercase tracking-widest mt-3 font-semibold ${currentStep >= step ? "text-primary" : "text-gray-400"}`}>
                                     {step === 1 ? "Essentials" : step === 2 ? "Attributes" : "Gallery"}
                                 </span>
                             </div>
@@ -363,29 +373,33 @@ export default function CreatePetListing() {
                                     className="space-y-8">
 
                                     <div className="text-center mb-10">
-                                        <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">The Essentials</h2>
-                                        <p className="text-gray-500 font-medium">Start with the fundamental details</p>
+                                        <h2 className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">The Essentials</h2>
+                                        <p className="text-gray-500 font-normal">Start with the fundamental details</p>
                                     </div>
 
-
                                     <div className="space-y-6">
+                                        {/* Title */}
                                         <div>
-                                            <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Listing Title *</label>
+                                            <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">
+                                                Listing Title * <span className="normal-case tracking-normal font-normal text-gray-300">({title.length}/80)</span>
+                                            </label>
                                             <input
                                                 type="text"
                                                 required
-                                                className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 focus:bg-white text-lg font-bold"
+                                                className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 focus:bg-white text-base font-normal"
                                                 placeholder="e.g. Energetic Husky Mix for Adoption"
                                                 value={title}
-                                                onChange={(e) => setTitle(e.target.value)}
+                                                onChange={handleTitleChange}
                                             />
+                                            {formErrors.title && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.title}</p>}
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-6">
+                                            {/* Pet Type */}
                                             <div>
-                                                <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Pet Type *</label>
+                                                <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Pet Type *</label>
                                                 <select
-                                                    className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 font-bold appearance-none"
+                                                    className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 font-normal appearance-none"
                                                     value={petType}
                                                     required
                                                     onChange={(e) => setPetType(e.target.value)}>
@@ -396,16 +410,18 @@ export default function CreatePetListing() {
                                                         </option>
                                                     ))}
                                                 </select>
+                                                {formErrors.petType && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.petType}</p>}
                                             </div>
+                                            {/* Sex */}
                                             <div>
-                                                <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Sex *</label>
+                                                <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Sex *</label>
                                                 <div className="flex gap-2">
                                                     {["male", "female"].map((s) => (
                                                         <button
                                                             key={s}
                                                             type="button"
                                                             onClick={() => setSex(s)}
-                                                            className={`flex-1 py-4 rounded-3xl text-sm font-bold capitalize border transition-all ${sex === s
+                                                            className={`flex-1 py-4 rounded-3xl text-sm font-medium capitalize border transition-all ${sex === s
                                                                 ? "border-primary bg-primary/5 text-primary"
                                                                 : "border-gray-100 bg-gray-50 text-gray-400"
                                                                 }`}>
@@ -417,10 +433,11 @@ export default function CreatePetListing() {
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-6">
+                                            {/* City */}
                                             <div>
-                                                <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">City *</label>
+                                                <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">City *</label>
                                                 <select
-                                                    className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 font-bold"
+                                                    className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 font-normal"
                                                     value={cityId}
                                                     required
                                                     onChange={(e) => setCityId(e.target.value)}>
@@ -431,39 +448,42 @@ export default function CreatePetListing() {
                                                         </option>
                                                     ))}
                                                 </select>
+                                                {formErrors.cityId && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.cityId}</p>}
                                             </div>
+                                            {/* Area */}
                                             <div>
-                                                <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Area/Neighborhood *</label>
+                                                <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Area/Neighborhood</label>
                                                 <input
                                                     type="text"
-                                                    className="p-5 w-full border rounded-3xl input-field bg-gray-50/50"
+                                                    className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 font-normal"
                                                     placeholder="DHA, Gulberg, etc."
                                                     value={area}
-                                                    onChange={(e) => setArea(e.target.value)}
+                                                    onChange={handleAreaChange}
                                                 />
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-6">
-                                            <div className="col-span-2">
-                                                <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Contact Phone *</label>
-                                                <div className="flex items-center p-5 w-full border rounded-3xl input-field bg-gray-50/50 focus-within:bg-white focus-within:border-primary transition-all group">
-                                                    <span className="text-gray-400 font-bold mr-2 select-none">+92</span>
-                                                    <input
-                                                        type="text"
-                                                        required
-                                                        className="bg-transparent border-none outline-none w-full text-lg font-bold placeholder:text-gray-300"
-                                                        placeholder="3001234567"
-                                                        value={contactNumber}
-                                                        onChange={(e) => {
-                                                            const value = e.target.value.replace(/\D/g, "");
-                                                            if (value.length <= 11) {
-                                                                setContactNumber(value);
-                                                            }
-                                                        }}
-                                                    />
-                                                </div>
+                                        {/* Phone */}
+                                        <div>
+                                            <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Contact Phone *</label>
+                                            <div className={`flex items-center p-5 w-full border rounded-3xl input-field bg-gray-50/50 focus-within:bg-white transition-all ${formErrors.contactNumber ? "border-red-300" : "focus-within:border-primary"}`}>
+                                                <span className="text-gray-500 font-medium mr-2 select-none">+92</span>
+                                                <input
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    required
+                                                    className="bg-transparent border-none outline-none w-full text-base font-normal placeholder:text-gray-300"
+                                                    placeholder="3001234567"
+                                                    value={contactNumber}
+                                                    onChange={handlePhoneChange}
+                                                    maxLength={10}
+                                                />
+                                                <span className="text-xs text-gray-300 select-none">{contactNumber.length}/10</span>
                                             </div>
+                                            {formErrors.contactNumber
+                                                ? <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.contactNumber}</p>
+                                                : <p className="text-gray-400 text-xs mt-1 ml-1">10-digit number after +92 (e.g. 3001234567)</p>
+                                            }
                                         </div>
                                     </div>
 
@@ -472,8 +492,8 @@ export default function CreatePetListing() {
                                         whileTap={{ scale: 0.98 }}
                                         type="button"
                                         onClick={nextStep}
-                                        className="mt-12 p-6 bg-primary text-white rounded-[2rem] w-full font-black text-lg shadow-2xl shadow-primary/30 active:shadow-none transition-shadow">
-                                        Next Component
+                                        className="mt-12 p-6 bg-primary text-white rounded-[2rem] w-full font-semibold text-base shadow-2xl shadow-primary/30 active:shadow-none transition-shadow">
+                                        Next
                                     </motion.button>
                                 </motion.div>
                             )}
@@ -487,28 +507,32 @@ export default function CreatePetListing() {
                                     className="space-y-10">
 
                                     <div className="text-center mb-8">
-                                        <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">Traits & Behavior</h2>
-                                        <p className="text-gray-500 font-medium">Describe their unique personality</p>
+                                        <h2 className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">Traits & Behavior</h2>
+                                        <p className="text-gray-500 font-normal">Describe their unique personality</p>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-8 p-8 bg-gray-50/50 rounded-[3rem] border border-gray-100">
                                         <div className="space-y-6">
                                             <div>
-                                                <label className="block text-[10px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Years</label>
+                                                <label className="block text-[10px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Years</label>
                                                 <input
                                                     type="number"
-                                                    className="p-5 w-full border rounded-3xl input-field bg-white font-bold"
+                                                    min="0"
+                                                    max="30"
+                                                    className="p-5 w-full border rounded-3xl input-field bg-white font-normal"
                                                     placeholder="0"
                                                     value={age ?? ""}
                                                     onChange={handleAgeChange}
                                                 />
+                                                {ageError && <p className="text-red-500 text-xs mt-1 ml-1">{ageError}</p>}
                                             </div>
                                             <div>
-                                                <label className="block text-[10px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Months</label>
+                                                <label className="block text-[10px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Months (0–11)</label>
                                                 <input
                                                     type="number"
+                                                    min="0"
                                                     max="11"
-                                                    className="p-5 w-full border rounded-3xl input-field bg-white font-bold"
+                                                    className="p-5 w-full border rounded-3xl input-field bg-white font-normal"
                                                     placeholder="0"
                                                     value={months ?? ""}
                                                     onChange={handleMonthsChange}
@@ -517,51 +541,52 @@ export default function CreatePetListing() {
                                         </div>
                                         <div className="space-y-6">
                                             <div>
-                                                <label className="block text-[10px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Breed</label>
+                                                <label className="block text-[10px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Breed</label>
                                                 <input
                                                     type="text"
-                                                    className="p-5 w-full border rounded-3xl input-field bg-white"
+                                                    className="p-5 w-full border rounded-3xl input-field bg-white font-normal"
                                                     placeholder="e.g. Persian"
                                                     value={breed}
-                                                    onChange={(e) => setBreed(e.target.value)}
+                                                    onChange={handleBreedChange}
+                                                    maxLength={60}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-[10px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Health Issues</label>
+                                                <label className="block text-[10px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Health Issues</label>
                                                 <input
                                                     type="text"
-                                                    className="p-5 w-full border rounded-3xl input-field bg-white"
+                                                    className="p-5 w-full border rounded-3xl input-field bg-white font-normal"
                                                     placeholder="None / Minor"
                                                     value={healthIssues}
-                                                    onChange={(e) => setHealthIssues(e.target.value)}
+                                                    onChange={handleHealthChange}
+                                                    maxLength={200}
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="space-y-8">
-                                        <h3 className="text-sm font-black text-gray-300 uppercase tracking-[0.2em] text-center italic">Select all that apply</h3>
-
+                                        <h3 className="text-sm font-medium text-gray-300 uppercase tracking-[0.2em] text-center">Select all that apply</h3>
                                         <div className="space-y-10">
                                             {["personality", "lifestyle", "compatibility", "health"].map((cat) => (
                                                 <div key={cat} className="space-y-4">
                                                     <div className="flex items-center gap-3">
-                                                        <span className="text-[10px] uppercase tracking-[0.3em] font-black text-primary/40 leading-none">{cat}</span>
+                                                        <span className="text-[10px] uppercase tracking-[0.3em] font-medium text-primary/40 leading-none">{cat}</span>
                                                         <div className="h-[1px] flex-1 bg-gray-100"></div>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
                                                         {petTags
                                                             .filter((t) => t.tag_category === cat)
-                                                            .map((tag, idx) => (
+                                                            .map((tag) => (
                                                                 <motion.button
                                                                     whileHover={{ y: -2 }}
                                                                     whileTap={{ scale: 0.95 }}
                                                                     key={tag.tag_id}
                                                                     type="button"
                                                                     onClick={() => handleTagToggle(tag.tag_id)}
-                                                                    className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border-2 ${selectedTags.includes(tag.tag_id)
+                                                                    className={`px-6 py-3 rounded-2xl text-xs font-medium transition-all border-2 ${selectedTags.includes(tag.tag_id)
                                                                         ? "bg-primary border-primary text-white shadow-xl shadow-primary/20"
-                                                                        : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"
+                                                                        : "bg-white border-gray-100 text-gray-500 hover:border-gray-200"
                                                                         }`}>
                                                                     {tag.tag_name}
                                                                 </motion.button>
@@ -576,15 +601,15 @@ export default function CreatePetListing() {
                                         <button
                                             type="button"
                                             onClick={prevStep}
-                                            className="p-6 bg-gray-50 text-gray-400 rounded-[2rem] w-1/3 font-black hover:bg-gray-100 transition-all">
-                                            Return
+                                            className="p-6 bg-gray-50 text-gray-400 rounded-[2rem] w-1/3 font-medium hover:bg-gray-100 transition-all">
+                                            Back
                                         </button>
                                         <motion.button
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             type="button"
                                             onClick={nextStep}
-                                            className="p-6 bg-primary text-white rounded-[2rem] flex-1 font-black shadow-xl shadow-primary/10">
+                                            className="p-6 bg-primary text-white rounded-[2rem] flex-1 font-semibold shadow-xl shadow-primary/10">
                                             Almost Done
                                         </motion.button>
                                     </div>
@@ -600,22 +625,26 @@ export default function CreatePetListing() {
                                     className="space-y-10">
 
                                     <div className="text-center">
-                                        <h2 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">Final Details</h2>
-                                        <p className="text-gray-500 font-medium">Add photos and a short description</p>
+                                        <h2 className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">Final Details</h2>
+                                        <p className="text-gray-500 font-normal">Add photos and a short description</p>
                                     </div>
 
                                     <div className="space-y-6">
                                         <div>
-                                            <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-3 ml-1">The Story</label>
+                                            <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-3 ml-1">
+                                                The Story <span className="normal-case tracking-normal font-normal text-gray-300">({description.length}/1000)</span>
+                                            </label>
                                             <textarea
-                                                className="p-6 w-full border rounded-[2.5rem] input-field bg-gray-50/50 min-h-[180px] text-gray-700 leading-relaxed font-medium"
+                                                className="p-6 w-full border rounded-[2.5rem] input-field bg-gray-50/50 min-h-[180px] text-gray-700 leading-relaxed font-normal"
                                                 placeholder="Tell us about their habits, favorite toys, or how you found them..."
                                                 value={description}
-                                                onChange={(e) => setDescription(e.target.value)}></textarea>
+                                                onChange={handleDescriptionChange}
+                                                maxLength={1000}
+                                            />
                                         </div>
 
                                         <div className="p-10 bg-gray-50/30 rounded-[3rem] border-2 border-dashed border-gray-100 flex flex-col items-center">
-                                            <label className="text-[11px] uppercase tracking-widest font-black text-gray-400 mb-8">Photos Gallery (Max 5)</label>
+                                            <label className="text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-8">Photos Gallery (Max 5)</label>
                                             <Upload
                                                 className="listing-uploader scale-110"
                                                 listType="picture-card"
@@ -627,7 +656,7 @@ export default function CreatePetListing() {
                                                 {fileList.length >= 5 ? null : (
                                                     <div className="flex flex-col items-center opacity-40 hover:opacity-100 transition-opacity">
                                                         <PlusOutlined style={{ fontSize: "32px", color: "var(--primary-color)" }} />
-                                                        <div className="mt-2 text-[10px] font-black uppercase tracking-tighter">Add</div>
+                                                        <div className="mt-2 text-[10px] font-medium uppercase tracking-tighter">Add</div>
                                                     </div>
                                                 )}
                                             </Upload>
@@ -650,16 +679,16 @@ export default function CreatePetListing() {
                                         <button
                                             type="button"
                                             onClick={prevStep}
-                                            className="p-6 bg-gray-50 text-gray-400 rounded-[2rem] w-1/3 font-black hover:bg-gray-100 transition-all">
+                                            className="p-6 bg-gray-50 text-gray-400 rounded-[2rem] w-1/3 font-medium hover:bg-gray-100 transition-all">
                                             Back
                                         </button>
                                         <motion.button
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             type="submit"
-                                            className="p-6 bg-[#1a1a1a] text-white rounded-[2rem] flex-1 font-black shadow-2xl shadow-black/20 disabled:bg-gray-200 transition-all"
+                                            className="p-6 bg-[#1a1a1a] text-white rounded-[2rem] flex-1 font-semibold shadow-2xl shadow-black/20 disabled:bg-gray-200 transition-all"
                                             disabled={isSubmitting}>
-                                            {isSubmitting ? "Generating..." : "Launch Listing"}
+                                            {isSubmitting ? "Submitting..." : "Launch Listing"}
                                         </motion.button>
                                     </div>
                                 </motion.div>

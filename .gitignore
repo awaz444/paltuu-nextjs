@@ -31,3 +31,4 @@ seo+geo/
 # Build artifacts
 *.tsbuildinfo
 node_modules/
+.cursor/plans

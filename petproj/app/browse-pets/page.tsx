@@ -1,6 +1,8 @@
 import { db } from "@/db/index";
 import BrowsePetsClient from "./BrowsePetsClient";
 
+export const dynamic = "force-dynamic";
+
 // Fetch first page of available pets at request time so Googlebot gets real content in HTML.
 async function getInitialPets() {
     try {

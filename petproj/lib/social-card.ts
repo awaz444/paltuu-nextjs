@@ -1,9 +1,7 @@
 import fs from "fs";
 import path from "path";
 import sharp from "sharp";
-// opentype.js v2 — use parse(), not loadSync()
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const opentype = require("opentype.js") as typeof import("opentype.js");
+import * as opentype from "opentype.js";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -21,8 +19,8 @@ const FONT_PATH = path.join(
 
 // ─── Font loader (cached) ─────────────────────────────────────────────────────
 
-let _font: ReturnType<typeof opentype.parse> | null = null;
-function getFont() {
+let _font: opentype.Font | null = null;
+function getFont(): opentype.Font {
     if (!_font) {
         const buf = fs.readFileSync(FONT_PATH);
         _font = opentype.parse(buf.buffer as ArrayBuffer);
@@ -53,8 +51,8 @@ function centeredTextPath(
     const textW = bb.x2 - bb.x1;
     const startX = centerX - textW / 2 - bb.x1;
     const p = font.getPath(text, startX, baselineY, fontSize);
-    (p as any).fill = fill;
-    (p as any).stroke = null;
+    p.fill = fill;
+    p.stroke = null;
     return p.toSVG(2);
 }
 
@@ -68,8 +66,8 @@ function anchoredTextPath(
 ): string {
     const font = getFont();
     const p = font.getPath(text, x, baselineY, fontSize);
-    (p as any).fill = fill;
-    (p as any).stroke = null;
+    p.fill = fill;
+    p.stroke = null;
     return p.toSVG(2);
 }
 

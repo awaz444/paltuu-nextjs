@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
         }
 
         const result = await db.query(
-            `SELECT p.listing_type, p.city_id,
+            `SELECT p.listing_type, p.health_issues,
                 c.city_name,
                 (SELECT image_url FROM pet_images
                  WHERE pet_id = p.pet_id
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Pet not found" }, { status: 404 });
         }
 
-        const { listing_type, city_name, first_image } = result.rows[0];
+        const { listing_type, health_issues, city_name, first_image } = result.rows[0];
 
         if (!first_image) {
             return NextResponse.json({ error: "Pet has no images" }, { status: 422 });
@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
             imageUrl: first_image,
             city: city_name,
             listing_type: listing_type ?? "adoption",
+            healthIssue: health_issues ?? null,
         });
 
         const social_card_url = await uploadSocialCardToS3(cardBuffer, pet_id);

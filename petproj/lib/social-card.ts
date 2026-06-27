@@ -1,12 +1,16 @@
 import fs from "fs";
 import path from "path";
 import sharp from "sharp";
+// opentype.js v2 — use parse(), not loadSync()
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const opentype = require("opentype.js") as typeof import("opentype.js");
+
+// ─── Constants ───────────────────────────────────────────────────────────────
 
 const CARD_W = 1080;
 const CARD_H = 1350;
-const PAD = 48;
+const CORNER_PAD = 20; // tight corner padding for logo & city pill
 const ROSE = "#a03048";
-const DARK = "#1a1a1a";
 const WHITE = "#ffffff";
 
 const LOGO_PATH = path.join(process.cwd(), "public/post-template-assets/paltuu.png");
@@ -15,106 +19,181 @@ const FONT_PATH = path.join(
     "public/post-template-assets/Montserrat/static/Montserrat-Bold.ttf"
 );
 
-let _fontB64: string | null = null;
-function getFontB64(): string {
-    if (!_fontB64) _fontB64 = fs.readFileSync(FONT_PATH).toString("base64");
-    return _fontB64;
+// ─── Font loader (cached) ─────────────────────────────────────────────────────
+
+let _font: ReturnType<typeof opentype.parse> | null = null;
+function getFont() {
+    if (!_font) {
+        const buf = fs.readFileSync(FONT_PATH);
+        _font = opentype.parse(buf.buffer as ArrayBuffer);
+    }
+    return _font;
 }
 
-function makeSvg(width: number, height: number, body: string): Buffer {
-    const fontB64 = getFontB64();
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-  <defs>
-    <style>
-      @font-face {
-        font-family: 'Montserrat';
-        src: url('data:font/truetype;base64,${fontB64}');
-        font-weight: bold;
-      }
-    </style>
-  </defs>
-  ${body}
-</svg>`;
-    return Buffer.from(svg);
+// ─── Text-to-path helpers ─────────────────────────────────────────────────────
+
+type BBox = { x1: number; y1: number; x2: number; y2: number };
+
+function measureText(text: string, fontSize: number): BBox {
+    const font = getFont();
+    const p = font.getPath(text, 0, 0, fontSize);
+    return p.getBoundingBox() as BBox;
 }
 
-function cityPillSvg(city: string): Buffer {
+/** Returns an SVG <path> string for `text` centred at (centerX, baselineY). */
+function centeredTextPath(
+    text: string,
+    centerX: number,
+    baselineY: number,
+    fontSize: number,
+    fill: string
+): string {
+    const font = getFont();
+    const bb = measureText(text, fontSize);
+    const textW = bb.x2 - bb.x1;
+    const startX = centerX - textW / 2 - bb.x1;
+    const p = font.getPath(text, startX, baselineY, fontSize);
+    (p as any).fill = fill;
+    (p as any).stroke = null;
+    return p.toSVG(2);
+}
+
+/** Returns an SVG <path> string for `text` anchored at (x, baselineY). */
+function anchoredTextPath(
+    text: string,
+    x: number,
+    baselineY: number,
+    fontSize: number,
+    fill: string
+): string {
+    const font = getFont();
+    const p = font.getPath(text, x, baselineY, fontSize);
+    (p as any).fill = fill;
+    (p as any).stroke = null;
+    return p.toSVG(2);
+}
+
+// ─── SVG layer builders ───────────────────────────────────────────────────────
+
+function makeSvgLayer(body: string): Buffer {
+    return Buffer.from(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_W}" height="${CARD_H}">${body}</svg>`
+    );
+}
+
+/** White rounded-rect pill, centred horizontally at pilCentreX, top edge at y. */
+function pillRect(
+    pillCentreX: number,
+    pillTopY: number,
+    pillW: number,
+    pillH: number,
+    rx: number
+): string {
+    const x = pillCentreX - pillW / 2;
+    return `<rect x="${x.toFixed(1)}" y="${pillTopY.toFixed(1)}" width="${pillW}" height="${pillH}" rx="${rx}" fill="${WHITE}" opacity="0.93"/>`;
+}
+
+// ─── Layer: city pill (top-right) ────────────────────────────────────────────
+
+function buildCityLayer(city: string): Buffer {
     const label = city.toUpperCase();
-    const charW = 22;
-    const pillH = 56;
-    const pillW = Math.max(label.length * charW + 40, 120);
-    const x = CARD_W - PAD - pillW;
-    const y = PAD;
+    const fontSize = 44;
+    const bb = measureText(label, fontSize);
+    const textW = bb.x2 - bb.x1;
+    const hPad = 44;
+    const pillW = textW + hPad * 2;
+    const pillH = 76;
+    const rx = 38;
 
-    const body = `
-    <rect x="${x}" y="${y}" width="${pillW}" height="${pillH}" rx="28" fill="${WHITE}" opacity="0.92"/>
-    <text
-      x="${x + pillW / 2}" y="${y + pillH / 2 + 9}"
-      font-family="Montserrat" font-weight="bold" font-size="26"
-      fill="${DARK}" text-anchor="middle" letter-spacing="2">${label}</text>`;
+    // Right-align pill: right edge at CARD_W - CORNER_PAD
+    const pillLeft = CARD_W - CORNER_PAD - pillW;
+    const pillCentreX = pillLeft + pillW / 2;
+    const pillTopY = CORNER_PAD;
 
-    return makeSvg(CARD_W, CARD_H, body);
+    // Baseline: vertically centred in pill
+    const baselineY = pillTopY + pillH / 2 + (bb.y2 - bb.y1) / 2 - bb.y2;
+
+    const rect = `<rect x="${pillLeft.toFixed(1)}" y="${pillTopY}" width="${pillW.toFixed(1)}" height="${pillH}" rx="${rx}" fill="${WHITE}" opacity="0.93"/>`;
+    const textPath = centeredTextPath(label, pillCentreX, baselineY, fontSize, ROSE);
+
+    return makeSvgLayer(rect + textPath);
 }
 
-function adoptionBadgeSvg(): Buffer {
+// ─── Layer: bottom badge ──────────────────────────────────────────────────────
+
+function buildAdoptionBadge(): Buffer {
     const label = "UP FOR ADOPTION";
-    const pillW = 680;
-    const pillH = 80;
-    const x = (CARD_W - pillW) / 2;
-    const y = CARD_H - PAD - pillH;
+    const fontSize = 46;
+    const bb = measureText(label, fontSize);
+    const textH = bb.y2 - bb.y1;
+    const pillW = 730;
+    const pillH = 88;
+    const rx = 44;
+    const bottomPad = 56;
 
-    const body = `
-    <rect x="${x}" y="${y}" width="${pillW}" height="${pillH}" rx="40" fill="${WHITE}" opacity="0.93"/>
-    <text
-      x="${CARD_W / 2}" y="${y + pillH / 2 + 13}"
-      font-family="Montserrat" font-weight="bold" font-size="40"
-      fill="${ROSE}" text-anchor="middle" letter-spacing="3">${label}</text>`;
+    const pillCentreX = CARD_W / 2;
+    const pillTopY = CARD_H - bottomPad - pillH;
+    const baselineY = pillTopY + (pillH - textH) / 2 - bb.y1;
 
-    return makeSvg(CARD_W, CARD_H, body);
+    const body =
+        pillRect(pillCentreX, pillTopY, pillW, pillH, rx) +
+        centeredTextPath(label, pillCentreX, baselineY, fontSize, ROSE);
+
+    return makeSvgLayer(body);
 }
 
-function rescueBadgeSvg(): Buffer {
-    const mainLabel = "UP FOR ADOPTION";
-    const tagLabel = "RESCUE";
-    const mainPillW = 680;
-    const mainPillH = 80;
-    const tagPillW = 220;
-    const tagPillH = 52;
-    const gap = 14;
+function buildRescueBadge(healthIssue?: string | null): Buffer {
+    const mainLabel = "RESCUE ADOPTION";
+    const mainFontSize = 46;
+    const mainBb = measureText(mainLabel, mainFontSize);
+    const mainTextH = mainBb.y2 - mainBb.y1;
+    const mainPillW = 730;
+    const mainPillH = 88;
+    const mainRx = 44;
+    const bottomPad = 56;
 
-    const mainX = (CARD_W - mainPillW) / 2;
-    const mainY = CARD_H - PAD - mainPillH;
-    const tagX = (CARD_W - tagPillW) / 2;
-    const tagY = mainY - gap - tagPillH;
+    const mainPillCentreX = CARD_W / 2;
+    const mainPillTopY = CARD_H - bottomPad - mainPillH;
+    const mainBaselineY = mainPillTopY + (mainPillH - mainTextH) / 2 - mainBb.y1;
 
-    const body = `
-    <rect x="${tagX}" y="${tagY}" width="${tagPillW}" height="${tagPillH}" rx="26" fill="${ROSE}"/>
-    <text
-      x="${CARD_W / 2}" y="${tagY + tagPillH / 2 + 9}"
-      font-family="Montserrat" font-weight="bold" font-size="26"
-      fill="${WHITE}" text-anchor="middle" letter-spacing="3">${tagLabel}</text>
-    <rect x="${mainX}" y="${mainY}" width="${mainPillW}" height="${mainPillH}" rx="40" fill="${WHITE}" opacity="0.93"/>
-    <text
-      x="${CARD_W / 2}" y="${mainY + mainPillH / 2 + 13}"
-      font-family="Montserrat" font-weight="bold" font-size="40"
-      fill="${ROSE}" text-anchor="middle" letter-spacing="3">${mainLabel}</text>`;
+    let body =
+        pillRect(mainPillCentreX, mainPillTopY, mainPillW, mainPillH, mainRx) +
+        centeredTextPath(mainLabel, mainPillCentreX, mainBaselineY, mainFontSize, ROSE);
 
-    return makeSvg(CARD_W, CARD_H, body);
+    // Optional health-condition tag above the main badge
+    if (healthIssue) {
+        const tagLabel = ("+ " + healthIssue).toUpperCase();
+        const tagFontSize = 30;
+        const tagBb = measureText(tagLabel, tagFontSize);
+        const tagTextH = tagBb.y2 - tagBb.y1;
+        const tagHPad = 40;
+        const tagPillW = Math.min((tagBb.x2 - tagBb.x1) + tagHPad * 2, CARD_W - 80);
+        const tagPillH = 60;
+        const tagRx = 30;
+        const tagGap = 18;
+
+        const tagPillCentreX = CARD_W / 2;
+        const tagPillTopY = mainPillTopY - tagGap - tagPillH;
+        const tagBaselineY = tagPillTopY + (tagPillH - tagTextH) / 2 - tagBb.y1;
+
+        body =
+            pillRect(tagPillCentreX, tagPillTopY, tagPillW, tagPillH, tagRx) +
+            centeredTextPath(tagLabel, tagPillCentreX, tagBaselineY, tagFontSize, ROSE) +
+            body;
+    }
+
+    return makeSvgLayer(body);
 }
 
-function logoBadgeSvg(logoW: number, logoH: number): Buffer {
-    const body = `<image href="data:image/png;base64,LOGO_PLACEHOLDER" x="${PAD}" y="${PAD}" width="${logoW}" height="${logoH}"/>`;
-    // Logo is composited separately as a PNG — this layer is not used for the logo.
-    // Returned as empty transparent layer; logo is handled via sharp composite.
-    return makeSvg(CARD_W, CARD_H, "");
-}
+// ─── Public API ───────────────────────────────────────────────────────────────
 
 export async function generateSocialCard(params: {
     imageUrl: string;
     city: string;
     listing_type: string;
+    healthIssue?: string | null;
 }): Promise<Buffer> {
-    const { imageUrl, city, listing_type } = params;
+    const { imageUrl, city, listing_type, healthIssue } = params;
 
     // 1. Fetch pet photo
     const photoRes = await fetch(imageUrl);
@@ -127,28 +206,29 @@ export async function generateSocialCard(params: {
         .jpeg({ quality: 92 })
         .toBuffer();
 
-    // 3. Prepare logo — resize to 180px wide preserving aspect ratio
+    // 3. Prepare logo — 240px wide, at tight corner
     const logoBuffer = fs.readFileSync(LOGO_PATH);
     const logoMeta = await sharp(logoBuffer).metadata();
-    const logoW = 180;
-    const logoH = logoMeta.height && logoMeta.width
-        ? Math.round((logoMeta.height / logoMeta.width) * logoW)
-        : logoW;
-    const resizedLogo = await sharp(logoBuffer)
-        .resize(logoW, logoH)
-        .png()
-        .toBuffer();
+    const logoW = 240;
+    const logoH =
+        logoMeta.height && logoMeta.width
+            ? Math.round((logoMeta.height / logoMeta.width) * logoW)
+            : logoW;
+    const resizedLogo = await sharp(logoBuffer).resize(logoW, logoH).png().toBuffer();
 
-    // 4. Build SVG overlay layers
-    const citySvg = cityPillSvg(city);
-    const badgeSvg = listing_type === "rescue" ? rescueBadgeSvg() : adoptionBadgeSvg();
+    // 4. Build SVG text layers (paths only — no font embedding needed)
+    const cityLayer = buildCityLayer(city);
+    const badgeLayer =
+        listing_type === "rescue"
+            ? buildRescueBadge(healthIssue)
+            : buildAdoptionBadge();
 
-    // 5. Composite: base image + logo + city pill + badge
+    // 5. Composite: base → city overlay → badge overlay → logo PNG
     const result = await sharp(base)
         .composite([
-            { input: citySvg, top: 0, left: 0 },
-            { input: badgeSvg, top: 0, left: 0 },
-            { input: resizedLogo, top: PAD, left: PAD },
+            { input: cityLayer, top: 0, left: 0 },
+            { input: badgeLayer, top: 0, left: 0 },
+            { input: resizedLogo, top: CORNER_PAD, left: CORNER_PAD },
         ])
         .jpeg({ quality: 92 })
         .toBuffer();

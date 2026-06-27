@@ -75,19 +75,20 @@ export async function PATCH(req: NextRequest) {
             (async () => {
                 try {
                     const cardData = await db.query(
-                        `SELECT c.city_name,
+                        `SELECT c.city_name, p.health_issues,
                             (SELECT image_url FROM pet_images
                              WHERE pet_id = $1
                              ORDER BY "order" ASC LIMIT 1) AS first_image
-                         FROM cities c WHERE c.city_id = $2`,
+                         FROM cities c, pets p WHERE c.city_id = $2 AND p.pet_id = $1`,
                         [pet_id, pet.city_id]
                     );
-                    const { city_name, first_image } = cardData.rows[0] ?? {};
+                    const { city_name, health_issues, first_image } = cardData.rows[0] ?? {};
                     if (first_image && city_name) {
                         const buffer = await generateSocialCard({
                             imageUrl: first_image,
                             city: city_name,
                             listing_type: pet.listing_type ?? "adoption",
+                            healthIssue: health_issues ?? null,
                         });
                         const social_card_url = await uploadSocialCardToS3(buffer, pet_id);
                         await db.query(

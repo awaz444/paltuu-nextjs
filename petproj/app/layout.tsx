@@ -46,7 +46,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon-maroon.png" id="favicon" />
+        <link rel="icon" href="/favicon.png" type="image/png" id="favicon" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
         {/* Organization JSON-LD — GEO signal for AI engines */}
         <script

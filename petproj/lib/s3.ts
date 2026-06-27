@@ -45,7 +45,7 @@ export type S3Folder = "posts" | "covers" | "profile-pics";
 const MAIN_REGION = process.env.AWS_S3_REGION_MAIN || process.env.AWS_S3_REGION || "ap-south-1";
 const MAIN_BUCKET = process.env.AWS_S3_BUCKET_MAIN || "paltuu-main";
 
-export type S3MainFolder = "adoption" | "vets" | "shelter" | "kyc" | "lostandfound" | "users" | "clinics";
+export type S3MainFolder = "adoption" | "vets" | "shelter" | "kyc" | "lostandfound" | "users" | "clinics" | "social-cards";
 
 let _s3Main: S3Client | null = null;
 
@@ -122,6 +122,26 @@ export async function deleteFromS3Main(urlOrKey: string): Promise<void> {
     await getS3Main().send(
         new DeleteObjectCommand({ Bucket: MAIN_BUCKET, Key: key })
     );
+}
+
+/**
+ * Upload a JPEG buffer to paltuu-main/social-cards/ with a deterministic key
+ * based on the pet ID, so re-generation overwrites the previous card.
+ */
+export async function uploadSocialCardToS3(buffer: Buffer, petId: number): Promise<string> {
+    const key = `social-cards/listing_${petId}_social.jpg`;
+
+    await getS3Main().send(
+        new PutObjectCommand({
+            Bucket: MAIN_BUCKET,
+            Key: key,
+            Body: buffer,
+            ContentType: "image/jpeg",
+        })
+    );
+
+    const s3Url = `https://${MAIN_BUCKET}.s3.${MAIN_REGION}.amazonaws.com/${key}`;
+    return toMainCdnUrl(s3Url);
 }
 
 /**

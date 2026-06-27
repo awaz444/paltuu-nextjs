@@ -36,6 +36,7 @@ type Pet = {
   vaccinated: boolean;
   neutered: boolean;
   approved: boolean;
+  social_card_url?: string | null;
   images?: { image_id?: number; image_url: string; order?: number }[];
 };
 
@@ -53,6 +54,7 @@ const AdminPetInteraction: React.FC = () => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
+  const [generatingCard, setGeneratingCard] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
   const { cities } = useSelector((state: RootState) => state.cities);
@@ -284,6 +286,32 @@ const AdminPetInteraction: React.FC = () => {
 
   const handleCancel = () => {
     setEditingPet(null); // Close the edit modal
+  };
+
+  const handleGenerateSocialCard = async () => {
+    if (!editingPet) return;
+    setGeneratingCard(true);
+    try {
+      const res = await fetch('/api/v1/admin/generate-social-card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pet_id: editingPet.pet_id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        message.error(data.error || 'Failed to generate social card');
+        return;
+      }
+      setEditingPet((prev) => prev ? { ...prev, social_card_url: data.social_card_url } : prev);
+      setPets((prev) => prev.map((p) =>
+        p.pet_id === editingPet.pet_id ? { ...p, social_card_url: data.social_card_url } : p
+      ));
+      message.success('Social card generated!');
+    } catch {
+      message.error('Error generating social card');
+    } finally {
+      setGeneratingCard(false);
+    }
   };
 
   const columns = [
@@ -629,6 +657,50 @@ const AdminPetInteraction: React.FC = () => {
               >
                 Foster
               </button>
+            </div>
+
+            {/* Social Card */}
+            <div className="mt-2 mb-2 border rounded-lg p-4 bg-gray-50">
+              <p className="text-sm font-semibold text-gray-700 mb-3">Social Card</p>
+              {editingPet?.social_card_url ? (
+                <div className="flex flex-col items-center gap-3">
+                  <img
+                    src={editingPet.social_card_url}
+                    alt="Social card preview"
+                    className="w-40 rounded-lg shadow"
+                    style={{ aspectRatio: '4/5', objectFit: 'cover' }}
+                  />
+                  <div className="flex gap-2">
+                    <a
+                      href={editingPet.social_card_url}
+                      download={`listing_${editingPet.pet_id}_social.jpg`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3 py-1 text-sm bg-primary text-white rounded-lg"
+                    >
+                      Download
+                    </a>
+                    <Button
+                      size="small"
+                      loading={generatingCard}
+                      onClick={handleGenerateSocialCard}
+                    >
+                      Regenerate
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <p className="text-xs text-gray-500">No card generated yet</p>
+                  <Button
+                    size="small"
+                    loading={generatingCard}
+                    onClick={handleGenerateSocialCard}
+                  >
+                    Generate Card
+                  </Button>
+                </div>
+              )}
             </div>
 
           </Form>

@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/utils/authServer";
 import { NotificationService } from "@/lib/notifications/NotificationService";
 import { NotificationType, EntityType } from "@/lib/notifications/notificationTypes";
+import { generateSocialCard } from "@/lib/social-card";
+import { uploadSocialCardToS3 } from "@/lib/s3";
 
 /**
  * @swagger
@@ -68,6 +70,35 @@ export async function PATCH(req: NextRequest) {
                     pet_name: pet.pet_name
                 }
             });
+
+            // Fire social card generation — failure does not block approval
+            (async () => {
+                try {
+                    const cardData = await db.query(
+                        `SELECT c.city_name,
+                            (SELECT image_url FROM pet_images
+                             WHERE pet_id = $1
+                             ORDER BY "order" ASC LIMIT 1) AS first_image
+                         FROM cities c WHERE c.city_id = $2`,
+                        [pet_id, pet.city_id]
+                    );
+                    const { city_name, first_image } = cardData.rows[0] ?? {};
+                    if (first_image && city_name) {
+                        const buffer = await generateSocialCard({
+                            imageUrl: first_image,
+                            city: city_name,
+                            listing_type: pet.listing_type ?? "adoption",
+                        });
+                        const social_card_url = await uploadSocialCardToS3(buffer, pet_id);
+                        await db.query(
+                            `UPDATE pets SET social_card_url = $1 WHERE pet_id = $2`,
+                            [social_card_url, pet_id]
+                        );
+                    }
+                } catch (cardErr) {
+                    console.error("Social card auto-generation failed (non-blocking):", cardErr);
+                }
+            })();
         }
 
         return NextResponse.json({ success: true, pet });

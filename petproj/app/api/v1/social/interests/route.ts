@@ -5,6 +5,28 @@ import { MAX_INTEREST_SCORE } from "@/lib/interestScoring";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * GET /api/v1/social/interests
+ * Returns the current user's interest picks (tag_ids and has_picks flag).
+ */
+export async function GET(req: NextRequest) {
+  try {
+    const userIdRaw = await getUserIdFromRequest(req);
+    if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const userId = parseInt(String(userIdRaw), 10);
+
+    const res = await db.query(
+      `SELECT tag_id FROM user_interest_picks WHERE user_id = $1`,
+      [userId]
+    );
+    const tagIds: number[] = res.rows.map((r: any) => r.tag_id);
+    return NextResponse.json({ tag_ids: tagIds, has_picks: tagIds.length > 0 });
+  } catch (error) {
+    console.error("Social interests GET error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
 const ONBOARDING_DELTA = 1.0;
 
 /**

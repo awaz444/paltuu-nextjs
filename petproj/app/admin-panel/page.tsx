@@ -27,6 +27,7 @@ const AdminPanel = () => {
     const [userId, setUserId] = useState<string | null>(null);
     const [data, setData] = useState<UserProfileData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+    const [socialCounts, setSocialCounts] = useState<{ untagged: number; reports: number }>({ untagged: 0, reports: 0 });
 
     const fetchedRef = React.useRef(false);
 
@@ -74,6 +75,17 @@ const AdminPanel = () => {
         };
 
         fetchUserProfile();
+
+        // Fetch social moderation counts for hub card badges
+        Promise.all([
+            fetch("/api/v1/admin/social/tagging-queue?limit=1").then(r => r.json()).catch(() => ({})),
+            fetch("/api/v1/admin/social/reports?status=pending&limit=50").then(r => r.json()).catch(() => ({})),
+        ]).then(([queueData, reportsData]) => {
+            setSocialCounts({
+                untagged: queueData.total_untagged ?? 0,
+                reports: (reportsData.reports ?? []).length,
+            });
+        });
     }, [user, isHydrating]);
 
 
@@ -286,6 +298,53 @@ const AdminPanel = () => {
                         <p className="text-sm text-gray-600">Update products, vet custom items, and track sellers</p>
                     </div>
                     </Link>
+
+                    {/* Social Moderation */}
+                    <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 border border-gray-200 col-span-1 sm:col-span-2 lg:col-span-3">
+                        <h4 className="text-base sm:text-lg font-bold text-primary mb-4">Social Moderation</h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                            <Link href="/admin-panel/social/tagging">
+                                <div className="border border-gray-200 hover:border-primary rounded-lg p-3 cursor-pointer transition-all">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <p className="text-sm font-semibold text-gray-800">🏷 Tagging Queue</p>
+                                        {socialCounts.untagged > 0 && (
+                                            <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">{socialCounts.untagged}</span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-500">Tag untagged posts for personalization</p>
+                                </div>
+                            </Link>
+                            <Link href="/admin-panel/social/reports">
+                                <div className="border border-gray-200 hover:border-primary rounded-lg p-3 cursor-pointer transition-all">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <p className="text-sm font-semibold text-gray-800">⚠ Report Queue</p>
+                                        {socialCounts.reports > 0 && (
+                                            <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium">{socialCounts.reports}</span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-500">Review flagged posts and reporter trust</p>
+                                </div>
+                            </Link>
+                            <Link href="/admin-panel/social/tags">
+                                <div className="border border-gray-200 hover:border-primary rounded-lg p-3 cursor-pointer transition-all">
+                                    <p className="text-sm font-semibold text-gray-800 mb-1">🗂 Tag Taxonomy</p>
+                                    <p className="text-xs text-gray-500">Add, edit, and manage content tags</p>
+                                </div>
+                            </Link>
+                            <Link href="/admin-panel/social/posts">
+                                <div className="border border-gray-200 hover:border-primary rounded-lg p-3 cursor-pointer transition-all">
+                                    <p className="text-sm font-semibold text-gray-800 mb-1">🔍 Post Browser</p>
+                                    <p className="text-xs text-gray-500">Search and moderate any post</p>
+                                </div>
+                            </Link>
+                            <Link href="/admin-panel/social/experiment">
+                                <div className="border border-gray-200 hover:border-primary rounded-lg p-3 cursor-pointer transition-all">
+                                    <p className="text-sm font-semibold text-gray-800 mb-1">🧪 A/B Experiment</p>
+                                    <p className="text-xs text-gray-500">Compare personalized vs. current feed</p>
+                                </div>
+                            </Link>
+                        </div>
+                    </div>
                 </div>
             </div>
         </>

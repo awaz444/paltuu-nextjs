@@ -74,14 +74,15 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         const productId = params.id;
 
         // Transactional delete
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
-            await db.query(`DELETE FROM bazaar_product_categories WHERE product_id = $1`, [productId]);
-            await db.query(`DELETE FROM bazaar_product_media WHERE product_id = $1`, [productId]);
-            await db.query(`DELETE FROM bazaar_product_variants WHERE product_id = $1`, [productId]);
-            const result = await db.query(`DELETE FROM bazaar_products WHERE product_id = $1 RETURNING *`, [productId]);
+            await client.query('BEGIN');
+            await client.query(`DELETE FROM bazaar_product_categories WHERE product_id = $1`, [productId]);
+            await client.query(`DELETE FROM bazaar_product_media WHERE product_id = $1`, [productId]);
+            await client.query(`DELETE FROM bazaar_product_variants WHERE product_id = $1`, [productId]);
+            const result = await client.query(`DELETE FROM bazaar_products WHERE product_id = $1 RETURNING *`, [productId]);
             
-            await db.query('COMMIT');
+            await client.query('COMMIT');
 
             if ((result.rowCount ?? 0) === 0) {
                 return NextResponse.json({ error: "Product not found" }, { status: 404 });
@@ -89,8 +90,10 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
             return NextResponse.json({ success: true, message: "Product deleted" });
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error) {

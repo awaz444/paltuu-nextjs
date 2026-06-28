@@ -50,16 +50,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         // 3. Ensure no blocking relationship exists
         await assertNotBlocked(userId, originalAuthorId);
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             // 3. Record the repost relationship
-            await db.query(
+            await client.query(
                 "INSERT INTO social_reposts (post_id, user_id, caption) VALUES ($1, $2, $3)",
                 [originalPostId, userId, caption]
             );
 
             // 4. Create a new post entry (the repost in feed)
-            const repostEntry = await db.query(`
+            const repostEntry = await client.query(`
                 INSERT INTO social_posts
                     (user_id, post_type, content, original_post_id, is_repost)
                 VALUES ($1, 'repost', $2, $3, true)
@@ -67,13 +68,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             `, [userId, caption, originalPostId]);
 
             // 5. Update repost_count on original
-            await db.query(
+            await client.query(
                 "UPDATE social_posts SET repost_count = repost_count + 1 WHERE post_id = $1",
                 [originalPostId]
             );
 
             // 6. Update user post_count
-            await db.query(
+            await client.query(
                 "UPDATE users SET post_count = post_count + 1 WHERE user_id = $1",
                 [userId]
             );
@@ -82,8 +83,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             if (originalAuthorId !== userId) {
                 // Fetch reposter and post details
                 const [reposterRes, postImageRes] = await Promise.all([
-                    db.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]),
-                    db.query(`SELECT (SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1) as image_url`, [originalPostId])
+                    client.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]),
+                    client.query(`SELECT (SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1) as image_url`, [originalPostId])
                 ]);
                 const reposter = reposterRes.rows[0];
                 const postImage = postImageRes.rows[0]?.image_url;
@@ -97,10 +98,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 ).catch(() => {});
             }
 
-            await db.query('COMMIT');
+            await client.query('COMMIT');
 
             // Real-time: push repost count update to post viewers
-            const updatedPost = await db.query(
+            const updatedPost = await client.query(
                 "SELECT repost_count FROM social_posts WHERE post_id = $1",
                 [originalPostId]
             );
@@ -121,8 +122,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             return NextResponse.json({ reposted: true, post: repostEntry.rows[0] }, { status: 201 });
 
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error: any) {
@@ -154,37 +157,40 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             return NextResponse.json({ reposted: false, message: "No repost found" });
         }
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             // Remove repost record
-            await db.query(
+            await client.query(
                 "DELETE FROM social_reposts WHERE post_id = $1 AND user_id = $2",
                 [originalPostId, userId]
             );
 
             // Soft-delete the repost post entry
-            await db.query(`
+            await client.query(`
                 UPDATE social_posts
                 SET is_deleted = true
                 WHERE original_post_id = $1 AND user_id = $2 AND is_repost = true
             `, [originalPostId, userId]);
 
             // Decrement counts
-            await db.query(
+            await client.query(
                 "UPDATE social_posts SET repost_count = GREATEST(0, repost_count - 1) WHERE post_id = $1",
                 [originalPostId]
             );
-            await db.query(
+            await client.query(
                 "UPDATE users SET post_count = GREATEST(0, post_count - 1) WHERE user_id = $1",
                 [userId]
             );
 
-            await db.query('COMMIT');
+            await client.query('COMMIT');
             return NextResponse.json({ reposted: false });
 
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error) {

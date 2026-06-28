@@ -93,9 +93,10 @@ export async function POST(
         const petTypeId = catRes.rows[0].category_id;
 
         // ── Create adoption listing row in `pets` table ────────────────────────
-        await db.query("BEGIN");
+        const client = await db.connect();
         try {
-            const petsRes = await db.query(
+            await client.query("BEGIN");
+            const petsRes = await client.query(
                 `INSERT INTO pets (
                     owner_id, pet_name, pet_type, pet_breed, city_id,
                     description, adoption_status, sex, listing_type,
@@ -123,7 +124,7 @@ export async function POST(
             const newPetId = petsRes.rows[0].pet_id;
 
             // ── Update pet_profile to mark as listed ──────────────────────────
-            await db.query(
+            await client.query(
                 `UPDATE pet_profiles
                  SET is_listed_for_adoption = true,
                      adoption_listing_id    = $1,
@@ -132,7 +133,7 @@ export async function POST(
                 [newPetId, params.pet_id]
             );
 
-            await db.query("COMMIT");
+            await client.query("COMMIT");
 
             return NextResponse.json(
                 {
@@ -144,8 +145,10 @@ export async function POST(
             );
 
         } catch (e) {
-            await db.query("ROLLBACK");
+            await client.query("ROLLBACK");
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error) {

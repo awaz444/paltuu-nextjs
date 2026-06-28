@@ -61,19 +61,22 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             for (const slot of slots) {
-                await db.query(`
+                await client.query(`
                     INSERT INTO vet_availability (vet_id, day_of_week, start_time, end_time)
                     VALUES ($1, $2, $3, $4)
                 `, [vetId, slot.day_of_week, slot.start_time, slot.end_time]);
             }
-            await db.query('COMMIT');
+            await client.query('COMMIT');
             return NextResponse.json({ success: true });
         } catch (error) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw error;
+        } finally {
+            client.release();
         }
 
     } catch (error) {
@@ -96,10 +99,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             for (const slot of availability) {
-                await db.query(`
+                await client.query(`
                     UPDATE vet_availability SET 
                         day_of_week = $1,
                         start_time = $2,
@@ -107,11 +111,13 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
                     WHERE availability_id = $4 AND vet_id = $5
                 `, [slot.day_of_week, slot.start_time, slot.end_time, slot.availability_id, vetId]);
             }
-            await db.query('COMMIT');
+            await client.query('COMMIT');
             return NextResponse.json({ success: true });
         } catch (error) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw error;
+        } finally {
+            client.release();
         }
 
     } catch (error) {

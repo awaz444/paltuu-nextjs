@@ -278,10 +278,11 @@ export async function POST(req: NextRequest) {
 
         let parsedMentions: ParsedMention[] = [];
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             // 1. Create Post
-            const postRes = await db.query(`
+            const postRes = await client.query(`
                 INSERT INTO social_posts (user_id, post_type, content)
                 VALUES ($1, $2, $3)
                 RETURNING *
@@ -291,14 +292,14 @@ export async function POST(req: NextRequest) {
             // 2. Add Media
             for (let i = 0; i < media.length; i++) {
                 const m = media[i];
-                await db.query(`
+                await client.query(`
                     INSERT INTO social_post_media (post_id, media_type, url, thumbnail_url, ordering)
                     VALUES ($1, $2, $3, $4, $5)
                 `, [post.post_id, m.media_type, m.url, m.thumbnail_url || null, i]);
             }
 
             // 3. Increment Post Count
-            await db.query("UPDATE users SET post_count = post_count + 1 WHERE user_id = $1", [userId]);
+            await client.query("UPDATE users SET post_count = post_count + 1 WHERE user_id = $1", [userId]);
 
             // 4. Parse & upsert hashtags from content
             if (content) {
@@ -306,7 +307,7 @@ export async function POST(req: NextRequest) {
                 const uniqueTags = [...new Set(tagMatches.map((t: string) => t.slice(1).toLowerCase()))];
                 for (const tag of uniqueTags) {
                     // Upsert: insert tag if new, increment post_count if exists
-                    const tagRes = await db.query(`
+                    const tagRes = await client.query(`
                         INSERT INTO hashtags (tag, post_count)
                         VALUES ($1, 1)
                         ON CONFLICT (tag) DO UPDATE
@@ -315,7 +316,7 @@ export async function POST(req: NextRequest) {
                     `, [tag]);
                     const hashtagId = tagRes.rows[0].hashtag_id;
                     // Link post → hashtag (ignore duplicate if somehow re-run)
-                    await db.query(`
+                    await client.query(`
                         INSERT INTO post_hashtags (post_id, hashtag_id)
                         VALUES ($1, $2)
                         ON CONFLICT DO NOTHING
@@ -329,8 +330,8 @@ export async function POST(req: NextRequest) {
                 if (parsedMentions.length > MAX_MENTIONS_PER_CONTENT) {
                     throw new Error(`A post can mention at most ${MAX_MENTIONS_PER_CONTENT} users/pets`);
                 }
-                await validateMentions(db, parsedMentions, userId);
-                await persistMentions(db, { postId: post.post_id }, parsedMentions, userId);
+                await validateMentions(client, parsedMentions, userId);
+                await persistMentions(client, { postId: post.post_id }, parsedMentions, userId);
             }
 
             // 5. Tag personal pet profiles (not adoption listings)
@@ -341,7 +342,7 @@ export async function POST(req: NextRequest) {
 
                 if (tagIds.length > 0) {
                     // Validate all tagged pet_profile_ids belong to the posting user
-                    const ownerCheck = await db.query(
+                    const ownerCheck = await client.query(
                         `SELECT COUNT(*) FROM pet_profiles
                          WHERE pet_profile_id = ANY($1::int[]) AND owner_id = $2`,
                         [tagIds, userId]
@@ -351,7 +352,7 @@ export async function POST(req: NextRequest) {
                     }
 
                     for (const profileId of tagIds) {
-                        await db.query(
+                        await client.query(
                             `INSERT INTO post_pet_tags (post_id, pet_profile_id)
                              VALUES ($1, $2)
                              ON CONFLICT DO NOTHING`,
@@ -361,7 +362,7 @@ export async function POST(req: NextRequest) {
                 }
             }
 
-            await db.query('COMMIT');
+            await client.query('COMMIT');
 
             // Fan-out to follower feed caches (fire and forget — non-blocking)
             fanOutPostToFollowers(post.post_id, userId, post.created_at, db)
@@ -382,8 +383,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(post, { status: 201 });
 
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error) {

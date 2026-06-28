@@ -152,10 +152,11 @@ export async function POST(req: NextRequest) {
         if (!validation.success) return NextResponse.json({ errors: validation.errors }, { status: 400 });
 
         // Transactional Order Placement (Split-Cart Multi-Vendor)
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             // 1. Get Cart Items with Vendor Info
-            const cartRes = await db.query(`
+            const cartRes = await client.query(`
                 SELECT
                     ci.*,
                     COALESCE(vi.selling_price, p.price) as unit_price,
@@ -208,7 +209,7 @@ export async function POST(req: NextRequest) {
             const orderNumber = `PALTUU-${Date.now().toString(36).toUpperCase()}`;
 
             // 3. Create Parent Order
-            const orderRes = await db.query(`
+            const orderRes = await client.query(`
                 INSERT INTO bazaar_orders (
                     user_id, session_id, order_number, status, subtotal, total_amount,
                     shipping_amount, discount_amount, currency,
@@ -232,7 +233,7 @@ export async function POST(req: NextRequest) {
                 // Create Vendor Order if it's an actual vendor (not platform)
                 let vendorOrderId = null;
                 if (vid !== 'platform') {
-                    const vOrderRes = await db.query(`
+                    const vOrderRes = await client.query(`
                         INSERT INTO vendor_orders (
                             order_id, vendor_id, status, subtotal, delivery_fee, total, created_at
                         ) VALUES ($1, $2, 'pending', $3, $4, $5, CURRENT_TIMESTAMP)
@@ -250,7 +251,7 @@ export async function POST(req: NextRequest) {
                 }
 
                 for (const item of group.items) {
-                    await db.query(`
+                    await client.query(`
                         INSERT INTO bazaar_order_items (
                             order_id, vendor_id, inventory_id, vendor_order_id,
                             product_id, variant_id, quantity, unit_price, total_price, product_title
@@ -264,9 +265,9 @@ export async function POST(req: NextRequest) {
             }
 
             // 5. Clear Cart
-            await db.query('DELETE FROM bazaar_cart_items WHERE cart_id = $1', [cartId]);
+            await client.query('DELETE FROM bazaar_cart_items WHERE cart_id = $1', [cartId]);
 
-            await db.query('COMMIT');
+            await client.query('COMMIT');
 
             // Send notification (fire-and-forget) after transaction succeeds
             if (userId && typeof userId === 'number') {
@@ -289,8 +290,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: true, order: parentOrder }, { status: 201 });
 
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error) {

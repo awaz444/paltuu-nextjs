@@ -52,10 +52,11 @@ export async function PATCH(req: NextRequest) {
         if ((shopCheck.rowCount ?? 0) === 0) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         const shopId = shopCheck.rows[0].shop_id;
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             // 2. Update Basic Info
-            await db.query(`
+            await client.query(`
                 UPDATE shops SET 
                     shop_name = COALESCE($1, shop_name), 
                     address = COALESCE($2, address), 
@@ -66,9 +67,9 @@ export async function PATCH(req: NextRequest) {
 
             // 3. Update Bank Info
             if (account_title || iban || bank_name) {
-                const bankExists = await db.query('SELECT 1 FROM shop_bank_info WHERE shop_id = $1', [shopId]);
+                const bankExists = await client.query('SELECT 1 FROM shop_bank_info WHERE shop_id = $1', [shopId]);
                 if ((bankExists.rowCount ?? 0) > 0) {
-                    await db.query(`
+                    await client.query(`
                         UPDATE shop_bank_info SET 
                             account_title = COALESCE($1, account_title),
                             iban = COALESCE($2, iban),
@@ -76,19 +77,21 @@ export async function PATCH(req: NextRequest) {
                         WHERE shop_id = $4
                     `, [account_title, iban, bank_name, shopId]);
                 } else {
-                    await db.query(`
+                    await client.query(`
                         INSERT INTO shop_bank_info (shop_id, account_title, iban, bank_name)
                         VALUES ($1, $2, $3, $4)
                     `, [shopId, account_title, iban, bank_name]);
                 }
             }
 
-            await db.query('COMMIT');
+            await client.query('COMMIT');
             return NextResponse.json({ success: true, message: "Shop updated safely" });
 
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error) {

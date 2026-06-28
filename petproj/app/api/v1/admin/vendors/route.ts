@@ -85,21 +85,22 @@ export async function POST(req: NextRequest) {
 
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-        await db.query("BEGIN");
+        const client = await db.connect();
         try {
-            const userRes = await db.query(
+            await client.query("BEGIN");
+            const userRes = await client.query(
                 `INSERT INTO users (name, email, password, role, city_id, created_at) VALUES ($1, $2, $3, 'vendor', $4, NOW()) RETURNING user_id`,
                 [shop_name, email, hashedPassword, city_id || null]
             );
             const userId = userRes.rows[0].user_id;
 
-            const vendorRes = await db.query(
+            const vendorRes = await client.query(
                 `INSERT INTO vendors (user_id, shop_name, address, area, city_id, contact_number, whatsapp_number, is_active, is_verified, created_at, updated_at)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, true, true, NOW(), NOW()) RETURNING *`,
                 [userId, shop_name, address, area || null, city_id || null, contact_number || null, whatsapp_number || null]
             );
 
-            await db.query("COMMIT");
+            await client.query("COMMIT");
 
             try {
                 await sendEmail({
@@ -118,8 +119,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(vendorRes.rows[0], { status: 201 });
 
         } catch (e) {
-            await db.query("ROLLBACK");
+            await client.query("ROLLBACK");
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error: any) {

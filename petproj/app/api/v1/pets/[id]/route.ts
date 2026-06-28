@@ -83,9 +83,10 @@ export async function PUT(req: NextRequest) {
             images
         } = body;
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
-            const result = await db.query(
+            await client.query('BEGIN');
+            const result = await client.query(
                 `UPDATE pets SET 
                     pet_name = COALESCE($1, pet_name),
                     pet_type = COALESCE($2, pet_type),
@@ -122,23 +123,23 @@ export async function PUT(req: NextRequest) {
             if (Array.isArray(images)) {
                 const remainingImageIds = images.filter(img => img.image_id).map(img => img.image_id);
                 if (remainingImageIds.length > 0) {
-                    await db.query(
+                    await client.query(
                         `DELETE FROM pet_images WHERE pet_id = $1 AND image_id NOT IN (${remainingImageIds.map((_, i) => `$${i + 2}`).join(', ')})`,
                         [id, ...remainingImageIds]
                     );
                 } else {
-                    await db.query(`DELETE FROM pet_images WHERE pet_id = $1`, [id]);
+                    await client.query(`DELETE FROM pet_images WHERE pet_id = $1`, [id]);
                 }
 
                 for (let i = 0; i < images.length; i++) {
                     const img = images[i];
                     if (img.image_id) {
-                        await db.query(
+                        await client.query(
                             `UPDATE pet_images SET "order" = $1 WHERE image_id = $2 AND pet_id = $3`,
                             [i, img.image_id, id]
                         );
                     } else {
-                        await db.query(
+                        await client.query(
                             `INSERT INTO pet_images (pet_id, image_url, "order") VALUES ($1, $2, $3)`,
                             [id, img.image_url, i]
                         );
@@ -146,11 +147,13 @@ export async function PUT(req: NextRequest) {
                 }
             }
 
-            await db.query('COMMIT');
+            await client.query('COMMIT');
             return NextResponse.json(result.rows[0]);
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error) {
@@ -176,17 +179,20 @@ export async function DELETE(req: NextRequest) {
         if (!isOwner && !isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
         // Transactional Delete
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
-            await db.query('DELETE FROM pet_tag_assignments WHERE pet_id = $1', [id]);
-            await db.query('DELETE FROM pet_images WHERE pet_id = $1', [id]);
-            await db.query('DELETE FROM adoption_applications WHERE pet_id = $1', [id]);
-            await db.query('DELETE FROM pets WHERE pet_id = $1', [id]);
-            await db.query('COMMIT');
+            await client.query('BEGIN');
+            await client.query('DELETE FROM pet_tag_assignments WHERE pet_id = $1', [id]);
+            await client.query('DELETE FROM pet_images WHERE pet_id = $1', [id]);
+            await client.query('DELETE FROM adoption_applications WHERE pet_id = $1', [id]);
+            await client.query('DELETE FROM pets WHERE pet_id = $1', [id]);
+            await client.query('COMMIT');
             return NextResponse.json({ message: "Pet deleted successfully" });
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error) {

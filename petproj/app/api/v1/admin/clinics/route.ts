@@ -52,20 +52,21 @@ export async function POST(req: NextRequest) {
 
         if (!name || !address) return NextResponse.json({ error: "Name and address required" }, { status: 400 });
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             let owner_id = null;
             if (owner_email) {
-                let userResult = await db.query("SELECT user_id FROM users WHERE email = $1", [owner_email]);
+                let userResult = await client.query("SELECT user_id FROM users WHERE email = $1", [owner_email]);
                 if (userResult.rows.length > 0) {
                     owner_id = userResult.rows[0].user_id;
                 } else {
-                    const res = await db.query("INSERT INTO users (name, email, password, role) VALUES ($1, $2, '12345', 'user') RETURNING user_id", [name, owner_email]);
+                    const res = await client.query("INSERT INTO users (name, email, password, role) VALUES ($1, $2, '12345', 'user') RETURNING user_id", [name, owner_email]);
                     owner_id = res.rows[0].user_id;
                 }
             }
 
-            const result = await db.query(`
+            const result = await client.query(`
                 INSERT INTO clinics (
                     name, address, city, category,
                     google_maps_link, contact_number, whatsapp_number,
@@ -83,11 +84,13 @@ export async function POST(req: NextRequest) {
                 is_paltuu_partner || false, owner_id
             ]);
 
-            await db.query('COMMIT');
+            await client.query('COMMIT');
             return NextResponse.json(result.rows[0], { status: 201 });
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
     } catch (error) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

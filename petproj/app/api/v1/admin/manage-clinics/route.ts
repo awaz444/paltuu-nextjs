@@ -93,13 +93,14 @@ export async function PATCH(req: NextRequest) {
         if (!clinic_id)
             return NextResponse.json({ error: "clinic_id required" }, { status: 400 });
 
-        await db.query("BEGIN");
+        const client = await db.connect();
         try {
+            await client.query("BEGIN");
             // Resolve owner_id from email if provided
             let owner_id: number | null = null;
             if (owner_email !== undefined) {
                 if (owner_email) {
-                    const ur = await db.query(
+                    const ur = await client.query(
                         "SELECT user_id FROM users WHERE email = $1",
                         [owner_email]
                     );
@@ -126,7 +127,7 @@ export async function PATCH(req: NextRequest) {
 
             if (owner_email !== undefined) baseParams.push(owner_id as any);
 
-            const result = await db.query(`
+            const result = await client.query(`
                 UPDATE clinics SET
                     name              = COALESCE($1,  name),
                     address           = COALESCE($2,  address),
@@ -148,15 +149,17 @@ export async function PATCH(req: NextRequest) {
             `, baseParams);
 
             if (result.rowCount === 0) {
-                await db.query("ROLLBACK");
+                await client.query("ROLLBACK");
                 return NextResponse.json({ error: "Clinic not found" }, { status: 404 });
             }
 
-            await db.query("COMMIT");
+            await client.query("COMMIT");
             return NextResponse.json(result.rows[0]);
         } catch (e) {
-            await db.query("ROLLBACK");
+            await client.query("ROLLBACK");
             throw e;
+        } finally {
+            client.release();
         }
     } catch (error) {
         console.error("manage-clinics PATCH error:", error);

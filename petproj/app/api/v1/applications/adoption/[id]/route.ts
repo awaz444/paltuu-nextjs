@@ -48,9 +48,10 @@ export async function PATCH(req: NextRequest) {
         }
 
         // 2. Update Status
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
-            const result = await db.query(`
+            await client.query('BEGIN');
+            const result = await client.query(`
                 UPDATE adoption_applications SET status = $1, updated_at = CURRENT_TIMESTAMP
                 WHERE adoption_id = $2 RETURNING *
             `, [status, id]);
@@ -70,11 +71,13 @@ export async function PATCH(req: NextRequest) {
                 ).catch(() => {});
             }
 
-            await db.query('COMMIT');
+            await client.query('COMMIT');
             return NextResponse.json(result.rows[0]);
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error) {

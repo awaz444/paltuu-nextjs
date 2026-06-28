@@ -91,33 +91,36 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             return NextResponse.json({ error: "followerId is required" }, { status: 400 });
         }
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
-            const res = await db.query(
+            await client.query('BEGIN');
+            const res = await client.query(
                 "DELETE FROM social_follows WHERE follower_id = $1 AND following_id = $2",
                 [followerId, currentUserId]
             );
 
             if (res.rowCount === 0) {
-                await db.query('ROLLBACK');
+                await client.query('ROLLBACK');
                 return NextResponse.json({ error: "Follower relationship not found" }, { status: 404 });
             }
 
             // Decrement counts
-            await db.query(
+            await client.query(
                 "UPDATE users SET follower_count = GREATEST(0, follower_count - 1) WHERE user_id = $1",
                 [currentUserId]
             );
-            await db.query(
+            await client.query(
                 "UPDATE users SET following_count = GREATEST(0, following_count - 1) WHERE user_id = $1",
                 [followerId]
             );
 
-            await db.query('COMMIT');
+            await client.query('COMMIT');
             return NextResponse.json({ removed: true });
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error) {

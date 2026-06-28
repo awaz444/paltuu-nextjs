@@ -88,8 +88,9 @@ export async function PUT(req: NextRequest) {
         const body = await req.json();
         const { shelter_name, address, description, capacity, logo_url, bank_info } = body;
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             const updateShelter = `
                 UPDATE rescue_shelters SET
                     shelter_name = COALESCE($1, shelter_name),
@@ -100,7 +101,7 @@ export async function PUT(req: NextRequest) {
                     updated_at = CURRENT_TIMESTAMP
                 WHERE shelter_id = $6
             `;
-            await db.query(updateShelter, [shelter_name, address, description, capacity, logo_url, id]);
+            await client.query(updateShelter, [shelter_name, address, description, capacity, logo_url, id]);
 
             if (bank_info) {
                 const { account_title, iban, bank_name } = bank_info;
@@ -114,15 +115,17 @@ export async function PUT(req: NextRequest) {
                         bank_name = EXCLUDED.bank_name,
                         updated_at = CURRENT_TIMESTAMP
                 `;
-                await db.query(updateBank, [id, account_title, iban, bank_name]);
+                await client.query(updateBank, [id, account_title, iban, bank_name]);
             }
 
-            await db.query('COMMIT');
+            await client.query('COMMIT');
             return NextResponse.json({ success: true, message: "Shelter updated successfully" });
 
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error) {

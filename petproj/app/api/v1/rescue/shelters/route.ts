@@ -26,10 +26,11 @@ export async function POST(req: NextRequest) {
 
         if (!validation.success) return NextResponse.json({ errors: validation.errors }, { status: 400 });
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             // 1. Create Shelter
-            const shelterRes = await db.query(`
+            const shelterRes = await client.query(`
                 INSERT INTO rescue_shelters (user_id, shelter_name, address, description, capacity, approved, created_at)
                 VALUES ($1, $2, $3, $4, $5, false, CURRENT_TIMESTAMP)
                 RETURNING shelter_id
@@ -38,17 +39,19 @@ export async function POST(req: NextRequest) {
             const shelterId = shelterRes.rows[0].shelter_id;
 
             // 2. Add Bank Info
-            await db.query(`
+            await client.query(`
                 INSERT INTO shelter_bank_info (shelter_id, account_title, iban, bank_name)
                 VALUES ($1, $2, $3, $4)
             `, [shelterId, accountTitle, iban, bankName]);
 
-            await db.query('COMMIT');
+            await client.query('COMMIT');
             return NextResponse.json({ success: true, shelter_id: shelterId }, { status: 201 });
 
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error) {

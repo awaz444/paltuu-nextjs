@@ -142,10 +142,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         if (post.rowCount === 0) return NextResponse.json({ error: "Post not found" }, { status: 404 });
         if (post.rows[0].user_id !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             // Decrement post_count for all hashtags linked to this post
-            await db.query(`
+            await client.query(`
                 UPDATE hashtags h
                 SET post_count = GREATEST(0, h.post_count - 1)
                 FROM post_hashtags ph
@@ -153,19 +154,21 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
                   AND ph.post_id = $1
             `, [postId]);
 
-            await db.query(
+            await client.query(
                 "UPDATE social_posts SET is_deleted = true WHERE post_id = $1",
                 [postId]
             );
-            await db.query(
+            await client.query(
                 "UPDATE users SET post_count = GREATEST(0, post_count - 1) WHERE user_id = $1",
                 [userId]
             );
-            await db.query('COMMIT');
+            await client.query('COMMIT');
             return NextResponse.json({ deleted: true });
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error) {
@@ -199,10 +202,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         const oldContent = postCheck.rows[0].content;
         let newlyAddedMentions: ParsedMention[] = [];
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             // Update the post
-            await db.query(`
+            await client.query(`
                 UPDATE social_posts 
                 SET content = COALESCE($1, content),
                     post_type = COALESCE($2, post_type),
@@ -218,7 +222,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
                 if (tagIds.length > 0) {
                     // Validate ownership of all tagged profiles
-                    const ownerCheck = await db.query(
+                    const ownerCheck = await client.query(
                         `SELECT COUNT(*) FROM pet_profiles
                          WHERE pet_profile_id = ANY($1::int[]) AND owner_id = $2`,
                         [tagIds, userId]
@@ -229,11 +233,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                 }
 
                 // Delete existing tags
-                await db.query("DELETE FROM post_pet_tags WHERE post_id = $1", [postId]);
+                await client.query("DELETE FROM post_pet_tags WHERE post_id = $1", [postId]);
 
                 // Insert new ones
                 for (const profileId of tagIds) {
-                    await db.query(
+                    await client.query(
                         `INSERT INTO post_pet_tags (post_id, pet_profile_id)
                          VALUES ($1, $2)
                          ON CONFLICT DO NOTHING`,
@@ -245,7 +249,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             // If content changed, update hashtags
             if (content !== undefined && content !== oldContent) {
                 // 1. Decrement old hashtag counts
-                await db.query(`
+                await client.query(`
                     UPDATE hashtags h
                     SET post_count = GREATEST(0, h.post_count - 1)
                     FROM post_hashtags ph
@@ -254,19 +258,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                 `, [postId]);
 
                 // 2. Remove old hashtag links
-                await db.query("DELETE FROM post_hashtags WHERE post_id = $1", [postId]);
+                await client.query("DELETE FROM post_hashtags WHERE post_id = $1", [postId]);
 
                 // 2. Parse & upsert new hashtags
                 const tagMatches = content.match(/#([a-zA-Z0-9_]+)/g) || [];
                 const uniqueTags = [...new Set(tagMatches.map((t: string) => t.slice(1).toLowerCase()))];
                 for (const tag of uniqueTags) {
-                    const tagRes = await db.query(`
+                    const tagRes = await client.query(`
                         INSERT INTO hashtags (tag, post_count)
                         VALUES ($1, 1)
                         ON CONFLICT (tag) DO UPDATE SET post_count = hashtags.post_count + 1
                         RETURNING hashtag_id
                     `, [tag]);
-                    await db.query(`
+                    await client.query(`
                         INSERT INTO post_hashtags (post_id, hashtag_id)
                         VALUES ($1, $2) ON CONFLICT DO NOTHING
                     `, [postId, tagRes.rows[0].hashtag_id]);
@@ -280,19 +284,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                 const oldMentions = parseMentions(oldContent);
                 const newMentions = parseMentions(content);
 
-                await validateMentions(db, newMentions, userId);
+                await validateMentions(client, newMentions, userId);
 
-                await deleteMentions(db, { postId });
-                await persistMentions(db, { postId }, newMentions, userId);
+                await deleteMentions(client, { postId });
+                await persistMentions(client, { postId }, newMentions, userId);
 
                 const oldKeys = new Set(oldMentions.map((m) => `${m.type}:${m.id}`));
                 newlyAddedMentions = newMentions.filter((m) => !oldKeys.has(`${m.type}:${m.id}`));
             }
 
-            await db.query('COMMIT');
+            await client.query('COMMIT');
 
             if (newlyAddedMentions.length > 0) {
-                const authorRes = await db.query(`SELECT name FROM users WHERE user_id = $1`, [userId]);
+                const authorRes = await client.query(`SELECT name FROM users WHERE user_id = $1`, [userId]);
                 notifyNewMentions(newlyAddedMentions, {
                     mentionerId: userId,
                     mentionerName: authorRes.rows[0]?.name || 'User',
@@ -303,8 +307,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
             return NextResponse.json({ updated: true });
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
     } catch (error) {
         console.error("V1 Social Post PATCH error:", error);

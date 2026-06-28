@@ -54,12 +54,13 @@ export async function POST(req: NextRequest) {
 
         if (!name || !email) return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             const tempPassword = Math.random().toString(36).slice(-10);
             const hashed = await bcrypt.hash(tempPassword, 10);
 
-            const userRes = await db.query(`
+            const userRes = await client.query(`
                 INSERT INTO users (name, email, password, role, created_at)
                 VALUES ($1, $2, $3, 'vet', CURRENT_TIMESTAMP)
                 ON CONFLICT (email) DO UPDATE SET role = 'vet'
@@ -68,21 +69,23 @@ export async function POST(req: NextRequest) {
 
             const userId = userRes.rows[0].user_id;
 
-            const vetRes = await db.query(`
+            const vetRes = await client.query(`
                 INSERT INTO vets (user_id, clinic_name, license_number, profile_verified, created_at)
                 VALUES ($1, $2, $3, true, CURRENT_TIMESTAMP)
                 RETURNING *
             `, [userId, clinic_name, license_number]);
 
-            await db.query('COMMIT');
+            await client.query('COMMIT');
             return NextResponse.json({ 
                 message: "Vet account created", 
                 vet: vetRes.rows[0],
                 temp_password: tempPassword 
             }, { status: 201 });
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
     } catch (error) {
         console.error("V1 Admin Vet POST error:", error);

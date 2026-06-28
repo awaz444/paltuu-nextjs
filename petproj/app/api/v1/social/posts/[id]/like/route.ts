@@ -42,15 +42,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             [postId, userId]
         );
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             if ((existing.rowCount ?? 0) > 0) {
                 // Unlike
-                await db.query("DELETE FROM social_likes WHERE post_id = $1 AND user_id = $2", [postId, userId]);
-                await db.query("UPDATE social_posts SET like_count = GREATEST(0, like_count - 1) WHERE post_id = $1", [postId]);
-                await db.query('COMMIT');
+                await client.query("DELETE FROM social_likes WHERE post_id = $1 AND user_id = $2", [postId, userId]);
+                await client.query("UPDATE social_posts SET like_count = GREATEST(0, like_count - 1) WHERE post_id = $1", [postId]);
+                await client.query('COMMIT');
 
-                const updated = await db.query("SELECT like_count FROM social_posts WHERE post_id = $1", [postId]);
+                const updated = await client.query("SELECT like_count FROM social_posts WHERE post_id = $1", [postId]);
                 const likeCount = updated.rows[0]?.like_count ?? 0;
                 // Fire-and-forget real-time event
                 emitLike(postId, userId, likeCount, false);
@@ -58,15 +59,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
             } else {
                 // Like
-                await db.query("INSERT INTO social_likes (post_id, user_id) VALUES ($1, $2)", [postId, userId]);
-                await db.query("UPDATE social_posts SET like_count = like_count + 1 WHERE post_id = $1", [postId]);
+                await client.query("INSERT INTO social_likes (post_id, user_id) VALUES ($1, $2)", [postId, userId]);
+                await client.query("UPDATE social_posts SET like_count = like_count + 1 WHERE post_id = $1", [postId]);
 
                 // Send notification (fire-and-forget, non-blocking)
                 if (postAuthorId !== userId) {
                     // Fetch liker and post details for notification
                     const [likerRes, postRes] = await Promise.all([
-                        db.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]),
-                        db.query(`SELECT
+                        client.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]),
+                        client.query(`SELECT
                             (SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1) as image_url
                             FROM social_posts WHERE post_id = $1`, [postId])
                     ]);
@@ -83,9 +84,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                     ).catch(() => {}); // Non-blocking
                 }
 
-                await db.query('COMMIT');
+                await client.query('COMMIT');
 
-                const updated = await db.query("SELECT like_count FROM social_posts WHERE post_id = $1", [postId]);
+                const updated = await client.query("SELECT like_count FROM social_posts WHERE post_id = $1", [postId]);
                 const likeCount = updated.rows[0]?.like_count ?? 0;
                 // Fire-and-forget real-time events (like count + notification)
                 emitLike(postId, userId, likeCount, true);
@@ -94,8 +95,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 return NextResponse.json({ liked: true, like_count: likeCount });
             }
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error: any) {

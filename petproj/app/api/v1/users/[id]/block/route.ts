@@ -27,18 +27,19 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        await db.query('BEGIN');
+        const client = await db.connect();
         try {
+            await client.query('BEGIN');
             // 1. Insert Block
             // If already blocked, DO NOTHING (return silently 200)
-            const blockRes = await db.query(`
+            const blockRes = await client.query(`
                 INSERT INTO user_blocks (blocker_id, blocked_id)
                 VALUES ($1, $2)
                 ON CONFLICT (blocker_id, blocked_id) DO NOTHING
             `, [blockerId, blockedId]);
 
             // 2. Auto-unfollow in both directions
-            const deletedFollows = await db.query(`
+            const deletedFollows = await client.query(`
                 DELETE FROM social_follows 
                 WHERE (follower_id = $1 AND following_id = $2)
                    OR (follower_id = $2 AND following_id = $1)
@@ -46,15 +47,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             `, [blockerId, blockedId]);
             
             for (const row of deletedFollows.rows) {
-                await db.query("UPDATE users SET following_count = GREATEST(0, following_count - 1) WHERE user_id = $1", [row.follower_id]);
-                await db.query("UPDATE users SET follower_count = GREATEST(0, follower_count - 1) WHERE user_id = $1", [row.following_id]);
+                await client.query("UPDATE users SET following_count = GREATEST(0, following_count - 1) WHERE user_id = $1", [row.follower_id]);
+                await client.query("UPDATE users SET follower_count = GREATEST(0, follower_count - 1) WHERE user_id = $1", [row.following_id]);
             }
 
-            await db.query('COMMIT');
+            await client.query('COMMIT');
             return NextResponse.json({ blocked: true });
         } catch (e) {
-            await db.query('ROLLBACK');
+            await client.query('ROLLBACK');
             throw e;
+        } finally {
+            client.release();
         }
 
     } catch (error) {

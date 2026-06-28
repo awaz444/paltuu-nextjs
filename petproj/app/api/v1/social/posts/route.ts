@@ -4,6 +4,13 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 import { fanOutPostToFollowers } from "@/lib/redis";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import {
+    resolveBucket,
+    ensureBucketAssigned,
+    logFeedImpressions,
+    RANKING_WEIGHTS,
+    type ExperimentBucket,
+} from "@/lib/feedExperiment";
+import {
     parseMentions,
     validateMentions,
     persistMentions,
@@ -20,7 +27,11 @@ export const dynamic = "force-dynamic";
  * Modes:
  *   ?mode=following    (default) — algorithmic ranked feed from followed users + self
  *   ?mode=global       — algorithmic ranked feed from all users
+ *   ?mode=personalized — "For You": base ranking blended with interest affinity
+ *                        (A/B: control = base only, treatment = 0.70·base + 0.30·affinity)
  *   ?mode=chronological — pure newest-first (no ranking)
+ *
+ * global + personalized exclude quarantined posts; following keeps them visible.
  *
  * Cursor-based pagination using the relevance score.
  *
@@ -41,8 +52,179 @@ export async function GET(req: NextRequest) {
         const mode    = searchParams.get("mode") || "following";
 
         const isChronological = mode === "chronological";
+        const isPersonalized  = mode === "personalized";
         const isGlobal        = mode === "global";
         const viewerId        = userId || 0;
+
+        // Quarantined posts are excluded from global + personalized feeds, but stay
+        // visible in the following feed (still shown to followers). See plan §8.
+        const quarantineFilter = (isGlobal || isPersonalized)
+            ? `AND (p.moderation_state IS NULL OR p.moderation_state <> 'quarantined')`
+            : ``;
+
+        // ── Personalized "For You" feed (plan §11) — A/B experiment surface ────────
+        // Resolve the viewer's experiment arm; control ranks on base_score only,
+        // treatment blends interest affinity. Falls through to the algorithmic query
+        // for everyone else.
+        if (isPersonalized && userId) {
+            const viewerIdNum = parseInt(String(userId), 10);
+            const bucketRow = await db.query(
+                `SELECT feed_experiment_bucket, feed_experiment_assigned
+                   FROM users WHERE user_id = $1`,
+                [viewerId]
+            );
+            const bucket: ExperimentBucket = resolveBucket(
+                viewerIdNum,
+                bucketRow.rows[0]?.feed_experiment_assigned === true,
+                bucketRow.rows[0]?.feed_experiment_bucket ?? null
+            );
+            // Persist the deterministic default on first serve (non-blocking).
+            ensureBucketAssigned(viewerIdNum).catch(() => {});
+
+            const { base: baseW, affinity: affW } = RANKING_WEIGHTS[bucket];
+
+            const personalizedQuery = `
+                WITH following_set AS (
+                    SELECT following_id FROM social_follows WHERE follower_id = $1
+                ),
+                post_media AS (
+                    SELECT post_id, json_agg(m ORDER BY m.ordering) AS media
+                    FROM social_post_media m
+                    GROUP BY post_id
+                ),
+                user_max_interest AS (
+                    SELECT COALESCE(MAX(score), 0.01) AS max_score
+                    FROM user_interest_scores
+                    WHERE user_id = $1
+                ),
+                post_affinity AS (
+                    SELECT
+                        pct.post_id,
+                        AVG(uis.score) FILTER (WHERE pct.role = 'primary') AS avg_primary_interest,
+                        COUNT(*) FILTER (WHERE pct.role = 'primary')        AS primary_count
+                    FROM post_content_tags pct
+                    LEFT JOIN user_interest_scores uis
+                        ON uis.tag_id = pct.tag_id AND uis.user_id = $1
+                    GROUP BY pct.post_id
+                    HAVING COUNT(*) FILTER (WHERE pct.role = 'primary') BETWEEN 1 AND 3
+                ),
+                scored AS (
+                    SELECT
+                        p.*,
+                        u.name               AS author_name,
+                        u.profile_image_url  AS author_image,
+                        u.social_username,
+                        false                AS is_blocked_by_me,
+                        false                AS is_blocking_me,
+                        COALESCE(pm.media, '[]'::json)  AS media,
+                        COALESCE(
+                            (SELECT json_agg(json_build_object(
+                                'pet_profile_id', pp.pet_profile_id,
+                                'name', pp.name,
+                                'avatar_url', pp.avatar_url,
+                                'species', pp.species
+                             ))
+                             FROM post_pet_tags ppt
+                             JOIN pet_profiles pp ON pp.pet_profile_id = ppt.pet_profile_id
+                             WHERE ppt.post_id = p.post_id),
+                            '[]'::json
+                        ) AS tagged_pets,
+                        op.content           AS original_content,
+                        op.user_id           AS original_user_id,
+                        ou.name              AS original_author_name,
+                        ou.social_username   AS original_social_username,
+                        ou.profile_image_url AS original_author_image,
+                        false                AS original_author_is_blocked_by_me,
+                        false                AS original_author_is_blocking_me,
+                        COALESCE(opm.media, '[]'::json) AS original_media,
+                        (sl.post_id IS NOT NULL)  AS is_liked,
+                        (sr.post_id IS NOT NULL)  AS is_reposted,
+                        EXISTS(SELECT 1 FROM social_comments WHERE post_id = p.post_id AND user_id = $1 AND is_deleted = false) AS is_commented,
+                        (sp.save_id IS NOT NULL)  AS is_saved,
+                        COALESCE(
+                          (SELECT json_agg(sc.collection_id)
+                           FROM collection_posts cp
+                           JOIN save_collections sc ON sc.collection_id = cp.collection_id
+                           WHERE cp.save_id = sp.save_id),
+                          '[]'::json
+                        ) AS saved_to_collections,
+                        (fs.following_id IS NOT NULL) AS is_following,
+                        (
+                            EXP(-EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 21600.0) * 0.4
+                            + LEAST(
+                                LOG(1 + p.like_count * 1.0
+                                      + p.comment_count * 2.0
+                                      + p.repost_count  * 3.0) / 10.0,
+                                0.4
+                              ) * 0.4
+                            + CASE
+                                WHEN p.user_id = $1              THEN 0.4
+                                WHEN fs.following_id IS NOT NULL THEN 0.2
+                                ELSE 0.0
+                              END * 0.2
+                        ) AS base_score,
+                        CASE
+                            WHEN pa.avg_primary_interest IS NOT NULL
+                                THEN pa.avg_primary_interest / umi.max_score
+                            ELSE 0
+                        END AS score_affinity
+                    FROM social_posts p
+                    JOIN users u ON u.user_id = p.user_id
+                    LEFT JOIN following_set fs  ON fs.following_id = p.user_id
+                    LEFT JOIN post_media pm     ON pm.post_id  = p.post_id
+                    LEFT JOIN social_posts op   ON op.post_id  = p.original_post_id
+                    LEFT JOIN users ou          ON ou.user_id  = op.user_id
+                    LEFT JOIN post_media opm    ON opm.post_id = op.post_id
+                    LEFT JOIN social_likes   sl ON sl.post_id = p.post_id AND sl.user_id = $1
+                    LEFT JOIN social_reposts sr ON sr.post_id = p.post_id AND sr.user_id = $1
+                    LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
+                    LEFT JOIN post_affinity pa  ON pa.post_id = p.post_id
+                    CROSS JOIN user_max_interest umi
+                    WHERE p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $1)
+                    AND (p.moderation_state IS NULL OR p.moderation_state <> 'quarantined')
+                    AND NOT EXISTS (
+                        SELECT 1 FROM user_blocks b
+                        WHERE (b.blocker_id = $1 AND b.blocked_id = p.user_id)
+                           OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
+                    )
+                    AND (p.original_post_id IS NULL OR NOT EXISTS (
+                        SELECT 1 FROM user_blocks b
+                        WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
+                           OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
+                    ))
+                )
+                SELECT *,
+                    ($4 * base_score + $5 * score_affinity) AS relevance_score
+                FROM scored
+                ORDER BY relevance_score DESC, created_at DESC
+                LIMIT $2 OFFSET $3
+            `;
+
+            const result = await db.query(personalizedQuery, [viewerId, limit, offset, baseW, affW]);
+            const posts  = result.rows;
+
+            // Log impressions for the A/B experiment (fire-and-forget).
+            logFeedImpressions(
+                viewerIdNum,
+                bucket,
+                posts.map((row, idx) => ({
+                    post_id: row.post_id,
+                    score_base: Number(row.base_score) || 0,
+                    score_affinity: Number(row.score_affinity) || 0,
+                    score_final: Number(row.relevance_score) || 0,
+                    position: offset + idx,
+                }))
+            ).catch(() => {});
+
+            const nextCursor = posts.length === limit ? String(offset + limit) : null;
+            return NextResponse.json({
+                posts,
+                next_cursor:       nextCursor,
+                has_more:          nextCursor !== null,
+                mode:              "personalized",
+                experiment_bucket: bucket,
+            });
+        }
 
         /*
          * Strategy: use a CTE so:
@@ -126,6 +308,7 @@ export async function GET(req: NextRequest) {
                     WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
                        OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
                 ))
+                ${quarantineFilter}
                 ${!isGlobal && userId ? `AND (
                     p.user_id = $1
                     OR p.user_id IN (SELECT following_id FROM social_follows WHERE follower_id = $1)
@@ -225,6 +408,7 @@ export async function GET(req: NextRequest) {
                         WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
                            OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
                     ))
+                    ${quarantineFilter}
                     ${!isGlobal && userId ? `AND (
                         p.user_id = $1
                         OR fs.following_id IS NOT NULL

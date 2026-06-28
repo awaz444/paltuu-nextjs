@@ -5,6 +5,7 @@ import { emitLike } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { SocialNotifications } from "@/lib/notifications";
 import { assertNotBlocked } from "@/lib/moderation";
+import { recordEngagementEvent } from "@/lib/interestScoring";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 const likeCount = updated.rows[0]?.like_count ?? 0;
                 // Fire-and-forget real-time events (like count + notification)
                 emitLike(postId, userId, likeCount, true);
+                // Fire-and-forget interest scoring (only on like, not unlike)
+                recordEngagementEvent(userId, postId, 'like').catch(() => {});
                 return NextResponse.json({ liked: true, like_count: likeCount });
             }
         } catch (e) {

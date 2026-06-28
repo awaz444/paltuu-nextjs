@@ -5,6 +5,7 @@ import { emitRepost, emitNotification } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { SocialNotifications } from "@/lib/notifications";
 import { assertNotBlocked } from "@/lib/moderation";
+import { recordEngagementEvent } from "@/lib/interestScoring";
 
 export const dynamic = "force-dynamic";
 
@@ -104,6 +105,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 [originalPostId]
             );
             emitRepost(originalPostId, userId, updatedPost.rows[0]?.repost_count ?? 0).catch(() => {});
+
+            // Fire-and-forget interest scoring against the ORIGINAL post's tags
+            recordEngagementEvent(userId, originalPostId, 'repost').catch(() => {});
 
             // Real-time: push notification to original author
             if (originalAuthorId !== userId) {

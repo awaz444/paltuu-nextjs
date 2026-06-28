@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import { recordEngagementEvent } from "@/lib/interestScoring";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: { code: "POST_NOT_FOUND", message: "Post does not exist", status: 404 } }, { status: 404 });
     }
 
+    let wasNewSave = false;
     await db.query('BEGIN');
     try {
       // 2. Check if already saved
@@ -31,6 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       const existingSave = await db.query("SELECT save_id FROM saved_posts WHERE user_id = $1 AND post_id = $2", [userId, postId]);
 
       if (existingSave.rowCount === 0) {
+        wasNewSave = true;
         // 3. Create saved_posts entry
         const newSave = await db.query(
           "INSERT INTO saved_posts (user_id, post_id) VALUES ($1, $2) RETURNING save_id",
@@ -78,6 +81,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       }
 
       await db.query('COMMIT');
+      // Fire-and-forget interest scoring (only on a brand-new save, not re-saves)
+      if (wasNewSave) recordEngagementEvent(userId, postId, 'save').catch(() => {});
       return NextResponse.json({ saved: true, save_id: saveId });
     } catch (e) {
       await db.query('ROLLBACK');

@@ -5,6 +5,7 @@ import { emitComment, emitNotification } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { SocialNotifications } from "@/lib/notifications";
 import { assertNotBlocked, checkIsBlocked } from "@/lib/moderation";
+import { recordEngagementEvent } from "@/lib/interestScoring";
 import {
     parseMentions,
     validateMentions,
@@ -173,6 +174,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             throw e;
         }
         client.release();
+
+        // Fire-and-forget interest scoring (every successful comment / reply)
+        recordEngagementEvent(userId, postId, 'comment').catch(() => {});
 
         // Fetch notification metadata AFTER the transaction (pool queries, non-blocking)
         const commenterRes = await db.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]);

@@ -868,6 +868,17 @@ model social_posts {
   is_repost          Boolean?            @default(false)
   original_post_id   BigInt?
   report_count       Int?                @default(0)
+  // Content tagging (feed algorithm)
+  tagging_status            String?       @default("untagged") @db.VarChar(20)
+  primary_tag_id            Int?
+  tagged_at                 DateTime?     @db.Timestamptz(6)
+  tagged_by                 Int?
+  // Weighted moderation
+  moderation_state          String?       @default("none") @db.VarChar(20)
+  report_weighted_score     Float?        @default(0)
+  report_immunity_until     DateTime?     @db.Timestamptz(6)
+  suspicious_burst_at       DateTime?     @db.Timestamptz(6)
+  author_block_after_report Boolean?      @default(false)
   post_hashtags      post_hashtags[]
   saved_posts        saved_posts[]
   social_comments    social_comments[]
@@ -937,6 +948,14 @@ model users {
   post_count                                        Int?                    @default(0)
   is_private                                        Boolean?                @default(false)
   cover_photo_url                                   String?                 @db.VarChar
+  // Reporter trust (weighted moderation)
+  reporter_trust                                    Float?                  @default(1.0)
+  lifetime_dismissals                               Int?                    @default(0)
+  trust_ceiling                                     Float?                  @default(1.0)
+  last_dismissal_at                                 DateTime?               @db.Timestamptz(6)
+  // Feed experiment / personalization
+  feed_experiment_bucket                            String?                 @default("control") @db.VarChar(20)
+  feed_personalization_tier                         String?                 @default("cold_start") @db.VarChar(20)
   admin_action_logs                                 admin_action_logs[]
   adoption_applications                             adoption_applications[]
   carts                                             carts[]
@@ -1128,6 +1147,7 @@ model reports {
   admin_note      String?
   created_at      DateTime? @default(now()) @db.Timestamptz(6)
   reviewed_at     DateTime? @db.Timestamptz(6)
+  report_weight   Float?    // computed at insert time by lib/reportScoring.ts; never recomputed
   users           users     @relation(fields: [reporter_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([reporter_id, target_type, target_id])
@@ -1228,4 +1248,88 @@ model social_mentions {
   @@index([mentioned_user_id, created_at(sort: Desc)], map: "idx_social_mentions_user")
   @@index([mentioned_pet_id], map: "idx_social_mentions_pet")
   @@index([mentioned_by], map: "idx_social_mentions_by")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Feed algorithm: content tagging + interest scoring + versioned settings
+// (managed via db/social_feed_migration.ts; descriptive only)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model content_tags {
+  tag_id            Int      @id @default(autoincrement())
+  slug              String   @unique @db.VarChar(100)
+  label             String   @db.VarChar(100)
+  category          String   @db.VarChar(30) // species | topic | content_type | mood
+  parent_tag_id     Int?
+  default_weight    Float    @default(1.0)
+  keyword_aliases   String[] @default([])
+  is_active         Boolean  @default(true)
+  sort_order        Int      @default(0)
+}
+
+model post_content_tags {
+  post_id   BigInt
+  tag_id    Int
+  role      String   @default("secondary") @db.VarChar(20) // primary | secondary
+  tagged_by Int?
+  tagged_at DateTime @default(now()) @db.Timestamptz(6)
+  source    String   @default("admin") @db.VarChar(20) // admin | auto (future)
+
+  @@id([post_id, tag_id])
+  @@index([post_id], map: "idx_post_content_tags_post")
+}
+
+// Additive interest score per user per tag. Capped at 10.0 (CHECK score_cap).
+model user_interest_scores {
+  user_id    Int
+  tag_id     Int
+  score      Float    @default(0)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@id([user_id, tag_id])
+  @@index([user_id], map: "idx_user_interest_scores_user")
+}
+
+// Onboarding picks — seeds user_interest_scores at +1.0 per tag
+model user_interest_picks {
+  user_id    Int
+  tag_id     Int
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@id([user_id, tag_id])
+}
+
+// Full audit trail: every interest delta (engagement, backfill, onboarding, undo)
+model user_interest_events {
+  event_id         BigInt    @id @default(autoincrement())
+  user_id          Int
+  tag_id           Int
+  post_id          BigInt?
+  delta            Float
+  event_type       String    @db.VarChar(30)
+  reversible_until DateTime? @db.Timestamptz(6)
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([user_id], map: "idx_user_interest_events_user")
+}
+
+// Events queued while a post is untagged; processed on admin tag action
+model pending_interest_events {
+  id         BigInt   @id @default(autoincrement())
+  user_id    Int
+  post_id    BigInt
+  event_type String   @db.VarChar(20)
+  delta      Float
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([post_id], map: "idx_pending_interest_post")
+}
+
+// Versioned history of app_settings changes for rollback
+model app_settings_versions {
+  version_id     Int      @id @default(autoincrement())
+  settings_key   String   @db.VarChar(100)
+  settings_value Json
+  created_by     Int?
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
 }

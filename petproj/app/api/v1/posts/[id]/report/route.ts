@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { REPORT_REASONS } from "@/lib/moderation";
+import { scoreReport } from "@/lib/reportScoring";
 
 export const dynamic = "force-dynamic";
 
@@ -36,12 +37,21 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             return NextResponse.json({ error: "CANNOT_REPORT_SELF" }, { status: 403 });
         }
 
-        // Insert report. If already reported, ignore silently
-        await db.query(`
+        // Insert report. If already reported, ignore silently.
+        const inserted = await db.query(`
             INSERT INTO reports (reporter_id, target_type, target_id, reason_code, additional_note)
             VALUES ($1, 'post', $2, $3, $4)
             ON CONFLICT (reporter_id, target_type, target_id) DO NOTHING
+            RETURNING report_id
         `, [reporterId, targetId, reason_code, additional_note || null]);
+
+        // Only score genuinely new reports (replaces the old trg_reports_insert trigger).
+        const reportId = inserted.rows[0]?.report_id;
+        if (reportId) {
+            scoreReport(reportId, targetId).catch((e) =>
+                console.error("scoreReport failed:", e)
+            );
+        }
 
         return NextResponse.json({ reported: true });
     } catch (error) {

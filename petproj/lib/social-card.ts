@@ -7,11 +7,11 @@ import * as opentype from "opentype.js";
 
 const CARD_W = 1080;
 const CARD_H = 1350;
-const CORNER_PAD = 20; // tight corner padding for logo & city pill
+const MARGIN = 32; // consistent margin from all four edges
 const ROSE = "#a03048";
 const WHITE = "#ffffff";
 
-const LOGO_PATH = path.join(process.cwd(), "public/post-template-assets/paltuu.png");
+const LOGO_PATH = path.join(process.cwd(), "public/post-template-assets/main.png");
 const FONT_PATH = path.join(
     process.cwd(),
     "public/post-template-assets/Montserrat/static/Montserrat-Bold.ttf"
@@ -103,10 +103,10 @@ function buildCityLayer(city: string): Buffer {
     const pillH = 76;
     const rx = 38;
 
-    // Right-align pill: right edge at CARD_W - CORNER_PAD
-    const pillLeft = CARD_W - CORNER_PAD - pillW;
+    // Right-align pill: right edge at CARD_W - MARGIN
+    const pillLeft = CARD_W - MARGIN - pillW;
     const pillCentreX = pillLeft + pillW / 2;
-    const pillTopY = CORNER_PAD;
+    const pillTopY = MARGIN;
 
     // Baseline: vertically centred in pill
     const baselineY = pillTopY + pillH / 2 + (bb.y2 - bb.y1) / 2 - bb.y2;
@@ -127,7 +127,7 @@ function buildAdoptionBadge(): Buffer {
     const pillW = 730;
     const pillH = 88;
     const rx = 44;
-    const bottomPad = 56;
+    const bottomPad = MARGIN;
 
     const pillCentreX = CARD_W / 2;
     const pillTopY = CARD_H - bottomPad - pillH;
@@ -148,7 +148,7 @@ function buildRescueBadge(healthIssue?: string | null): Buffer {
     const mainPillW = 730;
     const mainPillH = 88;
     const mainRx = 44;
-    const bottomPad = 56;
+    const bottomPad = MARGIN;
 
     const mainPillCentreX = CARD_W / 2;
     const mainPillTopY = CARD_H - bottomPad - mainPillH;
@@ -226,7 +226,7 @@ export async function generateSocialCard(params: {
         .composite([
             { input: cityLayer, top: 0, left: 0 },
             { input: badgeLayer, top: 0, left: 0 },
-            { input: resizedLogo, top: CORNER_PAD, left: CORNER_PAD },
+            { input: resizedLogo, top: MARGIN, left: MARGIN },  // same margin as city pill & badge
         ])
         .jpeg({ quality: 92 })
         .toBuffer();

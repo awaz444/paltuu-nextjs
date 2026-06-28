@@ -198,8 +198,9 @@ export async function generateSocialCard(params: {
     if (!photoRes.ok) throw new Error(`Failed to fetch pet image: ${photoRes.status}`);
     const photoBuffer = Buffer.from(await photoRes.arrayBuffer());
 
-    // 2. Crop/resize to 4:5 (1080×1350), centre-anchored cover
+    // 2. Auto-rotate from EXIF then crop/resize to 4:5 (1080×1350), centre-anchored cover
     const base = await sharp(photoBuffer)
+        .rotate()  // honour EXIF orientation so portrait shots stay upright
         .resize(CARD_W, CARD_H, { fit: "cover", position: "centre" })
         .jpeg({ quality: 92 })
         .toBuffer();

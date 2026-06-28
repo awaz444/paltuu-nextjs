@@ -703,6 +703,50 @@ const AdminPetInteraction: React.FC = () => {
               )}
             </div>
 
+            {/* Caption Generator */}
+            {editingPet && (() => {
+              const cityName = cities.find(c => c.city_id === editingPet.city_id)?.city_name ?? '';
+              const location = [editingPet.area, cityName].filter(Boolean).join(', ');
+              const caption = [
+                'ADOPT NOW ON PALTUU.PK!!',
+                '',
+                editingPet.description ?? '',
+                '',
+                'Details:',
+                '',
+                editingPet.pet_breed ? `Breed: ${editingPet.pet_breed}` : '',
+                editingPet.age_months != null ? `Age: ${formatAge(editingPet.age_months)}` : '',
+                editingPet.sex ? `Sex: ${editingPet.sex.charAt(0).toUpperCase() + editingPet.sex.slice(1)}` : '',
+                location ? `Location: ${location}` : '',
+              ].filter((line, i, arr) => {
+                // collapse consecutive blank lines
+                if (line !== '') return true;
+                return arr[i - 1] !== '';
+              }).join('\n');
+
+              return (
+                <div className="mt-4 mb-2 border rounded-lg p-4 bg-gray-50">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Post Caption</p>
+                  <textarea
+                    readOnly
+                    value={caption}
+                    rows={10}
+                    className="w-full text-xs font-mono bg-white border border-gray-200 rounded p-2 resize-none text-gray-800"
+                  />
+                  <Button
+                    size="small"
+                    className="mt-2"
+                    onClick={() => {
+                      navigator.clipboard.writeText(caption);
+                      message.success('Caption copied!');
+                    }}
+                  >
+                    Copy Caption
+                  </Button>
+                </div>
+              );
+            })()}
+
           </Form>
         </Modal>
       </div>

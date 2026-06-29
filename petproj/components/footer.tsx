@@ -56,7 +56,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-primary text-white px-6 md:px-16 py-10 rounded-t-3xl mt-6">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
         {/* Col 1 - Logo, About & Address */}
         <div className="text-center md:text-left">
           <img
@@ -98,20 +98,7 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Col 3 - Shop */}
-        <div className="text-center md:text-left">
-          <h3 className="text-lg font-semibold mb-4">Shop Pet Products</h3>
-          <ul className="space-y-2 text-sm">
-            <li><Link href="/marketplace/cat-food" className="hover:text-gray-300">Cat Food</Link></li>
-            <li><Link href="/marketplace/dog-food" className="hover:text-gray-300">Dog Food</Link></li>
-            <li><Link href="/marketplace/litter" className="hover:text-gray-300">Cat Litter</Link></li>
-            <li><Link href="/marketplace?category=grooming" className="hover:text-gray-300">Grooming</Link></li>
-            <li><Link href="/marketplace?category=accessories" className="hover:text-gray-300">Accessories</Link></li>
-            <li><Link href="/marketplace/brands" className="hover:text-gray-300">All Brands</Link></li>
-          </ul>
-        </div>
-
-        {/* Col 4 - Newsletter + Policies */}
+        {/* Col 3 - Newsletter + Policies */}
         <div className="text-center md:text-left">
           <h3 className="text-lg font-semibold mb-2">Policies</h3>
           <ul className="space-y-1 text-sm mb-6">

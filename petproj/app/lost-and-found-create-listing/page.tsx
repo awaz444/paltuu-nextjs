@@ -2,52 +2,39 @@
 
 import { useState, useEffect } from "react";
 import "./styles.css";
-import Navbar from "@/components/navbar";
 import { useRouter } from "next/navigation";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import { useAuth } from "@/context/AuthContext";
-import LoginModal from "@/components/LoginModal"; // Import your login modal component
+import LoginModal from "@/components/LoginModal";
 
 const LostFoundListingPage = () => {
     const { user, isAuthenticated, isHydrating } = useAuth();
-    const [categoryId, setCategoryId] = useState<number | string>(""); // Updated to categoryId
+    const [categoryId, setCategoryId] = useState<number | string>("");
     const [cityId, setCityId] = useState("");
     const [location, setLocation] = useState("");
-    const [description, setDescription] = useState(""); // **Pet Description field**
+    const [description, setDescription] = useState("");
     const [date, setDate] = useState("");
     const [contactInfo, setContactInfo] = useState("");
     const [activeTab, setActiveTab] = useState<"lost" | "found">("lost");
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
-    
-    const router = useRouter();
 
-    // Re-calculate userId from auth context
+    const router = useRouter();
     const userId = user?.id || (user as any)?.user_id;
 
-    // **Check authentication state**
     useEffect(() => {
-        // console.log("LostFoundListingPage Auth State:", { isAuthenticated, isHydrating, userId });
         if (!isHydrating) {
-            if (!isAuthenticated) {
-                // console.log("Setting showLoginModal to true");
-                setShowLoginModal(true);
-            } else {
-                // console.log("Setting showLoginModal to false");
-                setShowLoginModal(false);
-            }
+            setShowLoginModal(!isAuthenticated);
         }
     }, [isAuthenticated, isHydrating]);
 
-    // **City Options**
     const cities = [
         { id: 1, name: "Karachi" },
         { id: 2, name: "Islamabad" },
         { id: 3, name: "Lahore" },
     ];
 
-    // **Pet Categories**
     const petCategories = [
         { id: 1, name: "Dog" },
         { id: 2, name: "Cat" },
@@ -61,7 +48,6 @@ const LostFoundListingPage = () => {
         { id: 15, name: "Mouse" },
     ];
 
-    // **Handle form submission**
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -73,221 +59,191 @@ const LostFoundListingPage = () => {
         setLoading(true);
         setError(null);
 
-        // Collect the form data
         const formData = {
-            category_id: categoryId, // Convert to integer
-            city_id: parseInt(cityId), // Convert to integer
-            location: location,
-            pet_description: description || null, // **Include pet description** (optional field)
-            date: activeTab === "lost" ? date : null, // Only include date_lost if "Lost" is active
+            category_id: categoryId,
+            city_id: parseInt(cityId),
+            location,
+            pet_description: description || null,
+            date: activeTab === "lost" ? date : null,
             contact_info: contactInfo,
-            post_type: activeTab, // This will be either "lost" or "found"
-            user_id: userId, // **User ID is added here**
+            post_type: activeTab,
+            user_id: userId,
         };
-
-        console.log('Form Data:', formData); // Debugging log
-
-        const handleLoginSuccess = () => {
-            setShowLoginModal(false);
-        };
-
 
         try {
             const response = await fetch("/api/v1/lost-and-found", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                console.log("Success:", data);
-
-                // Assuming the response contains a post_id
                 const postId = data?.post_id;
                 if (postId) {
                     router.push(`/lost-and-found-images?post_id=${postId}`);
                 } else {
                     setError("Failed to get post ID from response.");
                 }
-
                 resetForm();
             } else {
                 setError(data?.message || "Failed to submit listing");
             }
-        } catch (error) {
+        } catch {
             setError("An error occurred while submitting the listing");
         } finally {
             setLoading(false);
         }
     };
 
-    // **Reset form fields**
     const resetForm = () => {
         setCategoryId("");
         setCityId("");
         setLocation("");
-        setDescription(""); // Reset pet description
+        setDescription("");
         setDate("");
         setContactInfo("");
-    };
-
-    // **Toggle between Lost and Found tabs**
-    const handleTabToggle = (tab: "lost" | "found") => {
-        setActiveTab(tab);
-    };
-
-    const handleLoginSuccess = () => {
-        setShowLoginModal(false);
     };
 
     return (
         <>
             <LoginModal
-  visible={showLoginModal}
-  onSuccess={handleLoginSuccess}
-  onClose={() => setShowLoginModal(false)}
-  mandatory={!isAuthenticated} // Only mandatory if not authenticated
-/>
-            
-            <div
-                className="fullBody"
-                style={{ maxWidth: "90%", margin: "0 auto" }}
-            >
-                <form
-                    className="bg-white p-6 rounded-3xl shadow-md w-full max-w-lg mx-auto my-8"
-                    onSubmit={handleSubmit}
-                >
-                    {error && <p className="text-red-500 mb-4">{error}</p>}
+                visible={showLoginModal}
+                onSuccess={() => setShowLoginModal(false)}
+                onClose={() => setShowLoginModal(false)}
+                mandatory={!isAuthenticated}
+            />
 
-                    {/* Tab Switch */}
-                    <div className="tab-switch-container mb-6">
-                        <div
-                            className="tab-switch-slider bg-primary"
-                            style={{
-                                transform: activeTab === "lost" ? "translateX(0)" : "translateX(100%)",
-                            }}
-                        />
-                        <div
-                            className={`tab ${activeTab === "lost" ? "active" : ""}`}
-                            onClick={() => handleTabToggle("lost")}
-                        >
-                            Lost
-                        </div>
-                        <div
-                            className={`tab ${activeTab === "found" ? "active" : ""}`}
-                            onClick={() => handleTabToggle("found")}
-                        >
-                            Found
-                        </div>
+            <main className="min-h-screen bg-gray-100">
+                {/* Slim banner */}
+                <div className="bg-white border-b border-gray-100">
+                    <div style={{ maxWidth: "90%", margin: "0 auto" }} className="py-6 px-4 md:px-8 text-center">
+                        <p className="text-gray-500 text-sm">
+                            Help reunite pets with their families —{" "}
+                            <span className="font-semibold text-primary">report a lost or found pet</span>
+                        </p>
                     </div>
+                </div>
 
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Pet Category</label>
-                        <select
-                            className="mt-1 p-3 w-full border rounded-2xl"
-                            value={categoryId}
-                            required
-                            onChange={(e) => setCategoryId(e.target.value)}
-                        >
-                            <option value="">Select pet category</option>
-                            {petCategories.map((category) => (
-                                <option key={category.id} value={category.id}>
-                                    {category.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">City</label>
-                        <select
-                            className="mt-1 p-3 w-full border rounded-2xl"
-                            value={cityId}
-                            required
-                            onChange={(e) => setCityId(e.target.value)}
-                        >
-                            <option value="">Select city</option>
-                            {cities.map((city) => (
-                                <option key={city.id} value={city.id}>
-                                    {city.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Location</label>
-                        <input
-                            type="text"
-                            className="mt-1 p-3 w-full border rounded-2xl"
-                            placeholder="Enter specific location"
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Pet Description</label>
-                        <textarea
-                            className="mt-1 p-3 w-full border rounded-2xl"
-                            placeholder="Enter details about the pet"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            rows={4}
-                        />
-                    </div>
-
-                    {/* Show "Date Lost" if Lost tab is active */}
-                    {activeTab === "lost" && (
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700">Date Lost</label>
-                            <input
-                                type="date"
-                                className="mt-1 p-3 w-full border rounded-2xl"
-                                value={date}
-                                onChange={(e) => setDate(e.target.value)}
-                            />
-                        </div>
-                    )}
-
-                    {/* Show "Date Found" if Found tab is active */}
-                    {activeTab === "found" && (
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700">Date Found</label>
-                            <input
-                                type="date"
-                                className="mt-1 p-3 w-full border rounded-2xl"
-                                value={date}
-                                onChange={(e) => setDate(e.target.value)}
-                            />
-                        </div>
-                    )}
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Contact Info</label>
-                        <input
-                            type="text"
-                            required
-                            className="mt-1 p-3 w-full border rounded-2xl"
-                            placeholder="Enter contact details"
-                            value={contactInfo}
-                            onChange={(e) => setContactInfo(e.target.value)}
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="mt-4 p-3 bg-primary text-white rounded-3xl w-full"
-                        disabled={loading}
+                {/* Form */}
+                <div style={{ maxWidth: "90%", margin: "0 auto" }} className="py-10 px-4 md:px-8">
+                    <form
+                        className="bg-white p-8 rounded-3xl shadow-sm w-full max-w-lg mx-auto"
+                        onSubmit={handleSubmit}
                     >
-                        {loading ? "Submitting..." : "Submit Listing"}
-                    </button>
-                </form>
-            </div>
+                        {/* Lost / Found tab */}
+                        <div className="tab-switch-container mb-6">
+                            <div
+                                className="tab-switch-slider bg-primary"
+                                style={{ transform: activeTab === "lost" ? "translateX(0)" : "translateX(100%)" }}
+                            />
+                            <div className={`tab ${activeTab === "lost" ? "active" : ""}`} onClick={() => setActiveTab("lost")}>
+                                Lost
+                            </div>
+                            <div className={`tab ${activeTab === "found" ? "active" : ""}`} onClick={() => setActiveTab("found")}>
+                                Found
+                            </div>
+                        </div>
+
+                        {error && (
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-sm">
+                                {error}
+                            </div>
+                        )}
+
+                        {/* Pet Category */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Pet Category</label>
+                            <select
+                                className="p-3 w-full border rounded-2xl bg-white"
+                                value={categoryId}
+                                required
+                                onChange={(e) => setCategoryId(e.target.value)}
+                            >
+                                <option value="">Select pet category</option>
+                                {petCategories.map((cat) => (
+                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* City */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                            <select
+                                className="p-3 w-full border rounded-2xl bg-white"
+                                value={cityId}
+                                required
+                                onChange={(e) => setCityId(e.target.value)}
+                            >
+                                <option value="">Select city</option>
+                                {cities.map((city) => (
+                                    <option key={city.id} value={city.id}>{city.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Location */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                            <input
+                                type="text"
+                                className="p-3 w-full border rounded-2xl"
+                                placeholder="Enter specific location"
+                                value={location}
+                                onChange={(e) => setLocation(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Pet Description */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Pet Description</label>
+                            <textarea
+                                className="p-3 w-full border rounded-2xl resize-none"
+                                placeholder="Describe the pet — colour, size, markings, collar, etc."
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                rows={4}
+                            />
+                        </div>
+
+                        {/* Date */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                {activeTab === "lost" ? "Date Lost" : "Date Found"}
+                            </label>
+                            <input
+                                type="date"
+                                className="p-3 w-full border rounded-2xl"
+                                value={date}
+                                onChange={(e) => setDate(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Contact Info */}
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Contact Info</label>
+                            <input
+                                type="text"
+                                required
+                                className="p-3 w-full border rounded-2xl"
+                                placeholder="Phone number or email"
+                                value={contactInfo}
+                                onChange={(e) => setContactInfo(e.target.value)}
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="p-3 bg-primary text-white rounded-2xl w-full font-medium disabled:opacity-60"
+                            disabled={loading}
+                        >
+                            {loading ? "Submitting..." : "Submit Listing"}
+                        </button>
+                    </form>
+                </div>
+            </main>
         </>
     );
 };

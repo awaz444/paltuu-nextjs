@@ -179,6 +179,7 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
                 onSearch={handleFilterChange}
             />
             <main className="flex min-h-screen flex-col mx-0 md:mx-8 items-center pt-7 bg-gray-100">
+                <h1 className="sr-only">Adopt a Pet in Pakistan — Browse Dogs, Cats &amp; More</h1>
                 <div className="flex w-full">
                     <div className="w-1/4 mr-4 vertical-search-bar hidden lg:block">
                         <VerticalSearchBar

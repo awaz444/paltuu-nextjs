@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
-import Navbar from "../../components/navbar";
+import LostAndFoundVerticalFilter from "../../components/LostAndFoundVerticalFilter";
 import LostAndFoundFilter from "../../components/Lost&FoundFilter";
 import LostAndFoundGrid from "../../components/LostAndFoundGrid";
 import axios from "axios";
@@ -28,8 +28,6 @@ interface LostAndFoundPet {
 }
 
 export default function LostFound() {
-    
-
     const [pets, setPets] = useState<LostAndFoundPet[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -46,7 +44,6 @@ export default function LostFound() {
         setError(null);
         try {
             const response = await axios.get("/api/v1/lost-and-found");
-            console.log("API Response:", response);
 
             if (!response.data || !Array.isArray(response.data)) {
                 throw new Error("Invalid API response");
@@ -95,10 +92,6 @@ export default function LostFound() {
         });
     };
 
-    const handleSearch = () => {
-        console.log("Searching with filters:", filters);
-    };
-
     const [primaryColor, setPrimaryColor] = useState("#000000");
 
     useEffect(() => {
@@ -119,7 +112,6 @@ export default function LostFound() {
         const matchesCategory = filters.selectedSpecies
             ? pet.category_id === Number(filters.selectedSpecies)
             : true;
-
         const matchesStatus =
             activeTab === "lost"
                 ? pet.post_type === "lost"
@@ -134,79 +126,86 @@ export default function LostFound() {
         return dateB.getTime() - dateA.getTime();
     });
 
-    const handleTabToggle = (tab: "lost" | "found") => {
-        setActiveTab(tab);
-    };
-
     return (
         <>
+            {/* Visually hidden h1 — SEO signal without disrupting layout */}
+            <h1 className="sr-only">Lost and Found Pets in Pakistan</h1>
+
             <div
                 className="fullBody"
                 style={{ maxWidth: "90%", margin: "0 auto" }}>
-                
-                {/* SEO Headers for Server-Side Rendering & Soft 404 Fix */}
-                <div className="text-center py-8 md:py-12 bg-white border border-gray-100 mb-6 rounded-2xl shadow-sm px-4">
-                    <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
-                        Lost and Found Pets in Pakistan
-                    </h1>
-                    <p className="text-gray-600 text-base md:text-lg max-w-4xl mx-auto">
-                        Have you lost your pet or found a stray animal? Paltuu.pk is Pakistan's largest community for reuniting missing pets with their families. Search our database of lost and found dogs, cats, and other animals in Karachi, Lahore, Islamabad, and nationwide. Report a missing pet or list a found animal to help them get back home safely.
-                    </p>
-                </div>
-                <LostAndFoundFilter
-                    onSearch={(filters) => {
-                        console.log("Filters updated:", filters);
-                        setFilters((prev) => ({ ...prev, ...filters }));
-                    }}
-                />
+
                 <main className="flex min-h-screen flex-col mx-0 md:mx-8 mt-1 items-center pt-7 bg-gray-100">
-                    <div className="w-full">
-                        <div className="tab-switch-container">
-                            <div
-                                className="tab-switch-slider bg-primary"
-                                style={{
-                                    transform:
-                                        activeTab === "lost"
-                                            ? "translateX(0)"
-                                            : "translateX(100%)",
-                                }}
+                    <div className="flex w-full">
+                        {/* Vertical sidebar — desktop only, matches Browse Pets layout */}
+                        <div className="w-1/4 mr-4 vertical-search-bar hidden lg:block">
+                            <LostAndFoundVerticalFilter
+                                filters={filters}
+                                onChange={(updated) => setFilters((prev) => ({ ...prev, ...updated }))}
+                                onReset={handleReset}
                             />
-                            <div
-                                className={`tab ${activeTab === "lost" ? "active" : ""
-                                    }`}
-                                onClick={() => handleTabToggle("lost")}>
-                                Lost
-                            </div>
-                            <div
-                                className={`tab ${activeTab === "found" ? "active" : ""
-                                    }`}
-                                onClick={() => handleTabToggle("found")}>
-                                Found
-                            </div>
                         </div>
 
-                        {loading ? (
-                            <MoonLoader
-                                className="mt-5 mx-auto relative top-5"
-                                size={30}
-                                color={primaryColor}
-                            />
-                        ) : error ? (
-                            <div className="text-center">
-                                <p className="text-red-500">{error}</p>
-                                <button
-                                    className="mt-2 px-4 py-2 bg-primary text-white rounded"
-                                    onClick={fetchLostAndFoundPosts}
-                                >
-                                    Retry
-                                </button>
+                        {/* Main content */}
+                        <div className="w-full lg:w-3/4">
+                            {/* Lost / Found tab toggle */}
+                            <div className="tab-switch-container mb-4">
+                                <div
+                                    className="tab-switch-slider bg-primary"
+                                    style={{
+                                        transform:
+                                            activeTab === "lost"
+                                                ? "translateX(0)"
+                                                : "translateX(100%)",
+                                    }}
+                                />
+                                <div
+                                    className={`tab ${activeTab === "lost" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("lost")}>
+                                    Lost
+                                </div>
+                                <div
+                                    className={`tab ${activeTab === "found" ? "active" : ""}`}
+                                    onClick={() => setActiveTab("found")}>
+                                    Found
+                                </div>
                             </div>
-                        ) : (
-                            <LostAndFoundGrid pets={sortedPets} />
-                        )}
+
+                            {loading ? (
+                                <MoonLoader
+                                    className="mt-5 mx-auto relative top-5"
+                                    size={30}
+                                    color={primaryColor}
+                                />
+                            ) : error ? (
+                                <div className="text-center">
+                                    <p className="text-red-500">{error}</p>
+                                    <button
+                                        className="mt-2 px-4 py-2 bg-primary text-white rounded"
+                                        onClick={fetchLostAndFoundPosts}
+                                    >
+                                        Retry
+                                    </button>
+                                </div>
+                            ) : (
+                                <LostAndFoundGrid pets={sortedPets} />
+                            )}
+                        </div>
                     </div>
                 </main>
             </div>
+
+            {/* Mobile filter modal — LostAndFoundFilter handles its own floating button */}
+            <LostAndFoundFilter
+                onSearch={(f) =>
+                    setFilters((prev) => ({
+                        ...prev,
+                        selectedCity: f.selectedCity,
+                        location: f.location,
+                        selectedSpecies: f.selectedCategory,
+                    }))
+                }
+            />
         </>
     );
 }

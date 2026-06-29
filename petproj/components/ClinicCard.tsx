@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Clinic } from "../app/types/clinic";
-import { FaMapMarkerAlt, FaPhone, FaClock, FaArrowRight } from "react-icons/fa";
+import { FaMapMarkerAlt, FaClock, FaArrowRight } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi2";
 
 interface ClinicCardProps {
@@ -24,7 +24,7 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
 
     return (
         <div
-            className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#a03048]/20 transition-all duration-300 flex flex-col h-full cursor-pointer"
+            className="group relative bg-white rounded-3xl overflow-hidden border-2 border-transparent shadow-sm hover:border-[#a03048] hover:scale-102 transition-all duration-300 flex flex-col h-full cursor-pointer"
             onClick={handleViewDetails}
         >
             {/* Logo / Image Area — styled like BazaarProductCard */}
@@ -65,13 +65,6 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
                             {clinic.address}
                         </span>
                     </div>
-
-                    {clinic.contact_number && (
-                        <div className="flex items-center gap-2 text-gray-500">
-                            <FaPhone className="text-[#a03048] shrink-0 text-xs" />
-                            <span className="text-xs">{clinic.contact_number}</span>
-                        </div>
-                    )}
 
                     {clinic.operating_hours && (
                         <div className="flex items-center gap-2 text-gray-500">

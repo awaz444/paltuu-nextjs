@@ -16,6 +16,12 @@ import {
     FaCheckCircle,
     FaPhoneAlt,
     FaEnvelope,
+    FaSearch,
+    FaChevronDown,
+    FaChevronLeft,
+    FaChevronRight,
+    FaTimes,
+    FaArrowUp,
 } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi2";
 
@@ -25,9 +31,105 @@ export default function PetCare() {
         (state: RootState) => state.clinics
     );
 
+    const [cityFilter, setCityFilter] = useState("Karachi");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [partnerFilter, setPartnerFilter] = useState(false);
+    const [visibleCount, setVisibleCount] = useState(12);
+    const [showBackToTop, setShowBackToTop] = useState(false);
+
     useEffect(() => {
         dispatch(fetchClinics());
     }, [dispatch]);
+
+    // Reset visibleCount count when any filter changes
+    useEffect(() => {
+        setVisibleCount(12);
+    }, [cityFilter, searchQuery, partnerFilter]);
+
+    useEffect(() => {
+        const toggleVisibility = () => {
+            if (window.scrollY > 400) {
+                setShowBackToTop(true);
+            } else {
+                setShowBackToTop(false);
+            }
+        };
+
+        window.addEventListener("scroll", toggleVisibility);
+        return () => window.removeEventListener("scroll", toggleVisibility);
+    }, []);
+
+    const scrollToTop = () => {
+        const element = document.getElementById("clinics-listings-start");
+        if (element) {
+            element.scrollIntoView({ behavior: "smooth" });
+        } else {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+    };
+
+    // Gather available cities from clinic data dynamically
+    const availableCities = Array.from(
+        new Set(clinics.map((c) => c.city).filter(Boolean))
+    ) as string[];
+
+    // Filtering logic
+    const filteredClinics = clinics.filter((clinic) => {
+        // City filter (defaults to Karachi, "All" bypasses)
+        if (
+            cityFilter &&
+            cityFilter !== "All" &&
+            clinic.city?.toLowerCase() !== cityFilter.toLowerCase()
+        ) {
+            return false;
+        }
+
+
+
+        // Paltuu Partner filter
+        if (partnerFilter && !clinic.is_paltuu_partner) {
+            return false;
+        }
+
+        // Text search (name or address)
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            const nameMatch = clinic.name?.toLowerCase().includes(query);
+            const addressMatch = clinic.address?.toLowerCase().includes(query);
+            if (!nameMatch && !addressMatch) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    // Intersection Observer for seamless lazy loading
+    useEffect(() => {
+        if (loading || visibleCount >= filteredClinics.length) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    setVisibleCount((prev) => prev + 12);
+                }
+            },
+            { rootMargin: "800px" } // Trigger loading when the user reaches the second-to-last row (approx 800px from the bottom)
+        );
+
+        const target = document.getElementById("lazy-load-trigger");
+        if (target) {
+            observer.observe(target);
+        }
+
+        return () => {
+            if (target) {
+                observer.unobserve(target);
+            }
+        };
+    }, [visibleCount, filteredClinics.length, loading]);
+
+    const displayedClinics = filteredClinics.slice(0, visibleCount);
 
     const stats = [
         { icon: <FaClinicMedical />, value: `${clinics.length || "10"}+`, label: "Verified Clinics" },
@@ -170,50 +272,193 @@ export default function PetCare() {
             )} */}
 
             {/* ================= CLINICS SECTION ================= */}
-            <section className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
-                {/* Section Header */}
-                {/* <div className="mb-10 text-center">
-                    <div className="inline-flex items-center gap-2 bg-white text-[#a03048] px-4 py-2 rounded-full text-sm font-semibold mb-4">
-                        <FaPaw className="text-xs" />
-                        All Clinics
-                    </div>
-                    <h2 className="text-3xl md:text-4xl font-bold text-[#111827] mb-3">
-                        Browse Veterinary Clinics
-                    </h2>
-                    <p className="text-gray-500 text-base max-w-xl mx-auto">
-                        Find the perfect veterinary clinic for your pet's needs across Pakistan.
-                    </p>
-                </div> */}
+            <section id="clinics-listings-start" className="max-w-[1600px] mx-auto px-4 lg:px-8 py-16 scroll-mt-6">
+                <div className={`grid gap-8 items-start ${
+                    (!loading && !error && clinics.length > 0)
+                        ? "lg:grid-cols-[280px_1fr]"
+                        : "grid-cols-1"
+                }`}>
+                    {/* Sticky Sidebar on Desktop */}
+                    {!loading && !error && clinics.length > 0 && (
+                        <div className="lg:sticky lg:top-24 z-20">
+                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                                <h3 className="font-bold text-gray-950 text-lg mb-4">Filters</h3>
+                                
+                                <div className="space-y-5">
+                                    {/* Search Bar */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Search</label>
+                                        <div className="relative">
+                                            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search name or address..."
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:border-[#a03048] focus:bg-white transition-all text-gray-800"
+                                            />
+                                        </div>
+                                    </div>
 
-                {/* Clinic Grid / States */}
-                {loading ? (
-                    <div className="flex flex-col items-center justify-center py-24 gap-4">
-                        <div className="w-12 h-12 border-4 border-[#a03048]/20 border-t-[#a03048] rounded-full animate-spin" />
-                        <p className="text-gray-500 text-sm font-medium">
-                            Loading clinics...
-                        </p>
+                                    {/* City Filter */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">City</label>
+                                        <div className="relative">
+                                            <select
+                                                value={cityFilter}
+                                                onChange={(e) => setCityFilter(e.target.value)}
+                                                className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:border-[#a03048] focus:bg-white transition-all appearance-none cursor-pointer text-gray-800"
+                                            >
+                                                <option value="All">All Cities</option>
+                                                <option value="Karachi">Karachi</option>
+                                                <option value="Lahore">Lahore</option>
+                                                <option value="Islamabad">Islamabad</option>
+                                                <option value="Rawalpindi">Rawalpindi</option>
+                                                {availableCities
+                                                    .filter(
+                                                        (c) =>
+                                                            ![
+                                                                "karachi",
+                                                                "lahore",
+                                                                "islamabad",
+                                                                "rawalpindi",
+                                                            ].includes(c.toLowerCase())
+                                                    )
+                                                    .map((city) => (
+                                                        <option key={city} value={city}>
+                                                            {city}
+                                                        </option>
+                                                    ))}
+                                            </select>
+                                            <FaChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
+                                        </div>
+                                    </div>
+
+                                    {/* Quick Cities */}
+                                    <div className="space-y-1.5 pt-3 border-t border-gray-100">
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Quick Cities</label>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {["Karachi", "Lahore", "Islamabad", "All"].map((city) => (
+                                                <button
+                                                    key={city}
+                                                    onClick={() => setCityFilter(city)}
+                                                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                                                        cityFilter === city
+                                                            ? "bg-[#a03048] text-white shadow-sm"
+                                                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                                    }`}
+                                                >
+                                                    {city === "All" ? "All" : city}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Partner Filter */}
+                                    <div className="pt-3 border-t border-gray-100">
+                                        <button
+                                            onClick={() => setPartnerFilter(!partnerFilter)}
+                                            className={`w-full px-4 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                                                partnerFilter
+                                                    ? "bg-amber-500 text-white shadow-sm"
+                                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                            }`}
+                                        >
+                                            <FaCheckCircle className="text-sm" />
+                                            Paltuu Partner Only
+                                        </button>
+                                    </div>
+
+                                    {/* Clear Filters */}
+                                    {(cityFilter !== "Karachi" ||
+                                        searchQuery !== "" ||
+                                        partnerFilter) && (
+                                        <button
+                                            onClick={() => {
+                                                setCityFilter("All");
+                                                setSearchQuery("");
+                                                setPartnerFilter(false);
+                                            }}
+                                            className="w-full py-2.5 rounded-2xl text-xs font-bold text-[#a03048] hover:bg-[#a03048]/5 transition-all flex items-center justify-center gap-1.5 border border-dashed border-[#a03048]/20"
+                                        >
+                                            <FaTimes />
+                                            Reset Filters
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Listings Grid */}
+                    <div className="w-full">
+                        {/* Clinic Grid / States */}
+                        {loading ? (
+                            <div className="flex flex-col items-center justify-center py-24 gap-4">
+                                <div className="w-12 h-12 border-4 border-[#a03048]/20 border-t-[#a03048] rounded-full animate-spin" />
+                                <p className="text-gray-500 text-sm font-medium">
+                                    Loading clinics...
+                                </p>
+                            </div>
+                        ) : error ? (
+                            <div className="bg-red-50 border border-red-100 rounded-2xl p-10 text-center">
+                                <div className="text-4xl mb-3">⚠️</div>
+                                <h3 className="text-red-700 font-semibold text-lg mb-1">
+                                    Error Loading Clinics
+                                </h3>
+                                <p className="text-red-500 text-sm">{error}</p>
+                            </div>
+                        ) : clinics.length === 0 ? (
+                            <div className="bg-white border border-gray-100 rounded-2xl p-16 text-center shadow-sm">
+                                <FaClinicMedical className="text-gray-200 text-6xl mx-auto mb-5" />
+                                <h3 className="text-gray-700 font-semibold text-xl mb-2">
+                                    No Clinics Found
+                                </h3>
+                                <p className="text-gray-400 text-sm max-w-sm mx-auto">
+                                    We're working on adding more veterinary clinics to your area. Check back soon!
+                                </p>
+                            </div>
+                        ) : filteredClinics.length === 0 ? (
+                            <div className="bg-white border border-gray-100 rounded-3xl p-16 text-center shadow-sm flex flex-col items-center">
+                                <div className="w-16 h-16 rounded-2xl bg-[#a03048]/5 flex items-center justify-center mb-5 text-[#a03048]">
+                                    <FaClinicMedical className="text-2xl" />
+                                </div>
+                                <h3 className="text-gray-950 font-bold text-xl mb-2">
+                                    No Matches Found
+                                </h3>
+                                <p className="text-gray-500 text-sm max-w-md mx-auto mb-6">
+                                    We couldn't find any veterinary clinics matching your selected filters or search query. Try resetting your filters to browse all options.
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        setCityFilter("All");
+                                        setSearchQuery("");
+                                        setPartnerFilter(false);
+                                    }}
+                                    className="px-6 py-2.5 bg-[#a03048] hover:bg-[#8a2940] text-white rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
+                                >
+                                    Reset All Filters
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <ClinicGrid clinics={displayedClinics} />
+
+                                {/* Lazy Loading spinner / trigger */}
+                                <div id="lazy-load-trigger" className="w-full">
+                                    {visibleCount < filteredClinics.length && (
+                                        <div className="flex flex-col items-center justify-center py-8 gap-2">
+                                            <div className="w-8 h-8 border-4 border-[#a03048]/20 border-t-[#a03048] rounded-full animate-spin" />
+                                            <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+                                                Scrolling to load more clinics...
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
                     </div>
-                ) : error ? (
-                    <div className="bg-red-50 border border-red-100 rounded-2xl p-10 text-center">
-                        <div className="text-4xl mb-3">⚠️</div>
-                        <h3 className="text-red-700 font-semibold text-lg mb-1">
-                            Error Loading Clinics
-                        </h3>
-                        <p className="text-red-500 text-sm">{error}</p>
-                    </div>
-                ) : clinics.length === 0 ? (
-                    <div className="bg-white border border-gray-100 rounded-2xl p-16 text-center shadow-sm">
-                        <FaClinicMedical className="text-gray-200 text-6xl mx-auto mb-5" />
-                        <h3 className="text-gray-700 font-semibold text-xl mb-2">
-                            No Clinics Found
-                        </h3>
-                        <p className="text-gray-400 text-sm max-w-sm mx-auto">
-                            We're working on adding more veterinary clinics to your area. Check back soon!
-                        </p>
-                    </div>
-                ) : (
-                    <ClinicGrid clinics={clinics} />
-                )}
+                </div>
             </section>
 
             {/* ================= CTA SECTION ================= */}
@@ -283,6 +528,15 @@ export default function PetCare() {
                 </div>
             </section>
 
+            {showBackToTop && (
+                <button
+                    onClick={scrollToTop}
+                    className="fixed bottom-24 right-8 z-50 bg-[#a03048] hover:bg-[#8a2940] text-white p-4 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center text-lg border border-white/20 animate-fade-in"
+                    title="Back to Top"
+                >
+                    <FaArrowUp />
+                </button>
+            )}
         </main>
     );
 }

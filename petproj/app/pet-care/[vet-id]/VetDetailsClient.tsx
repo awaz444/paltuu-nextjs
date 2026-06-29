@@ -85,6 +85,7 @@ export default function VetDetailsClient({
         approvedCount: number;
     } | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
     const { isAuthenticated, user } = useAuth();
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [form] = Form.useForm();
@@ -247,6 +248,29 @@ export default function VetDetailsClient({
         );
     }
 
+    const googleMapsLink = (() => {
+        if (!vetDetails.google_maps_link) {
+            if (vetDetails.clinic_name && vetDetails.location) {
+                const queryStr = `${vetDetails.clinic_name}, ${vetDetails.location}${vetDetails.city ? `, ${vetDetails.city}` : ''}`;
+                return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(queryStr)}`;
+            }
+            return undefined;
+        }
+        let link = vetDetails.google_maps_link.replace(/&amp;/g, "&");
+        if (
+            link === "https://maps.google.com" ||
+            link === "https://www.google.com/maps" ||
+            link === "https://maps.google.com/" ||
+            link === "https://www.google.com/maps/"
+        ) {
+            if (vetDetails.clinic_name && vetDetails.location) {
+                const queryStr = `${vetDetails.clinic_name}, ${vetDetails.location}${vetDetails.city ? `, ${vetDetails.city}` : ''}`;
+                return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(queryStr)}`;
+            }
+        }
+        return link;
+    })();
+
     return (
         <>
             <div className="min-h-screen bg-gray-50">
@@ -263,7 +287,8 @@ export default function VetDetailsClient({
                                             <img
                                                 src={vetDetails.profile_image_url || "/placeholder.jpg"}
                                                 alt={vetDetails.vet_name}
-                                                className="w-32 h-32 rounded-full object-cover border-4 border-gray-100"
+                                                className="w-32 h-32 rounded-full object-cover border-4 border-gray-100 cursor-pointer hover:opacity-90 transition-opacity"
+                                                onClick={() => setIsImagePreviewOpen(true)}
                                             />
                                         </div>
 
@@ -319,9 +344,9 @@ export default function VetDetailsClient({
                                             <div className="text-gray-600 text-sm mb-2">
                                                 {vetDetails.location}, {vetDetails.city}
                                             </div>
-                                            {vetDetails.google_maps_link && (
+                                            {googleMapsLink && (
                                                 <a
-                                                    href={vetDetails.google_maps_link}
+                                                    href={googleMapsLink}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1"
@@ -560,6 +585,31 @@ export default function VetDetailsClient({
                 onClose={() => setShowLoginModal(false)}
                 onSuccess={handleLoginSuccess}
             />
+
+            {/* Image Preview Modal */}
+            <Modal
+                open={isImagePreviewOpen}
+                footer={null}
+                onCancel={() => setIsImagePreviewOpen(false)}
+                centered
+                bodyStyle={{ padding: 0 }}
+                closeIcon={null}
+                width={800}
+            >
+                <div className="relative bg-black rounded-2xl overflow-hidden flex items-center justify-center">
+                    <img
+                        src={vetDetails.profile_image_url || "/placeholder.jpg"}
+                        alt={vetDetails.vet_name}
+                        className="w-full h-auto max-h-[85vh] object-contain"
+                    />
+                    <button
+                        onClick={() => setIsImagePreviewOpen(false)}
+                        className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white rounded-full p-2 w-10 h-10 flex items-center justify-center transition-all shadow-md text-xl"
+                    >
+                        ✕
+                    </button>
+                </div>
+            </Modal>
 
             {/* Review Modal */}
             <ReviewModal

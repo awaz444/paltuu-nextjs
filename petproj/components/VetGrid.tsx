@@ -13,6 +13,7 @@ interface VetGridProps {
 const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedVet, setSelectedVet] = useState<Vet | null>(null);
+    const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
 
 
 
@@ -77,7 +78,11 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
                                             "/placeholder.jpg"
                                         }
                                         alt={vet.name}
-                                        className="w-24 h-24 object-cover rounded-full sm:mr-4 mb-4 sm:mb-0 flex-shrink-0"
+                                        className="w-24 h-24 object-cover rounded-full sm:mr-4 mb-4 sm:mb-0 flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                                        onClick={() => setPreviewImage({
+                                            url: vet.profile_image_url || "/placeholder.jpg",
+                                            title: vet.name
+                                        })}
                                     />
                                     <div className="flex-grow min-w-0">
                                         <div className="flex flex-wrap items-center gap-x-2">
@@ -132,6 +137,33 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
                     </div>
                 );
             })}
+            {/* Image Preview Modal */}
+            <Modal
+                open={!!previewImage}
+                footer={null}
+                onCancel={() => setPreviewImage(null)}
+                centered
+                bodyStyle={{ padding: 0 }}
+                closeIcon={null}
+                width={800}
+            >
+                {previewImage && (
+                    <div className="relative bg-black rounded-2xl overflow-hidden flex items-center justify-center">
+                        <img
+                            src={previewImage.url}
+                            alt={previewImage.title}
+                            className="w-full h-auto max-h-[85vh] object-contain"
+                        />
+                        <button
+                            onClick={() => setPreviewImage(null)}
+                            className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white rounded-full p-2 w-10 h-10 flex items-center justify-center transition-all shadow-md text-xl"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                )}
+            </Modal>
+
             <Modal
                 title="Contact Information"
                 open={isModalVisible}

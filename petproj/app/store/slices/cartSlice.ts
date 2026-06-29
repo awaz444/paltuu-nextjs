@@ -39,60 +39,14 @@ export const fetchCart = createAsyncThunk<
   void,
   { rejectValue: string; state: { cart: CartState } }
 >("cart/fetchCart", async (_, { rejectWithValue }) => {
-    try {
-    //console.log('🔍 fetchCart - Attempting to fetch cart (server will check authentication)...');
-
-    // Try fetching from server first (works for both logged-in and guest users)
-    // Server will extract userId from cookie automatically for logged-in users
-    // For guest users, we'll send sessionId as fallback
-    try {
-      // First, try without sessionId - backend will use userId from cookie if user is logged in
-      let res = await fetch('/api/v1/bazaar/cart', {
-        credentials: 'include',
-      });
-
-      // If request fails with 401 and we have a sessionId, retry with sessionId (for guests)
-      if (!res.ok && res.status === 401) {
-        const sessionId = getGuestSessionId() || getOrCreateGuestSessionId();
-        if (sessionId) {
-          //console.log('🔄 fetchCart - Retrying with sessionId for guest user');
-          res = await fetch(`/api/v1/bazaar/cart?sessionId=${encodeURIComponent(sessionId)}`, {
-            credentials: 'include',
-          });
-        }
-      }
-
-      if (res.ok) {
-        const data = await res.json();
-        const apiItems = data?.items ?? data ?? [];
-        //console.log('✅ fetchCart - Loaded cart from server:', apiItems.length, 'items');
-
-        const mapped = (apiItems || []).map((it: any): CartItem => ({
-          id: it.cart_item_id ?? it.item_id ?? it.id,
-          title: it.product_title ?? it.title ?? it.name ?? "Untitled",
-          qty: it.quantity ?? 1,
-          price: Number(it.effective_price ?? it.price ?? 0),
-          image: it.image_url ?? it.image ?? null,
-          code: it.product_code ?? it.sku ?? it.product_id ?? null,
-          sku: it.variant_sku ?? it.sku ?? it.product_sku ?? it.product_code ?? null,
-          variantTitle: it.variant_title ?? it.variant_name ?? it.variant?.title ?? null,
-          attributes: it.attributes ?? it.variant_attributes ?? it.attributes_map ?? it.variant?.attributes ?? null,
-        }));
-
-        return mapped;
-      }
-    } catch (fetchError) {
-      //console.warn('⚠️ fetchCart - Server fetch failed, falling back to localStorage:', fetchError);
-    }
-
-    // Fallback: For guest users or if server unavailable, use localStorage
-    //console.log('✅ fetchCart - Loading guest cart from localStorage');
+  try {
+    // Database sync disabled temporarily:
+    // Load guest cart from localStorage only
     if (typeof window !== "undefined") {
       try {
         const guestCart = localStorage.getItem('guest_cart');
         if (guestCart) {
           const parsedCart = JSON.parse(guestCart) as CartItem[];
-          //console.log('📦 Guest cart loaded from localStorage:', parsedCart.length, 'items');
           return parsedCart;
         }
       } catch (e) {
@@ -100,8 +54,6 @@ export const fetchCart = createAsyncThunk<
       }
     }
     return [];
-
-
   } catch (err: any) {
     return rejectWithValue(err.message ?? "Unknown error");
   }

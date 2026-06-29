@@ -48,6 +48,7 @@ export default function ClinicPage() {
         reviewsCount: number;
     } | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
     const { isAuthenticated, user } = useAuth();
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [form] = Form.useForm();
@@ -177,6 +178,27 @@ export default function ClinicPage() {
         return <div className="text-center mt-10">Clinic not found.</div>;
     }
 
+    const googleMapsLink = (() => {
+        if (!clinic.google_maps_link) {
+            if (clinic.name && clinic.address) {
+                return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${clinic.name}, ${clinic.address}`)}`;
+            }
+            return undefined;
+        }
+        let link = clinic.google_maps_link.replace(/&amp;/g, "&");
+        if (
+            link === "https://maps.google.com" ||
+            link === "https://www.google.com/maps" ||
+            link === "https://maps.google.com/" ||
+            link === "https://www.google.com/maps/"
+        ) {
+            if (clinic.name && clinic.address) {
+                return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${clinic.name}, ${clinic.address}`)}`;
+            }
+        }
+        return link;
+    })();
+
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -188,17 +210,18 @@ export default function ClinicPage() {
                             <div className="bg-white rounded-3xl p-6 shadow-sm">
                                 <div className="flex flex-col items-center text-center mb-6">
                                     {/* Clinic Logo */}
-                                    <div className="relative mb-4">
+                                    <div className="relative w-full mb-4">
                                         <img
                                             src={clinic.logo_url || "/placeholder-clinic.png"}
                                             onError={(e) => {
                                                 (e.target as HTMLImageElement).src = "/placeholder-clinic.png";
                                             }}
                                             alt={clinic.name}
-                                            className="w-32 h-32 rounded-full object-cover border-4 border-gray-100"
+                                            className="w-full h-48 rounded-2xl object-cover border-2 border-gray-100 shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
+                                            onClick={() => setIsImagePreviewOpen(true)}
                                         />
                                         {clinic.is_paltuu_partner && (
-                                            <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-2 shadow-lg">
+                                            <div className="absolute bottom-2 right-2 bg-primary text-white rounded-full p-2 shadow-lg">
                                                 <MdVerified className="text-lg" />
                                             </div>
                                         )}
@@ -242,9 +265,9 @@ export default function ClinicPage() {
                                         <div className="text-gray-600 text-sm mb-2">
                                             {clinic.address}
                                         </div>
-                                        {clinic.google_maps_link && (
+                                        {googleMapsLink && (
                                             <a
-                                                href={clinic.google_maps_link}
+                                                href={googleMapsLink}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1"
@@ -570,6 +593,34 @@ export default function ClinicPage() {
                 onClose={() => setShowLoginModal(false)}
                 onSuccess={handleLoginSuccess}
             />
+
+            {/* Image Preview Modal */}
+            <Modal
+                open={isImagePreviewOpen}
+                footer={null}
+                onCancel={() => setIsImagePreviewOpen(false)}
+                centered
+                bodyStyle={{ padding: 0 }}
+                closeIcon={null}
+                width={800}
+            >
+                <div className="relative bg-black rounded-2xl overflow-hidden flex items-center justify-center">
+                    <img
+                        src={clinic.logo_url || "/placeholder-clinic.png"}
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder-clinic.png";
+                        }}
+                        alt={clinic.name}
+                        className="w-full h-auto max-h-[85vh] object-contain"
+                    />
+                    <button
+                        onClick={() => setIsImagePreviewOpen(false)}
+                        className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white rounded-full p-2 w-10 h-10 flex items-center justify-center transition-all shadow-md text-xl"
+                    >
+                        ✕
+                    </button>
+                </div>
+            </Modal>
 
             {/* Review Modal — commented out with reviews section */}
             {/*

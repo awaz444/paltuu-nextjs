@@ -153,6 +153,21 @@ export default function PetCare() {
                 </div>
             </div>
 
+            {/* ===== BROWSE BY CITY ===== */}
+            <div style={{ maxWidth: "90%", margin: "0 auto" }} className="pt-4 px-4 md:px-8">
+                <div className="mx-0 md:mx-8 flex flex-wrap gap-2">
+                    {["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan"].map((city) => (
+                        <a
+                            key={city}
+                            href={`/pet-care/${city.toLowerCase()}`}
+                            className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 hover:border-primary hover:text-primary transition-colors shadow-sm"
+                        >
+                            Vets in {city}
+                        </a>
+                    ))}
+                </div>
+            </div>
+
             {/* ===== MAP ===== */}
             {!error && (
                 <div className="hidden lg:block" style={{ maxWidth: "90%", margin: "0 auto" }}>

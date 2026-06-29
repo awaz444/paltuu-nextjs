@@ -89,12 +89,22 @@ export default function Footer() {
         {/* Col 2 - Explore */}
         <div className="text-center md:text-left">
           <h3 className="text-lg font-semibold mb-4">Explore Paltuu</h3>
-          <ul className="space-y-2 text-sm">
+          <ul className="space-y-2 text-sm mb-5">
             <li><Link href="/browse-pets" className="hover:text-gray-300">Adopt a Pet</Link></li>
             <li><Link href="/pet-care" className="hover:text-gray-300">Find a Vet</Link></li>
             <li><Link href="/lost-and-found" className="hover:text-gray-300">Lost &amp; Found</Link></li>
             <li><Link href="/blogs" className="hover:text-gray-300">Pet Care Blog</Link></li>
             <li><Link href="/about-us" className="hover:text-gray-300">About Us</Link></li>
+          </ul>
+          <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Vets by City</h3>
+          <ul className="space-y-2 text-sm">
+            {["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan"].map((city) => (
+              <li key={city}>
+                <Link href={`/pet-care/${city.toLowerCase()}`} className="hover:text-gray-300">
+                  Vets in {city}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 

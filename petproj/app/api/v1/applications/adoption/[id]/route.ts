@@ -17,6 +17,7 @@ export async function PATCH(req: NextRequest) {
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const id = req.nextUrl.pathname.split("/").pop();
+        if (!id || isNaN(parseInt(id, 10))) return NextResponse.json({ error: "Invalid or missing application ID" }, { status: 400 });
         const body = await req.json();
         const { status } = body;
 

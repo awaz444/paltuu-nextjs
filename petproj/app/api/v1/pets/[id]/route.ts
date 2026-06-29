@@ -19,7 +19,7 @@ import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
 export async function GET(req: NextRequest) {
     try {
         const id = req.nextUrl.pathname.split("/").pop();
-        if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
+        if (!id || isNaN(parseInt(id, 10))) return NextResponse.json({ error: "Invalid or missing ID" }, { status: 400 });
 
         const result = await db.query(`
             SELECT 
@@ -63,6 +63,7 @@ export async function PUT(req: NextRequest) {
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const id = req.nextUrl.pathname.split("/").pop();
+        if (!id || isNaN(parseInt(id, 10))) return NextResponse.json({ error: "Invalid or missing ID" }, { status: 400 });
         const body = await req.json();
 
         // Ownership & Auth Check
@@ -168,6 +169,7 @@ export async function DELETE(req: NextRequest) {
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const id = req.nextUrl.pathname.split("/").pop();
+        if (!id || isNaN(parseInt(id, 10))) return NextResponse.json({ error: "Invalid or missing ID" }, { status: 400 });
 
         // Ownership check
         const petCheck = await db.query('SELECT owner_id FROM pets WHERE pet_id = $1', [id]);

@@ -23,6 +23,18 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
+        if (isNaN(parseInt(application_id, 10))) {
+            return NextResponse.json({ error: "Invalid application_id" }, { status: 400 });
+        }
+
+        if (type !== 'adoption' && type !== 'foster') {
+            return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+        }
+
+        if (status !== 'approved' && status !== 'rejected') {
+            return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+        }
+
         const tableName = type === 'adoption' ? 'adoption_applications' : 'foster_applications';
         const idCol = type === 'adoption' ? 'adoption_id' : 'foster_id';
 

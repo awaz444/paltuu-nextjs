@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
         const { searchParams } = new URL(req.url);
         const petId = searchParams.get('pet_id');
 
-        if (!petId) return NextResponse.json({ error: "Pet ID required" }, { status: 400 });
+        if (!petId || isNaN(parseInt(petId, 10))) return NextResponse.json({ error: "Invalid or missing Pet ID required" }, { status: 400 });
 
         // Verify Ownership: Only the pet owner can see applications
         const petCheck = await db.query('SELECT owner_id FROM pets WHERE pet_id = $1', [petId]);

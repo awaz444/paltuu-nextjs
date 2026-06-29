@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
         const petId = searchParams.get('pet_id');
-        if (!petId) return NextResponse.json({ error: "Pet ID required" }, { status: 400 });
+        if (!petId || isNaN(parseInt(petId, 10))) return NextResponse.json({ error: "Invalid or missing Pet ID" }, { status: 400 });
 
         const result = await db.query(`
             SELECT need_id, special_need 
@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const { pet_id, special_needs } = await req.json();
-        if (!pet_id || !Array.isArray(special_needs)) {
-            return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+        if (!pet_id || isNaN(parseInt(pet_id, 10)) || !Array.isArray(special_needs)) {
+            return NextResponse.json({ error: "Invalid data or missing/invalid pet_id" }, { status: 400 });
         }
 
         // 1. Ownership Check

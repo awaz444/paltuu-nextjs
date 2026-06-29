@@ -23,8 +23,13 @@ export async function GET(req: NextRequest) {
         const { searchParams } = new URL(req.url);
         
         // Pagination
-        const page = parseInt(searchParams.get("page") || "1", 10);
-        const limit = parseInt(searchParams.get("limit") || "10", 10);
+        const pageStr = searchParams.get("page") || "1";
+        const limitStr = searchParams.get("limit") || "10";
+        const page = parseInt(pageStr, 10);
+        const limit = parseInt(limitStr, 10);
+        if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
+            return NextResponse.json({ error: "Invalid pagination parameters" }, { status: 400 });
+        }
         const offset = (page - 1) * limit;
 
         // Filters
@@ -39,12 +44,46 @@ export async function GET(req: NextRequest) {
         const values: any[] = [];
         let paramIndex = 1;
 
-        if (cityId) { conditions.push(`pets.city_id = $${paramIndex++}`); values.push(parseInt(cityId)); }
-        if (speciesId) { conditions.push(`pets.pet_type = $${paramIndex++}`); values.push(parseInt(speciesId)); }
-        if (sex) { conditions.push(`pets.sex = $${paramIndex++}`); values.push(sex); }
-        if (listingType) { conditions.push(`pets.listing_type = $${paramIndex++}`); values.push(listingType); }
-        if (minPrice) { conditions.push(`pets.price >= $${paramIndex++}`); values.push(parseFloat(minPrice)); }
-        if (maxPrice) { conditions.push(`pets.price <= $${paramIndex++}`); values.push(parseFloat(maxPrice)); }
+        if (cityId) {
+            const parsedCityId = parseInt(cityId, 10);
+            if (isNaN(parsedCityId)) {
+                return NextResponse.json({ error: "Invalid city parameter" }, { status: 400 });
+            }
+            conditions.push(`pets.city_id = $${paramIndex++}`);
+            values.push(parsedCityId);
+        }
+        if (speciesId) {
+            const parsedSpeciesId = parseInt(speciesId, 10);
+            if (isNaN(parsedSpeciesId)) {
+                return NextResponse.json({ error: "Invalid species parameter" }, { status: 400 });
+            }
+            conditions.push(`pets.pet_type = $${paramIndex++}`);
+            values.push(parsedSpeciesId);
+        }
+        if (sex) {
+            conditions.push(`pets.sex = $${paramIndex++}`);
+            values.push(sex);
+        }
+        if (listingType) {
+            conditions.push(`pets.listing_type = $${paramIndex++}`);
+            values.push(listingType);
+        }
+        if (minPrice) {
+            const parsedMinPrice = parseFloat(minPrice);
+            if (isNaN(parsedMinPrice)) {
+                return NextResponse.json({ error: "Invalid minPrice parameter" }, { status: 400 });
+            }
+            conditions.push(`pets.price >= $${paramIndex++}`);
+            values.push(parsedMinPrice);
+        }
+        if (maxPrice) {
+            const parsedMaxPrice = parseFloat(maxPrice);
+            if (isNaN(parsedMaxPrice)) {
+                return NextResponse.json({ error: "Invalid maxPrice parameter" }, { status: 400 });
+            }
+            conditions.push(`pets.price <= $${paramIndex++}`);
+            values.push(parsedMaxPrice);
+        }
 
         const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 

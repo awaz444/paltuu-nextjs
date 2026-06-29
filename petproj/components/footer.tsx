@@ -94,7 +94,6 @@ export default function Footer() {
             <li><Link href="/pet-care" className="hover:text-gray-300">Find a Vet</Link></li>
             <li><Link href="/lost-and-found" className="hover:text-gray-300">Lost &amp; Found</Link></li>
             <li><Link href="/blogs" className="hover:text-gray-300">Pet Care Blog</Link></li>
-            <li><Link href="/about-us" className="hover:text-gray-300">About Us</Link></li>
           </ul>
           <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Vets by City</h3>
           <ul className="space-y-2 text-sm">

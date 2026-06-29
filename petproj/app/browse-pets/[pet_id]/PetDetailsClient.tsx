@@ -5,7 +5,7 @@ import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
 import RescueDetails from "../../../components/RescueDetails";
 import { formatDistanceToNow } from "date-fns";
-import { formatAiResponse } from "@/utils/formatAiResponse";
+import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { formatAge } from "@/utils/formatAge";
@@ -743,12 +743,24 @@ const PetDetailsClient: React.FC<{
                                         ? "bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200"
                                         : "bg-gray-50 border border-gray-200"
                                     }`}>
-                                <div className="flex items-start mb-4">
-                                    <div className="text-gray-800 text-base leading-relaxed">
-                                        <div
-                                            dangerouslySetInnerHTML={{ __html: formatAiResponse(llmSummary) }}
-                                            className="ai-formatted-content"
-                                        />
+                                <div className="flex items-start mb-4 w-full">
+                                    <div className="text-gray-800 text-base leading-relaxed w-full">
+                                        <ReactMarkdown
+                                            components={{
+                                                h1: ({ children }) => <h1 className="text-xl font-bold text-gray-900 mb-3 mt-4">{children}</h1>,
+                                                h2: ({ children }) => <h2 className="text-lg font-bold text-gray-900 mb-2 mt-4">{children}</h2>,
+                                                h3: ({ children }) => <h3 className="text-base font-semibold text-gray-800 mb-2 mt-3">{children}</h3>,
+                                                p: ({ children }) => <p className="mb-3 text-gray-700">{children}</p>,
+                                                ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>,
+                                                ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>,
+                                                li: ({ children }) => <li className="text-gray-700">{children}</li>,
+                                                strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                                                em: ({ children }) => <em className="italic text-gray-700">{children}</em>,
+                                                hr: () => <hr className="my-4 border-gray-200" />,
+                                            }}
+                                        >
+                                            {llmSummary}
+                                        </ReactMarkdown>
                                     </div>
                                 </div>
                                 <div className="mt-4 p-3 bg-white rounded border border-gray-100">

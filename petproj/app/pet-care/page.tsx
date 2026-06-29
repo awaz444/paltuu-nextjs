@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../store/store";
 import { fetchClinics } from "../store/slices/clinicSlice";
 import ClinicGrid from "../../components/ClinicGrid";
+import SkeletonCard, { SidebarSkeleton, MapSkeleton } from "../../components/SkeletonCard";
 import dynamic from "next/dynamic";
 import {
     FaClinicMedical,
@@ -153,13 +154,14 @@ export default function PetCare() {
             </div>
 
             {/* ===== MAP ===== */}
-            {!loading && !error && clinics.length > 0 && (
+            {!error && (
                 <div className="hidden lg:block" style={{ maxWidth: "90%", margin: "0 auto" }}>
                     <div className="mx-0 md:mx-8 mt-6 rounded-3xl overflow-hidden shadow-sm" style={{ isolation: "isolate" }}>
-                        <ClinicMap
-                            clinics={filteredClinics}
-                            userCoords={userCoords}
-                        />
+                        {loading || clinics.length === 0 ? (
+                            <MapSkeleton />
+                        ) : (
+                            <ClinicMap clinics={filteredClinics} userCoords={userCoords} />
+                        )}
                     </div>
                 </div>
             )}
@@ -169,8 +171,9 @@ export default function PetCare() {
                 <div className="flex mx-0 md:mx-8 mt-6 pb-16 items-start">
 
                     {/* Vertical Sidebar — desktop only, matches Browse Pets & Lost & Found */}
-                    {!loading && !error && clinics.length > 0 && (
+                    {!error && (
                         <div className="w-1/4 mr-4 vertical-search-bar hidden lg:block">
+                            {loading || clinics.length === 0 ? <SidebarSkeleton /> :
                             <div className="bg-white shadow-sm p-6 rounded-3xl sticky top-4">
 
                                 {/* Search */}
@@ -235,6 +238,7 @@ export default function PetCare() {
                                     </button>
                                 </div>
                             </div>
+                        }
                         </div>
                     )}
 
@@ -242,9 +246,10 @@ export default function PetCare() {
                     <div className="w-full lg:w-3/4">
 
                         {loading ? (
-                            <div className="flex flex-col items-center justify-center py-24 gap-4">
-                                <div className="w-12 h-12 border-4 border-[#a03048]/20 border-t-[#a03048] rounded-full animate-spin" />
-                                <p className="text-gray-500 text-sm font-medium">Loading clinics...</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {Array.from({ length: 6 }).map((_, i) => (
+                                    <SkeletonCard key={i} variant="clinic" />
+                                ))}
                             </div>
                         ) : error ? (
                             <div className="bg-red-50 border border-red-100 rounded-2xl p-10 text-center">

@@ -1,11 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import LostAndFoundVerticalFilter from "../../components/LostAndFoundVerticalFilter";
 import LostAndFoundFilter from "../../components/Lost&FoundFilter";
 import LostAndFoundGrid from "../../components/LostAndFoundGrid";
+import SkeletonCard from "../../components/SkeletonCard";
 import axios from "axios";
-import { MoonLoader } from "react-spinners";
 import "./styles.css";
 
 interface LostAndFoundPet {
@@ -92,16 +91,6 @@ export default function LostFound() {
         });
     };
 
-    const [primaryColor, setPrimaryColor] = useState("#000000");
-
-    useEffect(() => {
-        const rootStyles = getComputedStyle(document.documentElement);
-        const color = rootStyles.getPropertyValue("--primary-color").trim();
-        if (color) {
-            setPrimaryColor(color);
-        }
-    }, []);
-
     const filteredPets = pets.filter((pet) => {
         const matchesCity = filters.selectedCity
             ? pet.city_id === Number(filters.selectedCity)
@@ -172,11 +161,11 @@ export default function LostFound() {
                             </div>
 
                             {loading ? (
-                                <MoonLoader
-                                    className="mt-5 mx-auto relative top-5"
-                                    size={30}
-                                    color={primaryColor}
-                                />
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {Array.from({ length: 6 }).map((_, i) => (
+                                        <SkeletonCard key={i} />
+                                    ))}
+                                </div>
                             ) : error ? (
                                 <div className="text-center">
                                     <p className="text-red-500">{error}</p>

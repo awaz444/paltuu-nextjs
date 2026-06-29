@@ -8,6 +8,7 @@ import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import VerticalSearchBar from "../../components/VerticalSearchBar";
 import FilterSection from "../../components/FilterSection";
 import PetGrid from "../../components/petGrid";
+import SkeletonCard from "../../components/SkeletonCard";
 import { MoonLoader } from "react-spinners";
 import "./styles.css";
 
@@ -192,8 +193,10 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
 
                     <div className="w-full lg:w-3/4">
                         {loading && pets.length === 0 ? (
-                            <div className="flex justify-center items-center py-20">
-                                <MoonLoader size={30} color={primaryColor} />
+                            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {Array.from({ length: 6 }).map((_, i) => (
+                                    <SkeletonCard key={i} />
+                                ))}
                             </div>
                         ) : error ? (
                             <div className="text-center py-10 text-red-500">

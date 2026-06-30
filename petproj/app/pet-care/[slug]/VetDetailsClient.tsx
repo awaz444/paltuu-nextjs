@@ -72,10 +72,10 @@ interface VetDetails {
 }
 
 export default function VetDetailsClient({
-    params,
+    slug,
     initialVet,
 }: {
-    params: { "vet-id": string };
+    slug: string;
     initialVet?: VetDetails;
 }) {
     const [vetDetails, setVetDetails] = useState<VetDetails | null>(initialVet ?? null);
@@ -100,7 +100,7 @@ export default function VetDetailsClient({
     // Fetch vet details
     const fetchVetDetails = async () => {
         try {
-            const response = await fetch(`/api/vets/${params["vet-id"]}`);
+            const response = await fetch(`/api/vets/${slug}`);
             if (!response.ok) {
                 throw new Error("Failed to fetch vet details");
             }
@@ -135,7 +135,7 @@ export default function VetDetailsClient({
     // Fetch review stats
     const fetchReviewStats = async () => {
         try {
-            const response = await fetch(`/api/vet-reviews-stats?vet_id=${params["vet-id"]}`);
+            const response = await fetch(`/api/vet-reviews-stats?vet_id=${slug}`);
             if (!response.ok) {
                 throw new Error("Failed to fetch review stats");
             }
@@ -155,7 +155,7 @@ export default function VetDetailsClient({
             fetchVetDetails();
         }
         fetchReviewStats();
-    }, [params, router]);
+    }, [slug, router]);
 
     // Handle copy to clipboard
     const handleCopy = (text: string) => {
@@ -193,7 +193,7 @@ export default function VetDetailsClient({
         }
 
         const review_date = new Date().toISOString();
-        const vet_id = params["vet-id"];
+        const vet_id = slug;
 
         try {
             const response = await fetch(`/api/vet-reviews-stats`, {

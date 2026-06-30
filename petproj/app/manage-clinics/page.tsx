@@ -11,8 +11,9 @@ import {
     LinkOutlined, DisconnectOutlined, ReloadOutlined,
     EnvironmentOutlined, PhoneOutlined, StarOutlined,
     GlobalOutlined, ClockCircleOutlined, UserOutlined,
-    MedicineBoxOutlined,
+    MedicineBoxOutlined, CopyOutlined, QrcodeOutlined,
 } from "@ant-design/icons";
+import QRCode from "qrcode";
 import type { UploadFile } from "antd/es/upload/interface";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -71,6 +72,77 @@ interface LinkedVet {
 
 const CITIES = ["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan"];
 const PC = "#a03048"; // primary color
+
+const OUTREACH_TEMPLATE = `Assalam o Alaikum! 👋
+
+We're the team behind Paltuu (paltuu.pk), Pakistan's first and largest digital pet ecosystem, built right here in Karachi.
+
+Here's where we stand today:
+
+📊 183,000+ monthly listing views
+🐾 2,087 pet listings across Pakistan
+✅ 1000+ adoptions directly facilitated
+🤝 1,500+ animals helped through shelter partnerships
+👥 1,600 registered pet parents and growing
+📍 125+ verified vet clinics and pet care centres listed across Karachi, Lahore, and Islamabad
+
+Your clinic, [CLINIC NAME], is already listed on Paltuu and is being discovered by pet owners every day. Here's your page: [CLINIC PAGE LINK]
+
+We want to make your listing as complete and accurate as possible so that more pet owners in your area can find you. In return, we'll mark your profile with a ✅ Verified Badge, a trust signal that stands out to every user browsing the directory.
+
+To get your clinic verified, we just need a few details from you:
+
+https://docs.google.com/forms/d/e/1FAIpQLSdHGGofZuIaMZVKmaZG3TkU5J2MN4y0-N2N2PVDdLCdPOgrWw/viewform?usp=publish-editor
+
+We've also attached an image with a QR code linking directly to your Paltuu page and a Leave a Review prompt. Feel free to print it and display it at your reception. Every review on your Paltuu profile helps more pet owners find and trust your clinic.
+
+Reply to this message with your details and we'll update and verify your listing within 24 hours.
+
+Shukria! 🐾
+The Paltuu Team
+paltuu.pk | @paltuupk`;
+
+// ─── Canvas helpers ───────────────────────────────────────────────────────────
+
+function roundRect(
+    ctx: CanvasRenderingContext2D,
+    x: number, y: number, w: number, h: number, r: number
+) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+}
+
+// Wraps text and returns the y position after the last line
+function wrapText(
+    ctx: CanvasRenderingContext2D,
+    text: string, x: number, startY: number,
+    maxWidth: number, lineHeight: number
+): number {
+    const words = text.split(' ');
+    let line = '';
+    let y = startY;
+    for (const word of words) {
+        const test = line ? `${line} ${word}` : word;
+        if (ctx.measureText(test).width > maxWidth && line) {
+            ctx.fillText(line, x, y);
+            line = word;
+            y += lineHeight;
+        } else {
+            line = test;
+        }
+    }
+    ctx.fillText(line, x, y);
+    return y;
+}
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
@@ -343,6 +415,194 @@ export default function ManageClinicsPage() {
         }
     };
 
+    // ── Copy outreach message ─────────────────────────────────────────────
+
+    const handleCopyMessage = (clinic: Clinic) => {
+        const clinicUrl = `https://www.paltuu.pk/pet-care/clinic/${clinic.clinic_id}`;
+        const msg = OUTREACH_TEMPLATE
+            .replace("[CLINIC NAME]", clinic.name)
+            .replace("[CLINIC PAGE LINK]", clinicUrl);
+        navigator.clipboard.writeText(msg).then(() => {
+            message.success(`Outreach message copied for ${clinic.name}`);
+        }).catch(() => {
+            message.error("Failed to copy — check clipboard permissions");
+        });
+    };
+
+    // ── Download QR code PNG ──────────────────────────────────────────────
+
+    const handleDownloadQR = async (clinic: Clinic) => {
+        const clinicUrl = `https://www.paltuu.pk/pet-care/clinic/${clinic.clinic_id}`;
+        const msgKey = "qr-gen";
+        const PC = "#a03048";
+
+        message.loading({ content: "Generating PNG…", key: msgKey, duration: 0 });
+
+        // A5 at 300 DPI (half of A4 landscape)
+        const W = 1748;
+        const H = 2480;
+        const RADIUS = 60;
+        const BORDER = 14;
+
+        // 1. QR code — red dots to match brand
+        let qrDataUrl: string;
+        try {
+            qrDataUrl = await QRCode.toDataURL(clinicUrl, {
+                width: 1200,
+                margin: 2,
+                color: { dark: "#000000", light: "#ffffff" },
+                errorCorrectionLevel: "H",
+            });
+        } catch {
+            message.error({ content: "Failed to generate QR code", key: msgKey });
+            return;
+        }
+
+        // 2. Load Montserrat
+        try {
+            const reg   = new FontFace("Montserrat", "url(/post-template-assets/Montserrat/static/Montserrat-Regular.ttf)");
+            const bold  = new FontFace("Montserrat", "url(/post-template-assets/Montserrat/static/Montserrat-Bold.ttf)",      { weight: "700" });
+            const xbold = new FontFace("Montserrat", "url(/post-template-assets/Montserrat/static/Montserrat-ExtraBold.ttf)", { weight: "800" });
+            const [r, b, x] = await Promise.all([reg.load(), bold.load(), xbold.load()]);
+            document.fonts.add(r); document.fonts.add(b); document.fonts.add(x);
+        } catch { /* system font fallback */ }
+
+        // 3. Load logo → render white copy for the dark header
+        const whiteLogoCanvas = await (async () => {
+            const img = await new Promise<HTMLImageElement | null>((resolve) => {
+                const i = new Image();
+                i.crossOrigin = "anonymous";
+                i.onload  = () => resolve(i);
+                i.onerror = () => resolve(null);
+                i.src = "/paltuu%20bilkul%20tight.svg";
+            });
+            if (!img) return null;
+            const c  = document.createElement("canvas");
+            c.width  = img.naturalWidth  || 2210;
+            c.height = img.naturalHeight || 1173;
+            const cx = c.getContext("2d")!;
+            cx.drawImage(img, 0, 0);
+            const id = cx.getImageData(0, 0, c.width, c.height);
+            for (let i = 0; i < id.data.length; i += 4) {
+                if (id.data[i + 3] > 10) {
+                    id.data[i] = id.data[i + 1] = id.data[i + 2] = 255;
+                }
+            }
+            cx.putImageData(id, 0, 0);
+            return c;
+        })();
+
+        // 4. Load QR image
+        const qrImg = await new Promise<HTMLImageElement>((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.src = qrDataUrl;
+        });
+
+        // 5. Compose
+        const canvas = document.createElement("canvas");
+        canvas.width  = W;
+        canvas.height = H;
+        const ctx = canvas.getContext("2d")!;
+
+        // ── White card background ────────────────────────────────────────
+        ctx.fillStyle = "#ffffff";
+        roundRect(ctx, 0, 0, W, H, RADIUS);
+        ctx.fill();
+
+        // ── Dark red header (clipped to card corners) ────────────────────
+        const headerH = 340;
+        ctx.save();
+        roundRect(ctx, 0, 0, W, H, RADIUS);
+        ctx.clip();
+        ctx.fillStyle = PC;
+        ctx.fillRect(0, 0, W, headerH);
+        ctx.restore();
+
+        // ── Border ───────────────────────────────────────────────────────
+        ctx.strokeStyle = PC;
+        ctx.lineWidth = BORDER;
+        roundRect(ctx, BORDER / 2, BORDER / 2, W - BORDER, H - BORDER, RADIUS);
+        ctx.stroke();
+
+        // ── Logo (white) in header ───────────────────────────────────────
+        if (whiteLogoCanvas) {
+            const aspect = whiteLogoCanvas.width / whiteLogoCanvas.height;
+            const lh = 170;
+            const lw = Math.min(lh * aspect, W - 300);
+            ctx.drawImage(whiteLogoCanvas, (W - lw) / 2, (headerH - lh) / 2, lw, lh);
+        } else {
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "800 110px Montserrat, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("Paltuu", W / 2, headerH / 2 + 44);
+        }
+
+        // ── Body ─────────────────────────────────────────────────────────
+        let y = headerH + 100;
+        const sidePad = 220;
+
+        // Clinic name
+        ctx.fillStyle = "#1a1a1a";
+        ctx.font = "700 82px Montserrat, sans-serif";
+        ctx.textAlign = "center";
+        const nameBottom = wrapText(ctx, clinic.name, W / 2, y + 82, W - sidePad * 2, 104);
+        y = nameBottom + 60;
+
+        // Short divider
+        ctx.strokeStyle = PC;
+        ctx.lineWidth = 8;
+        const divLen = 110;
+        ctx.beginPath();
+        ctx.moveTo((W - divLen) / 2, y);
+        ctx.lineTo((W + divLen) / 2, y);
+        ctx.stroke();
+        y += 70;
+
+        // QR box (light gray container)
+        const qrSize = W - sidePad * 2;
+        const boxPad = 50;
+        ctx.fillStyle = "#f3f3f3";
+        roundRect(ctx, sidePad - boxPad, y - boxPad, qrSize + boxPad * 2, qrSize + boxPad * 2, 48);
+        ctx.fill();
+
+        // QR image inside box
+        ctx.drawImage(qrImg, sidePad, y, qrSize, qrSize);
+        y += qrSize + boxPad * 2 + 70;
+
+        // "Leave a Review!"
+        ctx.fillStyle = PC;
+        ctx.font = "800 96px Montserrat, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Leave a Review!", W / 2, y);
+        y += 115;
+
+        // Subtext
+        ctx.fillStyle = "#888888";
+        ctx.font = "400 46px Montserrat, sans-serif";
+        ctx.fillText("Scan the QR code to visit our Paltuu page", W / 2, y);
+        y += 64;
+        ctx.fillText("and share your experience 🐾", W / 2, y);
+        y += 80;
+
+        // URL
+        ctx.fillStyle = "#cccccc";
+        ctx.font = "400 32px Montserrat, sans-serif";
+        ctx.fillText(clinicUrl, W / 2, y);
+
+        // 6. Download
+        canvas.toBlob((blob) => {
+            if (!blob) { message.error({ content: "Failed to create PNG", key: msgKey }); return; }
+            const url  = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href     = url;
+            link.download = `paltuu-qr-${clinic.name.replace(/\s+/g, "-").toLowerCase()}.png`;
+            link.click();
+            URL.revokeObjectURL(url);
+            message.success({ content: "PNG downloaded!", key: msgKey });
+        }, "image/png");
+    };
+
     // ══════════════════════════════════════════════════════════════════════
     // VETS — data fetching
     // ══════════════════════════════════════════════════════════════════════
@@ -564,9 +824,15 @@ export default function ManageClinicsPage() {
         },
         {
             title: "Actions",
-            width: 110,
+            width: 160,
             render: (_: any, r: Clinic) => (
-                <Space>
+                <Space wrap>
+                    <Tooltip title="Copy outreach message">
+                        <Button size="small" icon={<CopyOutlined />} onClick={() => handleCopyMessage(r)} />
+                    </Tooltip>
+                    <Tooltip title="Download QR code image">
+                        <Button size="small" icon={<QrcodeOutlined />} onClick={() => handleDownloadQR(r)} />
+                    </Tooltip>
                     <Tooltip title="Edit clinic">
                         <Button type="primary" size="small" icon={<EditOutlined />} style={{ background: PC, borderColor: PC }} onClick={() => openEditClinic(r)} />
                     </Tooltip>

@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import { validateUsername } from "@/utils/usernameValidation";
 
 export const dynamic = "force-dynamic";
 
@@ -14,21 +15,25 @@ export async function PUT(req: NextRequest) {
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const body = await req.json();
-        const { social_username, bio, is_private } = body;
+        let { social_username, bio, is_private } = body;
 
-        // 1. If username is changing, check for uniqueness
-        if (social_username) {
-            // Basic handle validation: alphanumeric + underscores, 3-20 chars
-            if (!/^[a-zA-Z0-9_]{3,20}$/.test(social_username)) {
-                return NextResponse.json({ error: "Invalid handle. Use 3-20 alphanumeric characters or underscores." }, { status: 400 });
+        // 1. If username is changing, validate and check for uniqueness
+        if (social_username !== undefined && social_username !== null) {
+            const validation = validateUsername(social_username);
+            if (!validation.valid) {
+                return NextResponse.json({ error: validation.error }, { status: 400 });
             }
+            // Normalise to lowercase — store it consistently
+            social_username = validation.normalised!;
+            body.social_username = social_username;
 
+            // Case-insensitive uniqueness check (lowercased value vs stored lowercase)
             const existing = await db.query(
-                "SELECT user_id FROM users WHERE social_username = $1 AND user_id != $2",
+                "SELECT user_id FROM users WHERE LOWER(social_username) = $1 AND user_id != $2",
                 [social_username, userId]
             );
             if ((existing.rowCount ?? 0) > 0) {
-                return NextResponse.json({ error: "This social handle is already taken" }, { status: 400 });
+                return NextResponse.json({ error: "This social handle is already taken." }, { status: 409 });
             }
         }
 
@@ -44,7 +49,7 @@ export async function PUT(req: NextRequest) {
         });
 
         if (setClause.length === 0) {
-            return NextResponse.json({ error: "No updates provided" }, { status: 400 });
+            return NextResponse.json({ error: "No updates provided." }, { status: 400 });
         }
 
         const query = `

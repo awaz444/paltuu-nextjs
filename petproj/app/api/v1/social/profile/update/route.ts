@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import { validateUsername } from "@/utils/usernameValidation";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,26 @@ export async function PATCH(req: NextRequest) {
         }
 
         const body = await req.json();
-        
+
+        // ── Username validation (was completely missing — critical bug) ──────────
+        if (body.social_username !== undefined) {
+            const validation = validateUsername(body.social_username);
+            if (!validation.valid) {
+                return NextResponse.json({ error: validation.error }, { status: 400 });
+            }
+            // Normalise to lowercase before writing
+            body.social_username = validation.normalised!;
+
+            // Case-insensitive uniqueness check
+            const existing = await db.query(
+                "SELECT user_id FROM users WHERE LOWER(social_username) = $1 AND user_id != $2",
+                [body.social_username, userId]
+            );
+            if ((existing.rowCount ?? 0) > 0) {
+                return NextResponse.json({ error: "This social handle is already taken." }, { status: 409 });
+            }
+        }
+
         const updates: string[] = [];
         const values: any[] = [];
         let paramIndex = 1;
@@ -57,7 +77,7 @@ export async function PATCH(req: NextRequest) {
         const result = await db.query(query, values);
 
         if (result.rowCount === 0) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+            return NextResponse.json({ error: "User not found." }, { status: 404 });
         }
 
         return NextResponse.json({ success: true, user: result.rows[0] });

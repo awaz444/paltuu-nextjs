@@ -25,7 +25,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
     const { error: userError } = useSelector((state: RootState) => state.user);
     const router = useRouter();
 
-    const [username, setUsername] = useState("");
+
     const [name, setName] = useState("");
     const [DOB, setDOB] = useState("");
     const [cityId, setCityId] = useState<number | null>(null);
@@ -173,7 +173,6 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         }
 
         const newUser: Omit<User, "user_id"> = {
-            username,
             name,
             DOB,
             city_id: cityId,

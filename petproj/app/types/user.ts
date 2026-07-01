@@ -1,7 +1,8 @@
 // Define a User interface based on the expected user object structure
 export interface User {
     user_id?: number; // Optional if not required during creation
-    username: string;
+    username?: string; // Optional
+    social_username?: string; // Optional
     name: string;
     DOB: string;
     city_id: number | null; // Ensure this aligns with your API

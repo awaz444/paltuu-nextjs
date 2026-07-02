@@ -1,18 +1,13 @@
-import React, { useState } from "react";
-import { Modal, Input, Select, Checkbox, Button, Upload } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/app/store/store";
 import { useRouter } from "next/navigation";
 import "./petGrid.css";
-import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import Link from "next/link";
-import { UseDispatch } from "react-redux";
 import { fetchAdoptionPets } from "@/app/store/slices/adoptionPetsSlice";
 import { fetchFosterPets } from "@/app/store/slices/fosterPetsSlice";
 import { formatAge } from "@/utils/formatAge";
-
-const { TextArea } = Input;
+import { X, Plus } from "lucide-react";
 
 export interface Pet {
     pet_id: number;
@@ -52,699 +47,429 @@ interface PetGridProps {
     showCreateButton?: boolean;
 }
 
+const PET_TYPE_OPTIONS = [
+    { value: 1, label: "Dog" }, { value: 2, label: "Cat" }, { value: 3, label: "Bird" },
+    { value: 4, label: "Fish" }, { value: 5, label: "Rabbit" }, { value: 6, label: "Hamster" },
+    { value: 7, label: "Guinea Pig" }, { value: 8, label: "Turtle" }, { value: 11, label: "Horse" }, { value: 15, label: "Mouse" },
+];
+
+interface ExistingImage { image_id: number; image_url: string; order: number; }
+interface NewFile { file: File; preview: string; }
+
 const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }) => {
     const dispatch = useDispatch<AppDispatch>();
-    const [showConfirm, setShowConfirm] = useState<{
-        pet_id: number | null;
-        show: boolean;
-    }>({ pet_id: null, show: false });
-    const [loading, setLoading] = useState(false);
-    const [updateLoading, setUpdateLoading] = useState(false);
+    const router = useRouter();
+
+    const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+    const [deleteLoading, setDeleteLoading] = useState(false);
     const [editingPet, setEditingPet] = useState<Pet | null>(null);
-    const [successMessage, setSuccessMessage] = useState(false);
+    const [updateLoading, setUpdateLoading] = useState(false);
+    const [successToast, setSuccessToast] = useState(false);
 
-    // Photo edit states
-    const [editingPetImages, setEditingPetImages] = useState<{ image_id: number; image_url: string; order: number }[]>([]);
+    // Images
+    const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
+    const [newFiles, setNewFiles] = useState<NewFile[]>([]);
     const [loadingImages, setLoadingImages] = useState(false);
-    const [newFileList, setNewFileList] = useState<any[]>([]);
 
-    const router = useRouter(); // Initialize router for navigation
+    // Close modal on Escape
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => { if (e.key === "Escape") { setEditingPet(null); setDeleteConfirm(null); } };
+        document.addEventListener("keydown", handler);
+        return () => document.removeEventListener("keydown", handler);
+    }, []);
 
-    const handleViewApplications = (petId: number) => {
-        router.push(`/adoption-applicants?pet_id=${petId}`);
-    };
+    // Lock body scroll when modal open
+    useEffect(() => {
+        document.body.style.overflow = editingPet ? "hidden" : "";
+        return () => { document.body.style.overflow = ""; };
+    }, [editingPet]);
+
+    const handleViewApplications = (petId: number) => router.push(`/adoption-applicants?pet_id=${petId}`);
 
     const handleDelete = async (petId: number) => {
-        dispatch(fetchAdoptionPets({}));
-        dispatch(fetchFosterPets());
-        const response = await fetch(`/api/v1/pets/${petId}`, {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-
-        setLoading(false);
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Delete failed:", errorData);
-        } else {
-            console.log("Delete successful");
+        setDeleteLoading(true);
+        try {
+            await fetch(`/api/v1/pets/${petId}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
+            dispatch(fetchAdoptionPets({}));
+            dispatch(fetchFosterPets());
+        } finally {
+            setDeleteLoading(false);
+            setDeleteConfirm(null);
         }
-    };
-
-    const handleConfirmation = (petId: number) => {
-        setShowConfirm({ pet_id: petId, show: true });
-    };
-
-    const confirmDelete = async (petId: number) => {
-        setLoading(true);
-        await handleDelete(petId);
-        setShowConfirm({ pet_id: null, show: false });
-    };
-
-    const cancelDelete = () => {
-        setShowConfirm({ pet_id: null, show: false });
     };
 
     const handleEdit = async (pet: Pet) => {
         setEditingPet(pet);
-        setEditingPetImages([]);
-        setNewFileList([]);
+        setExistingImages([]);
+        setNewFiles([]);
         setLoadingImages(true);
         try {
-            const response = await fetch(`/api/v1/pets/${pet.pet_id}`);
-            if (response.ok) {
-                const data = await response.json();
-                if (data.images) {
-                    setEditingPetImages(data.images);
-                }
+            const res = await fetch(`/api/v1/pets/${pet.pet_id}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.images) setExistingImages(data.images);
             }
-        } catch (error) {
-            console.error("Failed to load pet images:", error);
         } finally {
             setLoadingImages(false);
         }
     };
 
+    const handleNewFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        const canAdd = Math.max(0, 5 - existingImages.length - newFiles.length);
+        const toAdd = files.slice(0, canAdd).map((file) => ({ file, preview: URL.createObjectURL(file) }));
+        setNewFiles((prev) => [...prev, ...toAdd]);
+        e.target.value = "";
+    };
+
+    const removeNewFile = (index: number) => {
+        setNewFiles((prev) => {
+            URL.revokeObjectURL(prev[index].preview);
+            return prev.filter((_, i) => i !== index);
+        });
+    };
+
     const handleUpdate = async () => {
         if (!editingPet) return;
         setUpdateLoading(true);
-
-        dispatch(fetchAdoptionPets({}));
-        dispatch(fetchFosterPets());
-
         try {
             let uploadedUrls: string[] = [];
-            // 1. Upload new files if there are any
-            const filesToUpload = newFileList.filter(f => f.originFileObj);
-            if (filesToUpload.length > 0) {
+            if (newFiles.length > 0) {
                 const formData = new FormData();
-                filesToUpload.forEach((file) => {
-                    formData.append("files", file.originFileObj);
-                });
-                const uploadRes = await fetch("/api/v1/upload-image", {
-                    method: "POST",
-                    body: formData
-                });
+                newFiles.forEach((f) => formData.append("files", f.file));
+                const uploadRes = await fetch("/api/v1/upload-image", { method: "POST", body: formData });
                 if (uploadRes.ok) {
                     const uploadData = await uploadRes.json();
-                    if (uploadData.urls) {
-                        uploadedUrls = uploadData.urls;
-                    }
-                } else {
-                    console.error("Failed to upload new images");
+                    uploadedUrls = uploadData.urls || [];
                 }
             }
 
-            // 2. Combine and order final images
             const finalImages = [
-                ...editingPetImages.map((img, index) => ({
-                    image_id: img.image_id,
-                    image_url: img.image_url,
-                    order: index
-                })),
-                ...uploadedUrls.map((url, index) => ({
-                    image_url: url,
-                    order: editingPetImages.length + index
-                }))
+                ...existingImages.map((img, i) => ({ image_id: img.image_id, image_url: img.image_url, order: i })),
+                ...uploadedUrls.map((url, i) => ({ image_url: url, order: existingImages.length + i })),
             ];
 
-            const response = await fetch(`/api/v1/pets/${editingPet.pet_id}`, {
+            const res = await fetch(`/api/v1/pets/${editingPet.pet_id}`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    ...editingPet,
-                    images: finalImages
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...editingPet, images: finalImages }),
             });
 
-            if (!response.ok) {
-                console.error("Update failed:", await response.json());
-            } else {
-                console.log("Update successful");
-                setSuccessMessage(true); // Show success message
-                setTimeout(() => setSuccessMessage(false), 3000); // Hide after 3 seconds
+            if (res.ok) {
+                setSuccessToast(true);
+                setTimeout(() => setSuccessToast(false), 3000);
+                dispatch(fetchAdoptionPets({}));
+                dispatch(fetchFosterPets());
             }
 
             setEditingPet(null);
-            setNewFileList([]);
-            setEditingPetImages([]);
-        } catch (error) {
-            console.error("Update error:", error);
+            setNewFiles([]);
+            setExistingImages([]);
         } finally {
             setUpdateLoading(false);
         }
     };
 
-    const handleCancel = () => {
+    const handleCancelEdit = () => {
         setEditingPet(null);
-        setNewFileList([]);
-        setEditingPetImages([]);
+        newFiles.forEach((f) => URL.revokeObjectURL(f.preview));
+        setNewFiles([]);
+        setExistingImages([]);
     };
 
+    const field = (label: string, children: React.ReactNode) => (
+        <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+            {children}
+        </div>
+    );
+
+    const inputClass = "p-3 w-full border rounded-2xl focus:outline-none focus:border-primary transition-colors";
+    const checkboxRow = (label: string, checked: boolean, onChange: (v: boolean) => void) => (
+        <label className="flex items-center gap-3 cursor-pointer py-1">
+            <input type="checkbox" className="w-4 h-4 accent-primary rounded" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+            <span className="text-sm text-gray-700">{label}</span>
+        </label>
+    );
+
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {showCreateButton && (
                 <Link
                     href="/create-listing"
-                    className="create-listing-btn bg-white text-primary p-4 rounded-3xl shadow-sm overflow-hidden flex  flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        fill="currentColor"
-                        className="bi bi-plus-circle mb-5 plus-sign"
-                        viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                    </svg>
-                    Create new listing
+                    className="bg-white text-primary p-4 rounded-3xl shadow-sm flex flex-col items-center justify-center border-2 border-transparent hover:border-primary hover:scale-[1.02] transition-all duration-300 min-h-[260px]"
+                >
+                    <div className="w-12 h-12 rounded-full border-2 border-primary flex items-center justify-center mb-3">
+                        <Plus size={22} className="text-primary" />
+                    </div>
+                    <span className="text-sm font-medium">Create new listing</span>
                 </Link>
             )}
+
             {pets.map((pet) => (
                 <div
                     key={pet.pet_id}
-                    className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-primary hover:scale-102 transition-all duration-300 relative">
+                    className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-[#a03048] hover:scale-[1.02] transition-all duration-300 relative"
+                >
                     <div className="relative">
-                        <div className="absolute top-2 right-2 flex gap-2">
-                            {/* Delete Button */}
+                        {/* Action buttons */}
+                        <div className="absolute top-2 right-2 flex gap-2 z-10">
                             <button
-                                className="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition"
-                                onClick={() => handleConfirmation(pet.pet_id)}>
-                                <img
-                                    src="/trash.svg"
-                                    alt="Delete"
-                                    className="w-4 h-4"
-                                />
+                                className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 rounded-full hover:bg-gray-100 transition"
+                                onClick={() => setDeleteConfirm(pet.pet_id)}
+                            >
+                                <img src="/trash.svg" alt="Delete" className="w-4 h-4" />
                             </button>
-                            {/* Edit Button */}
                             <button
-                                className="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded-full hover:bg-gray-200 transition"
-                                onClick={() => handleEdit(pet)}>
-                                <img
-                                    src="/pen.svg"
-                                    alt="Edit"
-                                    className="w-4 h-4"
-                                />
+                                className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 rounded-full hover:bg-gray-100 transition"
+                                onClick={() => handleEdit(pet)}
+                            >
+                                <img src="/pen.svg" alt="Edit" className="w-4 h-4" />
                             </button>
                         </div>
-                        {/* Adoption Status */}
-                        <div className="absolute top-2 left-2 flex gap-2">
-                            <div
-                                className={`${pet.approved
-                                    ? "bg-green-600"
-                                    : "bg-orange-500"
-                                    } text-white text-sm font-semibold px-3 py-1 rounded-full`}>
+                        {/* Status badge */}
+                        <div className="absolute top-2 left-2 z-10">
+                            <span className={`text-white text-xs font-semibold px-3 py-1 rounded-full ${pet.approved ? "bg-green-600" : "bg-orange-500"}`}>
                                 {pet.approved ? "Approved" : "Pending"}
-                            </div>
+                            </span>
                         </div>
                         <img
-                            src={pet.primary_image || (pet as any).primaryImage || (pet as any).image_url || "/dog-placeholder.png"}
+                            src={pet.primary_image || (pet as any).primaryImage || pet.image_url || "/dog-placeholder.png"}
                             alt={pet.pet_name}
-                            className="w-full h-48 object-cover rounded-2xl block"
-                            style={{ minHeight: '192px' }}
+                            className="w-full aspect-square object-cover rounded-2xl block"
                         />
                     </div>
-                    {/* Pet Details */}
                     <div className="pt-4 pl-2">
-                        <h3 className="font-bold text-2xl mb-1">
-                            {pet.pet_name}
-                        </h3>
-                        <p className="text-gray-600 mb-1">
-                            {formatAge(pet.age_months)}
-                        </p>
-                        <p className="text-gray-600 mb-1">
-                            {pet.city} - {pet.area}
-                        </p>
+                        <h3 className="font-bold text-xl mb-1">{pet.pet_name}</h3>
+                        <p className="text-gray-500 text-sm mb-0.5">{formatAge(pet.age_months)}</p>
+                        <p className="text-gray-500 text-sm">{pet.city} — {pet.area}</p>
                     </div>
-
                 </div>
             ))}
 
-            {/* Confirmation Popup */}
-            {showConfirm.show && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-6 rounded-3xl shadow-lg max-w-sm w-full">
-                        <h3 className="text-lg font-bold mb-4">
-                            Are you sure you want to delete this pet?
-                        </h3>
-                        <div className="flex justify-between">
+            {/* Delete confirm modal */}
+            {deleteConfirm !== null && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDeleteConfirm(null)}>
+                    <div className="bg-white rounded-3xl shadow-lg p-8 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">Delete this listing?</h3>
+                        <p className="text-gray-500 text-sm mb-6">This action cannot be undone.</p>
+                        <div className="flex gap-3">
                             <button
-                                className="bg-primary text-white px-4 py-2 rounded-xl"
-                                onClick={() =>
-                                    confirmDelete(showConfirm.pet_id!)
-                                }
-                                disabled={loading}>
-                                {loading ? "Deleting..." : "Confirm"}
+                                onClick={() => setDeleteConfirm(null)}
+                                className="flex-1 py-3 border-2 border-gray-200 text-gray-600 rounded-2xl font-medium hover:border-gray-300 transition-colors"
+                            >
+                                Cancel
                             </button>
                             <button
-                                className="bg-white text-primary border border-primary px-4 py-2 rounded-xl"
-                                onClick={cancelDelete}>
-                                Cancel
+                                onClick={() => handleDelete(deleteConfirm)}
+                                disabled={deleteLoading}
+                                className="flex-1 py-3 bg-red-500 text-white rounded-2xl font-medium hover:bg-red-600 transition-colors disabled:opacity-60"
+                            >
+                                {deleteLoading ? "Deleting..." : "Delete"}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
-            {/* Edit Form Popup */}
+
+            {/* Edit modal */}
             {editingPet && (
-                <Modal
-                    title="Edit Pet Listing"
-                    open={!!editingPet}
-                    onCancel={handleCancel}
-                    footer={null} // Hide default buttons
-                    className="rounded-2xl">
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Pictures
-                        </label>
-                        {loadingImages ? (
-                            <div className="text-gray-500 text-sm py-2">Loading current photos...</div>
-                        ) : (
-                            <div className="space-y-4">
-                                {editingPetImages.length > 0 && (
-                                    <div className="grid grid-cols-3 gap-2 mb-2">
-                                        {editingPetImages.map((img) => (
-                                            <div key={img.image_id} className="relative aspect-square rounded-lg overflow-hidden border">
-                                                <img
-                                                    src={img.image_url}
-                                                    alt="Pet"
-                                                    className="w-full h-full object-cover"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition shadow text-xs font-bold"
-                                                    onClick={() => {
-                                                        setEditingPetImages(prev => prev.filter(i => i.image_id !== img.image_id));
-                                                    }}
-                                                >
-                                                    &times;
-                                                </button>
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={handleCancelEdit}>
+                    <div
+                        className="bg-white rounded-3xl shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Modal header */}
+                        <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-3xl z-10">
+                            <h2 className="text-lg font-bold text-gray-900">Edit Listing</h2>
+                            <button onClick={handleCancelEdit} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+                                <X size={16} className="text-gray-500" />
+                            </button>
+                        </div>
+
+                        <div className="p-6">
+                            {/* Photos */}
+                            <div className="mb-5">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Photos</label>
+                                {loadingImages ? (
+                                    <p className="text-gray-400 text-sm py-2">Loading photos...</p>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {/* Existing images */}
+                                        {existingImages.length > 0 && (
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {existingImages.map((img) => (
+                                                    <div key={img.image_id} className="relative aspect-square rounded-xl overflow-hidden border border-gray-100">
+                                                        <img src={img.image_url} alt="Pet" className="w-full h-full object-cover" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setExistingImages((prev) => prev.filter((i) => i.image_id !== img.image_id))}
+                                                            className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition"
+                                                        >
+                                                            <X size={10} />
+                                                        </button>
+                                                    </div>
+                                                ))}
                                             </div>
-                                        ))}
+                                        )}
+                                        {/* New file previews */}
+                                        {newFiles.length > 0 && (
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {newFiles.map((f, i) => (
+                                                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-gray-100">
+                                                        <img src={f.preview} alt="New" className="w-full h-full object-cover" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeNewFile(i)}
+                                                            className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition"
+                                                        >
+                                                            <X size={10} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {/* Upload button */}
+                                        {existingImages.length + newFiles.length < 5 && (
+                                            <label className="flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:border-primary transition-colors text-sm text-gray-500">
+                                                <Plus size={16} /> Add Photos
+                                                <input type="file" multiple accept="image/*" className="hidden" onChange={handleNewFileChange} />
+                                            </label>
+                                        )}
+                                        <p className="text-xs text-gray-400">Maximum 5 photos total</p>
                                     </div>
                                 )}
+                            </div>
 
-                                <Upload
-                                    listType="picture-card"
-                                    fileList={newFileList}
-                                    onChange={({ fileList }) => setNewFileList(fileList)}
-                                    beforeUpload={() => false}
-                                    multiple
-                                    accept="image/*"
+                            {field("Pet Name",
+                                <input type="text" className={inputClass} value={editingPet.pet_name}
+                                    onChange={(e) => setEditingPet({ ...editingPet, pet_name: e.target.value })} />
+                            )}
+
+                            {field("Pet Type",
+                                <select className={inputClass} value={editingPet.pet_type}
+                                    onChange={(e) => setEditingPet({ ...editingPet, pet_type: Number(e.target.value) })}>
+                                    {PET_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                </select>
+                            )}
+
+                            {field("Pet Breed",
+                                <input type="text" className={inputClass} placeholder="Breed" value={editingPet.pet_breed || ""}
+                                    onChange={(e) => setEditingPet({ ...editingPet, pet_breed: e.target.value })} />
+                            )}
+
+                            {field("Age (months)",
+                                <>
+                                    <input type="number" className={inputClass} value={editingPet.age_months}
+                                        onChange={(e) => setEditingPet({ ...editingPet, age_months: Number(e.target.value) })} />
+                                    <p className="text-xs text-gray-400 mt-1">Current: {formatAge(editingPet.age_months)}</p>
+                                </>
+                            )}
+
+                            {field("Contact Number",
+                                <input type="text" className={inputClass} placeholder="+923..." value={editingPet.contact_number || ""}
+                                    onChange={(e) => setEditingPet({ ...editingPet, contact_number: e.target.value })} />
+                            )}
+
+                            {field("Description",
+                                <textarea className={`${inputClass} resize-none`} rows={3} placeholder="Description" value={editingPet.description}
+                                    onChange={(e) => setEditingPet({ ...editingPet, description: e.target.value })} />
+                            )}
+
+                            {/* Listing type toggle */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Listing Type</label>
+                                <div className="flex gap-2">
+                                    {["adoption", "foster"].map((type) => (
+                                        <button
+                                            key={type}
+                                            type="button"
+                                            onClick={() => setEditingPet({ ...editingPet, listing_type: type })}
+                                            className={`flex-1 py-2.5 rounded-2xl text-sm font-medium capitalize transition-colors ${editingPet.listing_type === type ? "bg-primary text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                                        >
+                                            {type}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {field("Price",
+                                <input type="number" className={inputClass} placeholder="Price" value={editingPet.price}
+                                    onChange={(e) => setEditingPet({ ...editingPet, price: e.target.value })} />
+                            )}
+
+                            {field("Minimum Age of Children",
+                                <input type="number" className={inputClass} value={editingPet.min_age_of_children}
+                                    onChange={(e) => setEditingPet({ ...editingPet, min_age_of_children: Number(e.target.value) })} />
+                            )}
+
+                            {/* Checkboxes */}
+                            <div className="mb-4 space-y-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Living Compatibility</label>
+                                {checkboxRow("Can live with dogs", editingPet.can_live_with_dogs, (v) => setEditingPet({ ...editingPet, can_live_with_dogs: v }))}
+                                {checkboxRow("Can live with cats", editingPet.can_live_with_cats, (v) => setEditingPet({ ...editingPet, can_live_with_cats: v }))}
+                                {checkboxRow("Must have someone home", editingPet.must_have_someone_home, (v) => setEditingPet({ ...editingPet, must_have_someone_home: v }))}
+                                {checkboxRow("Vaccinated", editingPet.vaccinated || false, (v) => setEditingPet({ ...editingPet, vaccinated: v }))}
+                                {checkboxRow("Neutered", editingPet.neutered || false, (v) => setEditingPet({ ...editingPet, neutered: v }))}
+                            </div>
+
+                            {/* Energy level */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Energy Level</label>
+                                <input type="range" min="1" max="5" className="w-full" value={editingPet.energy_level ?? 3}
+                                    onChange={(e) => setEditingPet({ ...editingPet, energy_level: Number(e.target.value) })}
+                                    style={{ background: `linear-gradient(to right, #a03048 0%, #a03048 ${(editingPet.energy_level - 1) * 25}%, #D1D5DB ${(editingPet.energy_level - 1) * 25}%, #D1D5DB 100%)` }}
+                                />
+                                <div className="flex justify-between text-xs text-gray-400 mt-1"><span>Chilled</span><span>Hyper</span></div>
+                            </div>
+
+                            {/* Cuddliness level */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Cuddliness Level</label>
+                                <input type="range" min="1" max="5" className="w-full" value={editingPet.cuddliness_level ?? 3}
+                                    onChange={(e) => setEditingPet({ ...editingPet, cuddliness_level: Number(e.target.value) })}
+                                    style={{ background: `linear-gradient(to right, #a03048 0%, #a03048 ${(editingPet.cuddliness_level - 1) * 25}%, #D1D5DB ${(editingPet.cuddliness_level - 1) * 25}%, #D1D5DB 100%)` }}
+                                />
+                                <div className="flex justify-between text-xs text-gray-400 mt-1"><span>Cuddler</span><span>Independent</span></div>
+                            </div>
+
+                            {field("Health Issues",
+                                <textarea className={`${inputClass} resize-none`} rows={2} placeholder="Any health issues" value={editingPet.health_issues}
+                                    onChange={(e) => setEditingPet({ ...editingPet, health_issues: e.target.value })} />
+                            )}
+
+                            {field("Sex",
+                                <select className={inputClass} value={editingPet.sex || ""}
+                                    onChange={(e) => setEditingPet({ ...editingPet, sex: e.target.value })}>
+                                    <option value="">Select sex</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            )}
+
+                            {/* Action buttons */}
+                            <div className="flex gap-3 pt-4 border-t border-gray-100 mt-2">
+                                <button onClick={handleCancelEdit} className="flex-1 py-3 border-2 border-primary text-primary rounded-2xl font-medium hover:bg-primary hover:text-white transition-colors">
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleUpdate}
+                                    disabled={updateLoading}
+                                    className="flex-1 py-3 bg-primary text-white rounded-2xl font-medium hover:opacity-90 transition-opacity disabled:opacity-60"
                                 >
-                                    {newFileList.length + editingPetImages.length < 5 && (
-                                        <div>
-                                            <PlusOutlined />
-                                            <div style={{ marginTop: 8 }}>Upload</div>
-                                        </div>
-                                    )}
-                                </Upload>
-                                <p className="text-[10px] text-gray-500">Maximum 5 photos total.</p>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Pet Name
-                        </label>
-                        <Input
-                            placeholder="Pet Name"
-                            value={editingPet.pet_name}
-                            onChange={(e) =>
-                                setEditingPet({
-                                    ...editingPet,
-                                    pet_name: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Pet Type
-                        </label>
-                        <Select
-                            className="w-full"
-                            value={editingPet.pet_type}
-                            onChange={(value) =>
-                                setEditingPet({
-                                    ...editingPet,
-                                    pet_type: value,
-                                })
-                            }>
-                            <Select.Option value={1}>Dog</Select.Option>
-                            <Select.Option value={2}>Cat</Select.Option>
-                            <Select.Option value={3}>Bird</Select.Option>
-                            <Select.Option value={4}>Fish</Select.Option>
-                            <Select.Option value={5}>Rabbit</Select.Option>
-                            <Select.Option value={6}>Hamster</Select.Option>
-                            <Select.Option value={7}>Guinea Pig</Select.Option>
-                            <Select.Option value={8}>Turtle</Select.Option>
-                            <Select.Option value={11}>Horse</Select.Option>
-                            <Select.Option value={15}>Mouse</Select.Option>
-                        </Select>
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Pet Breed
-                        </label>
-                        <Input
-                            placeholder="Pet Breed"
-                            value={editingPet.pet_breed || ""}
-                            onChange={(e) =>
-                                setEditingPet({
-                                    ...editingPet,
-                                    pet_breed: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-
-                    {/* Age months field */}
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Age (Total Months)
-                        </label>
-                        <Input
-                            placeholder="Age in months"
-                            type="number"
-                            value={editingPet.age_months}
-                            onChange={(e) =>
-                                setEditingPet({
-                                    ...editingPet,
-                                    age_months: Number(e.target.value),
-                                })
-                            }
-                        />
-                        <p className="text-[10px] text-gray-500 mt-1">Current: {formatAge(editingPet.age_months)}</p>
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Contact Number
-                        </label>
-                        <Input
-                            placeholder="+923..."
-                            value={editingPet.contact_number || ""}
-                            onChange={(e) =>
-                                setEditingPet({
-                                    ...editingPet,
-                                    contact_number: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Description
-                        </label>
-                        <TextArea
-                            placeholder="Description"
-                            rows={4}
-                            value={editingPet.description}
-                            onChange={(e) =>
-                                setEditingPet({
-                                    ...editingPet,
-                                    description: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-
-                    <div className="flex justify-between mb-4">
-                        <button
-                            className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet.listing_type === "adoption"
-                                ? "bg-primary text-white"
-                                : "bg-gray-100"
-                                }`}
-                            onClick={() =>
-                                setEditingPet({
-                                    ...editingPet,
-                                    listing_type: "adoption",
-                                })
-                            }>
-                            Adoption
-                        </button>
-                        <button
-                            className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet.listing_type === "foster"
-                                ? "bg-primary text-white"
-                                : "bg-gray-100"
-                                }`}
-                            onClick={() =>
-                                setEditingPet({
-                                    ...editingPet,
-                                    listing_type: "foster",
-                                })
-                            }>
-                            Foster
-                        </button>
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Price
-                        </label>
-                        <Input
-                            placeholder="Price"
-                            type="number"
-                            value={editingPet.price}
-                            onChange={(e) =>
-                                setEditingPet({
-                                    ...editingPet,
-                                    price: e.target.value,
-                                })
-                            }
-                        // disabled={editingPet.listing_type === "adoption"}
-                        />
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Minimum Age of Children
-                        </label>
-                        <Input
-                            placeholder="Minimum Age of Children"
-                            type="number"
-                            value={editingPet.min_age_of_children}
-                            onChange={(e) =>
-                                setEditingPet({
-                                    ...editingPet,
-                                    min_age_of_children: Number(e.target.value),
-                                })
-                            }
-                        />
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Can live with dogs
-                        </label>
-                        <Checkbox
-                            checked={editingPet.can_live_with_dogs}
-                            onChange={(e) =>
-                                setEditingPet({
-                                    ...editingPet,
-                                    can_live_with_dogs: e.target.checked,
-                                })
-                            }
-                        />
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Can live with cats
-                        </label>
-                        <Checkbox
-                            checked={editingPet.can_live_with_cats}
-                            onChange={(e) =>
-                                setEditingPet({
-                                    ...editingPet,
-                                    can_live_with_cats: e.target.checked,
-                                })
-                            }
-                        />
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Must have someone home
-                        </label>
-                        <Checkbox
-                            checked={editingPet.must_have_someone_home}
-                            onChange={(e) =>
-                                setEditingPet({
-                                    ...editingPet,
-                                    must_have_someone_home: e.target.checked,
-                                })
-                            }
-                        />
-                    </div>
-
-                    {/* Energy Level Slider */}
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Energy Level
-                        </label>
-                        <div className="relative">
-                            <input
-                                type="range"
-                                min="1"
-                                max="5"
-                                className="mt-2 w-full"
-                                value={editingPet.energy_level ?? 3}
-                                onChange={(e) =>
-                                    setEditingPet({
-                                        ...editingPet,
-                                        energy_level: Number(e.target.value),
-                                    })
-                                }
-                                onMouseDown={() => {
-                                    if (editingPet.energy_level === null)
-                                        setEditingPet({
-                                            ...editingPet,
-                                            energy_level: 3,
-                                        });
-                                }}
-                                style={{
-                                    background: editingPet.energy_level
-                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${(editingPet.energy_level - 1) * 25
-                                        }%, #D1D5DB ${(editingPet.energy_level - 1) * 25
-                                        }%, #D1D5DB 100%)`
-                                        : "#D1D5DB important!", // Default background when unselected
-                                }}
-                            />
-                            <div className="w-full flex justify-between -top-2">
-                                <span className="text-sm text-gray-500">
-                                    Chilled
-                                </span>
-                                <span className="text-sm text-gray-500">
-                                    Hyper
-                                </span>
+                                    {updateLoading ? "Saving..." : "Save Changes"}
+                                </button>
                             </div>
                         </div>
                     </div>
+                </div>
+            )}
 
-                    {/* Cuddliness Level Slider */}
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Cuddliness Level
-                        </label>
-                        <div className="relative">
-                            <input
-                                type="range"
-                                min="1"
-                                max="5"
-                                className="mt-2 w-full h-2 rounded-2xl"
-                                value={editingPet.cuddliness_level ?? 3}
-                                onChange={(e) =>
-                                    setEditingPet({
-                                        ...editingPet,
-                                        cuddliness_level: Number(
-                                            e.target.value
-                                        ),
-                                    })
-                                }
-                                onMouseDown={() => {
-                                    if (editingPet.cuddliness_level === null)
-                                        setEditingPet({
-                                            ...editingPet,
-                                            cuddliness_level: 3,
-                                        });
-                                }}
-                                style={{
-                                    background: editingPet.cuddliness_level
-                                        ? `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${(editingPet.cuddliness_level -
-                                            1) *
-                                        25
-                                        }%, #D1D5DB ${(editingPet.cuddliness_level -
-                                            1) *
-                                        25
-                                        }%, #D1D5DB 100%)`
-                                        : "#D1D5DB",
-                                }}
-                            />
-                            <div className="w-full flex justify-between mt-2 text-sm text-gray-500">
-                                <span>Cuddler</span>
-                                <span>Independent</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Health Issues
-                        </label>
-                        <TextArea
-                            placeholder="Health Issues"
-                            rows={2}
-                            value={editingPet.health_issues}
-                            onChange={(e) =>
-                                setEditingPet({
-                                    ...editingPet,
-                                    health_issues: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Sex
-                        </label>
-                        <Select
-                            className="w-full"
-                            value={editingPet.sex}
-                            onChange={(value) =>
-                                setEditingPet({ ...editingPet, sex: value })
-                            }>
-                            <Select.Option value="male">Male</Select.Option>
-                            <Select.Option value="female">Female</Select.Option>
-                        </Select>
-                    </div>
-                    <Checkbox
-                        className="mb-4"
-                        checked={editingPet.vaccinated || false}
-                        onChange={(e) =>
-                            setEditingPet({
-                                ...editingPet,
-                                vaccinated: e.target.checked,
-                            })
-                        }>
-                        Vaccinated
-                    </Checkbox>
-                    <Checkbox
-                        className="mb-4"
-                        checked={editingPet.neutered || false}
-                        onChange={(e) =>
-                            setEditingPet({
-                                ...editingPet,
-                                neutered: e.target.checked,
-                            })
-                        }>
-                        Neutered
-                    </Checkbox>
-                    <div className="flex justify-end gap-4 mt-6">
-                        <button
-                            onClick={handleCancel}
-                            className="px-5 py-2 text-primary rounded-3xl font-semibold border border-primary bg-white transition-colors duration-200">
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleUpdate}
-                            disabled={updateLoading}
-                            className={`px-5 py-2 text-white rounded-3xl font-semibold border border-primary transition-colors duration-200 ${updateLoading ? 'bg-primary opacity-70 cursor-not-allowed' : 'bg-primary'}`}>
-                            {updateLoading ? "Updating..." : "Update"}
-                        </button>
-                    </div>
-                </Modal>
+            {/* Success toast */}
+            {successToast && (
+                <div className="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-lg text-sm font-medium text-white bg-green-500">
+                    Listing updated successfully!
+                </div>
             )}
         </div>
     );

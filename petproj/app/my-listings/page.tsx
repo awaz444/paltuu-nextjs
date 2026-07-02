@@ -2,60 +2,18 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Pet } from "@/components/MyListingGrid";
-import Navbar from "@/components/navbar";
 import MyListingGrid from "@/components/MyListingGrid";
 import "./styles.css";
-import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
-import { MoonLoader } from "react-spinners";
 import Link from "next/link";
-import { Collapse } from "antd";
 import { useAuth } from "@/context/AuthContext";
-import {
-    CheckCircleOutlined,
-    EnvironmentOutlined,
-    DollarOutlined,
-    TeamOutlined,
-    HeartOutlined,
-    MedicineBoxOutlined,
-    SafetyCertificateOutlined,
-} from "@ant-design/icons";
-
-
 
 const ADOPTION_CHECKLIST = [
-    {
-        title: "Stable Home Environment",
-        description:
-            "Applicant has a stable home environment suitable for a pet",
-        icon: <EnvironmentOutlined />,
-    },
-    {
-        title: "Household Agreement",
-        description: "All household members are on board with the adoption",
-        icon: <TeamOutlined />,
-    },
-    {
-        title: "Experience & Research",
-        description:
-            "Applicant has prior experience with pets or has done research",
-        icon: <SafetyCertificateOutlined />,
-    },
-    {
-        title: "Financial Capability",
-        description:
-            "Financially capable of covering pet expenses (food, vet, etc.)",
-        icon: <DollarOutlined />,
-    },
-    {
-        title: "Veterinary Care",
-        description: "Willing to provide regular vet visits and vaccinations",
-        icon: <MedicineBoxOutlined />,
-    },
-    {
-        title: "Time Commitment",
-        description: "Has time to properly care for and socialize with the pet",
-        icon: <HeartOutlined />,
-    },
+    { title: "Stable Home Environment", description: "Applicant has a stable home environment suitable for a pet", icon: "🏠" },
+    { title: "Household Agreement", description: "All household members are on board with the adoption", icon: "👨‍👩‍👧" },
+    { title: "Experience & Research", description: "Applicant has prior experience with pets or has done research", icon: "📋" },
+    { title: "Financial Capability", description: "Financially capable of covering pet expenses (food, vet, etc.)", icon: "💳" },
+    { title: "Veterinary Care", description: "Willing to provide regular vet visits and vaccinations", icon: "🏥" },
+    { title: "Time Commitment", description: "Has time to properly care for and socialise with the pet", icon: "❤️" },
 ];
 
 const UserListingsPage = () => {
@@ -63,226 +21,134 @@ const UserListingsPage = () => {
     const [listings, setListings] = useState<Pet[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [primaryColor, setPrimaryColor] = useState("#000000");
+    const [whyOpen, setWhyOpen] = useState(false);
     const lastFetchedUserId = useRef<string | null>(null);
     const isFetching = useRef(false);
 
     useEffect(() => {
-        if (!isAuthenticated || !user?.id) {
-            setIsLoading(false);
-            return;
-        }
-
-        // Deduplication: Don't fetch if already fetching or if we already fetched for this user
-        if (isFetching.current || lastFetchedUserId.current === user.id) {
-            setIsLoading(false);
-            return;
-        }
+        if (!isAuthenticated || !user?.id) { setIsLoading(false); return; }
+        if (isFetching.current || lastFetchedUserId.current === user.id) { setIsLoading(false); return; }
 
         const fetchData = async () => {
             try {
                 isFetching.current = true;
                 setIsLoading(true);
-
-                // Fetch regular listings using token-based authentication
-                const listingsResponse = await fetch('/api/v1/profile/listings', {
-                    method: 'GET',
-                    credentials: 'include', // Include cookies for authentication
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (!listingsResponse.ok) {
-                    throw new Error("Failed to fetch listings");
-                }
-                const listingsData = await listingsResponse.json();
-                setListings(listingsData.listings || []);
+                const res = await fetch("/api/v1/profile/listings", { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } });
+                if (!res.ok) throw new Error("Failed to fetch listings");
+                const data = await res.json();
+                setListings(data.listings || []);
                 lastFetchedUserId.current = user.id!;
-
-                setIsLoading(false);
             } catch (err) {
-                if (err instanceof Error) {
-                    setError(err.message);
-                } else {
-                    setError("An unknown error occurred");
-                }
-                setIsLoading(false);
+                setError(err instanceof Error ? err.message : "An unknown error occurred");
             } finally {
+                setIsLoading(false);
                 isFetching.current = false;
             }
         };
-
         fetchData();
     }, [user?.id, isAuthenticated]);
 
-    useEffect(() => {
-        const rootStyles = getComputedStyle(document.documentElement);
-        const color = rootStyles.getPropertyValue("--primary-color").trim();
-        if (color) {
-            setPrimaryColor(color);
-        }
-    }, []);
-
-    // Authentication check - moved after all hooks
     if (!isAuthenticated || !user) {
         return (
-            <div className="flex flex-col justify-center items-center min-h-screen text-center">
-                <MoonLoader size={30} color={primaryColor} />
-                <p className="mt-4 text-gray-600">Please log in to view your listings.</p>
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+                <div className="bg-white rounded-3xl p-10 shadow-sm text-center max-w-sm w-full mx-4">
+                    <p className="text-gray-500 mb-5 text-sm">Please log in to view your listings.</p>
+                    <Link href="/auth" className="bg-primary text-white px-6 py-3 rounded-2xl font-medium inline-block">Sign In</Link>
+                </div>
             </div>
         );
     }
 
-    if (isLoading)
+    if (isLoading) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <MoonLoader size={30} color={primaryColor} />
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+                <div className="w-8 h-8 border-[3px] border-[#a03048] border-t-transparent rounded-full animate-spin" />
             </div>
         );
+    }
 
-    if (error)
+    if (error) {
         return (
-            <div className="flex justify-center items-center min-h-screen text-red-600">
-                Error: {error}
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+                <div className="bg-white rounded-3xl p-10 shadow-sm text-center max-w-sm w-full mx-4">
+                    <p className="text-red-500 text-sm mb-5">{error}</p>
+                    <button onClick={() => window.location.reload()} className="bg-primary text-white px-6 py-3 rounded-2xl font-medium">Retry</button>
+                </div>
             </div>
         );
+    }
 
     return (
-        <>
+        <main className="min-h-screen bg-gray-100">
+            {/* Slim banner */}
+            <div className="bg-white border-b border-gray-100">
+                <div style={{ maxWidth: "90%", margin: "0 auto" }} className="py-6 px-4 md:px-8">
+                    <h1 className="text-2xl font-bold text-gray-900">My Listings</h1>
+                    {user.name && <p className="text-gray-500 text-sm mt-0.5">Hi, <span className="font-medium text-gray-700">{user.name}</span></p>}
+                </div>
+            </div>
 
-            <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
-                <header className="bg-white text-primary border border-1 border-primary p-8 rounded-2xl shadow-lg mb-10">
-                    <div className="flex flex-col md:flex-row items-center gap-6">
-                        <div className="bg-primary flex-shrink-0 w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center shadow-lg">
-                            <img className="p-3" src="/favicon-dark.png" alt="paltuu logo" />
-                        </div>
-
-                        <div className="text-center md:text-left">
-                            <h1 className="text-3xl text-black md:text-4xl font-bold mb-2">My Listings</h1>
-                        </div>
-                    </div>
-                </header>
-                {/* Conditional rendering based on whether listings exist */}
+            <div style={{ maxWidth: "90%", margin: "0 auto" }} className="py-8 px-4 md:px-8">
                 {listings.length === 0 ? (
-                    <div className="w-full max-w-4xl mt-8 text-center">
-                        <div className="bg-white p-8 rounded-xl shadow-sm">
-                            <svg
-                                className="w-16 h-16 mx-auto text-gray-400 mb-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
+                    <div className="bg-white rounded-3xl p-12 shadow-sm text-center max-w-lg mx-auto">
+                        <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-                                No Listings Yet
-                            </h2>
-                            <p className="text-gray-600 mb-6">
-                                You haven't created any adoption listings yet.
-                            </p>
-                            <Link href="/create-listing">
-                                <button
-                                    type="button"
-                                    className="px-6 py-3 bg-primary text-white rounded-3xl hover:bg-dark transition-all duration-300">
-                                    Create Your First Listing
-                                </button>
-                            </Link>
                         </div>
+                        <h2 className="text-lg font-semibold text-gray-800 mb-2">No Listings Yet</h2>
+                        <p className="text-gray-500 text-sm mb-6">You haven't created any adoption listings yet.</p>
+                        <Link href="/create-listing" className="bg-primary text-white px-6 py-3 rounded-2xl font-medium inline-block">Create Your First Listing</Link>
                     </div>
                 ) : (
                     <>
-                        <div className="w-full max-w-4xl mt-6 mb-8 bg-white rounded-xl shadow-sm overflow-hidden">
-                            <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
-                                <h2 className="text-2xl font-semibold mb-2 text-gray-800">
-                                    Adoption Readiness Checklist
-                                </h2>
-                                <p className="text-gray-600">
-                                    Complete these requirements to ensure a
-                                    successful adoption process
-                                </p>
+                        {/* Adoption Readiness Checklist */}
+                        <div className="bg-white rounded-3xl shadow-sm mb-8">
+                            <div className="p-6 border-b border-gray-100">
+                                <h2 className="text-base font-semibold text-gray-900">Adoption Readiness Checklist</h2>
+                                <p className="text-gray-500 text-sm mt-0.5">Ensure a successful adoption process for your listing</p>
                             </div>
-
                             <div className="p-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {ADOPTION_CHECKLIST.map((item, index) => (
-                                        <div
-                                            key={index}
-                                            className="border border-gray-200 rounded-lg p-4 flex items-start transition-all duration-300 hover:border-primary hover:shadow-sm">
-                                            <div className="rounded-full p-2 mr-3 bg-gray-100 text-gray-600">
-                                                {item.icon}
-                                            </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {ADOPTION_CHECKLIST.map((item, i) => (
+                                        <div key={i} className="border border-gray-100 rounded-2xl p-4 flex items-start gap-3 hover:border-primary transition-colors">
+                                            <span className="text-xl flex-shrink-0 leading-none">{item.icon}</span>
                                             <div>
-                                                <h3 className="font-medium text-gray-800">
-                                                    {item.title}
-                                                </h3>
-                                                <p className="text-sm text-gray-600 mt-1">
-                                                    {item.description}
-                                                </p>
+                                                <h3 className="font-medium text-gray-800 text-sm">{item.title}</h3>
+                                                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{item.description}</p>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
 
-                                <Collapse
-                                    bordered={false}
-                                    className="bg-transparent mt-6"
-                                    expandIconPosition="end"
-                                    items={[
-                                        {
-                                            key: "1",
-                                            className: "border-0",
-                                            label: (
-                                                <span className="font-medium text-primary">
-                                                    Why are these checks important?
-                                                </span>
-                                            ),
-                                            children: (
-                                                <div className="text-gray-600 text-sm pl-5">
-                                                    <ul className="list-disc space-y-2">
-                                                        <li>
-                                                            These requirements help
-                                                            ensure pets are placed in
-                                                            safe, loving, and permanent
-                                                            homes
-                                                        </li>
-                                                        <li>
-                                                            They minimize the risk of
-                                                            pets being returned or
-                                                            rehomed
-                                                        </li>
-                                                        <li>
-                                                            They help match pets with
-                                                            owners who can properly care
-                                                            for them
-                                                        </li>
-                                                        <li>
-                                                            They ensure adopters
-                                                            understand the
-                                                            responsibilities of pet
-                                                            ownership
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            )
-                                        }
-                                    ]}
-                                />
+                                {/* Custom accordion */}
+                                <div className="mt-4 pt-4 border-t border-gray-100">
+                                    <button
+                                        onClick={() => setWhyOpen(!whyOpen)}
+                                        className="flex items-center justify-between w-full text-left text-sm font-medium text-primary"
+                                    >
+                                        <span>Why are these checks important?</span>
+                                        <svg className={`w-4 h-4 transition-transform duration-200 ${whyOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    {whyOpen && (
+                                        <ul className="mt-3 pl-4 space-y-2 text-sm text-gray-500 list-disc">
+                                            <li>Ensures pets are placed in safe, loving, and permanent homes</li>
+                                            <li>Minimises the risk of pets being returned or rehomed</li>
+                                            <li>Helps match pets with owners who can properly care for them</li>
+                                            <li>Ensures adopters understand the responsibilities of pet ownership</li>
+                                        </ul>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
-                        <div className="mt-6 w-full max-w-6xl mb-3">
-                            <MyListingGrid pets={listings} />
-                        </div>
+                        <MyListingGrid pets={listings} />
                     </>
                 )}
             </div>
-        </>
+        </main>
     );
 };
 

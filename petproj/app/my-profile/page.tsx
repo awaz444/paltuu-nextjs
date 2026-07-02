@@ -1,526 +1,704 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import Navbar from "@/components/navbar";
-import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
+import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import {
-  CameraOutlined,
-  LockOutlined,
-  EditOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  UserOutlined,
-  MailOutlined,
-  SafetyOutlined,
-} from "@ant-design/icons";
 import { format } from "date-fns";
-import { Modal, Input, Form, message } from "antd";
-import { MoonLoader } from "react-spinners";
-import { motion, AnimatePresence } from "framer-motion";
+import { AtSign, Camera, Check, ChevronRight, Edit2, Eye, EyeOff, Lock, Mail, Shield, User, X } from "lucide-react";
+import Link from "next/link";
 import "./styles.css";
 
 interface UserProfileData {
-  user_id: string;
-  name: string;
-  email: string;
-  profile_image_url: string;
-  created_at: string;
+    user_id: string;
+    name: string;
+    email: string;
+    profile_image_url: string;
+    created_at: string;
+    social_username?: string;
 }
 
+interface ListingSnippet {
+    pet_id: number;
+    pet_name: string;
+    image_url: string | null;
+    primary_image?: string | null;
+    approved: boolean | null;
+    listing_type: string;
+}
 
-const passwordRegex =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+interface ApplicationSnippet {
+    application_id: string;
+    application_type: string;
+    pet_name: string;
+    image_url: string;
+    status: string;
+    created_at: string;
+}
+
+type UsernameStatus = "idle" | "checking" | "available" | "taken" | "invalid";
+
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 const MyProfile = () => {
-  const { user, isAuthenticated, refreshUser } = useAuth();
-  const [data, setData] = useState<UserProfileData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [updatedData, setUpdatedData] = useState<UserProfileData | null>(null);
-  const [imageLoading, setImageLoading] = useState(false);
-  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
-  const [passwordForm] = Form.useForm();
+    const { user, isAuthenticated, refreshUser } = useAuth();
+    const [data, setData] = useState<UserProfileData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [editing, setEditing] = useState(false);
+    const [updatedData, setUpdatedData] = useState<UserProfileData | null>(null);
+    const [imageLoading, setImageLoading] = useState(false);
 
-  const handlePersonalInfoChange = (
-    field: keyof UserProfileData,
-    value: string
-  ) => {
-    setUpdatedData((prev) =>
-      prev
-        ? {
-          ...prev,
-          [field]: value,
-        }
-        : null
-    );
-  };
+    // Username state
+    const [usernameInput, setUsernameInput] = useState("");
+    const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>("idle");
+    const [usernameError, setUsernameError] = useState("");
+    const usernameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handlePasswordChange = async (values: {
-    currentPassword: string;
-    newPassword: string;
-    confirmPassword: string;
-  }) => {
-    try {
-      if (values.newPassword !== values.confirmPassword) {
-        throw new Error("New passwords don't match");
-      }
+    // Listings + applications on profile
+    const [listings, setListings] = useState<ListingSnippet[]>([]);
+    const [applications, setApplications] = useState<ApplicationSnippet[]>([]);
 
-      if (!passwordRegex.test(values.newPassword)) {
-        throw new Error(
-          "Password must contain at least 8 characters, including uppercase, lowercase, number, and special character"
-        );
-      }
+    // Password modal
+    const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+    const [pwValues, setPwValues] = useState({ current: "", newPw: "", confirm: "" });
+    const [pwErrors, setPwErrors] = useState<Record<string, string>>({});
+    const [showPw, setShowPw] = useState({ current: false, newPw: false, confirm: false });
+    const [pwLoading, setPwLoading] = useState(false);
 
-      const res = await fetch(`/api/v1/profile/password`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          currentPassword: values.currentPassword,
-          newPassword: values.newPassword,
-        }),
-      });
+    // Toast
+    const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Password change failed");
-      }
-
-      message.success("Password changed successfully");
-      setPasswordModalVisible(false);
-      passwordForm.resetFields();
-    } catch (error: any) {
-      message.error(error.message || "Failed to change password");
-    }
-  };
-
-  const fetchedRef = React.useRef(false);
-
-  useEffect(() => {
-    const loadUserData = async () => {
-      if (!isAuthenticated || !user?.id || fetchedRef.current) {
-        if (!isAuthenticated || !user?.id) setLoading(false);
-        return;
-      }
-
-      try {
-        fetchedRef.current = true;
-        const res = await fetch(`/api/v1/profile`);
-        if (!res.ok) throw new Error("Failed to fetch profile");
-        const profileData = await res.json();
-
-        const finalProfileData = {
-          ...profileData,
-          name: (profileData.name && profileData.name.trim()) || user.name || "User",
-          profile_image_url: (profileData.profile_image_url && profileData.profile_image_url.trim()) || user.profile_image_url || "/default-avatar.png",
-        };
-
-        setData(finalProfileData);
-        setUpdatedData(finalProfileData);
-      } catch (error) {
-        console.error("Error loading data:", error);
-        const fallbackData = {
-          user_id: user.id,
-          name: user.name || "User",
-          email: user.email || "",
-          profile_image_url: user.profile_image_url || "/default-avatar.png",
-          created_at: new Date().toISOString(),
-        };
-        setData(fallbackData);
-        setUpdatedData(fallbackData);
-      } finally {
-        setLoading(false);
-      }
+    const showToast = (type: "success" | "error", text: string) => {
+        setToast({ type, text });
+        setTimeout(() => setToast(null), 3000);
     };
 
-    loadUserData();
-  }, [isAuthenticated, user]);
+    const fetchedRef = useRef(false);
 
-  const handleImageUpload = async (file: File) => {
-    if (!user?.id) return;
+    useEffect(() => {
+        const loadUserData = async () => {
+            if (!isAuthenticated || !user?.id || fetchedRef.current) {
+                if (!isAuthenticated || !user?.id) setLoading(false);
+                return;
+            }
 
-    setImageLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+            try {
+                fetchedRef.current = true;
 
-      const uploadRes = await fetch(`/api/v1/profile/avatar`, {
-        method: "POST",
-        body: formData,
-      });
+                const [profileRes, listingsRes, appsRes] = await Promise.all([
+                    fetch("/api/v1/profile"),
+                    fetch("/api/v1/profile/listings", { credentials: "include" }),
+                    fetch("/api/v1/applications/my", { credentials: "include" }),
+                ]);
 
-      if (!uploadRes.ok) throw new Error("Upload failed");
-      const { url } = await uploadRes.json();
+                if (!profileRes.ok) throw new Error("Failed to fetch profile");
+                const profileData = await profileRes.json();
+                const finalProfileData = {
+                    ...profileData,
+                    name: (profileData.name && profileData.name.trim()) || user.name || "User",
+                    profile_image_url: (profileData.profile_image_url && profileData.profile_image_url.trim()) || user.profile_image_url || "/default-avatar.png",
+                };
+                setData(finalProfileData);
+                setUpdatedData(finalProfileData);
 
-      setUpdatedData((prev) =>
-        prev ? { ...prev, profile_image_url: url } : null
-      );
-      setData((prev) => (prev ? { ...prev, profile_image_url: url } : null));
+                if (listingsRes.ok) {
+                    const ld = await listingsRes.json();
+                    setListings((ld.listings || []).slice(0, 3));
+                }
+                if (appsRes.ok) {
+                    const ad = await appsRes.json();
+                    setApplications((ad.applications || []).slice(0, 3));
+                }
+            } catch {
+                const fallback = {
+                    user_id: user.id,
+                    name: user.name || "User",
+                    email: user.email || "",
+                    profile_image_url: user.profile_image_url || "/default-avatar.png",
+                    created_at: new Date().toISOString(),
+                };
+                setData(fallback);
+                setUpdatedData(fallback);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadUserData();
+    }, [isAuthenticated, user]);
 
-      // Refresh the AuthContext to update navbar
-      await refreshUser();
-    } catch (error) {
-      Modal.error({
-        title: "Upload Failed",
-        content: "Could not update profile image",
-      });
-    } finally {
-      setImageLoading(false);
-    }
-  };
+    // Debounced username availability check
+    useEffect(() => {
+        if (!editing) return;
 
-  const [primaryColor, setPrimaryColor] = useState("#A03048");
+        const savedUsername = data?.social_username || "";
+        const trimmed = usernameInput.trim();
 
-  useEffect(() => {
-    const rootStyles = getComputedStyle(document.documentElement);
-    const color = rootStyles.getPropertyValue("--primary-color").trim();
-    if (color) {
-      setPrimaryColor(color);
-    }
-  }, []);
+        // If unchanged from saved value, no need to check
+        if (trimmed === savedUsername) {
+            setUsernameStatus("idle");
+            setUsernameError("");
+            return;
+        }
 
-  const handleSaveChanges = async () => {
-    if (!user?.id || !updatedData) return;
+        // Empty — clear status
+        if (!trimmed) {
+            setUsernameStatus("idle");
+            setUsernameError("");
+            return;
+        }
 
-    try {
-      const res = await fetch(`/api/v1/profile`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedData),
-      });
+        setUsernameStatus("checking");
 
-      if (!res.ok) throw new Error("Update failed");
+        if (usernameDebounceRef.current) clearTimeout(usernameDebounceRef.current);
 
-      const result = await res.json();
-      setData(result.user);
-      setUpdatedData(result.user);
-      setEditing(false);
+        usernameDebounceRef.current = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/v1/social/username/check?q=${encodeURIComponent(trimmed)}`);
+                const json = await res.json();
+                if (!json.valid) {
+                    setUsernameStatus("invalid");
+                    setUsernameError(json.error || "Invalid username format");
+                } else if (json.available) {
+                    setUsernameStatus("available");
+                    setUsernameError("");
+                } else {
+                    setUsernameStatus("taken");
+                    setUsernameError("Username is already taken");
+                }
+            } catch {
+                setUsernameStatus("idle");
+                setUsernameError("");
+            }
+        }, 400);
 
-      // Refresh the AuthContext to update navbar
-      await refreshUser();
+        return () => {
+            if (usernameDebounceRef.current) clearTimeout(usernameDebounceRef.current);
+        };
+    }, [usernameInput, editing, data?.social_username]);
 
-      message.success({
-        content: "Profile updated successfully",
-        duration: 3,
-      });
-    } catch (error) {
-      message.error({
-        content: "Failed to update profile",
-        duration: 3,
-      });
-    }
-  };
+    const handleEditStart = () => {
+        setUsernameInput(data?.social_username || "");
+        setUsernameStatus("idle");
+        setUsernameError("");
+        setEditing(true);
+    };
 
-  const handleCancel = () => {
-    setUpdatedData(data);
-    setEditing(false);
-  };
+    const handleImageUpload = async (file: File) => {
+        if (!user?.id) return;
+        setImageLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            const uploadRes = await fetch("/api/v1/profile/avatar", { method: "POST", body: formData });
+            if (!uploadRes.ok) throw new Error("Upload failed");
+            const { url } = await uploadRes.json();
+            setUpdatedData((prev) => prev ? { ...prev, profile_image_url: url } : null);
+            setData((prev) => (prev ? { ...prev, profile_image_url: url } : null));
+            await refreshUser();
+        } catch {
+            showToast("error", "Could not update profile image");
+        } finally {
+            setImageLoading(false);
+        }
+    };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center h-screen gap-6 bg-white font-Montserrat">
-        <MoonLoader size={30} color={primaryColor} />
-        <p className="text-gray-400 font-bold uppercase tracking-[0.3em] text-xs">Authenticating Profile</p>
-      </div>
-    );
-  }
+    const handleSaveChanges = async () => {
+        if (!user?.id || !updatedData) return;
 
-  if (!isAuthenticated || !user || !data || !updatedData) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-white font-Montserrat px-8 text-center">
-        <div className="max-w-md">
-          <h1 className="text-4xl font-black text-gray-900 mb-4">Unauthorized</h1>
-          <p className="text-gray-500 font-medium mb-8">Please log in to manage your premium profile settings.</p>
-          <button
-            onClick={() => window.location.href = '/auth'}
-            className="px-8 py-4 bg-primary text-white font-black rounded-3xl shadow-xl shadow-primary/20 hover:scale-105 transition-all">
-            Sign In Now
-          </button>
-        </div>
-      </div>
-    );
-  }
-  return (
-    <>
-      <div className="min-h-screen bg-gray-50/50 pb-20 font-Montserrat">
-        <div className="max-w-5xl mx-auto px-6 pt-12">
+        const savedUsername = data?.social_username || "";
+        const trimmedUsername = usernameInput.trim();
+        const usernameChanged = trimmedUsername !== savedUsername;
 
-          {/* Header Section */}
-          <motion.header
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)] mb-12 flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex items-center gap-8">
-              <div className="w-20 h-20 rounded-[1.5rem] bg-primary flex items-center justify-center p-4 shadow-2xl shadow-primary/30">
-                <img src="/favicon-dark.png" alt="logo" className="w-full h-full object-contain" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-black text-gray-900 leading-tight">My Profile</h1>
-                <p className="text-gray-400 font-bold uppercase tracking-[0.2em] text-[10px] sm:text-xs">Security & Account Identity</p>
-              </div>
+        // Block save if username check is in progress or failed
+        if (usernameChanged && trimmedUsername) {
+            if (usernameStatus === "checking") {
+                showToast("error", "Please wait for username check to finish");
+                return;
+            }
+            if (usernameStatus === "taken" || usernameStatus === "invalid") {
+                showToast("error", usernameError || "Fix the username before saving");
+                return;
+            }
+        }
+
+        try {
+            const profilePromise = fetch("/api/v1/profile", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: updatedData.name }),
+            });
+
+            // Only call social update if something related to it changed
+            const socialPromise = (usernameChanged || updatedData.name !== data?.name)
+                ? fetch("/api/v1/social/profile/update", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        name: updatedData.name,
+                        ...(usernameChanged && { social_username: trimmedUsername }),
+                    }),
+                  })
+                : null;
+
+            const [profileRes, socialRes] = await Promise.all([profilePromise, socialPromise]);
+
+            if (!profileRes.ok) throw new Error("Update failed");
+
+            if (socialRes && !socialRes.ok) {
+                const err = await socialRes.json();
+                if (socialRes.status === 409) {
+                    setUsernameStatus("taken");
+                    setUsernameError("Username is already taken");
+                    showToast("error", "That username is already taken");
+                    return;
+                }
+                throw new Error(err.message || "Username update failed");
+            }
+
+            const result = await profileRes.json();
+            const socialResult = socialRes ? await socialRes.json().catch(() => null) : null;
+
+            const newData: UserProfileData = {
+                ...result.user,
+                social_username: socialResult?.user?.social_username ?? (usernameChanged ? trimmedUsername : data?.social_username),
+            };
+
+            setData(newData);
+            setUpdatedData(newData);
+            setUsernameInput(newData.social_username || "");
+            setUsernameStatus("idle");
+            setEditing(false);
+            await refreshUser();
+            showToast("success", "Profile updated successfully");
+        } catch {
+            showToast("error", "Failed to update profile");
+        }
+    };
+
+    const handleCancel = () => {
+        setUpdatedData(data);
+        setUsernameInput(data?.social_username || "");
+        setUsernameStatus("idle");
+        setUsernameError("");
+        setEditing(false);
+    };
+
+    const validatePassword = () => {
+        const errors: Record<string, string> = {};
+        if (!pwValues.current) errors.current = "Required";
+        if (!pwValues.newPw) errors.newPw = "Required";
+        else if (!passwordRegex.test(pwValues.newPw)) errors.newPw = "Min 8 chars with uppercase, lowercase, number & special character";
+        if (!pwValues.confirm) errors.confirm = "Required";
+        else if (pwValues.newPw !== pwValues.confirm) errors.confirm = "Passwords don't match";
+        return errors;
+    };
+
+    const handlePasswordSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const errors = validatePassword();
+        if (Object.keys(errors).length > 0) { setPwErrors(errors); return; }
+        setPwLoading(true);
+        try {
+            const res = await fetch("/api/v1/profile/password", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ currentPassword: pwValues.current, newPassword: pwValues.newPw }),
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message || "Password change failed");
+            }
+            showToast("success", "Password changed successfully");
+            setPasswordModalOpen(false);
+            setPwValues({ current: "", newPw: "", confirm: "" });
+            setPwErrors({});
+        } catch (error: any) {
+            showToast("error", error.message || "Failed to change password");
+        } finally {
+            setPwLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center gap-3">
+                <div className="w-8 h-8 border-[3px] border-[#a03048] border-t-transparent rounded-full animate-spin" />
+                <p className="text-xs text-gray-400 uppercase tracking-widest font-medium">Loading Profile</p>
             </div>
+        );
+    }
 
-            <div className="flex items-center gap-4">
-              <AnimatePresence mode="wait">
-                {editing ? (
-                  <motion.div
-                    key="editing-btns"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="flex gap-4">
-                    <button
-                      onClick={handleCancel}
-                      className="h-14 px-8 rounded-3xl border-2 border-gray-100 text-gray-400 font-black hover:bg-gray-50 transition-all flex items-center gap-2">
-                      <CloseOutlined />
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveChanges}
-                      className="h-14 px-10 rounded-3xl bg-primary text-white font-black shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
-                      <CheckOutlined />
-                      Save Profile
-                    </button>
-                  </motion.div>
-                ) : (
-                  <motion.button
-                    key="edit-btn"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    onClick={() => setEditing(true)}
-                    className="h-14 px-12 rounded-3xl bg-primary text-white font-black shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
-                    <EditOutlined />
-                    Edit Personal Info
-                  </motion.button>
-                )}
-              </AnimatePresence>
+    if (!isAuthenticated || !user || !data || !updatedData) {
+        return (
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+                <div className="bg-white rounded-3xl p-10 shadow-sm text-center max-w-sm w-full mx-4">
+                    <h1 className="text-xl font-bold text-gray-900 mb-2">Sign in required</h1>
+                    <p className="text-gray-500 text-sm mb-6">Please log in to manage your profile.</p>
+                    <button onClick={() => (window.location.href = "/auth")} className="bg-primary text-white px-8 py-3 rounded-2xl font-medium w-full">Sign In</button>
+                </div>
             </div>
-          </motion.header>
+        );
+    }
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+    const statusColors: Record<string, string> = {
+        pending: "bg-yellow-50 text-yellow-700",
+        approved: "bg-green-50 text-green-700",
+        rejected: "bg-red-50 text-red-700",
+    };
 
-            {/* Left Side: Identity */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="lg:col-span-12 xl:col-span-4 space-y-12">
+    const UsernameStatusBadge = () => {
+        if (usernameStatus === "checking") {
+            return (
+                <span className="flex items-center gap-1 text-xs text-gray-400">
+                    <span className="w-3 h-3 border-[2px] border-gray-400 border-t-transparent rounded-full animate-spin inline-block" />
+                    Checking…
+                </span>
+            );
+        }
+        if (usernameStatus === "available") {
+            return <span className="flex items-center gap-1 text-xs text-green-600 font-medium"><Check size={12} /> Available</span>;
+        }
+        if (usernameStatus === "taken" || usernameStatus === "invalid") {
+            return <span className="flex items-center gap-1 text-xs text-red-500"><X size={12} /> {usernameError}</span>;
+        }
+        return null;
+    };
 
-              <div className="bg-white rounded-[3rem] p-12 border border-gray-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)] text-center">
-                <div className="relative inline-block group">
-                  <div className="w-48 h-48 rounded-[3.5rem] bg-gradient-to-br from-primary/20 to-primary/5 p-2 shadow-inner">
-                    <img
-                      className="w-full h-full rounded-[3rem] object-cover border-8 border-white shadow-2xl"
-                      src={data.profile_image_url || "/placeholder.jpg"}
-                      alt={data.name}
-                    />
-                  </div>
-
-                  {editing && (
-                    <div className="absolute inset-4 rounded-[2.5rem] bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center cursor-pointer">
-                      <input
-                        type="file"
-                        id="profileImage"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-                      />
-                      <label htmlFor="profileImage" className="cursor-pointer flex flex-col items-center">
-                        {imageLoading ? (
-                          <MoonLoader size={20} color={primaryColor} />
-                        ) : (
-                          <div className="bg-primary p-4 rounded-3xl shadow-xl shadow-primary/30 transform transition-transform hover:scale-110 active:scale-95">
-                            <CameraOutlined className="text-2xl text-white" />
-                          </div>
-                        )}
-                        <span className="text-white text-[10px] font-black uppercase tracking-widest mt-4">Change Photo</span>
-                      </label>
+    return (
+        <main className="min-h-screen bg-gray-100 pb-16">
+            {/* Slim banner */}
+            <div className="bg-white border-b border-gray-100">
+                <div style={{ maxWidth: "90%", margin: "0 auto" }} className="py-6 px-4 md:px-8 flex items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+                        <p className="text-gray-500 text-sm mt-0.5">
+                            Hi, <span className="font-medium text-gray-700">{data.name}</span>
+                            {data.social_username && (
+                                <span className="ml-2 text-primary font-medium">@{data.social_username}</span>
+                            )}
+                        </p>
                     </div>
-                  )}
-                </div>
 
-                <div className="mt-10">
-                  <h2 className="text-3xl font-black text-gray-900 truncate">{data.name}</h2>
-                  <div className="flex items-center justify-center gap-2 mt-2">
-                    <SafetyOutlined className="text-primary" />
-                    <span className="text-gray-400 font-bold uppercase tracking-[0.2em] text-[10px]">Verified Member</span>
-                  </div>
-                </div>
-
-                <div className="mt-12 pt-12 border-t border-gray-50 flex justify-center gap-12">
-                  <div className="text-center">
-                    <div className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Member Since</div>
-                    <div className="text-xl font-black text-gray-900">
-                      {data.created_at && !isNaN(new Date(data.created_at).getTime())
-                        ? format(new Date(data.created_at), "MMM yyyy")
-                        : "N/A"}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Right Side: Account Details */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="lg:col-span-12 xl:col-span-8 flex flex-col gap-12">
-
-              <div className="bg-white rounded-[3rem] p-12 border border-gray-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)] h-full">
-                <div className="flex items-center gap-4 mb-12">
-                  <UserOutlined className="text-2xl text-primary" />
-                  <h3 className="text-2xl font-black text-gray-900">Personal Details</h3>
-                </div>
-
-                <div className="flex flex-col gap-8">
-                  <div className="p-8 rounded-3xl bg-gray-50/50 border border-gray-50 space-y-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary/40 block leading-none">Full Account Name</label>
-                    {editing ? (
-                      <input
-                        type="text"
-                        value={updatedData?.name || ""}
-                        onChange={(e) => handlePersonalInfoChange("name", e.target.value)}
-                        className="w-full bg-white px-6 py-4 rounded-2xl border-2 border-gray-100 focus:border-primary transition-all font-black"
-                      />
-                    ) : (
-                      <div className="text-xl font-black text-gray-900 truncate" title={updatedData?.name}>{updatedData?.name}</div>
-                    )}
-                  </div>
-
-                  <div className="p-8 rounded-3xl bg-gray-50/50 border border-gray-50 space-y-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary/40 block leading-none">Email</label>
                     <div className="flex items-center gap-3">
-                      <MailOutlined className="text-primary flex-shrink-0" />
-                      <div className="text-xl font-black text-gray-900" title={data.email}>
-                        {data.email}
-                      </div>
+                        {editing ? (
+                            <>
+                                <button onClick={handleCancel} className="flex items-center gap-1.5 px-4 py-2.5 border-2 border-gray-200 text-gray-600 rounded-2xl text-sm font-medium hover:border-gray-300 transition-colors">
+                                    <X size={14} /> Cancel
+                                </button>
+                                <button onClick={handleSaveChanges} className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white rounded-2xl text-sm font-medium hover:opacity-90 transition-opacity">
+                                    <Check size={14} /> Save
+                                </button>
+                            </>
+                        ) : (
+                            <button onClick={handleEditStart} className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white rounded-2xl text-sm font-medium hover:opacity-90 transition-opacity">
+                                <Edit2 size={14} /> Edit Profile
+                            </button>
+                        )}
                     </div>
-                  </div>
                 </div>
-
-                {/* Security Section */}
-                <div className="mt-16 pt-12 border-t border-gray-50">
-                  <div className="flex items-center gap-4 mb-10">
-                    <LockOutlined className="text-2xl text-primary" />
-                    <h3 className="text-2xl font-black text-gray-900">Password Settings</h3>
-                  </div>
-
-                  <div className="flex flex-col md:flex-row items-center gap-8 bg-black/[0.02] p-8 rounded-[2.5rem] border border-gray-50">
-                    <div className="text-gray-500 font-medium">Protect your account with a strong password.</div>
-                    <button
-                      onClick={() => setPasswordModalVisible(true)}
-                      className="h-14 px-10 rounded-2xl bg-white border-2 border-gray-100 text-gray-900 font-black shadow-sm transition-all hover:shadow-xl hover:scale-[1.02] active:scale-95 flex items-center gap-3 whitespace-nowrap ml-auto">
-                      <LockOutlined className="text-primary" />
-                      Change Password
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Updated Password Modal */}
-        <Modal
-          title={null}
-          open={passwordModalVisible}
-          onCancel={() => setPasswordModalVisible(false)}
-          footer={null}
-          destroyOnClose
-          width={500}
-          className="premium-modal"
-          centered
-        >
-          <div className="p-10 font-Montserrat">
-            <div className="flex items-center gap-4 mb-10">
-              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
-                <LockOutlined className="text-3xl text-primary" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-black text-gray-900">Credentials Refactor</h2>
-                <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Update your security layer</p>
-              </div>
             </div>
 
-            <Form
-              form={passwordForm}
-              layout="vertical"
-              onFinish={handlePasswordChange}
-              className="space-y-6"
-            >
-              <Form.Item
-                name="currentPassword"
-                rules={[{ required: true, message: "Required" }]}
-                className="mb-0"
-              >
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest font-black text-primary/40">Current Security Key</label>
-                  <Input.Password
-                    placeholder="••••••••"
-                    size="large"
-                    className="h-16 rounded-2xl border-2 border-gray-50 bg-gray-50/50 focus:bg-white font-black"
-                  />
-                </div>
-              </Form.Item>
+            <div style={{ maxWidth: "90%", margin: "0 auto" }} className="py-8 px-4 md:px-8 space-y-6">
 
-              <Form.Item
-                name="newPassword"
-                rules={[
-                  { required: true, message: "Required" },
-                  { validator: (_, value) => !value || passwordRegex.test(value) ? Promise.resolve() : Promise.reject("Invalid complexity") }
-                ]}
-                className="mb-0"
-              >
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest font-black text-primary/40">New Security Key</label>
-                  <Input.Password
-                    placeholder="••••••••"
-                    size="large"
-                    className="h-16 rounded-2xl border-2 border-gray-50 bg-gray-50/50 focus:bg-white font-black"
-                  />
-                </div>
-              </Form.Item>
+                {/* Profile card */}
+                <div className="bg-white rounded-3xl shadow-sm p-6 md:p-8">
+                    <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                        {/* Avatar */}
+                        <div className="relative flex-shrink-0 group">
+                            <img
+                                src={data.profile_image_url || "/default-avatar.png"}
+                                alt={data.name}
+                                className="w-28 h-28 rounded-2xl object-cover border-2 border-gray-100"
+                            />
+                            {editing && (
+                                <label
+                                    htmlFor="profileImage"
+                                    className="absolute inset-0 rounded-2xl bg-black/50 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <input
+                                        type="file"
+                                        id="profileImage"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                                    />
+                                    {imageLoading ? (
+                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                        <>
+                                            <Camera size={20} className="text-white mb-1" />
+                                            <span className="text-white text-[10px] font-medium uppercase tracking-wider">Change</span>
+                                        </>
+                                    )}
+                                </label>
+                            )}
+                        </div>
 
-              <Form.Item
-                name="confirmPassword"
-                dependencies={["newPassword"]}
-                rules={[
-                  { required: true, message: "Required" },
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
-                      return !value || getFieldValue("newPassword") === value ? Promise.resolve() : Promise.reject("Mismatch")
-                    },
-                  }),
-                ]}
-                className="mb-0"
-              >
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-widest font-black text-primary/40">Confirm Security Key</label>
-                  <Input.Password
-                    placeholder="••••••••"
-                    size="large"
-                    className="h-16 rounded-2xl border-2 border-gray-50 bg-gray-50/50 focus:bg-white font-black"
-                  />
-                </div>
-              </Form.Item>
+                        {/* Info */}
+                        <div className="flex-1 w-full space-y-4">
+                            {/* Name */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <User size={13} className="inline mr-1.5 text-primary" />Full Name
+                                </label>
+                                {editing ? (
+                                    <input
+                                        type="text"
+                                        value={updatedData.name}
+                                        onChange={(e) => setUpdatedData((prev) => prev ? { ...prev, name: e.target.value } : null)}
+                                        className="p-3 w-full border rounded-2xl focus:outline-none focus:border-primary transition-colors"
+                                    />
+                                ) : (
+                                    <p className="text-gray-900 font-medium py-1">{data.name}</p>
+                                )}
+                            </div>
 
-              <Form.Item className="pt-6">
-                <button
-                  type="submit"
-                  className="w-full h-16 bg-primary text-white font-black rounded-2xl shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
-                >
-                  Update Credentials
-                </button>
-              </Form.Item>
-            </Form>
-          </div>
-        </Modal>
-      </div>
-    </>
-  );
+                            {/* Username */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <AtSign size={13} className="inline mr-1.5 text-primary" />Username
+                                </label>
+                                {editing ? (
+                                    <div>
+                                        <div className="flex items-center border rounded-2xl focus-within:border-primary transition-colors overflow-hidden">
+                                            <span className="pl-3 pr-1 text-gray-400 font-medium select-none text-sm">@</span>
+                                            <input
+                                                type="text"
+                                                value={usernameInput}
+                                                onChange={(e) => setUsernameInput(e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, ""))}
+                                                placeholder="yourhandle"
+                                                className="flex-1 py-3 pr-3 focus:outline-none text-gray-900 text-sm bg-transparent"
+                                            />
+                                        </div>
+                                        <div className="mt-1.5 min-h-[18px]">
+                                            <UsernameStatusBadge />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-gray-900 font-medium py-1">
+                                        {data.social_username ? (
+                                            <span className="text-primary">@{data.social_username}</span>
+                                        ) : (
+                                            <span className="text-gray-400 text-sm">No username set</span>
+                                        )}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Email (read-only) */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <Mail size={13} className="inline mr-1.5 text-primary" />Email
+                                </label>
+                                <p className="text-gray-900 font-medium py-1">{data.email}</p>
+                            </div>
+
+                            {/* Member since + verified */}
+                            <div className="flex items-center gap-4 pt-2 border-t border-gray-100">
+                                <div>
+                                    <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Member Since</p>
+                                    <p className="text-sm font-semibold text-gray-800 mt-0.5">
+                                        {data.created_at && !isNaN(new Date(data.created_at).getTime())
+                                            ? format(new Date(data.created_at), "MMM yyyy")
+                                            : "N/A"}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-full">
+                                    <Shield size={12} className="text-primary" />
+                                    <span className="text-xs font-medium text-primary">Verified Member</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Security card */}
+                <div className="bg-white rounded-3xl shadow-sm p-6 md:p-8">
+                    <div className="flex items-center gap-2 mb-5">
+                        <Lock size={16} className="text-primary" />
+                        <h2 className="text-base font-semibold text-gray-900">Password & Security</h2>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                        <p className="text-sm text-gray-500">Protect your account with a strong, unique password.</p>
+                        <button
+                            onClick={() => setPasswordModalOpen(true)}
+                            className="flex items-center gap-2 px-5 py-2.5 border-2 border-primary text-primary rounded-2xl text-sm font-medium hover:bg-primary hover:text-white transition-colors whitespace-nowrap"
+                        >
+                            <Lock size={13} /> Change Password
+                        </button>
+                    </div>
+                </div>
+
+                {/* My Listings preview */}
+                <div className="bg-white rounded-3xl shadow-sm p-6 md:p-8">
+                    <div className="flex items-center justify-between mb-5">
+                        <h2 className="text-base font-semibold text-gray-900">My Listings</h2>
+                        <Link href="/my-listings" className="flex items-center gap-1 text-sm text-primary font-medium hover:underline">
+                            View All <ChevronRight size={14} />
+                        </Link>
+                    </div>
+                    {listings.length === 0 ? (
+                        <div className="text-center py-8 border border-dashed border-gray-200 rounded-2xl">
+                            <p className="text-gray-400 text-sm mb-3">No listings yet</p>
+                            <Link href="/create-listing" className="text-primary text-sm font-medium hover:underline">Create a listing →</Link>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            {listings.map((pet) => (
+                                <div key={pet.pet_id} className="rounded-2xl overflow-hidden border border-gray-100 hover:border-primary transition-colors">
+                                    <img
+                                        src={pet.primary_image || pet.image_url || "/dog-placeholder.png"}
+                                        alt={pet.pet_name}
+                                        className="w-full h-32 object-cover"
+                                    />
+                                    <div className="p-3 flex items-center justify-between gap-2">
+                                        <p className="font-semibold text-gray-800 text-sm truncate">{pet.pet_name}</p>
+                                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${pet.approved ? "bg-green-50 text-green-700" : "bg-orange-50 text-orange-700"}`}>
+                                            {pet.approved ? "Approved" : "Pending"}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* My Applications preview */}
+                <div className="bg-white rounded-3xl shadow-sm p-6 md:p-8">
+                    <div className="flex items-center justify-between mb-5">
+                        <h2 className="text-base font-semibold text-gray-900">My Applications</h2>
+                        <Link href="/my-applications" className="flex items-center gap-1 text-sm text-primary font-medium hover:underline">
+                            View All <ChevronRight size={14} />
+                        </Link>
+                    </div>
+                    {applications.length === 0 ? (
+                        <div className="text-center py-8 border border-dashed border-gray-200 rounded-2xl">
+                            <p className="text-gray-400 text-sm mb-3">No applications yet</p>
+                            <Link href="/browse-pets" className="text-primary text-sm font-medium hover:underline">Browse pets →</Link>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            {applications.map((app) => (
+                                <div key={app.application_id} className="rounded-2xl overflow-hidden border border-gray-100 hover:border-primary transition-colors">
+                                    <img
+                                        src={app.image_url || "/dog-placeholder.png"}
+                                        alt={app.pet_name}
+                                        className="w-full h-32 object-cover"
+                                    />
+                                    <div className="p-3">
+                                        <div className="flex items-center justify-between gap-2 mb-1">
+                                            <p className="font-semibold text-gray-800 text-sm truncate">{app.pet_name}</p>
+                                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 capitalize ${statusColors[app.status?.toLowerCase()] || "bg-gray-100 text-gray-600"}`}>
+                                                {app.status || "Pending"}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-400 capitalize">{app.application_type}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Password modal */}
+            {passwordModalOpen && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl shadow-lg w-full max-w-md">
+                        {/* Modal header */}
+                        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center">
+                                    <Lock size={18} className="text-primary" />
+                                </div>
+                                <div>
+                                    <h2 className="text-base font-bold text-gray-900">Change Password</h2>
+                                    <p className="text-xs text-gray-400">Update your account security</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => { setPasswordModalOpen(false); setPwErrors({}); setPwValues({ current: "", newPw: "", confirm: "" }); }}
+                                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                            >
+                                <X size={16} className="text-gray-500" />
+                            </button>
+                        </div>
+
+                        {/* Modal form */}
+                        <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
+                            {/* Current password */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                                <div className="relative">
+                                    <input
+                                        type={showPw.current ? "text" : "password"}
+                                        placeholder="••••••••"
+                                        value={pwValues.current}
+                                        onChange={(e) => { setPwValues((p) => ({ ...p, current: e.target.value })); setPwErrors((p) => ({ ...p, current: "" })); }}
+                                        className={`p-3 w-full border rounded-2xl pr-10 focus:outline-none focus:border-primary transition-colors ${pwErrors.current ? "border-red-400" : ""}`}
+                                    />
+                                    <button type="button" onClick={() => setShowPw((p) => ({ ...p, current: !p.current }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                        {showPw.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                                {pwErrors.current && <p className="text-xs text-red-500 mt-1">{pwErrors.current}</p>}
+                            </div>
+
+                            {/* New password */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                                <div className="relative">
+                                    <input
+                                        type={showPw.newPw ? "text" : "password"}
+                                        placeholder="••••••••"
+                                        value={pwValues.newPw}
+                                        onChange={(e) => { setPwValues((p) => ({ ...p, newPw: e.target.value })); setPwErrors((p) => ({ ...p, newPw: "" })); }}
+                                        className={`p-3 w-full border rounded-2xl pr-10 focus:outline-none focus:border-primary transition-colors ${pwErrors.newPw ? "border-red-400" : ""}`}
+                                    />
+                                    <button type="button" onClick={() => setShowPw((p) => ({ ...p, newPw: !p.newPw }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                        {showPw.newPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                                {pwErrors.newPw && <p className="text-xs text-red-500 mt-1">{pwErrors.newPw}</p>}
+                            </div>
+
+                            {/* Confirm password */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                                <div className="relative">
+                                    <input
+                                        type={showPw.confirm ? "text" : "password"}
+                                        placeholder="••••••••"
+                                        value={pwValues.confirm}
+                                        onChange={(e) => { setPwValues((p) => ({ ...p, confirm: e.target.value })); setPwErrors((p) => ({ ...p, confirm: "" })); }}
+                                        className={`p-3 w-full border rounded-2xl pr-10 focus:outline-none focus:border-primary transition-colors ${pwErrors.confirm ? "border-red-400" : ""}`}
+                                    />
+                                    <button type="button" onClick={() => setShowPw((p) => ({ ...p, confirm: !p.confirm }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                        {showPw.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                                {pwErrors.confirm && <p className="text-xs text-red-500 mt-1">{pwErrors.confirm}</p>}
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={pwLoading}
+                                className="w-full p-3 bg-primary text-white rounded-2xl font-medium disabled:opacity-60 mt-2"
+                            >
+                                {pwLoading ? "Updating..." : "Update Password"}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Toast */}
+            {toast && (
+                <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-lg text-sm font-medium text-white ${toast.type === "success" ? "bg-green-500" : "bg-red-500"}`}>
+                    {toast.text}
+                </div>
+            )}
+        </main>
+    );
 };
 
 export default MyProfile;

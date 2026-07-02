@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
         const userId = parseInt(String(userIdRaw), 10);
 
         const result = await db.query(`
-            SELECT user_id, name, email, profile_image_url, role, created_at, phone_number, dob, city_id
+            SELECT user_id, name, email, profile_image_url, role, created_at, phone_number, dob, city_id, social_username
             FROM users
             WHERE user_id = $1
         `, [userId]);

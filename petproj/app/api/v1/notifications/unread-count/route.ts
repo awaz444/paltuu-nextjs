@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { NotificationService } from "@/lib/notifications/NotificationService";
 
+export const dynamic = "force-dynamic";
+
 /**
  * @swagger
  * /api/v1/notifications/unread-count:

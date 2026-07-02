@@ -5,6 +5,7 @@ import { Redis as UpstashRedis } from "@upstash/redis";
 const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REST_URL || "";
 const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REST_TOKEN || "";
 const USE_UPSTASH = !!UPSTASH_URL && !!UPSTASH_TOKEN;
+const REDIS_ENABLED = process.env.REDIS_ENABLED !== 'false';
 
 // If Upstash is configured, use its HTTP client (serverless-friendly). Otherwise fall back to ioredis if enabled.
 let upstash: UpstashRedis | null = null;
@@ -19,7 +20,6 @@ if (USE_UPSTASH) {
 }
 
 // Local ioredis (optional)
-const REDIS_ENABLED = process.env.REDIS_ENABLED !== 'false';
 let ioredis: IORedisClient | null = null;
 if (!USE_UPSTASH && REDIS_ENABLED) {
   ioredis = new RedisIoredis({
@@ -112,6 +112,10 @@ export const safeRedis = {
     }
   }
 };
+
+export function hasRedisBackend(): boolean {
+  return !!upstash || !!ioredis;
+}
 
 // For backward compatibility (some modules import default), export default the active client
 export default (upstash as any) || (ioredis as any) || null;

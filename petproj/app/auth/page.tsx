@@ -1,83 +1,44 @@
-// app/auth/page.tsx
-"use client";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import jwt from "jsonwebtoken";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/utils/authOptions";
+import AuthPageClient from "./AuthPageClient";
 
-import { useState, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import LoginForm from "@/components/auth/LoginForm";
-import SignupForm from "@/components/auth/SignupForm";
+export const dynamic = "force-dynamic";
 
-// Create a client component that uses useSearchParams
-function AuthPageClient() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const initialMode = searchParams.get("mode") as "login" | "signup" | null;
-  const [authMode, setAuthMode] = useState<"login" | "signup">(
-    initialMode === "signup" ? "signup" : "login"
-  );
-
-  const handleBackToHome = () => {
-    router.push("/");
-  };
-
-  const switchToSignup = () => setAuthMode("signup");
-  const switchToLogin = () => setAuthMode("login");
-
-  return (
-    <div className="min-h-screen flex flex-col sm:flex-col lg:flex-row bg-gray-100">
-      {/* Left Side - Branding */}
-      <div className="w-full lg:w-1/2 lg:fixed lg:left-0 lg:top-0 lg:bottom-0 flex flex-col justify-center items-center bg-primary p-8 text-white rounded-b-3xl lg:rounded-r-3xl lg:rounded-b-none lg:h-screen lg:overflow-hidden">
-        <button
-          onClick={handleBackToHome}
-          className="absolute top-4 left-4 text-white hover:text-gray-200 flex items-center transition-colors"
-          title="Back to Home"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 mr-1"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </button>
-
-        <img
-          src="/paltu_logo.svg"
-          alt="Paltu Logo"
-          className="mb-3 mt-2 w-40 lg:w-full max-w-full"
-        />
-      </div>
-
-      {/* Right Side - Auth Forms */}
-      <div className="w-full lg:w-1/2 lg:ml-[50%] flex items-center justify-center p-6 sm:p-12 bg-gray-100 lg:min-h-screen py-10">
-        <div className="w-full max-w-md">
-          {/* Dynamic Form Rendering */}
-          {authMode === "login" ? (
-            <LoginForm onSwitchToSignup={switchToSignup} />
-          ) : (
-            <SignupForm onSwitchToLogin={switchToLogin} />
-          )}
-        </div>
-      </div>
-    </div>
-  );
+function getRoleRedirect(role?: string | null) {
+  switch (role) {
+    case "vet":
+      return "/vet-panel";
+    case "shop admin":
+      return "/shop-panel";
+    case "shelter admin":
+      return "/rescue-panel";
+    case "vendor":
+      return "/vendor-panel";
+    case "admin":
+      return "/admin-panel";
+    default:
+      return "/browse-pets";
+  }
 }
 
-// Create the main page component with Suspense
-export default function AuthPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-          <div className="animate-pulse text-primary">Loading...</div>
-        </div>
-      }
-    >
-      <AuthPageClient />
-    </Suspense>
-  );
+export default async function AuthPage() {
+  const session = await getServerSession(authOptions);
+  if (session?.user) {
+    redirect(getRoleRedirect((session.user as any).role));
+  }
+
+  const token = cookies().get("token")?.value;
+  if (token && process.env.TOKEN_SECRET) {
+    try {
+      const decoded = jwt.verify(token, process.env.TOKEN_SECRET) as { role?: string };
+      redirect(getRoleRedirect(decoded.role));
+    } catch {
+      // Invalid custom token falls through to the auth page.
+    }
+  }
+
+  return <AuthPageClient />;
 }

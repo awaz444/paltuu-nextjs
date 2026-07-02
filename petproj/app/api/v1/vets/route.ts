@@ -1,6 +1,8 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 /**
  * @swagger
  * /api/v1/vets:
@@ -12,12 +14,12 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
     try {
         const result = await db.query(`
-            SELECT 
-                v.*, 
-                u.profile_image_url 
+            SELECT
+                v.*,
+                u.profile_image_url
             FROM vets v
             JOIN users u ON v.user_id = u.user_id
-            WHERE v.approved = true
+            WHERE v.profile_verified = true
             ORDER BY v.created_at DESC
         `);
         return NextResponse.json(result.rows);

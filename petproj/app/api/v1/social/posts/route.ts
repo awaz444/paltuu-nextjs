@@ -47,8 +47,8 @@ export async function GET(req: NextRequest) {
 
         const userId = await getUserIdFromRequest(req);
         const { searchParams } = new URL(req.url);
-        const limit   = Math.min(50, parseInt(searchParams.get("limit")  || "20", 10));
-        const offset  = Math.max(0,  parseInt(searchParams.get("cursor") || "0",  10)); // cursor = page offset
+        const limit   = Math.min(30, parseInt(searchParams.get("limit")  || "20", 10));
+        const offset  = Math.min(1000, Math.max(0, parseInt(searchParams.get("cursor") || "0", 10))); // cursor = page offset
         const mode    = searchParams.get("mode") || "following";
 
         const isChronological = mode === "chronological";
@@ -299,12 +299,12 @@ export async function GET(req: NextRequest) {
                 LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
                 WHERE p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $1)
                 AND NOT EXISTS (
-                    SELECT 1 FROM user_blocks b 
+                    SELECT 1 FROM user_blocks b
                     WHERE (b.blocker_id = $1 AND b.blocked_id = p.user_id)
                        OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
                 )
                 AND (p.original_post_id IS NULL OR NOT EXISTS (
-                    SELECT 1 FROM user_blocks b 
+                    SELECT 1 FROM user_blocks b
                     WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
                        OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
                 ))
@@ -318,7 +318,7 @@ export async function GET(req: NextRequest) {
             `;
             queryParams = [viewerId, limit, offset];
 
-            
+
         } else {
             // ── Algorithmic ───────────────────────────────────────────────
             // Score = recency 40% + engagement 40% + relationship 20%
@@ -399,12 +399,12 @@ export async function GET(req: NextRequest) {
                     LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
                     WHERE p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $1)
                     AND NOT EXISTS (
-                        SELECT 1 FROM user_blocks b 
+                        SELECT 1 FROM user_blocks b
                         WHERE (b.blocker_id = $1 AND b.blocked_id = p.user_id)
                            OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
                     )
                     AND (p.original_post_id IS NULL OR NOT EXISTS (
-                        SELECT 1 FROM user_blocks b 
+                        SELECT 1 FROM user_blocks b
                         WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
                            OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
                     ))

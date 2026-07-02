@@ -1,7 +1,74 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import jwt from 'jsonwebtoken';
+
+type CustomTokenPayload = {
+  role?: string;
+  id?: number | string;
+  user_id?: number | string;
+  sub?: string;
+};
+
+function base64UrlToBytes(input: string): Uint8Array {
+  const normalized = input.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return bytes;
+}
+
+function base64UrlFromBytes(bytes: Uint8Array): string {
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+}
+
+async function verifyCustomToken(token: string): Promise<CustomTokenPayload | null> {
+  const secret = process.env.TOKEN_SECRET;
+  if (!secret || !token) return null;
+
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+
+  const [encodedHeader, encodedPayload, encodedSignature] = parts;
+  const signingInput = `${encodedHeader}.${encodedPayload}`;
+
+  try {
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+
+    const signature = base64UrlToBytes(encodedSignature);
+    const isValid = await crypto.subtle.verify(
+      'HMAC',
+      key,
+      signature,
+      new TextEncoder().encode(signingInput)
+    );
+
+    if (!isValid) return null;
+
+    const payloadJson = new TextDecoder().decode(base64UrlToBytes(encodedPayload));
+    return JSON.parse(payloadJson) as CustomTokenPayload;
+  } catch {
+    return null;
+  }
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -55,32 +122,51 @@ export async function middleware(request: NextRequest) {
   });
 
   const customAuthToken = request.cookies.get('token')?.value;
+  const customAuthPayload = customAuthToken ? await verifyCustomToken(customAuthToken) : null;
 
-  const isAuthenticated = !!token || !!customAuthToken;
+  const isAuthenticated = !!token || !!customAuthPayload;
+
+  const getRoleRedirect = (role?: string | null) => {
+    switch (role) {
+      case 'vet':
+        return '/vet-panel';
+      case 'shop admin':
+        return '/shop-panel';
+      case 'shelter admin':
+        return '/rescue-panel';
+      case 'vendor':
+        return '/vendor-panel';
+      case 'admin':
+        return '/admin-panel';
+      default:
+        return '/browse-pets';
+    }
+  };
+
+  if (pathname === '/auth' && isAuthenticated) {
+    if (token?.role) {
+      return NextResponse.redirect(new URL(getRoleRedirect(token.role), request.url));
+    }
+
+    if (customAuthPayload) {
+      return NextResponse.redirect(new URL(getRoleRedirect(customAuthPayload.role), request.url));
+    }
+
+    return NextResponse.redirect(new URL('/browse-pets', request.url));
+  }
 
   if (isAdminPath) {
     const isAdmin = token?.role === 'admin';
 
-    if (!isAdmin && customAuthToken) {
-      try {
-        // Verify signature properly using the server secret
-        const decoded = jwt.verify(customAuthToken, process.env.TOKEN_SECRET!) as { role?: string };
-        if (decoded.role === 'admin') {
-          // Admin token is valid, allow access
-          return NextResponse.next();
-        } else {
-          // Valid token but not admin
-          return NextResponse.redirect(new URL('/browse-pets', request.url));
-        }
-      } catch (error) {
-        console.warn('⚠️ [Middleware] Admin JWT verification failed:', error instanceof Error ? error.message : error);
-        // Token verification failed, allow the page to load and let the client-side auth handle it
-        // This way the user gets a proper error message from the React component
+    if (!isAdmin && customAuthPayload) {
+      if (customAuthPayload.role === 'admin') {
         return NextResponse.next();
       }
+
+      return NextResponse.redirect(new URL('/browse-pets', request.url));
     }
 
-    if (!isAdmin && !customAuthToken) {
+    if (!isAdmin && !customAuthPayload) {
       return NextResponse.redirect(new URL('/auth', request.url));
     }
   }
@@ -96,6 +182,7 @@ export async function middleware(request: NextRequest) {
 // Update matcher to include all protected routes
 export const config = {
   matcher: [
+    '/auth',
     '/profile',
     '/my-listings',
     '/my-applications',

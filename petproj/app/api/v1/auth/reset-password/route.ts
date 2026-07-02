@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { rateLimit } from "@/utils/rateLimit";
 
 /**
  * @swagger
@@ -13,6 +14,11 @@ export async function POST(req: NextRequest) {
     try {
         const { token, newPassword } = await req.json();
         if (!token || !newPassword) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+
+        const limiter = await rateLimit(`reset-password:${String(token).slice(-12)}`, 5, 300, { failOpen: false });
+        if (!limiter.success) {
+            return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });
+        }
 
         // 1. Verify token in OTP table
         const otpRes = await db.query('SELECT email, created_at FROM "OTP" WHERE otp = $1', [token]);

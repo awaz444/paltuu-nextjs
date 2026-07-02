@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     }
 
     // Rate limiting
-    const limiter = await rateLimit(`register:${email}`, 3, 60);
+    const limiter = await rateLimit(`register:${email}`, 3, 60, { failOpen: false });
     if (!limiter.success) {
       return NextResponse.json({ message: "Too many attempts. Please try again later." }, { status: 429 });
     }
@@ -127,4 +127,4 @@ export async function POST(req: Request) {
 
 export async function OPTIONS() {
   return new Response(null, { status: 200 });
-}
+}

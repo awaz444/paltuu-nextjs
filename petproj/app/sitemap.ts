@@ -64,11 +64,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     let vetPages: MetadataRoute.Sitemap = [];
     try {
         const result = await db.query(
-            `SELECT vet_id, updated_at FROM vets WHERE approved = true`
+            `SELECT vet_id, created_at FROM vets WHERE profile_verified = true`
         );
         vetPages = result.rows.map((row) => ({
             url: `${baseUrl}/pet-care/${row.vet_id}`,
-            lastModified: row.updated_at ? new Date(row.updated_at) : new Date(),
+            lastModified: row.created_at ? new Date(row.created_at) : new Date(),
             changeFrequency: 'monthly' as const,
             priority: 0.6,
         }));

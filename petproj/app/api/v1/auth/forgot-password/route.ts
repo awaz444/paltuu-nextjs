@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail } from "@/utils/email";
 import crypto from "crypto";
+import { rateLimit } from "@/utils/rateLimit";
 
 /**
  * @swagger
@@ -14,6 +15,11 @@ export async function POST(req: NextRequest) {
     try {
         const { email } = await req.json();
         if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
+
+        const limiter = await rateLimit(`forgot-password:${String(email).toLowerCase().trim()}`, 3, 300, { failOpen: false });
+        if (!limiter.success) {
+            return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });
+        }
 
         // 1. Check if user exists
         const userRes = await db.query('SELECT user_id, name FROM users WHERE email = $1', [email]);

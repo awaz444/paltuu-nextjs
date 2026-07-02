@@ -62,6 +62,11 @@ export async function POST(req: NextRequest) {
         const userId = await getUserIdFromRequest(req);
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+        const contentLength = Number(req.headers.get("content-length") || "0");
+        if (contentLength > 50 * 1024 * 1024) {
+            return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+        }
+
         const formData = await req.formData();
         const files = formData.getAll("files") as File[];
 
@@ -83,6 +88,10 @@ export async function POST(req: NextRequest) {
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
+            if (file.size > 25 * 1024 * 1024) {
+                return NextResponse.json({ error: "Each file must be 25 MB or smaller" }, { status: 413 });
+            }
+
             const buffer = Buffer.from(await file.arrayBuffer());
             const isVideo = file.type.startsWith("video/");
 

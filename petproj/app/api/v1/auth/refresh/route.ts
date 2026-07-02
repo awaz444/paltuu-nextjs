@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { rateLimit } from "@/utils/rateLimit";
+import { rotateMobileTokenPair, verifyMobileRefreshToken, verifyRefreshTokenInDb } from "@/utils/mobileAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -17,41 +18,43 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Refresh token is required" }, { status: 400 });
         }
 
-        // 1. Verify token exists in DB and is not revoked
-        const res = await db.query(`
-            SELECT * FROM refresh_tokens 
-            WHERE token = $1 AND revoked = false AND expires_at > NOW()
-        `, [refreshToken]);
+        const limited = await rateLimit(`refresh:${String(refreshToken).slice(-12)}`, 10, 60, { failOpen: false });
+        if (!limited.success) {
+            return NextResponse.json({ error: "Too many refresh attempts" }, { status: 429 });
+        }
 
-        if ((res.rowCount ?? 0) === 0) {
+        // 1. Verify refresh token signature and check that it is still active in DB.
+        const decoded = verifyMobileRefreshToken(refreshToken);
+        if (!decoded?.user_id) {
             return NextResponse.json({ error: "Invalid or expired refresh token" }, { status: 401 });
         }
 
-        const rt = res.rows[0];
+        const activeUserId = await verifyRefreshTokenInDb(refreshToken);
+        if (!activeUserId) {
+            return NextResponse.json({ error: "Invalid or expired refresh token" }, { status: 401 });
+        }
 
         // 2. Fetch User
-        const userRes = await db.query("SELECT * FROM users WHERE user_id = $1", [rt.user_id]);
+        const userRes = await db.query("SELECT user_id, name, email, role, image FROM users WHERE user_id = $1", [activeUserId]);
         if ((userRes.rowCount ?? 0) === 0) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
         const user = userRes.rows[0];
 
-        // 3. Generate New Access Token
-        const accessToken = jwt.sign(
-            { 
-                id: user.user_id,
+        // 3. Rotate the refresh token so replay windows stay small.
+        const tokens = await rotateMobileTokenPair(
+            {
                 user_id: user.user_id,
-                email: user.email, 
-                name: user.name,
-                role: user.role 
+                email: user.email,
+                role: user.role,
             },
-            process.env.TOKEN_SECRET!,
-            { expiresIn: '2h' }
+            refreshToken
         );
 
-        return NextResponse.json({ 
-            success: true, 
-            accessToken,
+        return NextResponse.json({
+            success: true,
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
             user: {
                 id: user.user_id,
                 name: user.name,

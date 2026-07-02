@@ -3,6 +3,8 @@ import { db } from "@/db/index";
 import { generateMobileTokenPair } from "@/utils/mobileAuth";
 import bcrypt from "bcryptjs";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/v1/auth/google/mobile/callback
  *

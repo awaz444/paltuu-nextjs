@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
         if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
 
         // Rate limit: 3 OTPs per 5 minutes per email
-        const limiter = await rateLimit(`otp:${email}`, 3, 300);
+        const limiter = await rateLimit(`otp:${email}`, 3, 300, { failOpen: false });
         if (!limiter.success) return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();

@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     const identifier = isEmail ? rawIdentifier.toLowerCase() : rawIdentifier.toLowerCase();
 
     // Rate limiting: 5 attempts per minute per identifier
-    const limiter = await rateLimit(`login:${identifier}`, 5, 60);
+    const limiter = await rateLimit(`login:${identifier}`, 5, 60, { failOpen: false });
     if (!limiter.success) {
       return NextResponse.json({ message: "Too many login attempts. Please try again later." }, { status: 429 });
     }
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
     }
 
     const user = result.rows[0];
-    
+
     // 2. Compare password
     // Support both bcrypt-hashed and legacy plain-text passwords.
     // If a legacy password logs in, immediately migrate it to bcrypt.

@@ -1,25 +1,25 @@
 /**
  * Paltuu Social — Real-Time WebSocket Server
- * 
+ *
  * Run alongside Next.js:
  *   node server/social-realtime.js
- * 
+ *
  * Or add to package.json scripts:
  *   "realtime": "node server/social-realtime.js"
- * 
+ *
  * Connects on port 3001 (configurable via REALTIME_PORT env var).
- * 
+ *
  * CLIENT USAGE (React Native):
  *   import { io } from 'socket.io-client';
  *   const socket = io('http://your-server:3001', { auth: { userId: '123' } });
- * 
+ *
  * EVENTS THE CLIENT RECEIVES:
  *   post:liked       → { postId, userId, like_count }
  *   post:commented   → { postId, comment }
  *   post:reposted    → { postId, userId, repost_count }
  *   follow:new       → { followerId, followerName }
  *   notification:new → { ...notification object }
- * 
+ *
  * EVENTS THE CLIENT EMITS:
  *   post:join  → postId    (subscribe to real-time updates for a specific post)
  *   post:leave → postId    (unsubscribe)
@@ -29,6 +29,7 @@ require('dotenv').config();
 const { Server } = require('socket.io');
 const http = require('http');
 const { Pool } = require('pg');
+const jwt = require('jsonwebtoken');
 
 const PORT = parseInt(process.env.REALTIME_PORT || '3001');
 const NEXT_ORIGIN = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -39,6 +40,9 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false },
     max: 5, // Small pool — only used for notification lookups
 });
+
+const SOCKET_AUTH_SECRET = process.env.TOKEN_SECRET;
+const MAX_EMITTER_BODY_BYTES = parseInt(process.env.REALTIME_EMITTER_MAX_BODY_BYTES || '65536', 10);
 
 // ─── HTTP + Socket.io Server ──────────────────────────────────────────────────
 const httpServer = http.createServer((req, res) => {
@@ -63,14 +67,25 @@ const io = new Server(httpServer, {
 });
 
 // ─── Auth Middleware ───────────────────────────────────────────────────────────
-// Validates userId from handshake auth — no JWT needed on same server
+// Validates a signed app token from the handshake. Rejecting unsigned userId
+// values prevents socket identity spoofing if this server is exposed.
 io.use((socket, next) => {
-    const userId = socket.handshake.auth?.userId;
-    if (!userId) {
-        return next(new Error('Authentication required: provide userId in socket.auth'));
+    const authToken = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.replace(/^Bearer\s+/i, '');
+    if (!authToken || !SOCKET_AUTH_SECRET) {
+        return next(new Error('Authentication required'));
     }
-    socket.data.userId = parseInt(userId, 10);
-    next();
+
+    try {
+        const decoded = jwt.verify(authToken, SOCKET_AUTH_SECRET);
+        const userId = parseInt(String(decoded.user_id || decoded.id || decoded.sub || ''), 10);
+        if (!Number.isInteger(userId)) {
+            return next(new Error('Invalid auth token'));
+        }
+        socket.data.userId = userId;
+        next();
+    } catch (error) {
+        return next(new Error('Authentication failed'));
+    }
 });
 
 // ─── Connected users map: userId → Set of socket IDs ─────────────────────────
@@ -144,12 +159,24 @@ const emitterServer = http.createServer(async (req, res) => {
 
     let body = '';
     req.on('data', chunk => body += chunk);
+    req.on('data', () => {
+        if (body.length > MAX_EMITTER_BODY_BYTES) {
+            res.writeHead(413);
+            res.end(JSON.stringify({ error: 'Payload too large' }));
+            req.destroy();
+        }
+    });
     req.on('end', () => {
         try {
             const { event, room, data } = JSON.parse(body);
             if (!event || !room) {
                 res.writeHead(400);
                 res.end(JSON.stringify({ error: 'event and room required' }));
+                return;
+            }
+            if (typeof event !== 'string' || typeof room !== 'string' || event.length > 64 || room.length > 128) {
+                res.writeHead(400);
+                res.end(JSON.stringify({ error: 'Invalid event or room' }));
                 return;
             }
             io.to(room).emit(event, data);

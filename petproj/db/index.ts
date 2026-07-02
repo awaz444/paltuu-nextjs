@@ -28,8 +28,13 @@ if (!connectionString) {
 const globalForPool = globalThis as unknown as { pgPool?: Pool };
 
 function createPool(): Pool {
+    const maxConnections = Number(process.env.PG_POOL_MAX) || 20;
+    const connectionTimeoutMillis = Number(process.env.PG_CONNECTION_TIMEOUT_MS) || 4_000;
+    const statementTimeout = Number(process.env.PG_STATEMENT_TIMEOUT_MS) || 8_000;
+
     const pool = new Pool({
         connectionString,
+        application_name: process.env.PG_APP_NAME || 'paltuu-nextjs',
 
         // ── SSL ──────────────────────────────────────────────────────────────
         // AWS RDS requires SSL. rejectUnauthorized: false accepts the
@@ -39,7 +44,7 @@ function createPool(): Pool {
         // ── Connection count ─────────────────────────────────────────────────
         // Set to a safe fraction of your RDS instance limit.
         // Increase when you upgrade your RDS instance tier.
-        max: 10,
+        max: maxConnections,
 
         // ── Idle connection cleanup ───────────────────────────────────────────
         // Release connections that have been idle longer than 30 seconds.
@@ -51,12 +56,12 @@ function createPool(): Pool {
         // ── Connection acquisition timeout ───────────────────────────────────
         // If a free connection is not available from the pool within 5 seconds,
         // throw an error instead of waiting indefinitely.
-        connectionTimeoutMillis: 5_000,
+        connectionTimeoutMillis,
 
         // ── Per-query timeout ────────────────────────────────────────────────
         // Kill any individual query that runs longer than 10 seconds.
         // Protects against runaway queries starving the pool.
-        statement_timeout: 10_000,
+        statement_timeout: statementTimeout,
 
         // ── TCP keep-alive ───────────────────────────────────────────────────
         // Sends a keep-alive packet every 10 seconds. This prevents AWS NAT
@@ -131,7 +136,7 @@ export function createClient() {
                 if (client) return client.query(text.text, text.values);
                 return db.query(text.text, text.values);
             }
-            
+
             if (client) {
                 return client.query(text, params as any);
             }

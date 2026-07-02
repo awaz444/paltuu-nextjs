@@ -14,6 +14,13 @@ export interface MobileJWTPayload {
  * Generate a pair of tokens for the mobile app
  */
 export async function generateMobileTokenPair(user: { user_id: number; email: string; role: string | null }) {
+  return createAndStoreMobileTokenPair(user, { replaceAllExistingTokens: true });
+}
+
+async function createAndStoreMobileTokenPair(
+  user: { user_id: number; email: string; role: string | null },
+  options: { replaceAllExistingTokens: boolean; previousRefreshToken?: string }
+) {
   const accessSecret = process.env.TOKEN_SECRET!;
   const refreshSecret = process.env.REFRESH_TOKEN_SECRET || accessSecret;
 
@@ -26,8 +33,13 @@ export async function generateMobileTokenPair(user: { user_id: number; email: st
   const accessToken = jwt.sign(payload, accessSecret, { expiresIn: ACCESS_TOKEN_EXPIRY });
   const refreshToken = jwt.sign({ user_id: user.user_id }, refreshSecret, { expiresIn: REFRESH_TOKEN_EXPIRY });
 
-  // 1. Delete old refresh tokens for this user to prevent bloat (Cleanup)
-  await db.query('DELETE FROM mobile_refresh_tokens WHERE user_id = $1', [user.user_id]);
+  if (options.replaceAllExistingTokens) {
+    // 1. Delete old refresh tokens for this user to prevent bloat (Cleanup)
+    await db.query('DELETE FROM mobile_refresh_tokens WHERE user_id = $1', [user.user_id]);
+  } else if (options.previousRefreshToken) {
+    // Rotation path: revoke only the currently presented refresh token.
+    await db.query('DELETE FROM mobile_refresh_tokens WHERE token = $1', [options.previousRefreshToken]);
+  }
 
   // 2. Save new refresh token to DB
   const expiresAt = new Date();
@@ -39,6 +51,19 @@ export async function generateMobileTokenPair(user: { user_id: number; email: st
   );
 
   return { accessToken, refreshToken };
+}
+
+/**
+ * Rotate a valid mobile refresh token and issue a fresh token pair.
+ */
+export async function rotateMobileTokenPair(
+  user: { user_id: number; email: string; role: string | null },
+  previousRefreshToken: string
+) {
+  return createAndStoreMobileTokenPair(user, {
+    replaceAllExistingTokens: false,
+    previousRefreshToken,
+  });
 }
 
 /**

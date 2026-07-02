@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { uploadToS3Main } from "@/lib/s3";
 import { db } from "@/db/index";
+import { getUserIdFromRequest } from "@/utils/authServer";
 
 /**
  * @swagger
@@ -12,6 +13,16 @@ import { db } from "@/db/index";
  */
 export async function POST(req: NextRequest) {
     try {
+        const userId = await getUserIdFromRequest(req);
+        if (!userId) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const contentLength = Number(req.headers.get("content-length") || "0");
+        if (contentLength > 20 * 1024 * 1024) {
+            return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+        }
+
         const formData = await req.formData();
         const files = formData.getAll("files") as File[];
         const petId = formData.get("pet_id");
@@ -20,9 +31,21 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "No files provided" }, { status: 400 });
         }
 
+        if (files.length > 10) {
+            return NextResponse.json({ error: "Maximum 10 files per upload" }, { status: 400 });
+        }
+
         const urls: string[] = [];
 
         for (const file of files) {
+            if (!file.type.startsWith("image/")) {
+                return NextResponse.json({ error: "Only image uploads are allowed" }, { status: 400 });
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                return NextResponse.json({ error: "Each file must be 5 MB or smaller" }, { status: 413 });
+            }
+
             const buffer = Buffer.from(await file.arrayBuffer());
             const ext = file.type.split("/")[1] || "jpg";
             const imageUrl = await uploadToS3Main(buffer, "adoption", file.type, ext);

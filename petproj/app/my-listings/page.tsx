@@ -144,7 +144,10 @@ const UserListingsPage = () => {
                             </div>
                         </div>
 
-                        <MyListingGrid pets={listings} />
+                        <MyListingGrid
+                            pets={listings}
+                            onPetDeleted={(petId) => setListings((prev) => prev.filter((p) => p.pet_id !== petId))}
+                        />
                     </>
                 )}
             </div>

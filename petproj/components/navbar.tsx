@@ -461,39 +461,9 @@ const Navbar = ({
             </div>
 
             {/* Main Section */}
-            <div className="flex flex-col justify-center items-center w-full h-full px-4 relative space-y-6">
-              {/* Navlinks */}
-              <div
-                className={`transition-all duration-500 ease-in-out ${mobileView === "navlinks"
-                  ? "opacity-100 translate-y-0 pointer-events-auto"
-                  : "opacity-0 -translate-y-6 pointer-events-none"
-                  } mt-32`}
-              >
-                <div className="space-y-6 text-center">
-                  {links.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={`/${link.href}`}
-                      onClick={() => {
-                        setIsMenuOpen(false); // 👈 close drawer
-                        setMobileView("navlinks"); // reset view
-                      }}
-                    >
-                      <span className="py-3 block text-white text-lg flex items-center justify-center gap-3">
-                        {link.name}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
+            <div className="flex flex-col justify-center items-center w-full flex-1 px-4 gap-6">
               {/* Nameplate */}
-              <div
-                className={`transition-all duration-500 ease-in-out ${mobileView === "dropdown"
-                  ? "-translate-y-[240px]"
-                  : "translate-y-0"
-                  }`}
-              >
+              <div className="w-full">
                 {isAuthenticated ? (
                   <button
                     className="flex flex-row items-center justify-center gap-4 w-full px-4 py-3"
@@ -516,8 +486,7 @@ const Navbar = ({
                       height="12"
                       viewBox="0 0 24 24"
                       fill="none"
-                      className={`text-white transition-transform duration-300 ${mobileView === "dropdown" ? "rotate-180" : ""
-                        }`}
+                      className={`text-white transition-transform duration-300 ${mobileView === "dropdown" ? "rotate-180" : ""}`}
                     >
                       <path
                         d="M6 9L12 15L18 9"
@@ -537,14 +506,29 @@ const Navbar = ({
                 )}
               </div>
 
+              {/* Navlinks */}
+              {mobileView === "navlinks" && (
+                <div className="space-y-6 text-center w-full">
+                  {links.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={`/${link.href}`}
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        setMobileView("navlinks");
+                      }}
+                    >
+                      <span className="py-3 block text-white text-lg flex items-center justify-center gap-3">
+                        {link.name}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
               {/* Dropdown */}
-              <div
-                className={`w-full transition-all duration-500 ease-in-out ${mobileView === "dropdown"
-                  ? "opacity-100 -translate-y-[240px]"
-                  : "opacity-0 -translate-y-4 pointer-events-none"
-                  }`}
-              >
-                <div className="space-y-4 text-center">
+              {mobileView === "dropdown" && (
+                <div className="space-y-4 text-center w-full">
                   {dropdownItems.map((item) =>
                     item.isAction ? (
                       <div
@@ -552,12 +536,11 @@ const Navbar = ({
                         className="py-3 text-white text-lg cursor-pointer flex items-center justify-center gap-3"
                         onClick={() => {
                           handleLogout();
-                          setIsMenuOpen(false); // 👈 close drawer
+                          setIsMenuOpen(false);
                           setMobileView("navlinks");
                         }}
                       >
-                        <i className={`bi ${item.icon} text-xl`} />{" "}
-                        {/* icon added */}
+                        <i className={`bi ${item.icon} text-xl`} />
                         {item.label}
                       </div>
                     ) : (
@@ -565,20 +548,19 @@ const Navbar = ({
                         key={item.href}
                         href={item.href}
                         onClick={() => {
-                          setIsMenuOpen(false); // 👈 close drawer
+                          setIsMenuOpen(false);
                           setMobileView("navlinks");
                         }}
                       >
                         <div className="py-3 text-white text-lg cursor-pointer flex items-center justify-center gap-3">
-                          <i className={`bi ${item.icon} text-xl`} />{" "}
-                          {/* icon added */}
+                          <i className={`bi ${item.icon} text-xl`} />
                           {item.label}
                         </div>
                       </Link>
                     )
                   )}
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

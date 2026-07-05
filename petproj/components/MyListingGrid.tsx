@@ -45,6 +45,7 @@ export interface Pet {
 interface PetGridProps {
     pets: Pet[];
     showCreateButton?: boolean;
+    onPetDeleted?: (petId: number) => void;
 }
 
 const PET_TYPE_OPTIONS = [
@@ -56,7 +57,7 @@ const PET_TYPE_OPTIONS = [
 interface ExistingImage { image_id: number; image_url: string; order: number; }
 interface NewFile { file: File; preview: string; }
 
-const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }) => {
+const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true, onPetDeleted }) => {
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
 
@@ -89,9 +90,12 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true }
     const handleDelete = async (petId: number) => {
         setDeleteLoading(true);
         try {
-            await fetch(`/api/v1/pets/${petId}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
-            dispatch(fetchAdoptionPets({}));
-            dispatch(fetchFosterPets());
+            const res = await fetch(`/api/v1/pets/${petId}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
+            if (res.ok) {
+                onPetDeleted?.(petId);
+                dispatch(fetchAdoptionPets({}));
+                dispatch(fetchFosterPets());
+            }
         } finally {
             setDeleteLoading(false);
             setDeleteConfirm(null);

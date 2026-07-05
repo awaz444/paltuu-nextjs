@@ -138,7 +138,7 @@ const AdminPanel = () => {
                     <div className="flex flex-col sm:flex-row gap-4">
                         <img
                             className="w-20 h-20 sm:w-24 sm:h-24 rounded-full shadow-md mx-auto sm:mx-0"
-                            src={profile_image_url || "/placeholder.jpg"}
+                            src={profile_image_url || "/no-profile/no-profile.jpg"}
                             alt={name}
                         />
                         <div className="flex-1 text-center sm:text-left">

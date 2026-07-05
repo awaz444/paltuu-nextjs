@@ -57,7 +57,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           name,
           email,
           role,
-          profile_image_url: profile_image_url || "/default-avatar.png",
+          profile_image_url: profile_image_url || "/no-profile/no-profile.jpg",
         };
         // Token is set in httpOnly cookie by server, no localStorage needed
         login(userDetails); // This will update AuthContext and redirect

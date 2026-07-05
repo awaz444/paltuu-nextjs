@@ -130,7 +130,7 @@ const ReviewsSummary = () => {
       className="flex items-start bg-white p-6 mb-6 rounded-2xl shadow-sm border border-gray-200 hover:border-primary/30 transition-all duration-200"
     >
       <img
-        src={review.user_image_url || "/placeholder.jpg"}
+        src={review.user_image_url || "/no-profile/no-profile.jpg"}
         alt={review.user_name}
         className="w-16 h-16 object-cover rounded-full mr-4 border-2 border-primary/20"
       />

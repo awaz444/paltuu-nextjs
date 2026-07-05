@@ -94,7 +94,7 @@ const MyProfile = () => {
                 const finalProfileData = {
                     ...profileData,
                     name: (profileData.name && profileData.name.trim()) || user.name || "User",
-                    profile_image_url: (profileData.profile_image_url && profileData.profile_image_url.trim()) || user.profile_image_url || "/default-avatar.png",
+                    profile_image_url: (profileData.profile_image_url && profileData.profile_image_url.trim()) || user.profile_image_url || "/no-profile/no-profile.jpg",
                 };
                 setData(finalProfileData);
                 setUpdatedData(finalProfileData);
@@ -112,7 +112,7 @@ const MyProfile = () => {
                     user_id: user.id,
                     name: user.name || "User",
                     email: user.email || "",
-                    profile_image_url: user.profile_image_url || "/default-avatar.png",
+                    profile_image_url: user.profile_image_url || "/no-profile/no-profile.jpg",
                     created_at: new Date().toISOString(),
                 };
                 setData(fallback);
@@ -405,7 +405,7 @@ const MyProfile = () => {
                         {/* Avatar */}
                         <div className="relative flex-shrink-0 group">
                             <img
-                                src={data.profile_image_url || "/default-avatar.png"}
+                                src={data.profile_image_url || "/no-profile/no-profile.jpg"}
                                 alt={data.name}
                                 className="w-28 h-28 rounded-2xl object-cover border-2 border-gray-100"
                             />

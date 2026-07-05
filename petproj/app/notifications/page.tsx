@@ -218,10 +218,10 @@ const NotificationsPage = () => {
                                     {/* Avatar — sender profile pic or placeholder fallback */}
                                     <div className="flex-shrink-0 relative">
                                         <img
-                                            src={n.sender?.profile_image_url || "/placeholder.jpg"}
+                                            src={n.sender?.profile_image_url || "/no-profile/no-profile.jpg"}
                                             alt={n.sender?.name || "Paltuu"}
                                             className="w-10 h-10 rounded-full object-cover"
-                                            onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.jpg"; }}
+                                            onError={(e) => { (e.target as HTMLImageElement).src = "/no-profile/no-profile.jpg"; }}
                                         />
                                         {/* Type badge overlaid bottom-right */}
                                         <div className="absolute -bottom-0.5 -right-0.5 w-[18px] h-[18px] bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100">

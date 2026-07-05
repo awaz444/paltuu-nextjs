@@ -180,7 +180,7 @@ export async function POST(req: Request) {
         email: user.email,
         name: user.name,
         role: user.role,
-        profile_image_url: user.profile_image_url || "/default-avatar.png"
+        profile_image_url: user.profile_image_url || "/no-profile/no-profile.jpg"
       }
     }, { status: 200 });
 

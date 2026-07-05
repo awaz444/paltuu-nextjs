@@ -58,7 +58,7 @@ export async function GET(
             name: user.name,
             dob: user.dob,
             email: user.email,
-            profile_image_url: user.profile_image_url || "/default-avatar.png",
+            profile_image_url: user.profile_image_url || "/no-profile/no-profile.jpg",
             city: user.city || "Not specified",
             created_at: user.created_at
         });

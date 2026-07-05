@@ -282,7 +282,7 @@ export default function ProfileContent() {
           <div className="relative group">
             <img
               className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
-              src={data.profile_image_url || "/placeholder.jpg"}
+              src={data.profile_image_url || "/no-profile/no-profile.jpg"}
               alt={data.name}
             />
             {editing && (

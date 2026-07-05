@@ -192,7 +192,7 @@ const Navbar = ({
 
   const displayName = user?.name || user?.email || "User";
 
-  const profileImage = user?.profile_image_url || "/default-avatar.png";
+  const profileImage = user?.profile_image_url || "/no-profile/no-profile.jpg";
 
 
   // Cart state for navbar dropdown

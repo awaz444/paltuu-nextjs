@@ -679,19 +679,11 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                       <div className="flex flex-col xs:flex-row justify-between xs:items-center gap-3 mb-3">
                         {/* User Info */}
                         <div className="flex items-center min-w-0">
-                          {review.user_avatar ? (
-                            <img
-                              src={review.user_avatar}
-                              alt={review.user_name}
-                              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full mr-3 flex-shrink-0"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
-                              <span className="text-primary font-semibold text-sm sm:text-base">
-                                {review.user_name?.charAt(0) || "U"}
-                              </span>
-                            </div>
-                          )}
+                          <img
+                            src={review.user_avatar || "/no-profile/no-profile.jpg"}
+                            alt={review.user_name}
+                            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full mr-3 flex-shrink-0"
+                          />
 
                           <div className="min-w-0">
                             {/* Name + Date */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { EnvironmentOutlined, UserOutlined, PhoneOutlined } from "@ant-design/icons";
+import { EnvironmentOutlined, PhoneOutlined } from "@ant-design/icons";
 import "./LostAndFoundGrid.css";
 
 interface LostAndFoundPet {
@@ -135,17 +135,11 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
                         {/* Header */}
                         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
                             <div className="flex items-center gap-3">
-                                {selectedPet.user_profile_image ? (
-                                    <img
-                                        src={selectedPet.user_profile_image}
-                                        alt={selectedPet.user_name}
-                                        className="w-9 h-9 rounded-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
-                                        <UserOutlined className="text-gray-400" />
-                                    </div>
-                                )}
+                                <img
+                                    src={selectedPet.user_profile_image || "/no-profile/no-profile.jpg"}
+                                    alt={selectedPet.user_name}
+                                    className="w-9 h-9 rounded-full object-cover"
+                                />
                                 <div>
                                     <p className="font-semibold text-gray-900 leading-tight">{selectedPet.user_name}</p>
                                     <p className="text-xs text-gray-400">{formatDate(selectedPet.post_date)}</p>

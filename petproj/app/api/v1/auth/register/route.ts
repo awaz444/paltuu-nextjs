@@ -104,7 +104,7 @@ export async function POST(req: Request) {
         name: user.name,
         role: user.role,
         social_username: user.social_username,
-        profile_image_url: "/default-avatar.png"
+        profile_image_url: "/no-profile/no-profile.jpg"
       }
     }, { status: 201 });
 

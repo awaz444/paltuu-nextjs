@@ -285,7 +285,7 @@ export default function VetDetailsClient({
                                         {/* Profile Image */}
                                         <div className="relative mb-4">
                                             <img
-                                                src={vetDetails.profile_image_url || "/placeholder.jpg"}
+                                                src={vetDetails.profile_image_url || "/no-profile/no-profile.jpg"}
                                                 alt={vetDetails.vet_name}
                                                 className="w-32 h-32 rounded-full object-cover border-4 border-gray-100 cursor-pointer hover:opacity-90 transition-opacity"
                                                 onClick={() => setIsImagePreviewOpen(true)}
@@ -528,19 +528,11 @@ export default function VetDetailsClient({
                                                 className={`pb-4 ${index !== vetDetails.reviews.length - 1 ? 'border-b border-gray-100' : ''}`}
                                             >
                                                 <div className="flex items-start gap-3">
-                                                    {review.review_maker_profile_image_url ? (
-                                                        <img
-                                                            src={review.review_maker_profile_image_url}
-                                                            alt={review.review_maker_name}
-                                                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                                            <span className="text-primary font-semibold text-sm">
-                                                                {review.review_maker_name.charAt(0).toUpperCase()}
-                                                            </span>
-                                                        </div>
-                                                    )}
+                                                    <img
+                                                        src={review.review_maker_profile_image_url || "/no-profile/no-profile.jpg"}
+                                                        alt={review.review_maker_name}
+                                                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0"
+                                                    />
 
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 mb-2">
@@ -598,7 +590,7 @@ export default function VetDetailsClient({
             >
                 <div className="relative bg-black rounded-2xl overflow-hidden flex items-center justify-center">
                     <img
-                        src={vetDetails.profile_image_url || "/placeholder.jpg"}
+                        src={vetDetails.profile_image_url || "/no-profile/no-profile.jpg"}
                         alt={vetDetails.vet_name}
                         className="w-full h-auto max-h-[85vh] object-contain"
                     />

@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
                 email: dbUser.email,
                 name: dbUser.name,
                 role: dbUser.role,
-                profile_image_url: dbUser.profile_image_url || "/default-avatar.png"
+                profile_image_url: dbUser.profile_image_url || "/no-profile/no-profile.jpg"
             }
         });
     } catch (error) {

@@ -44,17 +44,11 @@ export default function ProfilePage() {
                     {userData ? (
                         <div className="space-y-6">
                             <div className="flex items-center space-x-4">
-                                {userData.profile_image_url ? (
-                                    <img
-                                        src={userData.profile_image_url}
-                                        alt="Profile"
-                                        className="w-24 h-24 rounded-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center text-xl font-semibold text-gray-600">
-                                        {userData.username.charAt(0).toUpperCase()}
-                                    </div>
-                                )}
+                                <img
+                                    src={userData.profile_image_url || "/no-profile/no-profile.jpg"}
+                                    alt="Profile"
+                                    className="w-24 h-24 rounded-full object-cover"
+                                />
                                 <div>
                                     <h2 className="text-2xl font-semibold text-gray-800">{userData.name}</h2>
                                     <p className="text-lg text-gray-600">{userData.username}</p>

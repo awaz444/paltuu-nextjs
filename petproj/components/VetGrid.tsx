@@ -75,12 +75,12 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
                                     <img
                                         src={
                                             vet.profile_image_url ||
-                                            "/placeholder.jpg"
+                                            "/no-profile/no-profile.jpg"
                                         }
                                         alt={vet.name}
                                         className="w-24 h-24 object-cover rounded-full sm:mr-4 mb-4 sm:mb-0 flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
                                         onClick={() => setPreviewImage({
-                                            url: vet.profile_image_url || "/placeholder.jpg",
+                                            url: vet.profile_image_url || "/no-profile/no-profile.jpg",
                                             title: vet.name
                                         })}
                                     />

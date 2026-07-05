@@ -160,7 +160,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           name: session.user.name || undefined,
           email: session.user.email || "",
           role: (session.user as any).role || "guest",
-          profile_image_url: session.user.image || "/default-avatar.png",
+          profile_image_url: session.user.image || "/no-profile/no-profile.jpg",
           method: "google",
         };
 
@@ -220,7 +220,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       name: userData.name,
       email: userData.email,
       role: userData.role,
-      profile_image_url: userData.profile_image_url || "/default-avatar.png",
+      profile_image_url: userData.profile_image_url || "/no-profile/no-profile.jpg",
       method: "api",
     };
 

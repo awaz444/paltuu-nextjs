@@ -851,12 +851,10 @@ export default function ManageClinicsPage() {
             render: (_: any, r: VetRow) => (
                 <div className="flex items-center gap-3">
                     <Avatar
-                        src={r.profile_image_url || undefined}
+                        src={r.profile_image_url || "/no-profile/no-profile.jpg"}
                         size={42}
                         style={{ background: `${PC}15`, color: PC, flexShrink: 0 }}
-                    >
-                        {!r.profile_image_url && r.name?.[0]}
-                    </Avatar>
+                    />
                     <div>
                         <div className="font-semibold text-gray-900 text-sm flex items-center gap-2">
                             {r.name}
@@ -1286,12 +1284,10 @@ export default function ManageClinicsPage() {
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex items-center gap-3">
                                         <Avatar
-                                            src={vet.profile_image_url || undefined}
+                                            src={vet.profile_image_url || "/no-profile/no-profile.jpg"}
                                             size={44}
                                             style={{ background: `${PC}15`, color: PC, flexShrink: 0 }}
-                                        >
-                                            {!vet.profile_image_url && vet.name?.[0]}
-                                        </Avatar>
+                                        />
                                         <div>
                                             <div className="font-semibold text-gray-900 text-sm flex items-center gap-2">
                                                 {vet.name}

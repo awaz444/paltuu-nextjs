@@ -30,73 +30,66 @@ export async function GET(req: NextRequest) {
         if (!userIdRaw) return errorResponse("UNAUTHORIZED", "Missing or invalid JWT", 401);
         const userId = parseInt(String(userIdRaw), 10);
 
-        const [hashtagsRes, usersRes, breedsRes] = await Promise.all([
-            // Trending hashtags — top 15 by recent activity in last 7 days
+        const [hashtagsRes, mediaPostsRes, breedsRes] = await Promise.all([
+            // Trending hashtags — ranked by activity in the last 7 days, falling back
+            // to all-time post_count when there's no recent activity yet
             db.query(`
                 SELECT
                     h.tag,
                     h.post_count,
-                    COUNT(ph.post_id) AS recent_count
-                FROM post_hashtags ph
-                JOIN hashtags h ON h.hashtag_id = ph.hashtag_id
-                WHERE ph.created_at >= NOW() - INTERVAL '7 days'
+                    COUNT(ph.post_id) FILTER (WHERE ph.created_at >= NOW() - INTERVAL '7 days') AS recent_count
+                FROM hashtags h
+                LEFT JOIN post_hashtags ph ON ph.hashtag_id = h.hashtag_id
+                WHERE h.post_count > 0
                 GROUP BY h.hashtag_id, h.tag, h.post_count
-                ORDER BY recent_count DESC
+                ORDER BY recent_count DESC, h.post_count DESC
                 LIMIT 15
             `),
 
-            // Suggested users — mutual follows first, then follower count; excludes blocked users
+            // Media grid — trending posts (last 7 days, ranked by engagement) first,
+            // then older posts with media to fill the grid, newest first; excludes blocked users
             db.query(`
-                WITH my_following AS (
-                    SELECT following_id FROM social_follows WHERE follower_id = $1
-                ),
-                blocked AS (
-                    SELECT blocked_id AS user_id FROM user_blocks WHERE blocker_id = $1
-                    UNION
-                    SELECT blocker_id AS user_id FROM user_blocks WHERE blocked_id = $1
-                ),
-                mutual AS (
+                WITH candidate_posts AS (
                     SELECT
-                        sf.following_id AS user_id,
-                        COUNT(*) AS mutual_count
-                    FROM social_follows sf
-                    WHERE sf.follower_id IN (SELECT following_id FROM my_following)
-                      AND sf.following_id != $1
-                      AND sf.following_id NOT IN (SELECT following_id FROM my_following)
-                      AND sf.following_id NOT IN (SELECT user_id FROM blocked)
-                    GROUP BY sf.following_id
+                        p.post_id, p.content, p.like_count, p.comment_count, p.created_at,
+                        u.user_id, u.name AS author_name,
+                        u.social_username, u.profile_image_url AS author_image,
+                        (p.created_at >= NOW() - INTERVAL '7 days') AS is_trending,
+                        ((p.like_count * 2) + (p.comment_count * 3)) AS rank_score
+                    FROM social_posts p
+                    JOIN users u ON u.user_id = p.user_id
+                    WHERE p.is_deleted = false
+                      AND p.is_hidden = false
+                      AND u.is_private = false
+                      AND EXISTS (SELECT 1 FROM social_post_media m WHERE m.post_id = p.post_id)
+                      AND NOT EXISTS (
+                          SELECT 1 FROM user_blocks b
+                          WHERE (b.blocker_id = $1 AND b.blocked_id = p.user_id)
+                             OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
+                      )
                 )
                 SELECT
-                    u.user_id,
-                    u.name,
-                    u.social_username,
-                    u.profile_image_url,
-                    u.follower_count,
-                    COALESCE(m.mutual_count, 0) AS mutual_follows,
-                    false AS is_following
-                FROM users u
-                LEFT JOIN mutual m ON m.user_id = u.user_id
-                WHERE u.user_id != $1
-                  AND u.is_deleted = false
-                  AND u.user_id NOT IN (SELECT following_id FROM my_following)
-                  AND u.user_id NOT IN (SELECT user_id FROM blocked)
-                ORDER BY mutual_follows DESC, u.follower_count DESC
-                LIMIT 10
+                    cp.post_id, cp.content, cp.like_count, cp.comment_count, cp.created_at,
+                    cp.user_id, cp.author_name, cp.social_username, cp.author_image,
+                    (SELECT json_agg(m.* ORDER BY m.ordering) FROM social_post_media m WHERE m.post_id = cp.post_id) AS media
+                FROM candidate_posts cp
+                ORDER BY cp.is_trending DESC, cp.rank_score DESC, cp.created_at DESC, cp.post_id DESC
+                LIMIT 30
             `, [userId]),
 
             // Trending breeds — derived from pets + adoption_listings
             db.query(`
-                SELECT breed, 
+                SELECT breed,
                        COUNT(*) FILTER (WHERE source='pet') AS pet_count,
                        COUNT(*) FILTER (WHERE source='adoption') AS adoption_count
                 FROM (
-                    SELECT pet_breed AS breed, 'pet' AS source FROM pets WHERE is_deleted = false
+                    SELECT pet_breed AS breed, 'pet' AS source FROM pets WHERE approved = true
                     UNION ALL
-                    SELECT pet_breed AS breed, 'adoption' FROM pets WHERE listing_type = 'adoption' AND is_deleted = false
+                    SELECT pet_breed AS breed, 'adoption' FROM pets WHERE listing_type = 'adoption' AND approved = true
                 ) t
                 WHERE breed IS NOT NULL
-                GROUP BY breed 
-                ORDER BY COUNT(*) DESC 
+                GROUP BY breed
+                ORDER BY COUNT(*) DESC
                 LIMIT 10
             `),
         ]);
@@ -106,7 +99,7 @@ export async function GET(req: NextRequest) {
                 tag: r.tag,
                 post_count: r.post_count,
             })),
-            suggested_users: usersRes.rows,
+            media_posts: mediaPostsRes.rows,
             trending_breeds: breedsRes.rows,
         });
 

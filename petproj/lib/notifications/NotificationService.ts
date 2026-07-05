@@ -240,7 +240,7 @@ export class NotificationService {
             priority: "high" as const,
             notification: {
               sound: "default",
-              channel_id: "paltuu_default",
+              channel_id: "default",
             },
           },
         };
@@ -491,7 +491,7 @@ export class NotificationService {
         INSERT INTO user_devices (user_id, fcm_token, device_platform, created_at, updated_at)
         VALUES ($1, $2, $3, NOW(), NOW())
         ON CONFLICT (fcm_token) DO UPDATE
-        SET updated_at = NOW(), device_platform = $3
+        SET user_id = $1, updated_at = NOW(), device_platform = $3
         `,
         [userId, fcmToken, platform]
       );
@@ -541,7 +541,7 @@ export class NotificationService {
           priority: "high" as const,
           notification: {
             sound: "default",
-            channel_id: "paltuu_default",
+            channel_id: "default",
           },
         },
       };

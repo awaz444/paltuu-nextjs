@@ -89,8 +89,9 @@ export async function GET(req: NextRequest) {
     );
 
     let user;
+    const isNewUser = (userResult.rowCount ?? 0) === 0;
 
-    if ((userResult.rowCount ?? 0) === 0) {
+    if (isNewUser) {
       console.log(`[Mobile Google Callback] Auto-registering new Google user: ${email}`);
       const username = email.split('@')[0];
       const placeholderPassword = await bcrypt.hash(Math.random().toString(36), 10);
@@ -129,6 +130,7 @@ export async function GET(req: NextRequest) {
       name: user.name,
       email: user.email,
       role: user.role || 'regular user',
+      isNewUser: String(isNewUser),
       ...(user.profile_image_url ? { profile_image_url: user.profile_image_url } : {}),
     });
     return NextResponse.redirect(`${deepLinkBase}?${params.toString()}`);

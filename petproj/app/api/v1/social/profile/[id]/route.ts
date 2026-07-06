@@ -69,6 +69,11 @@ export async function GET(
         // 2. Fetch posts (hidden if private account and not following, or if blocked)
         let posts: any[] = [];
         if (!isPrivate && !isBlocked) {
+            // Reposts are included here (no `is_repost = false` filter) so they
+            // render inline in the main feed, same as the home feed — the
+            // Reposts tab was removed in favor of this. The original_* fields
+            // (via LEFT JOIN on the reposted post) are what PostCard needs to
+            // render a repost's embedded original.
             const postsRes = await db.query(`
                 SELECT
                     p.post_id, p.content, p.like_count, p.comment_count,
@@ -79,19 +84,38 @@ export async function GET(
                         FROM social_post_media m
                         WHERE m.post_id = p.post_id
                     ), '[]'::json) AS media,
+                    op.content           AS original_content,
+                    op.user_id           AS original_user_id,
+                    ou.name              AS original_author_name,
+                    ou.social_username   AS original_social_username,
+                    ou.profile_image_url AS original_author_image,
+                    COALESCE((
+                        SELECT json_agg(m.* ORDER BY m.ordering ASC)
+                        FROM social_post_media m
+                        WHERE m.post_id = op.post_id
+                    ), '[]'::json) AS original_media,
                     EXISTS(
                         SELECT 1 FROM social_likes l
                         WHERE l.post_id = p.post_id AND l.user_id = $2
                     ) AS is_liked,
                     EXISTS(
+                        SELECT 1 FROM social_reposts r
+                        WHERE r.post_id = p.post_id AND r.user_id = $2
+                    ) AS is_reposted,
+                    EXISTS(
+                        SELECT 1 FROM saved_posts sp
+                        WHERE sp.post_id = p.post_id AND sp.user_id = $2
+                    ) AS is_saved,
+                    EXISTS(
                         SELECT 1 FROM social_comments c
                         WHERE c.post_id = p.post_id AND c.user_id = $2 AND c.is_deleted = false
                     ) AS is_commented
                 FROM social_posts p
+                LEFT JOIN social_posts op ON op.post_id = p.original_post_id
+                LEFT JOIN users ou        ON ou.user_id = op.user_id
                 WHERE p.user_id = $1
                   AND p.is_deleted = false
                   AND (p.is_hidden = false OR p.user_id = $2)
-                  AND p.is_repost = false
                 ORDER BY p.created_at DESC
                 LIMIT 18
             `, [targetId, viewerId || 0]);

@@ -31,7 +31,16 @@ export async function POST(req: NextRequest) {
         const created_at = otpRes.rows[0].created_at;
 
         // Check if token is expired (1 hour)
-        const tokenCreatedTime = new Date(created_at).getTime();
+        const tokenDate = new Date(created_at);
+        const tokenCreatedTime = Date.UTC(
+            tokenDate.getFullYear(),
+            tokenDate.getMonth(),
+            tokenDate.getDate(),
+            tokenDate.getHours(),
+            tokenDate.getMinutes(),
+            tokenDate.getSeconds(),
+            tokenDate.getMilliseconds()
+        );
         const currentTime = new Date().getTime();
         const hourInMs = 60 * 60 * 1000;
 

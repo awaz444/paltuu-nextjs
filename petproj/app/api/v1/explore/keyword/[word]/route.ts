@@ -77,7 +77,7 @@ export async function GET(req: NextRequest, { params }: { params: { word: string
             LEFT JOIN social_likes sl ON sl.post_id = p.post_id AND sl.user_id = $2
             LEFT JOIN social_reposts sr ON sr.post_id = p.post_id AND sr.user_id = $2
             LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $2
-            WHERE p.content ~* ('\\m' || $1 || '\\M')
+            WHERE regexp_replace(lower(p.content), '\\[[^\\]]*\\]\\([^)]*\\)', ' ', 'g') ~* ('\\m' || $1 || '\\M')
               AND p.is_deleted = false
               AND p.is_hidden = false
               AND u.is_private = false
@@ -104,7 +104,7 @@ export async function GET(req: NextRequest, { params }: { params: { word: string
                 `SELECT COUNT(*)::int AS count
                  FROM social_posts p
                  JOIN users u ON u.user_id = p.user_id
-                 WHERE p.content ~* ('\\m' || $1 || '\\M')
+                 WHERE regexp_replace(lower(p.content), '\\[[^\\]]*\\]\\([^)]*\\)', ' ', 'g') ~* ('\\m' || $1 || '\\M')
                    AND p.is_deleted = false
                    AND p.is_hidden = false
                    AND u.is_private = false

@@ -64,7 +64,13 @@ export async function GET(req: NextRequest) {
                     SELECT
                         p.post_id,
                         regexp_replace(
-                            regexp_replace(lower(p.content), '(https?://\\S+|www\\.\\S+|[@#][a-z0-9_]+)', ' ', 'g'),
+                            regexp_replace(
+                                -- Strip encoded mention tokens first: {@}[Display Name](user:id)
+                                -- / [Name](pet:id). These carry the literal words "user"/"pet"
+                                -- and usernames, which must not count as content keywords.
+                                regexp_replace(lower(p.content), '\\[[^\\]]*\\]\\([^)]*\\)', ' ', 'g'),
+                                '(https?://\\S+|www\\.\\S+|\\{[@#]\\}|[@#][a-z0-9_]+)', ' ', 'g'
+                            ),
                             '[^a-z0-9\\s]', ' ', 'g'
                         ) AS cleaned,
                         (COALESCE(p.like_count, 0) * 2 + COALESCE(p.comment_count, 0) * 3 + 1)::numeric AS weight

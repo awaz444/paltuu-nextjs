@@ -473,13 +473,21 @@ export async function POST(req: NextRequest) {
             `, [userId, post_type, content]);
             const post = postRes.rows[0];
 
-            // 2. Add Media
+            // 2. Add Media — collect inserted rows so we can return media_id to the client
+            const insertedMedia: any[] = [];
             for (let i = 0; i < media.length; i++) {
                 const m = media[i];
-                await client.query(`
-                    INSERT INTO social_post_media (post_id, media_type, url, thumbnail_url, ordering)
-                    VALUES ($1, $2, $3, $4, $5)
-                `, [post.post_id, m.media_type, m.url, m.thumbnail_url || null, i]);
+                // For video rows, set video_status = 'pending' so the status endpoint
+                // reflects the correct state before MediaConvert is triggered.
+                const videoStatus = m.media_type === 'video' ? 'pending' : 'ready';
+                const mediaRes = await client.query(
+                    `INSERT INTO social_post_media
+                         (post_id, media_type, url, thumbnail_url, ordering, video_status)
+                     VALUES ($1, $2, $3, $4, $5, $6)
+                     RETURNING media_id, media_type, url, thumbnail_url, ordering, video_status, hls_url`,
+                    [post.post_id, m.media_type, m.url, m.thumbnail_url || null, i, videoStatus]
+                );
+                insertedMedia.push(mediaRes.rows[0]);
             }
 
             // 3. Increment Post Count
@@ -564,7 +572,9 @@ export async function POST(req: NextRequest) {
                 }).catch(() => {});
             }
 
-            return NextResponse.json(post, { status: 201 });
+            // Return post + media[] so the mobile app can read media_id for the
+            // MediaConvert confirm step (confirmVideoUpload needs media_id).
+            return NextResponse.json({ ...post, media: insertedMedia }, { status: 201 });
 
         } catch (e) {
             await client.query('ROLLBACK');

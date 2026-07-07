@@ -96,21 +96,28 @@ export async function POST(req: NextRequest) {
             const isVideo = file.type.startsWith("video/");
 
             if (isVideo) {
-                // Upload raw video to S3 posts/ folder
-                const ext = file.name.split(".").pop() || "mp4";
-                const url = await uploadToS3(buffer, "posts", file.type, ext);
+                // ── Video files must use the presigned-URL flow, NOT this endpoint ──
+                // This route streams bytes through the server and uploads to the wrong
+                // bucket (paltuu-social). Videos need to go to paltuu-videos-raw via a
+                // direct S3 presigned PUT so MediaConvert can pick them up for HLS transcoding.
+                //
+                // Correct flow:
+                //   1. GET  /api/v1/social/video-upload-url         → get presigned URL + video_key
+                //   2. PUT  <presigned_url>                          → upload raw video directly to S3
+                //   3. POST /api/v1/social/posts                     → create post (media_type: 'video')
+                //   4. POST /api/v1/social/video-upload-url          → confirm upload → triggers MediaConvert
+                return NextResponse.json(
+                    {
+                        error:
+                            "Video uploads must use the presigned S3 URL flow. " +
+                            "Call GET /api/v1/social/video-upload-url first to get a presigned upload URL, " +
+                            "then PUT the video directly to S3, then POST to /api/v1/social/video-upload-url " +
+                            "to confirm and trigger HLS transcoding.",
+                        code: "USE_VIDEO_UPLOAD_URL",
+                    },
+                    { status: 415 }
+                );
 
-                // Generate a thumbnail from first frame via Sharp (for video/gif support, limited)
-                // In production, use AWS MediaConvert or Lambda for proper video thumbnails
-                results.push({
-                    url,
-                    thumbnail_url: null, // Set up MediaConvert for proper video thumbnails
-                    media_type: "video",
-                    blurhash: "video",
-                    width: 0,
-                    height: 0,
-                    ordering: i,
-                });
 
             } else {
                 // 1. Optimize image: resize to max 1200px, convert to JPEG

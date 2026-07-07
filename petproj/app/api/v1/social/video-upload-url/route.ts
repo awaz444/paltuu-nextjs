@@ -14,12 +14,11 @@ export const dynamic = "force-dynamic";
  *
  * Query params:
  *   ?ext=mp4|mov|webm   (default: mp4)
- *   ?post_id=<uuid>     (optional — if the post is already created)
  *
  * Response:
  * {
  *   upload_url: string,   // PUT this URL with the raw video bytes
- *   video_key:  string,   // store this; pass it back in /video-confirm
+ *   video_key:  string,   // store this; pass it back in the confirm step
  *   expires_in: 900       // seconds
  * }
  */
@@ -39,21 +38,22 @@ export async function GET(req: NextRequest) {
             );
         }
 
-        const { uploadUrl, videoKey } = await getVideoUploadPresignedUrl(ext);
+        const { uploadUrl, videoKey, rawUrl } = await getVideoUploadPresignedUrl(ext);
 
         return NextResponse.json({
             upload_url: uploadUrl,
-            video_key: videoKey,
+            video_key:  videoKey,
+            raw_url:    rawUrl,    // S3 URL for immediate playback while HLS is transcoding
             expires_in: 900,
         });
     } catch (error) {
-        console.error("Video upload URL error:", error);
+        console.error("[video-upload-url GET] Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
 
 /**
- * POST /api/v1/social/video-upload-url/confirm
+ * POST /api/v1/social/video-upload-url
  *
  * Step 2 — called by the mobile app AFTER the raw upload to S3 is complete.
  * This kicks off MediaConvert and updates the media row status to "processing".
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
  * Body:
  * {
  *   video_key: string,    // from Step 1
- *   media_id:  string,    // the social_post_media row to update
+ *   media_id:  string,    // the social_post_media row to update (returned by POST /social/posts)
  * }
  *
  * Response:
@@ -95,21 +95,25 @@ export async function POST(req: NextRequest) {
         }
 
         // Submit MediaConvert job
+        console.log(`[video-upload-url] Submitting MediaConvert job for key: ${video_key}, media_id: ${media_id}`);
         const jobId = await createMediaConvertJob(video_key);
+        console.log(`[video-upload-url] MediaConvert job submitted: ${jobId}`);
 
-        // Update DB: mark as processing
+        // Update DB: mark as processing, store job ID and video key
         await db.query(
             `UPDATE social_post_media
-             SET video_status = 'processing',
+             SET video_status        = 'processing',
                  mediaconvert_job_id = $1,
-                 video_key = $2
+                 video_key           = $2
              WHERE media_id = $3`,
             [jobId, video_key, media_id]
         );
 
         return NextResponse.json({ job_id: jobId, status: "processing" });
     } catch (error) {
-        console.error("Video confirm error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        console.error("[video-upload-url POST] Error:", error);
+        // Surface the actual error message so the mobile app can display it
+        const message = error instanceof Error ? error.message : "Internal Server Error";
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }

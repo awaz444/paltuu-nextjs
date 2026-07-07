@@ -13,6 +13,8 @@ export enum NotificationType {
   SOCIAL_MENTION_POST = "social_mention_post",
   SOCIAL_MENTION_COMMENT = "social_mention_comment",
   SOCIAL_REPOST = "social_repost",
+  SOCIAL_VIDEO_READY = "social_video_ready",
+
 
   // Adoptions
   ADOPTION_NEW_APPLICATION = "adoption_new_application",
@@ -109,6 +111,13 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
     body: "reposted your post",
     deepLinkPattern: "paltuu://social/post/{entity_id}",
   },
+  [NotificationType.SOCIAL_VIDEO_READY]: {
+    type: NotificationType.SOCIAL_VIDEO_READY,
+    title: "Paltuu",
+    body: "Your video is ready to view! 🎬",
+    deepLinkPattern: "paltuu://social/post/{entity_id}",
+  },
+
 
   // ──── Adoptions ───────────────────────────────────────────────────────
   [NotificationType.ADOPTION_NEW_APPLICATION]: {

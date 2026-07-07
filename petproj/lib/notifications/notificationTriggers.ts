@@ -204,7 +204,27 @@ export const SocialNotifications = {
       },
     });
   },
+
+  /**
+   * Transcoding complete — notify the video owner
+   */
+  async onVideoReady(
+    authorId: number,
+    postId: number,
+    videoUrl?: string,
+    thumbnailUrl?: string
+  ) {
+    return NotificationService.createAndSend({
+      userId: authorId,
+      senderId: null, // System notification
+      type: NotificationType.SOCIAL_VIDEO_READY,
+      entityType: EntityType.SOCIAL_POST,
+      entityId: postId,
+      imageUrl: thumbnailUrl || videoUrl,
+    });
+  },
 };
+
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════

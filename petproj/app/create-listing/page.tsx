@@ -244,6 +244,7 @@ export default function CreatePetListing() {
             return;
         }
         setIsSubmitting(true);
+        let petId: number | null = null;
         try {
             const newPet = {
                 pet_name: title || null,
@@ -262,7 +263,7 @@ export default function CreatePetListing() {
                 tags: selectedTags,
             };
             const petResult = await dispatch(postPet(newPet)).unwrap();
-            const petId = petResult?.pet_id;
+            petId = petResult?.pet_id;
             if (!petId) throw new Error("Failed to get pet ID from response");
             if (fileList.length > 0) {
                 const formData = new FormData();
@@ -277,6 +278,13 @@ export default function CreatePetListing() {
             router.push("/listing-created");
         } catch (error) {
             console.error("Error creating pet listing:", error);
+            if (petId) {
+                try {
+                    await axios.delete(`/api/v1/pets/${petId}`);
+                } catch (deleteError) {
+                    console.error("Failed to roll back pet listing creation:", deleteError);
+                }
+            }
             message.error("Failed to create pet listing. Please try again.");
         } finally {
             setIsSubmitting(false);

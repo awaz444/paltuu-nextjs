@@ -114,7 +114,7 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
   [NotificationType.SOCIAL_VIDEO_READY]: {
     type: NotificationType.SOCIAL_VIDEO_READY,
     title: "Paltuu",
-    body: "Your video is ready to view! 🎬",
+    body: "Your video is ready to view!",
     deepLinkPattern: "paltuu://social/post/{entity_id}",
   },
 
@@ -128,7 +128,7 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
   },
   [NotificationType.ADOPTION_APPLICATION_APPROVED]: {
     type: NotificationType.ADOPTION_APPLICATION_APPROVED,
-    title: "Application Approved 🎉",
+    title: "Application Approved",
     body: (data) => `Your application for ${data.pet_name || 'the pet'} was approved!`,
     deepLinkPattern: "paltuu://adoptions/applications/{entity_id}",
   },
@@ -146,7 +146,7 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
   },
   [NotificationType.ADOPTION_LISTING_APPROVED]: {
     type: NotificationType.ADOPTION_LISTING_APPROVED,
-    title: "Listing Approved 🎉",
+    title: "Listing Approved",
     body: (data) => `Your listing "${data.pet_name}" has been approved!`,
     deepLinkPattern: "paltuu://adoptions/{entity_id}",
   },

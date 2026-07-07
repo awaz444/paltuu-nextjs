@@ -59,13 +59,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 await client.query("INSERT INTO social_comment_likes (comment_id, user_id) VALUES ($1, $2)", [commentId, userId]);
                 await client.query("UPDATE social_comments SET like_count = like_count + 1 WHERE comment_id = $1", [commentId]);
 
+                await client.query('COMMIT');
+
+                // Notify AFTER commit (fire-and-forget) — matches the comments route
+                // and guarantees we never notify about a like that rolled back.
                 if (commentAuthorId !== userId) {
                     const [likerRes, postRes] = await Promise.all([
-                        client.query(`SELECT name FROM users WHERE user_id = $1`, [userId]),
-                        client.query(`SELECT (SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1) as image_url`, [postId]),
+                        db.query(`SELECT name FROM users WHERE user_id = $1`, [userId]),
+                        db.query(`SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1`, [postId]),
                     ]);
                     const liker = likerRes.rows[0];
-                    const postImage = postRes.rows[0]?.image_url;
+                    const postImage = postRes.rows[0]?.url;
 
                     SocialNotifications.onCommentLiked(
                         commentAuthorId,
@@ -75,8 +79,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                         postImage
                     ).catch(() => {});
                 }
-
-                await client.query('COMMIT');
 
                 const updated = await client.query("SELECT like_count FROM social_comments WHERE comment_id = $1", [commentId]);
                 const likeCount = updated.rows[0]?.like_count ?? 0;

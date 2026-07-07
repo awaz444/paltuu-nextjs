@@ -62,17 +62,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 await client.query("INSERT INTO social_likes (post_id, user_id) VALUES ($1, $2)", [postId, userId]);
                 await client.query("UPDATE social_posts SET like_count = like_count + 1 WHERE post_id = $1", [postId]);
 
-                // Send notification (fire-and-forget, non-blocking)
+                await client.query('COMMIT');
+
+                // Notify AFTER commit (fire-and-forget) — matches the comments route
+                // and guarantees we never notify about a like that rolled back.
                 if (postAuthorId !== userId) {
-                    // Fetch liker and post details for notification
                     const [likerRes, postRes] = await Promise.all([
-                        client.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]),
-                        client.query(`SELECT
-                            (SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1) as image_url
-                            FROM social_posts WHERE post_id = $1`, [postId])
+                        db.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]),
+                        db.query(`SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1`, [postId]),
                     ]);
                     const liker = likerRes.rows[0];
-                    const post = postRes.rows[0];
+                    const postImage = postRes.rows[0]?.url;
 
                     SocialNotifications.onPostLiked(
                         postAuthorId,
@@ -80,11 +80,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                         parseInt(postId),
                         liker?.name || 'User',
                         liker?.profile_image_url,
-                        post?.image_url
+                        postImage
                     ).catch(() => {}); // Non-blocking
                 }
-
-                await client.query('COMMIT');
 
                 const updated = await client.query("SELECT like_count FROM social_posts WHERE post_id = $1", [postId]);
                 const likeCount = updated.rows[0]?.like_count ?? 0;

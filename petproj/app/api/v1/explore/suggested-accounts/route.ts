@@ -42,21 +42,45 @@ export async function GET(req: NextRequest) {
                 ORDER BY score DESC
                 LIMIT 10
             ),
-            -- Cheap popularity pre-filter so the scoring below never scans the full user table
+            -- The viewer's own posts, so we can find who's been interacting with them
+            my_posts AS (
+                SELECT post_id FROM social_posts
+                WHERE user_id = $1 AND is_deleted = false
+            ),
+            -- Top interactors: people who liked/commented on the viewer's posts in the
+            -- last 45 days (comments weighted heavier than likes). These are the
+            -- strongest "follow back" candidates.
+            interactors AS (
+                SELECT actor_id, SUM(weight) AS interactions_with_me
+                FROM (
+                    SELECT sl.user_id AS actor_id, COUNT(*)::numeric AS weight
+                    FROM social_likes sl
+                    JOIN my_posts mp ON mp.post_id = sl.post_id
+                    WHERE sl.user_id <> $1
+                      AND sl.created_at >= NOW() - INTERVAL '45 days'
+                    GROUP BY sl.user_id
+                    UNION ALL
+                    SELECT sc.user_id AS actor_id, (COUNT(*) * 2)::numeric AS weight
+                    FROM social_comments sc
+                    JOIN my_posts mp ON mp.post_id = sc.post_id
+                    WHERE sc.user_id <> $1
+                      AND sc.is_deleted = false
+                      AND sc.created_at >= NOW() - INTERVAL '45 days'
+                    GROUP BY sc.user_id
+                ) x
+                GROUP BY actor_id
+            ),
+            -- Candidate pool = popular accounts UNION everyone who interacts with the
+            -- viewer, so top interactors are always considered even with few followers.
             candidate_pool AS (
-                SELECT u.user_id
-                FROM users u
-                WHERE u.user_id <> $1
-                  AND NOT EXISTS (
-                      SELECT 1 FROM viewer_following vf WHERE vf.following_id = u.user_id
-                  )
-                  AND NOT EXISTS (
-                      SELECT 1 FROM user_blocks b
-                      WHERE (b.blocker_id = $1 AND b.blocked_id = u.user_id)
-                         OR (b.blocker_id = u.user_id AND b.blocked_id = $1)
-                  )
-                ORDER BY u.follower_count DESC NULLS LAST
-                LIMIT 500
+                SELECT user_id FROM (
+                    SELECT u.user_id
+                    FROM users u
+                    ORDER BY u.follower_count DESC NULLS LAST
+                    LIMIT 500
+                ) top_pop
+                UNION
+                SELECT actor_id AS user_id FROM interactors
             ),
             candidates AS (
                 SELECT
@@ -67,6 +91,7 @@ export async function GET(req: NextRequest) {
                     u.bio,
                     COALESCE(u.follower_count, 0) AS follower_count,
                     COALESCE(u.is_private, false) AS is_private,
+                    COALESCE(i.interactions_with_me, 0) AS interactions_with_me,
                     (
                         SELECT COUNT(*) FROM social_follows sf
                         WHERE sf.following_id = u.user_id
@@ -80,9 +105,28 @@ export async function GET(req: NextRequest) {
                           AND p2.is_deleted = false
                           AND pct.tag_id IN (SELECT tag_id FROM viewer_top_tags)
                     ) AS interest_overlap,
+                    -- How much engagement this account's own recent posts attract,
+                    -- so "who to follow" leans toward accounts people actually engage with.
+                    (
+                        SELECT COALESCE(SUM(COALESCE(p3.like_count, 0) + COALESCE(p3.comment_count, 0)), 0)
+                        FROM social_posts p3
+                        WHERE p3.user_id = u.user_id
+                          AND p3.is_deleted = false
+                          AND p3.created_at >= NOW() - INTERVAL '30 days'
+                    ) AS recent_engagement,
                     (u.city_id IS NOT NULL AND u.city_id = (SELECT city_id FROM me)) AS same_city
                 FROM users u
                 JOIN candidate_pool cp ON cp.user_id = u.user_id
+                LEFT JOIN interactors i ON i.actor_id = u.user_id
+                WHERE u.user_id <> $1
+                  AND NOT EXISTS (
+                      SELECT 1 FROM viewer_following vf WHERE vf.following_id = u.user_id
+                  )
+                  AND NOT EXISTS (
+                      SELECT 1 FROM user_blocks b
+                      WHERE (b.blocker_id = $1 AND b.blocked_id = u.user_id)
+                         OR (b.blocker_id = u.user_id AND b.blocked_id = $1)
+                  )
             )
             SELECT
                 user_id,
@@ -92,14 +136,18 @@ export async function GET(req: NextRequest) {
                 bio,
                 follower_count,
                 mutual_follows,
+                interactions_with_me,
+                recent_engagement,
                 (
                     LOG(1 + follower_count) * 1.0
                     + mutual_follows * 3.0
                     + interest_overlap * 2.0
+                    + interactions_with_me * 4.0
+                    + LOG(1 + recent_engagement) * 1.5
                     + CASE WHEN same_city THEN 2.0 ELSE 0 END
                 ) AS suggestion_score
             FROM candidates
-            WHERE (NOT is_private) OR mutual_follows > 0
+            WHERE (NOT is_private) OR mutual_follows > 0 OR interactions_with_me > 0
             ORDER BY suggestion_score DESC, follower_count DESC, user_id DESC
             LIMIT $2
         `, [userId, limit]);
@@ -113,6 +161,8 @@ export async function GET(req: NextRequest) {
                 bio: r.bio,
                 follower_count: Number(r.follower_count),
                 mutual_follows: Number(r.mutual_follows),
+                interactions_with_me: Number(r.interactions_with_me) || 0,
+                recent_engagement: Number(r.recent_engagement) || 0,
                 is_following: false,
             })),
         });

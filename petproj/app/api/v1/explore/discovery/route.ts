@@ -5,6 +5,28 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 export const dynamic = "force-dynamic";
 
 /**
+ * Common English stopwords + social filler, so trending keywords surface
+ * meaningful terms (pet, adopt, rescue, foster…) rather than glue words.
+ * Kept intentionally broad; short pet-relevant words (dog, cat, vet) are
+ * deliberately NOT included so they can still trend.
+ */
+const STOPWORDS = [
+    "the", "and", "for", "are", "but", "not", "you", "all", "any", "can", "had", "her",
+    "was", "one", "our", "out", "has", "him", "his", "how", "its", "let", "put", "say",
+    "she", "too", "use", "who", "did", "get", "got", "why", "yes", "yet", "day", "new",
+    "now", "old", "see", "two", "way", "off", "own", "per", "than", "that", "this", "with",
+    "have", "from", "they", "will", "your", "been", "were", "what", "when", "then", "them",
+    "some", "such", "very", "just", "like", "into", "over", "only", "also", "more", "most",
+    "much", "many", "here", "there", "their", "would", "could", "should", "about", "which",
+    "these", "those", "being", "doing", "going", "gonna", "wanna", "really", "still", "even",
+    "want", "wants", "need", "needs", "know", "make", "made", "take", "come", "back", "good",
+    "great", "love", "loves", "loved", "today", "guys", "everyone", "everything", "anyone",
+    "something", "someone", "http", "https", "www", "com", "dont", "cant", "wont", "didnt",
+    "ive", "youre", "youll", "thats", "isnt", "arent", "wasnt", "lol", "omg", "haha",
+    "please", "thanks", "thank", "hello", "yeah", "okay", "sure", "well", "one",
+];
+
+/**
  * Standard Error Envelope
  */
 function errorResponse(code: string, message: string, status: number) {
@@ -30,31 +52,53 @@ export async function GET(req: NextRequest) {
         if (!userIdRaw) return errorResponse("UNAUTHORIZED", "Missing or invalid JWT", 401);
         const userId = parseInt(String(userIdRaw), 10);
 
-        const [hashtagsRes, mediaPostsRes, breedsRes] = await Promise.all([
-            // Trending hashtags — ranked by the engagement (likes + weighted comments)
-            // of the posts using each tag in the last 14 days, so "trending" reflects
-            // what people are actually interacting with, not just raw post volume.
-            // The +1 per recent post keeps freshly-used tags in the running even before
-            // they accumulate likes. Falls back to all-time post_count on ties.
+        const [keywordsRes, mediaPostsRes, breedsRes] = await Promise.all([
+            // Trending keywords — the words people are actually engaging with. We
+            // tokenize the content of posts from the last 21 days (stripping URLs,
+            // @mentions and #hashtags), drop stopwords, and rank each word by the
+            // summed engagement (likes + weighted comments, +1 per post) of the posts
+            // it appears in. A word must show up in >= 2 distinct posts to count as
+            // "trending" (filters one-off noise). Blocked authors excluded.
             db.query(`
+                WITH recent_posts AS (
+                    SELECT
+                        p.post_id,
+                        regexp_replace(
+                            regexp_replace(lower(p.content), '(https?://\\S+|www\\.\\S+|[@#][a-z0-9_]+)', ' ', 'g'),
+                            '[^a-z0-9\\s]', ' ', 'g'
+                        ) AS cleaned,
+                        (COALESCE(p.like_count, 0) * 2 + COALESCE(p.comment_count, 0) * 3 + 1)::numeric AS weight
+                    FROM social_posts p
+                    JOIN users u ON u.user_id = p.user_id
+                    WHERE p.is_deleted = false
+                      AND p.is_hidden = false
+                      AND u.is_private = false
+                      AND p.created_at >= NOW() - INTERVAL '21 days'
+                      AND p.content IS NOT NULL AND p.content <> ''
+                      AND NOT EXISTS (
+                          SELECT 1 FROM user_blocks b
+                          WHERE (b.blocker_id = $1 AND b.blocked_id = p.user_id)
+                             OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
+                      )
+                ),
+                tokens AS (
+                    SELECT rp.post_id, rp.weight, w.word
+                    FROM recent_posts rp
+                    CROSS JOIN LATERAL regexp_split_to_table(rp.cleaned, '\\s+') AS w(word)
+                    WHERE length(w.word) >= 3
+                      AND w.word !~ '^[0-9]+$'
+                      AND w.word <> ALL($2::text[])
+                )
                 SELECT
-                    h.tag,
-                    h.post_count,
-                    COALESCE(SUM(
-                        CASE WHEN ph.created_at >= NOW() - INTERVAL '14 days'
-                             THEN (COALESCE(p.like_count, 0) + COALESCE(p.comment_count, 0) * 2 + 1)
-                             ELSE 0 END
-                    ), 0) AS engagement_score,
-                    COUNT(ph.post_id) FILTER (WHERE ph.created_at >= NOW() - INTERVAL '14 days') AS recent_count
-                FROM hashtags h
-                JOIN post_hashtags ph ON ph.hashtag_id = h.hashtag_id
-                JOIN social_posts p ON p.post_id = ph.post_id
-                    AND p.is_deleted = false AND p.is_hidden = false
-                WHERE h.post_count > 0
-                GROUP BY h.hashtag_id, h.tag, h.post_count
-                ORDER BY engagement_score DESC, recent_count DESC, h.post_count DESC
+                    word AS keyword,
+                    COUNT(DISTINCT post_id)::int AS post_count,
+                    SUM(weight) AS engagement_score
+                FROM tokens
+                GROUP BY word
+                HAVING COUNT(DISTINCT post_id) >= 2
+                ORDER BY engagement_score DESC, post_count DESC
                 LIMIT 15
-            `),
+            `, [userId, STOPWORDS]),
 
             // Media grid — "most interacted media" first. Ranked purely by a
             // time-decayed engagement score (likes/comments/reposts weighted, with a
@@ -113,11 +157,10 @@ export async function GET(req: NextRequest) {
         ]);
 
         return NextResponse.json({
-            trending_hashtags: hashtagsRes.rows.map((r) => ({
-                tag: r.tag,
-                post_count: r.post_count,
+            trending_keywords: keywordsRes.rows.map((r) => ({
+                keyword: r.keyword,
+                post_count: Number(r.post_count) || 0,
                 engagement_score: Number(r.engagement_score) || 0,
-                recent_count: Number(r.recent_count) || 0,
             })),
             media_posts: mediaPostsRes.rows,
             trending_breeds: breedsRes.rows,

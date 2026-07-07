@@ -36,18 +36,25 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         const queryParams: any[] = [postId, userId, limit, ...(cursor ? [cursor] : [])];
 
         const result = await db.query(`
+            WITH comment_media AS (
+                SELECT comment_id, json_agg(m ORDER BY m.ordering) AS media
+                FROM social_comment_media m
+                GROUP BY comment_id
+            )
             SELECT
                 c.*,
                 u.name              AS author_name,
                 u.profile_image_url AS author_image,
                 u.social_username,
                 false               AS is_blocked_by_me,
-                false               AS is_blocking_me
+                false               AS is_blocking_me,
+                COALESCE(cm.media, '[]'::json) AS media
             FROM social_comments c
             JOIN users u ON c.user_id = u.user_id
+            LEFT JOIN comment_media cm ON cm.comment_id = c.comment_id
             WHERE c.post_id = $1 AND c.is_deleted = false
             AND NOT EXISTS (
-                SELECT 1 FROM user_blocks b 
+                SELECT 1 FROM user_blocks b
                 WHERE (b.blocker_id = $2 AND b.blocked_id = c.user_id)
                    OR (b.blocker_id = c.user_id AND b.blocked_id = $2)
             )
@@ -89,7 +96,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
         const postId = params.id;
         const body = await req.json();
-        const { content, parent_comment_id } = body;
+        const { content, parent_comment_id, media } = body;
+        const mediaList: any[] = Array.isArray(media) ? media : [];
 
         if (!content?.trim()) {
             return NextResponse.json({ error: "Comment content is required" }, { status: 400 });
@@ -146,6 +154,21 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             `, [postId, userId, parent_comment_id || null, root_comment_id, content.trim(), depth]);
 
             comment = result.rows[0];
+
+            // Persist attached media (images/videos already uploaded via /social/upload)
+            for (let i = 0; i < mediaList.length; i++) {
+                const m = mediaList[i];
+                await client.query(`
+                    INSERT INTO social_comment_media (comment_id, media_type, url, thumbnail_url, ordering)
+                    VALUES ($1, $2, $3, $4, $5)
+                `, [comment.comment_id, m.media_type, m.url, m.thumbnail_url || null, i]);
+            }
+            comment.media = mediaList.map((m, i) => ({
+                media_type: m.media_type,
+                url: m.url,
+                thumbnail_url: m.thumbnail_url || null,
+                ordering: i,
+            }));
 
             // Parse, validate & persist @mentions from content (covers both
             // top-level comments and replies — both are social_comments rows)

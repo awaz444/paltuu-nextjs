@@ -48,10 +48,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 u.social_username,
                 false               AS is_blocked_by_me,
                 false               AS is_blocking_me,
-                COALESCE(cm.media, '[]'::json) AS media
+                COALESCE(cm.media, '[]'::json) AS media,
+                (scl.comment_id IS NOT NULL) AS is_liked
             FROM social_comments c
             JOIN users u ON c.user_id = u.user_id
             LEFT JOIN comment_media cm ON cm.comment_id = c.comment_id
+            LEFT JOIN social_comment_likes scl ON scl.comment_id = c.comment_id AND scl.user_id = $2
             WHERE c.post_id = $1 AND c.is_deleted = false
             AND NOT EXISTS (
                 SELECT 1 FROM user_blocks b

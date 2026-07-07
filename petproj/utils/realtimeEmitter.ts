@@ -52,6 +52,19 @@ export async function emitComment(postId: string | number, comment: Record<strin
 }
 
 /**
+ * Emit a comment/reply like update to everyone viewing the post
+ */
+export async function emitCommentLike(
+    postId: string | number,
+    commentId: string | number,
+    userId: number,
+    likeCount: number,
+    liked: boolean
+) {
+    await emitToRoom(`post:${postId}`, "comment:liked", { postId, commentId, userId, like_count: likeCount, liked });
+}
+
+/**
  * Emit a repost event to everyone viewing the post
  */
 export async function emitRepost(postId: string | number, userId: number, repostCount: number) {

@@ -76,6 +76,7 @@ export const SocialNotifications = {
     replierId: number,
     postId: number,
     replierName: string,
+    replyPreview?: string,
     postImageUrl?: string
   ) {
     return NotificationService.createAndSend({
@@ -87,6 +88,7 @@ export const SocialNotifications = {
       imageUrl: postImageUrl,
       customData: {
         sender_name: replierName,
+        preview: replyPreview?.substring(0, 100),
       },
     });
   },
@@ -144,7 +146,8 @@ export const SocialNotifications = {
     mentionedBy: number,
     postId: number,
     mentionerName: string,
-    postImageUrl?: string
+    postImageUrl?: string,
+    preview?: string
   ) {
     return NotificationService.createAndSend({
       userId: mentionedUserId,
@@ -155,6 +158,7 @@ export const SocialNotifications = {
       imageUrl: postImageUrl,
       customData: {
         sender_name: mentionerName,
+        preview: preview?.substring(0, 100),
       },
     });
   },
@@ -167,7 +171,8 @@ export const SocialNotifications = {
     mentionedBy: number,
     postId: number,
     mentionerName: string,
-    postImageUrl?: string
+    postImageUrl?: string,
+    preview?: string
   ) {
     return NotificationService.createAndSend({
       userId: mentionedUserId,
@@ -178,6 +183,7 @@ export const SocialNotifications = {
       imageUrl: postImageUrl,
       customData: {
         sender_name: mentionerName,
+        preview: preview?.substring(0, 100),
       },
     });
   },

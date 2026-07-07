@@ -228,6 +228,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 userId,
                 parseInt(postId),
                 commenter?.name || 'User',
+                content.trim(),
                 postImage
             ).catch(() => {});
         }
@@ -257,6 +258,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 postId: parseInt(postId),
                 isComment: true,
                 postImageUrl: postImage,
+                preview: content.trim(),
             }).catch(() => {});
         }
 

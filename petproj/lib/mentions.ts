@@ -223,6 +223,7 @@ export async function notifyNewMentions(
         postId: number;
         isComment: boolean;
         postImageUrl?: string;
+        preview?: string;
     }
 ): Promise<void> {
     if (mentions.length === 0) return;
@@ -252,7 +253,7 @@ export async function notifyNewMentions(
 
     await Promise.allSettled(
         Array.from(recipientIds).map((recipientId) =>
-            trigger(recipientId, context.mentionerId, context.postId, context.mentionerName, context.postImageUrl).catch(
+            trigger(recipientId, context.mentionerId, context.postId, context.mentionerName, context.postImageUrl, context.preview).catch(
                 (err: unknown) => console.error("notifyNewMentions: notification dispatch failed", err)
             )
         )

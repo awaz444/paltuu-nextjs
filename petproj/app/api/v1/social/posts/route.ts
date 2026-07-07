@@ -569,6 +569,7 @@ export async function POST(req: NextRequest) {
                     postId: Number(post.post_id),
                     isComment: false,
                     postImageUrl: media[0]?.url,
+                    preview: content,
                 }).catch(() => {});
             }
 

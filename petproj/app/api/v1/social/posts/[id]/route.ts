@@ -302,6 +302,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                     mentionerName: authorRes.rows[0]?.name || 'User',
                     postId: Number(postId),
                     isComment: false,
+                    preview: content,
                 }).catch(() => {});
             }
 

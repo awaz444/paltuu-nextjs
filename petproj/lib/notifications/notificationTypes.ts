@@ -3,6 +3,26 @@
  * Every notification must have one of these types
  */
 
+// Mention token format shared with lib/mentions.ts: {@}[name](user|pet:id)
+const MENTION_TOKEN_REGEX = /\{@\}\[([^\[\]]{1,100}?)\]\((?:user|pet):\d+\)/g;
+const PREVIEW_MAX = 48;
+
+/**
+ * Turn raw comment/post text into a short, clean single-line preview:
+ * mention tokens → "@name", emoji/pictographs stripped, whitespace collapsed,
+ * and truncated so notification copy never runs long.
+ */
+const toPreview = (raw?: string): string => {
+  if (!raw) return "";
+  const cleaned = raw
+    .replace(MENTION_TOKEN_REGEX, (_m, name) => `@${name}`)
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (cleaned.length <= PREVIEW_MAX) return cleaned;
+  return cleaned.slice(0, PREVIEW_MAX).trimEnd() + "…";
+};
+
 export enum NotificationType {
   // Social
   SOCIAL_POST_LIKE = "social_post_like",
@@ -72,13 +92,19 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
   [NotificationType.SOCIAL_POST_COMMENT]: {
     type: NotificationType.SOCIAL_POST_COMMENT,
     title: (data) => data.sender_name || "Someone",
-    body: "commented on your post",
+    body: (data) => {
+      const p = toPreview(data.preview);
+      return p ? `commented: "${p}"` : "commented on your post";
+    },
     deepLinkPattern: "paltuu://social/post/{entity_id}",
   },
   [NotificationType.SOCIAL_COMMENT_REPLY]: {
     type: NotificationType.SOCIAL_COMMENT_REPLY,
     title: (data) => data.sender_name || "Someone",
-    body: "replied to your comment",
+    body: (data) => {
+      const p = toPreview(data.preview);
+      return p ? `replied: "${p}"` : "replied to your comment";
+    },
     deepLinkPattern: "paltuu://social/post/{entity_id}",
   },
   [NotificationType.SOCIAL_COMMENT_LIKE]: {
@@ -96,13 +122,19 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
   [NotificationType.SOCIAL_MENTION_POST]: {
     type: NotificationType.SOCIAL_MENTION_POST,
     title: (data) => data.sender_name || "Someone",
-    body: "mentioned you in a post",
+    body: (data) => {
+      const p = toPreview(data.preview);
+      return p ? `mentioned you in a post: "${p}"` : "mentioned you in a post";
+    },
     deepLinkPattern: "paltuu://social/post/{entity_id}",
   },
   [NotificationType.SOCIAL_MENTION_COMMENT]: {
     type: NotificationType.SOCIAL_MENTION_COMMENT,
     title: (data) => data.sender_name || "Someone",
-    body: "mentioned you in a comment",
+    body: (data) => {
+      const p = toPreview(data.preview);
+      return p ? `mentioned you: "${p}"` : "mentioned you in a comment";
+    },
     deepLinkPattern: "paltuu://social/post/{entity_id}",
   },
   [NotificationType.SOCIAL_REPOST]: {

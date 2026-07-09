@@ -82,6 +82,17 @@ export async function getUserIdFromRequest(req: NextRequest): Promise<string | n
  */
 export async function getUserFromRequest(req: NextRequest): Promise<JWTPayload | null> {
   try {
+    // Check Authorization Header (Bearer Token) - Primary for Mobile
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        return jwt.verify(token, process.env.TOKEN_SECRET!) as JWTPayload;
+      } catch (err) {
+        console.warn('⚠️ [Server Auth] Invalid Bearer token:', err instanceof Error ? err.message : err);
+      }
+    }
+
     // Check NextAuth token
     const nextAuthToken = await getToken({
       req: req as any,

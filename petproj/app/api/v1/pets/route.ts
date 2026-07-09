@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
         const {
             pet_name, pet_type, pet_breed, city_id, area, age_months, contact_number,
             description, sex, listing_type, vaccinated, neutered, price, rescue_story,
-            energy_level, cuddliness_level
+            energy_level, cuddliness_level, tags
         } = body;
 
         // Auto-assign owner_id (Security fix)
@@ -168,6 +168,14 @@ export async function POST(req: NextRequest) {
         );
 
         const newPet = result.rows[0];
+
+        if (Array.isArray(tags) && tags.length > 0) {
+            const values = tags.map((_: any, i: number) => `($1, $${i + 2})`).join(', ');
+            await db.query(
+                `INSERT INTO pet_tag_assignments (pet_id, tag_id) VALUES ${values} ON CONFLICT DO NOTHING`,
+                [newPet.pet_id, ...tags]
+            );
+        }
 
         // Fire-and-forget: notify admin of new listing awaiting approval.
         // Fetch owner info first, then send — all in background, never blocks the response.

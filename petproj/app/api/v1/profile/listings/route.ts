@@ -17,12 +17,14 @@ export async function GET(req: NextRequest) {
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const query = `
-            SELECT 
-                p.*, 
+            SELECT
+                p.*,
                 cat.category_name AS category,
-                (SELECT image_url FROM pet_images WHERE pet_id = p.pet_id LIMIT 1) AS image_url
+                cities.city_name AS city_name,
+                (SELECT image_url FROM pet_images WHERE pet_id = p.pet_id ORDER BY "order" ASC LIMIT 1) AS image_url
             FROM pets p
             LEFT JOIN pet_category cat ON p.pet_type = cat.category_id
+            LEFT JOIN cities ON p.city_id = cities.city_id
             WHERE p.owner_id = $1
             ORDER BY p.created_at DESC;
         `;

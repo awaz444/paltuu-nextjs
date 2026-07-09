@@ -20,12 +20,22 @@ export async function GET(req: NextRequest) {
 
         // 1. Fetch Adoptions
         const adoptionQuery = `
-            SELECT 
+            SELECT
                 'adoption' AS application_type,
                 aa.adoption_id AS application_id,
                 aa.pet_id,
                 aa.status,
                 aa.created_at,
+                aa.adopter_name,
+                aa.adopter_address,
+                aa.contact_number,
+                aa.age_of_youngest_child,
+                aa.other_pets_details,
+                aa.other_pets_neutered,
+                aa.has_secure_outdoor_area,
+                aa.pet_sleep_location,
+                aa.pet_left_alone,
+                aa.additional_details,
                 p.pet_name,
                 p.pet_breed AS breed,
                 c.city_name,
@@ -42,12 +52,26 @@ export async function GET(req: NextRequest) {
 
         // 2. Fetch Fosters
         const fosterQuery = `
-            SELECT 
+            SELECT
                 'foster' AS application_type,
                 fa.foster_id AS application_id,
                 fa.pet_id,
                 fa.status,
                 fa.created_at,
+                fa.fosterer_name,
+                fa.fosterer_address,
+                fa.foster_start_date,
+                fa.foster_end_date,
+                fa.fostering_experience,
+                fa.age_of_youngest_child,
+                fa.other_pets_details,
+                fa.other_pets_neutered,
+                fa.has_secure_outdoor_area,
+                fa.pet_sleep_location,
+                fa.pet_left_alone,
+                fa.time_at_home,
+                fa.reason_for_fostering,
+                fa.additional_details,
                 p.pet_name,
                 p.pet_breed AS breed,
                 c.city_name,

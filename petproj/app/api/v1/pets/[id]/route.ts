@@ -81,7 +81,7 @@ export async function PUT(req: NextRequest) {
             description, sex, listing_type, vaccinated, neutered, price, rescue_story,
             energy_level, cuddliness_level, adoption_status, health_issues, min_age_of_children,
             can_live_with_dogs, can_live_with_cats, must_have_someone_home,
-            images
+            images, tags
         } = body;
 
         const client = await db.connect();
@@ -145,6 +145,17 @@ export async function PUT(req: NextRequest) {
                             [id, img.image_url, i]
                         );
                     }
+                }
+            }
+
+            if (Array.isArray(tags)) {
+                await client.query('DELETE FROM pet_tag_assignments WHERE pet_id = $1', [id]);
+                if (tags.length > 0) {
+                    const values = tags.map((_, i) => `($1, $${i + 2})`).join(', ');
+                    await client.query(
+                        `INSERT INTO pet_tag_assignments (pet_id, tag_id) VALUES ${values} ON CONFLICT DO NOTHING`,
+                        [id, ...tags]
+                    );
                 }
             }
 

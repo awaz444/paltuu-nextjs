@@ -37,6 +37,7 @@
     "@upstash/redis": "^1.35.4",
     "@vercel/analytics": "^1.4.1",
     "antd": "^5.22.2",
+    "apple-signin-auth": "^2.0.0",
     "aws": "^0.0.3-2",
     "axios": "^1.7.7",
     "bcryptjs": "^3.0.3",

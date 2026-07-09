@@ -3,6 +3,7 @@ import { db } from "@/db/index";
 import { generateMobileTokenPair } from "@/utils/mobileAuth";
 import appleSignin from "apple-signin-auth";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 export const dynamic = "force-dynamic";
 
@@ -37,9 +38,14 @@ export async function POST(req: NextRequest) {
         ignoreExpiration: false,
       });
     } catch (verifyError: any) {
+      const decoded = jwt.decode(identityToken) as any;
       console.error("[Mobile Apple Auth] Token verification failed:", verifyError);
+      console.error("[Mobile Apple Auth] Decoded token payload was:", decoded);
       return NextResponse.json(
-        { error: "Invalid Apple identity token: " + verifyError.message },
+        { 
+          error: "Invalid Apple identity token: " + verifyError.message,
+          decodedAudience: decoded?.aud
+        },
         { status: 400 }
       );
     }

@@ -12,6 +12,7 @@ interface User {
   email: string;
   profile_image_url?: string; // ✅ consistent naming
   role?: string;
+  social_username?: string | null;
   method: "google" | "api" | null;
 }
 
@@ -24,9 +25,12 @@ interface AuthContextProps {
     email: string;
     role: string;
     profile_image_url?: string;
+    social_username?: string | null;
   }) => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  updateSocialUsername: (handle: string) => void;
+  needsUsername: boolean;
   isHydrating: boolean;
 }
 
@@ -127,6 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             name: tokenUser.name,
             role: tokenUser.role,
             profile_image_url: tokenUser.profile_image_url,
+            social_username: tokenUser.social_username ?? null,
             method: "api"
           };
           setUser(hydratedUser);
@@ -155,12 +160,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user || user.method !== "google") {
       // First, try to fetch the user's database profile
       const fetchDatabaseProfile = async () => {
+        let socialUsername: string | null = null;
+        try {
+          const verifyResponse = await fetch("/api/v1/auth/verify", {
+            credentials: "include",
+            cache: "no-store",
+          });
+          if (verifyResponse.ok) {
+            const { valid, user: tokenUser } = await verifyResponse.json();
+            if (valid && tokenUser) {
+              socialUsername = tokenUser.social_username ?? null;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to fetch social_username for Google user:", e);
+        }
+
         const googleUser: User = {
           id: googleUserId,
           name: session.user.name || undefined,
           email: session.user.email || "",
           role: (session.user as any).role || "guest",
           profile_image_url: session.user.image || "/no-profile/no-profile.jpg",
+          social_username: socialUsername,
           method: "google",
         };
 
@@ -214,6 +236,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     email: string;
     role: string;
     profile_image_url?: string;
+    social_username?: string | null;
   }) => {
     const userWithMethod: User = {
       id: userData.id,
@@ -221,6 +244,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email: userData.email,
       role: userData.role,
       profile_image_url: userData.profile_image_url || "/no-profile/no-profile.jpg",
+      social_username: userData.social_username ?? null,
       method: "api",
     };
 
@@ -281,6 +305,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateSocialUsername = (handle: string) => {
+    setUser((prev) => (prev ? { ...prev, social_username: handle } : prev));
+  };
+
+  const needsUsername = isAuthenticated && !!user && !user.social_username;
+
   const logout = async () => {
    // console.log("Logout started, user method:", user?.method);
 
@@ -337,7 +367,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, refreshUser, isHydrating: isHydratingState }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, refreshUser, updateSocialUsername, needsUsername, isHydrating: isHydratingState }}>
       {children}
     </AuthContext.Provider>
   );

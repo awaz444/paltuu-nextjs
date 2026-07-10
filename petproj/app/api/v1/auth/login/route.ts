@@ -56,11 +56,11 @@ export async function POST(req: Request) {
     // 1. Fetch user by email OR username
     const result = isEmail
       ? await db.query(
-          'SELECT user_id, name, email, password, role, profile_image_url FROM users WHERE LOWER(email) = LOWER($1)',
+          'SELECT user_id, name, email, password, role, profile_image_url, social_username FROM users WHERE LOWER(email) = LOWER($1)',
           [identifier]
         )
       : await db.query(
-          'SELECT user_id, name, email, password, role, profile_image_url FROM users WHERE LOWER(social_username) = LOWER($1)',
+          'SELECT user_id, name, email, password, role, profile_image_url, social_username FROM users WHERE LOWER(social_username) = LOWER($1)',
           [identifier]
         );
 
@@ -180,7 +180,8 @@ export async function POST(req: Request) {
         email: user.email,
         name: user.name,
         role: user.role,
-        profile_image_url: user.profile_image_url || "/no-profile/no-profile.jpg"
+        profile_image_url: user.profile_image_url || "/no-profile/no-profile.jpg",
+        social_username: user.social_username || null
       }
     }, { status: 200 });
 

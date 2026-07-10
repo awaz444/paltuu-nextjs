@@ -4,7 +4,6 @@ import { generateMobileTokenPair } from "@/utils/mobileAuth";
 import { NextResponse } from "next/server";
 import { rateLimit } from "@/utils/rateLimit";
 import { validate } from "@/utils/validation";
-import { generateUniqueHandle } from "@/utils/usernameValidation";
 
 /**
  * @swagger
@@ -58,27 +57,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "User already exists" }, { status: 400 });
     }
 
-    // 3. Auto-generate a unique social_username from the user's display name
-    const socialUsername = await generateUniqueHandle(
-      name,
-      async (candidate) => {
-        const res = await db.query(
-          'SELECT 1 FROM users WHERE LOWER(social_username) = $1 LIMIT 1',
-          [candidate]
-        );
-        return (res.rowCount ?? 0) > 0;
-      }
-    );
-
-    // 4. Create user (with auto-generated handle)
+    // 3. Create user (social_username is picked explicitly by the client afterwards —
+    // via the RN app's own username step, or the webapp's UsernameGateModal)
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUserResult = await db.query(
-      'INSERT INTO users (name, email, password, role, social_username) VALUES ($1, $2, $3, $4, $5) RETURNING user_id, name, email, role, social_username',
-      [name, email, hashedPassword, 'regular user', socialUsername]
+      'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING user_id, name, email, role, social_username',
+      [name, email, hashedPassword, 'regular user']
     );
     const user = newUserResult.rows[0];
 
-    // 4b. Create Default "All Posts" Collection
+    // 3b. Create Default "All Posts" Collection
     await db.query(
       'INSERT INTO save_collections (user_id, name, is_default) VALUES ($1, $2, $3)',
       [user.user_id, 'All Posts', true]

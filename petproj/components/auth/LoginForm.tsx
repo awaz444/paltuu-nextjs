@@ -51,13 +51,14 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         withCredentials: true,
       });
       if (response.data.success) {
-        const { id, name, email, role, profile_image_url } = response.data.user;
+        const { id, name, email, role, profile_image_url, social_username } = response.data.user;
         const userDetails = {
           id,
           name,
           email,
           role,
           profile_image_url: profile_image_url || "/no-profile/no-profile.jpg",
+          social_username: social_username ?? null,
         };
         // Token is set in httpOnly cookie by server, no localStorage needed
         login(userDetails); // This will update AuthContext and redirect
@@ -97,8 +98,10 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
       <div className="relative mb-6">
         <input
           id="email"
-          type="email"
+          type="text"
           name="email"
+          autoCapitalize="none"
+          autoCorrect="off"
           value={user.email}
           onChange={(e) => setUser({ ...user, email: e.target.value })}
           onFocus={() => setIsEmailFocused(true)}
@@ -114,7 +117,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
             : "top-4 text-gray-400"
             }`}
         >
-          Email
+          Email or Username
         </label>
       </div>
 

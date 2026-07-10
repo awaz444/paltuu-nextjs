@@ -23,8 +23,8 @@ export async function GET(req: NextRequest) {
         
         // Fetch full profile to avoid extra client-side calls
         const { db } = await import("@/db/index");
-        const result = await db.query('SELECT user_id, name, email, role, profile_image_url FROM users WHERE user_id = $1', [userId]);
-        
+        const result = await db.query('SELECT user_id, name, email, role, profile_image_url, social_username FROM users WHERE user_id = $1', [userId]);
+
         if ((result.rowCount ?? 0) === 0) {
             return NextResponse.json({ valid: false, error: "User not found" }, { status: 404 });
         }
@@ -38,7 +38,8 @@ export async function GET(req: NextRequest) {
                 email: dbUser.email,
                 name: dbUser.name,
                 role: dbUser.role,
-                profile_image_url: dbUser.profile_image_url || "/no-profile/no-profile.jpg"
+                profile_image_url: dbUser.profile_image_url || "/no-profile/no-profile.jpg",
+                social_username: dbUser.social_username || null
             }
         });
     } catch (error) {

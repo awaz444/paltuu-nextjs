@@ -14,7 +14,9 @@ import {
     FaEnvelope,
     FaSearch,
     FaArrowUp,
+    FaPercentage,
 } from "react-icons/fa";
+import { MdVerified } from "react-icons/md";
 
 const ClinicMap = dynamic(() => import("../../components/ClinicMap"), { ssr: false });
 
@@ -41,6 +43,7 @@ export default function PetCare() {
     const [cityFilter, setCityFilter] = useState("Karachi");
     const [searchQuery, setSearchQuery] = useState("");
     const [partnerFilter, setPartnerFilter] = useState(false);
+    const [verifiedFilter, setVerifiedFilter] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [showBackToTop, setShowBackToTop] = useState(false);
     const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -70,7 +73,7 @@ export default function PetCare() {
     // Reset page on filter changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [cityFilter, searchQuery, partnerFilter, sortedByDistance]);
+    }, [cityFilter, searchQuery, partnerFilter, verifiedFilter, sortedByDistance]);
 
     useEffect(() => {
         const toggleVisibility = () => setShowBackToTop(window.scrollY > 400);
@@ -94,6 +97,9 @@ export default function PetCare() {
             return false;
         }
         if (partnerFilter && !clinic.is_paltuu_partner) {
+            return false;
+        }
+        if (verifiedFilter && !clinic.is_verified) {
             return false;
         }
         if (searchQuery) {
@@ -130,11 +136,12 @@ export default function PetCare() {
         setCityFilter("All");
         setSearchQuery("");
         setPartnerFilter(false);
+        setVerifiedFilter(false);
         setSortedByDistance(false);
         setUserCoords(null);
     };
 
-    const hasActiveFilters = cityFilter !== "Karachi" || searchQuery !== "" || partnerFilter || sortedByDistance;
+    const hasActiveFilters = cityFilter !== "Karachi" || searchQuery !== "" || partnerFilter || verifiedFilter || sortedByDistance;
 
     return (
         <main className="min-h-screen bg-gray-100">
@@ -223,8 +230,24 @@ export default function PetCare() {
                                                 : "border-primary text-primary bg-white"
                                         }`}
                                     >
-                                        <img src="/check2.svg" alt="" className={`w-4 h-4 ${partnerFilter ? "invert" : ""}`} style={{ filter: partnerFilter ? "invert(1)" : "invert(17%) sepia(77%) saturate(700%) hue-rotate(310deg) brightness(70%) contrast(110%)" }} />
+                                        <FaPercentage className="text-xs" />
                                         Paltuu Discounts Only
+                                    </button>
+                                </div>
+
+                                {/* Verified */}
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium mb-1">Verified</label>
+                                    <button
+                                        onClick={() => setVerifiedFilter(!verifiedFilter)}
+                                        className={`w-full p-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 border-2 ${
+                                            verifiedFilter
+                                                ? "bg-primary text-white border-primary"
+                                                : "border-primary text-primary bg-white"
+                                        }`}
+                                    >
+                                        <MdVerified className="text-sm" />
+                                        Verified Clinics Only
                                     </button>
                                 </div>
 

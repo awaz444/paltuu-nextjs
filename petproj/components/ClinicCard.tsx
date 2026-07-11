@@ -3,8 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Clinic } from "../app/types/clinic";
-import { FaMapMarkerAlt, FaClock, FaArrowRight } from "react-icons/fa";
-import { HiSparkles } from "react-icons/hi2";
+import { FaMapMarkerAlt, FaClock, FaArrowRight, FaPercentage } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 
 interface ClinicCardProps {
@@ -25,16 +24,22 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
 
     return (
         <div
-            className="group relative bg-white rounded-3xl overflow-hidden border-2 border-transparent shadow-sm hover:border-[#a03048] hover:scale-102 transition-all duration-300 flex flex-col h-full cursor-pointer"
+            className={`group relative bg-white rounded-3xl overflow-hidden border-2 hover:border-[#a03048] hover:scale-102 transition-all duration-300 flex flex-col h-full cursor-pointer ${
+                clinic.is_verified
+                    ? "border-primary/50 shadow-[0_0_0_4px_rgba(160,48,72,0.12),0_8px_24px_-4px_rgba(160,48,72,0.35)]"
+                    : "border-transparent shadow-sm"
+            }`}
             onClick={handleViewDetails}
         >
             {/* Logo / Image Area — styled like BazaarProductCard */}
             <div className="relative px-4 pt-4">
-                {/* Discount Badge */}
+                {/* Discount Ribbon */}
                 {hasDiscount && (
-                    <div className="absolute top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-primary text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg shadow-lg tracking-wider whitespace-nowrap">
-                        <HiSparkles className="text-xs" />
-                        Paltuu Discounts Available
+                    <div className="absolute -top-1 -left-1 z-20 overflow-hidden w-28 h-28 pointer-events-none">
+                        <div className="absolute top-[18px] -left-[34px] w-[150px] rotate-[-45deg] bg-gradient-to-r from-[#c94060] to-primary text-white text-[10px] font-extrabold uppercase text-center py-1.5 shadow-lg tracking-wide flex items-center justify-center gap-1">
+                            <FaPercentage className="text-[10px]" />
+                            Discounts
+                        </div>
                     </div>
                 )}
 
@@ -57,7 +62,7 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
                 >
                     <span className="line-clamp-1">{clinic.name}</span>
                     {clinic.is_verified && (
-                        <MdVerified className="text-[#a03048] text-base shrink-0" title="Verified Clinic" />
+                        <MdVerified className="text-[#a03048] text-base shrink-0 -translate-y-[1px]" title="Verified Clinic" />
                     )}
                 </h3>
 

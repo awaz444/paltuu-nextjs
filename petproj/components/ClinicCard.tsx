@@ -33,13 +33,11 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
         >
             {/* Logo / Image Area — styled like BazaarProductCard */}
             <div className="relative px-4 pt-4">
-                {/* Discount Ribbon */}
+                {/* Discount Banner */}
                 {hasDiscount && (
-                    <div className="absolute -top-1 -left-1 z-20 overflow-hidden w-28 h-28 pointer-events-none">
-                        <div className="absolute top-[18px] -left-[34px] w-[150px] rotate-[-45deg] bg-gradient-to-r from-[#c94060] to-primary text-white text-[10px] font-extrabold uppercase text-center py-1.5 shadow-lg tracking-wide flex items-center justify-center gap-1">
-                            <FaPercentage className="text-[10px]" />
-                            Discounts
-                        </div>
+                    <div className="absolute top-6 left-6 right-6 z-20 flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#c94060] to-primary text-white text-[11px] font-extrabold uppercase tracking-wide py-1.5 rounded-lg shadow-lg pointer-events-none">
+                        <FaPercentage className="text-[10px]" />
+                        Discounts Available
                     </div>
                 )}
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import "./navbar.css";
 import Image from "next/image";
 import { LoadingOutlined } from "@ant-design/icons"; // you already use Ant icons
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, memo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCart } from "@/app/store/slices/cartSlice";
 import type { RootState, AppDispatch } from "@/app/store/store";
@@ -40,7 +40,6 @@ const Navbar = ({
   logoHref?: string;
   hideCart?: boolean;
 }) => {
-  const [activeLink, setActiveLink] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [mobileView, setMobileView] = useState("navlinks"); // 'navlinks' or 'dropdown'
@@ -333,10 +332,7 @@ const Navbar = ({
   const links = linksOverride || defaultLinks;
 
 
-  useEffect(() => {
-    const currentPath = window.location.pathname.split("/")[1];
-    setActiveLink(currentPath);
-  }, [pathname]);
+  const activeLink = useMemo(() => pathname.split("/")[1] ?? "", [pathname]);
 
   const dropdownWidth = `${Math.max(
     displayName.length,
@@ -497,6 +493,10 @@ const Navbar = ({
                       />
                     </svg>
                   </button>
+                ) : isHydrating ? (
+                  <div className="w-full flex justify-center py-2">
+                    <div className="h-6 w-24 rounded bg-white/20 animate-pulse" />
+                  </div>
                 ) : (
                   <Link href="/auth">
                     <button className="w-full text-center text-white font-medium py-2 text-xl">
@@ -1017,6 +1017,8 @@ const Navbar = ({
                 )}
               </div>
             </>
+          ) : isHydrating ? (
+            <div className="h-10 w-24 rounded-full bg-white/20 animate-pulse" />
           ) : (
             <Link href="/auth">
               <button className="flex items-center justify-center gap-2 loginBtn">
@@ -1035,4 +1037,9 @@ const Navbar = ({
   );
 };
 
-export default Navbar;
+// Memoized so re-renders of NavbarWrapper (which subscribes to pathname just
+// to decide whether to hide the navbar on certain routes) don't cascade into
+// re-rendering this whole tree when Navbar's own props haven't changed. Navbar
+// still re-renders on its own when pathname/auth/cart state it actually reads
+// changes (e.g. active-link highlighting) — that's expected and cheap.
+export default memo(Navbar);

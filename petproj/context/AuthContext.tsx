@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState, useEffect, ReactNode, useRef } from "react";
+import React, { createContext, useState, useEffect, useLayoutEffect, ReactNode, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 import { clearGuestSessionId } from "@/utils/guest";
@@ -15,6 +15,52 @@ interface User {
   social_username?: string | null;
   method: "google" | "api" | null;
 }
+
+// Display-only optimistic auth snapshot.
+// This is NOT an authorization source — the httpOnly `token` cookie (read by
+// middleware.ts and every server route) remains the single source of truth.
+// The snapshot only lets the navbar render the last-known user instantly on a
+// cold load instead of flashing a "Login" button while the server verify runs.
+// A stale/forged snapshot can only briefly show a name/avatar and is corrected
+// on the next /api/v1/auth/verify. Never store tokens or passwords here.
+const AUTH_SNAPSHOT_KEY = "paltuu_auth_user";
+
+const readSnapshot = (): User | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(AUTH_SNAPSHOT_KEY);
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeSnapshot = (user: User) => {
+  if (typeof window === "undefined") return;
+  try {
+    const snapshot: User = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      profile_image_url: user.profile_image_url,
+      social_username: user.social_username ?? null,
+      method: user.method,
+    };
+    window.localStorage.setItem(AUTH_SNAPSHOT_KEY, JSON.stringify(snapshot));
+  } catch {
+    // ignore quota / serialization errors — snapshot is best-effort UI only
+  }
+};
+
+const clearSnapshot = () => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(AUTH_SNAPSHOT_KEY);
+  } catch {
+    // ignore
+  }
+};
 
 interface AuthContextProps {
   isAuthenticated: boolean;
@@ -45,6 +91,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isHydratingState, setIsHydratingState] = useState(true);
   const isHydrating = useRef(false);
   const hasHydrated = useRef(false);
+
+  // Optimistically render the last-known user from localStorage before the
+  // server verify resolves, so the navbar doesn't flash a "Login" button on
+  // cold loads. Runs pre-paint (useLayoutEffect) and after the first render
+  // so it doesn't cause an SSR hydration mismatch. This is display-only —
+  // isHydratingState stays true so the real verify below still runs and
+  // reconciles/corrects this if the session is actually gone.
+  useLayoutEffect(() => {
+    const snapshot = readSnapshot();
+    if (snapshot) {
+      setUser(snapshot);
+      setIsAuthenticated(true);
+    }
+  }, []);
 
   // Debug: Log state changes
   useEffect(() => {
@@ -119,6 +179,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (!verifyResponse.ok) {
           // console.log("⚠️ No valid token found on server");
+          // Session is actually gone — correct any stale optimistic snapshot.
+          clearSnapshot();
+          setUser(null);
+          setIsAuthenticated(false);
           hasHydrated.current = true;
           return;
         }
@@ -136,6 +200,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           };
           setUser(hydratedUser);
           setIsAuthenticated(true);
+          writeSnapshot(hydratedUser);
+        } else {
+          clearSnapshot();
+          setUser(null);
+          setIsAuthenticated(false);
         }
       } catch (e) {
         console.error("Failed to hydrate user from server:", e);
@@ -188,6 +257,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         setUser(googleUser);
         setIsAuthenticated(true);
+        writeSnapshot(googleUser);
         return googleUser;
       };
 
@@ -206,15 +276,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const callbackUrl = urlParams.get('callbackUrl');
 
           if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
-            router.push(decodeURIComponent(callbackUrl));
+            router.replace(decodeURIComponent(callbackUrl));
           } else {
             const role = finalUser.role;
-            if (role === "shop admin") router.push("/shop-panel");
-            else if (role === "shelter admin") router.push("/rescue-panel");
-            else if (role === "vet") router.push("/vet-panel");
-            else if (role === "vendor") router.push("/vendor-panel");
-            else if (role === "admin") router.push("/admin");
-            else router.push("/browse-pets");
+            if (role === "shop admin") router.replace("/shop-panel");
+            else if (role === "shelter admin") router.replace("/rescue-panel");
+            else if (role === "vet") router.replace("/vet-panel");
+            else if (role === "vendor") router.replace("/vendor-panel");
+            else if (role === "admin") router.replace("/admin");
+            else router.replace("/browse-pets");
           }
         } catch {}
       });
@@ -250,6 +320,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     setUser(userWithMethod);
     setIsAuthenticated(true);
+    writeSnapshot(userWithMethod);
 
     try {
       clearGuestSessionId();
@@ -262,19 +333,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const callbackUrl = urlParams.get('callbackUrl');
 
       if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
-        router.push(decodeURIComponent(callbackUrl));
+        router.replace(decodeURIComponent(callbackUrl));
       } else if (userWithMethod.role === "shop admin") {
-        router.push("/shop-panel");
+        router.replace("/shop-panel");
       } else if (userWithMethod.role === "shelter admin") {
-        router.push("/rescue-panel");
+        router.replace("/rescue-panel");
       } else if (userWithMethod.role === "vet") {
-        router.push("/vet-panel");
+        router.replace("/vet-panel");
       } else if (userWithMethod.role === "vendor") {
-        router.push("/vendor-panel");
+        router.replace("/vendor-panel");
       } else if (userWithMethod.role === "admin") {
-        router.push("/admin");
+        router.replace("/admin");
       } else {
-        router.push("/browse-pets");
+        router.replace("/browse-pets");
       }
     } catch {}
   };
@@ -297,7 +368,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
 
       setUser(updatedUser);
-      // Do not persist to localStorage
+      writeSnapshot(updatedUser);
 
       //console.log("✅ User data refreshed:", updatedUser);
     } catch (error) {
@@ -306,7 +377,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateSocialUsername = (handle: string) => {
-    setUser((prev) => (prev ? { ...prev, social_username: handle } : prev));
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, social_username: handle };
+      writeSnapshot(updated);
+      return updated;
+    });
   };
 
   const needsUsername = isAuthenticated && !!user && !user.social_username;
@@ -318,6 +394,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Clear in-memory user and guest session cookie (cart will be handled by useCartSync hook)
       try { clearGuestSessionId(); } catch {}      // Clear session storage if used
       try { sessionStorage.clear(); } catch {}
+      clearSnapshot();
 
       // ALWAYS call the server-side V1 logout API to clear all cookies
       try {
@@ -355,6 +432,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error("Logout error:", error);
       try { sessionStorage.clear(); } catch {}
+      clearSnapshot();
       try {
         document.cookie.split(";").forEach(function (c) {
           document.cookie = c

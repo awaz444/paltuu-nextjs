@@ -30,15 +30,6 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
 
   // Redirect handled by AuthContext after login
 
-  const redirectBasedOnRole = (role: string) => {
-    if (role === "vet") router.push("/vet-panel");
-    else if (role === "shop admin") router.push("/shop-panel");
-    else if (role === "shelter admin") router.push("/rescue-panel");
-    else if (role === "vendor") router.push("/vendor-panel");
-    else if (role === "admin") router.push("/admin-panel");
-    else router.push("/browse-pets");
-  };
-
   useEffect(() => {
     setButtonDisabled(!(user.email && user.password));
   }, [user]);
@@ -63,12 +54,6 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         // Token is set in httpOnly cookie by server, no localStorage needed
         login(userDetails); // This will update AuthContext and redirect
         toast.success("Login successful!");
-
-        // Additional redirect as backup to ensure navigation happens
-        // Give AuthContext a moment to update state before redirecting
-        setTimeout(() => {
-          redirectBasedOnRole(role);
-        }, 500);
       }
     } catch (error: any) {
       console.error("Login failed:", error.message);

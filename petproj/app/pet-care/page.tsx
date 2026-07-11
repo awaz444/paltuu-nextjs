@@ -212,9 +212,9 @@ export default function PetCare() {
                                     </select>
                                 </div>
 
-                                {/* Paltuu Partner */}
+                                {/* Discounts */}
                                 <div className="mb-4">
-                                    <label className="block text-sm font-medium mb-1">Partner Status</label>
+                                    <label className="block text-sm font-medium mb-1">Discounts</label>
                                     <button
                                         onClick={() => setPartnerFilter(!partnerFilter)}
                                         className={`w-full p-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 border-2 ${
@@ -224,7 +224,7 @@ export default function PetCare() {
                                         }`}
                                     >
                                         <img src="/check2.svg" alt="" className={`w-4 h-4 ${partnerFilter ? "invert" : ""}`} style={{ filter: partnerFilter ? "invert(1)" : "invert(17%) sepia(77%) saturate(700%) hue-rotate(310deg) brightness(70%) contrast(110%)" }} />
-                                        Paltuu Partner Only
+                                        Paltuu Discounts Only
                                     </button>
                                 </div>
 

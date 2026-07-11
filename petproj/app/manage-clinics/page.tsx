@@ -34,6 +34,7 @@ interface Clinic {
     rating?: number;
     total_reviews?: number;
     is_paltuu_partner: boolean;
+    is_verified?: boolean;
     owner_email?: string;
     vet_count: number;
     created_at: string;
@@ -340,6 +341,7 @@ export default function ManageClinicsPage() {
             rating: clinic.rating,
             total_reviews: clinic.total_reviews,
             is_paltuu_partner: clinic.is_paltuu_partner,
+            is_verified: clinic.is_verified,
             owner_email: clinic.owner_email,
         });
         setLogoFileList(
@@ -803,10 +805,16 @@ export default function ManageClinicsPage() {
             ) : <span className="text-gray-300 text-xs">—</span>,
         },
         {
-            title: "Partner",
+            title: "Discounts",
             dataIndex: "is_paltuu_partner",
-            width: 80,
-            render: (v: boolean) => <Tag color={v ? "green" : "default"} className="text-[10px]">{v ? "Partner" : "Regular"}</Tag>,
+            width: 90,
+            render: (v: boolean) => <Tag color={v ? "green" : "default"} className="text-[10px]">{v ? "Available" : "None"}</Tag>,
+        },
+        {
+            title: "Verified",
+            dataIndex: "is_verified",
+            width: 90,
+            render: (v: boolean) => <Tag color={v ? "blue" : "default"} className="text-[10px]">{v ? "Verified" : "Unverified"}</Tag>,
         },
         {
             title: "Vets",
@@ -976,8 +984,11 @@ export default function ManageClinicsPage() {
                 <Form.Item name="owner_email" label="Owner Email">
                     <Input placeholder="owner@example.com" className="rounded-xl" />
                 </Form.Item>
-                <Form.Item name="is_paltuu_partner" label="Paltuu Partner?" valuePropName="checked">
-                    <Switch checkedChildren="Partner" unCheckedChildren="Regular" />
+                <Form.Item name="is_paltuu_partner" label="Discounts Available?" valuePropName="checked">
+                    <Switch checkedChildren="Available" unCheckedChildren="None" />
+                </Form.Item>
+                <Form.Item name="is_verified" label="Verified Clinic?" valuePropName="checked">
+                    <Switch checkedChildren="Verified" unCheckedChildren="Unverified" />
                 </Form.Item>
             </div>
         </Form>

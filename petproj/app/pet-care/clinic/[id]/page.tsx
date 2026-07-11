@@ -220,17 +220,25 @@ export default function ClinicPage() {
                                             className="w-full h-48 rounded-2xl object-cover border-2 border-gray-100 shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
                                             onClick={() => setIsImagePreviewOpen(true)}
                                         />
-                                        {clinic.is_paltuu_partner && (
-                                            <div className="absolute bottom-2 right-2 bg-primary text-white rounded-full p-2 shadow-lg">
+                                        {clinic.is_verified && (
+                                            <div className="absolute bottom-2 right-2 bg-primary text-white rounded-full p-2 shadow-lg" title="Verified Clinic">
                                                 <MdVerified className="text-lg" />
                                             </div>
                                         )}
                                     </div>
 
                                     {/* Clinic Name */}
-                                    <h1 className="text-2xl font-bold text-gray-900 mb-0">
+                                    <h1 className="text-2xl font-bold text-gray-900 mb-0 flex items-center gap-2 justify-center">
                                         {clinic.name}
+                                        {clinic.is_verified && (
+                                            <MdVerified className="text-primary text-xl shrink-0" title="Verified Clinic" />
+                                        )}
                                     </h1>
+                                    {clinic.is_paltuu_partner && (
+                                        <span className="mt-2 inline-flex items-center gap-1.5 bg-primary/10 text-primary text-[11px] font-bold uppercase px-3 py-1 rounded-full tracking-wide">
+                                            Discounts Available
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Google Reviews */}

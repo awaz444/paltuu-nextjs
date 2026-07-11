@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Clinic } from "../app/types/clinic";
 import { FaMapMarkerAlt, FaClock, FaArrowRight } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi2";
+import { MdVerified } from "react-icons/md";
 
 interface ClinicCardProps {
     clinic: Clinic;
@@ -31,7 +32,7 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
             <div className="relative px-4 pt-4">
                 {/* Discount Badge */}
                 {hasDiscount && (
-                    <div className="absolute top-5 left-5 z-20 flex items-center gap-1.5 bg-primary text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg shadow-lg tracking-wider">
+                    <div className="absolute top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-primary text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg shadow-lg tracking-wider whitespace-nowrap">
                         <HiSparkles className="text-xs" />
                         Paltuu Discounts Available
                     </div>
@@ -51,10 +52,13 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
             <div className="flex flex-col flex-1 p-5">
                 {/* Clinic Name */}
                 <h3
-                    className="text-base font-bold text-[#111827] mb-3 line-clamp-1 group-hover:text-[#a03048] transition-colors"
+                    className="text-base font-bold text-[#111827] mb-3 line-clamp-1 group-hover:text-[#a03048] transition-colors flex items-center gap-1.5"
                     title={clinic.name}
                 >
-                    {clinic.name}
+                    <span className="line-clamp-1">{clinic.name}</span>
+                    {clinic.is_verified && (
+                        <MdVerified className="text-[#a03048] text-base shrink-0" title="Verified Clinic" />
+                    )}
                 </h3>
 
                 {/* Meta Info */}

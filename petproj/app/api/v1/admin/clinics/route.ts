@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
             google_maps_link, contact_number, whatsapp_number,
             logo_url, operating_hours, discount_details,
             website, rating, total_reviews,
-            is_paltuu_partner, owner_email
+            is_paltuu_partner, is_verified, owner_email
         } = body;
 
         if (!name || !address) return NextResponse.json({ error: "Name and address required" }, { status: 400 });
@@ -72,16 +72,16 @@ export async function POST(req: NextRequest) {
                     google_maps_link, contact_number, whatsapp_number,
                     logo_url, operating_hours, discount_details,
                     website, rating, total_reviews,
-                    is_paltuu_partner, owner_id
+                    is_paltuu_partner, is_verified, owner_id
                 )
-                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
                 RETURNING *
             `, [
                 name, address, city || null, category || null,
                 google_maps_link, contact_number, whatsapp_number,
                 logo_url, operating_hours, discount_details,
                 website || null, rating || null, total_reviews || null,
-                is_paltuu_partner || false, owner_id
+                is_paltuu_partner || false, is_verified || false, owner_id
             ]);
 
             await client.query('COMMIT');
@@ -108,7 +108,7 @@ export async function PATCH(req: NextRequest) {
             google_maps_link, contact_number, whatsapp_number,
             logo_url, operating_hours, discount_details,
             website, rating, total_reviews,
-            is_paltuu_partner
+            is_paltuu_partner, is_verified
         } = body;
         if (!clinic_id) return NextResponse.json({ error: "Clinic ID required" }, { status: 400 });
 
@@ -127,15 +127,16 @@ export async function PATCH(req: NextRequest) {
                 website           = COALESCE($11, website),
                 rating            = COALESCE($12, rating),
                 total_reviews     = COALESCE($13, total_reviews),
-                is_paltuu_partner = COALESCE($14, is_paltuu_partner)
-            WHERE clinic_id = $15
+                is_paltuu_partner = COALESCE($14, is_paltuu_partner),
+                is_verified       = COALESCE($15, is_verified)
+            WHERE clinic_id = $16
             RETURNING *
         `, [
             name, address, city, category,
             google_maps_link, contact_number, whatsapp_number,
             logo_url, operating_hours, discount_details,
             website, rating, total_reviews,
-            is_paltuu_partner, clinic_id
+            is_paltuu_partner, is_verified, clinic_id
         ]);
 
         if (result.rowCount === 0) return NextResponse.json({ error: "Clinic not found" }, { status: 404 });

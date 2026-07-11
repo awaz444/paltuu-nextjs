@@ -145,6 +145,7 @@ async function getVet(vetId: string) {
                 cl.whatsapp_number AS clinic_whatsapp,
                 cl.google_maps_link,
                 cl.is_paltuu_partner,
+                cl.is_verified,
                 c.city_name    AS city
             FROM vets v
             JOIN users u  ON v.user_id   = u.user_id

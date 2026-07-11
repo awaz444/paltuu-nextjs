@@ -141,7 +141,11 @@ export default function ClinicModal({ visible, onCancel, onSuccess, initialData 
                     <Input placeholder="Enter owner email to link/create user" className="rounded-xl p-2" />
                 </Form.Item>
 
-                <Form.Item name="is_paltuu_partner" label="Is Paltuu Partner?" valuePropName="checked">
+                <Form.Item name="is_paltuu_partner" label="Discounts Available?" valuePropName="checked">
+                    <Switch />
+                </Form.Item>
+
+                <Form.Item name="is_verified" label="Verified Clinic?" valuePropName="checked">
                     <Switch />
                 </Form.Item>
 

@@ -47,6 +47,7 @@ interface VetDetails {
     clinic_id: string;
     clinic_name: string;
     is_paltuu_partner: boolean;
+    is_verified?: boolean;
     clinic_whatsapp: string;
     google_maps_link: string;
     location: string;

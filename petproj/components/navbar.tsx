@@ -583,7 +583,6 @@ const Navbar = ({
                 className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${activeLink === link.href ? "after:w-full" : "after:w-0"
                   }`}
                 style={{ cursor: "pointer" }}
-                onClick={() => setActiveLink(link.href)}
               >
                 {link.name}
               </span>

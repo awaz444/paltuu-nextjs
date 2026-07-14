@@ -19,8 +19,16 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/v1/social/posts/[id]/comments
- * Paginated comments with nested replies
- * ?cursor=timestamp&limit=20
+ * Paginated comments with nested replies.
+ * ?cursor=<root_comment_id>&limit=<roots per page, default 20>
+ *
+ * Pagination is by ROOT (top-level) comment, and every page returns each root's
+ * ENTIRE reply subtree alongside it. This guarantees a comment is never split
+ * from its replies across pages — otherwise a parent could load on one page and
+ * its replies on a later, not-yet-fetched page, making it look reply-less.
+ * The cursor is the last root's comment_id (unique + monotonic → stable,
+ * gap-free, duplicate-free pages). The client rebuilds the tree and sorts by
+ * "Top" itself, so flat id ordering here is fine.
  */
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
     try {
@@ -31,19 +39,32 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         const { searchParams } = new URL(req.url);
         const limit = Math.min(50, parseInt(searchParams.get("limit") || "20", 10));
         const cursorRaw = searchParams.get("cursor");
-        // Paginate on comment_id: it's unique and monotonically increasing with
-        // creation, so it produces stable, gap-free, duplicate-free pages. (The
-        // previous created_at cursor didn't agree with the ORDER BY, which both
-        // skipped and re-returned rows.) The client rebuilds the thread tree and
-        // sorts by "Top" itself, so a flat id ordering here is fine.
         const cursor = cursorRaw != null ? parseInt(cursorRaw, 10) : null;
         const hasCursor = cursor != null && !Number.isNaN(cursor);
 
         const cursorClause = hasCursor ? `AND c.comment_id > $4` : "";
         const queryParams: any[] = [postId, userId, limit, ...(hasCursor ? [cursor] : [])];
 
+        // Not blocked in either direction (reused for both the root selection and
+        // the subtree fetch).
+        const notBlocked = `NOT EXISTS (
+            SELECT 1 FROM user_blocks b
+            WHERE (b.blocker_id = $2 AND b.blocked_id = c.user_id)
+               OR (b.blocker_id = c.user_id AND b.blocked_id = $2)
+        )`;
+
         const result = await db.query(`
-            WITH comment_media AS (
+            WITH roots AS (
+                SELECT c.comment_id
+                FROM social_comments c
+                WHERE c.post_id = $1 AND c.is_deleted = false
+                  AND c.parent_comment_id IS NULL
+                  AND ${notBlocked}
+                  ${cursorClause}
+                ORDER BY c.comment_id ASC
+                LIMIT $3
+            ),
+            comment_media AS (
                 SELECT comment_id, json_agg(m ORDER BY m.ordering) AS media
                 FROM social_comment_media m
                 GROUP BY comment_id
@@ -62,19 +83,21 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             LEFT JOIN comment_media cm ON cm.comment_id = c.comment_id
             LEFT JOIN social_comment_likes scl ON scl.comment_id = c.comment_id AND scl.user_id = $2
             WHERE c.post_id = $1 AND c.is_deleted = false
-            AND NOT EXISTS (
-                SELECT 1 FROM user_blocks b
-                WHERE (b.blocker_id = $2 AND b.blocked_id = c.user_id)
-                   OR (b.blocker_id = c.user_id AND b.blocked_id = $2)
-            )
-            ${cursorClause}
+              AND (
+                c.comment_id IN (SELECT comment_id FROM roots)
+                OR c.root_comment_id IN (SELECT comment_id FROM roots)
+              )
+              AND ${notBlocked}
             ORDER BY c.comment_id ASC
-            LIMIT $3
         `, queryParams);
 
         const comments = result.rows;
-        const nextCursor = comments.length === limit
-            ? comments[comments.length - 1].comment_id
+        // The cursor advances by root comment. has_more is true only when this
+        // page filled its root quota (a full page of roots may still be followed
+        // by more).
+        const rootRows = comments.filter((c: any) => c.parent_comment_id == null);
+        const nextCursor = rootRows.length === limit
+            ? rootRows[rootRows.length - 1].comment_id
             : null;
 
         return NextResponse.json({

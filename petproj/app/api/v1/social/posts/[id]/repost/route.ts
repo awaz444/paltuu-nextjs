@@ -24,19 +24,35 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         const userId = parseInt(String(userIdRaw), 10);
 
-        const originalPostId = params.id;
+        const targetPostId = params.id;
         const body = await req.json().catch(() => ({}));
         const caption = body.caption || null;
 
-        // 1. Verify original post exists
-        const original = await db.query(
-            `SELECT post_id, user_id FROM social_posts WHERE post_id = $1 AND is_deleted = false`,
-            [originalPostId]
+        // 1. Resolve the true original. If the target is itself a repost
+        //    ("XYZ reposted ABC"), reposting must target ABC's real post — never
+        //    the repost entry, which carries no media/content and would surface
+        //    as a blank repost. Walk the original_post_id chain to the root.
+        //    Only plain reposts (no caption) are dereferenced; quote posts carry
+        //    their own body and are legitimate standalone posts to repost as-is.
+        const resolved = await db.query(
+            `WITH RECURSIVE chain AS (
+                SELECT post_id, user_id, is_repost, original_post_id, content, is_deleted, 0 AS depth
+                FROM social_posts WHERE post_id = $1
+              UNION ALL
+                SELECT p.post_id, p.user_id, p.is_repost, p.original_post_id, p.content, p.is_deleted, c.depth + 1
+                FROM social_posts p
+                JOIN chain c ON p.post_id = c.original_post_id
+                WHERE c.is_repost = true AND COALESCE(c.content, '') = ''
+                  AND c.original_post_id IS NOT NULL AND c.depth < 10
+            )
+            SELECT post_id, user_id, is_deleted FROM chain ORDER BY depth DESC LIMIT 1`,
+            [targetPostId]
         );
-        if (original.rowCount === 0) {
+        if (resolved.rowCount === 0 || resolved.rows[0].is_deleted) {
             return NextResponse.json({ error: "Post not found" }, { status: 404 });
         }
-        const originalAuthorId = original.rows[0].user_id;
+        const originalPostId = String(resolved.rows[0].post_id);
+        const originalAuthorId = resolved.rows[0].user_id;
 
         // 2. Check if already reposted
         const existing = await db.query(
@@ -147,7 +163,23 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         const userId = parseInt(String(userIdRaw), 10);
 
-        const originalPostId = params.id;
+        // Resolve the true original (mirror of POST) so undoing from a repost
+        // card removes the repost of the underlying original, not the repost entry.
+        const resolved = await db.query(
+            `WITH RECURSIVE chain AS (
+                SELECT post_id, is_repost, original_post_id, content, 0 AS depth
+                FROM social_posts WHERE post_id = $1
+              UNION ALL
+                SELECT p.post_id, p.is_repost, p.original_post_id, p.content, c.depth + 1
+                FROM social_posts p
+                JOIN chain c ON p.post_id = c.original_post_id
+                WHERE c.is_repost = true AND COALESCE(c.content, '') = ''
+                  AND c.original_post_id IS NOT NULL AND c.depth < 10
+            )
+            SELECT post_id FROM chain ORDER BY depth DESC LIMIT 1`,
+            [params.id]
+        );
+        const originalPostId = resolved.rowCount ? String(resolved.rows[0].post_id) : params.id;
 
         const existing = await db.query(
             "SELECT repost_id FROM social_reposts WHERE post_id = $1 AND user_id = $2",

@@ -67,8 +67,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                     WHERE l.post_id = p.post_id AND l.user_id = $2
                 ) AS is_liked,
                 EXISTS(
-                    SELECT 1 FROM social_reposts r 
-                    WHERE r.post_id = p.post_id AND r.user_id = $2
+                    SELECT 1 FROM social_reposts r
+                    WHERE r.post_id = CASE WHEN p.is_repost AND COALESCE(p.content, '') = '' THEN p.original_post_id ELSE p.post_id END AND r.user_id = $2
                 ) AS is_reposted,
                 EXISTS(
                     SELECT 1 FROM social_comments c

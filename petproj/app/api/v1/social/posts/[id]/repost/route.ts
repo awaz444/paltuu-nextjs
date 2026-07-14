@@ -26,14 +26,22 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
         const targetPostId = params.id;
         const body = await req.json().catch(() => ({}));
-        const caption = body.caption || null;
+        // A quick (plain) repost carries no content → stored as NULL. A quote —
+        // whether it has text or only media — always stores a non-null content
+        // ('' for media-only), which is what distinguishes a hollow plain repost
+        // (content IS NULL) from a standalone quote everywhere below.
+        // Legacy clients may still send `caption`; honour it as a fallback.
+        const content = body.content !== undefined ? body.content
+            : (body.caption !== undefined ? body.caption : null);
+        const media = Array.isArray(body.media) ? body.media : [];
+        const petProfileTags = Array.isArray(body.pet_profile_tags) ? body.pet_profile_tags : [];
 
-        // 1. Resolve the true original. If the target is itself a repost
+        // 1. Resolve the true original. If the target is itself a plain repost
         //    ("XYZ reposted ABC"), reposting must target ABC's real post — never
         //    the repost entry, which carries no media/content and would surface
         //    as a blank repost. Walk the original_post_id chain to the root.
-        //    Only plain reposts (no caption) are dereferenced; quote posts carry
-        //    their own body and are legitimate standalone posts to repost as-is.
+        //    Only plain reposts (content IS NULL) are dereferenced; quotes carry
+        //    their own body/media and are standalone posts to repost as-is.
         const resolved = await db.query(
             `WITH RECURSIVE chain AS (
                 SELECT post_id, user_id, is_repost, original_post_id, content, is_deleted, 0 AS depth
@@ -42,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 SELECT p.post_id, p.user_id, p.is_repost, p.original_post_id, p.content, p.is_deleted, c.depth + 1
                 FROM social_posts p
                 JOIN chain c ON p.post_id = c.original_post_id
-                WHERE c.is_repost = true AND COALESCE(c.content, '') = ''
+                WHERE c.is_repost = true AND c.content IS NULL
                   AND c.original_post_id IS NOT NULL AND c.depth < 10
             )
             SELECT post_id, user_id, is_deleted FROM chain ORDER BY depth DESC LIMIT 1`,
@@ -72,7 +80,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             // 3. Record the repost relationship
             await client.query(
                 "INSERT INTO social_reposts (post_id, user_id, caption) VALUES ($1, $2, $3)",
-                [originalPostId, userId, caption]
+                [originalPostId, userId, content]
             );
 
             // 4. Create a new post entry (the repost in feed)
@@ -81,7 +89,48 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                     (user_id, post_type, content, original_post_id, is_repost)
                 VALUES ($1, 'repost', $2, $3, true)
                 RETURNING *
-            `, [userId, caption, originalPostId]);
+            `, [userId, content, originalPostId]);
+            const repostPostId = repostEntry.rows[0].post_id;
+
+            // 4a. Attach any media the quote carries (images/videos) to the
+            //     new repost post, mirroring create-post's media handling.
+            const insertedMedia: any[] = [];
+            for (let i = 0; i < media.length; i++) {
+                const m = media[i];
+                const videoStatus = m.media_type === 'video' ? 'pending' : 'ready';
+                const mediaRes = await client.query(
+                    `INSERT INTO social_post_media
+                         (post_id, media_type, url, thumbnail_url, ordering, video_status)
+                     VALUES ($1, $2, $3, $4, $5, $6)
+                     RETURNING media_id, media_type, url, thumbnail_url, ordering, video_status, hls_url`,
+                    [repostPostId, m.media_type, m.url, m.thumbnail_url || null, i, videoStatus]
+                );
+                insertedMedia.push(mediaRes.rows[0]);
+            }
+
+            // 4b. Tag the quoting user's own pet profiles.
+            if (petProfileTags.length > 0) {
+                const tagIds = petProfileTags
+                    .map((id: any) => parseInt(String(id), 10))
+                    .filter((id: number) => !isNaN(id));
+                if (tagIds.length > 0) {
+                    const ownerCheck = await client.query(
+                        `SELECT COUNT(*) FROM pet_profiles
+                         WHERE pet_profile_id = ANY($1::int[]) AND owner_id = $2`,
+                        [tagIds, userId]
+                    );
+                    if (parseInt(ownerCheck.rows[0].count, 10) !== tagIds.length) {
+                        throw new Error('One or more tagged pet profiles do not belong to you');
+                    }
+                    for (const profileId of tagIds) {
+                        await client.query(
+                            `INSERT INTO post_pet_tags (post_id, pet_profile_id)
+                             VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+                            [repostPostId, profileId]
+                        );
+                    }
+                }
+            }
 
             // 5. Update repost_count on original
             await client.query(
@@ -135,7 +184,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 }).catch(() => {});
             }
 
-            return NextResponse.json({ reposted: true, post: repostEntry.rows[0] }, { status: 201 });
+            return NextResponse.json(
+                { reposted: true, post: { ...repostEntry.rows[0], media: insertedMedia } },
+                { status: 201 }
+            );
 
         } catch (e) {
             await client.query('ROLLBACK');
@@ -173,7 +225,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
                 SELECT p.post_id, p.is_repost, p.original_post_id, p.content, c.depth + 1
                 FROM social_posts p
                 JOIN chain c ON p.post_id = c.original_post_id
-                WHERE c.is_repost = true AND COALESCE(c.content, '') = ''
+                WHERE c.is_repost = true AND c.content IS NULL
                   AND c.original_post_id IS NOT NULL AND c.depth < 10
             )
             SELECT post_id FROM chain ORDER BY depth DESC LIMIT 1`,

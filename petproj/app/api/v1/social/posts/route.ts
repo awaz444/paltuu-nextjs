@@ -176,7 +176,7 @@ export async function GET(req: NextRequest) {
                     LEFT JOIN users ou          ON ou.user_id  = op.user_id
                     LEFT JOIN post_media opm    ON opm.post_id = op.post_id
                     LEFT JOIN social_likes   sl ON sl.post_id = p.post_id AND sl.user_id = $1
-                    LEFT JOIN social_reposts sr ON sr.post_id = CASE WHEN p.is_repost AND COALESCE(p.content, '') = '' THEN p.original_post_id ELSE p.post_id END AND sr.user_id = $1
+                    LEFT JOIN social_reposts sr ON sr.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sr.user_id = $1
                     LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
                     LEFT JOIN post_affinity pa  ON pa.post_id = p.post_id
                     CROSS JOIN user_max_interest umi
@@ -295,7 +295,7 @@ export async function GET(req: NextRequest) {
                 LEFT JOIN users ou         ON ou.user_id = op.user_id
                 LEFT JOIN post_media opm   ON opm.post_id = op.post_id
                 LEFT JOIN social_likes  sl ON sl.post_id = p.post_id AND sl.user_id = $1
-                LEFT JOIN social_reposts sr ON sr.post_id = CASE WHEN p.is_repost AND COALESCE(p.content, '') = '' THEN p.original_post_id ELSE p.post_id END AND sr.user_id = $1
+                LEFT JOIN social_reposts sr ON sr.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sr.user_id = $1
                 LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
                 WHERE p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $1)
                 AND NOT EXISTS (
@@ -395,7 +395,7 @@ export async function GET(req: NextRequest) {
                     LEFT JOIN users ou          ON ou.user_id  = op.user_id
                     LEFT JOIN post_media opm    ON opm.post_id = op.post_id
                     LEFT JOIN social_likes   sl ON sl.post_id = p.post_id AND sl.user_id = $1
-                    LEFT JOIN social_reposts sr ON sr.post_id = CASE WHEN p.is_repost AND COALESCE(p.content, '') = '' THEN p.original_post_id ELSE p.post_id END AND sr.user_id = $1
+                    LEFT JOIN social_reposts sr ON sr.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sr.user_id = $1
                     LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
                     WHERE p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $1)
                     AND NOT EXISTS (

@@ -1,16 +1,18 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 export default function OpenClient() {
-  const searchParams = useSearchParams();
-  const path = searchParams.get("path") || "";
+  const [path, setPath] = useState("");
   const [failed, setFailed] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
 
+  // Read path from URL on client only — avoids useSearchParams + Suspense issues at build time
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setPath(params.get("path") || "");
+
     // Detect OS
     const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
     if (/iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream) {

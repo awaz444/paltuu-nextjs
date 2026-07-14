@@ -48,11 +48,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     let petPages: MetadataRoute.Sitemap = [];
     try {
         const result = await db.query(
-            `SELECT pet_id, updated_at FROM pets WHERE adoption_status = 'available' AND approved = true`
+            `SELECT pet_id, created_at FROM pets WHERE adoption_status = 'available' AND approved = true`
         );
         petPages = result.rows.map((row) => ({
             url: `${baseUrl}/browse-pets/${row.pet_id}`,
-            lastModified: row.updated_at ? new Date(row.updated_at) : new Date(),
+            lastModified: row.created_at ? new Date(row.created_at) : new Date(),
             changeFrequency: 'weekly' as const,
             priority: 0.7,
         }));
@@ -64,7 +64,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     let vetPages: MetadataRoute.Sitemap = [];
     try {
         const result = await db.query(
-            `SELECT vet_id, created_at FROM vets WHERE profile_verified = true`
+            `SELECT vet_id, created_at FROM vets WHERE is_active = true`
         );
         vetPages = result.rows.map((row) => ({
             url: `${baseUrl}/pet-care/${row.vet_id}`,

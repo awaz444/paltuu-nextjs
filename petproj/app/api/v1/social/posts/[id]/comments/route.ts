@@ -30,10 +30,17 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         const postId = params.id;
         const { searchParams } = new URL(req.url);
         const limit = Math.min(50, parseInt(searchParams.get("limit") || "20", 10));
-        const cursor = searchParams.get("cursor");
+        const cursorRaw = searchParams.get("cursor");
+        // Paginate on comment_id: it's unique and monotonically increasing with
+        // creation, so it produces stable, gap-free, duplicate-free pages. (The
+        // previous created_at cursor didn't agree with the ORDER BY, which both
+        // skipped and re-returned rows.) The client rebuilds the thread tree and
+        // sorts by "Top" itself, so a flat id ordering here is fine.
+        const cursor = cursorRaw != null ? parseInt(cursorRaw, 10) : null;
+        const hasCursor = cursor != null && !Number.isNaN(cursor);
 
-        const cursorClause = cursor ? `AND c.created_at > $4` : "";
-        const queryParams: any[] = [postId, userId, limit, ...(cursor ? [cursor] : [])];
+        const cursorClause = hasCursor ? `AND c.comment_id > $4` : "";
+        const queryParams: any[] = [postId, userId, limit, ...(hasCursor ? [cursor] : [])];
 
         const result = await db.query(`
             WITH comment_media AS (
@@ -61,13 +68,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                    OR (b.blocker_id = c.user_id AND b.blocked_id = $2)
             )
             ${cursorClause}
-            ORDER BY c.root_comment_id NULLS FIRST, c.created_at ASC
+            ORDER BY c.comment_id ASC
             LIMIT $3
         `, queryParams);
 
         const comments = result.rows;
         const nextCursor = comments.length === limit
-            ? comments[comments.length - 1].created_at
+            ? comments[comments.length - 1].comment_id
             : null;
 
         return NextResponse.json({

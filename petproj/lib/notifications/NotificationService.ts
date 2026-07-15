@@ -604,6 +604,7 @@ export class NotificationService {
     pushFailureCount: number;
   }> {
     const { senderId, title, body, deepLink, imageUrl } = params;
+    console.log(`📣 Broadcast triggered by admin user ${senderId}: "${title}"`);
 
     const usersResult = await db.query(`SELECT user_id FROM users`);
     const userIds: number[] = usersResult.rows.map((row: any) => row.user_id);
@@ -612,16 +613,19 @@ export class NotificationService {
       return { recipientCount: 0, insertedCount: 0, pushSuccessCount: 0, pushFailureCount: 0 };
     }
 
-    // 1. Bulk-insert one notification row per user
+    // 1. Bulk-insert one notification row per user.
+    // sender_id is intentionally left NULL: this is a message "from Paltuu", not from the
+    // admin's personal account, so the recipient's client shouldn't render the admin's name/photo
+    // as the sender. Who triggered the send is already tracked in notification_campaigns.sent_by.
     const insertResult = await db.query(
       `
       INSERT INTO notifications (
         user_id, sender_id, title, body, type, deep_link, image_url, is_read, created_at
       )
-      SELECT uid, $1, $2, $3, 'system_admin_broadcast', $4, $5, false, NOW()
-      FROM unnest($6::int[]) AS uid
+      SELECT uid, NULL, $1, $2, 'system_admin_broadcast', $3, $4, false, NOW()
+      FROM unnest($5::int[]) AS uid
       `,
-      [senderId, title.substring(0, 255), body, deepLink || null, imageUrl || null, userIds]
+      [title.substring(0, 255), body, deepLink || null, imageUrl || null, userIds]
     );
     const insertedCount = insertResult.rowCount || 0;
 

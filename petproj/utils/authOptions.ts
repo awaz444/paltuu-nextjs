@@ -228,8 +228,11 @@ export const authOptions: NextAuthOptions = {
       // 2. Specialized handling for Google to get the database's integer user_id
       if (account?.provider === "google" && profile?.email) {
         try {
+          const googlePicture = (profile as any).picture || null;
+          const googleName = profile.name || null;
+
           let res = await db.query(
-            "SELECT user_id, role FROM users WHERE email = $1",
+            "SELECT user_id, role, name, profile_image_url FROM users WHERE email = $1",
             [profile.email]
           );
 
@@ -240,15 +243,44 @@ export const authOptions: NextAuthOptions = {
             const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
             res = await db.query(
-              "INSERT INTO users (name, email, password, role, profile_image_url, oauth_provider, oauth_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING user_id, role",
+              "INSERT INTO users (name, email, password, role, profile_image_url, oauth_provider, oauth_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING user_id, role, name, profile_image_url",
               [
-                profile.name || "Google User",
+                googleName || "Google User",
                 profile.email,
                 hashedPassword,
                 "regular user",
-                (profile as any).picture || null,
+                googlePicture,
                 "google",
                 profile.sub,
+              ]
+            );
+          } else {
+            // Returning user: backfill oauth + missing name/avatar so navbar stays correct after hydrate
+            const existing = res.rows[0];
+            const existingImage = existing.profile_image_url as string | null;
+            const needsImage =
+              !!googlePicture &&
+              (!existingImage ||
+                existingImage.includes("no-profile") ||
+                existingImage.trim() === "");
+            const needsName =
+              !!googleName && (!existing.name || String(existing.name).trim() === "");
+
+            res = await db.query(
+              `UPDATE users SET
+                 oauth_provider = 'google',
+                 oauth_id = $1,
+                 profile_image_url = CASE WHEN $2::boolean THEN $3 ELSE profile_image_url END,
+                 name = CASE WHEN $4::boolean THEN $5 ELSE name END
+               WHERE user_id = $6
+               RETURNING user_id, role, name, profile_image_url`,
+              [
+                profile.sub,
+                needsImage,
+                googlePicture,
+                needsName,
+                googleName,
+                existing.user_id,
               ]
             );
           }
@@ -257,6 +289,8 @@ export const authOptions: NextAuthOptions = {
             token.id = res.rows[0].user_id;
             token.user_id = res.rows[0].user_id;
             token.role = res.rows[0].role || "regular user";
+            if (res.rows[0].name) token.name = res.rows[0].name;
+            if (res.rows[0].profile_image_url) token.picture = res.rows[0].profile_image_url;
             console.log(`[Auth] Mapped Google user ${profile.email} to DB ID ${token.id}`);
 
             await setAppTokenCookie({
@@ -370,6 +404,9 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).user_id = token.id;
         (session.user as any).role = token.role;
         (session.user as any).provider = token.provider;
+        if (token.name) session.user.name = token.name as string;
+        if (token.picture) session.user.image = token.picture as string;
+        if (token.email) session.user.email = token.email as string;
       }
       return session;
     },

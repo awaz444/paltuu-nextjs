@@ -189,18 +189,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const { valid, user: tokenUser } = await verifyResponse.json();
         if (valid && tokenUser) {
-          const hydratedUser: User = {
-            id: tokenUser.id,
-            email: tokenUser.email,
-            name: tokenUser.name,
-            role: tokenUser.role,
-            profile_image_url: tokenUser.profile_image_url,
-            social_username: tokenUser.social_username ?? null,
-            method: "api"
-          };
-          setUser(hydratedUser);
+          setUser((prev) => {
+            const isPlaceholder = (url?: string | null) =>
+              !url || url.includes("no-profile") || url.trim() === "";
+
+            // Keep a real avatar/name already shown from Google/Apple session
+            // if the DB row still has a placeholder (common right after OAuth).
+            const profile_image_url = !isPlaceholder(tokenUser.profile_image_url)
+              ? tokenUser.profile_image_url
+              : !isPlaceholder(prev?.profile_image_url)
+                ? prev!.profile_image_url
+                : tokenUser.profile_image_url || "/no-profile/no-profile.jpg";
+
+            const name =
+              tokenUser.name ||
+              prev?.name ||
+              undefined;
+
+            const hydratedUser: User = {
+              id: tokenUser.id,
+              email: tokenUser.email,
+              name,
+              role: tokenUser.role,
+              profile_image_url,
+              social_username: tokenUser.social_username ?? null,
+              method:
+                prev?.method === "google" || prev?.method === "apple"
+                  ? prev.method
+                  : "api",
+            };
+            writeSnapshot(hydratedUser);
+            return hydratedUser;
+          });
           setIsAuthenticated(true);
-          writeSnapshot(hydratedUser);
         } else {
           clearSnapshot();
           setUser(null);
@@ -233,6 +254,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // First, try to fetch the user's database profile
       const fetchDatabaseProfile = async () => {
         let socialUsername: string | null = null;
+        let dbName: string | undefined;
+        let dbImage: string | undefined;
+        let dbRole: string | undefined;
+        let dbId: string | undefined;
         try {
           const verifyResponse = await fetch("/api/v1/auth/verify", {
             credentials: "include",
@@ -242,18 +267,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const { valid, user: tokenUser } = await verifyResponse.json();
             if (valid && tokenUser) {
               socialUsername = tokenUser.social_username ?? null;
+              dbName = tokenUser.name || undefined;
+              dbImage = tokenUser.profile_image_url || undefined;
+              dbRole = tokenUser.role || undefined;
+              dbId = tokenUser.id != null ? String(tokenUser.id) : undefined;
             }
           }
         } catch (e) {
-          console.error(`Failed to fetch social_username for ${oauthMethod} user:`, e);
+          console.error(`Failed to fetch profile for ${oauthMethod} user:`, e);
         }
 
+        const isPlaceholder = (url?: string | null) =>
+          !url || url.includes("no-profile") || url.trim() === "";
+
+        const sessionImage = session.user.image || undefined;
+        const profile_image_url =
+          (!isPlaceholder(dbImage) ? dbImage : null) ||
+          sessionImage ||
+          "/no-profile/no-profile.jpg";
+
         const oauthUser: User = {
-          id: oauthUserId,
-          name: session.user.name || undefined,
+          id: dbId || oauthUserId,
+          name: dbName || session.user.name || undefined,
           email: session.user.email || "",
-          role: (session.user as any).role || "guest",
-          profile_image_url: session.user.image || "/no-profile/no-profile.jpg",
+          role: dbRole || (session.user as any).role || "guest",
+          profile_image_url,
           social_username: socialUsername,
           method: oauthMethod,
         };

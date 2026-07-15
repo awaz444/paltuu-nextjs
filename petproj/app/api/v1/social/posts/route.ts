@@ -18,6 +18,10 @@ import {
     MAX_MENTIONS_PER_CONTENT,
     type ParsedMention,
 } from "@/lib/mentions";
+import {
+    INFERRED_AFFINITY_MULTIPLIER,
+    personalizedAffinityCtes,
+} from "@/lib/tagInference";
 
 export const dynamic = "force-dynamic";
 
@@ -97,17 +101,7 @@ export async function GET(req: NextRequest) {
                     FROM user_interest_scores
                     WHERE user_id = $1
                 ),
-                post_affinity AS (
-                    SELECT
-                        pct.post_id,
-                        AVG(uis.score) FILTER (WHERE pct.role = 'primary') AS avg_primary_interest,
-                        COUNT(*) FILTER (WHERE pct.role = 'primary')        AS primary_count
-                    FROM post_content_tags pct
-                    LEFT JOIN user_interest_scores uis
-                        ON uis.tag_id = pct.tag_id AND uis.user_id = $1
-                    GROUP BY pct.post_id
-                    HAVING COUNT(*) FILTER (WHERE pct.role = 'primary') BETWEEN 1 AND 3
-                ),
+                ${personalizedAffinityCtes()},
                 scored AS (
                     SELECT
                         p.*,
@@ -200,7 +194,14 @@ export async function GET(req: NextRequest) {
                 LIMIT $2 OFFSET $3
             `;
 
-            const result = await db.query(personalizedQuery, [viewerId, limit, offset, baseW, affW]);
+            const result = await db.query(personalizedQuery, [
+                viewerId,
+                limit,
+                offset,
+                baseW,
+                affW,
+                INFERRED_AFFINITY_MULTIPLIER,
+            ]);
             const posts  = result.rows;
 
             // Log impressions for the A/B experiment (fire-and-forget).

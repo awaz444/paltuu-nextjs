@@ -43,8 +43,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     await db.query(
       `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
-       VALUES ($1, 'moderate_post', $2, $3)`,
-      [adminId, `post:${postId}`, state]
+       VALUES ($1, $2, $3, 'successful')`,
+      [adminId, `moderate_post:${state}`, `post:${postId}`]
     );
 
     return NextResponse.json({ success: true, moderation_state: state });

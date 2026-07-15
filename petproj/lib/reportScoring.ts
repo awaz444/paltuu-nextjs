@@ -283,7 +283,7 @@ async function quarantinePost(postId: Id): Promise<void> {
   );
   await db.query(
     `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
-     VALUES (NULL, 'auto_quarantine', $1, 'quarantined')`,
+     VALUES (NULL, 'auto_quarantine', $1, 'successful')`,
     [`post:${postId}`]
   );
   // TODO (Pass 2): push notification to author.
@@ -294,7 +294,7 @@ async function quarantinePost(postId: Id): Promise<void> {
 async function priorityQueue(postId: Id, reason: string): Promise<void> {
   await db.query(
     `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
-     VALUES (NULL, $1, $2, 'flagged')`,
+     VALUES (NULL, $1, $2, 'successful')`,
     [`priority_queue:${reason}`, `post:${postId}`]
   );
 }

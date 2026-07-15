@@ -119,9 +119,9 @@ export async function upsertInterestScore(
 ): Promise<void> {
   await db.query(
     `INSERT INTO user_interest_scores (user_id, tag_id, score, updated_at)
-     VALUES ($1, $2, LEAST($3, $4), NOW())
+     VALUES ($1, $2, LEAST($3::double precision, $4::double precision), NOW())
      ON CONFLICT (user_id, tag_id) DO UPDATE
-       SET score = LEAST(user_interest_scores.score + $3, $4),
+       SET score = LEAST(user_interest_scores.score + $3::double precision, $4::double precision),
            updated_at = NOW()`,
     [userId, tagId, delta, MAX_INTEREST_SCORE]
   );

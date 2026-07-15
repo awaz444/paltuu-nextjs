@@ -81,7 +81,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
       await client.query(
         `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
-         VALUES ($1, 'tag_post', $2, 'tagged')`,
+         VALUES ($1, 'tag_post', $2, 'successful')`,
         [adminId, `post:${postId}`]
       );
 

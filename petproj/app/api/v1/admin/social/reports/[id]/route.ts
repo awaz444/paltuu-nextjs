@@ -76,7 +76,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
         await client.query(
           `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
-           VALUES ($1, 'resolve_report', $2, 'dismissed')`,
+           VALUES ($1, 'resolve_report:dismissed', $2, 'successful')`,
           [adminId, `post:${postId}`]
         );
       } else if (action === 'confirm_hide') {
@@ -97,7 +97,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         );
         await client.query(
           `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
-           VALUES ($1, 'hide_post', $2, 'actioned')`,
+           VALUES ($1, 'hide_post:actioned', $2, 'successful')`,
           [adminId, `post:${postId}`]
         );
       } else {
@@ -108,7 +108,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         );
         await client.query(
           `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
-           VALUES ($1, 'warn_reporter', $2, 'reviewed')`,
+           VALUES ($1, 'warn_reporter:reviewed', $2, 'successful')`,
           [adminId, `user:${reporterId}`]
         );
       }

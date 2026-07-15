@@ -32,8 +32,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     await db.query(
       `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
-       VALUES ($1, 'reject_post', $2, $3)`,
-      [adminId, `post:${postId}`, reason.slice(0, 250)]
+       VALUES ($1, $2, $3, 'successful')`,
+      [adminId, `reject_post:${reason.slice(0, 200)}`, `post:${postId}`]
     );
 
     return NextResponse.json({ success: true });

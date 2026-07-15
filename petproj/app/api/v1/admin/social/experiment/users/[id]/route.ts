@@ -61,8 +61,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const effective = bucket === 'auto' ? deterministicBucket(userId) : bucket;
     await db.query(
       `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
-       VALUES ($1, 'assign_experiment_bucket', $2, $3)`,
-      [adminId, `user:${userId}`, bucket]
+       VALUES ($1, $2, $3, 'successful')`,
+      [adminId, `assign_experiment_bucket:${bucket}`, `user:${userId}`]
     );
 
     return NextResponse.json({

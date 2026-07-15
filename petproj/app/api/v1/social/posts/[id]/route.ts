@@ -10,6 +10,7 @@ import {
     type ParsedMention,
 } from "@/lib/mentions";
 import { checkIsBlocked } from "@/lib/moderation";
+import { resolveRepostTarget } from "@/lib/reposts";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     try {
         const userIdRaw = await getUserIdFromRequest(req);
         const userId = userIdRaw ? parseInt(String(userIdRaw), 10) : 0;
-        const postId = params.id;
+
+        // Opening a plain repost card's detail view must open the underlying
+        // root post — a plain repost entry is a hollow row with no content,
+        // stats, likes, or comments of its own.
+        const resolved = await resolveRepostTarget(db, params.id);
+        if (!resolved || resolved.isDeleted) {
+            return NextResponse.json({ error: "Post not found" }, { status: 404 });
+        }
+        const postId = resolved.postId;
 
         const result = await db.query(`
             SELECT 

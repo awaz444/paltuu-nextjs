@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { recordEngagementEvent } from "@/lib/interestScoring";
+import { resolveRepostTarget } from "@/lib/reposts";
 
 export const dynamic = "force-dynamic";
 
@@ -14,16 +15,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const userIdRaw = await getUserIdFromRequest(req);
     if (!userIdRaw) return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Unauthorized", status: 401 } }, { status: 401 });
     const userId = parseInt(String(userIdRaw), 10);
-    const postId = params.id;
 
     const body = await req.json().catch(() => ({}));
     const collectionIds: number[] = body.collection_ids || [];
 
-    // 1. Check if post exists and is not deleted
-    const postCheck = await db.query("SELECT post_id FROM social_posts WHERE post_id = $1 AND is_deleted = false", [postId]);
-    if (postCheck.rowCount === 0) {
+    // Saving a plain repost card must save the underlying root post — a plain
+    // repost entry is a hollow row with no content of its own to bookmark.
+    const resolved = await resolveRepostTarget(db, params.id);
+    if (!resolved || resolved.isDeleted) {
       return NextResponse.json({ error: { code: "POST_NOT_FOUND", message: "Post does not exist", status: 404 } }, { status: 404 });
     }
+    const postId = resolved.postId;
 
     let wasNewSave = false;
     const client = await db.connect();
@@ -106,7 +108,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const userIdRaw = await getUserIdFromRequest(req);
     if (!userIdRaw) return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Unauthorized", status: 401 } }, { status: 401 });
     const userId = parseInt(String(userIdRaw), 10);
-    const postId = params.id;
+    const resolved = await resolveRepostTarget(db, params.id);
+    const postId = resolved ? resolved.postId : params.id;
 
     const client = await db.connect();
     try {

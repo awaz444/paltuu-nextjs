@@ -131,9 +131,12 @@ export async function GET(req: NextRequest) {
                         false                AS original_author_is_blocked_by_me,
                         false                AS original_author_is_blocking_me,
                         COALESCE(opm.media, '[]'::json) AS original_media,
+                        CASE WHEN p.is_repost AND p.content IS NULL THEN op.like_count    ELSE p.like_count    END AS like_count,
+                        CASE WHEN p.is_repost AND p.content IS NULL THEN op.comment_count ELSE p.comment_count END AS comment_count,
+                        CASE WHEN p.is_repost AND p.content IS NULL THEN op.view_count    ELSE p.view_count    END AS view_count,
                         (sl.post_id IS NOT NULL)  AS is_liked,
                         (sr.post_id IS NOT NULL)  AS is_reposted,
-                        EXISTS(SELECT 1 FROM social_comments WHERE post_id = p.post_id AND user_id = $1 AND is_deleted = false) AS is_commented,
+                        EXISTS(SELECT 1 FROM social_comments WHERE post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND user_id = $1 AND is_deleted = false) AS is_commented,
                         (sp.save_id IS NOT NULL)  AS is_saved,
                         COALESCE(
                           (SELECT json_agg(sc.collection_id)
@@ -169,9 +172,9 @@ export async function GET(req: NextRequest) {
                     LEFT JOIN social_posts op   ON op.post_id  = p.original_post_id
                     LEFT JOIN users ou          ON ou.user_id  = op.user_id
                     LEFT JOIN post_media opm    ON opm.post_id = op.post_id
-                    LEFT JOIN social_likes   sl ON sl.post_id = p.post_id AND sl.user_id = $1
+                    LEFT JOIN social_likes   sl ON sl.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sl.user_id = $1
                     LEFT JOIN social_reposts sr ON sr.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sr.user_id = $1
-                    LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
+                    LEFT JOIN saved_posts sp ON sp.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sp.user_id = $1
                     LEFT JOIN post_affinity pa  ON pa.post_id = p.post_id
                     CROSS JOIN user_max_interest umi
                     WHERE p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $1)
@@ -274,9 +277,12 @@ export async function GET(req: NextRequest) {
                     false                AS original_author_is_blocked_by_me,
                     false                AS original_author_is_blocking_me,
                     COALESCE(opm.media, '[]'::json) AS original_media,
+                        CASE WHEN p.is_repost AND p.content IS NULL THEN op.like_count    ELSE p.like_count    END AS like_count,
+                        CASE WHEN p.is_repost AND p.content IS NULL THEN op.comment_count ELSE p.comment_count END AS comment_count,
+                        CASE WHEN p.is_repost AND p.content IS NULL THEN op.view_count    ELSE p.view_count    END AS view_count,
                     (sl.post_id IS NOT NULL)  AS is_liked,
                     (sr.post_id IS NOT NULL)  AS is_reposted,
-                    EXISTS(SELECT 1 FROM social_comments WHERE post_id = p.post_id AND user_id = $1 AND is_deleted = false) AS is_commented,
+                    EXISTS(SELECT 1 FROM social_comments WHERE post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND user_id = $1 AND is_deleted = false) AS is_commented,
                     (sp.save_id IS NOT NULL)  AS is_saved,
                     COALESCE(
                       (SELECT json_agg(sc.collection_id)
@@ -295,9 +301,9 @@ export async function GET(req: NextRequest) {
                 LEFT JOIN social_posts op  ON op.post_id = p.original_post_id
                 LEFT JOIN users ou         ON ou.user_id = op.user_id
                 LEFT JOIN post_media opm   ON opm.post_id = op.post_id
-                LEFT JOIN social_likes  sl ON sl.post_id = p.post_id AND sl.user_id = $1
+                LEFT JOIN social_likes  sl ON sl.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sl.user_id = $1
                 LEFT JOIN social_reposts sr ON sr.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sr.user_id = $1
-                LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
+                LEFT JOIN saved_posts sp ON sp.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sp.user_id = $1
                 WHERE p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $1)
                 AND NOT EXISTS (
                     SELECT 1 FROM user_blocks b
@@ -362,9 +368,12 @@ export async function GET(req: NextRequest) {
                         false                AS original_author_is_blocked_by_me,
                         false                AS original_author_is_blocking_me,
                         COALESCE(opm.media, '[]'::json) AS original_media,
+                        CASE WHEN p.is_repost AND p.content IS NULL THEN op.like_count    ELSE p.like_count    END AS like_count,
+                        CASE WHEN p.is_repost AND p.content IS NULL THEN op.comment_count ELSE p.comment_count END AS comment_count,
+                        CASE WHEN p.is_repost AND p.content IS NULL THEN op.view_count    ELSE p.view_count    END AS view_count,
                         (sl.post_id IS NOT NULL)  AS is_liked,
                         (sr.post_id IS NOT NULL)  AS is_reposted,
-                        EXISTS(SELECT 1 FROM social_comments WHERE post_id = p.post_id AND user_id = $1 AND is_deleted = false) AS is_commented,
+                        EXISTS(SELECT 1 FROM social_comments WHERE post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND user_id = $1 AND is_deleted = false) AS is_commented,
                         (sp.save_id IS NOT NULL)  AS is_saved,
                         COALESCE(
                           (SELECT json_agg(sc.collection_id)
@@ -395,9 +404,9 @@ export async function GET(req: NextRequest) {
                     LEFT JOIN social_posts op   ON op.post_id  = p.original_post_id
                     LEFT JOIN users ou          ON ou.user_id  = op.user_id
                     LEFT JOIN post_media opm    ON opm.post_id = op.post_id
-                    LEFT JOIN social_likes   sl ON sl.post_id = p.post_id AND sl.user_id = $1
+                    LEFT JOIN social_likes   sl ON sl.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sl.user_id = $1
                     LEFT JOIN social_reposts sr ON sr.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sr.user_id = $1
-                    LEFT JOIN saved_posts sp ON sp.post_id = p.post_id AND sp.user_id = $1
+                    LEFT JOIN saved_posts sp ON sp.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sp.user_id = $1
                     WHERE p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $1)
                     AND NOT EXISTS (
                         SELECT 1 FROM user_blocks b

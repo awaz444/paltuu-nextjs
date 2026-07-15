@@ -6,6 +6,7 @@ import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { SocialNotifications } from "@/lib/notifications";
 import { assertNotBlocked } from "@/lib/moderation";
 import { recordEngagementEvent } from "@/lib/interestScoring";
+import { resolveRepostTarget } from "@/lib/reposts";
 
 export const dynamic = "force-dynamic";
 
@@ -39,28 +40,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         // 1. Resolve the true original. If the target is itself a plain repost
         //    ("XYZ reposted ABC"), reposting must target ABC's real post — never
         //    the repost entry, which carries no media/content and would surface
-        //    as a blank repost. Walk the original_post_id chain to the root.
-        //    Only plain reposts (content IS NULL) are dereferenced; quotes carry
-        //    their own body/media and are standalone posts to repost as-is.
-        const resolved = await db.query(
-            `WITH RECURSIVE chain AS (
-                SELECT post_id, user_id, is_repost, original_post_id, content, is_deleted, 0 AS depth
-                FROM social_posts WHERE post_id = $1
-              UNION ALL
-                SELECT p.post_id, p.user_id, p.is_repost, p.original_post_id, p.content, p.is_deleted, c.depth + 1
-                FROM social_posts p
-                JOIN chain c ON p.post_id = c.original_post_id
-                WHERE c.is_repost = true AND c.content IS NULL
-                  AND c.original_post_id IS NOT NULL AND c.depth < 10
-            )
-            SELECT post_id, user_id, is_deleted FROM chain ORDER BY depth DESC LIMIT 1`,
-            [targetPostId]
-        );
-        if (resolved.rowCount === 0 || resolved.rows[0].is_deleted) {
+        //    as a blank repost. Only plain reposts (content IS NULL) are
+        //    dereferenced; quotes carry their own body/media and are standalone
+        //    posts to repost as-is.
+        const resolved = await resolveRepostTarget(db, targetPostId);
+        if (!resolved || resolved.isDeleted) {
             return NextResponse.json({ error: "Post not found" }, { status: 404 });
         }
-        const originalPostId = String(resolved.rows[0].post_id);
-        const originalAuthorId = resolved.rows[0].user_id;
+        const originalPostId = resolved.postId;
+        const originalAuthorId = resolved.authorId;
 
         // 2. Check if already reposted
         const existing = await db.query(
@@ -217,21 +205,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
         // Resolve the true original (mirror of POST) so undoing from a repost
         // card removes the repost of the underlying original, not the repost entry.
-        const resolved = await db.query(
-            `WITH RECURSIVE chain AS (
-                SELECT post_id, is_repost, original_post_id, content, 0 AS depth
-                FROM social_posts WHERE post_id = $1
-              UNION ALL
-                SELECT p.post_id, p.is_repost, p.original_post_id, p.content, c.depth + 1
-                FROM social_posts p
-                JOIN chain c ON p.post_id = c.original_post_id
-                WHERE c.is_repost = true AND c.content IS NULL
-                  AND c.original_post_id IS NOT NULL AND c.depth < 10
-            )
-            SELECT post_id FROM chain ORDER BY depth DESC LIMIT 1`,
-            [params.id]
-        );
-        const originalPostId = resolved.rowCount ? String(resolved.rows[0].post_id) : params.id;
+        const resolved = await resolveRepostTarget(db, params.id);
+        const originalPostId = resolved ? resolved.postId : params.id;
 
         const existing = await db.query(
             "SELECT repost_id FROM social_reposts WHERE post_id = $1 AND user_id = $2",

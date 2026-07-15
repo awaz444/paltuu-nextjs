@@ -6,6 +6,7 @@ import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { SocialNotifications } from "@/lib/notifications";
 import { assertNotBlocked } from "@/lib/moderation";
 import { recordEngagementEvent } from "@/lib/interestScoring";
+import { resolveRepostTarget } from "@/lib/reposts";
 
 export const dynamic = "force-dynamic";
 
@@ -22,17 +23,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         const userId = parseInt(String(userIdRaw), 10);
 
-        const postId = params.id;
-
-        // Get post author for notification
-        const postInfo = await db.query(
-            "SELECT user_id FROM social_posts WHERE post_id = $1 AND is_deleted = false",
-            [postId]
-        );
-        if (postInfo.rowCount === 0) {
+        // Liking a plain repost card must like the underlying root post — a
+        // plain repost entry is a hollow row with no genuine likes of its own.
+        const resolved = await resolveRepostTarget(db, params.id);
+        if (!resolved || resolved.isDeleted) {
             return NextResponse.json({ error: "Post not found" }, { status: 404 });
         }
-        const postAuthorId = postInfo.rows[0].user_id;
+        const postId = resolved.postId;
+        const postAuthorId = resolved.authorId;
 
         await assertNotBlocked(userId, postAuthorId);
 

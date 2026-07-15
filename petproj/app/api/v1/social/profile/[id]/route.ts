@@ -76,9 +76,15 @@ export async function GET(
             // render a repost's embedded original.
             const postsRes = await db.query(`
                 SELECT
-                    p.post_id, p.content, p.like_count, p.comment_count,
-                    p.repost_count, p.view_count, p.created_at, p.post_type,
+                    p.post_id, p.content, p.created_at, p.post_type,
                     p.is_repost, p.original_post_id,
+                    -- A plain repost (content IS NULL) is a hollow row — its
+                    -- stats, likes, saves and comments all belong to the root
+                    -- post it re-surfaces, not to the repost entry itself.
+                    CASE WHEN p.is_repost AND p.content IS NULL THEN op.like_count    ELSE p.like_count    END AS like_count,
+                    CASE WHEN p.is_repost AND p.content IS NULL THEN op.comment_count ELSE p.comment_count END AS comment_count,
+                    CASE WHEN p.is_repost AND p.content IS NULL THEN op.view_count    ELSE p.view_count    END AS view_count,
+                    p.repost_count,
                     COALESCE((
                         SELECT json_agg(m.* ORDER BY m.ordering ASC)
                         FROM social_post_media m
@@ -96,7 +102,7 @@ export async function GET(
                     ), '[]'::json) AS original_media,
                     EXISTS(
                         SELECT 1 FROM social_likes l
-                        WHERE l.post_id = p.post_id AND l.user_id = $2
+                        WHERE l.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND l.user_id = $2
                     ) AS is_liked,
                     EXISTS(
                         SELECT 1 FROM social_reposts r
@@ -104,11 +110,11 @@ export async function GET(
                     ) AS is_reposted,
                     EXISTS(
                         SELECT 1 FROM saved_posts sp
-                        WHERE sp.post_id = p.post_id AND sp.user_id = $2
+                        WHERE sp.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sp.user_id = $2
                     ) AS is_saved,
                     EXISTS(
                         SELECT 1 FROM social_comments c
-                        WHERE c.post_id = p.post_id AND c.user_id = $2 AND c.is_deleted = false
+                        WHERE c.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND c.user_id = $2 AND c.is_deleted = false
                     ) AS is_commented
                 FROM social_posts p
                 LEFT JOIN social_posts op ON op.post_id = p.original_post_id

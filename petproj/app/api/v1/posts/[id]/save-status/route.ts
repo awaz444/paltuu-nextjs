@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import { resolveRepostTarget } from "@/lib/reposts";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const userIdRaw = await getUserIdFromRequest(req);
     if (!userIdRaw) return NextResponse.json({ is_saved: false, collections: [] });
     const userId = parseInt(String(userIdRaw), 10);
-    const postId = params.id;
+    // A plain repost has nothing of its own to save — the bookmark belongs to
+    // the root post it re-surfaces.
+    const resolved = await resolveRepostTarget(db, params.id);
+    const postId = resolved ? resolved.postId : params.id;
 
     const saveRes = await db.query(`
       SELECT sp.save_id,

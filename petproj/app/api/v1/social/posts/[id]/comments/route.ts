@@ -6,6 +6,7 @@ import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { SocialNotifications } from "@/lib/notifications";
 import { assertNotBlocked, checkIsBlocked } from "@/lib/moderation";
 import { recordEngagementEvent } from "@/lib/interestScoring";
+import { resolveRepostTarget } from "@/lib/reposts";
 import {
     parseMentions,
     validateMentions,
@@ -35,7 +36,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         const userIdRaw = await getUserIdFromRequest(req);
         const userId = userIdRaw ? parseInt(String(userIdRaw), 10) : 0;
 
-        const postId = params.id;
+        // A plain repost has no comments of its own — they live on the root post.
+        const resolved = await resolveRepostTarget(db, params.id);
+        const postId = resolved ? resolved.postId : params.id;
         const { searchParams } = new URL(req.url);
         const limit = Math.min(50, parseInt(searchParams.get("limit") || "20", 10));
         const cursorRaw = searchParams.get("cursor");
@@ -126,7 +129,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         const userId = parseInt(String(userIdRaw), 10);
 
-        const postId = params.id;
         const body = await req.json();
         const { content, parent_comment_id, media } = body;
         const mediaList: any[] = Array.isArray(media) ? media : [];
@@ -135,15 +137,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             return NextResponse.json({ error: "Comment content is required" }, { status: 400 });
         }
 
-        // Get post for notification
-        const postInfo = await db.query(
-            "SELECT user_id FROM social_posts WHERE post_id = $1 AND is_deleted = false",
-            [postId]
-        );
-        if (postInfo.rowCount === 0) {
+        // Commenting on a plain repost card must comment on the underlying root
+        // post — a plain repost entry is a hollow row with no comments of its own.
+        const resolved = await resolveRepostTarget(db, params.id);
+        if (!resolved || resolved.isDeleted) {
             return NextResponse.json({ error: "Post not found" }, { status: 404 });
         }
-        const postAuthorId = postInfo.rows[0].user_id;
+        const postId = resolved.postId;
+        const postAuthorId = resolved.authorId;
 
         await assertNotBlocked(userId, postAuthorId);
 

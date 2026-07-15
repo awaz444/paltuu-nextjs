@@ -29,10 +29,10 @@ export default function UsernameGateModal() {
 
     useEffect(() => {
         const trimmed = value.trim();
+        setError(""); // Clear error when input changes
 
         if (!trimmed) {
             setStatus("idle");
-            setError("");
             return;
         }
 
@@ -70,6 +70,7 @@ export default function UsernameGateModal() {
     const handleSubmit = async () => {
         if (!canSubmit) return;
         setSaving(true);
+        setError("");
         try {
             const res = await fetch("/api/v1/social/profile/update", {
                 method: "PATCH",
@@ -80,7 +81,9 @@ export default function UsernameGateModal() {
             const json = await res.json();
 
             if (!res.ok) {
-                setError(json.error || "Failed to save your username.");
+                const errMsg = json.error || "Failed to save your username.";
+                setError(errMsg);
+                toast.error(errMsg);
                 if (res.status === 409) setStatus("taken");
                 return;
             }
@@ -88,7 +91,9 @@ export default function UsernameGateModal() {
             updateSocialUsername(json.user?.social_username || value.trim().toLowerCase());
             toast.success("Username set!");
         } catch {
-            setError("Failed to save your username. Please try again.");
+            const errMsg = "Failed to save your username. Please try again.";
+            setError(errMsg);
+            toast.error(errMsg);
         } finally {
             setSaving(false);
         }
@@ -126,10 +131,8 @@ export default function UsernameGateModal() {
                     </div>
                     <div className="mt-1 text-sm min-h-[1.25rem]">
                         {status === "checking" && <span className="text-gray-400">Checking availability&hellip;</span>}
-                        {status === "available" && <span className="text-green-600">@{value.trim()} is available</span>}
-                        {(status === "taken" || status === "invalid") && (
-                            <span className="text-red-500">{error}</span>
-                        )}
+                        {status === "available" && !error && <span className="text-green-600">@{value.trim()} is available</span>}
+                        {error && <span className="text-red-500">{error}</span>}
                     </div>
                 </div>
 

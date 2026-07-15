@@ -38,9 +38,11 @@ export async function getUserIdFromRequest(req: NextRequest): Promise<string | n
     }
 
     // 2. Check NextAuth session token (for Google OAuth/Web users)
+    const secureCookie = req.url?.startsWith("https://") || req.nextUrl?.protocol === "https:" || req.headers.get("x-forwarded-proto") === "https";
     const nextAuthToken = await getToken({
       req: req as any,
       secret: process.env.NEXTAUTH_SECRET!,
+      secureCookie,
     });
 
     if (nextAuthToken) {
@@ -94,9 +96,11 @@ export async function getUserFromRequest(req: NextRequest): Promise<JWTPayload |
     }
 
     // Check NextAuth token
+    const secureCookie = req.url?.startsWith("https://") || req.nextUrl?.protocol === "https:" || req.headers.get("x-forwarded-proto") === "https";
     const nextAuthToken = await getToken({
       req: req as any,
       secret: process.env.NEXTAUTH_SECRET!,
+      secureCookie,
     });
 
     if (nextAuthToken) {

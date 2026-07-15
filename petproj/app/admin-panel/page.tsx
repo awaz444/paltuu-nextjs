@@ -19,10 +19,47 @@ interface UserProfileData {
     created_at: string;
 }
 
+const ADMIN_PANEL_PIN = "1212";
+
+interface TileDef {
+    href: string;
+    title: string;
+    desc: string;
+    badge?: number;
+    icon?: string;
+}
+
+interface CategoryDef {
+    name: string;
+    tiles: TileDef[];
+}
+
+const Tile = ({ href, title, desc, badge }: TileDef) => (
+    <Link href={href}>
+        <div className="bg-white shadow-lg rounded-lg p-4 sm:p-5 h-full min-h-[150px] flex flex-col justify-between border border-gray-200 hover:border-primary transition-all cursor-pointer">
+            <div>
+                <div className="flex items-center gap-2 mb-2">
+                    <h4 className="text-sm sm:text-base font-bold text-primary leading-snug">{title}</h4>
+                    {!!badge && badge > 0 && (
+                        <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium shrink-0">
+                            {badge}
+                        </span>
+                    )}
+                </div>
+                <p className="text-xs sm:text-sm text-gray-600">{desc}</p>
+            </div>
+            <img src="/arrow-right.svg" alt="" className="w-5 h-5 self-end opacity-60" />
+        </div>
+    </Link>
+);
 
 const AdminPanel = () => {
     const { user, isHydrating } = useAuth();
     const router = useRouter();
+
+    const [pinVerified, setPinVerified] = useState(false);
+    const [pinInput, setPinInput] = useState("");
+    const [pinError, setPinError] = useState("");
 
     const [userId, setUserId] = useState<string | null>(null);
     const [data, setData] = useState<UserProfileData | null>(null);
@@ -88,6 +125,52 @@ const AdminPanel = () => {
         });
     }, [user, isHydrating]);
 
+    // PIN gate — asked for on every visit to this page, independent of the admin role check
+    const handlePinSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (pinInput === ADMIN_PANEL_PIN) {
+            setPinVerified(true);
+            setPinError("");
+        } else {
+            setPinError("Incorrect PIN");
+            setPinInput("");
+        }
+    };
+
+    if (!pinVerified) {
+        return (
+            <div className="flex justify-center items-center h-screen bg-gray-100 px-4">
+                <form
+                    onSubmit={handlePinSubmit}
+                    className="bg-white shadow-lg rounded-lg p-8 w-full max-w-xs text-center border border-gray-200"
+                >
+                    <h3 className="text-lg font-bold text-primary mb-2">Admin Panel Locked</h3>
+                    <p className="text-sm text-gray-500 mb-4">Enter the 4-digit PIN to continue</p>
+                    <input
+                        type="password"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={4}
+                        value={pinInput}
+                        onChange={(e) => {
+                            setPinError("");
+                            setPinInput(e.target.value.replace(/\D/g, "").slice(0, 4));
+                        }}
+                        className="w-full text-center tracking-[0.6em] text-2xl font-bold border border-gray-300 rounded-lg py-3 mb-3 focus:border-primary outline-none"
+                        autoFocus
+                    />
+                    {pinError && <p className="text-red-600 text-sm mb-3">{pinError}</p>}
+                    <button
+                        type="submit"
+                        disabled={pinInput.length !== 4}
+                        className="w-full bg-primary text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        Unlock
+                    </button>
+                </form>
+            </div>
+        );
+    }
 
     if (loading || isHydrating) {
         return (
@@ -119,12 +202,59 @@ const AdminPanel = () => {
 
     const { name, dob, email, profile_image_url, city, created_at } = data;
 
+    const categories: CategoryDef[] = [
+        {
+            name: "Pets & Adoptions",
+            tiles: [
+                { href: "/admin-pet", title: "Pets", desc: "Manage all pet listings" },
+                { href: "/admin-pet-approval", title: "Listing Approvals", desc: "Review pending pet listings" },
+                { href: "/admin-approve-vets", title: "Vet Verifications", desc: "Approve vet verification applications" },
+                { href: "/manage-clinics", title: "Clinics & Vets", desc: "Add/edit clinics, create vets, link vets to clinics" },
+            ],
+        },
+        {
+            name: "Users",
+            tiles: [
+                { href: "/admin-user", title: "Users", desc: "Manage user accounts" },
+            ],
+        },
+        {
+            name: "Commerce",
+            tiles: [
+                { href: "/orders", title: "Orders", desc: "View all marketplace orders" },
+                { href: "/admin", title: "Bazaar Portal", desc: "Update products, vet custom items, and track sellers" },
+            ],
+        },
+        {
+            name: "Communications",
+            tiles: [
+                { href: "/admin/notifications", title: "Push Notifications", desc: "Send a custom push notification to all app users" },
+            ],
+        },
+        {
+            name: "Social Moderation",
+            tiles: [
+                { href: "/admin-panel/social/tagging", title: "🏷 Tagging Queue", desc: "Tag untagged posts for personalization", badge: socialCounts.untagged },
+                { href: "/admin-panel/social/reports", title: "⚠ Report Queue", desc: "Review flagged posts and reporter trust", badge: socialCounts.reports },
+                { href: "/admin-panel/social/tags", title: "🗂 Tag Taxonomy", desc: "Add, edit, and manage content tags" },
+                { href: "/admin-panel/social/posts", title: "🔍 Post Browser", desc: "Search and moderate any post" },
+                { href: "/admin-panel/social/experiment", title: "🧪 A/B Experiment", desc: "Compare personalized vs. current feed" },
+            ],
+        },
+        {
+            name: "Data",
+            tiles: [
+                { href: "/admin-panel/whatsapp-data", title: "WhatsApp Data", desc: "View collected WhatsApp lead data" },
+            ],
+        },
+    ];
+
     return (
         <>
 
             <div className="bg-gray-100 min-h-screen px-4 sm:px-6 lg:px-8 py-8">
                 {/* Personal Info Box */}
-                <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 mb-6 relative border border-gray-200 hover:border-primary">
+                <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 mb-8 relative border border-gray-200 hover:border-primary">
                     <Link href="/my-profile">
                         <button
                             className="absolute top-4 right-4 w-6 h-6"
@@ -163,189 +293,17 @@ const AdminPanel = () => {
                     </div>
                 </div>
 
-
-                {/* Grid for Action Cards */}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                    {/* Pets */}
-                    <Link href="/admin-pet">
-                        <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 relative border border-gray-200 hover:border-primary transition-all cursor-pointer">
-                            <button
-                                className="absolute top-4 right-4 w-6 h-6"
-                                title="Go to Pets">
-                                <img
-                                    src="/arrow-right.svg"
-                                    alt="Details"
-                                    className="hover:text-primary"
-                                />
-                            </button>
-
-                            <h4 className="text-base sm:text-lg font-bold text-primary mb-4">
-                                Go to Pets
-                            </h4>
-                            <p className="text-sm text-gray-600">Manage all pet listings</p>
-                        </div>
-                    </Link>
-
-                    {/* Listing Approvals */}
-                    <Link href="/admin-pet-approval">
-                    <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 relative border border-gray-200 hover:border-primary transition-all cursor-pointer">
-                        <button
-                            className="absolute top-4 right-4 w-6 h-6"
-                            title="Go to Approvals">
-                            <img
-                                src="/arrow-right.svg"
-                                alt="Details"
-                                className="hover:text-primary"
-                            />
-                        </button>
-                        <h4 className="text-base sm:text-lg font-bold text-primary mb-4">
-                            Go to Listing Approvals
-                        </h4>
-                        <p className="text-sm text-gray-600">Review pending pet listings</p>
-                    </div>
-                    </Link>
-
-                    {/* Users */}
-                    <Link href="/admin-user">
-                        <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 relative border border-gray-200 hover:border-primary transition-all cursor-pointer">
-                            <div className="absolute top-4 right-4 w-6 h-6">
-                                <img
-                                    src="/arrow-right.svg"
-                                    alt="Details"
-                                    className="hover:text-primary text-primary"
-                                />
-                            </div>
-                            <h4 className="text-base sm:text-lg font-bold text-primary mb-4">
-                                Go to Users
-                            </h4>
-                            <p className="text-sm text-gray-600">Manage user accounts</p>
-                        </div>
-                    </Link>
-
-                    {/* Verification Applications */}
-                    <Link href="/admin-approve-vets">
-                    <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 relative border border-gray-200 hover:border-primary transition-all cursor-pointer">
-                        <button
-                            className="absolute top-4 right-4 w-6 h-6"
-                            title="Go to Verification">
-                            <img
-                                src="/arrow-right.svg"
-                                alt="Details"
-                                className="hover:text-primary"
-                            />
-                        </button>
-                        <h4 className="text-base sm:text-lg font-bold text-primary mb-4">
-                            Go to Verification Applications
-                        </h4>
-                        <p className="text-sm text-gray-600">Approve vet verifications</p>
-                    </div>
-                    </Link>
-
-                    {/* Orders */}
-                    <Link href="/orders">
-                    <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 relative border border-gray-200 hover:border-primary transition-all cursor-pointer">
-                        <button
-                            className="absolute top-4 right-4 w-6 h-6"
-                            title="Go to Orders">
-                            <img
-                                src="/arrow-right.svg"
-                                alt="Details"
-                                className="hover:text-primary"
-                            />
-                        </button>
-                        <h4 className="text-base sm:text-lg font-bold text-primary mb-4">
-                            Go to Orders
-                        </h4>
-                        <p className="text-sm text-gray-600">View all marketplace orders</p>
-                    </div>
-                    </Link>
-
-                    {/* Clinics & Vets → now /manage-clinics */}
-                    <Link href="/manage-clinics">
-                    <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 relative border border-gray-200 hover:border-primary transition-all cursor-pointer">
-                        <button
-                            className="absolute top-4 right-4 w-6 h-6"
-                            title="Go to Clinics & Vets">
-                            <img
-                                src="/arrow-right.svg"
-                                alt="Details"
-                                className="hover:text-primary"
-                            />
-                        </button>
-                        <h4 className="text-base sm:text-lg font-bold text-primary mb-4">
-                            Manage Clinics & Vets
-                        </h4>
-                        <p className="text-sm text-gray-600">Add / edit clinics, create vets, link vets to clinics</p>
-                    </div>
-                    </Link>
-
-                    {/* Bazaar Portal */}
-                    <Link href="/admin">
-                    <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 relative border border-gray-200 hover:border-primary transition-all cursor-pointer">
-                        <button
-                            className="absolute top-4 right-4 w-6 h-6"
-                            title="Go to Bazaar Portal">
-                            <img
-                                src="/arrow-right.svg"
-                                alt="Details"
-                                className="hover:text-primary"
-                            />
-                        </button>
-                        <h4 className="text-base sm:text-lg font-bold text-primary mb-4">
-                            Go to Bazaar Portal
-                        </h4>
-                        <p className="text-sm text-gray-600">Update products, vet custom items, and track sellers</p>
-                    </div>
-                    </Link>
-
-                    {/* Social Moderation */}
-                    <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6 border border-gray-200 col-span-1 sm:col-span-2 lg:col-span-3">
-                        <h4 className="text-base sm:text-lg font-bold text-primary mb-4">Social Moderation</h4>
-                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                            <Link href="/admin-panel/social/tagging">
-                                <div className="border border-gray-200 hover:border-primary rounded-lg p-3 cursor-pointer transition-all">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <p className="text-sm font-semibold text-gray-800">🏷 Tagging Queue</p>
-                                        {socialCounts.untagged > 0 && (
-                                            <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">{socialCounts.untagged}</span>
-                                        )}
-                                    </div>
-                                    <p className="text-xs text-gray-500">Tag untagged posts for personalization</p>
-                                </div>
-                            </Link>
-                            <Link href="/admin-panel/social/reports">
-                                <div className="border border-gray-200 hover:border-primary rounded-lg p-3 cursor-pointer transition-all">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <p className="text-sm font-semibold text-gray-800">⚠ Report Queue</p>
-                                        {socialCounts.reports > 0 && (
-                                            <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium">{socialCounts.reports}</span>
-                                        )}
-                                    </div>
-                                    <p className="text-xs text-gray-500">Review flagged posts and reporter trust</p>
-                                </div>
-                            </Link>
-                            <Link href="/admin-panel/social/tags">
-                                <div className="border border-gray-200 hover:border-primary rounded-lg p-3 cursor-pointer transition-all">
-                                    <p className="text-sm font-semibold text-gray-800 mb-1">🗂 Tag Taxonomy</p>
-                                    <p className="text-xs text-gray-500">Add, edit, and manage content tags</p>
-                                </div>
-                            </Link>
-                            <Link href="/admin-panel/social/posts">
-                                <div className="border border-gray-200 hover:border-primary rounded-lg p-3 cursor-pointer transition-all">
-                                    <p className="text-sm font-semibold text-gray-800 mb-1">🔍 Post Browser</p>
-                                    <p className="text-xs text-gray-500">Search and moderate any post</p>
-                                </div>
-                            </Link>
-                            <Link href="/admin-panel/social/experiment">
-                                <div className="border border-gray-200 hover:border-primary rounded-lg p-3 cursor-pointer transition-all">
-                                    <p className="text-sm font-semibold text-gray-800 mb-1">🧪 A/B Experiment</p>
-                                    <p className="text-xs text-gray-500">Compare personalized vs. current feed</p>
-                                </div>
-                            </Link>
+                {/* Categorized Tiles */}
+                {categories.map((category) => (
+                    <div key={category.name} className="mb-8">
+                        <h3 className="text-base sm:text-lg font-bold text-gray-700 mb-3">{category.name}</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                            {category.tiles.map((tile) => (
+                                <Tile key={tile.href} {...tile} />
+                            ))}
                         </div>
                     </div>
-                </div>
+                ))}
             </div>
         </>
     );

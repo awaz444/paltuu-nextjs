@@ -55,6 +55,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
     const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
     const [googleLoading, setGoogleLoading] = useState(false);
+    const [appleLoading, setAppleLoading] = useState(false);
 
     const [isVerifying, setIsVerifying] = useState(false);
     const [isEmailVerifying, setIsEmailVerifying] = useState(false);
@@ -81,6 +82,20 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             toast.error("Google login failed. Please try again!");
         } finally {
             setGoogleLoading(false);
+        }
+    };
+
+    const handleAppleLogin = async () => {
+        try {
+            setAppleLoading(true);
+            await signIn("apple", {
+                callbackUrl: "/browse-pets",
+            });
+        } catch (error) {
+            console.error("Apple login failed:", error);
+            toast.error("Apple login failed. Please try again!");
+        } finally {
+            setAppleLoading(false);
         }
     };
 
@@ -335,39 +350,59 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6 space-y-4">
             <h2 className="text-2xl font-semibold text-center mb-2">Sign Up</h2>
 
-            {/* Google Login Button */}
-            <button
-                type="button"
-                onClick={handleGoogleLogin}
-                disabled={googleLoading}
-                className={`w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 focus:outline-none transition flex items-center justify-center space-x-2 ${googleLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}>
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="w-5 h-5">
-                    <path
-                        d="M23.76 12.26c0-.79-.07-1.58-.19-2.34H12v4.44h6.66c-.29 1.56-1.15 2.88-2.46 3.76v3.12h3.98c2.32-2.14 3.68-5.29 3.68-8.98z"
-                        fill="#4285F4"
-                    />
-                    <path
-                        d="M12 24c3.3 0 6.07-1.09 8.09-2.94l-3.98-3.12c-1.1.74-2.52 1.18-4.11 1.18-3.15 0-5.82-2.13-6.77-5.01H1.2v3.14C3.25 21.08 7.34 24 12 24z"
-                        fill="#34A853"
-                    />
-                    <path
-                        d="M5.23 14.12c-.25-.74-.39-1.54-.39-2.37 0-.83.14-1.63.38-2.37V6.23H1.2A11.98 11.98 0 000 12c0 1.89.44 3.68 1.2 5.27l4.03-3.15z"
-                        fill="#FBBC05"
-                    />
-                    <path
-                        d="M12 4.74c1.8 0 3.4.62 4.67 1.84l3.5-3.5C17.99 1.12 15.22 0 12 0 7.34 0 3.25 2.92 1.2 6.73l4.03 3.15c.94-2.88 3.61-5.01 6.77-5.01z"
-                        fill="#EA4335"
-                    />
-                </svg>
-                <span>
-                    {googleLoading ? "Logging in..." : "Continue with Google"}
-                </span>
-            </button>
+            {/* Social Login Buttons */}
+            <div className="space-y-3">
+                <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={googleLoading || appleLoading}
+                    className={`w-full py-2 px-4 rounded-xl text-gray-600 border border-gray-400 focus:outline-none transition flex items-center justify-center space-x-2 ${googleLoading || appleLoading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-5 h-5">
+                        <path
+                            d="M23.76 12.26c0-.79-.07-1.58-.19-2.34H12v4.44h6.66c-.29 1.56-1.15 2.88-2.46 3.76v3.12h3.98c2.32-2.14 3.68-5.29 3.68-8.98z"
+                            fill="#4285F4"
+                        />
+                        <path
+                            d="M12 24c3.3 0 6.07-1.09 8.09-2.94l-3.98-3.12c-1.1.74-2.52 1.18-4.11 1.18-3.15 0-5.82-2.13-6.77-5.01H1.2v3.14C3.25 21.08 7.34 24 12 24z"
+                            fill="#34A853"
+                        />
+                        <path
+                            d="M5.23 14.12c-.25-.74-.39-1.54-.39-2.37 0-.83.14-1.63.38-2.37V6.23H1.2A11.98 11.98 0 000 12c0 1.89.44 3.68 1.2 5.27l4.03-3.15z"
+                            fill="#FBBC05"
+                        />
+                        <path
+                            d="M12 4.74c1.8 0 3.4.62 4.67 1.84l3.5-3.5C17.99 1.12 15.22 0 12 0 7.34 0 3.25 2.92 1.2 6.73l4.03 3.15c.94-2.88 3.61-5.01 6.77-5.01z"
+                            fill="#EA4335"
+                        />
+                    </svg>
+                    <span>
+                        {googleLoading ? "Logging in..." : "Continue with Google"}
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    onClick={handleAppleLogin}
+                    disabled={googleLoading || appleLoading}
+                    className={`w-full py-2 px-4 rounded-xl text-white bg-black hover:bg-gray-900 border border-black focus:outline-none transition flex items-center justify-center space-x-2 ${googleLoading || appleLoading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}>
+                    <svg
+                        className="w-5 h-5"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true">
+                        <path d="M16.365 1.43c0 1.14-.463 2.205-1.247 3.011-.847.87-2.217 1.534-3.385 1.44-.146-1.113.404-2.28 1.196-3.075C13.91 1.78 15.205 1.13 16.365 1.43zM20.82 17.19c-.56 1.29-.825 1.86-1.545 3-.95 1.45-2.29 3.25-3.95 3.27-1.48.02-1.86-.96-3.87-.95-2.01.01-2.43.97-3.91.95-1.66-.02-2.93-1.65-3.88-3.1-2.66-4.05-2.94-8.8-1.3-11.3 1.16-1.78 3-2.83 4.72-2.83 1.76 0 2.87 1 4.33 1 1.41 0 2.27-1.01 4.29-1.01 1.53 0 3.15.83 4.3 2.27-3.78 2.08-3.17 7.5.81 8.7z" />
+                    </svg>
+                    <span>
+                        {appleLoading ? "Logging in..." : "Continue with Apple"}
+                    </span>
+                </button>
+            </div>
 
             {/* OR Divider */}
             <div className="relative flex items-center py-2">

@@ -13,7 +13,7 @@ interface User {
   profile_image_url?: string; // ✅ consistent naming
   role?: string;
   social_username?: string | null;
-  method: "google" | "api" | null;
+  method: "google" | "apple" | "api" | null;
 }
 
 // Display-only optimistic auth snapshot.
@@ -223,10 +223,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // console.log("🔎 NextAuth session.user:", session?.user);
 
     if (status === "authenticated" && session?.user) {
-    const googleUserId = (session.user as any).user_id || (session.user as any).id;
+    const oauthUserId = (session.user as any).user_id || (session.user as any).id;
+    const provider = (session.user as any).provider;
+    const oauthMethod: "google" | "apple" =
+      provider === "apple" ? "apple" : "google";
 
-    // Only update if we don't have a user yet, or if this is a fresh Google login
-    if (!user || user.method !== "google") {
+    // Only update if we don't have a user yet, or if this is a fresh OAuth login
+    if (!user || (user.method !== "google" && user.method !== "apple")) {
       // First, try to fetch the user's database profile
       const fetchDatabaseProfile = async () => {
         let socialUsername: string | null = null;
@@ -242,30 +245,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
           }
         } catch (e) {
-          console.error("Failed to fetch social_username for Google user:", e);
+          console.error(`Failed to fetch social_username for ${oauthMethod} user:`, e);
         }
 
-        const googleUser: User = {
-          id: googleUserId,
+        const oauthUser: User = {
+          id: oauthUserId,
           name: session.user.name || undefined,
           email: session.user.email || "",
           role: (session.user as any).role || "guest",
           profile_image_url: session.user.image || "/no-profile/no-profile.jpg",
           social_username: socialUsername,
-          method: "google",
+          method: oauthMethod,
         };
 
-        setUser(googleUser);
+        setUser(oauthUser);
         setIsAuthenticated(true);
-        writeSnapshot(googleUser);
-        return googleUser;
+        writeSnapshot(oauthUser);
+        return oauthUser;
       };
 
         fetchDatabaseProfile().then((finalUser) => {
           // Clear guest session cookie (cart sync will be handled by useCartSync hook)
           try {
             clearGuestSessionId();
-            // console.log('✅ User logged in via Google - guest session cleared');
+            // console.log('✅ User logged in via OAuth - guest session cleared');
           } catch (e) {
             console.error('Error clearing guest session on login:', e);
           }
@@ -406,8 +409,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("V1 API logout error:", err);
       }
 
-      // Handle NextAuth signOut if Google method was used
-      if (user?.method === "google") {
+      // Handle NextAuth signOut if OAuth method was used
+      if (user?.method === "google" || user?.method === "apple") {
         await nextAuthSignOut({
           callbackUrl: "/auth",
           redirect: true,

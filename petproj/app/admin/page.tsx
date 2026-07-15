@@ -74,7 +74,7 @@ export default function AdminDashboard() {
 
             {/* Quick Actions */}
             <h3 className="text-xl font-bold text-gray-700 mb-6">Management Portals</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Link href="/admin/catalogue">
                     <div className="bg-gradient-to-br from-[#065758]/10 to-[#043b3c]/5 border border-[#065758]/20 hover:border-[#065758] hover:shadow-md rounded-2xl p-6 cursor-pointer transform hover:-translate-y-1 transition duration-200">
                         <h4 className="text-[#065758] font-bold text-lg mb-1">Master Catalogue</h4>
@@ -93,6 +93,13 @@ export default function AdminDashboard() {
                     <div className="bg-gradient-to-br from-[#065758]/10 to-[#043b3c]/5 border border-[#065758]/20 hover:border-[#065758] hover:shadow-md rounded-2xl p-6 cursor-pointer transform hover:-translate-y-1 transition duration-200">
                         <h4 className="text-[#065758] font-bold text-lg mb-1">Custom Requests</h4>
                         <p className="text-gray-500 text-sm">Vet product submissions before allowing visibility.</p>
+                    </div>
+                </Link>
+
+                <Link href="/admin/notifications">
+                    <div className="bg-gradient-to-br from-[#065758]/10 to-[#043b3c]/5 border border-[#065758]/20 hover:border-[#065758] hover:shadow-md rounded-2xl p-6 cursor-pointer transform hover:-translate-y-1 transition duration-200">
+                        <h4 className="text-[#065758] font-bold text-lg mb-1">Push Notifications</h4>
+                        <p className="text-gray-500 text-sm">Send a custom push notification to all app users.</p>
                     </div>
                 </Link>
             </div>

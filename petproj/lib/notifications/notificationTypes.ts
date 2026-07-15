@@ -59,6 +59,7 @@ export enum NotificationType {
   SYSTEM_BROADCAST = "system_broadcast",
   SYSTEM_PLATFORM_UPDATE = "system_platform_update",
   SYSTEM_LOST_FOUND_MATCH = "system_lost_found_match",
+  SYSTEM_ADMIN_BROADCAST = "system_admin_broadcast",
 }
 
 export enum EntityType {
@@ -253,6 +254,14 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
     title: "Possible Match Found",
     body: (data) => `Possible match for ${data.pet_name || 'your pet'} near ${data.area || 'your area'}`,
     deepLinkPattern: "paltuu://lost-found/{entity_id}",
+  },
+  // Admin-composed broadcasts carry their own literal title/body (set directly by
+  // NotificationService.broadcastToAllUsers), so these are just safe fallbacks.
+  [NotificationType.SYSTEM_ADMIN_BROADCAST]: {
+    type: NotificationType.SYSTEM_ADMIN_BROADCAST,
+    title: (data) => data.title || "Paltuu",
+    body: (data) => data.body || "",
+    deepLinkPattern: "{deep_link}",
   },
 };
 

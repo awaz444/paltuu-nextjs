@@ -39,7 +39,40 @@ interface NotificationRow {
   created_at: string;
 }
 
+const MAX_CHUNK_CONCURRENCY = 5;
+const EXPO_CHUNK_SIZE = 100;
+const FCM_CHUNK_SIZE = 500;
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+}
+
+async function runWithConcurrency<T>(
+  tasks: (() => Promise<T>)[],
+  concurrency: number
+): Promise<T[]> {
+  const results: T[] = [];
+  for (let i = 0; i < tasks.length; i += concurrency) {
+    const batch = tasks.slice(i, i + concurrency).map((task) => task());
+    results.push(...(await Promise.all(batch)));
+  }
+  return results;
+}
+
 export class NotificationService {
+  /**
+   * Split raw device tokens into Expo push tokens vs native FCM tokens
+   */
+  private static classifyTokens(tokens: string[]): { expoTokens: string[]; fcmTokens: string[] } {
+    const expoTokens = tokens.filter((t) => t.startsWith("ExponentPushToken") || t.startsWith("ExpoPushToken"));
+    const fcmTokens = tokens.filter((t) => !t.startsWith("ExponentPushToken") && !t.startsWith("ExpoPushToken"));
+    return { expoTokens, fcmTokens };
+  }
+
   /**
    * Create a notification in DB and send FCM push to user's devices
    */
@@ -146,8 +179,7 @@ export class NotificationService {
       const unreadCount = parseInt(unreadResult.rows[0]?.count || "0", 10);
 
       // Separate Expo push tokens from raw FCM tokens
-      const expoTokens = tokens.filter((t: string) => t.startsWith("ExponentPushToken") || t.startsWith("ExpoPushToken"));
-      const fcmTokens = tokens.filter((t: string) => !t.startsWith("ExponentPushToken") && !t.startsWith("ExpoPushToken"));
+      const { expoTokens, fcmTokens } = this.classifyTokens(tokens);
 
       // 3. Send via Expo Push API if there are Expo tokens
       if (expoTokens.length > 0) {
@@ -553,5 +585,178 @@ export class NotificationService {
       console.error("❌ Failed to send topic notification:", error);
       return false;
     }
+  }
+
+  /**
+   * Broadcast a custom notification to every user: bulk-inserts one DB row per
+   * user and fans out pushes in batched Expo/FCM calls (not one HTTP call per user).
+   */
+  static async broadcastToAllUsers(params: {
+    senderId: number;
+    title: string;
+    body: string;
+    deepLink?: string;
+    imageUrl?: string;
+  }): Promise<{
+    recipientCount: number;
+    insertedCount: number;
+    pushSuccessCount: number;
+    pushFailureCount: number;
+  }> {
+    const { senderId, title, body, deepLink, imageUrl } = params;
+
+    const usersResult = await db.query(`SELECT user_id FROM users`);
+    const userIds: number[] = usersResult.rows.map((row: any) => row.user_id);
+
+    if (userIds.length === 0) {
+      return { recipientCount: 0, insertedCount: 0, pushSuccessCount: 0, pushFailureCount: 0 };
+    }
+
+    // 1. Bulk-insert one notification row per user
+    const insertResult = await db.query(
+      `
+      INSERT INTO notifications (
+        user_id, sender_id, title, body, type, deep_link, image_url, is_read, created_at
+      )
+      SELECT uid, $1, $2, $3, 'system_admin_broadcast', $4, $5, false, NOW()
+      FROM unnest($6::int[]) AS uid
+      `,
+      [senderId, title.substring(0, 255), body, deepLink || null, imageUrl || null, userIds]
+    );
+    const insertedCount = insertResult.rowCount || 0;
+
+    // 2. Fetch all device tokens for the target users in one query
+    const devicesResult = await db.query(
+      `SELECT fcm_token FROM user_devices WHERE user_id = ANY($1)`,
+      [userIds]
+    );
+    const tokens: string[] = devicesResult.rows.map((row: any) => row.fcm_token);
+    const { expoTokens, fcmTokens } = this.classifyTokens(tokens);
+
+    let pushSuccessCount = 0;
+    let pushFailureCount = 0;
+    const invalidTokens: string[] = [];
+
+    // 3. Batched Expo push sends (≤100 tokens per request)
+    if (expoTokens.length > 0) {
+      const expoChunks = chunk(expoTokens, EXPO_CHUNK_SIZE);
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (process.env.EXPO_ACCESS_TOKEN) {
+        headers["Authorization"] = `Bearer ${process.env.EXPO_ACCESS_TOKEN}`;
+      }
+
+      await runWithConcurrency(
+        expoChunks.map((tokenChunk) => async () => {
+          try {
+            const payload = tokenChunk.map((token) => ({
+              to: token,
+              sound: "default",
+              title: title.substring(0, 255),
+              body,
+              data: {
+                type: "system_admin_broadcast",
+                deep_link: deepLink || "",
+              },
+            }));
+
+            const response = await fetch("https://exp.host/--/api/v2/push/send", {
+              method: "POST",
+              headers,
+              body: JSON.stringify(payload),
+            });
+            const data = (await response.json()) as any;
+
+            if (data?.data && Array.isArray(data.data)) {
+              data.data.forEach((receipt: any, idx: number) => {
+                if (receipt.status === "error") {
+                  pushFailureCount++;
+                  if (receipt.details?.error === "DeviceNotRegistered" && tokenChunk[idx]) {
+                    invalidTokens.push(tokenChunk[idx]);
+                  }
+                } else {
+                  pushSuccessCount++;
+                }
+              });
+            } else {
+              pushSuccessCount += tokenChunk.length;
+            }
+          } catch (err) {
+            console.error("❌ Failed to send Expo push chunk in broadcast:", err);
+            pushFailureCount += tokenChunk.length;
+          }
+        }),
+        MAX_CHUNK_CONCURRENCY
+      );
+
+      console.log(`✅ Broadcast Expo push sent to ~${expoTokens.length} devices across ${expoChunks.length} chunk(s)`);
+    }
+
+    // 4. Batched FCM push sends (≤500 tokens per request)
+    if (fcmTokens.length > 0) {
+      const messaging = getMessaging();
+      if (!messaging) {
+        console.log(`ℹ️ FCM broadcast skipped: Firebase is not configured`);
+        pushFailureCount += fcmTokens.length;
+      } else {
+        const fcmChunks = chunk(fcmTokens, FCM_CHUNK_SIZE);
+
+        await runWithConcurrency(
+          fcmChunks.map((tokenChunk) => async () => {
+            try {
+              const response = await messaging.sendEachForMulticast({
+                tokens: tokenChunk,
+                notification: {
+                  title: title.substring(0, 255),
+                  body: body.substring(0, 255),
+                },
+                data: {
+                  type: "system_admin_broadcast",
+                  deep_link: deepLink || "",
+                },
+                apns: { payload: { aps: { sound: "default" } } },
+                android: {
+                  priority: "high" as const,
+                  notification: { sound: "default", channel_id: "default" },
+                },
+              } as any);
+
+              pushSuccessCount += response.successCount;
+              pushFailureCount += response.failureCount;
+
+              response.responses.forEach((resp: any, idx: number) => {
+                if (!resp.success && tokenChunk[idx]) {
+                  const errorCode = (resp.error as any)?.code;
+                  if (
+                    errorCode === "messaging/invalid-registration-token" ||
+                    errorCode === "messaging/registration-token-not-registered"
+                  ) {
+                    invalidTokens.push(tokenChunk[idx]);
+                  }
+                }
+              });
+            } catch (err) {
+              console.error("❌ Failed to send FCM push chunk in broadcast:", err);
+              pushFailureCount += tokenChunk.length;
+            }
+          }),
+          MAX_CHUNK_CONCURRENCY
+        );
+
+        console.log(`✅ Broadcast FCM push sent across ${fcmChunks.length} chunk(s)`);
+      }
+    }
+
+    // 5. Clean up invalid/unregistered tokens
+    if (invalidTokens.length > 0) {
+      await db.query(`DELETE FROM user_devices WHERE fcm_token = ANY($1)`, [invalidTokens]);
+      console.log(`🗑️ Deleted ${invalidTokens.length} invalid tokens after broadcast`);
+    }
+
+    return {
+      recipientCount: userIds.length,
+      insertedCount,
+      pushSuccessCount,
+      pushFailureCount,
+    };
   }
 }

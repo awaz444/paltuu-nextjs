@@ -377,7 +377,7 @@ export const authOptions: NextAuthOptions = {
             }
 
             if (userRow) {
-              token.id = userRow.user_id;
+              token.id = String(userRow.user_id);
               token.user_id = userRow.user_id;
               token.role = userRow.role || "regular user";
               token.email = userRow.email;

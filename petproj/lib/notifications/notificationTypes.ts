@@ -87,7 +87,10 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
   [NotificationType.SOCIAL_POST_LIKE]: {
     type: NotificationType.SOCIAL_POST_LIKE,
     title: (data) => data.sender_name || "Someone",
-    body: "pawed your post",
+    body: (data) => {
+      const p = toPreview(data.preview);
+      return p ? `pawed your post: "${p}"` : "pawed your post";
+    },
     deepLinkPattern: "paltuu://social/post/{entity_id}",
   },
   [NotificationType.SOCIAL_POST_COMMENT]: {
@@ -111,7 +114,10 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
   [NotificationType.SOCIAL_COMMENT_LIKE]: {
     type: NotificationType.SOCIAL_COMMENT_LIKE,
     title: (data) => data.sender_name || "Someone",
-    body: "pawed your comment",
+    body: (data) => {
+      const p = toPreview(data.preview);
+      return p ? `pawed your comment: "${p}"` : "pawed your comment";
+    },
     deepLinkPattern: "paltuu://social/post/{entity_id}",
   },
   [NotificationType.SOCIAL_NEW_FOLLOWER]: {
@@ -141,7 +147,10 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
   [NotificationType.SOCIAL_REPOST]: {
     type: NotificationType.SOCIAL_REPOST,
     title: (data) => data.sender_name || "Someone",
-    body: "reposted your post",
+    body: (data) => {
+      const p = toPreview(data.preview);
+      return p ? `reposted your post: "${p}"` : "reposted your post";
+    },
     deepLinkPattern: "paltuu://social/post/{entity_id}",
   },
   [NotificationType.SOCIAL_VIDEO_READY]: {

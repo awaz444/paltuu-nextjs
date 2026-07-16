@@ -25,13 +25,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         const commentId = params.id;
 
         const commentInfo = await db.query(
-            "SELECT comment_id, post_id, user_id FROM social_comments WHERE comment_id = $1 AND is_deleted = false",
+            "SELECT comment_id, post_id, user_id, content FROM social_comments WHERE comment_id = $1 AND is_deleted = false",
             [commentId]
         );
         if (commentInfo.rowCount === 0) {
             return NextResponse.json({ error: "Comment not found" }, { status: 404 });
         }
-        const { post_id: postId, user_id: commentAuthorId } = commentInfo.rows[0];
+        const { post_id: postId, user_id: commentAuthorId, content: commentContent } = commentInfo.rows[0];
 
         await assertNotBlocked(userId, commentAuthorId);
 
@@ -76,7 +76,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                         userId,
                         postId,
                         liker?.name || 'User',
-                        postImage
+                        postImage,
+                        commentContent
                     ).catch(() => {});
                 }
 

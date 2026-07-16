@@ -65,12 +65,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 // Notify AFTER commit (fire-and-forget) — matches the comments route
                 // and guarantees we never notify about a like that rolled back.
                 if (postAuthorId !== userId) {
-                    const [likerRes, postRes] = await Promise.all([
+                    const [likerRes, postRes, captionRes] = await Promise.all([
                         db.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]),
                         db.query(`SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1`, [postId]),
+                        db.query(`SELECT content FROM social_posts WHERE post_id = $1`, [postId]),
                     ]);
                     const liker = likerRes.rows[0];
                     const postImage = postRes.rows[0]?.url;
+                    const postCaption = captionRes.rows[0]?.content;
 
                     SocialNotifications.onPostLiked(
                         postAuthorId,
@@ -78,7 +80,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                         parseInt(postId),
                         liker?.name || 'User',
                         liker?.profile_image_url,
-                        postImage
+                        postImage,
+                        postCaption
                     ).catch(() => {}); // Non-blocking
                 }
 

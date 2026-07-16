@@ -189,6 +189,10 @@ export class NotificationService {
           title: template.title,
           body: template.body,
           badge: unreadCount,
+          ...(notification.image_url && {
+            mutableContent: true,
+            richContent: { image: notification.image_url },
+          }),
           data: {
             notification_id: String(notification.notification_id),
             type: notification.type,
@@ -252,6 +256,7 @@ export class NotificationService {
           notification: {
             title: template.title.substring(0, 255),
             body: template.body.substring(0, 255),
+            ...(notification.image_url && { imageUrl: notification.image_url }),
           },
           data: {
             notification_id: String(notification.notification_id),
@@ -265,6 +270,7 @@ export class NotificationService {
               aps: {
                 badge: unreadCount,
                 sound: "default",
+                ...(notification.image_url && { "mutable-content": 1 }),
               },
             },
           },

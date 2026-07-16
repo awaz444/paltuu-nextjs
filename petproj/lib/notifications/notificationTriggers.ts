@@ -28,7 +28,8 @@ export const SocialNotifications = {
     postId: number,
     likerName: string,
     authorImageUrl?: string,
-    postImageUrl?: string
+    postImageUrl?: string,
+    postCaption?: string
   ) {
     return NotificationService.createAndSend({
       userId: postAuthorId,
@@ -39,6 +40,7 @@ export const SocialNotifications = {
       imageUrl: postImageUrl,
       customData: {
         sender_name: likerName,
+        preview: postCaption,
       },
     });
   },
@@ -101,7 +103,8 @@ export const SocialNotifications = {
     likerId: number,
     postId: number,
     likerName: string,
-    postImageUrl?: string
+    postImageUrl?: string,
+    commentText?: string
   ) {
     return NotificationService.createAndSend({
       userId: commentAuthorId,
@@ -112,6 +115,7 @@ export const SocialNotifications = {
       imageUrl: postImageUrl,
       customData: {
         sender_name: likerName,
+        preview: commentText,
       },
     });
   },
@@ -196,7 +200,8 @@ export const SocialNotifications = {
     reposterId: number,
     postId: number,
     reposterName: string,
-    postImageUrl?: string
+    postImageUrl?: string,
+    postCaption?: string
   ) {
     return NotificationService.createAndSend({
       userId: originalAuthorId,
@@ -207,6 +212,7 @@ export const SocialNotifications = {
       imageUrl: postImageUrl,
       customData: {
         sender_name: reposterName,
+        preview: postCaption,
       },
     });
   },

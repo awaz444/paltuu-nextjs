@@ -135,19 +135,22 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             // 7. Create notification for original author (if not reposting own post)
             if (originalAuthorId !== userId) {
                 // Fetch reposter and post details
-                const [reposterRes, postImageRes] = await Promise.all([
+                const [reposterRes, postImageRes, captionRes] = await Promise.all([
                     client.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]),
-                    client.query(`SELECT (SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1) as image_url`, [originalPostId])
+                    client.query(`SELECT (SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1) as image_url`, [originalPostId]),
+                    client.query(`SELECT content FROM social_posts WHERE post_id = $1`, [originalPostId])
                 ]);
                 const reposter = reposterRes.rows[0];
                 const postImage = postImageRes.rows[0]?.image_url;
+                const postCaption = captionRes.rows[0]?.content;
 
                 SocialNotifications.onPostReposted(
                     originalAuthorId,
                     userId,
                     parseInt(originalPostId),
                     reposter?.name || 'User',
-                    postImage
+                    postImage,
+                    postCaption
                 ).catch(() => {});
             }
 

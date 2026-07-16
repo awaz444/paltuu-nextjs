@@ -222,6 +222,7 @@ export async function notifyNewMentions(
         mentionerName: string;
         postId: number;
         isComment: boolean;
+        commentId?: number;
         postImageUrl?: string;
         preview?: string;
     }
@@ -247,13 +248,18 @@ export async function notifyNewMentions(
         }
     }
 
-    const trigger = context.isComment
-        ? SocialNotifications.onMentionedInComment
-        : SocialNotifications.onMentionedInPost;
-
     await Promise.allSettled(
         Array.from(recipientIds).map((recipientId) =>
-            trigger(recipientId, context.mentionerId, context.postId, context.mentionerName, context.postImageUrl, context.preview).catch(
+            (context.isComment
+                ? SocialNotifications.onMentionedInComment(
+                    recipientId, context.mentionerId, context.postId, context.mentionerName,
+                    context.postImageUrl, context.preview, context.commentId
+                )
+                : SocialNotifications.onMentionedInPost(
+                    recipientId, context.mentionerId, context.postId, context.mentionerName,
+                    context.postImageUrl, context.preview
+                )
+            ).catch(
                 (err: unknown) => console.error("notifyNewMentions: notification dispatch failed", err)
             )
         )

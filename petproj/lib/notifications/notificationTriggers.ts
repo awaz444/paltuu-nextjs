@@ -54,7 +54,8 @@ export const SocialNotifications = {
     postId: number,
     commenterName: string,
     commentPreview: string,
-    postImageUrl?: string
+    postImageUrl?: string,
+    commentId?: number
   ) {
     return NotificationService.createAndSend({
       userId: postAuthorId,
@@ -62,6 +63,7 @@ export const SocialNotifications = {
       type: NotificationType.SOCIAL_POST_COMMENT,
       entityType: EntityType.SOCIAL_POST,
       entityId: postId,
+      commentId,
       imageUrl: postImageUrl,
       customData: {
         sender_name: commenterName,
@@ -71,7 +73,9 @@ export const SocialNotifications = {
   },
 
   /**
-   * Someone replied to a comment
+   * Someone replied to a comment — the target is the recipient's own comment
+   * (parentCommentId), so tapping the notification re-roots on "your comment"
+   * with the new reply visible underneath, not on the reply itself.
    */
   async onCommentReplied(
     commentAuthorId: number,
@@ -79,7 +83,8 @@ export const SocialNotifications = {
     postId: number,
     replierName: string,
     replyPreview?: string,
-    postImageUrl?: string
+    postImageUrl?: string,
+    parentCommentId?: number
   ) {
     return NotificationService.createAndSend({
       userId: commentAuthorId,
@@ -87,6 +92,7 @@ export const SocialNotifications = {
       type: NotificationType.SOCIAL_COMMENT_REPLY,
       entityType: EntityType.SOCIAL_POST,
       entityId: postId,
+      commentId: parentCommentId,
       imageUrl: postImageUrl,
       customData: {
         sender_name: replierName,
@@ -104,7 +110,8 @@ export const SocialNotifications = {
     postId: number,
     likerName: string,
     postImageUrl?: string,
-    commentText?: string
+    commentText?: string,
+    commentId?: number
   ) {
     return NotificationService.createAndSend({
       userId: commentAuthorId,
@@ -112,6 +119,7 @@ export const SocialNotifications = {
       type: NotificationType.SOCIAL_COMMENT_LIKE,
       entityType: EntityType.SOCIAL_POST,
       entityId: postId,
+      commentId,
       imageUrl: postImageUrl,
       customData: {
         sender_name: likerName,
@@ -176,7 +184,8 @@ export const SocialNotifications = {
     postId: number,
     mentionerName: string,
     postImageUrl?: string,
-    preview?: string
+    preview?: string,
+    commentId?: number
   ) {
     return NotificationService.createAndSend({
       userId: mentionedUserId,
@@ -184,6 +193,7 @@ export const SocialNotifications = {
       type: NotificationType.SOCIAL_MENTION_COMMENT,
       entityType: EntityType.SOCIAL_POST,
       entityId: postId,
+      commentId,
       imageUrl: postImageUrl,
       customData: {
         sender_name: mentionerName,

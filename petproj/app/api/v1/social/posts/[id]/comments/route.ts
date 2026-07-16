@@ -249,7 +249,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 parseInt(postId),
                 commenter?.name || 'User',
                 content.trim(),
-                postImage
+                postImage,
+                comment.comment_id
             ).catch(() => {});
         }
 
@@ -261,7 +262,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 parseInt(postId),
                 commenter?.name || 'User',
                 content.trim(),
-                postImage
+                postImage,
+                parent_comment_id
             ).catch(() => {});
         }
 
@@ -290,6 +292,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 mentionerName: commenter?.name || 'User',
                 postId: parseInt(postId),
                 isComment: true,
+                commentId: comment.comment_id,
                 postImageUrl: postImage,
                 preview: content.trim(),
             }).catch(() => {});

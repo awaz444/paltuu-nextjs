@@ -77,7 +77,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                         postId,
                         liker?.name || 'User',
                         postImage,
-                        commentContent
+                        commentContent,
+                        parseInt(commentId)
                     ).catch(() => {});
                 }
 

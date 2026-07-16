@@ -100,7 +100,7 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
       const p = toPreview(data.preview);
       return p ? `commented: "${p}"` : "commented on your post";
     },
-    deepLinkPattern: "paltuu://social/post/{entity_id}",
+    deepLinkPattern: "paltuu://social/post/{entity_id}/comment/{comment_id}",
   },
   [NotificationType.SOCIAL_COMMENT_REPLY]: {
     type: NotificationType.SOCIAL_COMMENT_REPLY,
@@ -109,7 +109,7 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
       const p = toPreview(data.preview);
       return p ? `replied: "${p}"` : "replied to your comment";
     },
-    deepLinkPattern: "paltuu://social/post/{entity_id}",
+    deepLinkPattern: "paltuu://social/post/{entity_id}/comment/{comment_id}",
   },
   [NotificationType.SOCIAL_COMMENT_LIKE]: {
     type: NotificationType.SOCIAL_COMMENT_LIKE,
@@ -118,7 +118,7 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
       const p = toPreview(data.preview);
       return p ? `pawed your comment: "${p}"` : "pawed your comment";
     },
-    deepLinkPattern: "paltuu://social/post/{entity_id}",
+    deepLinkPattern: "paltuu://social/post/{entity_id}/comment/{comment_id}",
   },
   [NotificationType.SOCIAL_NEW_FOLLOWER]: {
     type: NotificationType.SOCIAL_NEW_FOLLOWER,
@@ -142,7 +142,7 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
       const p = toPreview(data.preview);
       return p ? `mentioned you: "${p}"` : "mentioned you in a comment";
     },
-    deepLinkPattern: "paltuu://social/post/{entity_id}",
+    deepLinkPattern: "paltuu://social/post/{entity_id}/comment/{comment_id}",
   },
   [NotificationType.SOCIAL_REPOST]: {
     type: NotificationType.SOCIAL_REPOST,

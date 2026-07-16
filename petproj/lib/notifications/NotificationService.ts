@@ -20,6 +20,7 @@ interface CreateNotificationParams {
   type: NotificationType;
   entityType?: EntityType | string;
   entityId?: number | null;
+  commentId?: number | null;
   imageUrl?: string;
   customData?: Record<string, any>;
 }
@@ -33,6 +34,7 @@ interface NotificationRow {
   type: string;
   entity_type: string | null;
   entity_id: number | null;
+  target_comment_id: number | null;
   deep_link: string | null;
   image_url: string | null;
   is_read: boolean;
@@ -102,6 +104,7 @@ export class NotificationService {
       const deepLink = buildDeepLink(params.type, {
         entity_id: params.entityId,
         sender_id: params.senderId,
+        comment_id: params.commentId,
         ...params.customData,
       });
 
@@ -110,11 +113,11 @@ export class NotificationService {
         `
         INSERT INTO notifications (
           user_id, sender_id, title, body, type, entity_type, entity_id,
-          deep_link, image_url, is_read, created_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, NOW())
+          target_comment_id, deep_link, image_url, is_read, created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false, NOW())
         RETURNING
           notification_id, user_id, sender_id, title, body, type,
-          entity_type, entity_id, deep_link, image_url, is_read, created_at
+          entity_type, entity_id, target_comment_id, deep_link, image_url, is_read, created_at
         `,
         [
           params.userId ?? null,
@@ -124,6 +127,7 @@ export class NotificationService {
           params.type,
           params.entityType ?? null,
           params.entityId ?? null,
+          params.commentId ?? null,
           deepLink || null,
           params.imageUrl ?? null,
         ]
@@ -383,6 +387,7 @@ export class NotificationService {
         body: row.body || row.notification_content || '',
         entity_type: row.entity_type,
         entity_id: row.entity_id,
+        entity_comment_id: row.target_comment_id,
         deep_link: row.deep_link,
         image_url: row.image_url,
         is_read: row.is_read,

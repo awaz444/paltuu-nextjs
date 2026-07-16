@@ -77,7 +77,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 u.name              AS author_name,
                 u.profile_image_url AS author_image,
                 u.social_username,
-                u.social_verified     AS author_verified,
+                u.verified     AS author_verified,
                 false               AS is_blocked_by_me,
                 false               AS is_blocking_me,
                 COALESCE(cm.media, '[]'::json) AS media,
@@ -236,7 +236,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         recordEngagementEvent(userId, postId, 'comment').catch(() => {});
 
         // Fetch notification metadata AFTER the transaction (pool queries, non-blocking)
-        const commenterRes = await db.query(`SELECT name, profile_image_url, social_username, social_verified FROM users WHERE user_id = $1`, [userId]);
+        const commenterRes = await db.query(`SELECT name, profile_image_url, social_username, verified FROM users WHERE user_id = $1`, [userId]);
         const commenter = commenterRes.rows[0];
         const postImageRes = await db.query(`SELECT (SELECT url FROM social_post_media WHERE post_id = $1 LIMIT 1) as image_url`, [postId]);
         const postImage = postImageRes.rows[0]?.image_url;
@@ -271,7 +271,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             author_name: commenter?.name,
             author_image: commenter?.profile_image_url ?? null,
             social_username: commenter?.social_username ?? null,
-            author_verified: commenter?.social_verified ?? false,
+            author_verified: commenter?.verified ?? false,
         }).catch(() => {});
 
         // Real-time: push notification to post author

@@ -942,7 +942,7 @@ model users {
   username                                          String?
   phone_verified                                    Boolean?                @default(false)
   founding_club                                     Boolean?                @default(false)
-  social_verified                                   Boolean                 @default(false)
+  verified                                          Boolean?                @default(false)
   social_username                                   String?                 @unique
   bio                                               String?
   follower_count                                    Int?                    @default(0)

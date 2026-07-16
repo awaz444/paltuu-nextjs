@@ -38,7 +38,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 u.name              AS author_name,
                 u.profile_image_url AS author_image,
                 u.social_username,
-                u.social_verified     AS author_verified,
+                u.verified     AS author_verified,
                 u.follower_count     AS author_followers,
                 COALESCE(
                     (SELECT json_agg(m.* ORDER BY m.ordering) 
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 op.user_id          AS original_user_id,
                 ou.name             AS original_author_name,
                 ou.social_username   AS original_social_username,
-                ou.social_verified   AS original_author_verified,
+                ou.verified   AS original_author_verified,
                 ou.profile_image_url AS original_author_image,
                 COALESCE(
                     (SELECT json_agg(om.* ORDER BY om.ordering) 

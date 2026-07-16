@@ -71,7 +71,7 @@ export async function POST(
         let cityId = body.city_id || profile.owner_city_id;
         if (!cityId) {
             const defaultCityRes = await db.query("SELECT city_id FROM cities ORDER BY city_id LIMIT 1");
-            if (defaultCityRes.rowCount > 0) {
+            if ((defaultCityRes.rowCount ?? 0) > 0) {
                 cityId = defaultCityRes.rows[0].city_id;
             }
         }

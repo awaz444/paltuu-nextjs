@@ -114,7 +114,7 @@ export async function GET(req: NextRequest) {
             db.query(`
                 WITH candidate_posts AS (
                     SELECT
-                        p.post_id, p.content, p.like_count, p.comment_count, p.repost_count, p.created_at,
+                        p.post_id, p.content, p.like_count, p.comment_count, p.repost_count, p.created_at, p.updated_at,
                         u.user_id, u.name AS author_name,
                         u.social_username, u.profile_image_url AS author_image,
                         (
@@ -137,7 +137,7 @@ export async function GET(req: NextRequest) {
                       )
                 )
                 SELECT
-                    cp.post_id, cp.content, cp.like_count, cp.comment_count, cp.repost_count, cp.created_at,
+                    cp.post_id, cp.content, cp.like_count, cp.comment_count, cp.repost_count, cp.created_at, cp.updated_at,
                     cp.user_id, cp.author_name, cp.social_username, cp.author_image,
                     (SELECT json_agg(m.* ORDER BY m.ordering) FROM social_post_media m WHERE m.post_id = cp.post_id) AS media
                 FROM candidate_posts cp

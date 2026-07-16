@@ -64,6 +64,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
                 p.repost_count,
                 p.post_type,
                 p.created_at,
+                p.updated_at,
                 p.user_id,
                 u.name               AS author_name,
                 u.profile_image_url  AS author_image,

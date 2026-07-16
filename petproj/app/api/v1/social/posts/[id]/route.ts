@@ -217,12 +217,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         try {
             await client.query('BEGIN');
             // Update the post
-            await client.query(`
-                UPDATE social_posts 
+            const updateRes = await client.query(`
+                UPDATE social_posts
                 SET content = COALESCE($1, content),
                     post_type = COALESCE($2, post_type),
                     updated_at = NOW()
                 WHERE post_id = $3
+                RETURNING updated_at
             `, [content, post_type, postId]);
 
             // If pet_profile_tags is passed, update tags
@@ -317,7 +318,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                 }).catch(() => {});
             }
 
-            return NextResponse.json({ updated: true });
+            return NextResponse.json({ updated: true, updated_at: updateRes.rows[0].updated_at });
         } catch (e) {
             await client.query('ROLLBACK');
             throw e;

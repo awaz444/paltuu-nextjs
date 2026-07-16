@@ -149,7 +149,7 @@ export async function GET(req: NextRequest) {
         // Posts
         async function searchPosts(lim: number, cur: any) {
             let query = `
-                SELECT 'post' AS entity_type, p.post_id, p.content, p.like_count, p.created_at,
+                SELECT 'post' AS entity_type, p.post_id, p.content, p.like_count, p.created_at, p.updated_at,
                        u.name AS author_name,
                        false AS is_blocked_by_me, false AS is_blocking_me,
                        COALESCE((SELECT json_agg(m.*) FROM social_post_media m WHERE m.post_id = p.post_id), '[]'::json) AS media

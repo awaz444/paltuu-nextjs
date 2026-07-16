@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
         sp.save_id,
         sp.created_at as saved_at,
         p.created_at as created_at,
+        p.updated_at as updated_at,
         COALESCE(
           (SELECT json_agg(m.* ORDER BY m.ordering) 
            FROM social_post_media m 

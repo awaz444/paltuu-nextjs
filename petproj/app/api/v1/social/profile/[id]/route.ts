@@ -77,7 +77,7 @@ export async function GET(
             // render a repost's embedded original.
             const postsRes = await db.query(`
                 SELECT
-                    p.post_id, p.content, p.created_at, p.post_type,
+                    p.post_id, p.content, p.created_at, p.updated_at, p.post_type,
                     p.is_repost, p.original_post_id,
                     -- A plain repost (content IS NULL) is a hollow row — its
                     -- stats, likes, saves and comments all belong to the root

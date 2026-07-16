@@ -27,7 +27,7 @@ export async function GET(
 
         const repostsQuery = `
             SELECT 
-                p.post_id, p.content, p.like_count, p.comment_count, p.repost_count, p.created_at, p.post_type,
+                p.post_id, p.content, p.like_count, p.comment_count, p.repost_count, p.created_at, p.updated_at, p.post_type,
                 COALESCE((
                     SELECT json_agg(m.* ORDER BY m.ordering ASC) 
                     FROM social_post_media m 

@@ -73,6 +73,7 @@ export async function GET(
                 p.post_type,
                 p.is_repost,
                 p.created_at,
+                p.updated_at,
                 u.name               AS author_name,
                 u.social_username    AS author_social_username,
                 u.profile_image_url  AS author_avatar,

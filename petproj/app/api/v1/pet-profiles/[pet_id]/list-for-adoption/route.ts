@@ -68,7 +68,13 @@ export async function POST(
             description,
         } = body;
 
-        const cityId = body.city_id || profile.owner_city_id;
+        let cityId = body.city_id || profile.owner_city_id;
+        if (!cityId) {
+            const defaultCityRes = await db.query("SELECT city_id FROM cities ORDER BY city_id LIMIT 1");
+            if (defaultCityRes.rowCount > 0) {
+                cityId = defaultCityRes.rows[0].city_id;
+            }
+        }
         if (!cityId) {
             return NextResponse.json(
                 { error: "city_id is required (the pet profile owner has no default city set)" },

@@ -285,7 +285,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             }).catch(() => {});
         }
 
-        // Notify mentioned users/pet-owners (fire and forget — non-blocking)
+        // Notify mentioned users/pet-owners (fire and forget — non-blocking).
+        // Excludes the post/parent-comment author: replying auto-mentions them
+        // (see RN's handleReply), and they already got the more specific
+        // "replied to your comment" / "commented on your post" notification
+        // above — a second "mentioned you" for the same action would be a dupe.
         if (parsedMentions.length > 0) {
             notifyNewMentions(parsedMentions, {
                 mentionerId: userId,
@@ -295,6 +299,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 commentId: comment.comment_id,
                 postImageUrl: postImage,
                 preview: content.trim(),
+                excludeUserIds: [postAuthorId, parentAuthorId].filter(
+                    (id): id is number => id != null
+                ),
             }).catch(() => {});
         }
 

@@ -214,6 +214,14 @@ export async function deleteMentions(client: QueryClient, target: MentionTarget)
  * NotificationService.createAndSend already no-ops self-notifications and
  * blocked-pair notifications internally, so no extra checks are needed here
  * beyond resolving a pet mention to its owner's user id.
+ *
+ * `excludeUserIds`: replying to a comment auto-inserts an @mention of the
+ * person you're replying to (see RN's handleReply), so a reply almost always
+ * doubles as a mention of the same user. That user already gets the more
+ * specific "replied to your comment" / "commented on your post" notification
+ * from onCommentReplied/onPostCommented — getting a second "mentioned you"
+ * notification for the exact same action is redundant, so callers pass the
+ * post/parent-comment author here to skip them.
  */
 export async function notifyNewMentions(
     mentions: ParsedMention[],
@@ -225,6 +233,7 @@ export async function notifyNewMentions(
         commentId?: number;
         postImageUrl?: string;
         preview?: string;
+        excludeUserIds?: number[];
     }
 ): Promise<void> {
     if (mentions.length === 0) return;
@@ -246,6 +255,10 @@ export async function notifyNewMentions(
         } catch (err) {
             console.error("notifyNewMentions: failed to resolve pet owners", err);
         }
+    }
+
+    for (const excluded of context.excludeUserIds ?? []) {
+        recipientIds.delete(excluded);
     }
 
     await Promise.allSettled(

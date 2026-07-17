@@ -31,11 +31,10 @@ export async function GET(req: NextRequest) {
         }
 
         const result = await db.query(
-            `SELECT m.media_id, m.video_status, m.hls_url, m.thumbnail_url, m.url
-             FROM social_post_media m
-             JOIN social_posts p ON p.post_id = m.post_id
-             WHERE m.media_id = $1 AND p.user_id = $2`,
-            [mediaId, userId]
+            `SELECT media_id, video_status, hls_url, thumbnail_url, url
+             FROM social_post_media
+             WHERE media_id = $1`,
+            [mediaId]
         );
 
         if (result.rowCount === 0) {

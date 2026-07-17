@@ -200,7 +200,7 @@ export class NotificationService {
           data: {
             notification_id: String(notification.notification_id),
             type: notification.type,
-            deep_link: template.deepLink || "",
+            deep_link: notification.deep_link || "",
             entity_id: String(notification.entity_id || ""),
             entity_type: notification.entity_type || "",
           },
@@ -265,7 +265,7 @@ export class NotificationService {
           data: {
             notification_id: String(notification.notification_id),
             type: notification.type,
-            deep_link: template.deepLink || "",
+            deep_link: notification.deep_link || "",
             entity_id: String(notification.entity_id || ""),
             entity_type: notification.entity_type || "",
           },

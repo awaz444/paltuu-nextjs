@@ -34,7 +34,15 @@ export async function GET(req: NextRequest) {
       ORDER BY is_default DESC, created_at DESC
     `, [userId]);
 
-    return NextResponse.json({ collections: result.rows });
+    // node-postgres returns `bigint` columns (collection_id) as strings to
+    // avoid precision loss, but /posts/:id/save-status builds its own
+    // collections list via a SQL-side json_agg/json_build_object, which
+    // Postgres serializes as a JSON number instead. The frontend compares
+    // collection_id across both endpoints with strict equality, so a type
+    // mismatch here makes it think a post was never added to a collection
+    // even right after it was.
+    const collections = result.rows.map((row) => ({ ...row, collection_id: Number(row.collection_id) }));
+    return NextResponse.json({ collections });
   } catch (error) {
     console.error("Collections GET error:", error);
     return NextResponse.json({ error: { code: "INTERNAL_ERROR", message: "Internal Server Error", status: 500 } }, { status: 500 });
@@ -78,7 +86,8 @@ export async function POST(req: NextRequest) {
       [userId, name]
     );
 
-    return NextResponse.json(result.rows[0], { status: 201 });
+    // Keep collection_id a JS number here too — see the GET handler above.
+    return NextResponse.json({ ...result.rows[0], collection_id: Number(result.rows[0].collection_id) }, { status: 201 });
   } catch (error) {
     console.error("Collections POST error:", error);
     return NextResponse.json({ error: { code: "INTERNAL_ERROR", message: "Internal Server Error", status: 500 } }, { status: 500 });

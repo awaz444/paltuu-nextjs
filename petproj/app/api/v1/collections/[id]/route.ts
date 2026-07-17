@@ -40,7 +40,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       [name, collectionId]
     );
 
-    return NextResponse.json(result.rows[0]);
+    // Keep collection_id a JS number, consistent with GET/POST /collections
+    // and with /posts/:id/save-status — see the comment there.
+    return NextResponse.json({ ...result.rows[0], collection_id: Number(result.rows[0].collection_id) });
   } catch (error) {
     console.error("Collection PATCH error:", error);
     return NextResponse.json({ error: { code: "INTERNAL_ERROR", message: "Internal Server Error", status: 500 } }, { status: 500 });

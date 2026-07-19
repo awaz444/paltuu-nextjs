@@ -17,11 +17,11 @@ export async function POST(req: NextRequest) {
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const data = await req.formData();
-        const file = data.get("file") as File;
+        const files = data.getAll("files") as File[];
         const post_id = data.get("post_id");
 
-        if (!file || !post_id) {
-            return NextResponse.json({ error: "Missing file or post_id" }, { status: 400 });
+        if (!files || files.length === 0 || !post_id) {
+            return NextResponse.json({ error: "Missing files or post_id" }, { status: 400 });
         }
 
         // 1. Ownership Check
@@ -29,25 +29,22 @@ export async function POST(req: NextRequest) {
         if ((check.rowCount ?? 0) === 0) return NextResponse.json({ error: "Post not found" }, { status: 404 });
         if (check.rows[0].user_id !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-        // 2. Limit: One image per post
-        const imgCheck = await db.query('SELECT image_id FROM lost_and_found_post_images WHERE post_id = $1', [post_id]);
-        if ((imgCheck.rowCount ?? 0) > 0) {
-            return NextResponse.json({ error: "Post already has an image. Delete it first." }, { status: 400 });
+        // 2. Upload each to AWS S3 (paltuu-main/lostandfound) and save to DB
+        const inserted = [];
+        for (const file of files) {
+            const buffer = Buffer.from(await file.arrayBuffer());
+            const ext = file.type.split("/")[1] || "jpg";
+            const imageUrl = await uploadToS3Main(buffer, "lostandfound", file.type, ext);
+
+            const result = await db.query(`
+                INSERT INTO lost_and_found_post_images (post_id, image_url, created_at)
+                VALUES ($1, $2, NOW())
+                RETURNING *
+            `, [post_id, imageUrl]);
+            inserted.push(result.rows[0]);
         }
 
-        // 3. Upload to AWS S3 (paltuu-main/lostandfound)
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const ext = file.type.split("/")[1] || "jpg";
-        const imageUrl = await uploadToS3Main(buffer, "lostandfound", file.type, ext);
-
-        // 4. Save to DB
-        const result = await db.query(`
-            INSERT INTO lost_and_found_post_images (post_id, image_url, created_at)
-            VALUES ($1, $2, NOW())
-            RETURNING *
-        `, [post_id, imageUrl]);
-
-        return NextResponse.json(result.rows[0], { status: 201 });
+        return NextResponse.json(inserted, { status: 201 });
 
     } catch (error) {
         console.error("V1 Lost and Found Image Upload Error:", error);

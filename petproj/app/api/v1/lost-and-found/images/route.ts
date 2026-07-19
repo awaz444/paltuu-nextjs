@@ -27,7 +27,10 @@ export async function POST(req: NextRequest) {
         // 1. Ownership Check
         const check = await db.query('SELECT user_id FROM lost_and_found_posts WHERE post_id = $1', [post_id]);
         if ((check.rowCount ?? 0) === 0) return NextResponse.json({ error: "Post not found" }, { status: 404 });
-        if (check.rows[0].user_id !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        // userId (from the JWT) is always a string; user_id from Postgres comes
+        // back as a number for an INTEGER column — compare as strings so a
+        // legitimate owner isn't rejected by a type mismatch.
+        if (String(check.rows[0].user_id) !== String(userId)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
         // 2. Upload each to AWS S3 (paltuu-main/lostandfound) and save to DB
         const inserted = [];

@@ -225,7 +225,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           type="button"
           onClick={handleAppleLogin}
           disabled={googleLoading || appleLoading}
-          className={`w-full py-3 px-4 rounded-xl text-white bg-black hover:bg-gray-900 border border-black transition flex items-center justify-center space-x-2 font-medium ${googleLoading || appleLoading ? "opacity-50 cursor-not-allowed" : ""
+          className={`w-full py-3 px-4 rounded-xl text-gray-600 border border-gray-400 hover:border-primary hover:text-primary transition flex items-center justify-center space-x-2 font-medium ${googleLoading || appleLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

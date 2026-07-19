@@ -352,6 +352,10 @@ const Navbar = ({
 
   const [loading, setLoading] = useState<"cart" | "checkout" | null>(null);
 
+  const handleLogoClick = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleNavigate = (path: string, type: "cart" | "checkout") => {
     setLoading(type);
     router.push(path);
@@ -379,7 +383,7 @@ const Navbar = ({
         </button>
 
         {/* Center: Logo */}
-        <Link href={logoHref || "/"} className="logo">
+        <Link href={logoHref || "/"} className="logo" onClick={handleLogoClick}>
           <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} priority />
         </Link>
 
@@ -570,7 +574,7 @@ const Navbar = ({
       <div className="hidden lg:flex items-center justify-between w-full">
         {/* Logo */}
         <div className="logo hidden lg:block">
-          <Link href={logoHref || "/"}>
+          <Link href={logoHref || "/"} onClick={handleLogoClick}>
             <Image src="/paltu_logo.svg" alt="Logo" width={200} height={80} />
           </Link>
         </div>

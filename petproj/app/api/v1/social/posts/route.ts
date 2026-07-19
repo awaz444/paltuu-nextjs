@@ -191,6 +191,9 @@ export async function GET(req: NextRequest) {
                         WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
                            OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
                     ))
+                    AND NOT EXISTS (
+                        SELECT 1 FROM hidden_posts hp WHERE hp.user_id = $1 AND hp.post_id = p.post_id
+                    )
                 )
                 SELECT *,
                     ($4 * base_score + $5 * score_affinity) AS relevance_score
@@ -319,6 +322,9 @@ export async function GET(req: NextRequest) {
                     WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
                        OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
                 ))
+                AND NOT EXISTS (
+                    SELECT 1 FROM hidden_posts hp WHERE hp.user_id = $1 AND hp.post_id = p.post_id
+                )
                 ${quarantineFilter}
                 ${!isGlobal && userId ? `AND (
                     p.user_id = $1
@@ -424,6 +430,9 @@ export async function GET(req: NextRequest) {
                         WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
                            OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
                     ))
+                    AND NOT EXISTS (
+                        SELECT 1 FROM hidden_posts hp WHERE hp.user_id = $1 AND hp.post_id = p.post_id
+                    )
                     ${quarantineFilter}
                     ${!isGlobal && userId ? `AND (
                         p.user_id = $1

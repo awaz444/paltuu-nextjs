@@ -809,7 +809,7 @@ model social_comments {
   social_comments_social_comments_root_comment_idTosocial_comments         social_comments?  @relation("social_comments_root_comment_idTosocial_comments", fields: [root_comment_id], references: [comment_id], onDelete: NoAction, onUpdate: NoAction)
   other_social_comments_social_comments_root_comment_idTosocial_comments   social_comments[] @relation("social_comments_root_comment_idTosocial_comments")
   users                                                                    users             @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
-  social_mentions                                                         social_mentions[]
+  social_mentions                                                          social_mentions[]
 }
 
 model social_follows {
@@ -854,45 +854,46 @@ model social_post_media {
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model social_posts {
-  post_id            BigInt              @id @default(autoincrement())
-  user_id            Int
-  pet_id             Int?
-  post_type          String
-  content            String?
-  like_count         Int?                @default(0)
-  comment_count      Int?                @default(0)
-  repost_count       Int?                @default(0)
-  view_count         Int?                @default(0)
-  is_hidden          Boolean?            @default(false)
-  is_deleted         Boolean?            @default(false)
-  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
-  is_repost          Boolean?            @default(false)
-  original_post_id   BigInt?
-  report_count       Int?                @default(0)
+  post_id                   BigInt              @id @default(autoincrement())
+  user_id                   Int
+  pet_id                    Int?
+  post_type                 String
+  content                   String?
+  like_count                Int?                @default(0)
+  comment_count             Int?                @default(0)
+  repost_count              Int?                @default(0)
+  view_count                Int?                @default(0)
+  is_hidden                 Boolean?            @default(false)
+  is_deleted                Boolean?            @default(false)
+  created_at                DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime?           @default(now()) @db.Timestamptz(6)
+  is_repost                 Boolean?            @default(false)
+  original_post_id          BigInt?
+  report_count              Int?                @default(0)
   // Content tagging (feed algorithm)
-  tagging_status            String?       @default("untagged") @db.VarChar(20)
+  tagging_status            String?             @default("untagged") @db.VarChar(20)
   primary_tag_id            Int?
-  tagged_at                 DateTime?     @db.Timestamptz(6)
+  tagged_at                 DateTime?           @db.Timestamptz(6)
   tagged_by                 Int?
   // Weighted moderation
-  moderation_state          String?       @default("none") @db.VarChar(20)
-  report_weighted_score     Float?        @default(0)
-  report_immunity_until     DateTime?     @db.Timestamptz(6)
-  suspicious_burst_at       DateTime?     @db.Timestamptz(6)
-  author_block_after_report Boolean?      @default(false)
-  post_hashtags      post_hashtags[]
-  saved_posts        saved_posts[]
-  social_comments    social_comments[]
-  social_likes       social_likes[]
-  social_post_media  social_post_media[]
-  social_posts       social_posts?       @relation("social_postsTosocial_posts", fields: [original_post_id], references: [post_id], onUpdate: NoAction)
-  other_social_posts social_posts[]      @relation("social_postsTosocial_posts")
-  pets               pets?               @relation(fields: [pet_id], references: [pet_id], onUpdate: NoAction)
-  users              users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
-  social_reposts     social_reposts[]
-  post_pet_tags      post_pet_tags[]
-  social_mentions    social_mentions[]
+  moderation_state          String?             @default("none") @db.VarChar(20)
+  report_weighted_score     Float?              @default(0)
+  report_immunity_until     DateTime?           @db.Timestamptz(6)
+  suspicious_burst_at       DateTime?           @db.Timestamptz(6)
+  author_block_after_report Boolean?            @default(false)
+  post_hashtags             post_hashtags[]
+  saved_posts               saved_posts[]
+  hidden_posts              hidden_posts[]
+  social_comments           social_comments[]
+  social_likes              social_likes[]
+  social_post_media         social_post_media[]
+  social_posts              social_posts?       @relation("social_postsTosocial_posts", fields: [original_post_id], references: [post_id], onUpdate: NoAction)
+  other_social_posts        social_posts[]      @relation("social_postsTosocial_posts")
+  pets                      pets?               @relation(fields: [pet_id], references: [pet_id], onUpdate: NoAction)
+  users                     users               @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  social_reposts            social_reposts[]
+  post_pet_tags             post_pet_tags[]
+  social_mentions           social_mentions[]
 }
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
@@ -975,6 +976,7 @@ model users {
   rescue_shelters                                   rescue_shelters[]
   save_collections                                  save_collections[]
   saved_posts                                       saved_posts[]
+  hidden_posts                                      hidden_posts[]
   social_comments                                   social_comments[]
   social_follows_social_follows_follower_idTousers  social_follows[]        @relation("social_follows_follower_idTousers")
   social_follows_social_follows_following_idTousers social_follows[]        @relation("social_follows_following_idTousers")
@@ -989,8 +991,8 @@ model users {
   vet_reviews                                       vet_reviews[]
   vets                                              vets[]
   pet_profiles                                      pet_profiles[]
-  social_mentions_mentioned                         social_mentions[] @relation("social_mentions_mentioned_userTousers")
-  social_mentions_by                                social_mentions[] @relation("social_mentions_mentioned_byTousers")
+  social_mentions_mentioned                         social_mentions[]       @relation("social_mentions_mentioned_userTousers")
+  social_mentions_by                                social_mentions[]       @relation("social_mentions_mentioned_byTousers")
 }
 
 model save_collections {
@@ -1021,6 +1023,18 @@ model saved_posts {
   @@unique([user_id, post_id])
   @@index([user_id, created_at(sort: Desc)], map: "idx_saved_posts_user")
   @@index([user_id, post_id], map: "idx_saved_posts_lookup")
+}
+
+model hidden_posts {
+  hide_id      BigInt       @id @default(autoincrement())
+  user_id      Int
+  post_id      BigInt
+  created_at   DateTime?    @default(now()) @db.Timestamptz(6)
+  social_posts social_posts @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_hidden_post")
+  users        users        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_hidden_user")
+
+  @@unique([user_id, post_id])
+  @@index([user_id, post_id], map: "idx_hidden_posts_lookup")
 }
 
 model collection_posts {
@@ -1151,7 +1165,7 @@ model reports {
   admin_note      String?
   created_at      DateTime? @default(now()) @db.Timestamptz(6)
   reviewed_at     DateTime? @db.Timestamptz(6)
-  report_weight   Float?    // computed at insert time by lib/reportScoring.ts; never recomputed
+  report_weight   Float? // computed at insert time by lib/reportScoring.ts; never recomputed
   users           users     @relation(fields: [reporter_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([reporter_id, target_type, target_id])
@@ -1234,18 +1248,18 @@ model post_pet_tags {
 /// mentioned_pet_id, and exactly one of post_id / comment_id, is set
 /// (enforced by CHECK constraints — see migrations/006_add_social_mentions.sql).
 model social_mentions {
-  mention_id         BigInt           @id @default(autoincrement())
-  post_id            BigInt?
-  comment_id         BigInt?
-  mentioned_user_id  Int?
-  mentioned_pet_id   Int?
-  mentioned_by       Int
-  created_at         DateTime         @default(now()) @db.Timestamptz(6)
-  social_posts       social_posts?    @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction)
-  social_comments    social_comments? @relation(fields: [comment_id], references: [comment_id], onDelete: Cascade, onUpdate: NoAction)
-  mentioned_user     users?           @relation("social_mentions_mentioned_userTousers", fields: [mentioned_user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
-  mentioned_pet      pet_profiles?    @relation(fields: [mentioned_pet_id], references: [pet_profile_id], onDelete: Cascade, onUpdate: NoAction)
-  mentioning_user    users            @relation("social_mentions_mentioned_byTousers", fields: [mentioned_by], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  mention_id        BigInt           @id @default(autoincrement())
+  post_id           BigInt?
+  comment_id        BigInt?
+  mentioned_user_id Int?
+  mentioned_pet_id  Int?
+  mentioned_by      Int
+  created_at        DateTime         @default(now()) @db.Timestamptz(6)
+  social_posts      social_posts?    @relation(fields: [post_id], references: [post_id], onDelete: Cascade, onUpdate: NoAction)
+  social_comments   social_comments? @relation(fields: [comment_id], references: [comment_id], onDelete: Cascade, onUpdate: NoAction)
+  mentioned_user    users?           @relation("social_mentions_mentioned_userTousers", fields: [mentioned_user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  mentioned_pet     pet_profiles?    @relation(fields: [mentioned_pet_id], references: [pet_profile_id], onDelete: Cascade, onUpdate: NoAction)
+  mentioning_user   users            @relation("social_mentions_mentioned_byTousers", fields: [mentioned_by], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([post_id], map: "idx_social_mentions_post_id")
   @@index([comment_id], map: "idx_social_mentions_comment_id")
@@ -1260,15 +1274,15 @@ model social_mentions {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model content_tags {
-  tag_id            Int      @id @default(autoincrement())
-  slug              String   @unique @db.VarChar(100)
-  label             String   @db.VarChar(100)
-  category          String   @db.VarChar(30) // species | topic | content_type | mood
-  parent_tag_id     Int?
-  default_weight    Float    @default(1.0)
-  keyword_aliases   String[] @default([])
-  is_active         Boolean  @default(true)
-  sort_order        Int      @default(0)
+  tag_id          Int      @id @default(autoincrement())
+  slug            String   @unique @db.VarChar(100)
+  label           String   @db.VarChar(100)
+  category        String   @db.VarChar(30) // species | topic | content_type | mood
+  parent_tag_id   Int?
+  default_weight  Float    @default(1.0)
+  keyword_aliases String[] @default([])
+  is_active       Boolean  @default(true)
+  sort_order      Int      @default(0)
 }
 
 model post_content_tags {

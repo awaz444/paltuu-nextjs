@@ -20,38 +20,21 @@ import { MdVerified } from "react-icons/md";
 
 const ClinicMap = dynamic(() => import("../../components/ClinicMap"), { ssr: false });
 
-const ITEMS_PER_PAGE = 15;
-
-function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
-    const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos(lat1 * (Math.PI / 180)) *
-        Math.cos(lat2 * (Math.PI / 180)) *
-        Math.sin(dLon / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
 export default function PetCare() {
     const dispatch = useDispatch<AppDispatch>();
-    const { clinics, loading, error } = useSelector(
+    const { clinics, cities, pagination, loading, error } = useSelector(
         (state: RootState) => state.clinics
     );
 
     const [cityFilter, setCityFilter] = useState("Karachi");
     const [searchQuery, setSearchQuery] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
     const [partnerFilter, setPartnerFilter] = useState(false);
     const [verifiedFilter, setVerifiedFilter] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [showBackToTop, setShowBackToTop] = useState(false);
     const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
     const [sortedByDistance, setSortedByDistance] = useState(false);
-
-    useEffect(() => {
-        dispatch(fetchClinics());
-    }, [dispatch]);
 
     // Attempt geolocation on mount
     useEffect(() => {
@@ -70,10 +53,31 @@ export default function PetCare() {
         }
     }, []);
 
+    // Debounce free-text search so we don't hit the API on every keystroke
+    useEffect(() => {
+        const id = setTimeout(() => setDebouncedSearch(searchQuery), 350);
+        return () => clearTimeout(id);
+    }, [searchQuery]);
+
     // Reset page on filter changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [cityFilter, searchQuery, partnerFilter, verifiedFilter, sortedByDistance]);
+    }, [cityFilter, debouncedSearch, partnerFilter, verifiedFilter, sortedByDistance]);
+
+    // Fetch from the backend whenever filters or page change — the server
+    // now owns filtering, sorting, and pagination.
+    useEffect(() => {
+        dispatch(fetchClinics({
+            page: currentPage,
+            city: cityFilter !== "All" ? cityFilter : undefined,
+            search: debouncedSearch || undefined,
+            partner: partnerFilter || undefined,
+            verified: verifiedFilter || undefined,
+            sort: sortedByDistance && userCoords ? "distance" : undefined,
+            lat: sortedByDistance && userCoords ? userCoords.lat : undefined,
+            lng: sortedByDistance && userCoords ? userCoords.lng : undefined,
+        }));
+    }, [dispatch, currentPage, cityFilter, debouncedSearch, partnerFilter, verifiedFilter, sortedByDistance, userCoords]);
 
     useEffect(() => {
         const toggleVisibility = () => setShowBackToTop(window.scrollY > 400);
@@ -87,50 +91,9 @@ export default function PetCare() {
         else window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const availableCities = Array.from(
-        new Set(clinics.map((c) => c.city).filter(Boolean))
-    ) as string[];
-
-    // Filter
-    const filteredClinics = clinics.filter((clinic) => {
-        if (cityFilter && cityFilter !== "All" && clinic.city?.toLowerCase() !== cityFilter.toLowerCase()) {
-            return false;
-        }
-        if (partnerFilter && !clinic.is_paltuu_partner) {
-            return false;
-        }
-        if (verifiedFilter && !clinic.is_verified) {
-            return false;
-        }
-        if (searchQuery) {
-            const q = searchQuery.toLowerCase();
-            if (!clinic.name?.toLowerCase().includes(q) && !clinic.address?.toLowerCase().includes(q)) {
-                return false;
-            }
-        }
-        return true;
-    });
-
-    // Sort: nearest-first if geolocation granted, else by rating (API default order preserved)
-    const sortedClinics = sortedByDistance && userCoords
-        ? [...filteredClinics].sort((a, b) => {
-            const hasA = a.latitude != null && a.longitude != null;
-            const hasB = b.latitude != null && b.longitude != null;
-            if (!hasA && !hasB) return 0;
-            if (!hasA) return 1;
-            if (!hasB) return -1;
-            return (
-                haversineKm(userCoords.lat, userCoords.lng, a.latitude!, a.longitude!) -
-                haversineKm(userCoords.lat, userCoords.lng, b.latitude!, b.longitude!)
-            );
-        })
-        : filteredClinics;
-
-    const totalPages = Math.ceil(sortedClinics.length / ITEMS_PER_PAGE);
-    const displayedClinics = sortedClinics.slice(
-        (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
-    );
+    const availableCities = cities;
+    const displayedClinics = clinics;
+    const totalPages = pagination.totalPages;
 
     const resetFilters = () => {
         setCityFilter("All");
@@ -153,8 +116,8 @@ export default function PetCare() {
                 <div style={{ maxWidth: "90%", margin: "0 auto" }} className="py-6 px-4 md:px-8">
                     <p className="text-gray-500 text-sm text-center">
                         Pakistan&apos;s trusted vet network
-                        {!loading && clinics.length > 0 && (
-                            <span className="ml-1 font-semibold text-[#a03048]">— {clinics.length}+ verified clinics</span>
+                        {!loading && pagination.total > 0 && (
+                            <span className="ml-1 font-semibold text-[#a03048]">— {pagination.total}+ verified clinics</span>
                         )}
                     </p>
                 </div>
@@ -167,7 +130,7 @@ export default function PetCare() {
                         {loading || clinics.length === 0 ? (
                             <MapSkeleton />
                         ) : (
-                            <ClinicMap clinics={filteredClinics} userCoords={userCoords} />
+                            <ClinicMap clinics={displayedClinics} userCoords={userCoords} />
                         )}
                     </div>
                 </div>
@@ -280,7 +243,7 @@ export default function PetCare() {
                                 <h3 className="text-red-700 font-semibold text-lg mb-1">Error Loading Clinics</h3>
                                 <p className="text-red-500 text-sm">{error}</p>
                             </div>
-                        ) : clinics.length === 0 ? (
+                        ) : clinics.length === 0 && !hasActiveFilters ? (
                             <div className="bg-white border border-gray-100 rounded-2xl p-16 text-center shadow-sm">
                                 <FaClinicMedical className="text-gray-200 text-6xl mx-auto mb-5" />
                                 <h3 className="text-gray-700 font-semibold text-xl mb-2">No Clinics Found</h3>
@@ -288,7 +251,7 @@ export default function PetCare() {
                                     We&apos;re working on adding more veterinary clinics to your area. Check back soon!
                                 </p>
                             </div>
-                        ) : sortedClinics.length === 0 ? (
+                        ) : clinics.length === 0 ? (
                             <div className="bg-white border border-gray-100 rounded-3xl p-16 text-center shadow-sm flex flex-col items-center">
                                 <FaClinicMedical className="text-[#a03048]/20 text-5xl mb-5" />
                                 <h3 className="text-gray-950 font-bold text-xl mb-2">No Matches Found</h3>

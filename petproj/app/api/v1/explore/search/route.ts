@@ -6,11 +6,13 @@ import { rateLimit } from "@/utils/rateLimit";
 export const dynamic = "force-dynamic";
 
 /**
- * Helper to encode cursor: base64(JSON.stringify({ id, created_at }))
+ * Helper to encode cursor: base64(JSON.stringify({ id, sort_key }))
+ * `sort_key` is whatever the entity is currently ordered by (relevance rank,
+ * created_at, post_count, ...) — kept generic since it varies per entity type.
  */
-function encodeCursor(id: number | string, createdAt: Date | string | null) {
-    if (!id || !createdAt) return null;
-    const data = JSON.stringify({ id, created_at: createdAt });
+function encodeCursor(id: number | string, sortKey: number | string | Date | null) {
+    if (id === null || id === undefined || sortKey === null || sortKey === undefined) return null;
+    const data = JSON.stringify({ id, sort_key: sortKey });
     return Buffer.from(data).toString("base64");
 }
 
@@ -21,7 +23,7 @@ function decodeCursor(cursor: string | null) {
     if (!cursor) return null;
     try {
         const decoded = Buffer.from(cursor, "base64").toString("utf8");
-        return JSON.parse(decoded) as { id: number | string; created_at: string };
+        return JSON.parse(decoded) as { id: number | string; sort_key: any };
     } catch (e) {
         return null;
     }
@@ -92,86 +94,120 @@ export async function GET(req: NextRequest) {
 
         // ── Entity Search Functions ──────────────────────────────────────────
 
-        // Users
+        // Users — full-text match OR trigram fuzzy match (typo-tolerant), ranked by relevance
         async function searchUsers(lim: number, cur: any) {
             let query = `
-                SELECT 'user' AS entity_type, u.user_id, u.name, u.social_username, u.profile_image_url, 
-                       u.follower_count, u.created_at,
-                       false AS is_blocked_by_me, false AS is_blocking_me,
-                       EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $3 AND following_id = u.user_id) AS is_following
-                FROM users u
-                WHERE to_tsvector('english', u.name || ' ' || coalesce(u.social_username, '')) @@ plainto_tsquery('english', $1)
-                  AND NOT EXISTS (
-                      SELECT 1 FROM user_blocks b 
-                      WHERE (b.blocker_id = $3 AND b.blocked_id = u.user_id)
-                         OR (b.blocker_id = u.user_id AND b.blocked_id = $3)
-                  )
+                SELECT * FROM (
+                    SELECT 'user' AS entity_type, u.user_id, u.name, u.social_username, u.profile_image_url,
+                           u.follower_count, u.created_at,
+                           false AS is_blocked_by_me, false AS is_blocking_me,
+                           EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $3 AND following_id = u.user_id) AS is_following,
+                           GREATEST(
+                               similarity(u.name, $1),
+                               similarity(coalesce(u.social_username, ''), $1),
+                               word_similarity($1, u.name || ' ' || coalesce(u.social_username, '')),
+                               ts_rank_cd(to_tsvector('english', u.name || ' ' || coalesce(u.social_username, '')), plainto_tsquery('english', $1))
+                           ) AS rank
+                    FROM users u
+                    WHERE (
+                        to_tsvector('english', u.name || ' ' || coalesce(u.social_username, '')) @@ plainto_tsquery('english', $1)
+                        OR similarity(u.name, $1) > 0.2
+                        OR similarity(coalesce(u.social_username, ''), $1) > 0.2
+                    )
+                      AND NOT EXISTS (
+                          SELECT 1 FROM user_blocks b
+                          WHERE (b.blocker_id = $3 AND b.blocked_id = u.user_id)
+                             OR (b.blocker_id = u.user_id AND b.blocked_id = $3)
+                      )
+                ) sub
             `;
             const params: any[] = [plainTsQuery, lim + 1, userId];
 
             if (cur) {
-                query += ` AND (u.created_at, u.user_id) < ($4, $5)`;
-                params.push(cur.created_at, cur.id);
+                query += ` WHERE (sub.rank, sub.user_id) < ($4, $5)`;
+                params.push(cur.sort_key, cur.id);
             }
 
-            query += ` ORDER BY u.created_at DESC, u.user_id DESC LIMIT $2`;
+            query += ` ORDER BY sub.rank DESC, sub.user_id DESC LIMIT $2`;
             const res = await db.query(query, params);
             return res.rows;
         }
 
-        // Pets
+        // Pets — full-text match OR trigram fuzzy match (typo-tolerant), ranked by relevance
         async function searchPets(lim: number, cur: any) {
             let query = `
-                SELECT 'pet' AS entity_type, p.pet_id, p.pet_name, p.pet_breed AS breed, p.image_url, p.created_at,
-                       u.name AS owner_name, u.user_id AS owner_id
-                FROM pets p
-                JOIN users u ON u.user_id = p.owner_id
-                WHERE to_tsvector('english', p.pet_name || ' ' || coalesce(p.pet_breed, '')) @@ plainto_tsquery('english', $1)
-                  AND p.is_deleted = false
-                  AND NOT EXISTS (
-                      SELECT 1 FROM user_blocks b 
-                      WHERE (b.blocker_id = $3 AND b.blocked_id = p.owner_id)
-                         OR (b.blocker_id = p.owner_id AND b.blocked_id = $3)
-                  )
+                SELECT * FROM (
+                    SELECT 'pet' AS entity_type, p.pet_id, p.pet_name, p.pet_breed AS breed,
+                           (SELECT image_url FROM pet_images WHERE pet_id = p.pet_id ORDER BY "order" ASC LIMIT 1) AS image_url,
+                           p.created_at,
+                           u.name AS owner_name, u.user_id AS owner_id,
+                           GREATEST(
+                               similarity(p.pet_name, $1),
+                               similarity(coalesce(p.pet_breed, ''), $1),
+                               word_similarity($1, p.pet_name || ' ' || coalesce(p.pet_breed, '')),
+                               ts_rank_cd(to_tsvector('english', p.pet_name || ' ' || coalesce(p.pet_breed, '')), plainto_tsquery('english', $1))
+                           ) AS rank
+                    FROM pets p
+                    JOIN users u ON u.user_id = p.owner_id
+                    WHERE (
+                        to_tsvector('english', p.pet_name || ' ' || coalesce(p.pet_breed, '')) @@ plainto_tsquery('english', $1)
+                        OR similarity(p.pet_name, $1) > 0.2
+                        OR similarity(coalesce(p.pet_breed, ''), $1) > 0.2
+                    )
+                      AND NOT EXISTS (
+                          SELECT 1 FROM user_blocks b
+                          WHERE (b.blocker_id = $3 AND b.blocked_id = p.owner_id)
+                             OR (b.blocker_id = p.owner_id AND b.blocked_id = $3)
+                      )
+                ) sub
             `;
             const params: any[] = [plainTsQuery, lim + 1, userId];
 
             if (cur) {
-                query += ` AND (p.created_at, p.pet_id) < ($4, $5)`;
-                params.push(cur.created_at, cur.id);
+                query += ` WHERE (sub.rank, sub.pet_id) < ($4, $5)`;
+                params.push(cur.sort_key, cur.id);
             }
 
-            query += ` ORDER BY p.created_at DESC, p.pet_id DESC LIMIT $2`;
+            query += ` ORDER BY sub.rank DESC, sub.pet_id DESC LIMIT $2`;
             const res = await db.query(query, params);
             return res.rows;
         }
 
-        // Posts
+        // Posts — full-text match OR trigram fuzzy match (typo-tolerant), ranked by relevance
         async function searchPosts(lim: number, cur: any) {
             let query = `
-                SELECT 'post' AS entity_type, p.post_id, p.content, p.like_count, p.created_at, p.updated_at,
-                       u.name AS author_name,
-                       false AS is_blocked_by_me, false AS is_blocking_me,
-                       COALESCE((SELECT json_agg(m.*) FROM social_post_media m WHERE m.post_id = p.post_id), '[]'::json) AS media
-                FROM social_posts p
-                JOIN users u ON u.user_id = p.user_id
-                WHERE to_tsvector('english', coalesce(p.content, '')) @@ plainto_tsquery('english', $1)
-                  AND p.is_deleted = false
-                  AND p.is_hidden = false
-                  AND NOT EXISTS (
-                      SELECT 1 FROM user_blocks b 
-                      WHERE (b.blocker_id = $3 AND b.blocked_id = p.user_id)
-                         OR (b.blocker_id = p.user_id AND b.blocked_id = $3)
-                  )
+                SELECT * FROM (
+                    SELECT 'post' AS entity_type, p.post_id, p.content, p.like_count, p.created_at, p.updated_at,
+                           u.name AS author_name,
+                           false AS is_blocked_by_me, false AS is_blocking_me,
+                           COALESCE((SELECT json_agg(m.*) FROM social_post_media m WHERE m.post_id = p.post_id), '[]'::json) AS media,
+                           GREATEST(
+                               word_similarity($1, coalesce(p.content, '')),
+                               ts_rank_cd(to_tsvector('english', coalesce(p.content, '')), plainto_tsquery('english', $1))
+                           ) AS rank
+                    FROM social_posts p
+                    JOIN users u ON u.user_id = p.user_id
+                    WHERE (
+                        to_tsvector('english', coalesce(p.content, '')) @@ plainto_tsquery('english', $1)
+                        OR word_similarity($1, coalesce(p.content, '')) > 0.25
+                    )
+                      AND p.is_deleted = false
+                      AND p.is_hidden = false
+                      AND NOT EXISTS (
+                          SELECT 1 FROM user_blocks b
+                          WHERE (b.blocker_id = $3 AND b.blocked_id = p.user_id)
+                             OR (b.blocker_id = p.user_id AND b.blocked_id = $3)
+                      )
+                ) sub
             `;
             const params: any[] = [plainTsQuery, lim + 1, userId];
 
             if (cur) {
-                query += ` AND (p.created_at, p.post_id) < ($4, $5)`;
-                params.push(cur.created_at, cur.id);
+                query += ` WHERE (sub.rank, sub.post_id) < ($4, $5)`;
+                params.push(cur.sort_key, cur.id);
             }
 
-            query += ` ORDER BY p.created_at DESC, p.post_id DESC LIMIT $2`;
+            query += ` ORDER BY sub.rank DESC, sub.post_id DESC LIMIT $2`;
             const res = await db.query(query, params);
             return res.rows;
         }
@@ -190,7 +226,7 @@ export async function GET(req: NextRequest) {
 
             if (cur) {
                 query += ` AND (p.created_at, p.product_id) < ($3, $4)`;
-                params.push(cur.created_at, cur.id);
+                params.push(cur.sort_key, cur.id);
             }
 
             query += ` ORDER BY p.created_at DESC, p.product_id DESC LIMIT $2`;
@@ -198,49 +234,69 @@ export async function GET(req: NextRequest) {
             return res.rows;
         }
 
-        // Adoptions
+        // Adoptions — full-text match OR trigram fuzzy match (typo-tolerant), ranked by relevance
         async function searchAdoptions(lim: number, cur: any) {
             let query = `
-                SELECT 'adoption' AS entity_type, p.pet_id AS listing_id, p.pet_name, p.pet_breed AS breed, p.location, p.adoption_status AS status, p.created_at
-                FROM pets p
-                WHERE p.listing_type = 'adoption'
-                  AND p.is_deleted = false
-                  AND to_tsvector('english', p.pet_name || ' ' || coalesce(p.pet_breed, '') || ' ' || coalesce(p.location, '')) @@ plainto_tsquery('english', $1)
-                  AND NOT EXISTS (
-                      SELECT 1 FROM user_blocks b 
-                      WHERE (b.blocker_id = $3 AND b.blocked_id = p.owner_id)
-                         OR (b.blocker_id = p.owner_id AND b.blocked_id = $3)
-                  )
+                SELECT * FROM (
+                    SELECT 'adoption' AS entity_type, p.pet_id AS listing_id, p.pet_name, p.pet_breed AS breed, p.area AS location, p.adoption_status AS status, p.created_at,
+                           (SELECT image_url FROM pet_images WHERE pet_id = p.pet_id ORDER BY "order" ASC LIMIT 1) AS image_url,
+                           GREATEST(
+                               word_similarity($1, p.pet_name || ' ' || coalesce(p.pet_breed, '') || ' ' || coalesce(p.area, '')),
+                               ts_rank_cd(to_tsvector('english', p.pet_name || ' ' || coalesce(p.pet_breed, '') || ' ' || coalesce(p.area, '')), plainto_tsquery('english', $1))
+                           ) AS rank
+                    FROM pets p
+                    WHERE p.listing_type = 'adoption'
+                      AND (
+                          to_tsvector('english', p.pet_name || ' ' || coalesce(p.pet_breed, '') || ' ' || coalesce(p.area, '')) @@ plainto_tsquery('english', $1)
+                          OR word_similarity($1, p.pet_name || ' ' || coalesce(p.pet_breed, '') || ' ' || coalesce(p.area, '')) > 0.25
+                      )
+                      AND NOT EXISTS (
+                          SELECT 1 FROM user_blocks b
+                          WHERE (b.blocker_id = $3 AND b.blocked_id = p.owner_id)
+                             OR (b.blocker_id = p.owner_id AND b.blocked_id = $3)
+                      )
+                ) sub
             `;
             const params: any[] = [plainTsQuery, lim + 1, userId];
 
             if (cur) {
-                query += ` AND (p.created_at, p.pet_id) < ($4, $5)`;
-                params.push(cur.created_at, cur.id);
+                query += ` WHERE (sub.rank, sub.listing_id) < ($4, $5)`;
+                params.push(cur.sort_key, cur.id);
             }
 
-            query += ` ORDER BY p.created_at DESC, p.pet_id DESC LIMIT $2`;
+            query += ` ORDER BY sub.rank DESC, sub.listing_id DESC LIMIT $2`;
             const res = await db.query(query, params);
             return res.rows;
         }
 
-        // Lost & Found
+        // Lost & Found — full-text match OR trigram fuzzy match (typo-tolerant), ranked by relevance
         async function searchLostFound(lim: number, cur: any) {
             let query = `
-                SELECT 'lost_found' AS entity_type, p.post_id AS report_id, p.pet_name, p.post_type AS report_type, p.location AS area, p.created_at,
-                       (SELECT image_url FROM lost_and_found_post_images WHERE post_id = p.post_id LIMIT 1) AS image_url
-                FROM lost_and_found_posts p
-                WHERE to_tsvector('english', coalesce(p.pet_description, '') || ' ' || coalesce(p.location, '')) @@ plainto_tsquery('english', $1)
-                  AND p.status = 'active'
+                SELECT * FROM (
+                    SELECT 'lost_found' AS entity_type, p.post_id AS report_id, cat.category_name AS pet_name,
+                           p.post_type AS report_type, p.location AS area, p.date AS created_at,
+                           (SELECT image_url FROM lost_and_found_post_images WHERE post_id = p.post_id LIMIT 1) AS image_url,
+                           GREATEST(
+                               word_similarity($1, coalesce(p.pet_description, '') || ' ' || coalesce(p.location, '')),
+                               ts_rank_cd(to_tsvector('english', coalesce(p.pet_description, '') || ' ' || coalesce(p.location, '')), plainto_tsquery('english', $1))
+                           ) AS rank
+                    FROM lost_and_found_posts p
+                    LEFT JOIN pet_category cat ON cat.category_id = p.category_id
+                    WHERE (
+                        to_tsvector('english', coalesce(p.pet_description, '') || ' ' || coalesce(p.location, '')) @@ plainto_tsquery('english', $1)
+                        OR word_similarity($1, coalesce(p.pet_description, '') || ' ' || coalesce(p.location, '')) > 0.25
+                    )
+                      AND p.status = 'active'
+                ) sub
             `;
             const params: any[] = [plainTsQuery, lim + 1];
 
             if (cur) {
-                query += ` AND (p.created_at, p.post_id) < ($3, $4)`;
-                params.push(cur.created_at, cur.id);
+                query += ` WHERE (sub.rank, sub.report_id) < ($3, $4)`;
+                params.push(cur.sort_key, cur.id);
             }
 
-            query += ` ORDER BY p.created_at DESC, p.post_id DESC LIMIT $2`;
+            query += ` ORDER BY sub.rank DESC, sub.report_id DESC LIMIT $2`;
             const res = await db.query(query, params);
             return res.rows;
         }
@@ -257,7 +313,7 @@ export async function GET(req: NextRequest) {
 
             if (cur) {
                 query += ` AND (post_count, hashtag_id) < ($3, $4)`;
-                params.push(cur.post_count, cur.id);
+                params.push(cur.sort_key, cur.id);
             }
 
             query += ` ORDER BY post_count DESC, hashtag_id DESC LIMIT $2`;
@@ -265,22 +321,32 @@ export async function GET(req: NextRequest) {
             return res.rows;
         }
 
-        // Vets
+        // Vets — full-text match OR trigram fuzzy match (typo-tolerant), ranked by relevance
         async function searchVets(lim: number, cur: any) {
             let query = `
-                SELECT 'vet' AS entity_type, c.clinic_id AS provider_id, c.name, c.address AS location, c.logo_url AS image_url, c.created_at,
-                       COALESCE((SELECT AVG(rating) FROM vet_reviews WHERE clinic_id = c.clinic_id), 0) AS rating
-                FROM clinics c
-                WHERE to_tsvector('english', c.name || ' ' || coalesce(c.address, '')) @@ plainto_tsquery('english', $1)
+                SELECT * FROM (
+                    SELECT 'vet' AS entity_type, c.clinic_id AS provider_id, c.name, c.address AS location, c.logo_url AS image_url, c.created_at,
+                           COALESCE((SELECT AVG(rating) FROM vet_reviews WHERE clinic_id = c.clinic_id), 0) AS rating,
+                           GREATEST(
+                               similarity(c.name, $1),
+                               word_similarity($1, c.name || ' ' || coalesce(c.address, '')),
+                               ts_rank_cd(to_tsvector('english', c.name || ' ' || coalesce(c.address, '')), plainto_tsquery('english', $1))
+                           ) AS rank
+                    FROM clinics c
+                    WHERE (
+                        to_tsvector('english', c.name || ' ' || coalesce(c.address, '')) @@ plainto_tsquery('english', $1)
+                        OR similarity(c.name, $1) > 0.2
+                    )
+                ) sub
             `;
             const params: any[] = [plainTsQuery, lim + 1];
 
             if (cur) {
-                query += ` AND (c.created_at, c.clinic_id) < ($3, $4)`;
-                params.push(cur.created_at, cur.id);
+                query += ` WHERE (sub.rank, sub.provider_id) < ($3, $4)`;
+                params.push(cur.sort_key, cur.id);
             }
 
-            query += ` ORDER BY c.created_at DESC, c.clinic_id DESC LIMIT $2`;
+            query += ` ORDER BY sub.rank DESC, sub.provider_id DESC LIMIT $2`;
             const res = await db.query(query, params);
             return res.rows;
         }
@@ -331,13 +397,16 @@ export async function GET(req: NextRequest) {
             let nextCursor = null;
             if (hasMore) {
                 const lastItem = results[results.length - 1];
+                const idField = lastItem.user_id || lastItem.pet_id || lastItem.post_id || lastItem.product_id || lastItem.listing_id || lastItem.report_id || lastItem.provider_id || lastItem.clinic_id;
                 if (type === "hashtags") {
                     nextCursor = encodeCursor(lastItem.hashtag_id, lastItem.post_count);
                 } else if (type === "breeds") {
                     nextCursor = encodeCursor(lastItem.breed, "0");
-                } else {
-                    const idField = lastItem.user_id || lastItem.pet_id || lastItem.post_id || lastItem.product_id || lastItem.listing_id || lastItem.report_id || lastItem.provider_id || lastItem.clinic_id;
+                } else if (type === "products") {
                     nextCursor = encodeCursor(idField, lastItem.created_at);
+                } else {
+                    // users, pets, posts, adoptions, lost_found, vets — ranked by relevance
+                    nextCursor = encodeCursor(idField, lastItem.rank);
                 }
             }
 

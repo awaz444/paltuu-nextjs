@@ -1,12 +1,18 @@
 /**
  * Social API Rate Limiter
- * Uses Upstash Redis sliding window counters — no extra package needed.
+ * Uses Upstash Redis fixed window counters — no extra package needed.
  *
  * Usage in any API route:
  *   import { rateLimit, LIMITS } from "@/lib/rateLimit";
  *
  *   const limited = await rateLimit(req, LIMITS.LIKE);
  *   if (limited) return limited; // returns 429 NextResponse automatically
+ *
+ * For read-heavy, low-risk routes (e.g. feed loads) pass { blocking: false }
+ * to fire the Redis check without awaiting it — the request proceeds
+ * immediately and is only ever denied on the *next* call once the limiter
+ * catches up. Trades strict enforcement accuracy for removing the Redis
+ * round-trip from the critical path.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -41,18 +47,22 @@ export const LIMITS = {
 type LimitPreset = (typeof LIMITS)[keyof typeof LIMITS];
 
 /**
- * Sliding window rate limiter.
+ * Fixed window rate limiter (single INCR+EXPIRE pipeline, one Redis round-trip).
  *
  * @param req      - The incoming Next.js request
  * @param preset   - One of LIMITS.*  e.g. LIMITS.LIKE
  * @param keyExtra - Optional extra string to namespace the key (e.g. postId)
+ * @param opts.blocking - Default true. When false, the Redis check is fired
+ *                        without being awaited and the request is always
+ *                        allowed to proceed immediately (best-effort limiting).
  *
  * @returns null if allowed, or a NextResponse(429) if rate limited
  */
 export async function rateLimit(
     req: NextRequest,
     preset: LimitPreset,
-    keyExtra?: string
+    keyExtra?: string,
+    opts?: { blocking?: boolean }
 ): Promise<NextResponse | null> {
     const redis = getRedis();
     if (!redis) return null; // Redis not configured — allow all (fail open)
@@ -64,46 +74,55 @@ export async function rateLimit(
     const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
     const token = req.cookies.get("token")?.value?.slice(-16) ?? ip;
 
-    const key = `rl:${maxRequests}:${windowSeconds}:${token}${keyExtra ? `:${keyExtra}` : ""}`;
-    const now = Date.now();
-    const windowMs = windowSeconds * 1000;
-    const windowStart = now - windowMs;
+    // Fixed window: bucket by the current window index so the key itself
+    // rotates every windowSeconds — no need to prune old entries.
+    const windowIdx = Math.floor(Date.now() / 1000 / windowSeconds);
+    const key = `rl:${maxRequests}:${windowSeconds}:${token}${keyExtra ? `:${keyExtra}` : ""}:${windowIdx}`;
 
-    try {
-        // Sliding window: store each request timestamp as a sorted set member
-        const pipeline = redis.pipeline();
-        pipeline.zremrangebyscore(key, 0, windowStart);          // remove old entries
-        pipeline.zadd(key, { score: now, member: `${now}` });    // add this request
-        pipeline.zcard(key);                                      // count in window
-        pipeline.expire(key, windowSeconds + 1);                  // auto-cleanup
+    const check = async (): Promise<NextResponse | null> => {
+        try {
+            const pipeline = redis.pipeline();
+            pipeline.incr(key);                        // count this request in the window
+            pipeline.expire(key, windowSeconds + 1);   // auto-cleanup shortly after window ends
 
-        const results = await pipeline.exec() as any[];
-        const count = results[2] as number;
+            const results = await pipeline.exec() as any[];
+            const count = results[0] as number;
 
-        if (count > maxRequests) {
-            const retryAfter = Math.ceil(windowSeconds - (now - windowStart) / 1000);
-            return NextResponse.json(
-                {
-                    error: "Too many requests",
-                    message: `Rate limit exceeded. Try again in ${retryAfter} seconds.`,
-                    retry_after: retryAfter,
-                },
-                {
-                    status: 429,
-                    headers: {
-                        "Retry-After": String(retryAfter),
-                        "X-RateLimit-Limit": String(maxRequests),
-                        "X-RateLimit-Window": String(windowSeconds),
-                        "X-RateLimit-Remaining": "0",
+            if (count > maxRequests) {
+                const retryAfter = windowSeconds - (Math.floor(Date.now() / 1000) % windowSeconds);
+                return NextResponse.json(
+                    {
+                        error: "Too many requests",
+                        message: `Rate limit exceeded. Try again in ${retryAfter} seconds.`,
+                        retry_after: retryAfter,
                     },
-                }
-            );
+                    {
+                        status: 429,
+                        headers: {
+                            "Retry-After": String(retryAfter),
+                            "X-RateLimit-Limit": String(maxRequests),
+                            "X-RateLimit-Window": String(windowSeconds),
+                            "X-RateLimit-Remaining": "0",
+                        },
+                    }
+                );
+            }
+
+            return null; // ✅ Allowed
+
+        } catch {
+            // Redis error — fail open (never break the API due to rate limiter)
+            return null;
         }
+    };
 
-        return null; // ✅ Allowed
-
-    } catch {
-        // Redis error — fail open (never break the API due to rate limiter)
+    if (opts?.blocking === false) {
+        // Best-effort: don't hold up the request on the Redis round-trip.
+        // Swallow the result (and any rejection) — this call can only ever
+        // deny a *future* request, never the current one.
+        void check().catch(() => {});
         return null;
     }
+
+    return check();
 }

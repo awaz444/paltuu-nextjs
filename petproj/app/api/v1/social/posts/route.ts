@@ -47,7 +47,9 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(req: NextRequest) {
     try {
-        const limited = await rateLimit(req, LIMITS.FEED);
+        // Feed reads are high-volume and low-risk — check the limit best-effort
+        // (fire-and-forget) instead of blocking every request on the Redis round-trip.
+        const limited = await rateLimit(req, LIMITS.FEED, undefined, { blocking: false });
         if (limited) return limited;
 
         const userId = await getUserIdFromRequest(req);

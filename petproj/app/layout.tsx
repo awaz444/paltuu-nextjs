@@ -3,7 +3,7 @@ import { Montserrat } from "next/font/google";
 import ClientProvider from "./ClientProvider";
 import "./globals.css";
 import Footer from "@/components/footer";
-import ChatBot from "@/components/ChatBot";
+// import ChatBot from "@/components/ChatBot"; // hidden from frontend
 import AppClientWrapper from "@/context/AppClientWrapper";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "react-hot-toast";
@@ -141,9 +141,11 @@ export default function RootLayout({
                 </PageTransition>
               </main>
 
+              {/* Hidden from frontend — re-enable by uncommenting
               <div className="fixed right-2 z-[998] bottom-20 sm:bottom-4">
                 <ChatBot />
               </div>
+              */}
               <Analytics />
             </CartSyncProvider>
           </ClientProvider>

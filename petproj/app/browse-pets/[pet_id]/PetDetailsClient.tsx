@@ -681,18 +681,22 @@ const PetDetailsClient: React.FC<{
                             )}
                         </div>
                     </Card>
+                    {/* AI Summary card hidden from frontend */}
+                    {false && (() => {
+                    if (!pet) return null;
+                    return (
                     <Card className="shadow-2xl shadow-primary/5 rounded-[3rem] overflow-hidden border border-gray-50 mt-12">
                         <Title
                             level={3}
                             className="text-gray-800 mb-4 flex items-center">
-                            {pet.listing_type === "adoption" ||
-                                pet.listing_type === "rescue" ? (
+                            {pet!.listing_type === "adoption" ||
+                                pet!.listing_type === "rescue" ? (
                                 <>
                                     <SafetyCertificateOutlined className="mr-2 text-primary" />
                                     Adoption Preparation Guide
                                 </>
-                            ) : pet.listing_type === "sell" ||
-                                pet.listing_type === "shop" ? (
+                            ) : pet!.listing_type === "sell" ||
+                                pet!.listing_type === "shop" ? (
                                 <>
                                     <DollarOutlined className="mr-2 text-green-600" />
                                     Purchase Information
@@ -709,11 +713,11 @@ const PetDetailsClient: React.FC<{
                             <div className="text-center py-8 bg-gray-50 rounded-lg">
                                 <InfoCircleOutlined className="text-3xl mb-3 text-gray-400" />
                                 <p className="text-gray-500 mb-4">
-                                    {pet.listing_type === "adoption" || pet.listing_type === "rescue"
-                                        ? `Want to know if ${pet.pet_name} is the right fit for your home?`
-                                        : pet.listing_type === "sell" || pet.listing_type === "shop"
-                                            ? `Considering buying ${pet.pet_name}? Get detailed information.`
-                                            : `Want to know more about ${pet.pet_name}?`}
+                                    {pet!.listing_type === "adoption" || pet!.listing_type === "rescue"
+                                        ? `Want to know if ${pet!.pet_name} is the right fit for your home?`
+                                        : pet!.listing_type === "sell" || pet!.listing_type === "shop"
+                                            ? `Considering buying ${pet!.pet_name}? Get detailed information.`
+                                            : `Want to know more about ${pet!.pet_name}?`}
                                 </p>
                                 <Button
                                     type="primary"
@@ -728,18 +732,18 @@ const PetDetailsClient: React.FC<{
                             <div className="flex flex-col items-center justify-center py-8 bg-gray-50 rounded-lg">
                                 <MoonLoader size={24} color={primaryColor} />
                                 <span className="ml-3 text-gray-600 mt-3">
-                                    {pet.listing_type === "adoption" || pet.listing_type === "rescue"
+                                    {pet!.listing_type === "adoption" || pet!.listing_type === "rescue"
                                         ? "Generating adoption guidance..."
-                                        : pet.listing_type === "sell" || pet.listing_type === "shop"
+                                        : pet!.listing_type === "sell" || pet!.listing_type === "shop"
                                             ? "Generating purchase information..."
                                             : "Generating pet summary..."}
                                 </span>
                             </div>
                         ) : llmSummary ? (
                             <div
-                                className={`rounded-lg p-6 ${pet.listing_type === "adoption" || pet.listing_type === "rescue"
+                                className={`rounded-lg p-6 ${pet!.listing_type === "adoption" || pet!.listing_type === "rescue"
                                     ? "bg-white border border-primary"
-                                    : pet.listing_type === "sell" || pet.listing_type === "shop"
+                                    : pet!.listing_type === "sell" || pet!.listing_type === "shop"
                                         ? "bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200"
                                         : "bg-gray-50 border border-gray-200"
                                     }`}>
@@ -767,9 +771,9 @@ const PetDetailsClient: React.FC<{
                                     <div className="flex items-center text-xs text-gray-500">
                                         <InfoCircleOutlined className="mr-2" />
                                         <span>
-                                            {pet.listing_type === "adoption" || pet.listing_type === "rescue"
+                                            {pet!.listing_type === "adoption" || pet!.listing_type === "rescue"
                                                 ? "This AI-generated guidance helps prepare for adoption. Always verify details with the owner or veterinarian."
-                                                : pet.listing_type === "sell" || pet.listing_type === "shop"
+                                                : pet!.listing_type === "sell" || pet!.listing_type === "shop"
                                                     ? "This AI-generated information provides purchase guidance. Contact the seller for exact details and pricing."
                                                     : "This AI-generated summary provides general information about the pet."}
                                         </span>
@@ -780,9 +784,9 @@ const PetDetailsClient: React.FC<{
                             <div className="text-center py-8 bg-gray-50 rounded-lg">
                                 <InfoCircleOutlined className="text-3xl mb-3 text-gray-400" />
                                 <p className="text-gray-500 mb-2">
-                                    {pet.listing_type === "adoption" || pet.listing_type === "rescue"
+                                    {pet!.listing_type === "adoption" || pet!.listing_type === "rescue"
                                         ? "Could not generate adoption guidance"
-                                        : pet.listing_type === "sell" || pet.listing_type === "shop"
+                                        : pet!.listing_type === "sell" || pet!.listing_type === "shop"
                                             ? "Could not generate purchase information"
                                             : "Could not generate pet summary"}
                                 </p>
@@ -792,6 +796,8 @@ const PetDetailsClient: React.FC<{
                             </div>
                         )}
                     </Card>
+                    );
+                    })()}
 
                     {/* Add Rescue Details for rescue pets */}
                     {pet.listing_type === "rescue" && (

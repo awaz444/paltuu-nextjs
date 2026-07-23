@@ -16,7 +16,7 @@ interface Post {
   report_count: number;
   hashtags: string[];
 }
-interface Tag { tag_id: number; slug: string; label: string; category: string; is_active: boolean; }
+interface Tag { tag_id: number; slug: string; label: string; category: string; is_active: boolean; description: string | null; }
 interface TagCategories { species: Tag[]; topic: Tag[]; content_type: Tag[]; mood: Tag[]; }
 
 type Filter = "all" | "media" | "text" | "sla_breach";
@@ -38,7 +38,9 @@ export default function TaggingQueuePage() {
   const [showCreateTag, setShowCreateTag] = useState(false);
   const [newTagLabel, setNewTagLabel] = useState("");
   const [newTagCategory, setNewTagCategory] = useState("species");
+  const [newTagDescription, setNewTagDescription] = useState("");
   const [creatingTag, setCreatingTag] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   function slugify(str: string) {
     return str.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -163,7 +165,7 @@ export default function TaggingQueuePage() {
       const res = await fetch("/api/v1/admin/social/content-tags", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label: newTagLabel.trim(), category: newTagCategory }),
+        body: JSON.stringify({ label: newTagLabel.trim(), category: newTagCategory, description: newTagDescription.trim() }),
       });
       if (!res.ok) { showToast("Tag already exists or error"); return; }
       const newTag = await res.json();
@@ -172,6 +174,7 @@ export default function TaggingQueuePage() {
         [newTagCategory]: [...(prev[newTagCategory as keyof TagCategories] ?? []), newTag],
       }));
       setNewTagLabel("");
+      setNewTagDescription("");
       setShowCreateTag(false);
       showToast(`Tag "${newTag.label}" created`);
     } finally { setCreatingTag(false); }
@@ -213,7 +216,7 @@ export default function TaggingQueuePage() {
           <h1 className="text-xl font-bold text-primary">Tagging Queue</h1>
           <span className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">{totalUntagged} untagged</span>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
           {(["all", "media", "text", "sla_breach"] as Filter[]).map(f => (
             <button
               key={f}
@@ -225,8 +228,56 @@ export default function TaggingQueuePage() {
               {f === "sla_breach" ? "⚠ SLA breach" : f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
+          <button
+            onClick={() => setShowGuide(v => !v)}
+            className={`text-xs px-3 py-1 rounded-full border transition-all ${
+              showGuide ? "bg-primary text-white border-primary" : "bg-white text-primary border-primary/40 hover:border-primary"
+            }`}
+          >
+            {showGuide ? "✕ Hide guide" : "📋 Tagging guide"}
+          </button>
         </div>
       </div>
+
+      {/* Best-practices guide — collapsible reference for anyone tagging */}
+      {showGuide && (
+        <div className="bg-white rounded-lg shadow border border-gray-200 mb-6 p-5 max-w-4xl">
+          <h2 className="font-semibold text-gray-800 mb-3">Tagging Best Practices</h2>
+          <ul className="text-sm text-gray-600 space-y-2.5 list-disc list-inside">
+            <li>
+              <strong>Tag within 4 hours, and never later than 72.</strong> Engagement (likes, saves, comments,
+              reposts) on an untagged post is queued, not scored. When you tag the post, only engagement from
+              roughly the last 72 hours is replayed into interest scores — anything older is discarded permanently,
+              and the queue is cleared either way. Work the <em>⚠ SLA breach</em> filter first; treat 72h as the
+              point of no return, not a soft deadline.
+            </li>
+            <li>
+              <strong>Only Primary tags affect the feed.</strong> Secondary tags are organizational metadata only —
+              they don't feed personalization at all. Put the tag you want the algorithm to learn from in Primary.
+            </li>
+            <li>
+              <strong>Never use more than 3 Primary tags.</strong> A post with 4+ primary tags gets{" "}
+              <em>zero</em> personalization affinity — it silently falls out of scoring entirely, which is worse
+              than a single tag. Prefer 1–2 precise primary tags over 3 loose ones.
+            </li>
+            <li>
+              <strong>Consistency beats precision.</strong> The score for a tag only becomes meaningful once it's
+              applied the same way across many similar posts. Hover any tag chip for its rubric, and when in doubt,
+              tag it the way the rubric says — not by vibes.
+            </li>
+            <li>
+              <strong>Don't tag obvious/derivable properties.</strong> Photo/Video/Text tags were retired because
+              they're already implied by the post itself and don't discriminate between users — nearly every post is
+              a photo. If a property is already true of almost everything, it isn't a useful interest signal.
+            </li>
+            <li>
+              Full rubric for every tag is in{" "}
+              <Link href="/admin-panel/social/tags" className="text-primary hover:underline">Tag Taxonomy</Link>{" "}
+              — that's also where to add missing keyword aliases so hashtags auto-suggest the right primary tag.
+            </li>
+          </ul>
+        </div>
+      )}
 
       {/* Empty state */}
       {posts.length === 0 && (
@@ -257,8 +308,16 @@ export default function TaggingQueuePage() {
                 Post #{post.post_id} · {Math.round(post.hours_untagged)}h ago
               </span>
               <div className="flex gap-2">
-                {post.hours_untagged > 24 && (
-                  <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Critical SLA</span>
+                {post.hours_untagged > 72 && (
+                  <span
+                    className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full"
+                    title="Past the 72h backfill window — engagement on this post can no longer be recovered into interest scores. Tag it anyway for future ranking, but the historical signal is gone."
+                  >
+                    🔴 Engagement lost (&gt;72h)
+                  </span>
+                )}
+                {post.hours_untagged > 24 && post.hours_untagged <= 72 && (
+                  <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Critical — tag now</span>
                 )}
                 {post.hours_untagged > 4 && post.hours_untagged <= 24 && (
                   <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">⚠ SLA breach</span>
@@ -351,6 +410,7 @@ export default function TaggingQueuePage() {
                         <button
                           key={t.tag_id}
                           onClick={() => togglePrimary(t.tag_id)}
+                          title={t.description ?? "No rubric set for this tag yet."}
                           className={`text-xs px-3 py-1 rounded-full border transition-all ${
                             selectedPrimary.includes(t.tag_id)
                               ? "bg-primary text-white border-primary"
@@ -373,7 +433,7 @@ export default function TaggingQueuePage() {
               </p>
               <div className="flex flex-wrap gap-2">
                 {allTags.filter(t => t.is_active && !selectedPrimary.includes(t.tag_id)).map(t => (
-                  <label key={t.tag_id} className="flex items-center gap-1 cursor-pointer">
+                  <label key={t.tag_id} title={t.description ?? "No rubric set for this tag yet."} className="flex items-center gap-1 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedSecondary.includes(t.tag_id)}
@@ -394,6 +454,10 @@ export default function TaggingQueuePage() {
             ) : (
               <div className="border border-gray-200 rounded-lg p-3 mb-4 bg-gray-50">
                 <p className="text-xs font-medium text-gray-600 mb-2">New tag</p>
+                <p className="text-xs text-amber-600 mb-2">
+                  Consider first whether an existing tag covers this — more tags fragment interest scoring at low
+                  post volume (see the Tagging guide above).
+                </p>
                 <input
                   value={newTagLabel}
                   onChange={e => setNewTagLabel(e.target.value)}
@@ -413,6 +477,13 @@ export default function TaggingQueuePage() {
                   <option value="content_type">Content Type</option>
                   <option value="mood">Mood</option>
                 </select>
+                <textarea
+                  value={newTagDescription}
+                  onChange={e => setNewTagDescription(e.target.value)}
+                  placeholder="Rubric — one precise sentence so every admin tags it the same way"
+                  rows={2}
+                  className="w-full text-xs border border-gray-300 rounded px-2 py-1 mb-2 focus:outline-none focus:border-primary"
+                />
                 <div className="flex gap-2">
                   <button
                     onClick={handleCreateTag}
@@ -421,7 +492,7 @@ export default function TaggingQueuePage() {
                   >
                     {creatingTag ? "Creating..." : "Create"}
                   </button>
-                  <button onClick={() => { setShowCreateTag(false); setNewTagLabel(""); }} className="text-xs text-gray-500 hover:text-gray-700">
+                  <button onClick={() => { setShowCreateTag(false); setNewTagLabel(""); setNewTagDescription(""); }} className="text-xs text-gray-500 hover:text-gray-700">
                     Cancel
                   </button>
                 </div>

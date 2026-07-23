@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   try {
     const res = await db.query(`
       SELECT tag_id, slug, label, category, parent_tag_id,
-             default_weight, keyword_aliases, is_active, sort_order
+             default_weight, keyword_aliases, is_active, sort_order, description
       FROM content_tags
       ORDER BY category, sort_order, label
     `);
@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { label, category } = body;
     const keyword_aliases: string[] = Array.isArray(body.keyword_aliases) ? body.keyword_aliases : [];
+    const description: string | null = typeof body.description === 'string' && body.description.trim() ? body.description.trim() : null;
 
     if (!label || !category) {
       return NextResponse.json({ error: "label and category are required" }, { status: 400 });
@@ -75,10 +76,10 @@ export async function POST(req: NextRequest) {
     }
 
     const inserted = await db.query(
-      `INSERT INTO content_tags (slug, label, category, keyword_aliases)
-       VALUES ($1, $2, $3, $4)
-       RETURNING tag_id, slug, label, category, parent_tag_id, default_weight, keyword_aliases, is_active, sort_order`,
-      [slug, label, category, keyword_aliases]
+      `INSERT INTO content_tags (slug, label, category, keyword_aliases, description)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING tag_id, slug, label, category, parent_tag_id, default_weight, keyword_aliases, is_active, sort_order, description`,
+      [slug, label, category, keyword_aliases, description]
     );
 
     return NextResponse.json(inserted.rows[0], { status: 201 });

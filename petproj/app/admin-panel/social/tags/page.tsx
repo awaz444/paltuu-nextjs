@@ -14,6 +14,7 @@ interface Tag {
   keyword_aliases: string[];
   is_active: boolean;
   sort_order: number;
+  description: string | null;
 }
 
 interface TagCategories { species: Tag[]; topic: Tag[]; content_type: Tag[]; mood: Tag[]; }
@@ -36,12 +37,14 @@ export default function TagTaxonomyPage() {
   const [editLabel, setEditLabel] = useState("");
   const [editAliases, setEditAliases] = useState("");
   const [editWeight, setEditWeight] = useState("1.0");
+  const [editDescription, setEditDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [newSlug, setNewSlug] = useState("");
   const [newCategory, setNewCategory] = useState("species");
   const [newAliases, setNewAliases] = useState("");
+  const [newDescription, setNewDescription] = useState("");
   const [creating, setCreating] = useState(false);
 
   function slugify(str: string) {
@@ -79,6 +82,7 @@ export default function TagTaxonomyPage() {
     setEditLabel(tag.label);
     setEditAliases((tag.keyword_aliases ?? []).join(", "));
     setEditWeight(String(tag.default_weight ?? 1.0));
+    setEditDescription(tag.description ?? "");
   }
 
   function cancelEdit() {
@@ -86,6 +90,7 @@ export default function TagTaxonomyPage() {
     setEditLabel("");
     setEditAliases("");
     setEditWeight("1.0");
+    setEditDescription("");
   }
 
   async function saveEdit(tag: Tag) {
@@ -99,6 +104,7 @@ export default function TagTaxonomyPage() {
           label: editLabel.trim(),
           keyword_aliases: aliases,
           default_weight: parseFloat(editWeight) || 1.0,
+          description: editDescription.trim(),
         }),
       });
       if (!res.ok) { showToast("Failed to save"); return; }
@@ -136,7 +142,13 @@ export default function TagTaxonomyPage() {
       const res = await fetch("/api/v1/admin/social/content-tags", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label: newLabel.trim(), slug: newSlug.trim() || slugify(newLabel), category: newCategory, keyword_aliases: aliases }),
+        body: JSON.stringify({
+          label: newLabel.trim(),
+          slug: newSlug.trim() || slugify(newLabel),
+          category: newCategory,
+          keyword_aliases: aliases,
+          description: newDescription.trim(),
+        }),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -148,7 +160,7 @@ export default function TagTaxonomyPage() {
         ...prev,
         [newCategory]: [...(prev[newCategory as keyof TagCategories] ?? []), newTag],
       }));
-      setNewLabel(""); setNewSlug(""); setNewAliases(""); setShowCreate(false);
+      setNewLabel(""); setNewSlug(""); setNewAliases(""); setNewDescription(""); setShowCreate(false);
       showToast(`"${newTag.label}" created`);
     } finally { setCreating(false); }
   }
@@ -178,6 +190,29 @@ export default function TagTaxonomyPage() {
         >
           + New Tag
         </button>
+      </div>
+
+      {/* Best-practices reference */}
+      <div className="bg-white rounded-lg shadow border border-gray-200 mb-6 p-5">
+        <h2 className="font-semibold text-gray-800 mb-3">Tagging Best Practices</h2>
+        <ul className="text-sm text-gray-600 space-y-2 list-disc list-inside">
+          <li><strong>Keep the taxonomy small.</strong> Consistency beats precision — an interest score only crosses a
+            useful threshold once a tag has been applied consistently to many similar posts. Adding more tags
+            fragments the signal at low post volume. Only add a new tag once an existing one is demonstrably wrong for
+            a real, recurring class of posts.</li>
+          <li><strong>Write a one-line rubric for every tag</strong> (the Description field below) and keep it
+            precise enough that two different admins would tag the same post the same way. This is the single biggest
+            lever for tagging consistency, and it's shown as a tooltip in the tagging queue.</li>
+          <li><strong>Populate keyword aliases.</strong> They power the tagging queue's hashtag → primary-tag
+            auto-suggestion — without aliases that suggestion almost never fires and every post is tagged from
+            scratch.</li>
+          <li><strong>Never re-introduce a tag that's fully derivable from existing data</strong> (post type, media
+            type, species on a tagged pet profile) — see the retired Photo/Video/Text tags below. A tag that's true
+            of nearly every post carries no personalization signal and just burns a primary-tag slot.</li>
+          <li><strong>Deactivate, don't delete,</strong> a tag that turns out to be redundant or low-signal — this
+            removes it from the tagging queue and the onboarding picker in one step while keeping historical
+            references on already-tagged posts intact.</li>
+        </ul>
       </div>
 
       {/* Create new tag */}
@@ -225,6 +260,17 @@ export default function TagTaxonomyPage() {
                 className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
               />
             </div>
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">
+                Description / rubric <span className="text-gray-400">(shown as a tooltip when tagging — keep it to one precise sentence)</span>
+              </label>
+              <input
+                value={newDescription}
+                onChange={e => setNewDescription(e.target.value)}
+                placeholder="e.g. Post is clearly about a hamster."
+                className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
+              />
+            </div>
             <div className="flex gap-2 pt-1">
               <button
                 onClick={handleCreate}
@@ -262,6 +308,13 @@ export default function TagTaxonomyPage() {
                           onChange={e => setEditLabel(e.target.value)}
                           className="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-primary"
                         />
+                        <textarea
+                          value={editDescription}
+                          onChange={e => setEditDescription(e.target.value)}
+                          placeholder="Description / rubric — one precise sentence, shown as a tooltip when tagging"
+                          rows={2}
+                          className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-primary"
+                        />
                         <input
                           value={editAliases}
                           onChange={e => setEditAliases(e.target.value)}
@@ -292,6 +345,11 @@ export default function TagTaxonomyPage() {
                           <span className="text-xs text-gray-400 ml-2">/{tag.slug}</span>
                           {tag.keyword_aliases?.length > 0 && (
                             <span className="text-xs text-gray-400 ml-2">· aliases: {tag.keyword_aliases.join(", ")}</span>
+                          )}
+                          {tag.description ? (
+                            <p className="text-xs text-gray-500 mt-1">{tag.description}</p>
+                          ) : (
+                            <p className="text-xs text-red-400 mt-1">No rubric set — add one so this tag is applied consistently.</p>
                           )}
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">

@@ -29,6 +29,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (body.default_weight !== undefined) { fields.push(`default_weight = $${i++}`); values.push(Number(body.default_weight)); }
     if (body.is_active !== undefined) { fields.push(`is_active = $${i++}`); values.push(Boolean(body.is_active)); }
     if (body.sort_order !== undefined) { fields.push(`sort_order = $${i++}`); values.push(parseInt(body.sort_order, 10)); }
+    if (body.description !== undefined) {
+      fields.push(`description = $${i++}`);
+      values.push(typeof body.description === 'string' && body.description.trim() ? body.description.trim() : null);
+    }
 
     if (fields.length === 0) {
       return NextResponse.json({ error: "No updatable fields provided" }, { status: 400 });
@@ -37,7 +41,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     values.push(tagId);
     const updated = await db.query(
       `UPDATE content_tags SET ${fields.join(', ')} WHERE tag_id = $${i}
-       RETURNING tag_id, slug, label, category, parent_tag_id, default_weight, keyword_aliases, is_active, sort_order`,
+       RETURNING tag_id, slug, label, category, parent_tag_id, default_weight, keyword_aliases, is_active, sort_order, description`,
       values
     );
 

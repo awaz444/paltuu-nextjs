@@ -16,6 +16,7 @@ import {
     type ParsedMention,
 } from "@/lib/mentions";
 import { validateSocialMediaPayload } from "@/lib/giphyMedia";
+import { invalidateViewerPostCache } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
 
@@ -243,6 +244,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
         // Fire-and-forget interest scoring (every successful comment / reply)
         recordEngagementEvent(userId, postId, 'comment').catch(() => {});
+        invalidateViewerPostCache(postId, userId).catch(() => {});
 
         // Fetch notification metadata AFTER the transaction (pool queries, non-blocking)
         const commenterRes = await db.query(`SELECT name, profile_image_url, social_username, verified FROM users WHERE user_id = $1`, [userId]);

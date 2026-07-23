@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
+import { VIEWER_COMMENTS_CTE } from "@/lib/feedQueryFragments";
 
 export const dynamic = "force-dynamic";
 
@@ -25,57 +26,58 @@ export async function GET(
             return NextResponse.json({ error: "User ID is required" }, { status: 400 });
         }
 
-        // 1. Fetch user profile with viewer context
-        const userRes = await db.query(`
-            SELECT 
-                u.user_id,
-                u.name,
-                u.username,
-                u.social_username,
-                u.verified,
-                u.bio,
-                u.follower_count,
-                u.following_count,
-                u.post_count,
-                u.profile_image_url,
-                u.cover_photo_url,
-                u.is_private,
-                u.created_at,
-                -- Viewer context
-                EXISTS(
-                    SELECT 1 FROM social_follows f
-                    WHERE f.follower_id = $2 AND f.following_id = u.user_id
-                ) AS is_following,
-                EXISTS(
-                    SELECT 1 FROM user_blocks b
-                    WHERE b.blocker_id = $2 AND b.blocked_id = u.user_id
-                ) AS is_blocked_by_me,
-                EXISTS(
-                    SELECT 1 FROM user_blocks b
-                    WHERE b.blocker_id = u.user_id AND b.blocked_id = $2
-                ) AS is_blocking_me,
-                ($2 = u.user_id) AS is_own_profile
-            FROM users u
-            WHERE u.user_id = $1
-        `, [targetId, viewerId || 0]);
-
-        if (userRes.rowCount === 0) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        const user = userRes.rows[0];
-        const isBlocked = user.is_blocked_by_me || user.is_blocking_me;
-        const isPrivate = user.is_private && !user.is_own_profile && !user.is_following;
-
-        // 2. Fetch posts (hidden if private account and not following, or if blocked)
-        let posts: any[] = [];
-        if (!isPrivate && !isBlocked) {
-            // Reposts are included here (no `is_repost = false` filter) so they
-            // render inline in the main feed, same as the home feed — the
-            // Reposts tab was removed in favor of this. The original_* fields
-            // (via LEFT JOIN on the reposted post) are what PostCard needs to
-            // render a repost's embedded original.
-            const postsRes = await db.query(`
+        // Fire the profile lookup and the posts query concurrently — the posts
+        // query only needs targetId/viewerId (both already known), not the
+        // privacy/block result from the profile query. We gate the *response*
+        // below on the privacy check, not the query dispatch, trading a little
+        // wasted DB work on the rare private/blocked profile for saved latency
+        // on the common (public, non-blocked) case.
+        //
+        // Reposts are included here (no `is_repost = false` filter) so they
+        // render inline in the main feed, same as the home feed — the
+        // Reposts tab was removed in favor of this. The original_* fields
+        // (via LEFT JOIN on the reposted post) are what PostCard needs to
+        // render a repost's embedded original.
+        const [userRes, postsRes] = await Promise.all([
+            db.query(`
+                SELECT
+                    u.user_id,
+                    u.name,
+                    u.username,
+                    u.social_username,
+                    u.verified,
+                    u.bio,
+                    u.follower_count,
+                    u.following_count,
+                    u.post_count,
+                    u.profile_image_url,
+                    u.cover_photo_url,
+                    u.is_private,
+                    u.created_at,
+                    -- Viewer context
+                    EXISTS(
+                        SELECT 1 FROM social_follows f
+                        WHERE f.follower_id = $2 AND f.following_id = u.user_id
+                    ) AS is_following,
+                    EXISTS(
+                        SELECT 1 FROM user_blocks b
+                        WHERE b.blocker_id = $2 AND b.blocked_id = u.user_id
+                    ) AS is_blocked_by_me,
+                    EXISTS(
+                        SELECT 1 FROM user_blocks b
+                        WHERE b.blocker_id = u.user_id AND b.blocked_id = $2
+                    ) AS is_blocking_me,
+                    ($2 = u.user_id) AS is_own_profile
+                FROM users u
+                WHERE u.user_id = $1
+            `, [targetId, viewerId || 0]),
+            db.query(`
+                WITH post_media AS (
+                    SELECT post_id, json_agg(m ORDER BY m.ordering) AS media
+                    FROM social_post_media m
+                    GROUP BY post_id
+                ),
+                ${VIEWER_COMMENTS_CTE}
                 SELECT
                     p.post_id, p.content, p.created_at, p.updated_at, p.post_type,
                     p.is_repost, p.original_post_id,
@@ -86,48 +88,45 @@ export async function GET(
                     CASE WHEN p.is_repost AND p.content IS NULL THEN op.comment_count ELSE p.comment_count END AS comment_count,
                     CASE WHEN p.is_repost AND p.content IS NULL THEN op.view_count    ELSE p.view_count    END AS view_count,
                     p.repost_count,
-                    COALESCE((
-                        SELECT json_agg(m.* ORDER BY m.ordering ASC)
-                        FROM social_post_media m
-                        WHERE m.post_id = p.post_id
-                    ), '[]'::json) AS media,
+                    COALESCE(pm.media, '[]'::json) AS media,
                     op.content           AS original_content,
                     op.user_id           AS original_user_id,
                     ou.name              AS original_author_name,
                     ou.social_username   AS original_social_username,
                     ou.profile_image_url AS original_author_image,
-                    COALESCE((
-                        SELECT json_agg(m.* ORDER BY m.ordering ASC)
-                        FROM social_post_media m
-                        WHERE m.post_id = op.post_id
-                    ), '[]'::json) AS original_media,
-                    EXISTS(
-                        SELECT 1 FROM social_likes l
-                        WHERE l.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND l.user_id = $2
-                    ) AS is_liked,
-                    EXISTS(
-                        SELECT 1 FROM social_reposts r
-                        WHERE r.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND r.user_id = $2
-                    ) AS is_reposted,
-                    EXISTS(
-                        SELECT 1 FROM saved_posts sp
-                        WHERE sp.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sp.user_id = $2
-                    ) AS is_saved,
-                    EXISTS(
-                        SELECT 1 FROM social_comments c
-                        WHERE c.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND c.user_id = $2 AND c.is_deleted = false
-                    ) AS is_commented
+                    COALESCE(opm.media, '[]'::json) AS original_media,
+                    (sl.post_id IS NOT NULL) AS is_liked,
+                    (sr.post_id IS NOT NULL) AS is_reposted,
+                    (sp.save_id IS NOT NULL) AS is_saved,
+                    (vc.post_id IS NOT NULL) AS is_commented
                 FROM social_posts p
                 LEFT JOIN social_posts op ON op.post_id = p.original_post_id
                 LEFT JOIN users ou        ON ou.user_id = op.user_id
+                LEFT JOIN post_media pm   ON pm.post_id  = p.post_id
+                LEFT JOIN post_media opm  ON opm.post_id = op.post_id
+                LEFT JOIN social_likes   sl ON sl.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sl.user_id = $2
+                LEFT JOIN social_reposts sr ON sr.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sr.user_id = $2
+                LEFT JOIN saved_posts    sp ON sp.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sp.user_id = $2
+                LEFT JOIN viewer_comments vc ON vc.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END
                 WHERE p.user_id = $1
                   AND p.is_deleted = false
                   AND (p.is_hidden = false OR p.user_id = $2)
                 ORDER BY p.created_at DESC
                 LIMIT 18
-            `, [targetId, viewerId || 0]);
-            posts = postsRes.rows;
+            `, [targetId, viewerId || 0]),
+        ]);
+
+        if (userRes.rowCount === 0) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
+
+        const user = userRes.rows[0];
+        const isBlocked = user.is_blocked_by_me || user.is_blocking_me;
+        const isPrivate = user.is_private && !user.is_own_profile && !user.is_following;
+
+        // Discard the fetched posts if the privacy/block check (only knowable
+        // after both queries resolve) says they shouldn't be visible.
+        const posts: any[] = (!isPrivate && !isBlocked) ? postsRes.rows : [];
 
         return NextResponse.json({
             profile: {

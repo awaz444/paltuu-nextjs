@@ -150,6 +150,12 @@ export async function getCachedFeedIds(
 
 /**
  * Cache a single post object.
+ *
+ * `postId` may be a plain post id (`post:{id}`) or a viewer-scoped composite
+ * key such as `{postId}:{viewerId}` (`post:{postId}:{viewerId}`) — required
+ * whenever the cached row contains viewer-specific fields (is_liked,
+ * is_reposted, is_saved, is_commented), since those must never be shared
+ * across viewers. See lib/feedHydration.ts.
  */
 export async function cachePost(postId: string | bigint, post: Record<string, any>): Promise<void> {
     if (!isRedisAvailable()) return;
@@ -159,7 +165,7 @@ export async function cachePost(postId: string | bigint, post: Record<string, an
 }
 
 /**
- * Get cached post by ID.
+ * Get cached post by ID (or viewer-scoped composite key — see cachePost).
  */
 export async function getCachedPost(postId: string | bigint): Promise<Record<string, any> | null> {
     if (!isRedisAvailable()) return null;
@@ -179,4 +185,18 @@ export async function invalidatePostCache(postId: string | bigint): Promise<void
     try {
         await redis.del(`post:${postId}`);
     } catch { }
+}
+
+/**
+ * Invalidate a single viewer's cached copy of a post (composite key
+ * `{postId}:{viewerId}`). Use this after a mutation performed BY that viewer
+ * (like/unlike, save/unsave, repost/undo, comment) so their own next fetch
+ * reflects the change immediately. Other viewers' cached copies of the same
+ * post are intentionally left to expire via the existing 30 min TTL rather
+ * than tracking every viewer who ever cached a given post — those viewers
+ * will see fresh counts within the TTL window, matching the accepted
+ * staleness tradeoff already used for engagement counts.
+ */
+export async function invalidateViewerPostCache(postId: string | bigint, viewerId: number): Promise<void> {
+    return invalidatePostCache(`${postId}:${viewerId}`);
 }

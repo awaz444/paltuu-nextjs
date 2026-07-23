@@ -8,6 +8,7 @@ import { assertNotBlocked } from "@/lib/moderation";
 import { recordEngagementEvent } from "@/lib/interestScoring";
 import { resolveRepostTarget } from "@/lib/reposts";
 import { validateSocialMediaPayload } from "@/lib/giphyMedia";
+import { invalidateViewerPostCache, fanOutPostToFollowers, removePostFromCaches } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
 
@@ -172,6 +173,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             // Fire-and-forget interest scoring against the ORIGINAL post's tags
             recordEngagementEvent(userId, originalPostId, 'repost').catch(() => {});
 
+            // repost_count on the original changed — invalidate the reposting
+            // user's own cached copy so their next fetch reflects it immediately.
+            invalidateViewerPostCache(originalPostId, userId).catch(() => {});
+            // Fan the new repost entry out to followers' feed caches, same as a
+            // fresh post — otherwise it wouldn't appear in a cached chronological
+            // feed until the 24h ZSET TTL expires.
+            fanOutPostToFollowers(repostPostId, userId, repostEntry.rows[0].created_at, db).catch(() => {});
+
             // Real-time: push notification to original author
             if (originalAuthorId !== userId) {
                 emitNotification(originalAuthorId, {
@@ -235,10 +244,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             );
 
             // Soft-delete the repost post entry
-            await client.query(`
+            const deletedRepost = await client.query(`
                 UPDATE social_posts
                 SET is_deleted = true
                 WHERE original_post_id = $1 AND user_id = $2 AND is_repost = true
+                RETURNING post_id
             `, [originalPostId, userId]);
 
             // Decrement counts
@@ -252,6 +262,12 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             );
 
             await client.query('COMMIT');
+
+            invalidateViewerPostCache(originalPostId, userId).catch(() => {});
+            const deletedRepostId = deletedRepost.rows[0]?.post_id;
+            if (deletedRepostId) {
+                removePostFromCaches(deletedRepostId, userId, db).catch(() => {});
+            }
             return NextResponse.json({ reposted: false });
 
         } catch (e) {

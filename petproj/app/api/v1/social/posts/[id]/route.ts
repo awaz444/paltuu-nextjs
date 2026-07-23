@@ -11,6 +11,7 @@ import {
 } from "@/lib/mentions";
 import { checkIsBlocked } from "@/lib/moderation";
 import { resolveRepostTarget } from "@/lib/reposts";
+import { invalidateViewerPostCache, removePostFromCaches } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
 
@@ -174,6 +175,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
                 [userId]
             );
             await client.query('COMMIT');
+            removePostFromCaches(postId, userId, db).catch(() => {});
             return NextResponse.json({ deleted: true });
         } catch (e) {
             await client.query('ROLLBACK');
@@ -318,6 +320,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                 }).catch(() => {});
             }
 
+            invalidateViewerPostCache(postId, userId).catch(() => {});
             return NextResponse.json({ updated: true, updated_at: updateRes.rows[0].updated_at });
         } catch (e) {
             await client.query('ROLLBACK');

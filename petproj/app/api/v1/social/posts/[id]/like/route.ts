@@ -7,6 +7,7 @@ import { SocialNotifications } from "@/lib/notifications";
 import { assertNotBlocked } from "@/lib/moderation";
 import { recordEngagementEvent } from "@/lib/interestScoring";
 import { resolveRepostTarget } from "@/lib/reposts";
+import { invalidateViewerPostCache } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 const likeCount = updated.rows[0]?.like_count ?? 0;
                 // Fire-and-forget real-time event
                 emitLike(postId, userId, likeCount, false);
+                invalidateViewerPostCache(postId, userId).catch(() => {});
                 return NextResponse.json({ liked: false, like_count: likeCount });
 
             } else {
@@ -91,6 +93,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 emitLike(postId, userId, likeCount, true);
                 // Fire-and-forget interest scoring (only on like, not unlike)
                 recordEngagementEvent(userId, postId, 'like').catch(() => {});
+                invalidateViewerPostCache(postId, userId).catch(() => {});
                 return NextResponse.json({ liked: true, like_count: likeCount });
             }
         } catch (e) {

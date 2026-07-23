@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { recordEngagementEvent } from "@/lib/interestScoring";
 import { resolveRepostTarget } from "@/lib/reposts";
+import { invalidateViewerPostCache } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
 
@@ -86,6 +87,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       await client.query('COMMIT');
       // Fire-and-forget interest scoring (only on a brand-new save, not re-saves)
       if (wasNewSave) recordEngagementEvent(userId, postId, 'save').catch(() => {});
+      invalidateViewerPostCache(postId, userId).catch(() => {});
       return NextResponse.json({ saved: true, save_id: saveId });
     } catch (e) {
       await client.query('ROLLBACK');
@@ -136,6 +138,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       }
 
       await client.query('COMMIT');
+      invalidateViewerPostCache(postId, userId).catch(() => {});
       return NextResponse.json({ unsaved: true });
     } catch (e) {
       await client.query('ROLLBACK');

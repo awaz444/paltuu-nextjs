@@ -1,7 +1,8 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
-import { fanOutPostToFollowers } from "@/lib/redis";
+import { fanOutPostToFollowers, getCachedFeedIds } from "@/lib/redis";
+import { hydratePostsByIds } from "@/lib/feedHydration";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import {
     resolveBucket,
@@ -23,6 +24,11 @@ import {
     personalizedAffinityCtes,
 } from "@/lib/tagInference";
 import { validateSocialMediaPayload } from "@/lib/giphyMedia";
+import {
+    TAGGED_PETS_AGG_CTE,
+    SAVED_COLLECTIONS_AGG_CTE,
+    VIEWER_COMMENTS_CTE,
+} from "@/lib/feedQueryFragments";
 
 export const dynamic = "force-dynamic";
 
@@ -104,6 +110,9 @@ export async function GET(req: NextRequest) {
                     FROM user_interest_scores
                     WHERE user_id = $1
                 ),
+                ${TAGGED_PETS_AGG_CTE},
+                ${SAVED_COLLECTIONS_AGG_CTE},
+                ${VIEWER_COMMENTS_CTE},
                 ${personalizedAffinityCtes()},
                 scored AS (
                     SELECT
@@ -115,18 +124,7 @@ export async function GET(req: NextRequest) {
                         false                AS is_blocked_by_me,
                         false                AS is_blocking_me,
                         COALESCE(pm.media, '[]'::json)  AS media,
-                        COALESCE(
-                            (SELECT json_agg(json_build_object(
-                                'pet_profile_id', pp.pet_profile_id,
-                                'name', pp.name,
-                                'avatar_url', pp.avatar_url,
-                                'species', pp.species
-                             ))
-                             FROM post_pet_tags ppt
-                             JOIN pet_profiles pp ON pp.pet_profile_id = ppt.pet_profile_id
-                             WHERE ppt.post_id = p.post_id),
-                            '[]'::json
-                        ) AS tagged_pets,
+                        COALESCE(tpa.tagged_pets, '[]'::json) AS tagged_pets,
                         op.content           AS original_content,
                         op.user_id           AS original_user_id,
                         ou.name              AS original_author_name,
@@ -141,15 +139,9 @@ export async function GET(req: NextRequest) {
                         CASE WHEN p.is_repost AND p.content IS NULL THEN op.view_count    ELSE p.view_count    END AS view_count,
                         (sl.post_id IS NOT NULL)  AS is_liked,
                         (sr.post_id IS NOT NULL)  AS is_reposted,
-                        EXISTS(SELECT 1 FROM social_comments WHERE post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND user_id = $1 AND is_deleted = false) AS is_commented,
+                        (vc.post_id IS NOT NULL)  AS is_commented,
                         (sp.save_id IS NOT NULL)  AS is_saved,
-                        COALESCE(
-                          (SELECT json_agg(sc.collection_id)
-                           FROM collection_posts cp
-                           JOIN save_collections sc ON sc.collection_id = cp.collection_id
-                           WHERE cp.save_id = sp.save_id),
-                          '[]'::json
-                        ) AS saved_to_collections,
+                        COALESCE(sca.collection_ids, '[]'::json) AS saved_to_collections,
                         (fs.following_id IS NOT NULL) AS is_following,
                         (
                             EXP(-EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 21600.0) * 0.4
@@ -181,6 +173,9 @@ export async function GET(req: NextRequest) {
                     LEFT JOIN social_reposts sr ON sr.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sr.user_id = $1
                     LEFT JOIN saved_posts sp ON sp.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sp.user_id = $1
                     LEFT JOIN post_affinity pa  ON pa.post_id = p.post_id
+                    LEFT JOIN tagged_pets_agg tpa ON tpa.post_id = p.post_id
+                    LEFT JOIN saved_collections_agg sca ON sca.save_id = sp.save_id
+                    LEFT JOIN viewer_comments vc ON vc.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END
                     CROSS JOIN user_max_interest umi
                     WHERE p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $1)
                     AND (p.moderation_state IS NULL OR p.moderation_state <> 'quarantined')
@@ -246,6 +241,31 @@ export async function GET(req: NextRequest) {
          *  4. Cursor = plain integer OFFSET — stable across page loads
          *     (score-based cursor breaks because recency decays every second)
          */
+        // Cache-first path: chronological mode's ordering is pure recency,
+        // which matches the feed:{userId} ZSET populated by fanOutPostToFollowers
+        // on post create — so a page-1 request can skip Postgres entirely on a
+        // cache hit. Only intercept offset === 0 (true cold start); paginated
+        // requests (cursor present) always go to Postgres. Any length mismatch
+        // after hydration (a cached post got deleted/hidden/blocked since) falls
+        // through to the full query below rather than returning a partial list.
+        if (isChronological && userId && offset === 0) {
+            const viewerIdNum = parseInt(String(viewerId), 10);
+            const cachedIds = await getCachedFeedIds(viewerIdNum, null, limit);
+            if (cachedIds && cachedIds.length > 0) {
+                const hydrated = await hydratePostsByIds(cachedIds, viewerIdNum);
+                if (hydrated.length === cachedIds.length) {
+                    return NextResponse.json({
+                        posts: hydrated,
+                        next_cursor: String(limit),
+                        has_more: true,
+                        mode: "chronological",
+                        source: "cache",
+                    });
+                }
+                // Partial hydration failure — fall through to the Postgres query.
+            }
+        }
+
         let feedQuery: string;
         let queryParams: any[];
 
@@ -256,7 +276,10 @@ export async function GET(req: NextRequest) {
                     SELECT post_id, json_agg(m ORDER BY m.ordering) AS media
                     FROM social_post_media m
                     GROUP BY post_id
-                )
+                ),
+                ${TAGGED_PETS_AGG_CTE},
+                ${SAVED_COLLECTIONS_AGG_CTE},
+                ${VIEWER_COMMENTS_CTE}
                 SELECT
                     p.*,
                     u.name               AS author_name,
@@ -266,18 +289,7 @@ export async function GET(req: NextRequest) {
                     false                AS is_blocked_by_me,
                     false                AS is_blocking_me,
                     COALESCE(pm.media, '[]'::json)  AS media,
-                    COALESCE(
-                        (SELECT json_agg(json_build_object(
-                            'pet_profile_id', pp.pet_profile_id,
-                            'name', pp.name,
-                            'avatar_url', pp.avatar_url,
-                            'species', pp.species
-                         ))
-                         FROM post_pet_tags ppt
-                         JOIN pet_profiles pp ON pp.pet_profile_id = ppt.pet_profile_id
-                         WHERE ppt.post_id = p.post_id),
-                        '[]'::json
-                    ) AS tagged_pets,
+                    COALESCE(tpa.tagged_pets, '[]'::json) AS tagged_pets,
                     op.content           AS original_content,
                     op.user_id           AS original_user_id,
                     ou.name              AS original_author_name,
@@ -292,15 +304,9 @@ export async function GET(req: NextRequest) {
                         CASE WHEN p.is_repost AND p.content IS NULL THEN op.view_count    ELSE p.view_count    END AS view_count,
                     (sl.post_id IS NOT NULL)  AS is_liked,
                     (sr.post_id IS NOT NULL)  AS is_reposted,
-                    EXISTS(SELECT 1 FROM social_comments WHERE post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND user_id = $1 AND is_deleted = false) AS is_commented,
+                    (vc.post_id IS NOT NULL)  AS is_commented,
                     (sp.save_id IS NOT NULL)  AS is_saved,
-                    COALESCE(
-                      (SELECT json_agg(sc.collection_id)
-                       FROM collection_posts cp
-                       JOIN save_collections sc ON sc.collection_id = cp.collection_id
-                       WHERE cp.save_id = sp.save_id),
-                      '[]'::json
-                    ) AS saved_to_collections,
+                    COALESCE(sca.collection_ids, '[]'::json) AS saved_to_collections,
                     EXISTS(
                         SELECT 1 FROM social_follows f
                         WHERE f.follower_id = $1 AND f.following_id = p.user_id
@@ -314,6 +320,9 @@ export async function GET(req: NextRequest) {
                 LEFT JOIN social_likes  sl ON sl.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sl.user_id = $1
                 LEFT JOIN social_reposts sr ON sr.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sr.user_id = $1
                 LEFT JOIN saved_posts sp ON sp.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sp.user_id = $1
+                LEFT JOIN tagged_pets_agg tpa ON tpa.post_id = p.post_id
+                LEFT JOIN saved_collections_agg sca ON sca.save_id = sp.save_id
+                LEFT JOIN viewer_comments vc ON vc.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END
                 WHERE p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $1)
                 AND NOT EXISTS (
                     SELECT 1 FROM user_blocks b
@@ -352,6 +361,9 @@ export async function GET(req: NextRequest) {
                     FROM social_post_media m
                     GROUP BY post_id
                 ),
+                ${TAGGED_PETS_AGG_CTE},
+                ${SAVED_COLLECTIONS_AGG_CTE},
+                ${VIEWER_COMMENTS_CTE},
                 scored AS (
                     SELECT
                         p.*,
@@ -362,18 +374,7 @@ export async function GET(req: NextRequest) {
                         false                AS is_blocked_by_me,
                         false                AS is_blocking_me,
                         COALESCE(pm.media, '[]'::json)  AS media,
-                        COALESCE(
-                            (SELECT json_agg(json_build_object(
-                                'pet_profile_id', pp.pet_profile_id,
-                                'name', pp.name,
-                                'avatar_url', pp.avatar_url,
-                                'species', pp.species
-                             ))
-                             FROM post_pet_tags ppt
-                             JOIN pet_profiles pp ON pp.pet_profile_id = ppt.pet_profile_id
-                             WHERE ppt.post_id = p.post_id),
-                            '[]'::json
-                        ) AS tagged_pets,
+                        COALESCE(tpa.tagged_pets, '[]'::json) AS tagged_pets,
                         op.content           AS original_content,
                         op.user_id           AS original_user_id,
                         ou.name              AS original_author_name,
@@ -388,15 +389,9 @@ export async function GET(req: NextRequest) {
                         CASE WHEN p.is_repost AND p.content IS NULL THEN op.view_count    ELSE p.view_count    END AS view_count,
                         (sl.post_id IS NOT NULL)  AS is_liked,
                         (sr.post_id IS NOT NULL)  AS is_reposted,
-                        EXISTS(SELECT 1 FROM social_comments WHERE post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND user_id = $1 AND is_deleted = false) AS is_commented,
+                        (vc.post_id IS NOT NULL)  AS is_commented,
                         (sp.save_id IS NOT NULL)  AS is_saved,
-                        COALESCE(
-                          (SELECT json_agg(sc.collection_id)
-                           FROM collection_posts cp
-                           JOIN save_collections sc ON sc.collection_id = cp.collection_id
-                           WHERE cp.save_id = sp.save_id),
-                          '[]'::json
-                        ) AS saved_to_collections,
+                        COALESCE(sca.collection_ids, '[]'::json) AS saved_to_collections,
                         (fs.following_id IS NOT NULL) AS is_following,
                         (
                             EXP(-EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 21600.0) * 0.4
@@ -422,6 +417,9 @@ export async function GET(req: NextRequest) {
                     LEFT JOIN social_likes   sl ON sl.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sl.user_id = $1
                     LEFT JOIN social_reposts sr ON sr.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sr.user_id = $1
                     LEFT JOIN saved_posts sp ON sp.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sp.user_id = $1
+                    LEFT JOIN tagged_pets_agg tpa ON tpa.post_id = p.post_id
+                    LEFT JOIN saved_collections_agg sca ON sca.save_id = sp.save_id
+                    LEFT JOIN viewer_comments vc ON vc.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END
                     WHERE p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $1)
                     AND NOT EXISTS (
                         SELECT 1 FROM user_blocks b

@@ -15,6 +15,7 @@ import {
     MAX_MENTIONS_PER_CONTENT,
     type ParsedMention,
 } from "@/lib/mentions";
+import { validateSocialMediaPayload } from "@/lib/giphyMedia";
 
 export const dynamic = "force-dynamic";
 
@@ -133,9 +134,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         const body = await req.json();
         const { content, parent_comment_id, media } = body;
         const mediaList: any[] = Array.isArray(media) ? media : [];
+        const text = typeof content === 'string' ? content.trim() : '';
 
-        if (!content?.trim()) {
-            return NextResponse.json({ error: "Comment content is required" }, { status: 400 });
+        // Text-only comments need content; media-only (image/gif/video) is allowed
+        // with an empty string — mirrors create-post and the mobile composer.
+        if (!text && mediaList.length === 0) {
+            return NextResponse.json({ error: "Comment content or media is required" }, { status: 400 });
+        }
+
+        const mediaError = validateSocialMediaPayload(mediaList);
+        if (mediaError) {
+            return NextResponse.json({ error: mediaError }, { status: 400 });
         }
 
         // Commenting on a plain repost card must comment on the underlying root
@@ -185,11 +194,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                     (post_id, user_id, parent_comment_id, root_comment_id, content, depth)
                 VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING *
-            `, [postId, userId, parent_comment_id || null, root_comment_id, content.trim(), depth]);
+            `, [postId, userId, parent_comment_id || null, root_comment_id, text, depth]);
 
             comment = result.rows[0];
 
-            // Persist attached media (images/videos already uploaded via /social/upload)
+            // Persist attached media (uploaded images/videos, or CDN GIFs)
             for (let i = 0; i < mediaList.length; i++) {
                 const m = mediaList[i];
                 await client.query(`
@@ -206,7 +215,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
             // Parse, validate & persist @mentions from content (covers both
             // top-level comments and replies — both are social_comments rows)
-            parsedMentions = parseMentions(content.trim());
+            parsedMentions = parseMentions(text);
             if (parsedMentions.length > MAX_MENTIONS_PER_CONTENT) {
                 await client.query('ROLLBACK');
                 client.release();
@@ -248,7 +257,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 userId,
                 parseInt(postId),
                 commenter?.name || 'User',
-                content.trim(),
+                text,
                 postImage,
                 comment.comment_id
             ).catch(() => {});
@@ -261,7 +270,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 userId,
                 parseInt(postId),
                 commenter?.name || 'User',
-                content.trim(),
+                text,
                 postImage,
                 parent_comment_id
             ).catch(() => {});
@@ -298,7 +307,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 isComment: true,
                 commentId: comment.comment_id,
                 postImageUrl: postImage,
-                preview: content.trim(),
+                preview: text,
                 excludeUserIds: [postAuthorId, parentAuthorId].filter(
                     (id): id is number => id != null
                 ),

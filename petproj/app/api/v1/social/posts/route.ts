@@ -22,6 +22,7 @@ import {
     INFERRED_AFFINITY_MULTIPLIER,
     personalizedAffinityCtes,
 } from "@/lib/tagInference";
+import { validateSocialMediaPayload } from "@/lib/giphyMedia";
 
 export const dynamic = "force-dynamic";
 
@@ -483,6 +484,11 @@ export async function POST(req: NextRequest) {
 
         if (!post_type || (!content && media.length === 0)) {
             return NextResponse.json({ error: "Post content or media is required" }, { status: 400 });
+        }
+
+        const mediaError = validateSocialMediaPayload(media);
+        if (mediaError) {
+            return NextResponse.json({ error: mediaError }, { status: 400 });
         }
 
         let parsedMentions: ParsedMention[] = [];

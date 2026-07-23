@@ -7,6 +7,7 @@ import { SocialNotifications } from "@/lib/notifications";
 import { assertNotBlocked } from "@/lib/moderation";
 import { recordEngagementEvent } from "@/lib/interestScoring";
 import { resolveRepostTarget } from "@/lib/reposts";
+import { validateSocialMediaPayload } from "@/lib/giphyMedia";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             : (body.caption !== undefined ? body.caption : null);
         const media = Array.isArray(body.media) ? body.media : [];
         const petProfileTags = Array.isArray(body.pet_profile_tags) ? body.pet_profile_tags : [];
+
+        const mediaError = validateSocialMediaPayload(media);
+        if (mediaError) {
+            return NextResponse.json({ error: mediaError }, { status: 400 });
+        }
 
         // 1. Resolve the true original. If the target is itself a plain repost
         //    ("XYZ reposted ABC"), reposting must target ABC's real post — never

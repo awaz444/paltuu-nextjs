@@ -271,6 +271,7 @@ export default function CreatePetListing() {
                     if (file.originFileObj) formData.append("files", file.originFileObj);
                 });
                 formData.append("pet_id", String(petId));
+                formData.append("notify_new_listing", "true");
                 await axios.post("/api/v1/upload-image", formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
@@ -694,9 +695,9 @@ export default function CreatePetListing() {
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             type="submit"
-                                            className="p-6 bg-[#1a1a1a] text-white rounded-[2rem] flex-1 font-semibold shadow-2xl shadow-black/20 disabled:bg-gray-200 transition-all"
+                                            className="p-6 bg-primary text-white rounded-[2rem] flex-1 font-semibold shadow-2xl shadow-primary/20 disabled:bg-gray-200 transition-all"
                                             disabled={isSubmitting}>
-                                            {isSubmitting ? "Submitting..." : "Launch Listing"}
+                                            {isSubmitting ? "Submitting..." : "Publish Listing"}
                                         </motion.button>
                                     </div>
                                 </motion.div>

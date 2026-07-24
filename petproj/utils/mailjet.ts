@@ -458,32 +458,89 @@ export async function sendNewListingNotification(petData: {
   listing_type: string;
   owner_name?: string;
   owner_email?: string;
+  owner_phone?: string;
+  city?: string;
+  area?: string;
+  pet_breed?: string;
+  age_months?: number;
+  sex?: string;
+  description?: string;
+  health_issues?: string;
+  rescue_story?: string;
+  vaccinated?: boolean;
+  neutered?: boolean;
+  image_urls?: string[];
 }): Promise<void> {
   console.log('📧 Attempting to send new listing notification:', petData.pet_name);
   try {
     const subject = `🐾 New Pet Listing Awaiting Approval - ${petData.pet_name}`;
+    const logoUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.paltuu.pk'}/${encodeURIComponent('paltuu bilkul tight.svg')}`;
+
+    const ageText = petData.age_months != null
+      ? petData.age_months >= 12
+        ? `${Math.floor(petData.age_months / 12)}y ${petData.age_months % 12}m`
+        : `${petData.age_months}m`
+      : null;
+
+    const detailRow = (label: string, value?: string | null) =>
+      value ? `<p style="margin:6px 0;color:#333;"><strong style="color:#8B1538;">${label}:</strong> ${value}</p>` : '';
+
+    const imagesHtml = petData.image_urls && petData.image_urls.length > 0
+      ? `
+        <div style="margin:20px 0;">
+          <p style="margin:0 0 10px;color:#8B1538;font-weight:600;">Photos (${petData.image_urls.length})</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            ${petData.image_urls.map((url) => `
+              <a href="${url}" target="_blank">
+                <img src="${url}" alt="${petData.pet_name}" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #eee;display:block;" />
+              </a>
+            `).join('')}
+          </div>
+        </div>
+      `
+      : '';
+
     const html = `
       <!DOCTYPE html>
       <html>
       <head><meta charset="UTF-8"></head>
-      <body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f5f5f5;">
-        <div style="max-width:600px;margin:20px auto;background-color:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
-          <div style="background-color:#8B1538;padding:30px;text-align:center;">
-            <h1 style="color:#ffffff;margin:0;font-size:24px;">🐾 New Pet Listing</h1>
+      <body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#ffffff;">
+        <div style="max-width:600px;margin:20px auto;background-color:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.08);border:1px solid #f0f0f0;">
+          <div style="padding:30px 30px 20px;text-align:center;background-color:#ffffff;">
+            <img src="${logoUrl}" alt="Paltuu" style="height:44px;display:block;margin:0 auto;" />
+            <h1 style="color:#8B1538;margin:16px 0 0;font-size:22px;">🐾 New Pet Listing Awaiting Approval</h1>
           </div>
-          <div style="padding:30px;">
-            <h2 style="color:#8B1538;margin-top:0;">Listing Awaiting Approval</h2>
-            <p style="color:#666;line-height:1.6;">A new pet listing has been submitted and requires your approval.</p>
 
-            <div style="background-color:#f8f8f8;border-left:4px solid #8B1538;padding:20px;margin:20px 0;border-radius:5px;">
-              <p style="margin:5px 0;"><strong>Pet Name:</strong> ${petData.pet_name}</p>
-              <p style="margin:5px 0;"><strong>Pet Type:</strong> ${petData.pet_type}</p>
-              <p style="margin:5px 0;"><strong>Listing Type:</strong> ${petData.listing_type}</p>
-              ${petData.owner_name ? `<p style="margin:5px 0;"><strong>Owner:</strong> ${petData.owner_name}</p>` : ''}
-              ${petData.owner_email ? `<p style="margin:5px 0;"><strong>Owner Email:</strong> <a href="mailto:${petData.owner_email}" style="color:#8B1538;">${petData.owner_email}</a></p>` : ''}
+          <div style="padding:0 30px 30px;">
+            <!-- Contact details up top so admins can reach the poster immediately -->
+            <div style="background-color:#fff5f7;border:1px solid #8B1538;padding:20px;margin:10px 0 20px;border-radius:8px;">
+              <p style="margin:0 0 10px;color:#8B1538;font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:0.5px;">Contact the Poster</p>
+              ${detailRow('Name', petData.owner_name)}
+              ${petData.owner_email ? `<p style="margin:6px 0;color:#333;"><strong style="color:#8B1538;">Email:</strong> <a href="mailto:${petData.owner_email}" style="color:#8B1538;">${petData.owner_email}</a></p>` : ''}
+              ${petData.owner_phone ? `<p style="margin:6px 0;color:#333;"><strong style="color:#8B1538;">Phone:</strong> <a href="tel:${petData.owner_phone}" style="color:#8B1538;">${petData.owner_phone}</a></p>` : ''}
             </div>
 
-            <div style="text-align:center;margin:30px 0;">
+            <p style="color:#666;line-height:1.6;margin-top:0;">A new pet listing has been submitted and requires your approval.</p>
+
+            <div style="background-color:#f8f8f8;border-left:4px solid #8B1538;padding:20px;margin:20px 0;border-radius:5px;">
+              ${detailRow('Pet Name', petData.pet_name)}
+              ${detailRow('Pet Type', petData.pet_type)}
+              ${detailRow('Breed', petData.pet_breed)}
+              ${detailRow('Sex', petData.sex)}
+              ${detailRow('Age', ageText)}
+              ${detailRow('Listing Type', petData.listing_type)}
+              ${detailRow('City', petData.city)}
+              ${detailRow('Area', petData.area)}
+              ${petData.vaccinated != null ? detailRow('Vaccinated', petData.vaccinated ? 'Yes' : 'No') : ''}
+              ${petData.neutered != null ? detailRow('Neutered/Spayed', petData.neutered ? 'Yes' : 'No') : ''}
+              ${detailRow('Health Issues', petData.health_issues)}
+              ${detailRow('Description', petData.description)}
+              ${detailRow('Rescue Story', petData.rescue_story)}
+            </div>
+
+            ${imagesHtml}
+
+            <div style="text-align:center;margin:30px 0 10px;">
               <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.paltuu.pk'}/admin-pet-approval"
                  style="display:inline-block;background-color:#8B1538;color:#ffffff;text-decoration:none;padding:12px 30px;border-radius:5px;font-weight:600;">
                 Review Listing

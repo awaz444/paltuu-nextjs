@@ -28,6 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 u.profile_image_url,
                 u.social_username,
                 u.verified,
+                u.founding_club,
                 u.bio,
                 u.follower_count,
                 u.following_count,

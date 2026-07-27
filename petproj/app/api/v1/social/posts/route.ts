@@ -29,6 +29,7 @@ import {
     SAVED_COLLECTIONS_AGG_CTE,
     VIEWER_COMMENTS_CTE,
 } from "@/lib/feedQueryFragments";
+import { interleaveFeedInjections } from "@/lib/feedInjection";
 
 export const dynamic = "force-dynamic";
 
@@ -232,8 +233,9 @@ export async function GET(req: NextRequest) {
             ).catch(() => {});
 
             const nextCursor = posts.length === limit ? String(offset + limit) : null;
+            const feedItems = await interleaveFeedInjections(posts, viewerIdNum, offset);
             return NextResponse.json({
-                posts,
+                posts: feedItems,
                 next_cursor:       nextCursor,
                 has_more:          nextCursor !== null,
                 mode:              "personalized",
@@ -262,8 +264,9 @@ export async function GET(req: NextRequest) {
             if (cachedIds && cachedIds.length > 0) {
                 const hydrated = await hydratePostsByIds(cachedIds, viewerIdNum);
                 if (hydrated.length === cachedIds.length) {
+                    const feedItems = await interleaveFeedInjections(hydrated, viewerIdNum, offset);
                     return NextResponse.json({
-                        posts: hydrated,
+                        posts: feedItems,
                         next_cursor: String(limit),
                         has_more: true,
                         mode: "chronological",
@@ -479,8 +482,11 @@ export async function GET(req: NextRequest) {
         // Cursor = next offset (null when we got fewer rows than requested)
         const nextCursor = posts.length === limit ? String(offset + limit) : null;
 
+        const viewerIdNum = userId ? parseInt(String(userId), 10) : null;
+        const feedItems = await interleaveFeedInjections(posts, viewerIdNum, offset);
+
         return NextResponse.json({
-            posts,
+            posts: feedItems,
             next_cursor: nextCursor,
             has_more:    nextCursor !== null,
             mode:        isChronological ? "chronological" : "algorithmic",

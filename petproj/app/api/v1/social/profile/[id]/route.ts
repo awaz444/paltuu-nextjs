@@ -58,8 +58,12 @@ export async function GET(
                     -- Viewer context
                     EXISTS(
                         SELECT 1 FROM social_follows f
-                        WHERE f.follower_id = $2 AND f.following_id = u.user_id
+                        WHERE f.follower_id = $2 AND f.following_id = u.user_id AND f.status = 'accepted'
                     ) AS is_following,
+                    EXISTS(
+                        SELECT 1 FROM social_follows f
+                        WHERE f.follower_id = $2 AND f.following_id = u.user_id AND f.status = 'pending'
+                    ) AS has_pending_request,
                     EXISTS(
                         SELECT 1 FROM user_blocks b
                         WHERE b.blocker_id = $2 AND b.blocked_id = u.user_id
@@ -145,6 +149,7 @@ export async function GET(
                 cover_photo_url: user.cover_photo_url,
                 is_private: user.is_private,
                 is_following: user.is_following,
+                has_pending_request: user.has_pending_request,
                 is_own_profile: user.is_own_profile,
                 is_blocked_by_me: user.is_blocked_by_me,
                 is_blocking_me: user.is_blocking_me,

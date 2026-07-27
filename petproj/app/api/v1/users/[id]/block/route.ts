@@ -38,15 +38,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 ON CONFLICT (blocker_id, blocked_id) DO NOTHING
             `, [blockerId, blockedId]);
 
-            // 2. Auto-unfollow in both directions
+            // 2. Auto-unfollow in both directions (also cancels any pending follow request)
             const deletedFollows = await client.query(`
-                DELETE FROM social_follows 
+                DELETE FROM social_follows
                 WHERE (follower_id = $1 AND following_id = $2)
                    OR (follower_id = $2 AND following_id = $1)
-                RETURNING follower_id, following_id
+                RETURNING follower_id, following_id, status
             `, [blockerId, blockedId]);
-            
+
+            // Only accepted follows ever incremented the counts — a pending request
+            // never did, so don't decrement for those.
             for (const row of deletedFollows.rows) {
+                if (row.status !== 'accepted') continue;
                 await client.query("UPDATE users SET following_count = GREATEST(0, following_count - 1) WHERE user_id = $1", [row.follower_id]);
                 await client.query("UPDATE users SET follower_count = GREATEST(0, follower_count - 1) WHERE user_id = $1", [row.following_id]);
             }

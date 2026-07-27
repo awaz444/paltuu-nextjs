@@ -35,7 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 f.created_at AS followed_at,
                 EXISTS(
                     SELECT 1 FROM social_follows cf
-                    WHERE cf.follower_id = $1 AND cf.following_id = u.user_id
+                    WHERE cf.follower_id = $1 AND cf.following_id = u.user_id AND cf.status = 'accepted'
                 ) AS is_followed_by_me,
                 EXISTS(
                     SELECT 1 FROM user_blocks b
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 ) AS is_blocking_me
             FROM social_follows f
             JOIN users u ON u.user_id = f.follower_id
-            WHERE f.following_id = $2
+            WHERE f.following_id = $2 AND f.status = 'accepted'
             ${cursorClause}
             ORDER BY f.created_at DESC
             LIMIT $3

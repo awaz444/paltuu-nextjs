@@ -70,7 +70,7 @@ export async function GET(req: NextRequest, { params }: { params: { word: string
                 (sp.save_id IS NOT NULL) AS is_saved,
                 EXISTS(
                     SELECT 1 FROM social_follows f
-                    WHERE f.follower_id = $2 AND f.following_id = p.user_id
+                    WHERE f.follower_id = $2 AND f.following_id = p.user_id AND f.status = 'accepted'
                 ) AS is_following
             FROM social_posts p
             JOIN users u ON u.user_id = p.user_id

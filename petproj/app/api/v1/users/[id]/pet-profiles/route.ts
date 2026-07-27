@@ -28,7 +28,7 @@ export async function GET(
             `SELECT user_id, is_private,
                     EXISTS(
                         SELECT 1 FROM social_follows f
-                        WHERE f.follower_id = $2 AND f.following_id = u.user_id
+                        WHERE f.follower_id = $2 AND f.following_id = u.user_id AND f.status = 'accepted'
                     ) AS viewer_is_following
              FROM users u
              WHERE u.user_id = $1`,

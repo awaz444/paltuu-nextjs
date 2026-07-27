@@ -30,6 +30,8 @@ export enum NotificationType {
   SOCIAL_COMMENT_REPLY = "social_comment_reply",
   SOCIAL_COMMENT_LIKE = "social_comment_like",
   SOCIAL_NEW_FOLLOWER = "social_new_follower",
+  SOCIAL_FOLLOW_REQUEST = "social_follow_request",
+  SOCIAL_FOLLOW_REQUEST_ACCEPTED = "social_follow_request_accepted",
   SOCIAL_MENTION_POST = "social_mention_post",
   SOCIAL_MENTION_COMMENT = "social_mention_comment",
   SOCIAL_REPOST = "social_repost",
@@ -124,6 +126,18 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
     type: NotificationType.SOCIAL_NEW_FOLLOWER,
     title: (data) => data.sender_name || "Someone",
     body: "started following you",
+    deepLinkPattern: "paltuu://profile/{sender_id}",
+  },
+  [NotificationType.SOCIAL_FOLLOW_REQUEST]: {
+    type: NotificationType.SOCIAL_FOLLOW_REQUEST,
+    title: (data) => data.sender_name || "Someone",
+    body: "requested to follow you",
+    deepLinkPattern: "paltuu://notifications/follow-requests",
+  },
+  [NotificationType.SOCIAL_FOLLOW_REQUEST_ACCEPTED]: {
+    type: NotificationType.SOCIAL_FOLLOW_REQUEST_ACCEPTED,
+    title: (data) => data.sender_name || "Someone",
+    body: "accepted your follow request",
     deepLinkPattern: "paltuu://profile/{sender_id}",
   },
   [NotificationType.SOCIAL_MENTION_POST]: {

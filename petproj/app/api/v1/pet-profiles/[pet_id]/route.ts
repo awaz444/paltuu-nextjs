@@ -23,7 +23,7 @@ async function resolveProfile(petId: string, viewerIdRaw: string | null) {
             (SELECT COUNT(*) FROM post_pet_tags ppt WHERE ppt.pet_profile_id = pp.pet_profile_id)::int       AS tagged_post_count,
             EXISTS(
                 SELECT 1 FROM social_follows f
-                WHERE f.follower_id = $2 AND f.following_id = pp.owner_id
+                WHERE f.follower_id = $2 AND f.following_id = pp.owner_id AND f.status = 'accepted'
             ) AS viewer_is_following
          FROM pet_profiles pp
          JOIN users u ON u.user_id = pp.owner_id

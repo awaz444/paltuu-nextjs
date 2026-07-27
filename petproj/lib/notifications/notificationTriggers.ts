@@ -151,6 +151,50 @@ export const SocialNotifications = {
   },
 
   /**
+   * Someone requested to follow a private account
+   */
+  async onFollowRequested(
+    targetUserId: number,
+    requesterId: number,
+    requesterName: string,
+    requesterImageUrl?: string
+  ) {
+    return NotificationService.createAndSend({
+      userId: targetUserId,
+      senderId: requesterId,
+      type: NotificationType.SOCIAL_FOLLOW_REQUEST,
+      entityType: EntityType.SOCIAL_POST,
+      imageUrl: requesterImageUrl,
+      customData: {
+        sender_name: requesterName,
+        sender_id: requesterId,
+      },
+    });
+  },
+
+  /**
+   * A private account accepted a follow request
+   */
+  async onFollowRequestAccepted(
+    requesterId: number,
+    accepterId: number,
+    accepterName: string,
+    accepterImageUrl?: string
+  ) {
+    return NotificationService.createAndSend({
+      userId: requesterId,
+      senderId: accepterId,
+      type: NotificationType.SOCIAL_FOLLOW_REQUEST_ACCEPTED,
+      entityType: EntityType.SOCIAL_POST,
+      imageUrl: accepterImageUrl,
+      customData: {
+        sender_name: accepterName,
+        sender_id: accepterId,
+      },
+    });
+  },
+
+  /**
    * User was mentioned in a post
    */
   async onMentionedInPost(

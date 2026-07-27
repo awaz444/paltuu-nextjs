@@ -70,7 +70,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         ) AS original_media,
         EXISTS(SELECT 1 FROM social_likes WHERE post_id = p.post_id AND user_id = $2) AS is_liked,
         EXISTS(SELECT 1 FROM social_reposts WHERE post_id = p.post_id AND user_id = $2) AS is_reposted,
-        EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $2 AND following_id = p.user_id) AS is_following
+        EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $2 AND following_id = p.user_id AND status = 'accepted') AS is_following
       FROM collection_posts cp
       JOIN saved_posts sp ON sp.save_id = cp.save_id
       JOIN social_posts p ON p.post_id = sp.post_id

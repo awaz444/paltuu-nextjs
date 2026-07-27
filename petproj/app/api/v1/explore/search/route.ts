@@ -101,7 +101,7 @@ export async function GET(req: NextRequest) {
                     SELECT 'user' AS entity_type, u.user_id, u.name, u.social_username, u.profile_image_url,
                            u.follower_count, u.created_at,
                            false AS is_blocked_by_me, false AS is_blocking_me,
-                           EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $3 AND following_id = u.user_id) AS is_following,
+                           EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $3 AND following_id = u.user_id AND status = 'accepted') AS is_following,
                            GREATEST(
                                similarity(u.name, $1),
                                similarity(coalesce(u.social_username, ''), $1),

@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
         const usersRes = await db.query(
             `
             SELECT u.user_id, u.name, u.social_username, u.profile_image_url,
-                   EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $1 AND following_id = u.user_id) AS is_following
+                   EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $1 AND following_id = u.user_id AND status = 'accepted') AS is_following
             FROM users u
             WHERE u.user_id != $1
               AND u.social_username IS NOT NULL
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
                      OR (b.blocker_id = u.user_id AND b.blocked_id = $1)
               )
               AND (
-                  ($2 = '' AND EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $1 AND following_id = u.user_id))
+                  ($2 = '' AND EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $1 AND following_id = u.user_id AND status = 'accepted'))
                   OR (
                       $2 != ''
                       AND (
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
                   )
               )
             ORDER BY
-              EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $1 AND following_id = u.user_id) DESC,
+              EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $1 AND following_id = u.user_id AND status = 'accepted') DESC,
               u.follower_count DESC NULLS LAST
             LIMIT $3
             `,

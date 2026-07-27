@@ -78,7 +78,7 @@ export const HYDRATE_POSTS_BY_IDS_QUERY = `
         COALESCE(sca.collection_ids, '[]'::json) AS saved_to_collections,
         EXISTS(
             SELECT 1 FROM social_follows f
-            WHERE f.follower_id = $1 AND f.following_id = p.user_id
+            WHERE f.follower_id = $1 AND f.following_id = p.user_id AND f.status = 'accepted'
         ) AS is_following
     FROM social_posts p
     JOIN users u ON u.user_id = p.user_id
@@ -99,10 +99,18 @@ export const HYDRATE_POSTS_BY_IDS_QUERY = `
           WHERE (b.blocker_id = $1 AND b.blocked_id = p.user_id)
              OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
       )
-      AND (p.original_post_id IS NULL OR NOT EXISTS (
-          SELECT 1 FROM user_blocks b
-          WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
-             OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
+      AND (p.user_id = $1 OR u.is_private = false OR EXISTS (
+          SELECT 1 FROM social_follows f WHERE f.follower_id = $1 AND f.following_id = p.user_id AND f.status = 'accepted'
+      ))
+      AND (p.original_post_id IS NULL OR (
+          NOT EXISTS (
+              SELECT 1 FROM user_blocks b
+              WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
+                 OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
+          )
+          AND (op.user_id = $1 OR ou.is_private = false OR EXISTS (
+              SELECT 1 FROM social_follows f WHERE f.follower_id = $1 AND f.following_id = op.user_id AND f.status = 'accepted'
+          ))
       ))
       AND NOT EXISTS (
           SELECT 1 FROM hidden_posts hp WHERE hp.user_id = $1 AND hp.post_id = p.post_id

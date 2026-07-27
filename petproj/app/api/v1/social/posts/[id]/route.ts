@@ -98,7 +98,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 ) AS saved_to_collections,
                 EXISTS(
                     SELECT 1 FROM social_follows f
-                    WHERE f.follower_id = $2 AND f.following_id = p.user_id
+                    WHERE f.follower_id = $2 AND f.following_id = p.user_id AND f.status = 'accepted'
                 ) AS is_following_author
             FROM social_posts p
             JOIN users u ON p.user_id = u.user_id

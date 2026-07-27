@@ -58,7 +58,7 @@ export async function fanOutPostToFollowers(
     try {
         // Fetch all followers
         const result = await db.query(
-            "SELECT follower_id FROM social_follows WHERE following_id = $1",
+            "SELECT follower_id FROM social_follows WHERE following_id = $1 AND status = 'accepted'",
             [authorId]
         );
 
@@ -106,7 +106,7 @@ export async function removePostFromCaches(postId: string | bigint, authorId: nu
 
     try {
         const result = await db.query(
-            "SELECT follower_id FROM social_follows WHERE following_id = $1",
+            "SELECT follower_id FROM social_follows WHERE following_id = $1 AND status = 'accepted'",
             [authorId]
         );
 

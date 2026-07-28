@@ -32,6 +32,7 @@ import {
 import { getReportSettings } from "@/lib/reportScoring";
 import { getSurfaceableComment } from "@/lib/commentSurfacing";
 import { getSurfacedCommentIds, markCommentSurfaced } from "@/lib/redis";
+import { interleaveFeedInjections } from "@/lib/feedInjection";
 
 export const dynamic = "force-dynamic";
 
@@ -271,7 +272,8 @@ export async function GET(req: NextRequest) {
             // surfaced-comment card (if any) is spliced in, so pagination stays
             // correct regardless of whether a card was injected.
             const nextCursor = posts.length === limit ? String(offset + limit) : null;
-            const postsWithSurfaced = await maybeInjectSurfacedComment(viewerIdNum, offset, posts);
+            const postsWithInjections = await interleaveFeedInjections(posts, viewerIdNum, offset);
+            const postsWithSurfaced = await maybeInjectSurfacedComment(viewerIdNum, offset, postsWithInjections);
 
             return NextResponse.json({
                 posts: postsWithSurfaced,
@@ -303,7 +305,8 @@ export async function GET(req: NextRequest) {
             if (cachedIds && cachedIds.length > 0) {
                 const hydrated = await hydratePostsByIds(cachedIds, viewerIdNum);
                 if (hydrated.length === cachedIds.length) {
-                    const hydratedWithSurfaced = await maybeInjectSurfacedComment(viewerIdNum, offset, hydrated);
+                    const hydratedWithInjections = await interleaveFeedInjections(hydrated, viewerIdNum, offset);
+                    const hydratedWithSurfaced = await maybeInjectSurfacedComment(viewerIdNum, offset, hydratedWithInjections);
                     return NextResponse.json({
                         posts: hydratedWithSurfaced,
                         next_cursor: String(limit),
@@ -520,7 +523,9 @@ export async function GET(req: NextRequest) {
 
         // Cursor = next offset (null when we got fewer rows than requested)
         const nextCursor = posts.length === limit ? String(offset + limit) : null;
-        const postsWithSurfaced = await maybeInjectSurfacedComment(parseInt(String(viewerId), 10), offset, posts);
+        const viewerIdNum = userId ? parseInt(String(userId), 10) : null;
+        const postsWithInjections = await interleaveFeedInjections(posts, viewerIdNum, offset);
+        const postsWithSurfaced = await maybeInjectSurfacedComment(parseInt(String(viewerId), 10), offset, postsWithInjections);
 
         return NextResponse.json({
             posts: postsWithSurfaced,

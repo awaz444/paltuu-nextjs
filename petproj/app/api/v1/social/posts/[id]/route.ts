@@ -42,6 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 u.verified     AS author_verified,
                 u.founding_club AS author_founding_club,
                 u.follower_count     AS author_followers,
+                u.is_private         AS author_is_private,
                 COALESCE(
                     (SELECT json_agg(m.* ORDER BY m.ordering) 
                      FROM social_post_media m 
@@ -120,6 +121,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             if (blocked) {
                 return NextResponse.json({ error: "Post not found" }, { status: 404 });
             }
+        }
+
+        // Private-post gate: same visibility rule as the main feed (Step 1) —
+        // a private author's post is invisible to anyone who isn't the author
+        // or an accepted follower. Previously this route only checked blocks,
+        // so a private post's numeric id alone was enough to view it in full.
+        if (result.rows[0].author_is_private && postAuthorId !== userId && !result.rows[0].is_following_author) {
+            return NextResponse.json({ error: "Post not found" }, { status: 404 });
         }
 
         // Increment view count (fire and forget, non-blocking)

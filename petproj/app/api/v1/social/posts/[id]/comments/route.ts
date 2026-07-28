@@ -46,9 +46,70 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         const cursorRaw = searchParams.get("cursor");
         const cursor = cursorRaw != null ? parseInt(cursorRaw, 10) : null;
         const hasCursor = cursor != null && !Number.isNaN(cursor);
+        const rootOnlyRaw = searchParams.get("rootOnly");
+        const rootOnly = rootOnlyRaw != null ? parseInt(rootOnlyRaw, 10) : null;
 
-        const cursorClause = hasCursor ? `AND c.comment_id > $4` : "";
-        const queryParams: any[] = [postId, userId, limit, ...(hasCursor ? [cursor] : [])];
+        // Private-post gate — same rule as the main feed (Step 1): a private
+        // author's post is invisible to anyone who isn't the author or an
+        // accepted follower. The one narrow exception is a surfaced-comment
+        // deep link (?rootOnly=<commentId>): the feed already told this viewer
+        // a specific comment exists because they follow ITS author, so that
+        // one thread is readable even though the post itself stays hidden —
+        // re-verified here rather than trusted blindly from the client.
+        const postRes = await db.query(
+            `SELECT p.post_id, p.user_id,
+                    u.is_private,
+                    EXISTS(
+                        SELECT 1 FROM social_follows f
+                        WHERE f.follower_id = $2 AND f.following_id = p.user_id AND f.status = 'accepted'
+                    ) AS viewer_is_following
+             FROM social_posts p
+             JOIN users u ON u.user_id = p.user_id
+             WHERE p.post_id = $1 AND p.is_deleted = false`,
+            [postId, userId || 0]
+        );
+        if (postRes.rowCount === 0) {
+            return NextResponse.json({ error: "Post not found" }, { status: 404 });
+        }
+        const post = postRes.rows[0];
+        const isOwner = userId !== 0 && userId === post.user_id;
+        const hasFullAccess = isOwner || !post.is_private || post.viewer_is_following;
+
+        // The single comment/reply this narrow access, if any, is scoped to —
+        // resolved to its thread ROOT so the full surrounding subtree renders
+        // (a bare reply with no parent context would look broken).
+        let scopedRootId: number | null = null;
+        if (!hasFullAccess && rootOnly != null && !Number.isNaN(rootOnly)) {
+            const rootComment = await db.query(
+                `SELECT comment_id, root_comment_id, user_id
+                 FROM social_comments
+                 WHERE comment_id = $1 AND post_id = $2 AND is_deleted = false`,
+                [rootOnly, postId]
+            );
+            if ((rootComment.rowCount ?? 0) > 0) {
+                const row = rootComment.rows[0];
+                const viewerFollowsCommenter = await db.query(
+                    `SELECT 1 FROM social_follows WHERE follower_id = $1 AND following_id = $2 AND status = 'accepted'`,
+                    [userId, row.user_id]
+                );
+                if ((viewerFollowsCommenter.rowCount ?? 0) > 0) {
+                    scopedRootId = row.root_comment_id ?? row.comment_id;
+                }
+            }
+        }
+
+        if (!hasFullAccess && scopedRootId == null) {
+            return NextResponse.json({ error: "Post not found" }, { status: 404 });
+        }
+
+        const cursorClause = hasCursor && hasFullAccess ? `AND c.comment_id > $4` : "";
+        const scopedRootClause = scopedRootId != null ? `AND c.comment_id = $4` : "";
+        const queryParams: any[] = [
+            postId,
+            userId,
+            hasFullAccess ? limit : 1,
+            ...(scopedRootId != null ? [scopedRootId] : hasCursor && hasFullAccess ? [cursor] : []),
+        ];
 
         // Not blocked in either direction (reused for both the root selection and
         // the subtree fetch).
@@ -66,6 +127,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                   AND c.parent_comment_id IS NULL
                   AND ${notBlocked}
                   ${cursorClause}
+                  ${scopedRootClause}
                 ORDER BY c.comment_id ASC
                 LIMIT $3
             ),
@@ -101,9 +163,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         const comments = result.rows;
         // The cursor advances by root comment. has_more is true only when this
         // page filled its root quota (a full page of roots may still be followed
-        // by more).
+        // by more). A scoped (?rootOnly=) fetch is always a single fixed thread,
+        // never paginated.
         const rootRows = comments.filter((c: any) => c.parent_comment_id == null);
-        const nextCursor = rootRows.length === limit
+        const nextCursor = scopedRootId == null && rootRows.length === limit
             ? rootRows[rootRows.length - 1].comment_id
             : null;
 
@@ -199,6 +262,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             `, [postId, userId, parent_comment_id || null, root_comment_id, text, depth]);
 
             comment = result.rows[0];
+
+            // Denormalized reply counter on the immediate parent (mirrors like_count).
+            if (parent_comment_id) {
+                await client.query(
+                    "UPDATE social_comments SET reply_count = reply_count + 1 WHERE comment_id = $1",
+                    [parent_comment_id]
+                );
+            }
 
             // Persist attached media (uploaded images/videos, or CDN GIFs)
             for (let i = 0; i < mediaList.length; i++) {

@@ -29,9 +29,44 @@ import {
     SAVED_COLLECTIONS_AGG_CTE,
     VIEWER_COMMENTS_CTE,
 } from "@/lib/feedQueryFragments";
-import { interleaveFeedInjections } from "@/lib/feedInjection";
+import { getReportSettings } from "@/lib/reportScoring";
+import { getSurfaceableComment } from "@/lib/commentSurfacing";
+import { getSurfacedCommentIds, markCommentSurfaced } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * The one deliberate exception to private-post visibility: a popular reply
+ * left by someone the viewer follows can surface as its own card, without
+ * exposing the private post itself (see lib/commentSurfacing.ts). Only
+ * attempted on a cold page-1 load — never mid-scroll — and deduped per
+ * viewer via Redis so the same comment doesn't repeat on every app open.
+ * Fails closed: any error here is swallowed and the normal feed is returned
+ * untouched, since this is a rare embellishment, not core feed functionality.
+ */
+async function maybeInjectSurfacedComment(
+    viewerId: number,
+    offset: number,
+    posts: any[]
+): Promise<any[]> {
+    if (offset !== 0 || !viewerId) return posts;
+    try {
+        const settings = await getReportSettings();
+        if (!settings.comment_surface_enabled) return posts;
+
+        const excludeIds = await getSurfacedCommentIds(viewerId);
+        const candidate = await getSurfaceableComment(viewerId, settings, excludeIds);
+        if (!candidate) return posts;
+
+        markCommentSurfaced(viewerId, candidate.comment_id, settings.comment_surface_cooldown_days).catch(() => {});
+
+        const insertAt = Math.min(2, posts.length);
+        return [...posts.slice(0, insertAt), candidate, ...posts.slice(insertAt)];
+    } catch (err) {
+        console.error("[comment-surfacing] injection failed:", err);
+        return posts;
+    }
+}
 
 /**
  * GET /api/v1/social/posts
@@ -232,10 +267,14 @@ export async function GET(req: NextRequest) {
                 }))
             ).catch(() => {});
 
+            // Cursor is based on the real page length — computed BEFORE the
+            // surfaced-comment card (if any) is spliced in, so pagination stays
+            // correct regardless of whether a card was injected.
             const nextCursor = posts.length === limit ? String(offset + limit) : null;
-            const feedItems = await interleaveFeedInjections(posts, viewerIdNum, offset);
+            const postsWithSurfaced = await maybeInjectSurfacedComment(viewerIdNum, offset, posts);
+
             return NextResponse.json({
-                posts: feedItems,
+                posts: postsWithSurfaced,
                 next_cursor:       nextCursor,
                 has_more:          nextCursor !== null,
                 mode:              "personalized",
@@ -264,9 +303,9 @@ export async function GET(req: NextRequest) {
             if (cachedIds && cachedIds.length > 0) {
                 const hydrated = await hydratePostsByIds(cachedIds, viewerIdNum);
                 if (hydrated.length === cachedIds.length) {
-                    const feedItems = await interleaveFeedInjections(hydrated, viewerIdNum, offset);
+                    const hydratedWithSurfaced = await maybeInjectSurfacedComment(viewerIdNum, offset, hydrated);
                     return NextResponse.json({
-                        posts: feedItems,
+                        posts: hydratedWithSurfaced,
                         next_cursor: String(limit),
                         has_more: true,
                         mode: "chronological",
@@ -481,12 +520,10 @@ export async function GET(req: NextRequest) {
 
         // Cursor = next offset (null when we got fewer rows than requested)
         const nextCursor = posts.length === limit ? String(offset + limit) : null;
-
-        const viewerIdNum = userId ? parseInt(String(userId), 10) : null;
-        const feedItems = await interleaveFeedInjections(posts, viewerIdNum, offset);
+        const postsWithSurfaced = await maybeInjectSurfacedComment(parseInt(String(viewerId), 10), offset, posts);
 
         return NextResponse.json({
-            posts: feedItems,
+            posts: postsWithSurfaced,
             next_cursor: nextCursor,
             has_more:    nextCursor !== null,
             mode:        isChronological ? "chronological" : "algorithmic",

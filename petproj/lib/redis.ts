@@ -200,3 +200,42 @@ export async function invalidatePostCache(postId: string | bigint): Promise<void
 export async function invalidateViewerPostCache(postId: string | bigint, viewerId: number): Promise<void> {
     return invalidatePostCache(`${postId}:${viewerId}`);
 }
+
+// ─── Surfaced-Comment Dedupe ──────────────────────────────────────────────────
+// Tracks which "popular reply on a private post" comment cards a viewer has
+// already been shown, so the same comment doesn't reappear in their feed on
+// every cold start. A plain SET (membership only, no ordering needed) with a
+// whole-key TTL — same idiom as the feed:{userId} ZSET cache above.
+
+/**
+ * Comment IDs already surfaced to this viewer (still within their cooldown
+ * window). Returns [] if Redis is unavailable — fails closed on injection
+ * (see posts/route.ts) rather than risk repeat-showing the same card.
+ */
+export async function getSurfacedCommentIds(userId: number): Promise<string[]> {
+    if (!isRedisAvailable()) return [];
+    try {
+        const ids = await redis.smembers(`surfaced_comments:${userId}`);
+        return (ids as string[]) ?? [];
+    } catch {
+        return [];
+    }
+}
+
+/**
+ * Record that this comment was just shown to this viewer as a feed card.
+ * TTL is refreshed on every write so the whole set expires together
+ * (Redis SETs have no per-member TTL).
+ */
+export async function markCommentSurfaced(
+    userId: number,
+    commentId: string | bigint,
+    ttlDays: number
+): Promise<void> {
+    if (!isRedisAvailable()) return;
+    try {
+        const key = `surfaced_comments:${userId}`;
+        await redis.sadd(key, String(commentId));
+        await redis.expire(key, ttlDays * 86400);
+    } catch { }
+}

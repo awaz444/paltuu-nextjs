@@ -24,6 +24,18 @@ export interface SocialFeedSettings {
   feed_weight_base: number;
   feed_weight_affinity: number;
   cold_start_interaction_threshold: number;
+
+  // ── Comment-surfacing (private-post popular-reply exception) ──────────────
+  // A comment on a PRIVATE account's post can surface as its own feed card to
+  // a viewer who doesn't follow the post author but does follow the commenter,
+  // once (like_count * weight + reply_count * weight) clears this threshold.
+  comment_surface_enabled: boolean;
+  comment_surface_score_threshold: number;
+  comment_surface_like_weight: number;
+  comment_surface_reply_weight: number;
+  comment_surface_min_age_minutes: number;
+  comment_surface_max_age_days: number;
+  comment_surface_cooldown_days: number;
 }
 
 export const DEFAULT_SETTINGS: SocialFeedSettings = {
@@ -40,6 +52,14 @@ export const DEFAULT_SETTINGS: SocialFeedSettings = {
   feed_weight_base: 0.7,
   feed_weight_affinity: 0.3,
   cold_start_interaction_threshold: 10,
+
+  comment_surface_enabled: true,
+  comment_surface_score_threshold: 40,
+  comment_surface_like_weight: 1,
+  comment_surface_reply_weight: 3,
+  comment_surface_min_age_minutes: 30,
+  comment_surface_max_age_days: 14,
+  comment_surface_cooldown_days: 30,
 };
 
 export async function getReportSettings(): Promise<SocialFeedSettings> {

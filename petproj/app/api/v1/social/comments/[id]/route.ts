@@ -19,16 +19,26 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         const commentId = params.id;
 
         const comment = await db.query(
-            "SELECT comment_id, post_id, user_id FROM social_comments WHERE comment_id = $1 AND is_deleted = false",
+            "SELECT comment_id, post_id, user_id, parent_comment_id FROM social_comments WHERE comment_id = $1 AND is_deleted = false",
             [commentId]
         );
         if (comment.rowCount === 0) return NextResponse.json({ error: "Comment not found" }, { status: 404 });
         if (comment.rows[0].user_id !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         const postId = comment.rows[0].post_id;
+        const parentCommentId = comment.rows[0].parent_comment_id;
 
         const client = await db.connect();
         try {
             await client.query('BEGIN');
+
+            // Deeper reply_counts die along with their rows below — only the
+            // immediate parent of the comment being deleted needs decrementing.
+            if (parentCommentId) {
+                await client.query(
+                    "UPDATE social_comments SET reply_count = GREATEST(0, reply_count - 1) WHERE comment_id = $1",
+                    [parentCommentId]
+                );
+            }
 
             // Cascade: soft-delete this comment plus every descendant reply in its subtree
             const deleted = await client.query(

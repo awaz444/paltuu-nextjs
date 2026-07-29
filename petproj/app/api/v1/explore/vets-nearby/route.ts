@@ -20,6 +20,11 @@ const CLINIC_FIELDS = `
     COALESCE(c.is_verified, false) AS is_verified
 `;
 
+// Past this, "near you" stops being true. Without the cap the distance sort
+// happily returns clinics on another continent (a Cupertino-based simulator
+// gets Islamabad clinics at ~11,900 km) and the client badges them as nearby.
+const NEARBY_RADIUS_KM = 100;
+
 /**
  * GET /api/v1/explore/vets-nearby?lat=&lng=&limit=
  * Clinics sorted by real distance when device coordinates are provided
@@ -46,16 +51,19 @@ export async function GET(req: NextRequest) {
             // float rounding just outside [-1, 1]. Earth radius 6371 km matches the
             // client-side utility (src/utils/geo.ts) for parity.
             const result = await db.query(`
-                SELECT ${CLINIC_FIELDS},
-                    6371 * acos(LEAST(1.0, GREATEST(-1.0,
-                        cos(radians($1)) * cos(radians(c.latitude)) * cos(radians(c.longitude) - radians($2))
-                        + sin(radians($1)) * sin(radians(c.latitude))
-                    ))) AS distance_km
-                FROM clinics c
-                WHERE c.latitude IS NOT NULL AND c.longitude IS NOT NULL
-                ORDER BY distance_km ASC
-                LIMIT $3
-            `, [lat, lng, limit]);
+                SELECT * FROM (
+                    SELECT ${CLINIC_FIELDS},
+                        6371 * acos(LEAST(1.0, GREATEST(-1.0,
+                            cos(radians($1)) * cos(radians(c.latitude)) * cos(radians(c.longitude) - radians($2))
+                            + sin(radians($1)) * sin(radians(c.latitude))
+                        ))) AS distance_km
+                    FROM clinics c
+                    WHERE c.latitude IS NOT NULL AND c.longitude IS NOT NULL
+                ) d
+                WHERE d.distance_km <= $3
+                ORDER BY d.distance_km ASC
+                LIMIT $4
+            `, [lat, lng, NEARBY_RADIUS_KM, limit]);
 
             if (result.rows.length > 0) {
                 return NextResponse.json({ clinics: result.rows });

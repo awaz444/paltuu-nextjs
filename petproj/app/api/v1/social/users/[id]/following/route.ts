@@ -32,11 +32,16 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 u.bio,
                 u.follower_count,
                 u.following_count,
+                u.is_private,
                 f.created_at AS followed_at,
                 EXISTS(
                     SELECT 1 FROM social_follows cf
                     WHERE cf.follower_id = $1 AND cf.following_id = u.user_id AND cf.status = 'accepted'
                 ) AS is_followed_by_me,
+                EXISTS(
+                    SELECT 1 FROM social_follows cf
+                    WHERE cf.follower_id = $1 AND cf.following_id = u.user_id AND cf.status = 'pending'
+                ) AS has_pending_request,
                 EXISTS(
                     SELECT 1 FROM user_blocks b
                     WHERE b.blocker_id = $1 AND b.blocked_id = u.user_id

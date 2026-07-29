@@ -135,6 +135,7 @@ export async function GET(req: NextRequest) {
                 profile_image_url,
                 bio,
                 follower_count,
+                is_private,
                 mutual_follows,
                 interactions_with_me,
                 recent_engagement,
@@ -160,10 +161,16 @@ export async function GET(req: NextRequest) {
                 profile_image_url: r.profile_image_url,
                 bio: r.bio,
                 follower_count: Number(r.follower_count),
+                is_private: r.is_private,
                 mutual_follows: Number(r.mutual_follows),
                 interactions_with_me: Number(r.interactions_with_me) || 0,
                 recent_engagement: Number(r.recent_engagement) || 0,
                 is_following: false,
+                // Candidates are pulled from `viewer_following`-excluded rows (any
+                // status), so nobody with an existing pending request ever reaches
+                // this list — always false from the server; flips true optimistically
+                // client-side the moment the viewer taps Follow.
+                has_pending_request: false,
             })),
         });
 

@@ -175,12 +175,11 @@ export class NotificationService {
         return;
       }
 
-      // 2. Get unread count for badge
-      const unreadResult = await db.query(
-        `SELECT COUNT(*) as count FROM notifications WHERE user_id = $1 AND is_read = false`,
-        [userId]
-      );
-      const unreadCount = parseInt(unreadResult.rows[0]?.count || "0", 10);
+      // 2. Get unread count for badge. Must go through getUnreadCount so the
+      // app icon badge matches the bell badge in-app exactly — a raw COUNT here
+      // would include notifications from blocked users, which getUnreadCount
+      // (and therefore the notifications screen) filters out.
+      const unreadCount = await this.getUnreadCount(userId);
 
       // Separate Expo push tokens from raw FCM tokens
       const { expoTokens, fcmTokens } = this.classifyTokens(tokens);
@@ -642,11 +641,39 @@ export class NotificationService {
 
     // 2. Fetch all device tokens for the target users in one query
     const devicesResult = await db.query(
-      `SELECT fcm_token FROM user_devices WHERE user_id = ANY($1)`,
+      `SELECT user_id, fcm_token FROM user_devices WHERE user_id = ANY($1)`,
       [userIds]
     );
     const tokens: string[] = devicesResult.rows.map((row: any) => row.fcm_token);
     const { expoTokens, fcmTokens } = this.classifyTokens(tokens);
+
+    // 2a. Per-user unread counts for the app icon badge. Same block-aware
+    // definition as getUnreadCount so the icon matches the in-app bell; done as
+    // one grouped query rather than per user. Rows inserted in step 1 are
+    // already unread, so this includes this broadcast.
+    const unreadResult = await db.query(
+      `
+      SELECT n.user_id, COUNT(*)::int AS count
+      FROM notifications n
+      WHERE n.user_id = ANY($1) AND n.is_read = false
+        AND (n.sender_id IS NULL OR NOT EXISTS (
+            SELECT 1 FROM user_blocks b
+            WHERE (b.blocker_id = n.user_id AND b.blocked_id = n.sender_id)
+               OR (b.blocker_id = n.sender_id AND b.blocked_id = n.user_id)
+        ))
+      GROUP BY n.user_id
+      `,
+      [userIds]
+    );
+    const unreadByUser = new Map<number, number>(
+      unreadResult.rows.map((row: any): [number, number] => [row.user_id, row.count])
+    );
+    const badgeByToken = new Map<string, number>(
+      devicesResult.rows.map((row: any): [string, number] => [
+        row.fcm_token,
+        unreadByUser.get(row.user_id) ?? 0,
+      ])
+    );
 
     let pushSuccessCount = 0;
     let pushFailureCount = 0;
@@ -668,6 +695,7 @@ export class NotificationService {
               sound: "default",
               title: title.substring(0, 255),
               body,
+              badge: badgeByToken.get(token) ?? 0,
               data: {
                 type: "system_admin_broadcast",
                 deep_link: deepLink || "",
@@ -713,10 +741,31 @@ export class NotificationService {
         console.log(`ℹ️ FCM broadcast skipped: Firebase is not configured`);
         pushFailureCount += fcmTokens.length;
       } else {
-        const fcmChunks = chunk(fcmTokens, FCM_CHUNK_SIZE);
+        // A multicast shares one payload across its whole token list, but the
+        // badge differs per recipient — so group tokens by their user's unread
+        // count and send one multicast per distinct count, each still chunked
+        // to the 500-token API limit. Distinct counts are few in practice, so
+        // this stays far closer to one call per 500 devices than per device.
+        const tokensByBadge = new Map<number, string[]>();
+        for (const token of fcmTokens) {
+          const badge = badgeByToken.get(token) ?? 0;
+          const group = tokensByBadge.get(badge);
+          if (group) {
+            group.push(token);
+          } else {
+            tokensByBadge.set(badge, [token]);
+          }
+        }
+
+        const fcmChunks: { badge: number; tokens: string[] }[] = [];
+        for (const [badge, groupTokens] of tokensByBadge) {
+          for (const tokenChunk of chunk(groupTokens, FCM_CHUNK_SIZE)) {
+            fcmChunks.push({ badge, tokens: tokenChunk });
+          }
+        }
 
         await runWithConcurrency(
-          fcmChunks.map((tokenChunk) => async () => {
+          fcmChunks.map(({ badge, tokens: tokenChunk }) => async () => {
             try {
               const response = await messaging.sendEachForMulticast({
                 tokens: tokenChunk,
@@ -728,7 +777,7 @@ export class NotificationService {
                   type: "system_admin_broadcast",
                   deep_link: deepLink || "",
                 },
-                apns: { payload: { aps: { sound: "default" } } },
+                apns: { payload: { aps: { sound: "default", badge } } },
                 android: {
                   priority: "high" as const,
                   notification: { sound: "default", channel_id: "default" },

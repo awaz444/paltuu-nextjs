@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 2. Fetch User
-        const userRes = await db.query("SELECT user_id, name, email, role, image FROM users WHERE user_id = $1", [activeUserId]);
+        const userRes = await db.query("SELECT user_id, name, email, role, profile_image_url FROM users WHERE user_id = $1", [activeUserId]);
         if ((userRes.rowCount ?? 0) === 0) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                image: user.image
+                image: user.profile_image_url
             }
         });
 

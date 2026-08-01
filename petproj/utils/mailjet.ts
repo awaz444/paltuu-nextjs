@@ -751,6 +751,57 @@ export async function sendNewShelterAdminNotification(shelterData: {
 }
 
 /**
+ * Send email notification for new mobile app beta program signup
+ */
+export async function sendBetaSignupNotification(signupData: {
+  email: string;
+  platform: "ios" | "android";
+}): Promise<void> {
+  console.log('📧 Attempting to send beta signup notification:', signupData.email);
+  try {
+    const platformLabel = signupData.platform === "ios" ? "iOS" : "Android";
+    const subject = `📱 New Beta Signup (${platformLabel}) - ${signupData.email}`;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="UTF-8"></head>
+      <body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f5f5f5;">
+        <div style="max-width:600px;margin:20px auto;background-color:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+          <div style="background-color:#8B1538;padding:30px;text-align:center;">
+            <h1 style="color:#ffffff;margin:0;font-size:24px;">📱 New Beta Program Signup</h1>
+          </div>
+          <div style="padding:30px;">
+            <p style="color:#666;line-height:1.6;">Someone signed up for the mobile app beta program.</p>
+
+            <div style="background-color:#f8f8f8;border-left:4px solid #8B1538;padding:20px;margin:20px 0;border-radius:5px;">
+              <p style="margin:5px 0;"><strong>Email:</strong> <a href="mailto:${signupData.email}" style="color:#8B1538;">${signupData.email}</a></p>
+              <p style="margin:5px 0;"><strong>Platform:</strong> ${platformLabel}</p>
+            </div>
+
+            <p style="color:#666;line-height:1.6;">Grant them ${platformLabel} beta access (TestFlight / Play Console internal testing) and reply to their email once added.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    await sendEmailViaBrevo(
+      ADMIN_EMAIL,
+      "Paltuu Admin",
+      subject,
+      html
+    );
+
+    console.log(`✅ Beta signup notification sent to admin for: ${signupData.email}`);
+  } catch (error: any) {
+    console.error("❌ Failed to send beta signup notification:");
+    console.error("Error details:", error?.message || error);
+    console.error("Error response:", error?.response?.body || error?.statusCode);
+    throw error;
+  }
+}
+
+/**
  * Send email notification for cart activity (add to cart, checkout page visit)
  */
 export async function sendCartActivityNotification(activityData: {

@@ -20,6 +20,7 @@ const hideNavbarRoutes = [
   "/shop-panel",
   "/rescue-panel",
   "/auth",
+  "/beta-signup",
   "/forgot-password",
   "/admin-clinics-vets",
 ];

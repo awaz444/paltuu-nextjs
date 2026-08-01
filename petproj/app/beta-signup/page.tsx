@@ -121,19 +121,6 @@ export default function BetaSignupPage() {
                   </div>
                 </button>
               </div>
-
-              <div className="text-center mt-6 pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-600">
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    className="text-primary font-semibold hover:underline focus:outline-none"
-                    onClick={() => router.push("/auth")}
-                  >
-                    Sign in here
-                  </button>
-                </p>
-              </div>
             </div>
           )}
 

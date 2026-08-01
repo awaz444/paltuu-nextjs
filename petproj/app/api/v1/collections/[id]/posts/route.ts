@@ -1,6 +1,11 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import {
+  originalPostAccessibleExpr,
+  originalPostVisibilityFilter,
+  redactUnavailableOriginals,
+} from "@/lib/feedQueryFragments";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +67,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         ou.name              AS original_author_name,
         ou.social_username   AS original_social_username,
         ou.profile_image_url AS original_author_image,
+        ou.is_private        AS original_author_is_private,
+        ${originalPostAccessibleExpr('$2')} AS original_available,
         COALESCE(
           (SELECT json_agg(opm.* ORDER BY opm.ordering) 
            FROM social_post_media opm 
@@ -77,8 +84,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       JOIN users u ON u.user_id = p.user_id
       LEFT JOIN social_posts op  ON op.post_id = p.original_post_id
       LEFT JOIN users ou         ON ou.user_id = op.user_id
-      WHERE cp.collection_id = $1 
+      WHERE cp.collection_id = $1
         AND p.is_deleted = false
+        ${originalPostVisibilityFilter('$2')}
     `;
 
     const queryParams: any[] = [collectionId, userId];
@@ -92,6 +100,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     queryParams.push(limit);
 
     const result = await db.query(query, queryParams);
+    redactUnavailableOriginals(result.rows);
     const posts = result.rows.map(row => ({
       ...row,
       is_saved: true

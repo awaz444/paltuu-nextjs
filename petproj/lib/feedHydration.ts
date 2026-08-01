@@ -1,6 +1,6 @@
 import { db } from "@/db/index";
 import { cachePost, getCachedPost } from "@/lib/redis";
-import { HYDRATE_POSTS_BY_IDS_QUERY } from "@/lib/feedQueryFragments";
+import { HYDRATE_POSTS_BY_IDS_QUERY, redactUnavailableOriginals } from "@/lib/feedQueryFragments";
 
 /**
  * Hydrate a list of post IDs (e.g. read from the Redis feed:{userId} ZSET)
@@ -43,6 +43,7 @@ export async function hydratePostsByIds(
 
     if (missingIds.length > 0) {
         const result = await db.query(HYDRATE_POSTS_BY_IDS_QUERY, [viewerId, missingIds]);
+        redactUnavailableOriginals(result.rows);
         for (const row of result.rows) {
             const id = String(row.post_id);
             byId.set(id, row);

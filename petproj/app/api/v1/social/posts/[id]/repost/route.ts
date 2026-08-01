@@ -57,6 +57,24 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         const originalPostId = resolved.postId;
         const originalAuthorId = resolved.authorId;
 
+        // 1a. Private accounts' posts can't be reposted by anyone — not even
+        // an accepted follower. Reposting redistributes content to the
+        // reposter's OWN followers, a different audience than the private
+        // author chose to allow, which defeats the point of going private.
+        // This mirrors the read-side check (see feedQueryFragments) but is
+        // stricter: reads still let a follower VIEW a private post directly
+        // on the author's profile, but nobody may REPOST it.
+        const authorCheck = await db.query(
+            "SELECT is_private FROM users WHERE user_id = $1",
+            [originalAuthorId]
+        );
+        if (authorCheck.rows[0]?.is_private) {
+            return NextResponse.json(
+                { error: "This post can't be reposted because the author's account is private" },
+                { status: 403 }
+            );
+        }
+
         // 2. Check if already reposted
         const existing = await db.query(
             "SELECT repost_id FROM social_reposts WHERE post_id = $1 AND user_id = $2",

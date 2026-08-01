@@ -2,7 +2,12 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
-import { VIEWER_COMMENTS_CTE } from "@/lib/feedQueryFragments";
+import {
+    VIEWER_COMMENTS_CTE,
+    originalPostAccessibleExpr,
+    originalPostVisibilityFilter,
+    redactUnavailableOriginals,
+} from "@/lib/feedQueryFragments";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +104,8 @@ export async function GET(
                     ou.name              AS original_author_name,
                     ou.social_username   AS original_social_username,
                     ou.profile_image_url AS original_author_image,
+                    ou.is_private        AS original_author_is_private,
+                    ${originalPostAccessibleExpr('$2')} AS original_available,
                     COALESCE(opm.media, '[]'::json) AS original_media,
                     (sl.post_id IS NOT NULL) AS is_liked,
                     (sr.post_id IS NOT NULL) AS is_reposted,
@@ -116,6 +123,7 @@ export async function GET(
                 WHERE p.user_id = $1
                   AND p.is_deleted = false
                   AND (p.is_hidden = false OR p.user_id = $2)
+                  ${originalPostVisibilityFilter('$2')}
                 ORDER BY p.created_at DESC
                 LIMIT 18
             `, [targetId, viewerId || 0]),
@@ -131,7 +139,7 @@ export async function GET(
 
         // Discard the fetched posts if the privacy/block check (only knowable
         // after both queries resolve) says they shouldn't be visible.
-        const posts: any[] = (!isPrivate && !isBlocked) ? postsRes.rows : [];
+        const posts: any[] = (!isPrivate && !isBlocked) ? redactUnavailableOriginals(postsRes.rows) : [];
 
         return NextResponse.json({
             profile: {

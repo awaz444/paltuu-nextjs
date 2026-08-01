@@ -12,6 +12,7 @@ import {
 import { checkIsBlocked } from "@/lib/moderation";
 import { resolveRepostTarget } from "@/lib/reposts";
 import { invalidateViewerPostCache, removePostFromCaches } from "@/lib/redis";
+import { originalPostAccessibleExpr } from "@/lib/feedQueryFragments";
 
 export const dynamic = "force-dynamic";
 
@@ -70,10 +71,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 ou.verified   AS original_author_verified,
                 ou.founding_club AS original_author_founding_club,
                 ou.profile_image_url AS original_author_image,
+                ou.is_private AS original_author_is_private,
+                ${originalPostAccessibleExpr('$2')} AS original_available,
                 COALESCE(
-                    (SELECT json_agg(om.* ORDER BY om.ordering) 
-                     FROM social_post_media om 
-                     WHERE om.post_id = op.post_id), 
+                    (SELECT json_agg(om.* ORDER BY om.ordering)
+                     FROM social_post_media om
+                     WHERE om.post_id = op.post_id),
                     '[]'::json
                 ) AS original_media,
                 -- viewer context
@@ -131,13 +134,34 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             return NextResponse.json({ error: "Post not found" }, { status: 404 });
         }
 
+        // Original-post gate: a repost/quote's embedded original is subject to
+        // the SAME live privacy check as the main feed — the original author's
+        // CURRENT is_private/follow state, not its state at repost time. If
+        // the viewer is the one who made this repost, keep the row but strip
+        // the original's content (redacted below) instead of 404ing, so their
+        // own profile/post view can show a "no longer available" placeholder
+        // rather than the entry vanishing outright.
+        const row = result.rows[0];
+        if (row.original_post_id && !row.original_available) {
+            if (postAuthorId !== userId) {
+                return NextResponse.json({ error: "Post not found" }, { status: 404 });
+            }
+            row.original_content = null;
+            row.original_media = [];
+            row.original_author_name = null;
+            row.original_social_username = null;
+            row.original_author_verified = null;
+            row.original_author_founding_club = null;
+            row.original_author_image = null;
+        }
+
         // Increment view count (fire and forget, non-blocking)
         db.query(
             "UPDATE social_posts SET view_count = view_count + 1 WHERE post_id = $1",
             [postId]
         ).catch(() => {});
 
-        return NextResponse.json(result.rows[0]);
+        return NextResponse.json(row);
 
     } catch (error) {
         console.error("V1 Social Post GET error:", error);

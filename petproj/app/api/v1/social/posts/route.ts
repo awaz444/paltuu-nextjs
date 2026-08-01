@@ -28,6 +28,9 @@ import {
     TAGGED_PETS_AGG_CTE,
     SAVED_COLLECTIONS_AGG_CTE,
     VIEWER_COMMENTS_CTE,
+    originalPostAccessibleExpr,
+    originalPostVisibilityFilter,
+    redactUnavailableOriginals,
 } from "@/lib/feedQueryFragments";
 import { getReportSettings } from "@/lib/reportScoring";
 import { getSurfaceableComment } from "@/lib/commentSurfacing";
@@ -159,6 +162,7 @@ export async function GET(req: NextRequest) {
                         u.social_username,
                         u.verified     AS author_verified,
                         u.founding_club AS author_founding_club,
+                        u.is_private   AS author_is_private,
                         false                AS is_blocked_by_me,
                         false                AS is_blocking_me,
                         COALESCE(pm.media, '[]'::json)  AS media,
@@ -170,8 +174,10 @@ export async function GET(req: NextRequest) {
                         ou.verified   AS original_author_verified,
                         ou.founding_club AS original_author_founding_club,
                         ou.profile_image_url AS original_author_image,
+                        ou.is_private AS original_author_is_private,
                         false                AS original_author_is_blocked_by_me,
                         false                AS original_author_is_blocking_me,
+                        ${originalPostAccessibleExpr('$1')} AS original_available,
                         COALESCE(opm.media, '[]'::json) AS original_media,
                         CASE WHEN p.is_repost AND p.content IS NULL THEN op.like_count    ELSE p.like_count    END AS like_count,
                         CASE WHEN p.is_repost AND p.content IS NULL THEN op.comment_count ELSE p.comment_count END AS comment_count,
@@ -224,16 +230,7 @@ export async function GET(req: NextRequest) {
                            OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
                     )
                     AND (p.user_id = $1 OR u.is_private = false OR fs.following_id IS NOT NULL)
-                    AND (p.original_post_id IS NULL OR (
-                        NOT EXISTS (
-                            SELECT 1 FROM user_blocks b
-                            WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
-                               OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
-                        )
-                        AND (op.user_id = $1 OR ou.is_private = false OR EXISTS (
-                            SELECT 1 FROM social_follows f WHERE f.follower_id = $1 AND f.following_id = op.user_id AND f.status = 'accepted'
-                        ))
-                    ))
+                    ${originalPostVisibilityFilter('$1')}
                     AND NOT EXISTS (
                         SELECT 1 FROM hidden_posts hp WHERE hp.user_id = $1 AND hp.post_id = p.post_id
                     )
@@ -254,6 +251,7 @@ export async function GET(req: NextRequest) {
                 INFERRED_AFFINITY_MULTIPLIER,
             ]);
             const posts  = result.rows;
+            redactUnavailableOriginals(posts);
 
             // Log impressions for the A/B experiment (fire-and-forget).
             logFeedImpressions(
@@ -340,6 +338,7 @@ export async function GET(req: NextRequest) {
                     u.social_username,
                         u.verified     AS author_verified,
                         u.founding_club AS author_founding_club,
+                        u.is_private   AS author_is_private,
                     false                AS is_blocked_by_me,
                     false                AS is_blocking_me,
                     COALESCE(pm.media, '[]'::json)  AS media,
@@ -351,8 +350,10 @@ export async function GET(req: NextRequest) {
                         ou.verified   AS original_author_verified,
                         ou.founding_club AS original_author_founding_club,
                     ou.profile_image_url AS original_author_image,
+                        ou.is_private AS original_author_is_private,
                     false                AS original_author_is_blocked_by_me,
                     false                AS original_author_is_blocking_me,
+                    ${originalPostAccessibleExpr('$1')} AS original_available,
                     COALESCE(opm.media, '[]'::json) AS original_media,
                         CASE WHEN p.is_repost AND p.content IS NULL THEN op.like_count    ELSE p.like_count    END AS like_count,
                         CASE WHEN p.is_repost AND p.content IS NULL THEN op.comment_count ELSE p.comment_count END AS comment_count,
@@ -387,16 +388,7 @@ export async function GET(req: NextRequest) {
                 AND (p.user_id = $1 OR u.is_private = false OR EXISTS (
                     SELECT 1 FROM social_follows f WHERE f.follower_id = $1 AND f.following_id = p.user_id AND f.status = 'accepted'
                 ))
-                AND (p.original_post_id IS NULL OR (
-                    NOT EXISTS (
-                        SELECT 1 FROM user_blocks b
-                        WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
-                           OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
-                    )
-                    AND (op.user_id = $1 OR ou.is_private = false OR EXISTS (
-                        SELECT 1 FROM social_follows f WHERE f.follower_id = $1 AND f.following_id = op.user_id AND f.status = 'accepted'
-                    ))
-                ))
+                ${originalPostVisibilityFilter('$1')}
                 AND NOT EXISTS (
                     SELECT 1 FROM hidden_posts hp WHERE hp.user_id = $1 AND hp.post_id = p.post_id
                 )
@@ -435,6 +427,7 @@ export async function GET(req: NextRequest) {
                         u.social_username,
                         u.verified     AS author_verified,
                         u.founding_club AS author_founding_club,
+                        u.is_private   AS author_is_private,
                         false                AS is_blocked_by_me,
                         false                AS is_blocking_me,
                         COALESCE(pm.media, '[]'::json)  AS media,
@@ -446,8 +439,10 @@ export async function GET(req: NextRequest) {
                         ou.verified   AS original_author_verified,
                         ou.founding_club AS original_author_founding_club,
                         ou.profile_image_url AS original_author_image,
+                        ou.is_private AS original_author_is_private,
                         false                AS original_author_is_blocked_by_me,
                         false                AS original_author_is_blocking_me,
+                        ${originalPostAccessibleExpr('$1')} AS original_available,
                         COALESCE(opm.media, '[]'::json) AS original_media,
                         CASE WHEN p.is_repost AND p.content IS NULL THEN op.like_count    ELSE p.like_count    END AS like_count,
                         CASE WHEN p.is_repost AND p.content IS NULL THEN op.comment_count ELSE p.comment_count END AS comment_count,
@@ -492,16 +487,7 @@ export async function GET(req: NextRequest) {
                            OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
                     )
                     AND (p.user_id = $1 OR u.is_private = false OR fs.following_id IS NOT NULL)
-                    AND (p.original_post_id IS NULL OR (
-                        NOT EXISTS (
-                            SELECT 1 FROM user_blocks b
-                            WHERE (b.blocker_id = $1 AND b.blocked_id = op.user_id)
-                               OR (b.blocker_id = op.user_id AND b.blocked_id = $1)
-                        )
-                        AND (op.user_id = $1 OR ou.is_private = false OR EXISTS (
-                            SELECT 1 FROM social_follows f WHERE f.follower_id = $1 AND f.following_id = op.user_id AND f.status = 'accepted'
-                        ))
-                    ))
+                    ${originalPostVisibilityFilter('$1')}
                     AND NOT EXISTS (
                         SELECT 1 FROM hidden_posts hp WHERE hp.user_id = $1 AND hp.post_id = p.post_id
                     )
@@ -520,6 +506,7 @@ export async function GET(req: NextRequest) {
 
         const result = await db.query(feedQuery, queryParams);
         const posts  = result.rows;
+        redactUnavailableOriginals(posts);
 
         // Cursor = next offset (null when we got fewer rows than requested)
         const nextCursor = posts.length === limit ? String(offset + limit) : null;

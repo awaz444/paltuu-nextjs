@@ -17,11 +17,17 @@ export async function GET(req: NextRequest) {
         const userId = await getUserIdFromRequest(req);
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        // 1. Check for Shop
-        const shopRes = await db.query('SELECT shop_id, shop_name FROM shops WHERE user_id = $1', [userId]);
-        
+        // 1. Check for vendor shop (shops table was replaced by vendors)
+        const shopRes = await db.query(
+            'SELECT vendor_id AS shop_id, shop_name FROM vendors WHERE user_id = $1',
+            [userId]
+        );
+
         // 2. Check for Shelter
-        const shelterRes = await db.query('SELECT shelter_id, shelter_name FROM rescue_shelters WHERE user_id = $1', [userId]);
+        const shelterRes = await db.query(
+            'SELECT shelter_id, shelter_name FROM rescue_shelters WHERE user_id = $1',
+            [userId]
+        );
 
         return NextResponse.json({
             managed_shops: shopRes.rows,

@@ -55,19 +55,17 @@ export default function RescuePanel() {
       if (!user?.id && !user?.user_id) return;
 
       try {
-        const userId = user.id || user.user_id;
-        console.log('Fetching shelter entity data for user ID:', userId);
-        const response = await fetch(`/api/user-shops-shelters?user_id=${userId}`);
+        const response = await fetch('/api/v1/profile/managed-entities');
         const data = await response.json();
         console.log('Shelter entity response:', data);
 
-        if (data.success && data.entity) {
+        const shelter = data.managed_shelters?.[0];
+        if (shelter) {
           setEntityData({
-            id: data.entity.id,
-            name: data.entity.name,
-            address: data.entity.address
+            id: shelter.shelter_id,
+            name: shelter.shelter_name,
           });
-          console.log('Set entity data:', { id: data.entity.id, name: data.entity.name, address: data.entity.address });
+          console.log('Set entity data:', { id: shelter.shelter_id, name: shelter.shelter_name });
         } else {
           console.log('No entity data found or API error:', data);
         }

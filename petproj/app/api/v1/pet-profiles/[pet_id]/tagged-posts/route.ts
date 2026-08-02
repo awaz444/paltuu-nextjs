@@ -75,8 +75,8 @@ export async function GET(
                 p.created_at,
                 p.updated_at,
                 u.name               AS author_name,
-                u.social_username    AS author_social_username,
-                u.profile_image_url  AS author_avatar,
+                u.social_username,
+                u.profile_image_url  AS author_image,
                 COALESCE((
                     SELECT json_agg(m.* ORDER BY m.ordering ASC)
                     FROM social_post_media m

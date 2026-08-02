@@ -4,6 +4,7 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import {
     VIEWER_COMMENTS_CTE,
+    TAGGED_PETS_AGG_CTE,
     originalPostAccessibleExpr,
     originalPostVisibilityFilter,
     redactUnavailableOriginals,
@@ -87,7 +88,8 @@ export async function GET(
                     FROM social_post_media m
                     GROUP BY post_id
                 ),
-                ${VIEWER_COMMENTS_CTE}
+                ${VIEWER_COMMENTS_CTE},
+                ${TAGGED_PETS_AGG_CTE}
                 SELECT
                     p.post_id, p.content, p.created_at, p.updated_at, p.post_type,
                     p.is_repost, p.original_post_id,
@@ -99,6 +101,7 @@ export async function GET(
                     CASE WHEN p.is_repost AND p.content IS NULL THEN op.view_count    ELSE p.view_count    END AS view_count,
                     p.repost_count,
                     COALESCE(pm.media, '[]'::json) AS media,
+                    COALESCE(tpa.tagged_pets, '[]'::json) AS tagged_pets,
                     op.content           AS original_content,
                     op.user_id           AS original_user_id,
                     ou.name              AS original_author_name,
@@ -116,6 +119,7 @@ export async function GET(
                 LEFT JOIN users ou        ON ou.user_id = op.user_id
                 LEFT JOIN post_media pm   ON pm.post_id  = p.post_id
                 LEFT JOIN post_media opm  ON opm.post_id = op.post_id
+                LEFT JOIN tagged_pets_agg tpa ON tpa.post_id = p.post_id
                 LEFT JOIN social_likes   sl ON sl.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sl.user_id = $2
                 LEFT JOIN social_reposts sr ON sr.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sr.user_id = $2
                 LEFT JOIN saved_posts    sp ON sp.post_id = CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END AND sp.user_id = $2

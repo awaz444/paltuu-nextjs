@@ -330,6 +330,7 @@ export default function BulkPetUploadForm({
       formData.append('files', image);
     });
     formData.append('pet_id', petId.toString());
+    formData.append('notify_new_listing', 'true');
 
     const response = await fetch('/api/v1/upload-image', {
       method: 'POST',

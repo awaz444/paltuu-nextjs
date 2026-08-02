@@ -276,6 +276,7 @@ export default function SinglePetUploadForm({
           }
         });
         formData.append("pet_id", String(petId));
+        formData.append("notify_new_listing", "true");
 
         await axios.post("/api/v1/upload-image", formData, {
           headers: {
@@ -959,15 +960,17 @@ export default function SinglePetUploadForm({
                 >
                   Back
                 </Button>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={uploading}
-                  className="w-full sm:flex-1"
-                  size="large"
-                >
-                  {uploading ? "Creating Listing..." : "Create Listing"}
-                </Button>
+                {fileList.length > 0 && (
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={uploading}
+                    className="w-full sm:flex-1"
+                    size="large"
+                  >
+                    {uploading ? "Creating Listing..." : "Create Listing"}
+                  </Button>
+                )}
               </div>
             </div>
           )}

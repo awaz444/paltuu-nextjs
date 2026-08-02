@@ -104,9 +104,17 @@ export async function GET(req: NextRequest) {
         const offset  = Math.min(1000, Math.max(0, parseInt(searchParams.get("cursor") || "0", 10))); // cursor = page offset
         const mode    = searchParams.get("mode") || "following";
 
-        const isChronological = mode === "chronological";
-        const isPersonalized  = mode === "personalized";
-        const isGlobal        = mode === "global";
+        // ── BETA OVERRIDE ────────────────────────────────────────────────
+        // For the beta test we want every tester looking at the same simple
+        // feed: all public posts, newest first — no following/personalized/
+        // algorithmic ranking to muddy feedback while the beta is running.
+        // So we ignore the requested `mode` and force chronological+global
+        // regardless of what the client asked for. Revert to reading `mode`
+        // (the three lines below) once the beta wraps and per-mode ranking
+        // should come back.
+        const isChronological = true;
+        const isPersonalized  = false;
+        const isGlobal        = true;
         const viewerId        = userId || 0;
 
         // Quarantined posts are excluded from global + personalized feeds, but stay
@@ -297,7 +305,10 @@ export async function GET(req: NextRequest) {
         // requests (cursor present) always go to Postgres. Any length mismatch
         // after hydration (a cached post got deleted/hidden/blocked since) falls
         // through to the full query below rather than returning a partial list.
-        if (isChronological && userId && offset === 0) {
+        // BETA: this cache holds each user's *following* feed (populated by
+        // fanOutPostToFollowers), not the public/global feed — with mode
+        // forced global above, `isGlobal` guards us from ever serving it.
+        if (isChronological && !isGlobal && userId && offset === 0) {
             const viewerIdNum = parseInt(String(viewerId), 10);
             const cachedIds = await getCachedFeedIds(viewerIdNum, null, limit);
             if (cachedIds && cachedIds.length > 0) {

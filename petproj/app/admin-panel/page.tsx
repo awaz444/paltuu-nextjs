@@ -238,6 +238,7 @@ const AdminPanel = () => {
                 { href: "/admin-panel/social/reports", title: "⚠ Report Queue", desc: "Review flagged posts and reporter trust", badge: socialCounts.reports },
                 { href: "/admin-panel/social/tags", title: "🗂 Tag Taxonomy", desc: "Add, edit, and manage content tags" },
                 { href: "/admin-panel/social/posts", title: "🔍 Post Browser", desc: "Search and moderate any post" },
+                { href: "/admin-panel/social/pet-photos", title: "🖼 Pet Photo Browser", desc: "Search and shadow-hide pet gallery polaroids" },
                 { href: "/admin-panel/social/experiment", title: "🧪 A/B Experiment", desc: "Compare personalized vs. current feed" },
             ],
         },

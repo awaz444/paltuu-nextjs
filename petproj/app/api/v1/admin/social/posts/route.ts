@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/v1/admin/social/posts?limit&offset&search&status
- * status: all | untagged | quarantined | hidden
+ * status: all | untagged | quarantined | hidden | shadow_hidden
  */
 export async function GET(req: NextRequest) {
   const admin = await checkAdmin(req);
@@ -35,6 +35,8 @@ export async function GET(req: NextRequest) {
       conditions.push(`sp.moderation_state = 'quarantined'`);
     } else if (status === "hidden") {
       conditions.push(`sp.moderation_state = 'hidden'`);
+    } else if (status === "shadow_hidden") {
+      conditions.push(`sp.is_shadow_hidden = true`);
     }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -49,6 +51,7 @@ export async function GET(req: NextRequest) {
            sp.tagging_status,
            sp.moderation_state,
            sp.is_hidden,
+           sp.is_shadow_hidden,
            u.name,
            u.social_username AS username,
            COALESCE(r.report_count, 0)::int AS report_count,

@@ -15,22 +15,27 @@ import type { Pool, PoolClient } from "pg";
 export async function resolveRepostTarget(
     db: Pool | PoolClient,
     postId: string | number
-): Promise<{ postId: string; authorId: number; isDeleted: boolean } | null> {
+): Promise<{ postId: string; authorId: number; isDeleted: boolean; isShadowHidden: boolean } | null> {
     const resolved = await db.query(
         `WITH RECURSIVE chain AS (
-            SELECT post_id, user_id, is_repost, original_post_id, content, is_deleted, 0 AS depth
+            SELECT post_id, user_id, is_repost, original_post_id, content, is_deleted, is_shadow_hidden, 0 AS depth
             FROM social_posts WHERE post_id = $1
           UNION ALL
-            SELECT p.post_id, p.user_id, p.is_repost, p.original_post_id, p.content, p.is_deleted, c.depth + 1
+            SELECT p.post_id, p.user_id, p.is_repost, p.original_post_id, p.content, p.is_deleted, p.is_shadow_hidden, c.depth + 1
             FROM social_posts p
             JOIN chain c ON p.post_id = c.original_post_id
             WHERE c.is_repost = true AND c.content IS NULL
               AND c.original_post_id IS NOT NULL AND c.depth < 10
         )
-        SELECT post_id, user_id, is_deleted FROM chain ORDER BY depth DESC LIMIT 1`,
+        SELECT post_id, user_id, is_deleted, is_shadow_hidden FROM chain ORDER BY depth DESC LIMIT 1`,
         [postId]
     );
     if (resolved.rowCount === 0) return null;
     const row = resolved.rows[0];
-    return { postId: String(row.post_id), authorId: row.user_id, isDeleted: row.is_deleted };
+    return {
+        postId: String(row.post_id),
+        authorId: row.user_id,
+        isDeleted: row.is_deleted,
+        isShadowHidden: row.is_shadow_hidden === true,
+    };
 }

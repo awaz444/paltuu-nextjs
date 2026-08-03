@@ -13,6 +13,7 @@ import { checkIsBlocked } from "@/lib/moderation";
 import { resolveRepostTarget } from "@/lib/reposts";
 import { invalidateViewerPostCache, removePostFromCaches } from "@/lib/redis";
 import { originalPostAccessibleExpr } from "@/lib/feedQueryFragments";
+import { redactModerationFields } from "@/lib/moderationRedaction";
 
 export const dynamic = "force-dynamic";
 
@@ -134,6 +135,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             return NextResponse.json({ error: "Post not found" }, { status: 404 });
         }
 
+        // Shadow-hide gate: the post stays fully readable for its author —
+        // this detail view looks completely normal to them — and 404s for
+        // everyone else, followers included. 404 rather than 403 so the id
+        // itself never confirms that a post is sitting there hidden.
+        if (result.rows[0].is_shadow_hidden && postAuthorId !== userId) {
+            return NextResponse.json({ error: "Post not found" }, { status: 404 });
+        }
+
         // Original-post gate: a repost/quote's embedded original is subject to
         // the SAME live privacy check as the main feed — the original author's
         // CURRENT is_private/follow state, not its state at repost time. If
@@ -161,6 +170,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             [postId]
         ).catch(() => {});
 
+        // Never let the shadow-hide flag reach the app — an author who could
+        // see it would know their post had been moderated.
+        redactModerationFields(row);
         return NextResponse.json(row);
 
     } catch (error) {

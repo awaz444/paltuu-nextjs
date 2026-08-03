@@ -34,13 +34,29 @@ export const VIEWER_COMMENTS_CTE = `viewer_comments AS (
 )`;
 
 /**
+ * WHERE-clause fragment enforcing the admin shadow-hide: a post flagged
+ * `is_shadow_hidden` stays readable by its author (whose feed and profile look
+ * completely unchanged) and by nobody else.
+ *
+ * Orthogonal to two neighbouring flags — don't conflate them:
+ *   users.is_private -> account-level, gates everything to accepted followers
+ *   is_hidden        -> hard moderation hide, drops the post for the author too
+ *
+ * Requires `p` (social_posts) in scope. Safe for anonymous viewers, who bind
+ * the viewer param to 0 — never a real user_id.
+ */
+export function shadowHiddenFilter(viewerParam: string = '$1'): string {
+    return `AND (p.is_shadow_hidden = false OR p.user_id = ${viewerParam})`;
+}
+
+/**
  * True when the viewer currently has access to the original post a repost/
- * quote points at: no original at all, the viewer IS the original author, the
- * original author is public, or the viewer follows them (accepted). This is
- * evaluated live on every read against the original author's CURRENT
- * is_private flag — not the flag's value at repost time — so a repost of a
- * once-public post correctly loses visibility if that author later goes
- * private, without needing to touch the repost row itself.
+ * quote points at: no original at all, the viewer IS the original author, or
+ * the original is a public post whose author is public-or-followed. This is
+ * evaluated live on every read against the original's CURRENT flags — not
+ * their values at repost time — so a repost of a once-public post correctly
+ * loses visibility if that author later goes private (or the original gets
+ * shadow-hidden), without needing to touch the repost row itself.
  *
  * Requires `op`/`ou` (LEFT JOIN social_posts/users on p.original_post_id) and
  * `p` to be in scope. `viewerParam` is the bound param placeholder for the
@@ -50,10 +66,15 @@ export function originalPostAccessibleExpr(viewerParam: string = '$1'): string {
     return `(
         p.original_post_id IS NULL
         OR op.user_id = ${viewerParam}
-        OR ou.is_private = false
-        OR EXISTS (
-            SELECT 1 FROM social_follows f
-            WHERE f.follower_id = ${viewerParam} AND f.following_id = op.user_id AND f.status = 'accepted'
+        OR (
+            op.is_shadow_hidden = false
+            AND (
+                ou.is_private = false
+                OR EXISTS (
+                    SELECT 1 FROM social_follows f
+                    WHERE f.follower_id = ${viewerParam} AND f.following_id = op.user_id AND f.status = 'accepted'
+                )
+            )
         )
     )`;
 }
@@ -177,6 +198,7 @@ export const HYDRATE_POSTS_BY_IDS_QUERY = `
       AND (p.user_id = $1 OR u.is_private = false OR EXISTS (
           SELECT 1 FROM social_follows f WHERE f.follower_id = $1 AND f.following_id = p.user_id AND f.status = 'accepted'
       ))
+      ${shadowHiddenFilter('$1')}
       ${originalPostVisibilityFilter('$1')}
       AND NOT EXISTS (
           SELECT 1 FROM hidden_posts hp WHERE hp.user_id = $1 AND hp.post_id = p.post_id

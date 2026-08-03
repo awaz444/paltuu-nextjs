@@ -33,6 +33,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         const postId = resolved.postId;
         const postAuthorId = resolved.authorId;
 
+        // A shadow-hidden post is readable only by its author, so nobody else
+        // may act on it either. The author's own likes keep working normally.
+        // 404 (not 403) keeps the moderation decision unobservable.
+        if (resolved.isShadowHidden && resolved.authorId !== userId) {
+            return NextResponse.json({ error: "Post not found" }, { status: 404 });
+        }
+
         await assertNotBlocked(userId, postAuthorId);
 
         // Check if already liked

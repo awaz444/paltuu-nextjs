@@ -58,6 +58,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         // re-verified here rather than trusted blindly from the client.
         const postRes = await db.query(
             `SELECT p.post_id, p.user_id,
+                    p.is_shadow_hidden AS post_is_shadow_hidden,
                     u.is_private,
                     EXISTS(
                         SELECT 1 FROM social_follows f
@@ -73,6 +74,16 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         }
         const post = postRes.rows[0];
         const isOwner = userId !== 0 && userId === post.user_id;
+
+        // A shadow-hidden post's thread is author-only, full stop — no
+        // follower access and no surfaced-comment deep link either (those
+        // comments are never surfaced in the first place; see
+        // lib/commentSurfacing.ts), so there's nothing to scope access to.
+        // The author still sees their thread exactly as before.
+        if (post.post_is_shadow_hidden && !isOwner) {
+            return NextResponse.json({ error: "Post not found" }, { status: 404 });
+        }
+
         const hasFullAccess = isOwner || !post.is_private || post.viewer_is_following;
 
         // The single comment/reply this narrow access, if any, is scoped to —
@@ -220,6 +231,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         }
         const postId = resolved.postId;
         const postAuthorId = resolved.authorId;
+
+        // A shadow-hidden post is readable only by its author, so nobody else
+        // may comment on it. The author commenting on their own post still
+        // works normally. 404 keeps the moderation decision unobservable.
+        if (resolved.isShadowHidden && resolved.authorId !== userId) {
+            return NextResponse.json({ error: "Post not found" }, { status: 404 });
+        }
 
         await assertNotBlocked(userId, postAuthorId);
 

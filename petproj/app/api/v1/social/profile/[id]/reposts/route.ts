@@ -38,6 +38,7 @@ export async function GET(
                 'repost' as display_type
             FROM social_posts p
             WHERE p.user_id = $1 AND p.is_deleted = false AND (p.is_hidden = false OR p.user_id = $4)
+            AND (p.is_shadow_hidden = false OR p.user_id = $4)
             AND p.post_type = 'repost'
             ORDER BY p.created_at DESC
             LIMIT $2 OFFSET $3

@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { cachePost, getCachedPost } from "@/lib/redis";
 import { HYDRATE_POSTS_BY_IDS_QUERY, redactUnavailableOriginals } from "@/lib/feedQueryFragments";
+import { redactModerationFields } from "@/lib/moderationRedaction";
 
 /**
  * Hydrate a list of post IDs (e.g. read from the Redis feed:{userId} ZSET)
@@ -44,6 +45,9 @@ export async function hydratePostsByIds(
     if (missingIds.length > 0) {
         const result = await db.query(HYDRATE_POSTS_BY_IDS_QUERY, [viewerId, missingIds]);
         redactUnavailableOriginals(result.rows);
+        // Strip the shadow-hide flag BEFORE caching, so it can't be served
+        // back out of Redis on a later cache hit.
+        redactModerationFields(result.rows);
         for (const row of result.rows) {
             const id = String(row.post_id);
             byId.set(id, row);

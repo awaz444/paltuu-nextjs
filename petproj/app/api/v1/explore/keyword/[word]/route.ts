@@ -81,6 +81,9 @@ export async function GET(req: NextRequest, { params }: { params: { word: string
             WHERE regexp_replace(lower(p.content), '\\[[^\\]]*\\]\\([^)]*\\)', ' ', 'g') ~* ('\\m' || $1 || '\\M')
               AND p.is_deleted = false
               AND p.is_hidden = false
+              -- Author-match carve-out: a shadow-hidden post must still turn up
+              -- when its own author searches for it, or the absence is the tell.
+              AND (p.is_shadow_hidden = false OR p.user_id = $2)
               AND u.is_private = false
               AND NOT EXISTS (
                   SELECT 1 FROM user_blocks b
@@ -108,6 +111,7 @@ export async function GET(req: NextRequest, { params }: { params: { word: string
                  WHERE regexp_replace(lower(p.content), '\\[[^\\]]*\\]\\([^)]*\\)', ' ', 'g') ~* ('\\m' || $1 || '\\M')
                    AND p.is_deleted = false
                    AND p.is_hidden = false
+                   AND (p.is_shadow_hidden = false OR p.user_id = $2)
                    AND u.is_private = false
                    AND NOT EXISTS (
                        SELECT 1 FROM user_blocks b

@@ -7,6 +7,7 @@ import {
     TAGGED_PETS_AGG_CTE,
     originalPostAccessibleExpr,
     originalPostVisibilityFilter,
+    shadowHiddenFilter,
     redactUnavailableOriginals,
 } from "@/lib/feedQueryFragments";
 
@@ -127,6 +128,7 @@ export async function GET(
                 WHERE p.user_id = $1
                   AND p.is_deleted = false
                   AND (p.is_hidden = false OR p.user_id = $2)
+                  ${shadowHiddenFilter('$2')}
                   ${originalPostVisibilityFilter('$2')}
                 ORDER BY p.created_at DESC
                 LIMIT 18

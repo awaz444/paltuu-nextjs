@@ -193,6 +193,10 @@ export async function GET(req: NextRequest) {
                     )
                       AND p.is_deleted = false
                       AND p.is_hidden = false
+                      -- Author-match carve-out: a shadow-hidden post must still
+                      -- turn up when its own author searches for it, or the
+                      -- absence is itself the tell.
+                      AND (p.is_shadow_hidden = false OR p.user_id = $3)
                       AND NOT EXISTS (
                           SELECT 1 FROM user_blocks b
                           WHERE (b.blocker_id = $3 AND b.blocked_id = p.user_id)

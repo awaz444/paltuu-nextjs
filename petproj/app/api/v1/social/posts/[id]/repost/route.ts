@@ -75,6 +75,25 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             );
         }
 
+        // 1b. Shadow-hidden originals. A non-author can't see the post at all,
+        // so a repost attempt can only be a hand-crafted request — 404, same
+        // as any other unreadable post.
+        //
+        // The AUTHOR is a different matter: to them the post looks completely
+        // normal, so refusing (or explaining) would tell them they've been
+        // moderated. Instead the repost succeeds exactly as it appears to, and
+        // the new repost row inherits the shadow-hide — so it stays visible to
+        // them and to nobody else, and can't be used to launder the original
+        // back into public feeds.
+        const originalShadowCheck = await db.query(
+            "SELECT is_shadow_hidden FROM social_posts WHERE post_id = $1",
+            [originalPostId]
+        );
+        const inheritShadowHide = originalShadowCheck.rows[0]?.is_shadow_hidden === true;
+        if (inheritShadowHide && originalAuthorId !== userId) {
+            return NextResponse.json({ error: "Post not found" }, { status: 404 });
+        }
+
         // 2. Check if already reposted
         const existing = await db.query(
             "SELECT repost_id FROM social_reposts WHERE post_id = $1 AND user_id = $2",
@@ -99,10 +118,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             // 4. Create a new post entry (the repost in feed)
             const repostEntry = await client.query(`
                 INSERT INTO social_posts
-                    (user_id, post_type, content, original_post_id, is_repost)
-                VALUES ($1, 'repost', $2, $3, true)
+                    (user_id, post_type, content, original_post_id, is_repost, is_shadow_hidden)
+                VALUES ($1, 'repost', $2, $3, true, $4)
                 RETURNING *
-            `, [userId, content, originalPostId]);
+            `, [userId, content, originalPostId, inheritShadowHide]);
             const repostPostId = repostEntry.rows[0].post_id;
 
             // 4a. Attach any media the quote carries (images/videos) to the
@@ -196,8 +215,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             invalidateViewerPostCache(originalPostId, userId).catch(() => {});
             // Fan the new repost entry out to followers' feed caches, same as a
             // fresh post — otherwise it wouldn't appear in a cached chronological
-            // feed until the 24h ZSET TTL expires.
-            fanOutPostToFollowers(repostPostId, userId, repostEntry.rows[0].created_at, db).catch(() => {});
+            // feed until the 24h ZSET TTL expires. Skipped when the repost
+            // inherited a shadow-hide: no follower may read it, so the only
+            // effect would be rows hydration has to filter back out.
+            if (!inheritShadowHide) {
+                fanOutPostToFollowers(repostPostId, userId, repostEntry.rows[0].created_at, db).catch(() => {});
+            }
 
             // Real-time: push notification to original author
             if (originalAuthorId !== userId) {

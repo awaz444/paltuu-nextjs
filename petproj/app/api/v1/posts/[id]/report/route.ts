@@ -29,8 +29,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         }
 
         // Check if post exists & owner isn't the reporter
-        const postCheck = await db.query('SELECT user_id FROM social_posts WHERE post_id = $1', [targetId]);
+        const postCheck = await db.query('SELECT user_id, is_shadow_hidden FROM social_posts WHERE post_id = $1', [targetId]);
         if (postCheck.rowCount === 0) {
+            return NextResponse.json({ error: "POST_NOT_FOUND" }, { status: 404 });
+        }
+        // A shadow-hidden post is invisible to everyone but its author, so
+        // nobody else is in a position to have seen it — let alone report it.
+        // 404 rather than an explanation: the flag stays unobservable.
+        if (postCheck.rows[0].is_shadow_hidden && postCheck.rows[0].user_id !== reporterId) {
             return NextResponse.json({ error: "POST_NOT_FOUND" }, { status: 404 });
         }
         if (postCheck.rows[0].user_id === reporterId) {

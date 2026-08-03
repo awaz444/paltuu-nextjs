@@ -86,6 +86,7 @@ export async function GET(req: NextRequest, { params }: { params: { tag: string 
             WHERE h.tag = $1
               AND p.is_deleted = false
               AND p.is_hidden = false
+              AND p.is_shadow_hidden = false
               AND NOT EXISTS (
                   SELECT 1 FROM user_blocks b
                   WHERE (b.blocker_id = $2 AND b.blocked_id = p.user_id)

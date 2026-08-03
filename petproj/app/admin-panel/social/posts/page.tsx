@@ -23,13 +23,24 @@ interface Post {
   report_count: number;
   report_weighted_score: number;
   is_hidden: boolean;
+  is_shadow_hidden: boolean;
   tags: ContentTag[];
   username: string;
   name: string;
   action_history: ActionLogEntry[];
 }
 
-type StatusFilter = "all" | "untagged" | "quarantined" | "hidden";
+type StatusFilter = "all" | "untagged" | "quarantined" | "hidden" | "shadow_hidden";
+
+type ModerationState = "none" | "quarantined" | "hidden" | "shadow_hidden";
+
+const FILTER_LABELS: Record<StatusFilter, string> = {
+  all: "All",
+  untagged: "Untagged",
+  quarantined: "Quarantined",
+  hidden: "Hidden",
+  shadow_hidden: "Shadow-hidden",
+};
 
 export default function PostBrowserPage() {
   const { user, isHydrating } = useAuth();
@@ -85,7 +96,14 @@ export default function PostBrowserPage() {
     searchRef.current = setTimeout(() => fetchPosts(q, statusFilter, 0), 400);
   }
 
-  async function handleModerate(postId: number, state: "none" | "quarantined" | "hidden") {
+  const ACTION_TOAST: Record<ModerationState, string> = {
+    hidden: "Hidden from everyone",
+    shadow_hidden: "Shadow-hidden — still visible to the author only",
+    quarantined: "Quarantined",
+    none: "Restored",
+  };
+
+  async function handleModerate(postId: number, state: ModerationState) {
     setActingId(postId);
     try {
       const res = await fetch(`/api/v1/admin/social/posts/${postId}/moderate`, {
@@ -95,9 +113,16 @@ export default function PostBrowserPage() {
       });
       if (!res.ok) { showToast("Failed"); return; }
       setPosts(prev => prev.map(p =>
-        p.post_id === postId ? { ...p, moderation_state: state, is_hidden: state === "hidden" } : p
+        p.post_id === postId
+          ? {
+              ...p,
+              moderation_state: state,
+              is_hidden: state === "hidden",
+              is_shadow_hidden: state === "shadow_hidden",
+            }
+          : p
       ));
-      showToast(state === "hidden" ? "Hidden" : state === "quarantined" ? "Quarantined" : "Restored");
+      showToast(ACTION_TOAST[state]);
     } finally { setActingId(null); }
   }
 
@@ -112,6 +137,14 @@ export default function PostBrowserPage() {
     none: "bg-green-50 text-green-700",
     quarantined: "bg-orange-100 text-orange-700",
     hidden: "bg-red-100 text-red-700",
+    shadow_hidden: "bg-purple-100 text-purple-700",
+  };
+
+  const STATE_LABELS: Record<string, string> = {
+    none: "none",
+    quarantined: "quarantined",
+    hidden: "hidden",
+    shadow_hidden: "shadow-hidden",
   };
 
   return (
@@ -138,7 +171,7 @@ export default function PostBrowserPage() {
           className="flex-1 min-w-48 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
         />
         <div className="flex gap-2 flex-wrap">
-          {(["all", "untagged", "quarantined", "hidden"] as StatusFilter[]).map(s => (
+          {(["all", "untagged", "quarantined", "hidden", "shadow_hidden"] as StatusFilter[]).map(s => (
             <button
               key={s}
               onClick={() => { setStatusFilter(s); setOffset(0); }}
@@ -146,7 +179,7 @@ export default function PostBrowserPage() {
                 statusFilter === s ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-300 hover:border-primary"
               }`}
             >
-              {s.charAt(0).toUpperCase() + s.slice(1)}
+              {FILTER_LABELS[s]}
             </button>
           ))}
         </div>
@@ -169,7 +202,7 @@ export default function PostBrowserPage() {
                     {post.username && <span className="text-xs text-gray-500">@{post.username}</span>}
                     <span className="text-xs text-gray-400">{new Date(post.created_at).toLocaleDateString()}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${STATE_COLORS[post.moderation_state ?? "none"]}`}>
-                      {post.moderation_state ?? "none"}
+                      {STATE_LABELS[post.moderation_state ?? "none"] ?? post.moderation_state}
                     </span>
                     {post.tagging_status === "untagged" && (
                       <span className="text-xs bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded-full">untagged</span>
@@ -220,15 +253,24 @@ export default function PostBrowserPage() {
                         Quarantine
                       </button>
                       <button
+                        onClick={() => handleModerate(post.post_id, "shadow_hidden")}
+                        disabled={actingId === post.post_id}
+                        title="Hide from everyone except the author. The author is never told and sees no change."
+                        className="text-xs px-3 py-1.5 rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-50 disabled:opacity-50 transition-all"
+                      >
+                        Shadow-hide
+                      </button>
+                      <button
                         onClick={() => handleModerate(post.post_id, "hidden")}
                         disabled={actingId === post.post_id}
+                        title="Hide from everyone, the author included."
                         className="text-xs px-3 py-1.5 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 transition-all"
                       >
                         Hide
                       </button>
                     </>
                   )}
-                  {(post.moderation_state === "quarantined" || post.moderation_state === "hidden") && (
+                  {(post.moderation_state === "quarantined" || post.moderation_state === "hidden" || post.moderation_state === "shadow_hidden") && (
                     <button
                       onClick={() => handleModerate(post.post_id, "none")}
                       disabled={actingId === post.post_id}

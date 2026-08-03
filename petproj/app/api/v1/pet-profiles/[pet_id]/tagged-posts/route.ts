@@ -96,6 +96,7 @@ export async function GET(
              WHERE ppt.pet_profile_id = $1
                AND p.is_deleted = false
                AND (p.is_hidden = false OR p.user_id = $2)
+               AND (p.is_shadow_hidden = false OR p.user_id = $2)
                ${cursorClause}
              ORDER BY p.post_id DESC
              LIMIT $3`,

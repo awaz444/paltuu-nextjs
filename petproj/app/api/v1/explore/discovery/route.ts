@@ -78,6 +78,7 @@ export async function GET(req: NextRequest) {
                     JOIN users u ON u.user_id = p.user_id
                     WHERE p.is_deleted = false
                       AND p.is_hidden = false
+                      AND p.is_shadow_hidden = false
                       AND u.is_private = false
                       AND p.created_at >= NOW() - INTERVAL '21 days'
                       AND p.content IS NOT NULL AND p.content <> ''
@@ -127,6 +128,7 @@ export async function GET(req: NextRequest) {
                     JOIN users u ON u.user_id = p.user_id
                     WHERE p.is_deleted = false
                       AND p.is_hidden = false
+                      AND p.is_shadow_hidden = false
                       AND u.is_private = false
                       AND p.created_at >= NOW() - INTERVAL '365 days'
                       AND EXISTS (SELECT 1 FROM social_post_media m WHERE m.post_id = p.post_id)

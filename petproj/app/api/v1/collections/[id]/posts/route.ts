@@ -4,8 +4,10 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 import {
   originalPostAccessibleExpr,
   originalPostVisibilityFilter,
+  shadowHiddenFilter,
   redactUnavailableOriginals,
 } from "@/lib/feedQueryFragments";
+import { redactModerationFields } from "@/lib/moderationRedaction";
 
 export const dynamic = "force-dynamic";
 
@@ -86,6 +88,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       LEFT JOIN users ou         ON ou.user_id = op.user_id
       WHERE cp.collection_id = $1
         AND p.is_deleted = false
+        ${shadowHiddenFilter('$2')}
         ${originalPostVisibilityFilter('$2')}
     `;
 
@@ -101,6 +104,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const result = await db.query(query, queryParams);
     redactUnavailableOriginals(result.rows);
+    // Never let the shadow-hide flag reach the app — an author who could see
+    // it would know their post had been moderated.
+    redactModerationFields(result.rows);
     const posts = result.rows.map(row => ({
       ...row,
       is_saved: true

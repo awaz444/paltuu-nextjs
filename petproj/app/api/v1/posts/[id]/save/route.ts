@@ -26,6 +26,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (!resolved || resolved.isDeleted) {
       return NextResponse.json({ error: { code: "POST_NOT_FOUND", message: "Post does not exist", status: 404 } }, { status: 404 });
     }
+    // A shadow-hidden post is visible only to its author — to anyone else it
+    // doesn't exist, so it can't be bookmarked either. The author saving their
+    // own post still works exactly as normal.
+    if (resolved.isShadowHidden && resolved.authorId !== userId) {
+      return NextResponse.json({ error: { code: "POST_NOT_FOUND", message: "Post does not exist", status: 404 } }, { status: 404 });
+    }
     const postId = resolved.postId;
 
     let wasNewSave = false;

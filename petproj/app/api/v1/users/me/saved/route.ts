@@ -61,8 +61,9 @@ export async function GET(req: NextRequest) {
       FROM saved_posts sp
       JOIN social_posts p ON p.post_id = sp.post_id
       JOIN users u ON u.user_id = p.user_id
-      WHERE sp.user_id = $1 
+      WHERE sp.user_id = $1
         AND p.is_deleted = false
+        AND (p.is_shadow_hidden = false OR p.user_id = $1)
     `;
 
     const params: any[] = [userId];

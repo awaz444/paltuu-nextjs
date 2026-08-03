@@ -30,8 +30,10 @@ import {
     VIEWER_COMMENTS_CTE,
     originalPostAccessibleExpr,
     originalPostVisibilityFilter,
+    shadowHiddenFilter,
     redactUnavailableOriginals,
 } from "@/lib/feedQueryFragments";
+import { redactModerationFields } from "@/lib/moderationRedaction";
 import { getReportSettings } from "@/lib/reportScoring";
 import { getSurfaceableComment } from "@/lib/commentSurfacing";
 import { getSurfacedCommentIds, markCommentSurfaced } from "@/lib/redis";
@@ -238,6 +240,7 @@ export async function GET(req: NextRequest) {
                            OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
                     )
                     AND (p.user_id = $1 OR u.is_private = false OR fs.following_id IS NOT NULL)
+                    ${shadowHiddenFilter('$1')}
                     ${originalPostVisibilityFilter('$1')}
                     AND NOT EXISTS (
                         SELECT 1 FROM hidden_posts hp WHERE hp.user_id = $1 AND hp.post_id = p.post_id
@@ -260,6 +263,9 @@ export async function GET(req: NextRequest) {
             ]);
             const posts  = result.rows;
             redactUnavailableOriginals(posts);
+            // Never let the shadow-hide flag reach the app — an author who could
+            // see it would know their post had been moderated.
+            redactModerationFields(posts);
 
             // Log impressions for the A/B experiment (fire-and-forget).
             logFeedImpressions(
@@ -399,6 +405,7 @@ export async function GET(req: NextRequest) {
                 AND (p.user_id = $1 OR u.is_private = false OR EXISTS (
                     SELECT 1 FROM social_follows f WHERE f.follower_id = $1 AND f.following_id = p.user_id AND f.status = 'accepted'
                 ))
+                ${shadowHiddenFilter('$1')}
                 ${originalPostVisibilityFilter('$1')}
                 AND NOT EXISTS (
                     SELECT 1 FROM hidden_posts hp WHERE hp.user_id = $1 AND hp.post_id = p.post_id
@@ -498,6 +505,7 @@ export async function GET(req: NextRequest) {
                            OR (b.blocker_id = p.user_id AND b.blocked_id = $1)
                     )
                     AND (p.user_id = $1 OR u.is_private = false OR fs.following_id IS NOT NULL)
+                    ${shadowHiddenFilter('$1')}
                     ${originalPostVisibilityFilter('$1')}
                     AND NOT EXISTS (
                         SELECT 1 FROM hidden_posts hp WHERE hp.user_id = $1 AND hp.post_id = p.post_id
@@ -518,6 +526,9 @@ export async function GET(req: NextRequest) {
         const result = await db.query(feedQuery, queryParams);
         const posts  = result.rows;
         redactUnavailableOriginals(posts);
+        // Never let the shadow-hide flag reach the app — an author who could
+        // see it would know their post had been moderated.
+        redactModerationFields(posts);
 
         // Cursor = next offset (null when we got fewer rows than requested)
         const nextCursor = posts.length === limit ? String(offset + limit) : null;

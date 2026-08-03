@@ -67,6 +67,7 @@ export async function getSurfaceableComment(
         WHERE c.is_deleted = false
           AND p.is_deleted = false
           AND p.is_hidden = false
+          AND p.is_shadow_hidden = false
           AND (p.moderation_state IS NULL OR p.moderation_state <> 'quarantined')
           -- Post author must be private, and the viewer must NOT already
           -- follow them — the inverse of the normal visibility gate.

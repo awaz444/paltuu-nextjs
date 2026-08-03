@@ -51,12 +51,17 @@ export async function GET(
             return NextResponse.json({ error: "This profile is private" }, { status: 403 });
         }
 
+        // A shadow-hidden polaroid is still returned to its owner, so their
+        // gallery looks untouched; everyone else gets the gallery as if it
+        // weren't there. The flag itself is never selected — the owner must
+        // not be able to tell.
         const result = await db.query(
             `SELECT photo_id, photo_url, caption, ordering, created_at
              FROM pet_profile_photos
              WHERE pet_profile_id = $1
+               AND ($2::boolean OR is_shadow_hidden = false)
              ORDER BY ordering ASC, created_at ASC`,
-            [params.pet_id]
+            [params.pet_id, access.isOwner]
         );
 
         return NextResponse.json({ photos: result.rows, total: result.rowCount });

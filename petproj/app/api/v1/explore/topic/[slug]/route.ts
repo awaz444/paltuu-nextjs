@@ -87,6 +87,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
             WHERE pct.tag_id = $1
               AND p.is_deleted = false
               AND p.is_hidden = false
+              AND p.is_shadow_hidden = false
               AND (p.moderation_state IS NULL OR p.moderation_state <> 'quarantined')
               AND COALESCE(u.is_private, false) = false
               AND NOT EXISTS (

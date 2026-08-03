@@ -19,7 +19,11 @@ async function resolveProfile(petId: string, viewerIdRaw: string | null) {
             u.name            AS owner_name,
             u.social_username AS owner_social_username,
             u.profile_image_url AS owner_avatar,
-            (SELECT COUNT(*) FROM pet_profile_photos ppp WHERE ppp.pet_profile_id = pp.pet_profile_id)::int AS photo_count,
+            -- Counts only the polaroids this viewer can actually open, so the
+            -- gallery badge doesn't advertise photos hidden from them.
+            (SELECT COUNT(*) FROM pet_profile_photos ppp
+             WHERE ppp.pet_profile_id = pp.pet_profile_id
+               AND (pp.owner_id = $2 OR ppp.is_shadow_hidden = false))::int AS photo_count,
             (SELECT COUNT(*) FROM post_pet_tags ppt WHERE ppt.pet_profile_id = pp.pet_profile_id)::int       AS tagged_post_count,
             EXISTS(
                 SELECT 1 FROM social_follows f

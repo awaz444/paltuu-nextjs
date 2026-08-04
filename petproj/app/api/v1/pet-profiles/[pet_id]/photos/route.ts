@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import { parseTakenOn } from "@/lib/photoTakenOn";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +57,8 @@ export async function GET(
         // weren't there. The flag itself is never selected — the owner must
         // not be able to tell.
         const result = await db.query(
-            `SELECT photo_id, photo_url, caption, ordering, created_at
+            `SELECT photo_id, photo_url, caption, ordering, created_at,
+                    to_char(taken_on, 'YYYY-MM-DD') AS taken_on
              FROM pet_profile_photos
              WHERE pet_profile_id = $1
                AND ($2::boolean OR is_shadow_hidden = false)
@@ -102,6 +104,13 @@ export async function POST(
             return NextResponse.json({ error: "photo_url is required" }, { status: 400 });
         }
 
+        // Optional — an absent/null taken_on stores as NULL and the client
+        // just doesn't render the date chip.
+        const takenOn = parseTakenOn(body.taken_on);
+        if (!takenOn.ok) {
+            return NextResponse.json({ error: takenOn.error }, { status: 400 });
+        }
+
         // ── Max 20 photos check ───────────────────────────────────────────────
         const countRes = await db.query(
             "SELECT COUNT(*) FROM pet_profile_photos WHERE pet_profile_id = $1",
@@ -118,10 +127,11 @@ export async function POST(
         const ordering = parseInt(countRes.rows[0].count, 10);
 
         const result = await db.query(
-            `INSERT INTO pet_profile_photos (pet_profile_id, photo_url, caption, ordering)
-             VALUES ($1, $2, $3, $4)
-             RETURNING *`,
-            [params.pet_id, String(photo_url).trim(), caption || null, ordering]
+            `INSERT INTO pet_profile_photos (pet_profile_id, photo_url, caption, ordering, taken_on)
+             VALUES ($1, $2, $3, $4, $5::date)
+             RETURNING photo_id, pet_profile_id, photo_url, caption, ordering, created_at,
+                       to_char(taken_on, 'YYYY-MM-DD') AS taken_on`,
+            [params.pet_id, String(photo_url).trim(), caption || null, ordering, takenOn.value]
         );
 
         return NextResponse.json(result.rows[0], { status: 201 });

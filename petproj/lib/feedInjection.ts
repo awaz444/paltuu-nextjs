@@ -14,22 +14,33 @@ interface InjectionSlot {
     type: InjectedType;
 }
 
+export interface Coords {
+    lat: number;
+    lng: number;
+}
+
 /**
  * Interleaves adoption-listing and lost/found cards into a page of feed posts.
  * Slot positions are computed from the item's *absolute* position in the
  * viewer's overall feed (offset + index), so the 1-in-12 cadence stays
  * consistent across page boundaries during infinite scroll.
  *
- * Cards prefer the viewer's own city when it's set, but fall back to
- * app-wide candidates otherwise (most beta accounts have no city_id yet,
- * and even set cities mostly have few or zero listings — a hard city
- * filter meant these cards almost never appeared). Excludes anything shown
- * to this viewer within the last IMPRESSION_COOLDOWN_DAYS days.
+ * "Near you" is based on the device's actual GPS coords (passed in from the
+ * client, see app/api/v1/social/posts/route.ts), not the viewer's stored
+ * city_id — most accounts don't have one set, and even set cities mostly
+ * have few or zero listings. Neither pets nor lost-found posts have their
+ * own lat/long, only a city_id, so distance is computed against that city's
+ * coordinates (cities.latitude/longitude) — coarser than a precise distance,
+ * but enough to rank "same city as you" ahead of "across the country". When
+ * coords aren't available (permission denied, older client) candidates just
+ * fall back to newest-first, app-wide. Excludes anything shown to this
+ * viewer within the last IMPRESSION_COOLDOWN_DAYS days.
  */
 export async function interleaveFeedInjections(
     posts: any[],
     viewerUserId: number | null,
     offset: number,
+    coords: Coords | null,
 ): Promise<any[]> {
     const tagged = posts.map((p) => ({ ...p, feed_item_type: "post" }));
     if (!viewerUserId || posts.length === 0) return tagged;
@@ -48,25 +59,15 @@ export async function interleaveFeedInjections(
     }
     if (slots.length === 0) return tagged;
 
-    const cityRes = await db.query("SELECT city_id FROM users WHERE user_id = $1", [viewerUserId]);
-    // Most beta testers haven't set a city yet (city_id is NULL for the
-    // majority of accounts), and even set cities mostly have few or zero
-    // adoption listings. Requiring an exact city match meant these cards
-    // almost never appeared. cityId is now just a *preference* — candidates
-    // are still pulled from the whole app, with the viewer's own city (when
-    // known) sorted first, so "near you" degrades to "anywhere" instead of
-    // showing nothing.
-    const cityId: number | null = cityRes.rows[0]?.city_id ?? null;
-
     const neededAdoption = slots.filter((s) => s.type === "adoption").length;
     const neededLostFound = slots.filter((s) => s.type === "lost_found").length;
 
     const [adoptionCandidates, lostFoundCandidates] = await Promise.all([
         neededAdoption > 0
-            ? fetchAdoptionCandidates(cityId, viewerUserId, neededAdoption + 2)
+            ? fetchAdoptionCandidates(coords, viewerUserId, neededAdoption + 2)
             : Promise.resolve([]),
         neededLostFound > 0
-            ? fetchLostFoundCandidates(cityId, viewerUserId, neededLostFound + 2)
+            ? fetchLostFoundCandidates(coords, viewerUserId, neededLostFound + 2)
             : Promise.resolve([]),
     ]);
 
@@ -102,10 +103,28 @@ export async function interleaveFeedInjections(
     return result;
 }
 
-// cityId is a soft preference, not a filter: candidates from the viewer's
-// own city (when known) sort first via the CASE ordering, but the query
-// still pulls app-wide so a missing/thin city never means zero candidates.
-async function fetchAdoptionCandidates(cityId: number | null, viewerUserId: number, limit: number) {
+// Haversine distance in SQL from the given device coords to each candidate's
+// city (cities table, aliased per query) — mirrors app/api/v1/explore/vets-nearby
+// for parity. Without coords, order is just newest-first, app-wide.
+function distanceExpr(cityAlias: string): string {
+    return `
+        6371 * acos(LEAST(1.0, GREATEST(-1.0,
+            cos(radians($1)) * cos(radians(${cityAlias}.latitude)) * cos(radians(${cityAlias}.longitude) - radians($2))
+            + sin(radians($1)) * sin(radians(${cityAlias}.latitude))
+        )))
+    `;
+}
+
+async function fetchAdoptionCandidates(coords: Coords | null, viewerUserId: number, limit: number) {
+    const orderBy = coords
+        ? `${distanceExpr("cities")} ASC`
+        : `pets.created_at DESC`;
+    const params = coords
+        ? [coords.lat, coords.lng, viewerUserId, limit]
+        : [viewerUserId, limit];
+    const viewerIdIdx = coords ? 3 : 1;
+    const limitIdx = coords ? 4 : 2;
+
     const result = await db.query(
         `SELECT
             pets.pet_id AS id,
@@ -124,17 +143,26 @@ async function fetchAdoptionCandidates(cityId: number | null, viewerUserId: numb
            AND pets.approved = true
            AND NOT EXISTS (
                SELECT 1 FROM feed_injected_impressions fi
-               WHERE fi.user_id = $2 AND fi.item_type = 'adoption' AND fi.item_id = pets.pet_id
+               WHERE fi.user_id = $${viewerIdIdx} AND fi.item_type = 'adoption' AND fi.item_id = pets.pet_id
                  AND fi.shown_at > NOW() - INTERVAL '${IMPRESSION_COOLDOWN_DAYS} days'
            )
-         ORDER BY (pets.city_id = $1) DESC, pets.created_at DESC
-         LIMIT $3`,
-        [cityId, viewerUserId, limit]
+         ORDER BY ${orderBy}
+         LIMIT $${limitIdx}`,
+        params
     );
     return result.rows.map((row) => ({ ...row, feed_item_type: "adoption_listing" }));
 }
 
-async function fetchLostFoundCandidates(cityId: number | null, viewerUserId: number, limit: number) {
+async function fetchLostFoundCandidates(coords: Coords | null, viewerUserId: number, limit: number) {
+    const orderBy = coords
+        ? `${distanceExpr("c")} ASC`
+        : `p.post_date DESC, p.post_id DESC`;
+    const params = coords
+        ? [coords.lat, coords.lng, viewerUserId, limit]
+        : [viewerUserId, limit];
+    const viewerIdIdx = coords ? 3 : 1;
+    const limitIdx = coords ? 4 : 2;
+
     const result = await db.query(
         `SELECT
             p.post_id AS id,
@@ -156,12 +184,12 @@ async function fetchLostFoundCandidates(cityId: number | null, viewerUserId: num
          WHERE COALESCE(p.status, 'active') = 'active'
            AND NOT EXISTS (
                SELECT 1 FROM feed_injected_impressions fi
-               WHERE fi.user_id = $2 AND fi.item_type = 'lost_found' AND fi.item_id = p.post_id
+               WHERE fi.user_id = $${viewerIdIdx} AND fi.item_type = 'lost_found' AND fi.item_id = p.post_id
                  AND fi.shown_at > NOW() - INTERVAL '${IMPRESSION_COOLDOWN_DAYS} days'
            )
-         ORDER BY (p.city_id = $1) DESC, p.post_date DESC, p.post_id DESC
-         LIMIT $3`,
-        [cityId, viewerUserId, limit]
+         ORDER BY ${orderBy}
+         LIMIT $${limitIdx}`,
+        params
     );
     return result.rows.map((row) => ({ ...row, feed_item_type: "lost_found" }));
 }

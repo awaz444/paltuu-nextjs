@@ -106,6 +106,19 @@ export async function GET(req: NextRequest) {
         const offset  = Math.min(1000, Math.max(0, parseInt(searchParams.get("cursor") || "0", 10))); // cursor = page offset
         const mode    = searchParams.get("mode") || "following";
 
+        // Device GPS coords for the adoption/lost-found cards interleaved into
+        // the feed (see lib/feedInjection.ts) — "near you" is now based on
+        // where the phone actually is, not the viewer's stored city_id (most
+        // accounts don't have one set). Falls back to no distance sort when
+        // the client hasn't sent coords (e.g. location permission denied).
+        const lat = parseFloat(searchParams.get("lat") || "");
+        const lng = parseFloat(searchParams.get("lng") || "");
+        const coords =
+            Number.isFinite(lat) && Number.isFinite(lng) &&
+            lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
+                ? { lat, lng }
+                : null;
+
         // ── BETA OVERRIDE ────────────────────────────────────────────────
         // For the beta test we want every tester looking at the same simple
         // feed: all public posts, newest first — no following/personalized/
@@ -284,7 +297,7 @@ export async function GET(req: NextRequest) {
             // surfaced-comment card (if any) is spliced in, so pagination stays
             // correct regardless of whether a card was injected.
             const nextCursor = posts.length === limit ? String(offset + limit) : null;
-            const postsWithInjections = await interleaveFeedInjections(posts, viewerIdNum, offset);
+            const postsWithInjections = await interleaveFeedInjections(posts, viewerIdNum, offset, coords);
             const postsWithSurfaced = await maybeInjectSurfacedComment(viewerIdNum, offset, postsWithInjections);
 
             return NextResponse.json({
@@ -320,7 +333,7 @@ export async function GET(req: NextRequest) {
             if (cachedIds && cachedIds.length > 0) {
                 const hydrated = await hydratePostsByIds(cachedIds, viewerIdNum);
                 if (hydrated.length === cachedIds.length) {
-                    const hydratedWithInjections = await interleaveFeedInjections(hydrated, viewerIdNum, offset);
+                    const hydratedWithInjections = await interleaveFeedInjections(hydrated, viewerIdNum, offset, coords);
                     const hydratedWithSurfaced = await maybeInjectSurfacedComment(viewerIdNum, offset, hydratedWithInjections);
                     return NextResponse.json({
                         posts: hydratedWithSurfaced,
@@ -533,7 +546,7 @@ export async function GET(req: NextRequest) {
         // Cursor = next offset (null when we got fewer rows than requested)
         const nextCursor = posts.length === limit ? String(offset + limit) : null;
         const viewerIdNum = userId ? parseInt(String(userId), 10) : null;
-        const postsWithInjections = await interleaveFeedInjections(posts, viewerIdNum, offset);
+        const postsWithInjections = await interleaveFeedInjections(posts, viewerIdNum, offset, coords);
         const postsWithSurfaced = await maybeInjectSurfacedComment(parseInt(String(viewerId), 10), offset, postsWithInjections);
 
         return NextResponse.json({

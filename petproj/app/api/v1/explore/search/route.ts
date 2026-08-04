@@ -94,7 +94,8 @@ export async function GET(req: NextRequest) {
 
         // ── Entity Search Functions ──────────────────────────────────────────
 
-        // Users — full-text match OR trigram fuzzy match (typo-tolerant), ranked by relevance
+        // Users — full-text match OR trigram fuzzy match (typo-tolerant),
+        // ranked by relationship (following > followers > others) then text relevance
         async function searchUsers(lim: number, cur: any) {
             let query = `
                 SELECT * FROM (
@@ -102,6 +103,12 @@ export async function GET(req: NextRequest) {
                            u.follower_count, u.created_at,
                            false AS is_blocked_by_me, false AS is_blocking_me,
                            EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $3 AND following_id = u.user_id AND status = 'accepted') AS is_following,
+                           EXISTS(SELECT 1 FROM social_follows WHERE follower_id = u.user_id AND following_id = $3 AND status = 'accepted') AS is_followed_by,
+                           CASE
+                               WHEN EXISTS(SELECT 1 FROM social_follows WHERE follower_id = $3 AND following_id = u.user_id AND status = 'accepted') THEN 2
+                               WHEN EXISTS(SELECT 1 FROM social_follows WHERE follower_id = u.user_id AND following_id = $3 AND status = 'accepted') THEN 1
+                               ELSE 0
+                           END AS relationship_boost,
                            GREATEST(
                                similarity(u.name, $1),
                                similarity(coalesce(u.social_username, ''), $1),
@@ -124,11 +131,18 @@ export async function GET(req: NextRequest) {
             const params: any[] = [plainTsQuery, lim + 1, userId];
 
             if (cur) {
-                query += ` WHERE (sub.rank, sub.user_id) < ($4, $5)`;
-                params.push(cur.sort_key, cur.id);
+                // sort_key: { boost, rank } (new) or bare rank number (legacy)
+                const boost = typeof cur.sort_key === "object" && cur.sort_key !== null
+                    ? (cur.sort_key.boost ?? 0)
+                    : 0;
+                const rank = typeof cur.sort_key === "object" && cur.sort_key !== null
+                    ? cur.sort_key.rank
+                    : cur.sort_key;
+                query += ` WHERE (sub.relationship_boost, sub.rank, sub.user_id) < ($4, $5, $6)`;
+                params.push(boost, rank, cur.id);
             }
 
-            query += ` ORDER BY sub.rank DESC, sub.user_id DESC LIMIT $2`;
+            query += ` ORDER BY sub.relationship_boost DESC, sub.rank DESC, sub.user_id DESC LIMIT $2`;
             const res = await db.query(query, params);
             return res.rows;
         }
@@ -408,8 +422,14 @@ export async function GET(req: NextRequest) {
                     nextCursor = encodeCursor(lastItem.breed, "0");
                 } else if (type === "products") {
                     nextCursor = encodeCursor(idField, lastItem.created_at);
+                } else if (type === "users") {
+                    // Keyset includes relationship_boost so paging stays stable across social tiers
+                    nextCursor = encodeCursor(idField, {
+                        boost: lastItem.relationship_boost ?? 0,
+                        rank: lastItem.rank,
+                    });
                 } else {
-                    // users, pets, posts, adoptions, lost_found, vets — ranked by relevance
+                    // pets, posts, adoptions, lost_found, vets — ranked by relevance
                     nextCursor = encodeCursor(idField, lastItem.rank);
                 }
             }

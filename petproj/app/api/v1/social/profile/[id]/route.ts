@@ -92,8 +92,18 @@ export async function GET(
                 ${VIEWER_COMMENTS_CTE},
                 ${TAGGED_PETS_AGG_CTE}
                 SELECT
-                    p.post_id, p.content, p.created_at, p.updated_at, p.post_type,
+                    p.post_id, p.user_id, p.content, p.created_at, p.updated_at, p.post_type,
                     p.is_repost, p.original_post_id,
+                    -- Author block, same shape the feed returns. Every post here
+                    -- belongs to the profile owner, but the client must not have
+                    -- to reconstruct that: badges in particular were being
+                    -- dropped because the screens only patched name/image/handle.
+                    u.name               AS author_name,
+                    u.profile_image_url  AS author_image,
+                    COALESCE(u.social_username, u.username) AS social_username,
+                    u.verified           AS author_verified,
+                    u.founding_club      AS author_founding_club,
+                    u.is_private         AS author_is_private,
                     -- A plain repost (content IS NULL) is a hollow row — its
                     -- stats, likes, saves and comments all belong to the root
                     -- post it re-surfaces, not to the repost entry itself.
@@ -107,6 +117,8 @@ export async function GET(
                     op.user_id           AS original_user_id,
                     ou.name              AS original_author_name,
                     ou.social_username   AS original_social_username,
+                    ou.verified          AS original_author_verified,
+                    ou.founding_club     AS original_author_founding_club,
                     ou.profile_image_url AS original_author_image,
                     ou.is_private        AS original_author_is_private,
                     ${originalPostAccessibleExpr('$2')} AS original_available,
@@ -116,6 +128,7 @@ export async function GET(
                     (sp.save_id IS NOT NULL) AS is_saved,
                     (vc.post_id IS NOT NULL) AS is_commented
                 FROM social_posts p
+                JOIN users u              ON u.user_id = p.user_id
                 LEFT JOIN social_posts op ON op.post_id = p.original_post_id
                 LEFT JOIN users ou        ON ou.user_id = op.user_id
                 LEFT JOIN post_media pm   ON pm.post_id  = p.post_id

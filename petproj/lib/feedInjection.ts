@@ -20,10 +20,11 @@ interface InjectionSlot {
  * viewer's overall feed (offset + index), so the 1-in-12 cadence stays
  * consistent across page boundaries during infinite scroll.
  *
- * Cards are scoped to the viewer's own city (no cross-city fallback — an
- * empty candidate pool just skips that slot rather than forcing an empty
- * card) and excludes anything shown to this viewer within the last
- * IMPRESSION_COOLDOWN_DAYS days.
+ * Cards prefer the viewer's own city when it's set, but fall back to
+ * app-wide candidates otherwise (most beta accounts have no city_id yet,
+ * and even set cities mostly have few or zero listings — a hard city
+ * filter meant these cards almost never appeared). Excludes anything shown
+ * to this viewer within the last IMPRESSION_COOLDOWN_DAYS days.
  */
 export async function interleaveFeedInjections(
     posts: any[],
@@ -48,8 +49,14 @@ export async function interleaveFeedInjections(
     if (slots.length === 0) return tagged;
 
     const cityRes = await db.query("SELECT city_id FROM users WHERE user_id = $1", [viewerUserId]);
+    // Most beta testers haven't set a city yet (city_id is NULL for the
+    // majority of accounts), and even set cities mostly have few or zero
+    // adoption listings. Requiring an exact city match meant these cards
+    // almost never appeared. cityId is now just a *preference* — candidates
+    // are still pulled from the whole app, with the viewer's own city (when
+    // known) sorted first, so "near you" degrades to "anywhere" instead of
+    // showing nothing.
     const cityId: number | null = cityRes.rows[0]?.city_id ?? null;
-    if (!cityId) return tagged; // no city set — nothing to scope injections to
 
     const neededAdoption = slots.filter((s) => s.type === "adoption").length;
     const neededLostFound = slots.filter((s) => s.type === "lost_found").length;
@@ -95,7 +102,10 @@ export async function interleaveFeedInjections(
     return result;
 }
 
-async function fetchAdoptionCandidates(cityId: number, viewerUserId: number, limit: number) {
+// cityId is a soft preference, not a filter: candidates from the viewer's
+// own city (when known) sort first via the CASE ordering, but the query
+// still pulls app-wide so a missing/thin city never means zero candidates.
+async function fetchAdoptionCandidates(cityId: number | null, viewerUserId: number, limit: number) {
     const result = await db.query(
         `SELECT
             pets.pet_id AS id,
@@ -112,20 +122,19 @@ async function fetchAdoptionCandidates(cityId: number, viewerUserId: number, lim
          JOIN cities ON cities.city_id = pets.city_id
          WHERE pets.adoption_status = 'available'
            AND pets.approved = true
-           AND pets.city_id = $1
            AND NOT EXISTS (
                SELECT 1 FROM feed_injected_impressions fi
                WHERE fi.user_id = $2 AND fi.item_type = 'adoption' AND fi.item_id = pets.pet_id
                  AND fi.shown_at > NOW() - INTERVAL '${IMPRESSION_COOLDOWN_DAYS} days'
            )
-         ORDER BY pets.created_at DESC
+         ORDER BY (pets.city_id = $1) DESC, pets.created_at DESC
          LIMIT $3`,
         [cityId, viewerUserId, limit]
     );
     return result.rows.map((row) => ({ ...row, feed_item_type: "adoption_listing" }));
 }
 
-async function fetchLostFoundCandidates(cityId: number, viewerUserId: number, limit: number) {
+async function fetchLostFoundCandidates(cityId: number | null, viewerUserId: number, limit: number) {
     const result = await db.query(
         `SELECT
             p.post_id AS id,
@@ -145,13 +154,12 @@ async function fetchLostFoundCandidates(cityId: number, viewerUserId: number, li
          FROM lost_and_found_posts p
          JOIN cities c ON c.city_id = p.city_id
          WHERE COALESCE(p.status, 'active') = 'active'
-           AND p.city_id = $1
            AND NOT EXISTS (
                SELECT 1 FROM feed_injected_impressions fi
                WHERE fi.user_id = $2 AND fi.item_type = 'lost_found' AND fi.item_id = p.post_id
                  AND fi.shown_at > NOW() - INTERVAL '${IMPRESSION_COOLDOWN_DAYS} days'
            )
-         ORDER BY p.post_date DESC, p.post_id DESC
+         ORDER BY (p.city_id = $1) DESC, p.post_date DESC, p.post_id DESC
          LIMIT $3`,
         [cityId, viewerUserId, limit]
     );

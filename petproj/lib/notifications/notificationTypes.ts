@@ -132,7 +132,12 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
     type: NotificationType.SOCIAL_FOLLOW_REQUEST,
     title: (data) => data.sender_name || "Someone",
     body: "requested to follow you",
-    deepLinkPattern: "paltuu://notifications/follow-requests",
+    // Same target as the other two follow notification types (new follower,
+    // request accepted) — the app's deep link router has no route registered
+    // for a bare "notifications/follow-requests" path, so that pattern fell
+    // through to its catch-all and reopened the notifications screen on top
+    // of itself instead of navigating anywhere.
+    deepLinkPattern: "paltuu://profile/{sender_id}",
   },
   [NotificationType.SOCIAL_FOLLOW_REQUEST_ACCEPTED]: {
     type: NotificationType.SOCIAL_FOLLOW_REQUEST_ACCEPTED,

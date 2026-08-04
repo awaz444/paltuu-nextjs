@@ -10,7 +10,10 @@ export const dynamic = "force-dynamic";
  * `sort_key` is whatever the entity is currently ordered by (relevance rank,
  * created_at, post_count, ...) — kept generic since it varies per entity type.
  */
-function encodeCursor(id: number | string, sortKey: number | string | Date | null) {
+function encodeCursor(
+    id: number | string,
+    sortKey: number | string | Date | null | { boost: number; rank: number | string }
+) {
     if (id === null || id === undefined || sortKey === null || sortKey === undefined) return null;
     const data = JSON.stringify({ id, sort_key: sortKey });
     return Buffer.from(data).toString("base64");

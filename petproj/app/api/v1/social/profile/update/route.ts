@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { validateUsername } from "@/utils/usernameValidation";
+import { validateEmail } from "@/utils/emailValidation";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,15 @@ export async function PATCH(req: NextRequest) {
             if ((existing.rowCount ?? 0) > 0) {
                 return NextResponse.json({ error: "This social handle is already taken." }, { status: 409 });
             }
+        }
+
+        // ── Email validation (was completely missing — only client-side "@." check) ──
+        if (body.email !== undefined) {
+            const validation = validateEmail(body.email);
+            if (!validation.valid) {
+                return NextResponse.json({ error: validation.error }, { status: 400 });
+            }
+            body.email = validation.normalised!;
         }
 
         const updates: string[] = [];

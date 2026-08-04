@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { sendBetaSignupNotification } from "@/utils/mailjet";
+import { validateEmail } from "@/utils/emailValidation";
 
 /**
  * @swagger
@@ -18,16 +19,16 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Email required" }, { status: 400 });
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return NextResponse.json({ error: "Invalid email" }, { status: 400 });
+        const emailValidation = validateEmail(email);
+        if (!emailValidation.valid) {
+            return NextResponse.json({ error: emailValidation.error }, { status: 400 });
         }
 
         if (platform !== "ios" && platform !== "android") {
             return NextResponse.json({ error: "Platform must be 'ios' or 'android'" }, { status: 400 });
         }
 
-        const normalizedEmail = email.trim().toLowerCase();
+        const normalizedEmail = emailValidation.normalised!;
 
         await db.query(`
             INSERT INTO beta_signups (email, platform, created_at, updated_at)

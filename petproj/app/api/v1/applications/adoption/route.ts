@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { AdoptionNotifications } from "@/lib/notifications";
 import { sendAdoptionApplicationEmails } from "@/utils/mailjet";
+import { withRetry } from "@/utils/retry";
 
 /**
  * @swagger
@@ -82,12 +83,16 @@ export async function POST(req: NextRequest) {
         }
 
         // 1. Check Pet Ownership
-        const petRes = await db.query('SELECT owner_id, pet_name FROM pets WHERE pet_id = $1', [pet_id]);
+        const petRes = await withRetry(
+            () => db.query('SELECT owner_id, pet_name FROM pets WHERE pet_id = $1', [pet_id]),
+            { label: "fetch pet for adoption application" }
+        );
         if (petRes.rowCount === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
         const { owner_id: ownerId, pet_name: petName } = petRes.rows[0];
 
         // 2. Insert Application
-        const result = await db.query(`
+        const result = await withRetry(
+            () => db.query(`
             INSERT INTO adoption_applications (
                 user_id, pet_id, adopter_name, adopter_address, status,
                 age_of_youngest_child, other_pets_details, other_pets_neutered,
@@ -97,11 +102,13 @@ export async function POST(req: NextRequest) {
                 $1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW()
             ) RETURNING adoption_id
         `, [
-            userId, pet_id, adopter_name, adopter_address, 
-            sanitizedAgeOfYoungestChild, other_pets_details, other_pets_neutered,
-            has_secure_outdoor_area, pet_sleep_location, pet_left_alone,
-            additional_details, agree_to_terms, sanitizedCityId, contact_number
-        ]);
+                userId, pet_id, adopter_name, adopter_address,
+                sanitizedAgeOfYoungestChild, other_pets_details, other_pets_neutered,
+                has_secure_outdoor_area, pet_sleep_location, pet_left_alone,
+                additional_details, agree_to_terms, sanitizedCityId, contact_number
+            ]),
+            { label: "insert adoption application" }
+        );
 
         const applicationId = result.rows[0].adoption_id;
 

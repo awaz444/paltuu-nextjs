@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
 import { validate } from "@/utils/validation";
+import { withRetry } from "@/utils/retry";
 
 /**
  * @swagger
@@ -151,19 +152,22 @@ export async function POST(req: NextRequest) {
         } = body;
 
         // Auto-assign owner_id (Security fix)
-        const result = await db.query(
-            `INSERT INTO pets (
+        const result = await withRetry(
+            () => db.query(
+                `INSERT INTO pets (
                 owner_id, pet_name, pet_type, pet_breed, city_id, area, age_months, contact_number,
-                description, adoption_status, sex, listing_type, vaccinated, neutered, price, 
+                description, adoption_status, sex, listing_type, vaccinated, neutered, price,
                 rescue_story, created_at, energy_level, cuddliness_level, approved
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'available', $10, $11, $12, $13, $14, $15, CURRENT_TIMESTAMP, $16, $17, false)
             RETURNING *`,
-            [
-                userId, pet_name, pet_type, pet_breed, city_id, area, age_months, contact_number,
-                description, sex, listing_type, vaccinated || false, neutered || false, 
-                listing_type === 'rescue' ? null : price, rescue_story, energy_level, cuddliness_level
-            ]
+                [
+                    userId, pet_name, pet_type, pet_breed, city_id, area, age_months, contact_number,
+                    description, sex, listing_type, vaccinated || false, neutered || false,
+                    listing_type === 'rescue' ? null : price, rescue_story, energy_level, cuddliness_level
+                ]
+            ),
+            { label: "insert pet listing" }
         );
 
         const newPet = result.rows[0];

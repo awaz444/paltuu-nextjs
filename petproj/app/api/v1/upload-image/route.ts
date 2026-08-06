@@ -3,6 +3,7 @@ import { uploadToS3Main } from "@/lib/s3";
 import { db } from "@/db/index";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { sendNewListingNotification } from "@/utils/mailjet";
+import { withRetry } from "@/utils/retry";
 
 /**
  * @swagger
@@ -50,16 +51,22 @@ export async function POST(req: NextRequest) {
 
             const buffer = Buffer.from(await file.arrayBuffer());
             const ext = file.type.split("/")[1] || "jpg";
-            const imageUrl = await uploadToS3Main(buffer, "adoption", file.type, ext);
+            const imageUrl = await withRetry(
+                () => uploadToS3Main(buffer, "adoption", file.type, ext),
+                { label: `S3 upload (${file.name || "image"})` }
+            );
             urls.push(imageUrl);
         }
 
         // If pet_id was provided, persist URLs into pet_images table
         if (petId) {
             for (let i = 0; i < urls.length; i++) {
-                await db.query(
-                    `INSERT INTO pet_images (pet_id, image_url, "order") VALUES ($1, $2, $3)`,
-                    [petId, urls[i], i]
+                await withRetry(
+                    () => db.query(
+                        `INSERT INTO pet_images (pet_id, image_url, "order") VALUES ($1, $2, $3)`,
+                        [petId, urls[i], i]
+                    ),
+                    { label: "insert pet_images row" }
                 );
             }
         }

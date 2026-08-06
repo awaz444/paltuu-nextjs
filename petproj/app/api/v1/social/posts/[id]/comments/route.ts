@@ -17,6 +17,8 @@ import {
 } from "@/lib/mentions";
 import { validateSocialMediaPayload } from "@/lib/giphyMedia";
 import { invalidateViewerPostCache } from "@/lib/redis";
+import { hasSevereMatch } from "@/lib/moderation/badWords";
+import { redactModerationFields } from "@/lib/moderationRedaction";
 
 export const dynamic = "force-dynamic";
 
@@ -130,6 +132,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                OR (b.blocker_id = c.user_id AND b.blocked_id = $2)
         )`;
 
+        // A shadow-hidden comment is invisible to everyone except its own
+        // author — same rule as shadow-hidden posts (see
+        // lib/moderationRedaction.ts). Applied at both levels: hiding a ROOT
+        // hides its whole reply subtree for other viewers (you can't see
+        // replies to a comment you can't see); hiding a REPLY only removes
+        // that one reply from an otherwise-visible thread.
+        const notShadowHidden = `(c.is_shadow_hidden = false OR c.user_id = $2)`;
+
         const result = await db.query(`
             WITH roots AS (
                 SELECT c.comment_id
@@ -137,6 +147,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 WHERE c.post_id = $1 AND c.is_deleted = false
                   AND c.parent_comment_id IS NULL
                   AND ${notBlocked}
+                  AND ${notShadowHidden}
                   ${cursorClause}
                   ${scopedRootClause}
                 ORDER BY c.comment_id ASC
@@ -168,10 +179,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 OR c.root_comment_id IN (SELECT comment_id FROM roots)
               )
               AND ${notBlocked}
+              AND ${notShadowHidden}
             ORDER BY c.comment_id ASC
         `, queryParams);
 
         const comments = result.rows;
+        // Never let the shadow-hide flag reach the app — an author who could
+        // see it would know their comment had been moderated.
+        redactModerationFields(comments);
         // The cursor advances by root comment. has_more is true only when this
         // page filled its root quota (a full page of roots may still be followed
         // by more). A scoped (?rootOnly=) fetch is always a single fixed thread,
@@ -241,6 +256,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
         await assertNotBlocked(userId, postAuthorId);
 
+        // Auto-moderation: a SEVERE match (slurs, explicit content — see
+        // lib/moderation/badWords.ts) shadow-hides the comment at creation
+        // time instead of rejecting it. The author sees it exactly as
+        // normal; everyone else doesn't, until an admin reviews it.
+        const autoShadowHide = text ? hasSevereMatch(text) : false;
+
         let depth = 0;
         let root_comment_id = null;
         let parentAuthorId: number | null = null;
@@ -274,10 +295,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
             const result = await client.query(`
                 INSERT INTO social_comments
-                    (post_id, user_id, parent_comment_id, root_comment_id, content, depth)
-                VALUES ($1, $2, $3, $4, $5, $6)
+                    (post_id, user_id, parent_comment_id, root_comment_id, content, depth, moderation_state, is_shadow_hidden)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                 RETURNING *
-            `, [postId, userId, parent_comment_id || null, root_comment_id, text, depth]);
+            `, [
+                postId, userId, parent_comment_id || null, root_comment_id, text, depth,
+                autoShadowHide ? 'shadow_hidden' : 'none', autoShadowHide,
+            ]);
 
             comment = result.rows[0];
 
@@ -332,6 +356,19 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         }
         client.release();
 
+        if (autoShadowHide) {
+            // Same as the auto-action logged in the posts POST route: never
+            // notify/broadcast a shadow-hidden comment — nobody but its author
+            // can see it, so pinging the post/parent author or other viewers
+            // would leak that it exists (or just be confusing when they can't
+            // find it). Log the auto-action for the admin queue instead.
+            db.query(
+                `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
+                 VALUES (NULL, 'auto_shadow_hide:severe_word_match', $1, 'successful')`,
+                [`comment:${comment.comment_id}`]
+            ).catch(() => {});
+        }
+
         // Fire-and-forget interest scoring (every successful comment / reply)
         recordEngagementEvent(userId, postId, 'comment').catch(() => {});
         invalidateViewerPostCache(postId, userId).catch(() => {});
@@ -343,7 +380,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         const postImage = postImageRes.rows[0]?.image_url;
 
         // Notification: post author (if commenting on someone else's post)
-        if (postAuthorId !== userId) {
+        if (postAuthorId !== userId && !autoShadowHide) {
             SocialNotifications.onPostCommented(
                 postAuthorId,
                 userId,
@@ -356,7 +393,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         }
 
         // Notification: parent comment author (if replying to someone else's comment)
-        if (parentAuthorId && parentAuthorId !== userId && parentAuthorId !== postAuthorId) {
+        if (parentAuthorId && parentAuthorId !== userId && parentAuthorId !== postAuthorId && !autoShadowHide) {
             SocialNotifications.onCommentReplied(
                 parentAuthorId,
                 userId,
@@ -368,18 +405,22 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             ).catch(() => {});
         }
 
-        // Real-time: push comment to all viewers of the post (fire and forget)
-        emitComment(postId, {
-            ...comment,
-            author_name: commenter?.name,
-            author_image: commenter?.profile_image_url ?? null,
-            social_username: commenter?.social_username ?? null,
-            author_verified: commenter?.verified ?? false,
-            author_founding_club: commenter?.founding_club ?? false,
-        }).catch(() => {});
+        // Real-time: push comment to all viewers of the post (fire and forget).
+        // Skipped when shadow-hidden — the author already has it locally via
+        // their own optimistic row, and no other viewer may see it.
+        if (!autoShadowHide) {
+            emitComment(postId, {
+                ...comment,
+                author_name: commenter?.name,
+                author_image: commenter?.profile_image_url ?? null,
+                social_username: commenter?.social_username ?? null,
+                author_verified: commenter?.verified ?? false,
+                author_founding_club: commenter?.founding_club ?? false,
+            }).catch(() => {});
+        }
 
         // Real-time: push notification to post author
-        if (postAuthorId !== userId) {
+        if (postAuthorId !== userId && !autoShadowHide) {
             emitNotification(postAuthorId, {
                 type: 'social_comment',
                 post_id: postId,
@@ -392,7 +433,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         // (see RN's handleReply), and they already got the more specific
         // "replied to your comment" / "commented on your post" notification
         // above — a second "mentioned you" for the same action would be a dupe.
-        if (parsedMentions.length > 0) {
+        if (parsedMentions.length > 0 && !autoShadowHide) {
             notifyNewMentions(parsedMentions, {
                 mentionerId: userId,
                 mentionerName: commenter?.name || 'User',

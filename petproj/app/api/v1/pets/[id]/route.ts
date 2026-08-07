@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
+import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 
 /**
  * @swagger
@@ -83,6 +84,10 @@ export async function PUT(req: NextRequest) {
             can_live_with_dogs, can_live_with_cats, must_have_someone_home,
             images, tags
         } = body;
+
+        if ((pet_name && hasSevereIdentityMatch(pet_name)) || (description && hasSevereIdentityMatch(description))) {
+            return NextResponse.json({ error: "Listing contains language that isn't allowed" }, { status: 400 });
+        }
 
         const client = await db.connect();
         try {

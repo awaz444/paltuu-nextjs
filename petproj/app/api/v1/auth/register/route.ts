@@ -4,6 +4,7 @@ import { generateMobileTokenPair } from "@/utils/mobileAuth";
 import { NextResponse } from "next/server";
 import { rateLimit } from "@/utils/rateLimit";
 import { validate } from "@/utils/validation";
+import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 
 /**
  * @swagger
@@ -31,6 +32,10 @@ export async function POST(req: Request) {
 
     if (!validation.success) {
       return NextResponse.json({ message: "Validation failed", errors: validation.errors }, { status: 400 });
+    }
+
+    if (hasSevereIdentityMatch(name)) {
+      return NextResponse.json({ message: "Validation failed", errors: { name: "Please choose a different name." } }, { status: 400 });
     }
 
     // Rate limiting

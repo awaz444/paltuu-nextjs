@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
 import { validate } from "@/utils/validation";
 import { withRetry } from "@/utils/retry";
+import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 
 /**
  * @swagger
@@ -150,6 +151,10 @@ export async function POST(req: NextRequest) {
             description, sex, listing_type, vaccinated, neutered, price, rescue_story,
             energy_level, cuddliness_level, tags
         } = body;
+
+        if (hasSevereIdentityMatch(pet_name) || (description && hasSevereIdentityMatch(description))) {
+            return NextResponse.json({ errors: ["Listing contains language that isn't allowed"] }, { status: 400 });
+        }
 
         // Auto-assign owner_id (Security fix)
         const result = await withRetry(

@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/utils/rateLimit";
 import { validateUsername } from "@/utils/usernameValidation";
+import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,10 @@ export async function GET(req: NextRequest) {
     const validation = validateUsername(q);
     if (!validation.valid) {
         return NextResponse.json({ valid: false, error: validation.error });
+    }
+
+    if (hasSevereIdentityMatch(q)) {
+        return NextResponse.json({ valid: false, error: "This username isn't available." });
     }
 
     const normalised = validation.normalised!;

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import sharp from "sharp";
 import { uploadToS3, deleteFromS3 } from "@/lib/s3";
+import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 
 const ACCEPTED_TYPES = new Set([
     "image/jpeg", "image/jpg", "image/png", "image/webp",
@@ -119,6 +120,10 @@ export async function PATCH(req: NextRequest) {
 
         const body = await req.json();
         const { name, phone_number, dob, city_id } = body;
+
+        if (name && hasSevereIdentityMatch(name)) {
+            return NextResponse.json({ error: "Please choose a different name." }, { status: 400 });
+        }
 
         const result = await db.query(`
             UPDATE users SET 

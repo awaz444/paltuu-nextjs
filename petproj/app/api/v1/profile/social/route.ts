@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { validateUsername } from "@/utils/usernameValidation";
+import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,9 @@ export async function PUT(req: NextRequest) {
             if (!validation.valid) {
                 return NextResponse.json({ error: validation.error }, { status: 400 });
             }
+            if (hasSevereIdentityMatch(social_username)) {
+                return NextResponse.json({ error: "Please choose a different username." }, { status: 400 });
+            }
             // Normalise to lowercase — store it consistently
             social_username = validation.normalised!;
             body.social_username = social_username;
@@ -35,6 +39,10 @@ export async function PUT(req: NextRequest) {
             if ((existing.rowCount ?? 0) > 0) {
                 return NextResponse.json({ error: "This social handle is already taken." }, { status: 409 });
             }
+        }
+
+        if (typeof bio === 'string' && hasSevereIdentityMatch(bio)) {
+            return NextResponse.json({ error: "Please remove offensive language from your bio." }, { status: 400 });
         }
 
         const allowedUpdates = ['social_username', 'bio', 'is_private'];

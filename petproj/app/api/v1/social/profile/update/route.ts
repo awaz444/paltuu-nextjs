@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { validateUsername } from "@/utils/usernameValidation";
 import { validateEmail } from "@/utils/emailValidation";
+import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 
 export const dynamic = "force-dynamic";
 
@@ -19,11 +20,21 @@ export async function PATCH(req: NextRequest) {
 
         const body = await req.json();
 
+        if (typeof body.name === 'string' && hasSevereIdentityMatch(body.name)) {
+            return NextResponse.json({ error: "Please choose a different name." }, { status: 400 });
+        }
+        if (typeof body.bio === 'string' && hasSevereIdentityMatch(body.bio)) {
+            return NextResponse.json({ error: "Please remove offensive language from your bio." }, { status: 400 });
+        }
+
         // ── Username validation (was completely missing — critical bug) ──────────
         if (body.social_username !== undefined) {
             const validation = validateUsername(body.social_username);
             if (!validation.valid) {
                 return NextResponse.json({ error: validation.error }, { status: 400 });
+            }
+            if (hasSevereIdentityMatch(body.social_username)) {
+                return NextResponse.json({ error: "Please choose a different username." }, { status: 400 });
             }
             // Normalise to lowercase before writing
             body.social_username = validation.normalised!;

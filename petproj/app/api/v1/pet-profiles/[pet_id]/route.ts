@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { calculateAge } from "@/utils/age.util";
+import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 
 export const dynamic = "force-dynamic";
 
@@ -108,6 +109,8 @@ export async function PATCH(
                 errors.push("name must not be blank");
             } else if (String(body.name).trim().length > 100) {
                 errors.push("name must be 100 characters or less");
+            } else if (hasSevereIdentityMatch(String(body.name))) {
+                errors.push("name contains language that isn't allowed");
             }
         }
         if ("species" in body && !ALLOWED_SPECIES.includes(body.species)) {
@@ -126,6 +129,8 @@ export async function PATCH(
         }
         if ("bio" in body && body.bio && String(body.bio).length > 500) {
             errors.push("bio must be 500 characters or less");
+        } else if ("bio" in body && body.bio && hasSevereIdentityMatch(String(body.bio))) {
+            errors.push("bio contains language that isn't allowed");
         }
 
         if (errors.length > 0) {

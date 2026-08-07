@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     // 2. Find or create the user in the database
     // Step 2a: Lookup by oauth_provider = 'apple' AND oauth_id = sub
     let userResult = await db.query(
-      "SELECT user_id, name, email, role, profile_image_url, phone_number FROM users WHERE oauth_provider = $1 AND oauth_id = $2",
+      "SELECT user_id, name, email, role, profile_image_url, phone_number, is_suspended FROM users WHERE oauth_provider = $1 AND oauth_id = $2",
       ["apple", sub]
     );
 
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     } else {
       // Step 2b: Lookup by email to link existing accounts
       const emailResult = await db.query(
-        "SELECT user_id, name, email, role, profile_image_url, phone_number FROM users WHERE email = $1",
+        "SELECT user_id, name, email, role, profile_image_url, phone_number, is_suspended FROM users WHERE email = $1",
         [resolvedEmail]
       );
 
@@ -115,6 +115,13 @@ export async function POST(req: NextRequest) {
           [user.user_id, "All Posts", true]
         );
       }
+    }
+
+    if (user.is_suspended) {
+      return NextResponse.json(
+        { error: "This account has been suspended for violating our Community Guidelines.", suspended: true },
+        { status: 403 }
+      );
     }
 
     // 3. Generate mobile JWT tokens

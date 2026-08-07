@@ -4,7 +4,7 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 import { emitComment, emitNotification } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { SocialNotifications } from "@/lib/notifications";
-import { assertNotBlocked, checkIsBlocked } from "@/lib/moderation";
+import { assertNotBlocked, assertNotSuspended, checkIsBlocked } from "@/lib/moderation";
 import { recordEngagementEvent } from "@/lib/interestScoring";
 import { resolveRepostTarget } from "@/lib/reposts";
 import {
@@ -221,6 +221,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         const userIdRaw = await getUserIdFromRequest(req);
         if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         const userId = parseInt(String(userIdRaw), 10);
+        await assertNotSuspended(userId);
 
         const body = await req.json();
         const { content, parent_comment_id, media } = body;
@@ -453,6 +454,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     } catch (error: any) {
         if (error.message === 'BLOCKED') {
             return NextResponse.json({ error: "BLOCKED" }, { status: 403 });
+        }
+        if (error.message === 'SUSPENDED') {
+            return NextResponse.json({ error: "This account has been suspended for violating our Community Guidelines." }, { status: 403 });
         }
         console.error("V1 Social Comments POST error:", error);
         const message = error instanceof Error ? error.message : "Internal Server Error";

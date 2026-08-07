@@ -4,21 +4,30 @@ import { checkAdmin } from "@/app/api/v1/admin/adminAuth";
 
 export const dynamic = "force-dynamic";
 
-const VALID_STATES = ['none', 'shadow_hidden'];
+const VALID_STATES = ['none', 'shadow_hidden', 'redacted'];
 
 /**
  * PATCH /api/v1/admin/social/comments/:id/moderate
- * Body: { state: 'none' | 'shadow_hidden' }
+ * Body: { state: 'none' | 'shadow_hidden' | 'redacted' }
  *
  * Mirrors the post moderate endpoint (see
  * app/api/v1/admin/social/posts/[id]/moderate/route.ts) but scoped to what a
- * comment actually needs: 'shadow_hidden' -> is_shadow_hidden = true (dropped
- * for everyone except the author, whose thread looks unchanged — see
- * lib/moderationRedaction.ts); 'none' -> false (restore). A full "hidden"
- * state isn't offered here — comments already have a hard-hide mechanism
- * (DELETE /api/v1/social/comments/:id, which soft-deletes the comment and
- * cascades to its replies), and that's a different, more destructive
- * operation than the temporary-review states this endpoint manages.
+ * comment actually needs:
+ *   shadow_hidden -> is_shadow_hidden = true (dropped for everyone except
+ *                    the author, whose thread looks unchanged — see
+ *                    lib/moderationRedaction.ts)
+ *   redacted      -> is_shadow_hidden stays false — the comment stays
+ *                    visible to everyone, but lib/moderationRedaction.ts
+ *                    covers the SEVERE word(s) with a grey chip on read
+ *                    (see lib/moderation/badWords.ts redactSevereWords).
+ *                    Use this instead of shadow_hidden when the rest of the
+ *                    comment is fine and only needs the slur covered.
+ *   none          -> restore, nothing hidden or redacted
+ * A full "hidden" state isn't offered here — comments already have a
+ * hard-hide mechanism (DELETE /api/v1/social/comments/:id, which
+ * soft-deletes the comment and cascades to its replies), and that's a
+ * different, more destructive operation than the states this endpoint
+ * manages.
  */
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
     const admin = await checkAdmin(req);

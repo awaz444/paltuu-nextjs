@@ -51,3 +51,19 @@ export async function assertNotBlocked(userAId: number, userBId: number) {
         throw err;
     }
 }
+
+/**
+ * A suspended account (see db/moderationBackfillSweep.ts and the admin
+ * suspend/unsuspend route) is blocked at login, but an already-issued JWT
+ * stays valid until it expires — call this from any write endpoint that
+ * shouldn't be reachable by a suspended user in the meantime (post/comment
+ * creation, primarily).
+ */
+export async function assertNotSuspended(userId: number) {
+    const res = await db.query('SELECT is_suspended FROM users WHERE user_id = $1', [userId]);
+    if (res.rows[0]?.is_suspended) {
+        const err = new Error('SUSPENDED');
+        (err as any).code = 'SUSPENDED';
+        throw err;
+    }
+}

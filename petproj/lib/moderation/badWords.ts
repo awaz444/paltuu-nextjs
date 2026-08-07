@@ -231,6 +231,28 @@ const SEVERE_RE = buildMatcher([...SEVERE_WORDS, ...SEVERE_PHRASES]);
 const MILD_RE = buildMatcher(MILD_WORDS);
 
 /**
+ * Sentinel wrapping a redacted word in content sent to the 'redacted'
+ * moderation state (see admin moderate routes + lib/moderationRedaction.ts).
+ * Private-Use-Area characters so it can never collide with real user text —
+ * the RN client (MentionText.tsx) pattern-matches this exact marker to
+ * render a grey "hidden word" chip instead of the raw slur. The actual
+ * SEVERE word is never sent to the client for a redacted item.
+ */
+export const REDACTED_WORD_MARKER = 'REDACTED';
+
+/**
+ * Replaces every SEVERE match in `text` with REDACTED_WORD_MARKER. Used for
+ * the 'redacted' moderation state — unlike shadow-hide (invisible to
+ * everyone but the author), a redacted post/comment stays visible to
+ * everyone, just with the slur itself covered. MILD words are left alone.
+ */
+export function redactSevereWords(text: string): string {
+    if (!text || !SEVERE_RE) return text;
+    SEVERE_RE.lastIndex = 0;
+    return text.replace(SEVERE_RE, REDACTED_WORD_MARKER);
+}
+
+/**
  * Scans free text for SEVERE and MILD matches. Case-insensitive, whole-word
  * (so "assassin" never matches "ass", "grasshopper" never matches "ass", etc).
  * Returns deduped, lowercased matches — empty arrays for clean text.

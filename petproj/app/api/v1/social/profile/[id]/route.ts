@@ -62,6 +62,7 @@ export async function GET(
                     u.cover_photo_url,
                     u.is_private,
                     u.created_at,
+                    u.is_suspended,
                     -- Viewer context
                     EXISTS(
                         SELECT 1 FROM social_follows f
@@ -153,6 +154,19 @@ export async function GET(
         }
 
         const user = userRes.rows[0];
+
+        // A suspended account is publicly shown as suspended — unlike a
+        // shadow-hide, this is meant to be visible: the profile is real, it's
+        // just been actioned for a guidelines violation. Short-circuits before
+        // any profile/post fields go out.
+        if (user.is_suspended) {
+            return NextResponse.json({
+                suspended: true,
+                profile: { user_id: user.user_id, social_username: user.social_username },
+                message: "This account has been suspended for violating our Community Guidelines.",
+            });
+        }
+
         const isBlocked = user.is_blocked_by_me || user.is_blocking_me;
         const isPrivate = user.is_private && !user.is_own_profile && !user.is_following;
 

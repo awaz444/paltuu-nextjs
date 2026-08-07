@@ -5,11 +5,11 @@ import { fanOutPostToFollowers, removePostFromCaches } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
 
-const VALID_STATES = ['none', 'quarantined', 'hidden', 'shadow_hidden'];
+const VALID_STATES = ['none', 'quarantined', 'hidden', 'shadow_hidden', 'redacted'];
 
 /**
  * PATCH /api/v1/admin/social/posts/:id/moderate
- * Body: { state: 'none' | 'quarantined' | 'hidden' | 'shadow_hidden' }
+ * Body: { state: 'none' | 'quarantined' | 'hidden' | 'shadow_hidden' | 'redacted' }
  *
  * is_hidden / is_shadow_hidden are kept in sync so existing feed queries
  * behave correctly:
@@ -19,6 +19,12 @@ const VALID_STATES = ['none', 'quarantined', 'hidden', 'shadow_hidden'];
  *                    they are never told, and the flag is redacted out of
  *                    every client response; see lib/moderationRedaction.ts)
  *   quarantined   -> both false (still visible to followers; global/personalized exclude it in Pass 2)
+ *   redacted      -> both false — the post stays visible to EVERYONE
+ *                    (unlike shadow_hidden), but lib/moderationRedaction.ts
+ *                    covers the SEVERE word(s) in `content` with a grey chip
+ *                    on read (see lib/moderation/badWords.ts
+ *                    redactSevereWords). Use this when the rest of the post
+ *                    is fine and only the slur itself needs covering.
  *   none          -> both false
  */
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {

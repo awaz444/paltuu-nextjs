@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
 
     // 3. Find or create the user in your DB (mirrors web NextAuth jwt callback)
     let userResult = await db.query(
-      'SELECT user_id, name, email, role, profile_image_url, phone_number FROM users WHERE email = $1',
+      'SELECT user_id, name, email, role, profile_image_url, phone_number, is_suspended FROM users WHERE email = $1',
       [email]
     );
 
@@ -111,6 +111,10 @@ export async function GET(req: NextRequest) {
       );
     } else {
       user = userResult.rows[0];
+    }
+
+    if (user.is_suspended) {
+      return NextResponse.redirect(`${deepLinkBase}?error=${encodeURIComponent('This account has been suspended for violating our Community Guidelines.')}`);
     }
 
     // 4. Generate mobile JWT tokens

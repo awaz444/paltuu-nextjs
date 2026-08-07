@@ -56,11 +56,11 @@ export async function POST(req: Request) {
     // 1. Fetch user by email OR username
     const result = isEmail
       ? await db.query(
-          'SELECT user_id, name, email, password, role, profile_image_url, social_username FROM users WHERE LOWER(email) = LOWER($1)',
+          'SELECT user_id, name, email, password, role, profile_image_url, social_username, is_suspended, suspension_reason FROM users WHERE LOWER(email) = LOWER($1)',
           [identifier]
         )
       : await db.query(
-          'SELECT user_id, name, email, password, role, profile_image_url, social_username FROM users WHERE LOWER(social_username) = LOWER($1)',
+          'SELECT user_id, name, email, password, role, profile_image_url, social_username, is_suspended, suspension_reason FROM users WHERE LOWER(social_username) = LOWER($1)',
           [identifier]
         );
 
@@ -161,6 +161,14 @@ export async function POST(req: Request) {
       console.warn(`[auth/login] stored_password kind=${kind} len=${storedPasswordTrimmed.length}`);
       console.warn(`[auth/login] password_mismatch identifier=${identifier} user_id=${user.user_id}`);
       return NextResponse.json({ message: "Invalid email/username or password" }, { status: 401 });
+    }
+
+    if (user.is_suspended) {
+      return NextResponse.json({
+        message: "This account has been suspended for violating our Community Guidelines.",
+        suspended: true,
+        suspension_reason: user.suspension_reason || undefined,
+      }, { status: 403 });
     }
 
     // 3. Generate tokens

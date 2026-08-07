@@ -576,6 +576,11 @@ export async function POST(req: NextRequest) {
         if (!userIdRaw) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         const userId = parseInt(String(userIdRaw), 10);
 
+        const suspendedCheck = await db.query('SELECT is_suspended FROM users WHERE user_id = $1', [userId]);
+        if (suspendedCheck.rows[0]?.is_suspended) {
+            return NextResponse.json({ error: "This account has been suspended for violating our Community Guidelines." }, { status: 403 });
+        }
+
         const body = await req.json();
         const { post_type, content, media = [], pet_profile_tags = [] } = body;
 

@@ -24,7 +24,7 @@ import {
     personalizedAffinityCtes,
 } from "@/lib/tagInference";
 import { validateSocialMediaPayload } from "@/lib/giphyMedia";
-import { hasSevereMatch } from "@/lib/moderation/badWords";
+import { hasSevereMatch, redactSevereWords } from "@/lib/moderation/badWords";
 import {
     TAGGED_PETS_AGG_CTE,
     SAVED_COLLECTIONS_AGG_CTE,
@@ -595,13 +595,21 @@ export async function POST(req: NextRequest) {
 
         let parsedMentions: ParsedMention[] = [];
 
-        // Auto-moderation: a SEVERE match (slurs, explicit content — see
-        // lib/moderation/badWords.ts) shadow-hides the post at creation time
-        // rather than rejecting it outright. The author sees it exactly as
-        // normal; everyone else doesn't, until an admin reviews it via the
-        // existing moderate endpoint. MILD matches are a client-side nudge
-        // only and never affect the server.
-        const autoShadowHide = content ? hasSevereMatch(content) : false;
+        // Auto-moderation: a SEVERE match (slurs — see lib/moderation/badWords.ts)
+        // REDACTS the post rather than shadow-hiding it. The post stays visible
+        // and fans out normally; only the offending word is covered (grey chip,
+        // rendered by the client from the marker lib/moderationRedaction.ts
+        // substitutes on read). Mirrors the comment path, where hiding outright
+        // would break the reply tree. MILD matches are a client-side nudge only
+        // and never affect the server.
+        //
+        // Full shadow-hide stays available to admins via the moderate endpoint
+        // for posts where covering a word isn't enough.
+        const autoRedact = content ? hasSevereMatch(content) : false;
+        // Raw text is stored (admins review the original; restoring to 'none'
+        // must bring the real wording back); everything leaving this request
+        // uses the censored copy.
+        const publicContent = autoRedact ? redactSevereWords(content) : content;
 
         const client = await db.connect();
         try {
@@ -611,7 +619,7 @@ export async function POST(req: NextRequest) {
                 INSERT INTO social_posts (user_id, post_type, content, moderation_state, is_shadow_hidden)
                 VALUES ($1, $2, $3, $4, $5)
                 RETURNING *
-            `, [userId, post_type, content, autoShadowHide ? 'shadow_hidden' : 'none', autoShadowHide]);
+            `, [userId, post_type, content, autoRedact ? 'redacted' : 'none', false]);
             const post = postRes.rows[0];
 
             // 2. Add Media — collect inserted rows so we can return media_id to the client
@@ -697,26 +705,23 @@ export async function POST(req: NextRequest) {
 
             await client.query('COMMIT');
 
-            if (autoShadowHide) {
-                // Never fan out a shadow-hidden post — it must not appear in any
-                // follower's cached feed. Log the auto-action the same way
-                // reportScoring's quarantinePost does, so it's auditable and
-                // surfaces via the admin panel like any other moderation event.
+            if (autoRedact) {
+                // Logged for the admin queue so a human can review the original
+                // wording and escalate if covering a word wasn't enough. The
+                // post still fans out below — it's visible, just censored.
                 db.query(
                     `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
-                     VALUES (NULL, 'auto_shadow_hide:severe_word_match', $1, 'successful')`,
+                     VALUES (NULL, 'auto_redact:severe_word_match', $1, 'successful')`,
                     [`post:${post.post_id}`]
                 ).catch(() => {});
-            } else {
-                // Fan-out to follower feed caches (fire and forget — non-blocking)
-                fanOutPostToFollowers(post.post_id, userId, post.created_at, db)
-                    .catch(() => {}); // never block the response
             }
 
+            // Fan-out to follower feed caches (fire and forget — non-blocking)
+            fanOutPostToFollowers(post.post_id, userId, post.created_at, db)
+                .catch(() => {}); // never block the response
+
             // Notify mentioned users/pet-owners (fire and forget — non-blocking).
-            // Skipped on a shadow-hidden post: nobody but the author can see it,
-            // so a "you were mentioned" notification would just be confusing.
-            if (parsedMentions.length > 0 && !autoShadowHide) {
+            if (parsedMentions.length > 0) {
                 const authorRes = await db.query(`SELECT name FROM users WHERE user_id = $1`, [userId]);
                 notifyNewMentions(parsedMentions, {
                     mentionerId: userId,
@@ -724,13 +729,17 @@ export async function POST(req: NextRequest) {
                     postId: Number(post.post_id),
                     isComment: false,
                     postImageUrl: media[0]?.url,
-                    preview: content,
+                    preview: publicContent,
                 }).catch(() => {});
             }
 
             // Return post + media[] so the mobile app can read media_id for the
             // MediaConvert confirm step (confirmVideoUpload needs media_id).
-            return NextResponse.json({ ...post, media: insertedMedia }, { status: 201 });
+            // Censored in place when redacted, and carries moderation_state so
+            // the composer can warn the author their wording was covered.
+            const responsePost = { ...post, media: insertedMedia };
+            redactModerationFields(responsePost);
+            return NextResponse.json(responsePost, { status: 201 });
 
         } catch (e) {
             await client.query('ROLLBACK');

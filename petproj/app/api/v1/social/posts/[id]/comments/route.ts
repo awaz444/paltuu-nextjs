@@ -17,7 +17,7 @@ import {
 } from "@/lib/mentions";
 import { validateSocialMediaPayload } from "@/lib/giphyMedia";
 import { invalidateViewerPostCache } from "@/lib/redis";
-import { hasSevereMatch } from "@/lib/moderation/badWords";
+import { hasSevereMatch, redactSevereWords } from "@/lib/moderation/badWords";
 import { redactModerationFields } from "@/lib/moderationRedaction";
 
 export const dynamic = "force-dynamic";
@@ -257,11 +257,24 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
         await assertNotBlocked(userId, postAuthorId);
 
-        // Auto-moderation: a SEVERE match (slurs, explicit content — see
-        // lib/moderation/badWords.ts) shadow-hides the comment at creation
-        // time instead of rejecting it. The author sees it exactly as
-        // normal; everyone else doesn't, until an admin reviews it.
-        const autoShadowHide = text ? hasSevereMatch(text) : false;
+        // Auto-moderation: a SEVERE match (slurs — see lib/moderation/badWords.ts)
+        // REDACTS the comment rather than shadow-hiding it. Hiding a reply
+        // outright orphans its own replies and breaks the thread's connecting
+        // line, so the comment stays exactly where it is in the tree and only
+        // the offending word is covered (grey chip, rendered by the client from
+        // the marker lib/moderationRedaction.ts substitutes on read).
+        //
+        // Unlike a shadow-hide, this is deliberately NOT silent: the row goes
+        // out with moderation_state = 'redacted', which the composer uses to
+        // warn the author that their wording was censored. Full shadow-hide
+        // stays available to admins for cases where the whole comment has to
+        // go (see app/api/v1/admin/social/comments/[id]/moderate/route.ts).
+        const autoRedact = text ? hasSevereMatch(text) : false;
+        // The raw text is what gets stored (admins review the original, and
+        // restoring to 'none' has to bring the real wording back). Everything
+        // that leaves this request — notification previews, the realtime
+        // broadcast, the response body — uses the censored copy instead.
+        const publicText = autoRedact ? redactSevereWords(text) : text;
 
         let depth = 0;
         let root_comment_id = null;
@@ -301,7 +314,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 RETURNING *
             `, [
                 postId, userId, parent_comment_id || null, root_comment_id, text, depth,
-                autoShadowHide ? 'shadow_hidden' : 'none', autoShadowHide,
+                autoRedact ? 'redacted' : 'none', false,
             ]);
 
             comment = result.rows[0];
@@ -357,15 +370,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         }
         client.release();
 
-        if (autoShadowHide) {
-            // Same as the auto-action logged in the posts POST route: never
-            // notify/broadcast a shadow-hidden comment — nobody but its author
-            // can see it, so pinging the post/parent author or other viewers
-            // would leak that it exists (or just be confusing when they can't
-            // find it). Log the auto-action for the admin queue instead.
+        if (autoRedact) {
+            // Logged for the admin queue so a human can still review the
+            // original wording (and escalate to a shadow-hide or a suspension
+            // if the censored version isn't enough). Notifications and the
+            // realtime broadcast below are NOT suppressed — a redacted comment
+            // is visible to everyone, so the thread behaves normally; they just
+            // carry `publicText` rather than the raw slur.
             db.query(
                 `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
-                 VALUES (NULL, 'auto_shadow_hide:severe_word_match', $1, 'successful')`,
+                 VALUES (NULL, 'auto_redact:severe_word_match', $1, 'successful')`,
                 [`comment:${comment.comment_id}`]
             ).catch(() => {});
         }
@@ -381,47 +395,46 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         const postImage = postImageRes.rows[0]?.image_url;
 
         // Notification: post author (if commenting on someone else's post)
-        if (postAuthorId !== userId && !autoShadowHide) {
+        if (postAuthorId !== userId) {
             SocialNotifications.onPostCommented(
                 postAuthorId,
                 userId,
                 parseInt(postId),
                 commenter?.name || 'User',
-                text,
+                publicText,
                 postImage,
                 comment.comment_id
             ).catch(() => {});
         }
 
         // Notification: parent comment author (if replying to someone else's comment)
-        if (parentAuthorId && parentAuthorId !== userId && parentAuthorId !== postAuthorId && !autoShadowHide) {
+        if (parentAuthorId && parentAuthorId !== userId && parentAuthorId !== postAuthorId) {
             SocialNotifications.onCommentReplied(
                 parentAuthorId,
                 userId,
                 parseInt(postId),
                 commenter?.name || 'User',
-                text,
+                publicText,
                 postImage,
                 parent_comment_id
             ).catch(() => {});
         }
 
         // Real-time: push comment to all viewers of the post (fire and forget).
-        // Skipped when shadow-hidden — the author already has it locally via
-        // their own optimistic row, and no other viewer may see it.
-        if (!autoShadowHide) {
-            emitComment(postId, {
-                ...comment,
-                author_name: commenter?.name,
-                author_image: commenter?.profile_image_url ?? null,
-                social_username: commenter?.social_username ?? null,
-                author_verified: commenter?.verified ?? false,
-                author_founding_club: commenter?.founding_club ?? false,
-            }).catch(() => {});
-        }
+        // Carries the censored copy — this path bypasses the read-time
+        // redaction in lib/moderationRedaction.ts, so it has to censor itself.
+        emitComment(postId, {
+            ...comment,
+            content: publicText,
+            author_name: commenter?.name,
+            author_image: commenter?.profile_image_url ?? null,
+            social_username: commenter?.social_username ?? null,
+            author_verified: commenter?.verified ?? false,
+            author_founding_club: commenter?.founding_club ?? false,
+        }).catch(() => {});
 
         // Real-time: push notification to post author
-        if (postAuthorId !== userId && !autoShadowHide) {
+        if (postAuthorId !== userId) {
             emitNotification(postAuthorId, {
                 type: 'social_comment',
                 post_id: postId,
@@ -434,7 +447,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         // (see RN's handleReply), and they already got the more specific
         // "replied to your comment" / "commented on your post" notification
         // above — a second "mentioned you" for the same action would be a dupe.
-        if (parsedMentions.length > 0 && !autoShadowHide) {
+        if (parsedMentions.length > 0) {
             notifyNewMentions(parsedMentions, {
                 mentionerId: userId,
                 mentionerName: commenter?.name || 'User',
@@ -442,13 +455,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 isComment: true,
                 commentId: comment.comment_id,
                 postImageUrl: postImage,
-                preview: text,
+                preview: publicText,
                 excludeUserIds: [postAuthorId, parentAuthorId].filter(
                     (id): id is number => id != null
                 ),
             }).catch(() => {});
         }
 
+        // Censors `content` in place when moderation_state is 'redacted', so
+        // the author's own optimistic row is replaced by the same censored
+        // text everyone else sees — and reads moderation_state to show them
+        // the "we hid some words" warning.
+        redactModerationFields(comment);
         return NextResponse.json(comment, { status: 201 });
 
     } catch (error: any) {

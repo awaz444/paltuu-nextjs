@@ -8,7 +8,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 import { hasSevereMatch, hasSevereIdentityMatch } from '../lib/moderation/badWords';
-import { removePostFromCaches } from '../lib/redis';
+import { fanOutPostToFollowers } from '../lib/redis';
 
 const connectionString = process.env.NEW_DATABASE_URL;
 if (!connectionString) {
@@ -22,10 +22,12 @@ const pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
  * checker (lib/moderation/badWords.ts) — it only runs on NEW writes, so
  * anything posted before it existed slips through until this is run.
  *
- * Posts and comments: auto shadow-hide on a SEVERE match, exactly like the
- * live POST handlers do for new content. This is safe and reversible — an
- * admin can flip moderation_state back to 'none' any time from the admin
- * panel — so it's applied automatically here.
+ * Posts and comments: auto-REDACT on a SEVERE match, exactly like the live
+ * POST handlers do for new content — the item stays visible in place with
+ * only the offending word covered, because hiding a reply outright orphans
+ * its replies and breaks the thread's connecting line. Safe and reversible
+ * (an admin can flip moderation_state back to 'none' any time), so it's
+ * applied automatically here.
  *
  * Names/usernames/bios can't be shadow-hidden (always fully public
  * identity, not a feed item):
@@ -46,60 +48,67 @@ async function run() {
         console.log('=== Moderation backfill sweep ===\n');
 
         // ── 1. Posts ─────────────────────────────────────────────────────────
+        // 'shadow_hidden' rows are re-swept too: an earlier run of this script
+        // hid them outright, which the redaction approach replaced. Restoring
+        // them to visible-but-censored also puts is_shadow_hidden back to
+        // false, so they need re-adding to the follower caches they were
+        // pulled from.
         console.log('Scanning social_posts...');
         const posts = await client.query(
-            `SELECT post_id, user_id, content, created_at FROM social_posts
+            `SELECT post_id, user_id, content, created_at, is_shadow_hidden FROM social_posts
              WHERE is_deleted = false AND content IS NOT NULL
-               AND (moderation_state IS NULL OR moderation_state = 'none')`
+               AND (moderation_state IS NULL OR moderation_state IN ('none', 'shadow_hidden'))`
         );
-        let postsHidden = 0;
+        let postsRedacted = 0;
         for (const row of posts.rows) {
             if (!hasSevereMatch(row.content)) continue;
             await client.query(
-                `UPDATE social_posts SET moderation_state = 'shadow_hidden', is_shadow_hidden = true WHERE post_id = $1`,
+                `UPDATE social_posts SET moderation_state = 'redacted', is_shadow_hidden = false WHERE post_id = $1`,
                 [row.post_id]
             );
             await client.query(
                 `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
-                 VALUES (NULL, 'auto_shadow_hide:backfill_sweep', $1, 'successful')`,
+                 VALUES (NULL, 'auto_redact:backfill_sweep', $1, 'successful')`,
                 [`post:${row.post_id}`]
             );
-            await removePostFromCaches(row.post_id, row.user_id, client).catch(() => {});
-            postsHidden++;
-            console.log(`  shadow-hid post ${row.post_id} (user ${row.user_id})`);
+            if (row.is_shadow_hidden) {
+                await fanOutPostToFollowers(row.post_id, row.user_id, row.created_at, client).catch(() => {});
+            }
+            postsRedacted++;
+            console.log(`  redacted post ${row.post_id} (user ${row.user_id})${row.is_shadow_hidden ? ' [un-hidden]' : ''}`);
         }
-        console.log(`Posts shadow-hidden: ${postsHidden}\n`);
+        console.log(`Posts redacted: ${postsRedacted}\n`);
 
         // ── 2. Comments (needs the comment_moderation_migration columns) ───────
         const commentCols = await client.query(
             `SELECT 1 FROM information_schema.columns
              WHERE table_name = 'social_comments' AND column_name = 'moderation_state'`
         );
-        let commentsHidden = 0;
+        let commentsRedacted = 0;
         if ((commentCols.rowCount ?? 0) === 0) {
             console.log('Skipping social_comments — run db/comment_moderation_migration.ts first.\n');
         } else {
             console.log('Scanning social_comments...');
             const comments = await client.query(
-                `SELECT comment_id, user_id, content FROM social_comments
+                `SELECT comment_id, user_id, content, is_shadow_hidden FROM social_comments
                  WHERE is_deleted = false AND content IS NOT NULL
-                   AND (moderation_state IS NULL OR moderation_state = 'none')`
+                   AND (moderation_state IS NULL OR moderation_state IN ('none', 'shadow_hidden'))`
             );
             for (const row of comments.rows) {
                 if (!hasSevereMatch(row.content)) continue;
                 await client.query(
-                    `UPDATE social_comments SET moderation_state = 'shadow_hidden', is_shadow_hidden = true WHERE comment_id = $1`,
+                    `UPDATE social_comments SET moderation_state = 'redacted', is_shadow_hidden = false WHERE comment_id = $1`,
                     [row.comment_id]
                 );
                 await client.query(
                     `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
-                     VALUES (NULL, 'auto_shadow_hide:backfill_sweep', $1, 'successful')`,
+                     VALUES (NULL, 'auto_redact:backfill_sweep', $1, 'successful')`,
                     [`comment:${row.comment_id}`]
                 );
-                commentsHidden++;
-                console.log(`  shadow-hid comment ${row.comment_id} (user ${row.user_id})`);
+                commentsRedacted++;
+                console.log(`  redacted comment ${row.comment_id} (user ${row.user_id})${row.is_shadow_hidden ? ' [un-hidden]' : ''}`);
             }
-            console.log(`Comments shadow-hidden: ${commentsHidden}\n`);
+            console.log(`Comments redacted: ${commentsRedacted}\n`);
         }
 
         // ── 3. Users: name / social_username / bio -> auto-suspend ─────────────
@@ -178,7 +187,7 @@ async function run() {
         console.log(`Adoption listings flagged for manual review: ${listingsFlagged}\n`);
 
         console.log('=== Done ===');
-        console.log(`Posts hidden: ${postsHidden} | Comments hidden: ${commentsHidden} | Users suspended: ${usersSuspended} | Pet profiles flagged: ${petProfilesFlagged} | Listings flagged: ${listingsFlagged}`);
+        console.log(`Posts redacted: ${postsRedacted} | Comments redacted: ${commentsRedacted} | Users suspended: ${usersSuspended} | Pet profiles flagged: ${petProfilesFlagged} | Listings flagged: ${listingsFlagged}`);
         console.log('\nSuspended users are now publicly shown as suspended and blocked from logging in.');
         console.log('Flagged pet profiles/listings were NOT modified — review them in the admin panel and action manually.');
     } finally {

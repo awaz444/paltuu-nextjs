@@ -14,10 +14,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: "La Mito Pet Products Pakistan | Paltuu.pk",
         description: "Shop La Mito premium pet products with delivery across Pakistan.",
-        url: "https://paltuu.pk/marketplace/brands/la-mito",
+        url: "https://www.paltuu.pk/marketplace/brands/la-mito",
         type: "website",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace/brands/la-mito" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace/brands/la-mito" },
 };
 
 export default function LaMitoLayout({ children }: { children: React.ReactNode }) {

@@ -38,10 +38,10 @@ export default function LaMitoBrandPage() {
         "@type": "Brand",
         "name": "La Mito",
         "description": "Natural and nutritious cat food brand available in Pakistan.",
-        "url": "https://paltuu.pk/marketplace/brands/la-mito",
+        "url": "https://www.paltuu.pk/marketplace/brands/la-mito",
         "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://paltuu.pk/marketplace/brands/la-mito?q={search_term_string}",
+            "target": "https://www.paltuu.pk/marketplace/brands/la-mito?q={search_term_string}",
             "query-input": "required name=search_term_string"
         }
     };

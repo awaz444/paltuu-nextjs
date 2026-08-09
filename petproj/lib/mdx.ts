@@ -10,6 +10,21 @@ import type { BlogMetadata } from './mdx-types';
 
 const BLOGS_PATH = path.join(process.cwd(), 'content', 'blogs');
 
+// Routes are generated from the .mdx filename, but canonical URLs, sitemap
+// entries, and index links are all built from the frontmatter `slug`. If the two
+// disagree the post ends up orphaned and self-canonicalized to a 404, so fail
+// loudly at build time instead of shipping an invisible page.
+class BlogSlugMismatchError extends Error {}
+
+function assertSlugMatchesFilename(filename: string, frontmatterSlug?: string) {
+    if (frontmatterSlug && frontmatterSlug !== filename) {
+        throw new BlogSlugMismatchError(
+            `Blog slug mismatch: content/blogs/${filename}.mdx declares slug "${frontmatterSlug}". ` +
+            `Rename the file to "${frontmatterSlug}.mdx" or fix the frontmatter so they match.`
+        );
+    }
+}
+
 // Get all blog slugs
 export function getAllBlogSlugs(): string[] {
     if (!fs.existsSync(BLOGS_PATH)) {
@@ -33,7 +48,9 @@ export function getBlogMetadata(slug: string): BlogMetadata | null {
 
         const fileContents = fs.readFileSync(filePath, 'utf8');
         const { data, content } = matter(fileContents);
-        
+
+        assertSlugMatchesFilename(slug, data.slug);
+
         // Calculate reading time
         const stats = readingTime(content);
 
@@ -49,6 +66,9 @@ export function getBlogMetadata(slug: string): BlogMetadata | null {
             readTime: stats.text,
         };
     } catch (error) {
+        // A slug mismatch silently orphans the post, so surface it instead of
+        // degrading to null and dropping the article from the index.
+        if (error instanceof BlogSlugMismatchError) throw error;
         console.error(`Error reading blog metadata for ${slug}:`, error);
         return null;
     }
@@ -79,7 +99,9 @@ export async function getBlogBySlug(slug: string) {
 
         const fileContents = fs.readFileSync(filePath, 'utf8');
         const { data, content } = matter(fileContents);
-        
+
+        assertSlugMatchesFilename(slug, data.slug);
+
         // Calculate reading time
         const stats = readingTime(content);
 
@@ -111,6 +133,7 @@ export async function getBlogBySlug(slug: string) {
             content: mdxContent,
         };
     } catch (error) {
+        if (error instanceof BlogSlugMismatchError) throw error;
         console.error(`Error reading blog ${slug}:`, error);
         return null;
     }

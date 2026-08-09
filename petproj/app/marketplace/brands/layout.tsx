@@ -17,10 +17,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Pet Food Brands in Pakistan | Paltuu.pk",
         description: "Shop Royal Canin, Pedigree, Whiskas and all major pet food brands with delivery across Pakistan.",
-        url: "https://paltuu.pk/marketplace/brands",
+        url: "https://www.paltuu.pk/marketplace/brands",
         type: "website",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace/brands" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace/brands" },
 };
 
 export default function BrandsLayout({ children }: { children: React.ReactNode }) {

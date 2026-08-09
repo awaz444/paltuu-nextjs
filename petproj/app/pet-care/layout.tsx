@@ -19,16 +19,16 @@ export const metadata: Metadata = {
         title: "Find Vets in Pakistan | Paltuu.pk",
         description:
             "Browse verified veterinarians in Karachi, Lahore, and Islamabad. Book consultations and connect with pet doctors across Pakistan.",
-        url: "https://paltuu.pk/pet-care",
+        url: "https://www.paltuu.pk/pet-care",
         type: "website",
-        images: [{ url: "https://paltuu.pk/paltu_logo.svg", width: 800, height: 400, alt: "Find Vets in Pakistan — Paltuu.pk" }],
+        images: [{ url: "https://www.paltuu.pk/paltu_logo.svg", width: 800, height: 400, alt: "Find Vets in Pakistan — Paltuu.pk" }],
     },
     twitter: {
         card: "summary_large_image",
         title: "Find Vets in Pakistan | Paltuu.pk",
         description: "Browse verified vets in Karachi, Lahore, and Islamabad on Paltuu.pk.",
     },
-    alternates: { canonical: "https://paltuu.pk/pet-care" },
+    alternates: { canonical: "https://www.paltuu.pk/pet-care" },
 };
 
 export default function PetCareLayout({

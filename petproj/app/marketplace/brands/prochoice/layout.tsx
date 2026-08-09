@@ -15,10 +15,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: "ProChoice Pet Food Pakistan | Paltuu.pk",
         description: "Buy ProChoice premium pet food — made for Pakistan — with nationwide delivery.",
-        url: "https://paltuu.pk/marketplace/brands/prochoice",
+        url: "https://www.paltuu.pk/marketplace/brands/prochoice",
         type: "website",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace/brands/prochoice" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace/brands/prochoice" },
 };
 
 export default function ProChoiceLayout({ children }: { children: React.ReactNode }) {

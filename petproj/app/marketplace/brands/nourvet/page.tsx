@@ -38,10 +38,10 @@ export default function NourvetBrandPage() {
         "@type": "Brand",
         "name": "Nourvet",
         "description": "Veterinary-grade cat food brand available in Pakistan.",
-        "url": "https://paltuu.pk/marketplace/brands/nourvet",
+        "url": "https://www.paltuu.pk/marketplace/brands/nourvet",
         "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://paltuu.pk/marketplace/brands/nourvet?q={search_term_string}",
+            "target": "https://www.paltuu.pk/marketplace/brands/nourvet?q={search_term_string}",
             "query-input": "required name=search_term_string"
         }
     };

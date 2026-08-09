@@ -38,10 +38,10 @@ export default function HomieBrandPage() {
     "@type": "Brand",
     "name": "Homie",
     "description": "Nutritious and affordable pet food brand available in Pakistan.",
-    "url": "https://paltuu.pk/marketplace/brands/homie",
+    "url": "https://www.paltuu.pk/marketplace/brands/homie",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://paltuu.pk/marketplace/brands/homie?q={search_term_string}",
+      "target": "https://www.paltuu.pk/marketplace/brands/homie?q={search_term_string}",
       "query-input": "required name=search_term_string"
     }
   };

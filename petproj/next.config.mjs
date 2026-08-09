@@ -26,6 +26,19 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 200, 256, 384, 400],
   },
 
+  async redirects() {
+    return [
+      {
+        // This URL was live while the file and its frontmatter slug disagreed.
+        // Preserve any equity it picked up now that the post lives at the
+        // slug its canonical always pointed to.
+        source: '/blogs/what-should-i-feed-my-cat-pakistan-complete-guide',
+        destination: '/blogs/what-should-i-feed-my-cat-pakistan',
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     return [
       {

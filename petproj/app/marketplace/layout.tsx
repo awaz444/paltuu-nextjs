@@ -20,16 +20,16 @@ export const metadata: Metadata = {
         title: "Pet Products in Pakistan | Cat Food, Dog Food & More | Paltuu.pk",
         description:
             "Shop cat food, dog food, litter, and pet accessories with nationwide delivery in Pakistan.",
-        url: "https://paltuu.pk/marketplace",
+        url: "https://www.paltuu.pk/marketplace",
         type: "website",
-        images: [{ url: "https://paltuu.pk/paltu_logo.svg", width: 800, height: 400, alt: "Pet Products — Paltuu.pk" }],
+        images: [{ url: "https://www.paltuu.pk/paltu_logo.svg", width: 800, height: 400, alt: "Pet Products — Paltuu.pk" }],
     },
     twitter: {
         card: "summary_large_image",
         title: "Pet Products in Pakistan | Paltuu.pk",
         description: "Shop cat food, dog food, and pet accessories with nationwide delivery.",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace" },
 };
 
 export default function MarketplaceLayout({

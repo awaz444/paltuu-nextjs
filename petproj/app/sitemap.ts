@@ -1,9 +1,10 @@
 import { MetadataRoute } from 'next';
 import { getAllBlogsMetadata } from '@/lib/mdx';
 import { db } from '@/db/index';
+import { SITE_URL } from '@/lib/site';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const baseUrl = 'https://paltuu.pk';
+    const baseUrl = SITE_URL;
 
     // Static pages — fixed dates so Google doesn't think every page changed today
     const staticRoutes: MetadataRoute.Sitemap = [
@@ -31,7 +32,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         { url: `${baseUrl}/marketplace/brands/la-mito`,      lastModified: new Date('2026-05-01'), changeFrequency: 'monthly', priority: 0.6 },
         { url: `${baseUrl}/lost-and-found`,     lastModified: new Date('2026-04-01'), changeFrequency: 'daily',   priority: 0.7 },
         { url: `${baseUrl}/blogs`,              lastModified: new Date('2026-05-01'), changeFrequency: 'weekly',  priority: 0.8 },
-        { url: `${baseUrl}/about-us`,           lastModified: new Date('2025-01-01'), changeFrequency: 'monthly', priority: 0.5 },
     ];
     const routes = staticRoutes;
 
@@ -76,21 +76,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         console.error('Sitemap: failed to fetch vet pages', e);
     }
 
-    // Dynamic marketplace product pages (kept in sitemap even while Bazaar is paused for SEO)
-    let productPages: MetadataRoute.Sitemap = [];
-    try {
-        const result = await db.query(
-            `SELECT product_id, updated_at FROM bazaar_products WHERE status = 'published'`
-        );
-        productPages = result.rows.map((row) => ({
-            url: `${baseUrl}/marketplace/${row.product_id}`,
-            lastModified: row.updated_at ? new Date(row.updated_at) : new Date(),
-            changeFrequency: 'monthly' as const,
-            priority: 0.6,
-        }));
-    } catch (e) {
-        console.error('Sitemap: failed to fetch product pages', e);
-    }
+    // Marketplace product pages are intentionally excluded while Bazaar is paused.
+    // /marketplace/{id} currently returns 404, and listing dead URLs wastes crawl
+    // budget and reads as a site-quality problem. Re-add this block once the
+    // product route serves 200 again.
 
-    return [...routes, ...blogPosts, ...petPages, ...vetPages, ...productPages];
+    return [...routes, ...blogPosts, ...petPages, ...vetPages];
 }

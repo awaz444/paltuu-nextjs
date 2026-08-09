@@ -16,10 +16,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Whiskas Cat Food Pakistan | Paltuu.pk",
         description: "Buy Whiskas cat food — wet and dry — with delivery across Pakistan.",
-        url: "https://paltuu.pk/marketplace/brands/whiskas",
+        url: "https://www.paltuu.pk/marketplace/brands/whiskas",
         type: "website",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace/brands/whiskas" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace/brands/whiskas" },
 };
 
 export default function WhiskasLayout({ children }: { children: React.ReactNode }) {

@@ -66,7 +66,7 @@ export async function generateMetadata({
         openGraph: {
             title,
             description: metaDescription,
-            url: `https://paltuu.pk/rescue-pets/${params.rescue_id}`,
+            url: `https://www.paltuu.pk/rescue-pets/${params.rescue_id}`,
             type: "website",
             images: firstImage
                 ? [{ url: firstImage, width: 800, height: 600, alt: `${pet.pet_name} — rescue pet in Pakistan` }]
@@ -79,7 +79,7 @@ export async function generateMetadata({
             images: firstImage ? [firstImage] : [],
         },
         alternates: {
-            canonical: `https://paltuu.pk/rescue-pets/${params.rescue_id}`,
+            canonical: `https://www.paltuu.pk/rescue-pets/${params.rescue_id}`,
         },
     };
 }

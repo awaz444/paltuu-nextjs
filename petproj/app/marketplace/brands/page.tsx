@@ -97,7 +97,7 @@ export default function AllBrandsPage() {
                 "name": brand.name,
                 "description": brand.description,
                 "image": brand.image,
-                "url": `https://paltuu.pk/marketplace/brands/${brand.slug}`
+                "url": `https://www.paltuu.pk/marketplace/brands/${brand.slug}`
             }
         }))
     };

@@ -38,10 +38,10 @@ export default function WhiskasBrandPage() {
         "@type": "Brand",
         "name": "Whiskas",
         "description": "Popular cat food brand offering delicious and nutritious meals, available in Pakistan.",
-        "url": "https://paltuu.pk/marketplace/brands/whiskas",
+        "url": "https://www.paltuu.pk/marketplace/brands/whiskas",
         "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://paltuu.pk/marketplace/brands/whiskas?q={search_term_string}",
+            "target": "https://www.paltuu.pk/marketplace/brands/whiskas?q={search_term_string}",
             "query-input": "required name=search_term_string"
         }
     };

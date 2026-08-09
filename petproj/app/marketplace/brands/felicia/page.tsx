@@ -38,10 +38,10 @@ export default function FeliciaBrandPage() {
     "@type": "Brand",
     "name": "Felicia",
     "description": "Premium low-grain and hypoallergenic pet food brand available in Pakistan.",
-    "url": "https://paltuu.pk/marketplace/brands/felicia",
+    "url": "https://www.paltuu.pk/marketplace/brands/felicia",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://paltuu.pk/marketplace/brands/felicia?q={search_term_string}",
+      "target": "https://www.paltuu.pk/marketplace/brands/felicia?q={search_term_string}",
       "query-input": "required name=search_term_string"
     }
   };

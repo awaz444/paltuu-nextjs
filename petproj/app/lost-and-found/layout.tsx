@@ -18,16 +18,16 @@ export const metadata: Metadata = {
         title: "Lost & Found Pets in Pakistan | Paltuu.pk",
         description:
             "Report or find lost and missing pets across Pakistan. Help reunite animals with their families.",
-        url: "https://paltuu.pk/lost-and-found",
+        url: "https://www.paltuu.pk/lost-and-found",
         type: "website",
-        images: [{ url: "https://paltuu.pk/paltu_logo.svg", width: 800, height: 400, alt: "Lost & Found Pets — Paltuu.pk" }],
+        images: [{ url: "https://www.paltuu.pk/paltu_logo.svg", width: 800, height: 400, alt: "Lost & Found Pets — Paltuu.pk" }],
     },
     twitter: {
         card: "summary_large_image",
         title: "Lost & Found Pets in Pakistan | Paltuu.pk",
         description: "Report or find lost pets across Pakistan on Paltuu.pk.",
     },
-    alternates: { canonical: "https://paltuu.pk/lost-and-found" },
+    alternates: { canonical: "https://www.paltuu.pk/lost-and-found" },
 };
 
 export default function LostAndFoundLayout({

@@ -14,10 +14,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Petline Pet Food Pakistan | Paltuu.pk",
         description: "Shop Petline cat and dog food with delivery across Pakistan.",
-        url: "https://paltuu.pk/marketplace/brands/petline",
+        url: "https://www.paltuu.pk/marketplace/brands/petline",
         type: "website",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace/brands/petline" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace/brands/petline" },
 };
 
 export default function PetlineLayout({ children }: { children: React.ReactNode }) {

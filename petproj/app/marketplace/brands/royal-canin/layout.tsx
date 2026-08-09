@@ -16,10 +16,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Royal Canin Pakistan | Buy Online | Paltuu.pk",
         description: "Shop Royal Canin cat and dog food with delivery across Pakistan.",
-        url: "https://paltuu.pk/marketplace/brands/royal-canin",
+        url: "https://www.paltuu.pk/marketplace/brands/royal-canin",
         type: "website",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace/brands/royal-canin" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace/brands/royal-canin" },
 };
 
 export default function RoyalCaninLayout({ children }: { children: React.ReactNode }) {

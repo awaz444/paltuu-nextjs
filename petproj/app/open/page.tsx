@@ -18,7 +18,7 @@ export async function generateMetadata({
 
   let title = "Paltuu App";
   let description = "Pakistan's first pet adoption and care platform. Connect with pets, adopt, or find vet clinics near you.";
-  let imageUrl = "https://paltuu.pk/favicon.png"; // Fallback brand image
+  let imageUrl = "https://www.paltuu.pk/favicon.png"; // Fallback brand image
 
   try {
     if (cleanPath.startsWith("post/")) {
@@ -93,7 +93,7 @@ export async function generateMetadata({
 
   // Ensure absolute image URL for crawlers
   if (imageUrl && !imageUrl.startsWith("http")) {
-    imageUrl = `https://paltuu.pk${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
+    imageUrl = `https://www.paltuu.pk${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
   }
 
   return {

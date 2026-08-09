@@ -42,10 +42,10 @@ export default function GenericBrandPage() {
         "@type": "Brand",
         "name": brandName,
         "description": `Shop ${brandName} pet products in Pakistan. Authentic ${brandName} food and accessories available for delivery in Karachi.`,
-        "url": `https://paltuu.pk/marketplace/brands/${rawBrandName}`,
+        "url": `https://www.paltuu.pk/marketplace/brands/${rawBrandName}`,
         "potentialAction": {
             "@type": "SearchAction",
-            "target": `https://paltuu.pk/marketplace/brands/${rawBrandName}?q={search_term_string}`,
+            "target": `https://www.paltuu.pk/marketplace/brands/${rawBrandName}?q={search_term_string}`,
             "query-input": "required name=search_term_string"
         }
     };

@@ -38,10 +38,10 @@ export default function JungleBrandPage() {
         "@type": "Brand",
         "name": "Jungle",
         "description": "High-quality pet food brand for cats and dogs available in Pakistan.",
-        "url": "https://paltuu.pk/marketplace/brands/jungle",
+        "url": "https://www.paltuu.pk/marketplace/brands/jungle",
         "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://paltuu.pk/marketplace/brands/jungle?q={search_term_string}",
+            "target": "https://www.paltuu.pk/marketplace/brands/jungle?q={search_term_string}",
             "query-input": "required name=search_term_string"
         }
     };

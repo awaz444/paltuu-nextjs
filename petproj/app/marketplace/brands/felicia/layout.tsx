@@ -14,10 +14,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Felicia Cat Food Pakistan | Paltuu.pk",
         description: "Buy Felicia cat food with delivery across Pakistan.",
-        url: "https://paltuu.pk/marketplace/brands/felicia",
+        url: "https://www.paltuu.pk/marketplace/brands/felicia",
         type: "website",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace/brands/felicia" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace/brands/felicia" },
 };
 
 export default function FeliciaLayout({ children }: { children: React.ReactNode }) {

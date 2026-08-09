@@ -14,10 +14,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Jungle Pet Food Pakistan | Paltuu.pk",
         description: "Shop Jungle natural pet food with delivery across Pakistan.",
-        url: "https://paltuu.pk/marketplace/brands/jungle",
+        url: "https://www.paltuu.pk/marketplace/brands/jungle",
         type: "website",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace/brands/jungle" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace/brands/jungle" },
 };
 
 export default function JungleLayout({ children }: { children: React.ReactNode }) {

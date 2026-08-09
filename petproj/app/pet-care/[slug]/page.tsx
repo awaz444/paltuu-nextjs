@@ -54,11 +54,11 @@ export async function generateMetadata({
             openGraph: {
                 title,
                 description,
-                url: `https://paltuu.pk/pet-care/${slug}`,
+                url: `https://www.paltuu.pk/pet-care/${slug}`,
                 type: "website",
                 images: [
                     {
-                        url: "https://paltuu.pk/paltu_logo.svg",
+                        url: "https://www.paltuu.pk/paltu_logo.svg",
                         width: 800,
                         height: 400,
                         alt: `Vets in ${cityName} — Paltuu.pk`,
@@ -70,7 +70,7 @@ export async function generateMetadata({
                 title,
                 description,
             },
-            alternates: { canonical: `https://paltuu.pk/pet-care/${slug}` },
+            alternates: { canonical: `https://www.paltuu.pk/pet-care/${slug}` },
         };
     }
 
@@ -103,7 +103,7 @@ export async function generateMetadata({
         openGraph: {
             title,
             description,
-            url: `https://paltuu.pk/pet-care/${slug}`,
+            url: `https://www.paltuu.pk/pet-care/${slug}`,
             type: "profile",
             images: vet.profile_image_url
                 ? [{ url: vet.profile_image_url, width: 400, height: 400, alt: vet.vet_name }]
@@ -116,7 +116,7 @@ export async function generateMetadata({
             images: vet.profile_image_url ? [vet.profile_image_url] : [],
         },
         alternates: {
-            canonical: `https://paltuu.pk/pet-care/${slug}`,
+            canonical: `https://www.paltuu.pk/pet-care/${slug}`,
         },
     };
 }
@@ -226,7 +226,7 @@ export default async function SlugPage({
                         addressLocality: c.city,
                         addressCountry: "PK",
                     },
-                    url: `https://paltuu.pk/pet-care/clinic/${c.clinic_id}`,
+                    url: `https://www.paltuu.pk/pet-care/clinic/${c.clinic_id}`,
                     ...(c.rating
                         ? {
                               aggregateRating: {
@@ -247,13 +247,13 @@ export default async function SlugPage({
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
             itemListElement: [
-                { "@type": "ListItem", position: 1, name: "Home", item: "https://paltuu.pk" },
-                { "@type": "ListItem", position: 2, name: "Pet Care", item: "https://paltuu.pk/pet-care" },
+                { "@type": "ListItem", position: 1, name: "Home", item: "https://www.paltuu.pk" },
+                { "@type": "ListItem", position: 2, name: "Pet Care", item: "https://www.paltuu.pk/pet-care" },
                 {
                     "@type": "ListItem",
                     position: 3,
                     name: `Vets in ${cityName}`,
-                    item: `https://paltuu.pk/pet-care/${slug}`,
+                    item: `https://www.paltuu.pk/pet-care/${slug}`,
                 },
             ],
         };
@@ -444,7 +444,7 @@ export default async function SlugPage({
               name: vet.vet_name,
               description: vet.bio || `Veterinarian at ${vet.clinic_name || "a clinic"} in ${vet.city || "Pakistan"}`,
               image: vet.profile_image_url || undefined,
-              url: `https://paltuu.pk/pet-care/${slug}`,
+              url: `https://www.paltuu.pk/pet-care/${slug}`,
               telephone: vet.contact_details || undefined,
               email: vet.email || undefined,
               priceRange: vet.minimum_fee ? `PKR ${vet.minimum_fee}+` : "PKR",

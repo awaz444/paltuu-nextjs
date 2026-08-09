@@ -21,7 +21,7 @@ export const metadata: Metadata = {
             "Find dogs, cats and other pets for adoption from verified shelters and owners across Pakistan.",
         url: "https://www.paltuu.pk/browse-pets",
         type: "website",
-        images: [{ url: "https://paltuu.pk/paltu_logo.svg", width: 800, height: 400, alt: "Paltuu — Adopt Pets in Pakistan" }],
+        images: [{ url: "https://www.paltuu.pk/paltu_logo.svg", width: 800, height: 400, alt: "Paltuu — Adopt Pets in Pakistan" }],
     },
     twitter: {
         card: "summary_large_image",

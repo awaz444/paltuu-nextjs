@@ -13,6 +13,7 @@ import ThemeInitializer from "./ThemeInitializer";
 import ApplyThemeColor from "@/components/ApplyThemeColor";
 import PageTransition from "@/components/PageTransition";
 import CartSyncProvider from "@/components/CartSyncProvider";
+import { SITE_URL } from "@/lib/site";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -22,6 +23,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Paltuu - Pakistan's First Pet Adoption Platform",
     template: "%s | Paltuu",
@@ -58,10 +60,10 @@ export default function RootLayout({
               "@type": "Organization",
               "name": "Paltuu",
               "alternateName": ["Paltuu.pk", "Paltu"],
-              "url": "https://paltuu.pk",
+              "url": "https://www.paltuu.pk",
               "logo": {
                 "@type": "ImageObject",
-                "url": "https://paltuu.pk/paltu_logo.svg",
+                "url": "https://www.paltuu.pk/paltu_logo.svg",
                 "width": 200,
                 "height": 80
               },
@@ -95,13 +97,13 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebSite",
               "name": "Paltuu.pk",
-              "url": "https://paltuu.pk",
+              "url": "https://www.paltuu.pk",
               "description": "Pakistan's first pet adoption and care platform",
               "potentialAction": {
                 "@type": "SearchAction",
                 "target": {
                   "@type": "EntryPoint",
-                  "urlTemplate": "https://paltuu.pk/browse-pets?search={search_term_string}"
+                  "urlTemplate": "https://www.paltuu.pk/browse-pets?search={search_term_string}"
                 },
                 "query-input": "required name=search_term_string"
               }

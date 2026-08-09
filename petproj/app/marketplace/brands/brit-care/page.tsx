@@ -39,10 +39,10 @@ export default function BritCareBrandPage() {
         "@type": "Brand",
         "name": "Brit Care",
         "description": "Hypoallergenic and premium pet food brand available in Pakistan.",
-        "url": "https://paltuu.pk/marketplace/brands/brit-care",
+        "url": "https://www.paltuu.pk/marketplace/brands/brit-care",
         "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://paltuu.pk/marketplace/brands/brit-care?q={search_term_string}",
+            "target": "https://www.paltuu.pk/marketplace/brands/brit-care?q={search_term_string}",
             "query-input": "required name=search_term_string"
         }
     };

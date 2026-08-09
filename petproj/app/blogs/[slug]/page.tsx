@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     const title = `${metadata.title} | Paltuu.pk - Pakistan's #1 Pet Community`;
     const description = metadata.description || `Read ${metadata.title} on Paltuu.pk. Your go-to source for pet care, adoption, and marketplace in Pakistan.`;
     const sitename = "Paltuu.pk";
-    const url = `https://paltuu.pk/blogs/${metadata.slug}`;
+    const url = `https://www.paltuu.pk/blogs/${metadata.slug}`;
 
     return {
         title: {
@@ -119,23 +119,22 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         "dateModified": metadata.date,
         "author": {
             "@type": "Person",
-            "name": metadata.author,
-            "url": "https://paltuu.pk/about-us"
+            "name": metadata.author
         },
         "publisher": {
             "@type": "Organization",
             "name": "Paltuu.pk",
-            "url": "https://paltuu.pk",
+            "url": "https://www.paltuu.pk",
             "logo": {
                 "@type": "ImageObject",
-                "url": "https://paltuu.pk/paltu_logo.svg",
+                "url": "https://www.paltuu.pk/paltu_logo.svg",
                 "width": 200,
                 "height": 80
             }
         },
         "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": `https://paltuu.pk/blogs/${metadata.slug}`
+            "@id": `https://www.paltuu.pk/blogs/${metadata.slug}`
         },
         "keywords": metadata.tags.join(", "),
         "articleSection": metadata.category,

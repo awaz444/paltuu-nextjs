@@ -62,7 +62,7 @@ export async function generateMetadata({
         openGraph: {
             title,
             description,
-            url: `https://paltuu.pk/browse-pets/${params.pet_id}`,
+            url: `https://www.paltuu.pk/browse-pets/${params.pet_id}`,
             type: "website",
             images: firstImage
                 ? [{ url: firstImage, width: 800, height: 800, alt: `${pet.pet_name} — ${breed}` }]
@@ -75,7 +75,7 @@ export async function generateMetadata({
             images: firstImage ? [firstImage] : [],
         },
         alternates: {
-            canonical: `https://paltuu.pk/browse-pets/${params.pet_id}`,
+            canonical: `https://www.paltuu.pk/browse-pets/${params.pet_id}`,
         },
     };
 }
@@ -102,7 +102,7 @@ export default async function PetPage({
               "name": `${pet.pet_name} — ${pet.pet_breed || "Mixed Breed"} for ${pet.listing_type === "adoption" || pet.listing_type === "rescue" ? "adoption" : "sale"} in ${pet.city || "Pakistan"}`,
               "description": pet.description || `${pet.pet_name} is a ${pet.pet_breed || "mixed breed"} ${pet.listing_type === "adoption" ? "available for adoption" : "pet"} in ${pet.city || "Pakistan"}, Pakistan.`,
               "image": firstImage ? [firstImage] : [],
-              "url": `https://paltuu.pk/browse-pets/${params.pet_id}`,
+              "url": `https://www.paltuu.pk/browse-pets/${params.pet_id}`,
               "offers": {
                   "@type": "Offer",
                   "availability":
@@ -114,7 +114,7 @@ export default async function PetPage({
                   "seller": {
                       "@type": "Organization",
                       "name": "Paltuu.pk",
-                      "url": "https://paltuu.pk"
+                      "url": "https://www.paltuu.pk"
                   }
               },
               "additionalProperty": [

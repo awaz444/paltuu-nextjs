@@ -162,7 +162,7 @@ export async function generateMetadata({
       openGraph: {
         title: config.title,
         description: config.description,
-        url: `https://paltuu.pk/marketplace/${params.product_id}`,
+        url: `https://www.paltuu.pk/marketplace/${params.product_id}`,
         type: "website",
       },
       twitter: {
@@ -171,7 +171,7 @@ export async function generateMetadata({
         description: config.description,
       },
       alternates: {
-        canonical: `https://paltuu.pk/marketplace/${params.product_id}`,
+        canonical: `https://www.paltuu.pk/marketplace/${params.product_id}`,
       },
     };
   }
@@ -338,7 +338,7 @@ export default async function MarketplaceDynamicPage({
       ? [product.images]
       : [],
     sku: product.sku || String(product.product_id),
-    url: `https://paltuu.pk/marketplace/${params.product_id}`,
+    url: `https://www.paltuu.pk/marketplace/${params.product_id}`,
     brand: product.brand_name
       ? { "@type": "Brand", name: product.brand_name }
       : { "@type": "Brand", name: "Paltuu.pk" },
@@ -347,8 +347,8 @@ export default async function MarketplaceDynamicPage({
       price: product.price,
       priceCurrency: "PKR",
       availability: "https://schema.org/InStock",
-      url: `https://paltuu.pk/marketplace/${params.product_id}`,
-      seller: { "@type": "Organization", name: "Paltuu.pk", url: "https://paltuu.pk" },
+      url: `https://www.paltuu.pk/marketplace/${params.product_id}`,
+      seller: { "@type": "Organization", name: "Paltuu.pk", url: "https://www.paltuu.pk" },
       shippingDetails: {
         "@type": "OfferShippingDetails",
         shippingDestination: {

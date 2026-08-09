@@ -43,12 +43,12 @@ export const metadata: Metadata = {
     title: "Paltuu — Pakistan's First Pet Super App & #1 Pet Adoption Platform",
     description:
       "Adopt pets, find verified vets, shop premium pet products, and connect with the pet community across Pakistan. Paltuu.pk is Pakistan's first pet super app — serving Karachi, Lahore, and Islamabad.",
-    url: "https://paltuu.pk",
+    url: "https://www.paltuu.pk",
     siteName: "Paltuu.pk",
     type: "website",
     images: [
       {
-        url: "https://paltuu.pk/paltu_logo.svg",
+        url: "https://www.paltuu.pk/paltu_logo.svg",
         width: 800,
         height: 400,
         alt: "Paltuu — Pakistan's First Pet Super App",
@@ -60,10 +60,10 @@ export const metadata: Metadata = {
     title: "Paltuu — Pakistan's First Pet Super App & #1 Pet Adoption Platform",
     description:
       "Adopt pets, find vets, shop pet products, and join Pakistan's first pet super app.",
-    images: ["https://paltuu.pk/paltu_logo.svg"],
+    images: ["https://www.paltuu.pk/paltu_logo.svg"],
   },
   alternates: {
-    canonical: "https://paltuu.pk",
+    canonical: "https://www.paltuu.pk",
   },
 };
 

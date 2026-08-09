@@ -38,10 +38,10 @@ export default function FluffNBluffBrandPage() {
         "@type": "Brand",
         "name": "Fluff'n Bluff",
         "description": "Premium pet grooming accessories and shampoos available in Pakistan.",
-        "url": "https://paltuu.pk/marketplace/brands/fluff-n-bluff",
+        "url": "https://www.paltuu.pk/marketplace/brands/fluff-n-bluff",
         "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://paltuu.pk/marketplace/brands/fluff-n-bluff?q={search_term_string}",
+            "target": "https://www.paltuu.pk/marketplace/brands/fluff-n-bluff?q={search_term_string}",
             "query-input": "required name=search_term_string"
         }
     };

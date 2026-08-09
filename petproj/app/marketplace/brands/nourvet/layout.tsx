@@ -14,10 +14,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: "NourVet Pet Food Pakistan | Paltuu.pk",
         description: "Shop NourVet vet-recommended pet nutrition with delivery across Pakistan.",
-        url: "https://paltuu.pk/marketplace/brands/nourvet",
+        url: "https://www.paltuu.pk/marketplace/brands/nourvet",
         type: "website",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace/brands/nourvet" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace/brands/nourvet" },
 };
 
 export default function NourVetLayout({ children }: { children: React.ReactNode }) {

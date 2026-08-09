@@ -38,10 +38,10 @@ export default function RoyalCaninBrandPage() {
         "@type": "Brand",
         "name": "Royal Canin",
         "description": "Veterinary-recommended pet food brand offering precise nutrition, available in Pakistan.",
-        "url": "https://paltuu.pk/marketplace/brands/royal-canin",
+        "url": "https://www.paltuu.pk/marketplace/brands/royal-canin",
         "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://paltuu.pk/marketplace/brands/royal-canin?q={search_term_string}",
+            "target": "https://www.paltuu.pk/marketplace/brands/royal-canin?q={search_term_string}",
             "query-input": "required name=search_term_string"
         }
     };

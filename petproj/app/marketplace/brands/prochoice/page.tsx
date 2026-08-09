@@ -38,10 +38,10 @@ export default function ProchoiceBrandPage() {
     "@type": "Brand",
     "name": "Prochoice",
     "description": "High-quality pet food brand offering balanced nutrition, available in Pakistan.",
-    "url": "https://paltuu.pk/marketplace/brands/prochoice",
+    "url": "https://www.paltuu.pk/marketplace/brands/prochoice",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://paltuu.pk/marketplace/brands/prochoice?q={search_term_string}",
+      "target": "https://www.paltuu.pk/marketplace/brands/prochoice?q={search_term_string}",
       "query-input": "required name=search_term_string"
     }
   };

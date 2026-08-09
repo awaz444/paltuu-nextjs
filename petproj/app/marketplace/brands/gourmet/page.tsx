@@ -38,10 +38,10 @@ export default function GourmetBrandPage() {
         "@type": "Brand",
         "name": "Gourmet",
         "description": "Premium wet cat food brand available in Pakistan.",
-        "url": "https://paltuu.pk/marketplace/brands/gourmet",
+        "url": "https://www.paltuu.pk/marketplace/brands/gourmet",
         "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://paltuu.pk/marketplace/brands/gourmet?q={search_term_string}",
+            "target": "https://www.paltuu.pk/marketplace/brands/gourmet?q={search_term_string}",
             "query-input": "required name=search_term_string"
         }
     };

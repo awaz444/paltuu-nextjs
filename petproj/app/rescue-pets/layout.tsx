@@ -18,16 +18,16 @@ export const metadata: Metadata = {
         title: "Rescue Pets in Pakistan | Paltuu.pk",
         description:
             "Adopt or foster rescue animals from verified shelters across Pakistan. Give a rescued pet a loving home.",
-        url: "https://paltuu.pk/rescue-pets",
+        url: "https://www.paltuu.pk/rescue-pets",
         type: "website",
-        images: [{ url: "https://paltuu.pk/paltu_logo.svg", width: 800, height: 400, alt: "Rescue Pets — Paltuu.pk" }],
+        images: [{ url: "https://www.paltuu.pk/paltu_logo.svg", width: 800, height: 400, alt: "Rescue Pets — Paltuu.pk" }],
     },
     twitter: {
         card: "summary_large_image",
         title: "Rescue Pets in Pakistan | Paltuu.pk",
         description: "Adopt or foster rescue animals from verified shelters across Pakistan.",
     },
-    alternates: { canonical: "https://paltuu.pk/rescue-pets" },
+    alternates: { canonical: "https://www.paltuu.pk/rescue-pets" },
 };
 
 export default function RescuePetsLayout({

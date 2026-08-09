@@ -15,10 +15,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Brit Care Pet Food Pakistan | Paltuu.pk",
         description: "Shop Brit Care grain-free cat and dog food with delivery across Pakistan.",
-        url: "https://paltuu.pk/marketplace/brands/brit-care",
+        url: "https://www.paltuu.pk/marketplace/brands/brit-care",
         type: "website",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace/brands/brit-care" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace/brands/brit-care" },
 };
 
 export default function BritCareLayout({ children }: { children: React.ReactNode }) {

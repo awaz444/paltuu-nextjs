@@ -38,10 +38,10 @@ export default function PedigreeBrandPage() {
         "@type": "Brand",
         "name": "Pedigree",
         "description": "Complete and balanced dog food brand available in Pakistan.",
-        "url": "https://paltuu.pk/marketplace/brands/pedigree",
+        "url": "https://www.paltuu.pk/marketplace/brands/pedigree",
         "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://paltuu.pk/marketplace/brands/pedigree?q={search_term_string}",
+            "target": "https://www.paltuu.pk/marketplace/brands/pedigree?q={search_term_string}",
             "query-input": "required name=search_term_string"
         }
     };

@@ -43,11 +43,11 @@ export async function generateMetadata({
         openGraph: {
             title,
             description,
-            url: `https://paltuu.pk/pet-care/clinic/${params.id}`,
+            url: `https://www.paltuu.pk/pet-care/clinic/${params.id}`,
             type: "website",
             images: [
                 {
-                    url: c.logo_url || "https://paltuu.pk/paltu_logo.svg",
+                    url: c.logo_url || "https://www.paltuu.pk/paltu_logo.svg",
                     width: 800,
                     height: 400,
                     alt: c.name,
@@ -59,7 +59,7 @@ export async function generateMetadata({
             title,
             description,
         },
-        alternates: { canonical: `https://paltuu.pk/pet-care/clinic/${params.id}` },
+        alternates: { canonical: `https://www.paltuu.pk/pet-care/clinic/${params.id}` },
     };
 }
 
@@ -76,21 +76,21 @@ export default async function ClinicDetailLayout({
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: "https://paltuu.pk" },
-            { "@type": "ListItem", position: 2, name: "Pet Care", item: "https://paltuu.pk/pet-care" },
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://www.paltuu.pk" },
+            { "@type": "ListItem", position: 2, name: "Pet Care", item: "https://www.paltuu.pk/pet-care" },
             {
                 "@type": "ListItem",
                 position: 3,
                 name: c?.city ? `Vets in ${c.city}` : "Clinics",
                 item: c?.city
-                    ? `https://paltuu.pk/pet-care/${c.city.toLowerCase()}`
-                    : "https://paltuu.pk/pet-care",
+                    ? `https://www.paltuu.pk/pet-care/${c.city.toLowerCase()}`
+                    : "https://www.paltuu.pk/pet-care",
             },
             {
                 "@type": "ListItem",
                 position: 4,
                 name: c?.name ?? "Clinic",
-                item: `https://paltuu.pk/pet-care/clinic/${params.id}`,
+                item: `https://www.paltuu.pk/pet-care/clinic/${params.id}`,
             },
         ],
     };
@@ -99,10 +99,10 @@ export default async function ClinicDetailLayout({
         ? {
               "@context": "https://schema.org",
               "@type": "VeterinaryCare",
-              "@id": `https://paltuu.pk/pet-care/clinic/${params.id}`,
+              "@id": `https://www.paltuu.pk/pet-care/clinic/${params.id}`,
               name: c.name,
               image: c.logo_url || undefined,
-              url: `https://paltuu.pk/pet-care/clinic/${params.id}`,
+              url: `https://www.paltuu.pk/pet-care/clinic/${params.id}`,
               telephone: c.contact_number || undefined,
               address: {
                   "@type": "PostalAddress",

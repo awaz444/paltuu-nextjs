@@ -38,10 +38,10 @@ export default function PetlineBrandPage() {
     "@type": "Brand",
     "name": "Petline",
     "description": "Super premium pet food made with real meat, available in Pakistan.",
-    "url": "https://paltuu.pk/marketplace/brands/petline",
+    "url": "https://www.paltuu.pk/marketplace/brands/petline",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://paltuu.pk/marketplace/brands/petline?q={search_term_string}",
+      "target": "https://www.paltuu.pk/marketplace/brands/petline?q={search_term_string}",
       "query-input": "required name=search_term_string"
     }
   };

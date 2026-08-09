@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Pet Care Blogs & Articles | Paltuu.pk",
         description: "Explore expert pet care tips, health advice, training guides, and adoption stories.",
-        url: "https://paltuu.pk/blogs",
+        url: "https://www.paltuu.pk/blogs",
         siteName: "Paltuu.pk",
         type: "website",
     },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
         description: "Explore expert pet care tips, health advice, training guides, and adoption stories.",
     },
     alternates: {
-        canonical: "https://paltuu.pk/blogs",
+        canonical: "https://www.paltuu.pk/blogs",
     },
 };
 

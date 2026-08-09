@@ -14,10 +14,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Fluff N Bluff Pet Products Pakistan | Paltuu.pk",
         description: "Shop Fluff N Bluff premium pet products with delivery across Pakistan.",
-        url: "https://paltuu.pk/marketplace/brands/fluff-n-bluff",
+        url: "https://www.paltuu.pk/marketplace/brands/fluff-n-bluff",
         type: "website",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace/brands/fluff-n-bluff" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace/brands/fluff-n-bluff" },
 };
 
 export default function FluffNBluffLayout({ children }: { children: React.ReactNode }) {

@@ -16,10 +16,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Pedigree Dog Food Pakistan | Paltuu.pk",
         description: "Buy Pedigree dog food and treats with delivery across Pakistan.",
-        url: "https://paltuu.pk/marketplace/brands/pedigree",
+        url: "https://www.paltuu.pk/marketplace/brands/pedigree",
         type: "website",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace/brands/pedigree" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace/brands/pedigree" },
 };
 
 export default function PedigreeLayout({ children }: { children: React.ReactNode }) {

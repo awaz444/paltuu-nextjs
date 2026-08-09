@@ -15,10 +15,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Gourmet Cat Food Pakistan | Paltuu.pk",
         description: "Buy Gourmet premium wet cat food with delivery across Pakistan.",
-        url: "https://paltuu.pk/marketplace/brands/gourmet",
+        url: "https://www.paltuu.pk/marketplace/brands/gourmet",
         type: "website",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace/brands/gourmet" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace/brands/gourmet" },
 };
 
 export default function GourmetLayout({ children }: { children: React.ReactNode }) {

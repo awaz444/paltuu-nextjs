@@ -14,10 +14,10 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Homie Pet Products Pakistan | Paltuu.pk",
         description: "Shop Homie pet products with delivery across Pakistan.",
-        url: "https://paltuu.pk/marketplace/brands/homie",
+        url: "https://www.paltuu.pk/marketplace/brands/homie",
         type: "website",
     },
-    alternates: { canonical: "https://paltuu.pk/marketplace/brands/homie" },
+    alternates: { canonical: "https://www.paltuu.pk/marketplace/brands/homie" },
 };
 
 export default function HomieLayout({ children }: { children: React.ReactNode }) {

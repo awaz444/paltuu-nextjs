@@ -225,11 +225,30 @@ export default async function MarketplaceDynamicPage({
       })),
     };
 
+    const breadcrumbJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://www.paltuu.pk" },
+        { "@type": "ListItem", position: 2, name: "Shop", item: "https://www.paltuu.pk/marketplace" },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: config.h1,
+          item: `https://www.paltuu.pk/marketplace/${params.product_id}`,
+        },
+      ],
+    };
+
     return (
       <div className="min-h-screen bg-gray-50">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
         />
 
         {/* SEO header — server-rendered, fully crawlable */}

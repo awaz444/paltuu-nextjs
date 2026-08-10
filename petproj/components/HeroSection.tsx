@@ -84,7 +84,7 @@ const HeroSection = () => {
                                 </span>
                             </h1>
                             {/* Tagline */}
-                            <h3 className="text-xl md:text-xl lg:text-2xl font-medium mb-0 md:mb-1">
+                            <h2 className="text-xl md:text-xl lg:text-2xl font-medium mb-0 md:mb-1">
                                 Get the Best for Your Pet —{" "}
                                 {/* <Link href="/bazaar" className="underline decoration-gray-400 hover:decoration-black text-black">
                                     Shop Bazaar
@@ -92,7 +92,7 @@ const HeroSection = () => {
                                 <Link href="/marketplace" className="underline decoration-gray-400 hover:decoration-black text-black">
                                     Shop Now
                                 </Link>
-                            </h3>
+                            </h2>
                             <p className="text-base md:text-md text-gray-700 mb-6 mt-2 md:mb-8 max-w-lg">
                                 <span className="font-bold">Paltuu.pk</span> (also searched as <span className="font-semibold text-gray-900">Paltu</span> or <span className="font-semibold text-gray-900">Paaltuu</span>) is Pakistan's first pet super app and #1 pet adoption platform, helping you{" "}
                                 <Link href="/browse-pets" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
@@ -144,7 +144,7 @@ const HeroSection = () => {
                             </div>
 
                             {/* Heading with primary_icon.svg */}
-                            <h4 className="text-xl md:text-2xl font-semibold text-primary flex justify-center items-center gap-3 relative z-10">
+                            <h3 className="text-xl md:text-2xl font-semibold text-primary flex justify-center items-center gap-3 relative z-10">
                                 Why choose
                                 <Image
                                     src="/paltuu.png"
@@ -154,7 +154,7 @@ const HeroSection = () => {
                                     style={{ width: "auto" }}
                                     className="h-16 md:h-24 inline-block relative md:-top-2 md:-left-2 -top-1 -left-2"
                                 />
-                            </h4>
+                            </h3>
 
                             {/* Perks List */}
                             <ul className="list-disc list-inside text-gray-700 space-y-2 mb-5">

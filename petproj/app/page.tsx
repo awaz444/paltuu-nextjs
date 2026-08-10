@@ -1,10 +1,11 @@
 import { Metadata } from "next";
 import HeroSection from "../components/HeroSection";
+import LatestBlogsSection from "@/components/LatestBlogsSection";
+import HomepageFAQ from "@/components/HomepageFAQ";
+import { getAllBlogsMetadata } from "@/lib/mdx";
 
 export const metadata: Metadata = {
-  title: {
-    absolute: "Paltuu — Pakistan's First Pet Super App & #1 Pet Adoption Platform | Paltuu.pk",
-  },
+  title: "Pet Adoption Pakistan — Adopt Dogs & Cats",
   description:
     "Paltuu (also spelled Paltu or Paaltuu) is Pakistan's first pet super app and #1 pet adoption platform. Adopt dogs, cats, puppies, and kittens, connect with verified vets, and shop pet products in Karachi, Lahore, Islamabad, and across Pakistan. Join our growing pet community.",
   keywords: [
@@ -40,27 +41,18 @@ export const metadata: Metadata = {
     "pet community pakistan",
   ],
   openGraph: {
-    title: "Paltuu — Pakistan's First Pet Super App & #1 Pet Adoption Platform",
+    title: "Pet Adoption Pakistan — Adopt Dogs & Cats | Paltuu",
     description:
       "Adopt pets, find verified vets, shop premium pet products, and connect with the pet community across Pakistan. Paltuu.pk is Pakistan's first pet super app — serving Karachi, Lahore, and Islamabad.",
     url: "https://www.paltuu.pk",
     siteName: "Paltuu.pk",
     type: "website",
-    images: [
-      {
-        url: "https://www.paltuu.pk/paltu_logo.svg",
-        width: 800,
-        height: 400,
-        alt: "Paltuu — Pakistan's First Pet Super App",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Paltuu — Pakistan's First Pet Super App & #1 Pet Adoption Platform",
+    title: "Pet Adoption Pakistan — Adopt Dogs & Cats | Paltuu",
     description:
       "Adopt pets, find vets, shop pet products, and join Pakistan's first pet super app.",
-    images: ["https://www.paltuu.pk/paltu_logo.svg"],
   },
   alternates: {
     canonical: "https://www.paltuu.pk",
@@ -68,9 +60,13 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
+  const latestPosts = getAllBlogsMetadata().slice(0, 3);
+
   return (
     <main className="overflow-hidden bg-white">
       <HeroSection />
+      <LatestBlogsSection posts={latestPosts} />
+      <HomepageFAQ />
     </main>
   );
 }

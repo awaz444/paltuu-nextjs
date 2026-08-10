@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Pet Products in Pakistan — Cat Food, Dog Food & Accessories | Paltuu.pk",
+    title: "Pet Products in Pakistan — Cat Food, Dog Food & Accessories",
     description:
         "Browse premium pet products in Pakistan. Shop cat food, dog food, cat litter, pet accessories, grooming essentials and toys with nationwide delivery. Paltuu.pk — Pakistan's pet marketplace.",
     keywords: [
@@ -17,16 +17,15 @@ export const metadata: Metadata = {
         "paltuu bazaar",
     ],
     openGraph: {
-        title: "Pet Products in Pakistan | Cat Food, Dog Food & More | Paltuu.pk",
+        title: "Pet Products in Pakistan | Cat Food, Dog Food & More | Paltuu",
         description:
             "Shop cat food, dog food, litter, and pet accessories with nationwide delivery in Pakistan.",
         url: "https://www.paltuu.pk/marketplace",
         type: "website",
-        images: [{ url: "https://www.paltuu.pk/paltu_logo.svg", width: 800, height: 400, alt: "Pet Products — Paltuu.pk" }],
     },
     twitter: {
         card: "summary_large_image",
-        title: "Pet Products in Pakistan | Paltuu.pk",
+        title: "Pet Products in Pakistan | Paltuu",
         description: "Shop cat food, dog food, and pet accessories with nationwide delivery.",
     },
     alternates: { canonical: "https://www.paltuu.pk/marketplace" },

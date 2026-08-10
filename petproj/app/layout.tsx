@@ -73,6 +73,19 @@ export default function RootLayout({
                 "@type": "Country",
                 "name": "Pakistan"
               },
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "National Incubation Center",
+                "addressLocality": "Karachi",
+                "addressCountry": "PK"
+              },
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "customer service",
+                "telephone": "+92-339-4022468",
+                "email": "support@paltuu.pk",
+                "areaServed": "PK"
+              },
               "knowsAbout": [
                 "Pet adoption",
                 "Cat care",

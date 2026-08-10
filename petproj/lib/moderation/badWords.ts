@@ -93,6 +93,12 @@ export const SEVERE_PHRASES = [
     'ullu ki aulad', 'ullu ki zat', 'lomdi ki aulad', 'lomdi ki zat',
     'bhed ki aulad', 'bhed ki zat', 'bakri ki aulad', 'bakri ki zat',
     'billi ki aulad', 'billi ki zat', 'mendhak ki aulad', 'mendhak ki zat',
+
+    // --- Racist phrases: the individual words are common vocabulary (a
+    // pet app talks about "black" cats and "monkey"s in the ordinary
+    // course of things), so only the combination — which invokes
+    // slavery/dehumanization rhetoric — is SEVERE, not the bare words. ---
+    'slavery black monkey', 'black monkey slavery', 'monkey slavery',
 ];
 
 export const MILD_WORDS = [
@@ -230,6 +236,24 @@ function buildMatcher(words: string[]): RegExp | null {
 const SEVERE_RE = buildMatcher([...SEVERE_WORDS, ...SEVERE_PHRASES]);
 const MILD_RE = buildMatcher(MILD_WORDS);
 
+const LEET_SUBSTITUTIONS: Record<string, string> = {
+    '!': 'i', '1': 'i', '0': 'o', '3': 'e', '4': 'a', '5': 's', '7': 't', '@': 'a', '$': 's', '+': 't',
+};
+const LEET_RE = new RegExp(`[${Object.keys(LEET_SUBSTITUTIONS).map((c) => `\\${c}`).join('')}]`, 'g');
+
+/**
+ * Normalizes common leetspeak substitutions ("n!gga", "n1gger", "sl4very")
+ * to plain letters before matching, catching evasions beyond the explicit
+ * '1'/'0'/etc. spellings already listed above. Every substitution is
+ * exactly one character for one character, so the normalized string stays
+ * the same length and index-aligned with the original — redactSevereWords
+ * below relies on that to slice the ORIGINAL text using match offsets
+ * found against the normalized one.
+ */
+export function normalizeLeetspeak(text: string): string {
+    return text.replace(LEET_RE, (ch) => LEET_SUBSTITUTIONS[ch] ?? ch);
+}
+
 /**
  * Sentinel wrapping a redacted word in content sent to the 'redacted'
  * moderation state (see admin moderate routes + lib/moderationRedaction.ts).
@@ -248,8 +272,18 @@ export const REDACTED_WORD_MARKER = 'REDACTED';
  */
 export function redactSevereWords(text: string): string {
     if (!text || !SEVERE_RE) return text;
+    const normalized = normalizeLeetspeak(text);
     SEVERE_RE.lastIndex = 0;
-    return text.replace(SEVERE_RE, REDACTED_WORD_MARKER);
+    let result = '';
+    let lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = SEVERE_RE.exec(normalized))) {
+        result += text.slice(lastIndex, m.index) + REDACTED_WORD_MARKER;
+        lastIndex = m.index + m[0].length;
+        if (m[0].length === 0) SEVERE_RE.lastIndex++;
+    }
+    result += text.slice(lastIndex);
+    return result;
 }
 
 /**
@@ -259,15 +293,16 @@ export function redactSevereWords(text: string): string {
  */
 export function matchBadWords(text: string): BadWordMatch {
     if (!text) return { severe: [], mild: [] };
-    const severe = SEVERE_RE ? Array.from(new Set((text.match(SEVERE_RE) ?? []).map((w) => w.toLowerCase()))) : [];
-    const mild = MILD_RE ? Array.from(new Set((text.match(MILD_RE) ?? []).map((w) => w.toLowerCase()))) : [];
+    const normalized = normalizeLeetspeak(text);
+    const severe = SEVERE_RE ? Array.from(new Set((normalized.match(SEVERE_RE) ?? []).map((w) => w.toLowerCase()))) : [];
+    const mild = MILD_RE ? Array.from(new Set((normalized.match(MILD_RE) ?? []).map((w) => w.toLowerCase()))) : [];
     return { severe, mild };
 }
 
 export function hasSevereMatch(text: string): boolean {
     if (!text || !SEVERE_RE) return false;
     SEVERE_RE.lastIndex = 0;
-    return SEVERE_RE.test(text);
+    return SEVERE_RE.test(normalizeLeetspeak(text));
 }
 
 /**

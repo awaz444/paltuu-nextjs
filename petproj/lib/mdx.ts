@@ -5,8 +5,8 @@ import { compileMDX } from 'next-mdx-remote/rsc';
 import readingTime from 'reading-time';
 
 // Export types from separate file (safe for client components)
-export type { BlogMetadata, BlogPost } from './mdx-types';
-import type { BlogMetadata } from './mdx-types';
+export type { BlogMetadata, BlogPost, BlogFAQItem } from './mdx-types';
+import type { BlogMetadata, BlogFAQItem } from './mdx-types';
 
 const BLOGS_PATH = path.join(process.cwd(), 'content', 'blogs');
 
@@ -41,7 +41,7 @@ export function getAllBlogSlugs(): string[] {
 export function getBlogMetadata(slug: string): BlogMetadata | null {
     try {
         const filePath = path.join(BLOGS_PATH, `${slug}.mdx`);
-        
+
         if (!fs.existsSync(filePath)) {
             return null;
         }
@@ -62,6 +62,7 @@ export function getBlogMetadata(slug: string): BlogMetadata | null {
             featuredImage: data.featuredImage,
             author: data.author,
             date: data.date,
+            updated: data.updated,
             tags: data.tags || [],
             readTime: stats.text,
         };
@@ -92,7 +93,7 @@ export function getAllBlogsMetadata(): BlogMetadata[] {
 export async function getBlogBySlug(slug: string) {
     try {
         const filePath = path.join(BLOGS_PATH, `${slug}.mdx`);
-        
+
         if (!fs.existsSync(filePath)) {
             return null;
         }
@@ -113,9 +114,12 @@ export async function getBlogBySlug(slug: string) {
             featuredImage: data.featuredImage,
             author: data.author,
             date: data.date,
+            updated: data.updated,
             tags: data.tags || [],
             readTime: stats.text,
         };
+
+        const faqs = extractFAQs(content);
 
         // Compile MDX
         const { content: mdxContent } = await compileMDX({
@@ -131,12 +135,62 @@ export async function getBlogBySlug(slug: string) {
         return {
             metadata,
             content: mdxContent,
+            faqs,
         };
     } catch (error) {
         if (error instanceof BlogSlugMismatchError) throw error;
         console.error(`Error reading blog ${slug}:`, error);
         return null;
     }
+}
+
+// Extracts Q&A pairs from a `## Frequently Asked Questions` section (### question
+// headings followed by answer text) so FAQPage schema can be generated without
+// authors needing any special MDX syntax — every post already writes FAQs this way.
+function extractFAQs(markdown: string): BlogFAQItem[] {
+    const lines = markdown.split('\n');
+    const startIndex = lines.findIndex((line) =>
+        /^##\s+(frequently asked questions|faqs?)\s*$/i.test(line.trim())
+    );
+    if (startIndex === -1) return [];
+
+    const endIndex = lines.findIndex(
+        (line, i) => i > startIndex && /^##\s+/.test(line.trim())
+    );
+    const section = lines.slice(startIndex + 1, endIndex === -1 ? undefined : endIndex);
+
+    const faqs: BlogFAQItem[] = [];
+    let currentQuestion: string | null = null;
+    let answerParts: string[] = [];
+
+    const pushCurrent = () => {
+        if (currentQuestion && answerParts.length > 0) {
+            const answer = answerParts.join(' ').replace(/\s+/g, ' ').trim();
+            if (answer) faqs.push({ question: currentQuestion.trim(), answer });
+        }
+    };
+
+    for (const rawLine of section) {
+        const line = rawLine.trim();
+        const questionMatch = line.match(/^###\s+(.+)/);
+        if (questionMatch) {
+            pushCurrent();
+            currentQuestion = questionMatch[1].trim();
+            answerParts = [];
+            continue;
+        }
+        if (!currentQuestion || line === '---' || line === '') continue;
+
+        const cleaned = line
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+            .replace(/[*_`]/g, '')
+            .replace(/^[-*]\s+/, '')
+            .replace(/^\d+\.\s+/, '');
+        answerParts.push(cleaned);
+    }
+    pushCurrent();
+
+    return faqs;
 }
 
 // Get blogs by category

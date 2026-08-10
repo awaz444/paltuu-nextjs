@@ -96,16 +96,14 @@ tags: ["winter-pet-care-pakistan", "cold-weather-dogs", "cat-winter-safety", "hy
 | `featuredImage` | Live 1200×630 URL. Verify with curl. |
 | `author` | Real name, or "Paltuu Team". |
 | `date` | `YYYY-MM-DD`, not in the future. |
+| `updated` | Optional. `YYYY-MM-DD`, set only when refreshing a published post — becomes `dateModified`. |
 | `tags` | 5–8, lowercase, hyphen-separated, specific. |
 
 ### ⚠️ Title length
 
-The blog route currently appends `| Paltuu.pk - Pakistan's #1 Pet Community` to
-every title. Google shows ~60 characters, so a 60-char title renders as ~103
-characters and gets truncated to mush in search results.
-
-Until that suffix is shortened, **keep titles under 50 characters.** Test:
-your title plus the suffix should read sensibly when cut at 60 chars.
+The blog route appends `| Paltuu` (8 characters) to every title. Google shows
+~60 characters, so **keep titles under ~50 characters** — your title plus the
+suffix should read sensibly when cut at 60 chars.
 
 ### Tags
 
@@ -171,12 +169,15 @@ Every post should be identifiably about Pakistan within the first paragraph.
 
 ### Add an FAQ section
 
-End with 3–5 real questions in H3s with direct answers. These are what get
-quoted by AI search and what qualify for FAQ rich results.
+End with 3–5 real questions in H3s with direct answers, under a `##
+Frequently Asked Questions` heading. These are what get quoted by AI search
+and what qualify for FAQ rich results.
 
-> **Note:** FAQ sections do not currently emit `FAQPage` schema — that's a
-> pending fix. Write them anyway; they'll be picked up automatically once the
-> `<FAQ>` component lands.
+No special MDX syntax needed — the build parses any `## Frequently Asked
+Questions` section (### question + answer text, matching every published
+post's existing format) and emits matching `FAQPage` schema automatically.
+Keep answers as plain text/lists; don't nest another heading inside an
+answer, or the parser will treat it as the next question.
 
 ---
 
@@ -235,7 +236,7 @@ broken hero means a broken `og:image` too.
 Refreshing beats republishing. Google rewards freshness on "best X in Pakistan"
 queries, and an established URL keeps its history.
 
-`dateModified` currently just mirrors `datePublished`, so refreshes are
-invisible to Google — an `updated` frontmatter field is a pending fix. Until
-then, don't bump `date` on a refresh; that fakes a publish date and resets
-nothing useful.
+Add an `updated: "YYYY-MM-DD"` field to frontmatter when you meaningfully
+refresh a post — it becomes `dateModified` in the schema (falls back to
+`date` when absent). Don't bump `date` itself on a refresh; that fakes a
+publish date and throws away the post's original age signal.

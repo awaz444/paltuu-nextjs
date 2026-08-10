@@ -12,13 +12,8 @@ import {
     faChevronRight,
     faHome,
 } from "@fortawesome/free-solid-svg-icons";
-import {
-    faFacebook,
-    faTwitter,
-    faLinkedinIn,
-    faWhatsapp,
-} from "@fortawesome/free-brands-svg-icons";
 import { Metadata } from "next";
+import ShareButtons from "@/components/blog/ShareButtons";
 
 // Generate static params for all blog posts
 export async function generateStaticParams() {
@@ -40,7 +35,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     }
 
     const { metadata } = blog;
-    const title = `${metadata.title} | Paltuu.pk - Pakistan's #1 Pet Community`;
+    const title = `${metadata.title} | Paltuu`;
     const description = metadata.description || `Read ${metadata.title} on Paltuu.pk. Your go-to source for pet care, adoption, and marketplace in Pakistan.`;
     const sitename = "Paltuu.pk";
     const url = `https://www.paltuu.pk/blogs/${metadata.slug}`;
@@ -100,7 +95,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         notFound();
     }
 
-    const { metadata, content } = blog;
+    const { metadata, content, faqs } = blog;
     const relatedPosts = getRelatedBlogs(metadata.slug, 3);
 
     // JSON-LD Schema
@@ -116,7 +111,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             "height": 630
         },
         "datePublished": metadata.date,
-        "dateModified": metadata.date,
+        "dateModified": metadata.updated || metadata.date,
         "author": {
             "@type": "Person",
             "name": metadata.author
@@ -145,12 +140,31 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         }
     };
 
+    const faqJsonLd = faqs.length > 0 ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": faqs.map((faq) => ({
+            "@type": "Question",
+            "name": faq.question,
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": faq.answer,
+            },
+        })),
+    } : null;
+
     return (
         <>
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
+            {faqJsonLd && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+                />
+            )}
 
             <main className="bg-gray-50 min-h-screen font-montserrat">
                 {/* Hero Section with Breadcrumb */}
@@ -282,32 +296,10 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                                         {/* Share Buttons */}
                                         <div className="flex items-center gap-3">
                                             <span className="text-gray-500 font-bold text-sm uppercase tracking-wide">Share:</span>
-                                            <div className="flex gap-2">
-                                                <button
-                                                    className="w-11 h-11 rounded-xl bg-[#1877F2] text-white flex items-center justify-center hover:scale-110 hover:shadow-lg transition-all duration-300"
-                                                    aria-label="Share on Facebook"
-                                                >
-                                                    <FontAwesomeIcon icon={faFacebook} className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    className="w-11 h-11 rounded-xl bg-[#1DA1F2] text-white flex items-center justify-center hover:scale-110 hover:shadow-lg transition-all duration-300"
-                                                    aria-label="Share on Twitter"
-                                                >
-                                                    <FontAwesomeIcon icon={faTwitter} className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    className="w-11 h-11 rounded-xl bg-[#0077b5] text-white flex items-center justify-center hover:scale-110 hover:shadow-lg transition-all duration-300"
-                                                    aria-label="Share on LinkedIn"
-                                                >
-                                                    <FontAwesomeIcon icon={faLinkedinIn} className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    className="w-11 h-11 rounded-xl bg-[#25D366] text-white flex items-center justify-center hover:scale-110 hover:shadow-lg transition-all duration-300"
-                                                    aria-label="Share on WhatsApp"
-                                                >
-                                                    <FontAwesomeIcon icon={faWhatsapp} className="w-5 h-5" />
-                                                </button>
-                                            </div>
+                                            <ShareButtons
+                                                url={`https://www.paltuu.pk/blogs/${metadata.slug}`}
+                                                title={metadata.title}
+                                            />
                                         </div>
                                     </div>
                                 </div>

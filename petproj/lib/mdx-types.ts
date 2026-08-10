@@ -9,10 +9,16 @@ export interface BlogMetadata {
     featuredImage: string;
     author: string;
     date: string;
+    updated?: string;
     tags: string[];
     readTime?: string;
 }
 
 export interface BlogPost extends BlogMetadata {
     content: string;
+}
+
+export interface BlogFAQItem {
+    question: string;
+    answer: string;
 }

@@ -60,6 +60,11 @@ export const dynamic = "force-dynamic";
  *           type: integer
  *           default: 15
  *         description: Max 50
+ *       - in: query
+ *         name: all
+ *         schema:
+ *           type: boolean
+ *         description: Skip pagination and return every matching clinic (e.g. for map pins) — ignores page/limit
  */
 
 const DEFAULT_LIMIT = 15;
@@ -77,6 +82,7 @@ export async function GET(req: NextRequest) {
         const lat      = parseFloat(searchParams.get("lat") ?? "");
         const lng      = parseFloat(searchParams.get("lng") ?? "");
         const hasCoords = Number.isFinite(lat) && Number.isFinite(lng);
+        const all      = searchParams.get("all") === "true";
 
         const page  = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
         const limit = Math.min(
@@ -132,10 +138,14 @@ export async function GET(req: NextRequest) {
             `;
         }
 
-        params.push(limit);
-        const limitIdx = params.length;
-        params.push(offset);
-        const offsetIdx = params.length;
+        let limitClause = "";
+        if (!all) {
+            params.push(limit);
+            const limitIdx = params.length;
+            params.push(offset);
+            const offsetIdx = params.length;
+            limitClause = `LIMIT $${limitIdx} OFFSET $${offsetIdx}`;
+        }
 
         const result = await db.query(`
             SELECT
@@ -149,7 +159,7 @@ export async function GET(req: NextRequest) {
             ${whereClause}
             GROUP BY c.clinic_id, u.profile_image_url
             ${orderClause}
-            LIMIT $${limitIdx} OFFSET $${offsetIdx}
+            ${limitClause}
         `, params);
 
         const total = result.rows[0]?.total_count ?? 0;
@@ -164,13 +174,15 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({
             data,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.max(1, Math.ceil(total / limit)),
-                hasMore: offset + data.length < total,
-            },
+            pagination: all
+                ? { page: 1, limit: total, total, totalPages: 1, hasMore: false }
+                : {
+                    page,
+                    limit,
+                    total,
+                    totalPages: Math.max(1, Math.ceil(total / limit)),
+                    hasMore: offset + data.length < total,
+                },
             cities: citiesResult.rows.map((r) => r.city),
         });
     } catch (error) {

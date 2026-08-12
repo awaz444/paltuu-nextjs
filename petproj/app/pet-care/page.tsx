@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../store/store";
-import { fetchClinics } from "../store/slices/clinicSlice";
+import { fetchClinics, fetchClinicsForMap } from "../store/slices/clinicSlice";
 import ClinicGrid from "../../components/ClinicGrid";
 import SkeletonCard, { SidebarSkeleton, MapSkeleton } from "../../components/SkeletonCard";
 import dynamic from "next/dynamic";
@@ -22,7 +22,7 @@ const ClinicMap = dynamic(() => import("../../components/ClinicMap"), { ssr: fal
 
 export default function PetCare() {
     const dispatch = useDispatch<AppDispatch>();
-    const { clinics, cities, pagination, loading, error } = useSelector(
+    const { clinics, cities, pagination, loading, error, mapClinics, mapLoading } = useSelector(
         (state: RootState) => state.clinics
     );
 
@@ -65,7 +65,8 @@ export default function PetCare() {
     }, [cityFilter, debouncedSearch, partnerFilter, verifiedFilter, sortedByDistance]);
 
     // Fetch from the backend whenever filters or page change — the server
-    // now owns filtering, sorting, and pagination.
+    // now owns filtering, sorting, and pagination. page 1 replaces the list
+    // (a fresh search/filter); later pages append (infinite scroll).
     useEffect(() => {
         dispatch(fetchClinics({
             page: currentPage,
@@ -78,6 +79,37 @@ export default function PetCare() {
             lng: sortedByDistance && userCoords ? userCoords.lng : undefined,
         }));
     }, [dispatch, currentPage, cityFilter, debouncedSearch, partnerFilter, verifiedFilter, sortedByDistance, userCoords]);
+
+    // The map needs every matching clinic's pin, not just the current page —
+    // fetch it separately (unpaginated) whenever the filters (not the page)
+    // change.
+    useEffect(() => {
+        dispatch(fetchClinicsForMap({
+            city: cityFilter !== "All" ? cityFilter : undefined,
+            search: debouncedSearch || undefined,
+            partner: partnerFilter || undefined,
+            verified: verifiedFilter || undefined,
+        }));
+    }, [dispatch, cityFilter, debouncedSearch, partnerFilter, verifiedFilter]);
+
+    // Infinite scroll — load the next page automatically as the sentinel
+    // below the grid comes into view, instead of requiring clicked page
+    // buttons.
+    const loadMoreRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        const el = loadMoreRef.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && pagination.hasMore && !loading) {
+                    setCurrentPage((p) => p + 1);
+                }
+            },
+            { rootMargin: "400px" }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [pagination.hasMore, loading]);
 
     useEffect(() => {
         const toggleVisibility = () => setShowBackToTop(window.scrollY > 400);
@@ -93,7 +125,6 @@ export default function PetCare() {
 
     const availableCities = cities;
     const displayedClinics = clinics;
-    const totalPages = pagination.totalPages;
 
     const resetFilters = () => {
         setCityFilter("All");
@@ -127,10 +158,10 @@ export default function PetCare() {
             {!error && (
                 <div className="hidden lg:block" style={{ maxWidth: "90%", margin: "0 auto" }}>
                     <div className="mx-0 md:mx-8 mt-6 rounded-3xl overflow-hidden shadow-sm" style={{ isolation: "isolate" }}>
-                        {loading || clinics.length === 0 ? (
+                        {mapLoading || mapClinics.length === 0 ? (
                             <MapSkeleton />
                         ) : (
-                            <ClinicMap clinics={displayedClinics} userCoords={userCoords} />
+                            <ClinicMap clinics={mapClinics} userCoords={userCoords} />
                         )}
                     </div>
                 </div>
@@ -143,7 +174,7 @@ export default function PetCare() {
                     {/* Vertical Sidebar — desktop only, matches Browse Pets & Lost & Found */}
                     {!error && (
                         <div className="w-1/4 mr-4 vertical-search-bar hidden lg:block">
-                            {loading || clinics.length === 0 ? <SidebarSkeleton /> :
+                            {loading && clinics.length === 0 ? <SidebarSkeleton /> :
                             <div className="bg-white shadow-sm p-6 rounded-3xl sticky top-4">
 
                                 {/* Search */}
@@ -231,7 +262,7 @@ export default function PetCare() {
                     {/* Main content */}
                     <div className="w-full lg:w-3/4">
 
-                        {loading ? (
+                        {loading && clinics.length === 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {Array.from({ length: 6 }).map((_, i) => (
                                     <SkeletonCard key={i} variant="clinic" />
@@ -269,50 +300,20 @@ export default function PetCare() {
                             <>
                                 <ClinicGrid clinics={displayedClinics} />
 
-                                {/* Pagination */}
-                                {totalPages > 1 && (
-                                    <div className="flex justify-center items-center mt-10 mb-6 space-x-2 flex-wrap">
-                                        <button
-                                            onClick={() => { setCurrentPage((p) => Math.max(1, p - 1)); scrollToTop(); }}
-                                            disabled={currentPage === 1}
-                                            className="px-3 py-1 bg-white border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
-                                        >
-                                            Previous
-                                        </button>
-
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => {
-                                            if (totalPages > 7) {
-                                                if (num === 1 || num === totalPages || (num >= currentPage - 1 && num <= currentPage + 1)) {
-                                                    // show
-                                                } else if (num === currentPage - 2 || num === currentPage + 2) {
-                                                    return <span key={num} className="px-2">...</span>;
-                                                } else {
-                                                    return null;
-                                                }
-                                            }
-                                            return (
-                                                <button
-                                                    key={num}
-                                                    onClick={() => { setCurrentPage(num); scrollToTop(); }}
-                                                    className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-150 ${
-                                                        currentPage === num
-                                                            ? "bg-primary text-white shadow-md font-bold"
-                                                            : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                                                    }`}
-                                                >
-                                                    {num}
-                                                </button>
-                                            );
-                                        })}
-
-                                        <button
-                                            onClick={() => { setCurrentPage((p) => Math.min(totalPages, p + 1)); scrollToTop(); }}
-                                            disabled={currentPage === totalPages}
-                                            className="px-3 py-1 bg-white border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
-                                        >
-                                            Next
-                                        </button>
+                                {/* Infinite scroll — this sentinel loads the next page
+                                    automatically once it scrolls into view. */}
+                                <div ref={loadMoreRef} className="h-1" />
+                                {loading && currentPage > 1 && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                                        {Array.from({ length: 3 }).map((_, i) => (
+                                            <SkeletonCard key={i} variant="clinic" />
+                                        ))}
                                     </div>
+                                )}
+                                {!pagination.hasMore && clinics.length > 0 && (
+                                    <p className="text-center text-gray-400 text-sm mt-10 mb-6">
+                                        You&apos;ve reached the end of the list.
+                                    </p>
                                 )}
                             </>
                         )}

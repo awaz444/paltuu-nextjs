@@ -13,6 +13,8 @@ export interface ClinicQueryParams {
     sort?: 'rating' | 'distance';
     lat?: number;
     lng?: number;
+    /** Skip pagination and return every matching clinic — used for map pins. */
+    all?: boolean;
 }
 
 interface ClinicPagination {
@@ -29,6 +31,9 @@ interface ClinicState {
     pagination: ClinicPagination;
     loading: boolean;
     error: string | null;
+    /** Full, unpaginated result set for the current filters — map pins only. */
+    mapClinics: Clinic[];
+    mapLoading: boolean;
 }
 
 const initialState: ClinicState = {
@@ -37,6 +42,8 @@ const initialState: ClinicState = {
     pagination: { page: 1, limit: 15, total: 0, totalPages: 1, hasMore: false },
     loading: false,
     error: null,
+    mapClinics: [],
+    mapLoading: false,
 };
 
 interface FetchClinicsResponse {
@@ -45,7 +52,7 @@ interface FetchClinicsResponse {
     cities: string[];
 }
 
-export const fetchClinics = createAsyncThunk('clinics/fetchClinics', async (params: ClinicQueryParams = {}) => {
+const buildQuery = (params: ClinicQueryParams) => {
     const query = new URLSearchParams();
     if (params.page) query.set('page', String(params.page));
     if (params.limit) query.set('limit', String(params.limit));
@@ -57,8 +64,12 @@ export const fetchClinics = createAsyncThunk('clinics/fetchClinics', async (para
     if (params.sort) query.set('sort', params.sort);
     if (params.lat != null) query.set('lat', String(params.lat));
     if (params.lng != null) query.set('lng', String(params.lng));
+    if (params.all) query.set('all', 'true');
+    return query;
+};
 
-    const response = await fetch(`/api/v1/clinics?${query.toString()}`);
+export const fetchClinics = createAsyncThunk('clinics/fetchClinics', async (params: ClinicQueryParams = {}) => {
+    const response = await fetch(`/api/v1/clinics?${buildQuery(params).toString()}`);
     if (!response.ok) {
         throw new Error('Failed to fetch clinics');
     }
@@ -70,6 +81,18 @@ export const fetchClinics = createAsyncThunk('clinics/fetchClinics', async (para
         if (clinics.loading) return false;
         return true;
     }
+});
+
+// Separate from `fetchClinics` — this one is for the map, which needs every
+// matching clinic's coordinates regardless of which page the list is on, so
+// it's tracked with its own loading flag and never paginated/appended.
+export const fetchClinicsForMap = createAsyncThunk('clinics/fetchClinicsForMap', async (params: ClinicQueryParams = {}) => {
+    const response = await fetch(`/api/v1/clinics?${buildQuery({ ...params, all: true }).toString()}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch clinics for map');
+    }
+    const data: FetchClinicsResponse = await response.json();
+    return data;
 });
 
 const clinicSlice = createSlice({
@@ -84,13 +107,27 @@ const clinicSlice = createSlice({
             })
             .addCase(fetchClinics.fulfilled, (state, action: PayloadAction<FetchClinicsResponse>) => {
                 state.loading = false;
-                state.clinics = action.payload.data;
+                // page 1 is a fresh search/filter — replace. Later pages are
+                // infinite-scroll continuations — append.
+                state.clinics = action.payload.pagination.page > 1
+                    ? [...state.clinics, ...action.payload.data]
+                    : action.payload.data;
                 state.pagination = action.payload.pagination;
                 state.cities = action.payload.cities;
             })
             .addCase(fetchClinics.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message || 'Failed to fetch clinics';
+            })
+            .addCase(fetchClinicsForMap.pending, (state) => {
+                state.mapLoading = true;
+            })
+            .addCase(fetchClinicsForMap.fulfilled, (state, action: PayloadAction<FetchClinicsResponse>) => {
+                state.mapLoading = false;
+                state.mapClinics = action.payload.data;
+            })
+            .addCase(fetchClinicsForMap.rejected, (state) => {
+                state.mapLoading = false;
             });
     },
 });

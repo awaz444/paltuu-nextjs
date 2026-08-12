@@ -16,8 +16,9 @@ export async function GET(
         }
 
         // Fetch clinic details - force cast ID to string for pg
+        // (is_active IS NOT FALSE keeps NULL treated as active, matching the public list API)
         const clinicResult = await db.query(
-            "SELECT * FROM clinics WHERE CAST(clinic_id AS TEXT) = $1",
+            "SELECT * FROM clinics WHERE CAST(clinic_id AS TEXT) = $1 AND is_active IS NOT FALSE",
             [String(id)]
         );
 

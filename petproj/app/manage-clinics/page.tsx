@@ -35,6 +35,7 @@ interface Clinic {
     total_reviews?: number;
     is_paltuu_partner: boolean;
     is_verified?: boolean;
+    is_active?: boolean;
     owner_email?: string;
     vet_count: number;
     created_at: string;
@@ -342,6 +343,7 @@ export default function ManageClinicsPage() {
             total_reviews: clinic.total_reviews,
             is_paltuu_partner: clinic.is_paltuu_partner,
             is_verified: clinic.is_verified,
+            is_active: clinic.is_active,
             owner_email: clinic.owner_email,
         });
         setLogoFileList(
@@ -414,6 +416,25 @@ export default function ManageClinicsPage() {
         } else {
             const d = await res.json();
             message.error(d.error || "Failed to delete clinic");
+        }
+    };
+
+    // ── Quick toggle: activate/deactivate without opening the full edit modal ──
+
+    const handleToggleClinicActive = async (clinic: Clinic) => {
+        const isCurrentlyActive = clinic.is_active !== false; // undefined/true both read as active
+        const nextActive = !isCurrentlyActive;
+        const res = await fetch("/api/v1/admin/clinics", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ clinic_id: clinic.clinic_id, is_active: nextActive }),
+        });
+        if (res.ok) {
+            message.success(nextActive ? "Clinic activated" : "Clinic deactivated");
+            fetchClinics(page);
+        } else {
+            const d = await res.json();
+            message.error(d.error || "Failed to update clinic status");
         }
     };
 
@@ -817,6 +838,12 @@ export default function ManageClinicsPage() {
             render: (v: boolean) => <Tag color={v ? "blue" : "default"} className="text-[10px]">{v ? "Verified" : "Unverified"}</Tag>,
         },
         {
+            title: "Status",
+            dataIndex: "is_active",
+            width: 90,
+            render: (v: boolean) => <Tag color={v === false ? "red" : "green"} className="text-[10px]">{v === false ? "Inactive" : "Active"}</Tag>,
+        },
+        {
             title: "Vets",
             dataIndex: "vet_count",
             width: 80,
@@ -844,6 +871,18 @@ export default function ManageClinicsPage() {
                     <Tooltip title="Edit clinic">
                         <Button type="primary" size="small" icon={<EditOutlined />} style={{ background: PC, borderColor: PC }} onClick={() => openEditClinic(r)} />
                     </Tooltip>
+                    <Popconfirm
+                        title={r.is_active === false ? "Activate this clinic?" : "Deactivate this clinic?"}
+                        description={r.is_active === false ? "It will become visible on the public site again." : "It will be hidden from the public site (not deleted)."}
+                        onConfirm={() => handleToggleClinicActive(r)}
+                    >
+                        <Tooltip title={r.is_active === false ? "Activate" : "Deactivate"}>
+                            <Button
+                                size="small"
+                                icon={r.is_active === false ? <ReloadOutlined /> : <DisconnectOutlined />}
+                            />
+                        </Tooltip>
+                    </Popconfirm>
                     <Popconfirm title="Delete this clinic?" description="This will also remove all vet links." onConfirm={() => handleDeleteClinic(r.clinic_id)} okButtonProps={{ danger: true }}>
                         <Tooltip title="Delete"><Button danger size="small" icon={<DeleteOutlined />} /></Tooltip>
                     </Popconfirm>
@@ -989,6 +1028,9 @@ export default function ManageClinicsPage() {
                 </Form.Item>
                 <Form.Item name="is_verified" label="Verified Clinic?" valuePropName="checked">
                     <Switch checkedChildren="Verified" unCheckedChildren="Unverified" />
+                </Form.Item>
+                <Form.Item name="is_active" label="Listing Active?" valuePropName="checked" initialValue={true}>
+                    <Switch checkedChildren="Active" unCheckedChildren="Inactive" defaultChecked />
                 </Form.Item>
             </div>
         </Form>

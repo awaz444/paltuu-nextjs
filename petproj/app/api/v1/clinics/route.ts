@@ -85,8 +85,8 @@ export async function GET(req: NextRequest) {
         );
         const offset = (page - 1) * limit;
 
-        // Always require a logo — clinics without one are not shown publicly
-        const conditions: string[] = ["c.logo_url IS NOT NULL"];
+        // Always require a logo, and hide deactivated listings — neither shown publicly
+        const conditions: string[] = ["c.logo_url IS NOT NULL", "c.is_active IS NOT FALSE"];
         const params: any[] = [];
 
         if (city) {
@@ -158,7 +158,7 @@ export async function GET(req: NextRequest) {
         const citiesResult = await db.query(`
             SELECT DISTINCT city
             FROM clinics
-            WHERE logo_url IS NOT NULL AND city IS NOT NULL
+            WHERE logo_url IS NOT NULL AND city IS NOT NULL AND is_active IS NOT FALSE
             ORDER BY city
         `);
 

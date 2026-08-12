@@ -87,7 +87,7 @@ export async function PATCH(req: NextRequest) {
             google_maps_link, contact_number, whatsapp_number,
             logo_url, operating_hours, discount_details,
             website, rating, total_reviews, is_paltuu_partner, is_verified,
-            owner_email,
+            is_active, owner_email,
         } = body;
 
         if (!clinic_id)
@@ -111,7 +111,7 @@ export async function PATCH(req: NextRequest) {
             }
 
             const ownerUpdate = owner_email !== undefined
-                ? `, owner_id = $17`
+                ? `, owner_id = $18`
                 : "";
 
             const baseParams = [
@@ -123,6 +123,7 @@ export async function PATCH(req: NextRequest) {
                 total_reviews !== undefined ? total_reviews : null,
                 is_paltuu_partner,
                 is_verified,
+                is_active,
                 clinic_id,
             ];
 
@@ -144,9 +145,10 @@ export async function PATCH(req: NextRequest) {
                     rating            = COALESCE($12, rating),
                     total_reviews     = COALESCE($13, total_reviews),
                     is_paltuu_partner = COALESCE($14, is_paltuu_partner),
-                    is_verified       = COALESCE($15, is_verified)
+                    is_verified       = COALESCE($15, is_verified),
+                    is_active         = COALESCE($16, is_active)
                     ${ownerUpdate}
-                WHERE clinic_id = $16
+                WHERE clinic_id = $17
                 RETURNING *
             `, baseParams);
 

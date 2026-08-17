@@ -273,7 +273,7 @@ export default function ClinicPage() {
                             <div className="bg-white rounded-3xl p-6 shadow-sm">
                                 <div className="flex flex-col items-center text-center mb-6">
                                     {/* Clinic Logo */}
-                                    <div className="relative w-full h-48 mb-4 rounded-2xl border-2 border-gray-100 shadow-sm bg-gray-50 overflow-hidden">
+                                    <div className="relative w-full aspect-video mb-4 rounded-2xl border-2 border-gray-100 shadow-sm bg-gray-50 overflow-hidden">
                                         <img
                                             src={clinic.logo_url || "/placeholder-clinic.png"}
                                             onError={(e) => {

@@ -13,6 +13,7 @@ import {
     FaStar,
     FaUserMd,
     FaClinicMedical,
+    FaHome,
     FaQuoteLeft,
     FaCheckCircle,
     FaCalendarAlt,
@@ -489,16 +490,22 @@ export default function ClinicPage() {
                                 </div>
                             </div>
 
-                            {/* Clinic Type */}
-                            {clinic.category && (
+                            {/* Clinic / Home Vet Type */}
+                            {(isHomeVet || clinic.category) && (
                                 <div className="bg-white rounded-3xl p-6 shadow-sm">
-                                    <h2 className="text-lg font-bold text-gray-900 mb-4">Clinic Type</h2>
+                                    <h2 className="text-lg font-bold text-gray-900 mb-4">
+                                        {isHomeVet ? "Service Type" : "Clinic Type"}
+                                    </h2>
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                            <FaClinicMedical className="text-primary text-sm" />
+                                            {isHomeVet ? (
+                                                <FaHome className="text-primary text-sm" />
+                                            ) : (
+                                                <FaClinicMedical className="text-primary text-sm" />
+                                            )}
                                         </div>
                                         <div className="text-sm font-medium text-gray-900">
-                                            {clinic.category}
+                                            {isHomeVet ? "Home Vet" : clinic.category}
                                         </div>
                                     </div>
                                 </div>

@@ -34,20 +34,8 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
             }`}
             onClick={handleViewDetails}
         >
-            {/* Logo / Image Area — styled like BazaarProductCard */}
+            {/* Logo / Image Area */}
             <div className="relative px-4 pt-4">
-                {/* Discount Banner */}
-                {hasDiscount && (
-                    <div className="absolute top-6 left-6 z-20 inline-flex items-center gap-1.5 bg-[#a03048] text-white text-[10px] font-extrabold uppercase tracking-wide px-2.5 py-1 rounded-full shadow-md pointer-events-none max-w-[calc(100%-3rem)]">
-                        <FaPercentage className="text-[9px] shrink-0" />
-                        <span className="truncate">
-                            {clinic.discount_details && clinic.discount_details.length <= 35
-                                ? clinic.discount_details
-                                : "Discount Available"}
-                        </span>
-                    </div>
-                )}
-
                 <img
                     alt={clinic.name}
                     src={clinic.logo_url || "/placeholder-clinic.png"}
@@ -101,6 +89,16 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
                     View Details
                     <FaArrowRight className="text-xs group-hover:translate-x-1 transition-transform" />
                 </button>
+
+                {/* Discount Banner below View Details button */}
+                {hasDiscount && (
+                    <div className="mt-2.5 w-full flex items-center justify-center gap-1.5 bg-[#a03048]/10 border border-[#a03048]/20 text-[#a03048] text-xs font-bold py-2 px-3 rounded-xl shadow-xs text-center">
+                        <FaPercentage className="text-[11px] shrink-0" />
+                        <span className="truncate">
+                            {clinic.discount_details}
+                        </span>
+                    </div>
+                )}
             </div>
         </div>
     );

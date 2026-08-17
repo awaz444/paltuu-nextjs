@@ -281,7 +281,7 @@ export default function ClinicPage() {
                                                 (e.target as HTMLImageElement).src = "/placeholder-clinic.png";
                                             }}
                                             alt={clinic.name}
-                                            className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                            className="w-full h-full object-cover object-top cursor-pointer hover:opacity-90 transition-opacity"
                                             onClick={() => setIsImagePreviewOpen(true)}
                                         />
                                         {isAdmin && (

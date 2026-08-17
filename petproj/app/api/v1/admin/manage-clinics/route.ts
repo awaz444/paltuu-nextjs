@@ -88,10 +88,21 @@ export async function PATCH(req: NextRequest) {
             logo_url, operating_hours, discount_details,
             website, rating, total_reviews, is_paltuu_partner, is_verified,
             is_active, owner_email,
+            listing_type: listingTypeRaw, coverage_area: coverageAreaRaw,
         } = body;
 
         if (!clinic_id)
             return NextResponse.json({ error: "clinic_id required" }, { status: 400 });
+
+        const listing_type = listingTypeRaw === "home_vet" || listingTypeRaw === "clinic"
+            ? listingTypeRaw
+            : null;
+        const coverage_area = coverageAreaRaw === undefined
+            ? null
+            : (typeof coverageAreaRaw === "string" && coverageAreaRaw.trim() ? coverageAreaRaw.trim() : null);
+        const resolvedAddress = listing_type === "home_vet"
+            ? (address || coverage_area)
+            : address;
 
         const client = await db.connect();
         try {
@@ -111,11 +122,11 @@ export async function PATCH(req: NextRequest) {
             }
 
             const ownerUpdate = owner_email !== undefined
-                ? `, owner_id = $18`
+                ? `, owner_id = $20`
                 : "";
 
             const baseParams = [
-                name, address, city, category,
+                name, resolvedAddress, city, category,
                 google_maps_link, contact_number, whatsapp_number,
                 logo_url, operating_hours, discount_details,
                 website,
@@ -124,6 +135,8 @@ export async function PATCH(req: NextRequest) {
                 is_paltuu_partner,
                 is_verified,
                 is_active,
+                listing_type,
+                coverage_area,
                 clinic_id,
             ];
 
@@ -146,9 +159,11 @@ export async function PATCH(req: NextRequest) {
                     total_reviews     = COALESCE($13, total_reviews),
                     is_paltuu_partner = COALESCE($14, is_paltuu_partner),
                     is_verified       = COALESCE($15, is_verified),
-                    is_active         = COALESCE($16, is_active)
+                    is_active         = COALESCE($16, is_active),
+                    listing_type      = COALESCE($17, listing_type),
+                    coverage_area     = COALESCE($18, coverage_area)
                     ${ownerUpdate}
-                WHERE clinic_id = $17
+                WHERE clinic_id = $19
                 RETURNING *
             `, baseParams);
 

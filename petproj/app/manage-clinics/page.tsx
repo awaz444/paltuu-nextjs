@@ -36,6 +36,8 @@ interface Clinic {
     is_paltuu_partner: boolean;
     is_verified?: boolean;
     is_active?: boolean;
+    listing_type?: "clinic" | "home_vet";
+    coverage_area?: string | null;
     owner_email?: string;
     vet_count: number;
     created_at: string;
@@ -166,6 +168,8 @@ export default function ManageClinicsPage() {
     const [clinicModal, setClinicModal]         = useState(false);
     const [editingClinic, setEditingClinic]     = useState<Clinic | null>(null); // null = create mode
     const [clinicForm]                          = Form.useForm();
+    const listingTypeWatch                      = Form.useWatch("listing_type", clinicForm);
+    const isHomeVetForm                         = listingTypeWatch === "home_vet";
     const [logoFileList, setLogoFileList]       = useState<UploadFile[]>([]);
     const [savingClinic, setSavingClinic]       = useState(false);
 
@@ -322,6 +326,7 @@ export default function ManageClinicsPage() {
     const openCreateClinic = () => {
         setEditingClinic(null);
         clinicForm.resetFields();
+        clinicForm.setFieldsValue({ listing_type: "clinic", is_active: true });
         setLogoFileList([]);
         setClinicModal(true);
     };
@@ -345,6 +350,8 @@ export default function ManageClinicsPage() {
             is_verified: clinic.is_verified,
             is_active: clinic.is_active,
             owner_email: clinic.owner_email,
+            listing_type: clinic.listing_type === "home_vet" ? "home_vet" : "clinic",
+            coverage_area: clinic.coverage_area || "",
         });
         setLogoFileList(
             clinic.logo_url
@@ -359,6 +366,10 @@ export default function ManageClinicsPage() {
     const handleSaveClinic = async () => {
         try {
             const values = await clinicForm.validateFields();
+            if (values.listing_type === "home_vet") {
+                values.coverage_area = (values.coverage_area || "").trim();
+                values.address = values.coverage_area || values.address;
+            }
             setSavingClinic(true);
 
             let logo_url = editingClinic?.logo_url ?? null;
@@ -797,8 +808,15 @@ export default function ManageClinicsPage() {
                     <div className="font-semibold text-gray-900 text-sm">{r.name}</div>
                     <div className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
                         <EnvironmentOutlined />
-                        {r.city ? `${r.city} — ` : ""}{(r.address || "").slice(0, 50)}{(r.address?.length ?? 0) > 50 ? "…" : ""}
+                        {r.city ? `${r.city} — ` : ""}
+                        {((r.listing_type === "home_vet" ? r.coverage_area : r.address) || "").slice(0, 50)}
+                        {((r.listing_type === "home_vet" ? r.coverage_area : r.address)?.length ?? 0) > 50 ? "…" : ""}
                     </div>
+                    {r.listing_type === "home_vet" ? (
+                        <Tag color="purple" className="mt-1 text-[10px]">Home vet</Tag>
+                    ) : (
+                        <Tag className="mt-1 text-[10px]">Clinic</Tag>
+                    )}
                     {r.category && <Tag color="blue" className="mt-1 text-[10px]">{r.category}</Tag>}
                 </div>
             ),
@@ -978,7 +996,7 @@ export default function ManageClinicsPage() {
                     </Upload>
                 </Form.Item>
                 <div className="flex-1 grid grid-cols-2 gap-x-4">
-                    <Form.Item name="name" label="Clinic Name" rules={[{ required: true }]}>
+                    <Form.Item name="name" label={isHomeVetForm ? "Home Vet Name" : "Clinic Name"} rules={[{ required: true }]}>
                         <Input className="rounded-xl" />
                     </Form.Item>
                     <Form.Item name="city" label="City">
@@ -990,9 +1008,31 @@ export default function ManageClinicsPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-x-4">
-                <Form.Item name="address" label="Address" rules={[{ required: true }]} className="col-span-2">
-                    <Input.TextArea rows={2} className="rounded-xl" />
+                <Form.Item
+                    name="listing_type"
+                    label="Listing Type"
+                    initialValue="clinic"
+                    className="col-span-2"
+                >
+                    <Select>
+                        <Select.Option value="clinic">Clinic</Select.Option>
+                        <Select.Option value="home_vet">Home vet</Select.Option>
+                    </Select>
                 </Form.Item>
+                {isHomeVetForm ? (
+                    <Form.Item
+                        name="coverage_area"
+                        label="Areas Covered"
+                        rules={[{ required: true, message: "Enter the neighbourhoods this vet covers" }]}
+                        className="col-span-2"
+                    >
+                        <Input.TextArea rows={2} placeholder="e.g. DHA, Clifton, Defence" className="rounded-xl" />
+                    </Form.Item>
+                ) : (
+                    <Form.Item name="address" label="Address" rules={[{ required: true }]} className="col-span-2">
+                        <Input.TextArea rows={2} className="rounded-xl" />
+                    </Form.Item>
+                )}
                 <Form.Item name="category" label="Category">
                     <Input placeholder="e.g. Veterinary Clinic" className="rounded-xl" />
                 </Form.Item>
@@ -1005,9 +1045,11 @@ export default function ManageClinicsPage() {
                 <Form.Item name="operating_hours" label="Operating Hours">
                     <Input prefix={<ClockCircleOutlined />} placeholder="9 AM – 9 PM" className="rounded-xl" />
                 </Form.Item>
-                <Form.Item name="google_maps_link" label="Google Maps Link">
-                    <Input prefix={<EnvironmentOutlined />} placeholder="https://maps.google.com/..." className="rounded-xl" />
-                </Form.Item>
+                {!isHomeVetForm && (
+                    <Form.Item name="google_maps_link" label="Google Maps Link">
+                        <Input prefix={<EnvironmentOutlined />} placeholder="https://maps.google.com/..." className="rounded-xl" />
+                    </Form.Item>
+                )}
                 <Form.Item name="website" label="Website">
                     <Input prefix={<GlobalOutlined />} placeholder="https://..." className="rounded-xl" />
                 </Form.Item>

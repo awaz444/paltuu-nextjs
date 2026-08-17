@@ -15,6 +15,7 @@ import {
     FaSearch,
     FaArrowUp,
     FaPercentage,
+    FaHome,
 } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 
@@ -35,6 +36,8 @@ export default function PetCare() {
     const [showBackToTop, setShowBackToTop] = useState(false);
     const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
     const [sortedByDistance, setSortedByDistance] = useState(false);
+    const [listingType, setListingType] = useState<"clinic" | "home_vet">("clinic");
+    const isHomeVetsTab = listingType === "home_vet";
 
     // Attempt geolocation on mount
     useEffect(() => {
@@ -62,7 +65,7 @@ export default function PetCare() {
     // Reset page on filter changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [cityFilter, debouncedSearch, partnerFilter, verifiedFilter, sortedByDistance]);
+    }, [cityFilter, debouncedSearch, partnerFilter, verifiedFilter, sortedByDistance, listingType]);
 
     // Fetch from the backend whenever filters or page change — the server
     // now owns filtering, sorting, and pagination. page 1 replaces the list
@@ -74,23 +77,26 @@ export default function PetCare() {
             search: debouncedSearch || undefined,
             partner: partnerFilter || undefined,
             verified: verifiedFilter || undefined,
+            listing_type: listingType,
             sort: sortedByDistance && userCoords ? "distance" : undefined,
             lat: sortedByDistance && userCoords ? userCoords.lat : undefined,
             lng: sortedByDistance && userCoords ? userCoords.lng : undefined,
         }));
-    }, [dispatch, currentPage, cityFilter, debouncedSearch, partnerFilter, verifiedFilter, sortedByDistance, userCoords]);
+    }, [dispatch, currentPage, cityFilter, debouncedSearch, partnerFilter, verifiedFilter, sortedByDistance, userCoords, listingType]);
 
     // The map needs every matching clinic's pin, not just the current page —
     // fetch it separately (unpaginated) whenever the filters (not the page)
     // change.
     useEffect(() => {
+        if (isHomeVetsTab) return;
         dispatch(fetchClinicsForMap({
             city: cityFilter !== "All" ? cityFilter : undefined,
             search: debouncedSearch || undefined,
             partner: partnerFilter || undefined,
             verified: verifiedFilter || undefined,
+            listing_type: "clinic",
         }));
-    }, [dispatch, cityFilter, debouncedSearch, partnerFilter, verifiedFilter]);
+    }, [dispatch, cityFilter, debouncedSearch, partnerFilter, verifiedFilter, isHomeVetsTab]);
 
     // Infinite scroll — load the next page automatically as the sentinel
     // below the grid comes into view, instead of requiring clicked page
@@ -148,14 +154,16 @@ export default function PetCare() {
                     <p className="text-gray-500 text-sm text-center">
                         Pakistan&apos;s trusted vet network
                         {!loading && pagination.total > 0 && (
-                            <span className="ml-1 font-semibold text-[#a03048]">— {pagination.total}+ verified clinics</span>
+                            <span className="ml-1 font-semibold text-[#a03048]">
+                                — {pagination.total}+ verified {isHomeVetsTab ? "home vets" : "clinics"}
+                            </span>
                         )}
                     </p>
                 </div>
             </div>
 
-            {/* ===== MAP ===== */}
-            {!error && (
+            {/* ===== MAP (clinics only — home vets cover an area, not a storefront) ===== */}
+            {!error && !isHomeVetsTab && (
                 <div className="hidden lg:block" style={{ maxWidth: "90%", margin: "0 auto" }}>
                     <div className="mx-0 md:mx-8 mt-6 rounded-3xl overflow-hidden shadow-sm" style={{ isolation: "isolate" }}>
                         {mapLoading || mapClinics.length === 0 ? (
@@ -166,6 +174,36 @@ export default function PetCare() {
                     </div>
                 </div>
             )}
+
+            {/* ===== HOME VETS / CLINICS TABS ===== */}
+            <div style={{ maxWidth: "90%", margin: "0 auto" }}>
+                <div className="mx-0 md:mx-8 mt-6 flex gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setListingType("home_vet")}
+                        className={`flex items-center gap-2 text-sm px-4 py-2 rounded-xl border transition-all ${
+                            isHomeVetsTab
+                                ? "bg-primary text-white border-primary"
+                                : "bg-white border-gray-300 text-gray-600 hover:border-primary"
+                        }`}
+                    >
+                        <FaHome className="text-xs" />
+                        Home Vets
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setListingType("clinic")}
+                        className={`flex items-center gap-2 text-sm px-4 py-2 rounded-xl border transition-all ${
+                            !isHomeVetsTab
+                                ? "bg-primary text-white border-primary"
+                                : "bg-white border-gray-300 text-gray-600 hover:border-primary"
+                        }`}
+                    >
+                        <FaClinicMedical className="text-xs" />
+                        Clinics
+                    </button>
+                </div>
+            </div>
 
             {/* ===== CLINICS SECTION ===== */}
             <section id="clinics-listings-start" className="scroll-mt-6" style={{ maxWidth: "90%", margin: "0 auto" }}>
@@ -184,7 +222,7 @@ export default function PetCare() {
                                         <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
                                         <input
                                             type="text"
-                                            placeholder="Clinic name or address..."
+                                            placeholder={isHomeVetsTab ? "Home vet name or area..." : "Clinic name or address..."}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             className="border rounded-xl w-full p-3 pl-9 text-sm"
@@ -241,7 +279,7 @@ export default function PetCare() {
                                         }`}
                                     >
                                         <MdVerified className="text-sm" />
-                                        Verified Clinics Only
+                                        Verified {isHomeVetsTab ? "Home Vets" : "Clinics"} Only
                                     </button>
                                 </div>
 
@@ -271,15 +309,21 @@ export default function PetCare() {
                         ) : error ? (
                             <div className="bg-red-50 border border-red-100 rounded-2xl p-10 text-center">
                                 <div className="text-4xl mb-3">⚠️</div>
-                                <h3 className="text-red-700 font-semibold text-lg mb-1">Error Loading Clinics</h3>
+                                <h3 className="text-red-700 font-semibold text-lg mb-1">
+                                    Error Loading {isHomeVetsTab ? "Home Vets" : "Clinics"}
+                                </h3>
                                 <p className="text-red-500 text-sm">{error}</p>
                             </div>
                         ) : clinics.length === 0 && !hasActiveFilters ? (
                             <div className="bg-white border border-gray-100 rounded-2xl p-16 text-center shadow-sm">
                                 <FaClinicMedical className="text-gray-200 text-6xl mx-auto mb-5" />
-                                <h3 className="text-gray-700 font-semibold text-xl mb-2">No Clinics Found</h3>
+                                <h3 className="text-gray-700 font-semibold text-xl mb-2">
+                                    {isHomeVetsTab ? "No Home Vets Found" : "No Clinics Found"}
+                                </h3>
                                 <p className="text-gray-400 text-sm max-w-sm mx-auto">
-                                    We&apos;re working on adding more veterinary clinics to your area. Check back soon!
+                                    {isHomeVetsTab
+                                        ? "We're adding home-visit vets to the network. Check back soon!"
+                                        : "We're working on adding more veterinary clinics to your area. Check back soon!"}
                                 </p>
                             </div>
                         ) : clinics.length === 0 ? (
@@ -287,7 +331,7 @@ export default function PetCare() {
                                 <FaClinicMedical className="text-[#a03048]/20 text-5xl mb-5" />
                                 <h3 className="text-gray-950 font-bold text-xl mb-2">No Matches Found</h3>
                                 <p className="text-gray-500 text-sm max-w-md mx-auto mb-6">
-                                    No clinics match your current filters. Try resetting to browse all options.
+                                    No {isHomeVetsTab ? "home vets" : "clinics"} match your current filters. Try resetting to browse all options.
                                 </p>
                                 <button
                                     onClick={resetFilters}
@@ -298,7 +342,7 @@ export default function PetCare() {
                             </div>
                         ) : (
                             <>
-                                <ClinicGrid clinics={displayedClinics} />
+                                <ClinicGrid clinics={displayedClinics} listingType={listingType} />
 
                                 {/* Infinite scroll — this sentinel loads the next page
                                     automatically once it scrolls into view. */}

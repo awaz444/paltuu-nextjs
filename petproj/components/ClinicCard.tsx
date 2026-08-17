@@ -22,6 +22,11 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
         !clinic.discount_details.toLowerCase().includes("no discount") &&
         !clinic.discount_details.toLowerCase().includes("pending negotiation");
 
+    const isHomeVet = clinic.listing_type === "home_vet";
+    const locationText = isHomeVet
+        ? (clinic.coverage_area || clinic.address)
+        : clinic.address;
+
     return (
         <div
             className={`group relative bg-white rounded-3xl overflow-hidden border-2 hover:border-[#a03048] hover:scale-102 transition-all duration-300 flex flex-col h-full cursor-pointer ${
@@ -60,7 +65,7 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
                 >
                     <span className="line-clamp-1">{clinic.name}</span>
                     {clinic.is_verified && (
-                        <MdVerified className="text-[#a03048] text-base shrink-0 -translate-y-[1px]" title="Verified Clinic" />
+                        <MdVerified className="text-[#a03048] text-base shrink-0 -translate-y-[1px]" title={isHomeVet ? "Verified Home Vet" : "Verified Clinic"} />
                     )}
                 </h3>
 
@@ -69,7 +74,7 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
                     <div className="flex items-start gap-2 text-gray-500">
                         <FaMapMarkerAlt className="mt-0.5 text-[#a03048] shrink-0 text-xs" />
                         <span className="text-xs line-clamp-2 leading-relaxed">
-                            {clinic.address}
+                            {isHomeVet ? (locationText ? `Covers ${locationText}` : "Coverage area not listed") : locationText}
                         </span>
                     </div>
 

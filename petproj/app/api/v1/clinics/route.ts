@@ -61,6 +61,12 @@ export const dynamic = "force-dynamic";
  *           default: 15
  *         description: Max 50
  *       - in: query
+ *         name: listing_type
+ *         schema:
+ *           type: string
+ *           enum: [clinic, home_vet]
+ *         description: Filter by listing type. Omit to return all listings.
+ *       - in: query
  *         name: all
  *         schema:
  *           type: boolean
@@ -83,6 +89,10 @@ export async function GET(req: NextRequest) {
         const lng      = parseFloat(searchParams.get("lng") ?? "");
         const hasCoords = Number.isFinite(lat) && Number.isFinite(lng);
         const all      = searchParams.get("all") === "true";
+        const listingTypeRaw = searchParams.get("listing_type");
+        const listingType = listingTypeRaw === "clinic" || listingTypeRaw === "home_vet"
+            ? listingTypeRaw
+            : null;
 
         const page  = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
         const limit = Math.min(
@@ -108,7 +118,12 @@ export async function GET(req: NextRequest) {
         if (search) {
             params.push(`%${search}%`);
             const idx = params.length;
-            conditions.push(`(c.name ILIKE $${idx} OR c.address ILIKE $${idx} OR c.city ILIKE $${idx})`);
+            conditions.push(`(c.name ILIKE $${idx} OR c.address ILIKE $${idx} OR c.city ILIKE $${idx} OR c.coverage_area ILIKE $${idx})`);
+        }
+
+        if (listingType) {
+            params.push(listingType);
+            conditions.push(`c.listing_type = $${params.length}`);
         }
 
         if (verified) {

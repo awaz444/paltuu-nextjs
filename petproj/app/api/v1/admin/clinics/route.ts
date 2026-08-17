@@ -47,10 +47,23 @@ export async function POST(req: NextRequest) {
             google_maps_link, contact_number, whatsapp_number,
             logo_url, operating_hours, discount_details,
             website, rating, total_reviews,
-            is_paltuu_partner, is_verified, is_active, owner_email
+            is_paltuu_partner, is_verified, is_active, owner_email,
+            listing_type: listingTypeRaw, coverage_area: coverageAreaRaw,
         } = body;
 
-        if (!name || !address) return NextResponse.json({ error: "Name and address required" }, { status: 400 });
+        const listing_type = listingTypeRaw === "home_vet" ? "home_vet" : "clinic";
+        const coverage_area = typeof coverageAreaRaw === "string" && coverageAreaRaw.trim()
+            ? coverageAreaRaw.trim()
+            : null;
+        const resolvedAddress = listing_type === "home_vet"
+            ? (address || coverage_area)
+            : address;
+
+        if (!name || !resolvedAddress) {
+            return NextResponse.json({
+                error: listing_type === "home_vet" ? "Name and coverage area required" : "Name and address required",
+            }, { status: 400 });
+        }
 
         const client = await db.connect();
         try {
@@ -72,17 +85,19 @@ export async function POST(req: NextRequest) {
                     google_maps_link, contact_number, whatsapp_number,
                     logo_url, operating_hours, discount_details,
                     website, rating, total_reviews,
-                    is_paltuu_partner, is_verified, is_active, owner_id
+                    is_paltuu_partner, is_verified, is_active, owner_id,
+                    listing_type, coverage_area
                 )
-                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
                 RETURNING *
             `, [
-                name, address, city || null, category || null,
+                name, resolvedAddress, city || null, category || null,
                 google_maps_link, contact_number, whatsapp_number,
                 logo_url, operating_hours, discount_details,
                 website || null, rating || null, total_reviews || null,
                 is_paltuu_partner || false, is_verified || false,
-                is_active === undefined ? true : is_active, owner_id
+                is_active === undefined ? true : is_active, owner_id,
+                listing_type, coverage_area,
             ]);
 
             await client.query('COMMIT');
@@ -109,9 +124,20 @@ export async function PATCH(req: NextRequest) {
             google_maps_link, contact_number, whatsapp_number,
             logo_url, operating_hours, discount_details,
             website, rating, total_reviews,
-            is_paltuu_partner, is_verified, is_active
+            is_paltuu_partner, is_verified, is_active,
+            listing_type: listingTypeRaw, coverage_area: coverageAreaRaw,
         } = body;
         if (!clinic_id) return NextResponse.json({ error: "Clinic ID required" }, { status: 400 });
+
+        const listing_type = listingTypeRaw === "home_vet" || listingTypeRaw === "clinic"
+            ? listingTypeRaw
+            : null;
+        const coverage_area = coverageAreaRaw === undefined
+            ? null
+            : (typeof coverageAreaRaw === "string" && coverageAreaRaw.trim() ? coverageAreaRaw.trim() : null);
+        const resolvedAddress = listing_type === "home_vet"
+            ? (address || coverage_area)
+            : address;
 
         const result = await db.query(`
             UPDATE clinics SET
@@ -130,15 +156,18 @@ export async function PATCH(req: NextRequest) {
                 total_reviews     = COALESCE($13, total_reviews),
                 is_paltuu_partner = COALESCE($14, is_paltuu_partner),
                 is_verified       = COALESCE($15, is_verified),
-                is_active         = COALESCE($16, is_active)
-            WHERE clinic_id = $17
+                is_active         = COALESCE($16, is_active),
+                listing_type      = COALESCE($17, listing_type),
+                coverage_area     = COALESCE($18, coverage_area)
+            WHERE clinic_id = $19
             RETURNING *
         `, [
-            name, address, city, category,
+            name, resolvedAddress, city, category,
             google_maps_link, contact_number, whatsapp_number,
             logo_url, operating_hours, discount_details,
             website, rating, total_reviews,
-            is_paltuu_partner, is_verified, is_active, clinic_id
+            is_paltuu_partner, is_verified, is_active,
+            listing_type, coverage_area, clinic_id
         ]);
 
         if (result.rowCount === 0) return NextResponse.json({ error: "Clinic not found" }, { status: 404 });

@@ -15,6 +15,7 @@ export interface ClinicQueryParams {
     lng?: number;
     /** Skip pagination and return every matching clinic — used for map pins. */
     all?: boolean;
+    listing_type?: 'clinic' | 'home_vet';
 }
 
 interface ClinicPagination {
@@ -65,6 +66,7 @@ const buildQuery = (params: ClinicQueryParams) => {
     if (params.lat != null) query.set('lat', String(params.lat));
     if (params.lng != null) query.set('lng', String(params.lng));
     if (params.all) query.set('all', 'true');
+    if (params.listing_type) query.set('listing_type', params.listing_type);
     return query;
 };
 
@@ -76,9 +78,11 @@ export const fetchClinics = createAsyncThunk('clinics/fetchClinics', async (para
     const data: FetchClinicsResponse = await response.json();
     return data;
 }, {
-    condition: (_, { getState }) => {
+    condition: (params, { getState }) => {
         const { clinics } = getState() as RootState;
-        if (clinics.loading) return false;
+        // Allow page-1 refetches (tab/filter changes) even if a list request
+        // is in flight; only block extra infinite-scroll pages.
+        if (clinics.loading && (params.page ?? 1) > 1) return false;
         return true;
     }
 });
@@ -101,9 +105,12 @@ const clinicSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(fetchClinics.pending, (state) => {
+            .addCase(fetchClinics.pending, (state, action) => {
                 state.loading = true;
                 state.error = null;
+                if ((action.meta.arg?.page ?? 1) === 1) {
+                    state.clinics = [];
+                }
             })
             .addCase(fetchClinics.fulfilled, (state, action: PayloadAction<FetchClinicsResponse>) => {
                 state.loading = false;

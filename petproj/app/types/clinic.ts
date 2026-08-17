@@ -1,8 +1,12 @@
+export type ClinicListingType = "clinic" | "home_vet";
+
 export interface Clinic {
     clinic_id: number;
     name: string;
     address: string;
     city?: string;
+    listing_type?: ClinicListingType;
+    coverage_area?: string | null;
     category?: string;
     contact_number?: string;
     whatsapp_number?: string;

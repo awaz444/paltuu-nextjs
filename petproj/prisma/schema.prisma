@@ -485,6 +485,8 @@ model clinics {
   longitude         Decimal?      @db.Decimal(11, 8)
   google_place_id   String?       @unique @db.VarChar(255)
   is_active         Boolean?      @default(true)
+  listing_type      String        @default("clinic") @db.VarChar(20)
+  coverage_area     String?
   clinic_vets       clinic_vets[]
   users             users?        @relation(fields: [owner_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
   vet_reviews       vet_reviews[]

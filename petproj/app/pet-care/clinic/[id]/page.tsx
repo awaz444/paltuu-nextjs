@@ -177,7 +177,11 @@ export default function ClinicPage() {
         return <div className="text-center mt-10">Clinic not found.</div>;
     }
 
+    const isHomeVet = clinic.listing_type === "home_vet";
+    const coverageText = clinic.coverage_area || clinic.address;
+
     const googleMapsLink = (() => {
+        if (isHomeVet) return undefined;
         if (!clinic.google_maps_link) {
             if (clinic.name && clinic.address) {
                 return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${clinic.name}, ${clinic.address}`)}`;
@@ -298,7 +302,9 @@ export default function ClinicPage() {
 
                             {/* Location Card */}
                             <div className="bg-white rounded-3xl p-6 shadow-sm">
-                                <h2 className="text-lg font-bold text-gray-900 mb-4">Location</h2>
+                                <h2 className="text-lg font-bold text-gray-900 mb-4">
+                                    {isHomeVet ? "Areas covered" : "Location"}
+                                </h2>
                                 <div className="flex items-start gap-3">
                                     <FaMapMarkerAlt className="text-primary text-lg mt-1 flex-shrink-0" />
                                     <div className="flex-1">
@@ -306,9 +312,9 @@ export default function ClinicPage() {
                                             {clinic.name}
                                         </div>
                                         <div className="text-gray-600 text-sm mb-2">
-                                            {clinic.address}
+                                            {isHomeVet ? coverageText : clinic.address}
                                         </div>
-                                        {googleMapsLink && (
+                                        {!isHomeVet && googleMapsLink && (
                                             <a
                                                 href={googleMapsLink}
                                                 target="_blank"
@@ -423,7 +429,7 @@ export default function ClinicPage() {
                                     qualifications: [],
                                     specializations: [],
                                     clinic_name: clinic.name,
-                                    location: clinic.address
+                                    location: isHomeVet ? coverageText : clinic.address
                                 }))} />
                             ) : (
                                 <div className="space-y-8">

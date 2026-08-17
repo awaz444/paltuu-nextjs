@@ -19,7 +19,7 @@ SET
   google_maps_link = NULL,
   latitude = NULL,
   longitude = NULL,
-  discount_details = '20% discount',
+  discount_details = '20% Discount on All Services',
   is_paltuu_partner = true
 WHERE clinic_id = 496 OR name ILIKE '%moiz%';
 

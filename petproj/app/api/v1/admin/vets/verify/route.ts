@@ -73,7 +73,10 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ vets });
     } catch (error) {
         console.error("V1 Admin Pending Vets GET Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : "Internal Server Error" },
+            { status: 500 }
+        );
     }
 }
 
@@ -125,6 +128,9 @@ export async function PATCH(req: NextRequest) {
         }
     } catch (error) {
         console.error("V1 Admin Vet Verify PATCH Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : "Internal Server Error" },
+            { status: 500 }
+        );
     }
 }

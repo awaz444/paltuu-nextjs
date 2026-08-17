@@ -32,10 +32,10 @@ const VetVerificationPage = () => {
                 const response = await fetch(
                     "/api/v1/admin/vets/verify"
                 );
-                if (!response.ok) {
-                    throw new Error("Failed to fetch vet data");
-                }
                 const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || "Failed to fetch vet data");
+                }
                 setVets(data.vets);
             } catch (error) {
                 setError(
@@ -60,11 +60,11 @@ const VetVerificationPage = () => {
                 body: JSON.stringify({ vet_id: vetId, status: 'approved' }),
             });
 
+            const data = await response.json();
             if (!response.ok) {
-                throw new Error("Failed to verify vet profile");
+                throw new Error(data.error || "Failed to verify vet profile");
             }
 
-            const data = await response.json();
             console.log(data.message);
 
             // Update the vet list to reflect the changes
@@ -76,12 +76,9 @@ const VetVerificationPage = () => {
                 )
             );
         } catch (error) {
-            console.error(
-                error instanceof Error
-                    ? error.message
-                    : "An unexpected error occurred"
-            );
-            alert("Failed to approve vet verification.");
+            const msg = error instanceof Error ? error.message : "An unexpected error occurred";
+            console.error(msg);
+            alert(`Failed to approve vet verification: ${msg}`);
         }
     };
 
@@ -111,8 +108,9 @@ const VetVerificationPage = () => {
                 `Vet application for ID ${vetId} has been rejected successfully.`
             );
         } catch (error) {
+            const msg = error instanceof Error ? error.message : "Unknown error";
             console.error("Error rejecting vet application:", error);
-            alert(`Failed to reject vet application for ID ${vetId}.`);
+            alert(`Failed to reject vet application for ID ${vetId}: ${msg}`);
         }
     };
 

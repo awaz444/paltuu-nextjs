@@ -274,14 +274,14 @@ export default function ClinicPage() {
                             <div className="bg-white rounded-3xl p-6 shadow-sm">
                                 <div className="flex flex-col items-center text-center mb-6">
                                     {/* Clinic Logo */}
-                                    <div className="relative w-full aspect-video mb-4 rounded-2xl border-2 border-gray-100 shadow-sm bg-gray-50 overflow-hidden">
+                                    <div className="relative w-full mb-4 rounded-2xl border-2 border-gray-100 shadow-sm bg-gray-50 overflow-hidden">
                                         <img
                                             src={clinic.logo_url || "/placeholder-clinic.png"}
                                             onError={(e) => {
                                                 (e.target as HTMLImageElement).src = "/placeholder-clinic.png";
                                             }}
                                             alt={clinic.name}
-                                            className="w-full h-full object-cover object-center cursor-pointer hover:opacity-90 transition-opacity"
+                                            className="block w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
                                             onClick={() => setIsImagePreviewOpen(true)}
                                         />
                                         {isAdmin && (

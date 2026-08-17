@@ -20,6 +20,7 @@ import type { UploadFile } from "antd/es/upload/interface";
 
 interface Clinic {
     clinic_id: string;
+    slug?: string;
     name: string;
     address: string;
     city?: string;
@@ -452,7 +453,7 @@ export default function ManageClinicsPage() {
     // ── Copy outreach message ─────────────────────────────────────────────
 
     const handleCopyMessage = (clinic: Clinic) => {
-        const clinicUrl = `https://www.paltuu.pk/pet-care/clinic/${clinic.clinic_id}`;
+        const clinicUrl = `https://www.paltuu.pk/pet-care/clinic/${clinic.slug || clinic.clinic_id}`;
         const msg = OUTREACH_TEMPLATE
             .replace("[CLINIC NAME]", clinic.name)
             .replace("[CLINIC PAGE LINK]", clinicUrl);
@@ -466,7 +467,7 @@ export default function ManageClinicsPage() {
     // ── Download QR code PNG ──────────────────────────────────────────────
 
     const handleDownloadQR = async (clinic: Clinic) => {
-        const clinicUrl = `https://www.paltuu.pk/pet-care/clinic/${clinic.clinic_id}`;
+        const clinicUrl = `https://www.paltuu.pk/pet-care/clinic/${clinic.slug || clinic.clinic_id}`;
         const msgKey = "qr-gen";
         const PC = "#a03048";
 

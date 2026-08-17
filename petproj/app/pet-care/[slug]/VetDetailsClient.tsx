@@ -45,6 +45,7 @@ interface VetDetails {
     vet_id: string;
     user_id: string;
     clinic_id: string;
+    clinic_slug?: string;
     clinic_name: string;
     is_paltuu_partner: boolean;
     is_verified?: boolean;
@@ -86,6 +87,7 @@ export default function VetDetailsClient({
         approvedCount: number;
     } | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
     const { isAuthenticated, user } = useAuth();
     const [showLoginModal, setShowLoginModal] = useState(false);
@@ -193,8 +195,11 @@ export default function VetDetailsClient({
             return;
         }
 
+        if (isSubmittingReview) return;
+
         const vet_id = slug;
 
+        setIsSubmittingReview(true);
         try {
             const response = await fetch(`/api/v1/reviews`, {
                 method: "POST",
@@ -218,6 +223,8 @@ export default function VetDetailsClient({
         } catch (err) {
             console.error("Error submitting review:", err);
             message.error("Failed to submit review");
+        } finally {
+            setIsSubmittingReview(false);
         }
     };
 
@@ -297,7 +304,7 @@ export default function VetDetailsClient({
                                             {vetDetails.vet_name}
                                         </h1>
                                         <a
-                                            href={`/pet-care/clinic/${vetDetails.clinic_id}`}
+                                            href={`/pet-care/clinic/${vetDetails.clinic_slug || vetDetails.clinic_id}`}
                                             className="text-primary hover:text-primary transition-colors"
                                         >
                                             {vetDetails.clinic_name}
@@ -609,6 +616,7 @@ export default function VetDetailsClient({
                 onClose={handleCloseModal}
                 form={form}
                 onSubmit={handleSubmit}
+                isSubmitting={isSubmittingReview}
             />
         </>
     );
@@ -618,8 +626,9 @@ const ReviewModal: React.FC<{
     open: boolean;
     onClose: () => void;
     form: any;
-    onSubmit: (values: any) => void
-}> = ({ open, onClose, form, onSubmit }) => (
+    onSubmit: (values: any) => void;
+    isSubmitting: boolean;
+}> = ({ open, onClose, form, onSubmit, isSubmitting }) => (
     <Modal
         title="Share Your Experience"
         open={open}
@@ -655,9 +664,11 @@ const ReviewModal: React.FC<{
             <Form.Item>
                 <button
                     type="submit"
-                    className="w-full bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
+                    disabled={isSubmitting}
+                    className="w-full bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                    Submit Review
+                    {isSubmitting && <MoonLoader size={16} color="#ffffff" />}
+                    {isSubmitting ? "Submitting..." : "Submit Review"}
                 </button>
             </Form.Item>
         </Form>

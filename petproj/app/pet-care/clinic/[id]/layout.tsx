@@ -4,7 +4,7 @@ import { Metadata } from "next";
 async function fetchClinic(id: string) {
     try {
         const result = await db.query(
-            "SELECT * FROM clinics WHERE CAST(clinic_id AS TEXT) = $1",
+            "SELECT * FROM clinics WHERE slug = $1 OR CAST(clinic_id AS TEXT) = $1",
             [id]
         );
         return result.rows[0] ?? null;
@@ -29,6 +29,7 @@ export async function generateMetadata({
 
     const title = `${c.name} — Vet Clinic in ${c.city} | Paltuu.pk`;
     const description = `${c.name} is a verified veterinary clinic in ${c.city}, Pakistan. Address: ${c.address}${c.contact_number ? `. Phone: ${c.contact_number}` : ""}. View vets, hours, and contact info on Paltuu.pk.`;
+    const canonicalId = c.slug || params.id;
 
     return {
         title,
@@ -43,7 +44,7 @@ export async function generateMetadata({
         openGraph: {
             title,
             description,
-            url: `https://www.paltuu.pk/pet-care/clinic/${params.id}`,
+            url: `https://www.paltuu.pk/pet-care/clinic/${canonicalId}`,
             type: "website",
             images: [
                 {
@@ -59,7 +60,7 @@ export async function generateMetadata({
             title,
             description,
         },
-        alternates: { canonical: `https://www.paltuu.pk/pet-care/clinic/${params.id}` },
+        alternates: { canonical: `https://www.paltuu.pk/pet-care/clinic/${canonicalId}` },
     };
 }
 
@@ -71,6 +72,7 @@ export default async function ClinicDetailLayout({
     params: { id: string };
 }) {
     const c = await fetchClinic(String(params.id));
+    const canonicalId = c?.slug || params.id;
 
     const breadcrumb = {
         "@context": "https://schema.org",
@@ -90,7 +92,7 @@ export default async function ClinicDetailLayout({
                 "@type": "ListItem",
                 position: 4,
                 name: c?.name ?? "Clinic",
-                item: `https://www.paltuu.pk/pet-care/clinic/${params.id}`,
+                item: `https://www.paltuu.pk/pet-care/clinic/${canonicalId}`,
             },
         ],
     };
@@ -99,10 +101,10 @@ export default async function ClinicDetailLayout({
         ? {
               "@context": "https://schema.org",
               "@type": "VeterinaryCare",
-              "@id": `https://www.paltuu.pk/pet-care/clinic/${params.id}`,
+              "@id": `https://www.paltuu.pk/pet-care/clinic/${canonicalId}`,
               name: c.name,
               image: c.logo_url || undefined,
-              url: `https://www.paltuu.pk/pet-care/clinic/${params.id}`,
+              url: `https://www.paltuu.pk/pet-care/clinic/${canonicalId}`,
               telephone: c.contact_number || undefined,
               address: {
                   "@type": "PostalAddress",

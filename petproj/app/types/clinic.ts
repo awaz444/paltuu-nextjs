@@ -2,6 +2,7 @@ export type ClinicListingType = "clinic" | "home_vet";
 
 export interface Clinic {
     clinic_id: number;
+    slug?: string;
     name: string;
     address: string;
     city?: string;

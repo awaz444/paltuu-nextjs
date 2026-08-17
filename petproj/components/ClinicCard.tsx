@@ -14,7 +14,7 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
     const router = useRouter();
 
     const handleViewDetails = () => {
-        router.push(`/pet-care/clinic/${clinic.clinic_id}`);
+        router.push(`/pet-care/clinic/${clinic.slug || clinic.clinic_id}`);
     };
 
     const hasDiscount =

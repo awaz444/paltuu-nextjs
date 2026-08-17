@@ -130,6 +130,7 @@ async function getVet(vetId: string) {
                 v.vet_id,
                 v.user_id,
                 cl.clinic_id,
+                cl.slug         AS clinic_slug,
                 v.minimum_fee,
                 v.contact_details,
                 v.created_at,
@@ -234,7 +235,7 @@ export default async function SlugPage({
                         addressLocality: c.city,
                         addressCountry: "PK",
                     },
-                    url: `https://www.paltuu.pk/pet-care/clinic/${c.clinic_id}`,
+                    url: `https://www.paltuu.pk/pet-care/clinic/${c.slug || c.clinic_id}`,
                     ...(c.rating
                         ? {
                               aggregateRating: {

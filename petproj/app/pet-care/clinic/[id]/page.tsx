@@ -53,6 +53,7 @@ export default function ClinicPage() {
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [form] = Form.useForm();
     const [activeGuideTab, setActiveGuideTab] = useState<"prep" | "emergency" | "schedule">("prep");
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);
@@ -137,8 +138,11 @@ export default function ClinicPage() {
             return;
         }
 
+        if (isSubmittingReview) return;
+
         const clinic_id = params.id;
 
+        setIsSubmittingReview(true);
         try {
             const response = await fetch(`/api/v1/reviews`, {
                 method: "POST",
@@ -162,6 +166,8 @@ export default function ClinicPage() {
         } catch (err) {
             console.error("Error submitting review:", err);
             message.error("Failed to submit review");
+        } finally {
+            setIsSubmittingReview(false);
         }
     };
 
@@ -213,14 +219,14 @@ export default function ClinicPage() {
                             <div className="bg-white rounded-3xl p-6 shadow-sm">
                                 <div className="flex flex-col items-center text-center mb-6">
                                     {/* Clinic Logo */}
-                                    <div className="relative w-full mb-4">
+                                    <div className="relative w-full h-48 mb-4 rounded-2xl border-2 border-gray-100 shadow-sm bg-gray-50 overflow-hidden">
                                         <img
                                             src={clinic.logo_url || "/placeholder-clinic.png"}
                                             onError={(e) => {
                                                 (e.target as HTMLImageElement).src = "/placeholder-clinic.png";
                                             }}
                                             alt={clinic.name}
-                                            className="w-full h-48 rounded-2xl object-cover border-2 border-gray-100 shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
+                                            className="w-full h-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
                                             onClick={() => setIsImagePreviewOpen(true)}
                                         />
                                         {clinic.is_verified && (
@@ -715,6 +721,7 @@ export default function ClinicPage() {
                 onClose={handleCloseModal}
                 form={form}
                 onSubmit={handleSubmit}
+                isSubmitting={isSubmittingReview}
             />
         </div>
     );
@@ -724,8 +731,9 @@ const ReviewModal: React.FC<{
     open: boolean;
     onClose: () => void;
     form: any;
-    onSubmit: (values: any) => void
-}> = ({ open, onClose, form, onSubmit }) => (
+    onSubmit: (values: any) => void;
+    isSubmitting: boolean;
+}> = ({ open, onClose, form, onSubmit, isSubmitting }) => (
     <Modal
         title="Share Your Experience"
         open={open}
@@ -761,9 +769,11 @@ const ReviewModal: React.FC<{
             <Form.Item>
                 <button
                     type="submit"
-                    className="w-full bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
+                    disabled={isSubmitting}
+                    className="w-full bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                    Submit Review
+                    {isSubmitting && <MoonLoader size={16} color="#ffffff" />}
+                    {isSubmitting ? "Submitting..." : "Submit Review"}
                 </button>
             </Form.Item>
         </Form>

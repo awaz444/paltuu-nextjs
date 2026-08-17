@@ -18,7 +18,7 @@ export async function GET(
         // Fetch clinic details - force cast ID to string for pg
         // (is_active IS NOT FALSE keeps NULL treated as active, matching the public list API)
         const clinicResult = await db.query(
-            "SELECT * FROM clinics WHERE CAST(clinic_id AS TEXT) = $1 AND is_active IS NOT FALSE",
+            "SELECT * FROM clinics WHERE (slug = $1 OR CAST(clinic_id AS TEXT) = $1) AND is_active IS NOT FALSE",
             [String(id)]
         );
 
@@ -43,9 +43,9 @@ export async function GET(
             JOIN clinic_vets cv ON v.vet_id = cv.vet_id
             LEFT JOIN users u ON v.user_id = u.user_id
             WHERE cv.clinic_id = $1 AND v.is_active = true
-        `, [id]);
+        `, [clinic.clinic_id]);
 
-        console.log(`[API] Found clinic ${id} and ${vetsResult.rowCount} vets via clinic_vets`);
+        console.log(`[API] Found clinic ${clinic.clinic_id} and ${vetsResult.rowCount} vets via clinic_vets`);
 
         const reviewsResult = await db.query(`
             SELECT
@@ -59,7 +59,7 @@ export async function GET(
             JOIN users u ON vr.user_id = u.user_id
             WHERE vr.clinic_id = $1
             ORDER BY vr.review_date DESC
-        `, [id]);
+        `, [clinic.clinic_id]);
 
         return NextResponse.json({
             ...clinic,

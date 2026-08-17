@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
         const targetId = searchParams.get("target_id");
-        const type = searchParams.get("type"); // 'vet' or 'product'
+        const type = searchParams.get("type"); // 'vet', 'clinic' or 'product'
 
         if (!targetId || !type) return NextResponse.json({ error: "Missing target_id or type" }, { status: 400 });
 
@@ -29,8 +29,16 @@ export async function GET(req: NextRequest) {
                 SELECT vr.*, u.name as reviewer_name, u.profile_image_url as reviewer_image
                 FROM vet_reviews vr
                 JOIN users u ON vr.user_id = u.user_id
-                WHERE vr.vet_id = $1 AND vr.is_approved = true
-                ORDER BY vr.created_at DESC
+                WHERE vr.vet_id = $1
+                ORDER BY vr.review_date DESC
+            `;
+        } else if (type === 'clinic') {
+            query = `
+                SELECT vr.*, u.name as reviewer_name, u.profile_image_url as reviewer_image
+                FROM vet_reviews vr
+                JOIN users u ON vr.user_id = u.user_id
+                WHERE vr.clinic_id = $1
+                ORDER BY vr.review_date DESC
             `;
         } else {
             query = `
@@ -68,7 +76,9 @@ export async function POST(req: NextRequest) {
 
         let query;
         if (type === 'vet') {
-            query = `INSERT INTO vet_reviews (vet_id, user_id, rating, comment, is_approved, created_at) VALUES ($1, $2, $3, $4, false, CURRENT_TIMESTAMP) RETURNING *`;
+            query = `INSERT INTO vet_reviews (vet_id, user_id, rating, review_content, review_date) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) RETURNING *`;
+        } else if (type === 'clinic') {
+            query = `INSERT INTO vet_reviews (clinic_id, user_id, rating, review_content, review_date) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) RETURNING *`;
         } else {
             query = `INSERT INTO bazaar_reviews (product_id, user_id, rating, comment, is_approved, created_at) VALUES ($1, $2, $3, $4, false, CURRENT_TIMESTAMP) RETURNING *`;
         }
@@ -76,11 +86,7 @@ export async function POST(req: NextRequest) {
         const result = await db.query(query, [target_id, userId, rating, comment]);
         const review = result.rows[0];
 
-        // Get reviewer details for notification (fire-and-forget - send when approved by admin)
-        // Note: We're NOT sending notification yet since is_approved = false
-        // The admin will trigger the notification when they approve it
-
-        return NextResponse.json({ message: "Review submitted and pending approval", review }, { status: 201 });
+        return NextResponse.json({ message: "Review submitted", review }, { status: 201 });
 
     } catch (error) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

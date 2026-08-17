@@ -137,18 +137,17 @@ export default function ClinicPage() {
             return;
         }
 
-        const review_date = new Date().toISOString();
         const clinic_id = params.id;
 
         try {
-            const response = await fetch(`/api/clinic-reviews-stats`, {
+            const response = await fetch(`/api/v1/reviews`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    clinic_id,
+                    target_id: clinic_id,
+                    type: "clinic",
                     rating: values.rating,
-                    review_content: values.review_content,
-                    review_date,
+                    comment: values.review_content,
                 }),
             });
 
@@ -278,7 +277,7 @@ export default function ClinicPage() {
                                 )}
 
                                 {/* Stats Row */}
-                                {/* {reviewStats && (
+                                {reviewStats && (
                                     <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100">
                                         <div className="text-center">
                                             <div className="text-lg font-bold text-primary flex items-center justify-center gap-1">
@@ -294,7 +293,7 @@ export default function ClinicPage() {
                                             <div className="text-xs text-gray-500 mt-1">Reviews</div>
                                         </div>
                                     </div>
-                                )} */}
+                                )}
                             </div>
 
                             {/* Location Card */}
@@ -591,8 +590,7 @@ export default function ClinicPage() {
                             )}
                         </div>
 
-                        {/* Reviews Section — commented out for now */}
-                        {/*
+                        {/* Reviews Section */}
                         <div className="bg-white rounded-3xl p-6 shadow-sm">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -615,8 +613,48 @@ export default function ClinicPage() {
                             <div className="space-y-4">
                                 {clinic.reviews && clinic.reviews.length > 0 ? (
                                     clinic.reviews.map((review, index) => (
-                                        <div key={review.review_id} className={`pb-4 ${index !== clinic.reviews.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                                            ...
+                                        <div
+                                            key={review.review_id}
+                                            className={`pb-4 ${index !== clinic.reviews.length - 1 ? 'border-b border-gray-100' : ''}`}
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                {review.review_maker_profile_image_url ? (
+                                                    <img
+                                                        src={review.review_maker_profile_image_url}
+                                                        alt={review.review_maker_name}
+                                                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0"
+                                                    />
+                                                ) : (
+                                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                        <span className="text-primary font-semibold text-sm">
+                                                            {review.review_maker_name?.charAt(0).toUpperCase() || "A"}
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 mb-2">
+                                                        <h3 className="font-semibold text-gray-900 text-sm truncate">
+                                                            {review.review_maker_name}
+                                                        </h3>
+                                                        <span className="text-xs text-gray-500 whitespace-nowrap">
+                                                            {new Date(review.review_date).toLocaleDateString('en-US', {
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                year: 'numeric'
+                                                            })}
+                                                        </span>
+                                                    </div>
+                                                    <Rate
+                                                        disabled
+                                                        value={review.rating}
+                                                        className="text-primary text-xs mb-2"
+                                                    />
+                                                    <p className="text-gray-600 text-sm leading-relaxed break-words">
+                                                        {review.review_content}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
                                     ))
                                 ) : (
@@ -626,7 +664,6 @@ export default function ClinicPage() {
                                 )}
                             </div>
                         </div>
-                        */}
                     </div>
                 </div>
             </div>
@@ -666,15 +703,13 @@ export default function ClinicPage() {
                 </div>
             </Modal>
 
-            {/* Review Modal — commented out with reviews section */}
-            {/*
+            {/* Review Modal */}
             <ReviewModal
                 open={isModalOpen}
                 onClose={handleCloseModal}
                 form={form}
                 onSubmit={handleSubmit}
             />
-            */}
         </div>
     );
 }

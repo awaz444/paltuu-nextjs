@@ -47,10 +47,24 @@ export async function GET(
 
         console.log(`[API] Found clinic ${id} and ${vetsResult.rowCount} vets via clinic_vets`);
 
+        const reviewsResult = await db.query(`
+            SELECT
+                vr.review_id,
+                vr.rating,
+                vr.review_content,
+                vr.review_date,
+                u.profile_image_url AS review_maker_profile_image_url,
+                u.name AS review_maker_name
+            FROM vet_reviews vr
+            JOIN users u ON vr.user_id = u.user_id
+            WHERE vr.clinic_id = $1
+            ORDER BY vr.review_date DESC
+        `, [id]);
+
         return NextResponse.json({
             ...clinic,
             vets: vetsResult.rows || [],
-            reviews: []
+            reviews: reviewsResult.rows || []
         });
 
     } catch (error) {

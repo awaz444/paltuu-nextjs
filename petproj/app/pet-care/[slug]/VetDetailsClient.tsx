@@ -136,14 +136,14 @@ export default function VetDetailsClient({
     // Fetch review stats
     const fetchReviewStats = async () => {
         try {
-            const response = await fetch(`/api/vet-reviews-stats?vet_id=${slug}`);
+            const response = await fetch(`/api/v1/vets/reviews-stats?vet_id=${slug}`);
             if (!response.ok) {
                 throw new Error("Failed to fetch review stats");
             }
             const stats = await response.json();
             setReviewStats({
                 averageRating: stats.average_rating,
-                approvedCount: stats.approved_reviews_count,
+                approvedCount: stats.reviews_count,
             });
         } catch (err) {
             console.error("Error fetching review stats:", err);
@@ -193,24 +193,23 @@ export default function VetDetailsClient({
             return;
         }
 
-        const review_date = new Date().toISOString();
         const vet_id = slug;
 
         try {
-            const response = await fetch(`/api/vet-reviews-stats`, {
+            const response = await fetch(`/api/v1/reviews`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    vet_id,
+                    target_id: vet_id,
+                    type: "vet",
                     rating: values.rating,
-                    review_content: values.review_content,
-                    review_date,
+                    comment: values.review_content,
                 }),
             });
 
             if (!response.ok) throw new Error("Failed to submit review");
 
-            message.success("Review submitted for approval! It will appear once approved.");
+            message.success("Review submitted!");
 
             handleCloseModal();
             await fetchVetDetails();
@@ -515,7 +514,7 @@ export default function VetDetailsClient({
                                             />
                                         </div>
                                         <div className="text-sm text-gray-600 text-center sm:text-left">
-                                            Based on {reviewStats.approvedCount} verified review{reviewStats.approvedCount !== 1 ? 's' : ''}
+                                            Based on {reviewStats.approvedCount} review{reviewStats.approvedCount !== 1 ? 's' : ''}
                                         </div>
                                     </div>
                                 )}

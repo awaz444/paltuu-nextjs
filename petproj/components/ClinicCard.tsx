@@ -38,11 +38,13 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
             <div className="relative px-4 pt-4">
                 {/* Discount Banner */}
                 {hasDiscount && (
-                    <div className="absolute top-6 left-6 right-6 z-20 flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#c94060] to-primary text-white text-[11px] font-extrabold uppercase tracking-wide py-1.5 rounded-lg shadow-lg pointer-events-none">
-                        <FaPercentage className="text-[10px]" />
-                        {clinic.discount_details && clinic.discount_details.length <= 40
-                            ? clinic.discount_details
-                            : "Discounts Available"}
+                    <div className="absolute top-6 left-6 z-20 inline-flex items-center gap-1.5 bg-[#a03048] text-white text-[10px] font-extrabold uppercase tracking-wide px-2.5 py-1 rounded-full shadow-md pointer-events-none max-w-[calc(100%-3rem)]">
+                        <FaPercentage className="text-[9px] shrink-0" />
+                        <span className="truncate">
+                            {clinic.discount_details && clinic.discount_details.length <= 35
+                                ? clinic.discount_details
+                                : "Discount Available"}
+                        </span>
                     </div>
                 )}
 

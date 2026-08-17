@@ -6,10 +6,10 @@ import ClinicCard from "./ClinicCard";
 
 interface ClinicGridProps {
     clinics: Clinic[];
-    listingType?: "clinic" | "home_vet";
+    listingType?: "all" | "clinic" | "home_vet";
 }
 
-const ClinicGrid: React.FC<ClinicGridProps> = ({ clinics, listingType = "clinic" }) => {
+const ClinicGrid: React.FC<ClinicGridProps> = ({ clinics, listingType = "all" }) => {
     const isHomeVet = listingType === "home_vet";
 
     if (!clinics || clinics.length === 0) {
@@ -20,13 +20,15 @@ const ClinicGrid: React.FC<ClinicGridProps> = ({ clinics, listingType = "clinic"
                 </div>
 
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                    {isHomeVet ? "No home vets found" : "No clinics found"}
+                    {isHomeVet ? "No home vets found" : listingType === "clinic" ? "No clinics found" : "No listings found"}
                 </h3>
 
                 <p className="max-w-md text-gray-500">
                     {isHomeVet
                         ? "We couldn’t find any home vets matching your criteria. Try a different city or area."
-                        : "We couldn’t find any clinics matching your criteria. Try adjusting your filters or searching a different location."}
+                        : listingType === "clinic"
+                        ? "We couldn’t find any clinics matching your criteria. Try adjusting your filters or searching a different location."
+                        : "We couldn’t find any clinics or home vets matching your criteria. Try adjusting your filters or searching a different location."}
                 </p>
             </div>
         );

@@ -158,6 +158,47 @@ export async function GET(req: NextRequest) {
                         power(sin(radians($${lngIdx} - c.longitude) / 2), 2)
                     )) ASC
             `;
+        } else if (!sort && !listingType) {
+            // Merged "all" view (no explicit type filter, no explicit sort):
+            // rank by proximity band first, verified-first within a band, so a
+            // close unverified listing still beats a far verified one — but
+            // verification breaks ties among similarly-distant results. Falls
+            // back to verified-first + rating when we don't have the user's
+            // location at all.
+            if (hasCoords) {
+                params.push(lat);
+                const latIdx = params.length;
+                params.push(lng);
+                const lngIdx = params.length;
+                orderClause = `
+                    ORDER BY
+                        CASE
+                            WHEN c.latitude IS NULL OR c.longitude IS NULL THEN 2
+                            WHEN 6371 * 2 * asin(sqrt(
+                                power(sin(radians($${latIdx} - c.latitude) / 2), 2) +
+                                cos(radians($${latIdx})) * cos(radians(c.latitude)) *
+                                power(sin(radians($${lngIdx} - c.longitude) / 2), 2)
+                            )) <= 5 THEN 0
+                            WHEN 6371 * 2 * asin(sqrt(
+                                power(sin(radians($${latIdx} - c.latitude) / 2), 2) +
+                                cos(radians($${latIdx})) * cos(radians(c.latitude)) *
+                                power(sin(radians($${lngIdx} - c.longitude) / 2), 2)
+                            )) <= 15 THEN 1
+                            ELSE 2
+                        END ASC,
+                        c.is_verified DESC NULLS LAST,
+                        (c.latitude IS NULL OR c.longitude IS NULL),
+                        6371 * 2 * asin(sqrt(
+                            power(sin(radians($${latIdx} - c.latitude) / 2), 2) +
+                            cos(radians($${latIdx})) * cos(radians(c.latitude)) *
+                            power(sin(radians($${lngIdx} - c.longitude) / 2), 2)
+                        )) ASC,
+                        c.rating DESC NULLS LAST,
+                        c.created_at DESC
+                `;
+            } else {
+                orderClause = "ORDER BY c.is_verified DESC NULLS LAST, c.rating DESC NULLS LAST, c.created_at DESC";
+            }
         }
 
         let limitClause = "";

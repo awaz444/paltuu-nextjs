@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Clinic } from "../app/types/clinic";
-import { FaMapMarkerAlt, FaClock, FaArrowRight, FaPercentage } from "react-icons/fa";
+import { FaMapMarkerAlt, FaClock, FaArrowRight, FaPercentage, FaHome, FaClinicMedical } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 
 interface ClinicCardProps {
@@ -44,6 +44,14 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
                     }}
                     className="w-full aspect-square object-cover rounded-2xl"
                 />
+                <div
+                    className={`absolute top-6 left-6 flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm ${
+                        isHomeVet ? "bg-[#a03048] text-white" : "bg-white text-[#a03048]"
+                    }`}
+                >
+                    {isHomeVet ? <FaHome className="text-[10px]" /> : <FaClinicMedical className="text-[10px]" />}
+                    {isHomeVet ? "Home Visit" : "Clinic"}
+                </div>
             </div>
 
             {/* Card Body */}

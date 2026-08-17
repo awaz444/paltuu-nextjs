@@ -17,7 +17,9 @@ const CLINIC_FIELDS = `
     c.rating,
     c.total_reviews,
     COALESCE(c.is_paltuu_partner, false) AS is_paltuu_partner,
-    COALESCE(c.is_verified, false) AS is_verified
+    COALESCE(c.is_verified, false) AS is_verified,
+    c.listing_type,
+    c.coverage_area
 `;
 
 // Past this, "near you" stops being true. Without the cap the distance sort

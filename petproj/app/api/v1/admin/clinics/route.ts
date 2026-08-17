@@ -3,6 +3,41 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/utils/authServer";
 import { ensureClinicListingColumns } from "@/lib/clinicListing";
 
+// ─── Slugs (verified clinics only) ─────────────────────────────────────────
+
+function slugify(text: string): string {
+    return (text || "")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+}
+
+async function generateUniqueClinicSlug(
+    client: { query: typeof db.query },
+    name: string,
+    city: string | null,
+    excludeClinicId?: string | number
+): Promise<string> {
+    const base = slugify(name) || "clinic";
+    const withCity = city ? `${base}-${slugify(city)}` : base;
+
+    let candidate = withCity;
+    let suffix = 2;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+        const existing = await client.query(
+            excludeClinicId
+                ? `SELECT clinic_id FROM clinics WHERE slug = $1 AND clinic_id != $2`
+                : `SELECT clinic_id FROM clinics WHERE slug = $1`,
+            excludeClinicId ? [candidate, excludeClinicId] : [candidate]
+        );
+        if (existing.rowCount === 0) return candidate;
+        candidate = `${withCity}-${suffix}`;
+        suffix += 1;
+    }
+}
+
 /**
  * @swagger
  * /api/v1/admin/clinics:
@@ -84,6 +119,10 @@ export async function POST(req: NextRequest) {
                 }
             }
 
+            const slug = is_verified
+                ? await generateUniqueClinicSlug(client, name, city || null)
+                : null;
+
             const result = await client.query(`
                 INSERT INTO clinics (
                     name, address, city, category,
@@ -91,9 +130,9 @@ export async function POST(req: NextRequest) {
                     logo_url, operating_hours, discount_details,
                     website, rating, total_reviews,
                     is_paltuu_partner, is_verified, is_active, owner_id,
-                    listing_type, coverage_area
+                    listing_type, coverage_area, slug
                 )
-                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
                 RETURNING *
             `, [
                 name, resolvedAddress, city || null, category || null,
@@ -102,7 +141,7 @@ export async function POST(req: NextRequest) {
                 website || null, rating || null, total_reviews || null,
                 is_paltuu_partner || false, is_verified || false,
                 is_active === undefined ? true : is_active, owner_id,
-                listing_type, coverage_area,
+                listing_type, coverage_area, slug,
             ]);
 
             await client.query('COMMIT');
@@ -176,7 +215,26 @@ export async function PATCH(req: NextRequest) {
         ]);
 
         if (result.rowCount === 0) return NextResponse.json({ error: "Clinic not found" }, { status: 404 });
-        return NextResponse.json(result.rows[0]);
+        let clinic = result.rows[0];
+
+        // Slugs exist only for verified clinics — assign one the moment a
+        // clinic becomes verified, and clear it if verification is revoked.
+        if (clinic.is_verified && !clinic.slug) {
+            const slug = await generateUniqueClinicSlug(db, clinic.name, clinic.city, clinic.clinic_id);
+            const slugResult = await db.query(
+                `UPDATE clinics SET slug = $1 WHERE clinic_id = $2 RETURNING *`,
+                [slug, clinic.clinic_id]
+            );
+            clinic = slugResult.rows[0];
+        } else if (!clinic.is_verified && clinic.slug) {
+            const slugResult = await db.query(
+                `UPDATE clinics SET slug = NULL WHERE clinic_id = $1 RETURNING *`,
+                [clinic.clinic_id]
+            );
+            clinic = slugResult.rows[0];
+        }
+
+        return NextResponse.json(clinic);
     } catch (error) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }

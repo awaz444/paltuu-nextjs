@@ -15,7 +15,8 @@ import {
     FaClinicMedical,
     FaQuoteLeft,
     FaCheckCircle,
-    FaCalendarAlt
+    FaCalendarAlt,
+    FaCamera
 } from "react-icons/fa";
 import { MdRateReview, MdVerified } from "react-icons/md";
 import { MoonLoader } from "react-spinners";
@@ -24,6 +25,27 @@ import LoginModal from "../../../../components/LoginModal";
 import { useAuth } from "@/context/AuthContext";
 import { Clinic } from "../../../types/clinic";
 import { Vet } from "../../../types/vet";
+
+const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+// DB stores hours either as a plain string ("11 AM - 10 PM") or as
+// Google-style "Monday: 9 AM – 9 PM; Tuesday: ...". Parse the latter into
+// rows so it renders as a day-by-day schedule instead of one run-on line.
+function parseOperatingHours(text: string): { day: string; hours: string }[] | null {
+    const parts = text.split(";").map((p) => p.trim()).filter(Boolean);
+    if (parts.length < 2) return null;
+
+    const rows: { day: string; hours: string }[] = [];
+    for (const part of parts) {
+        const idx = part.indexOf(":");
+        if (idx === -1) return null;
+        const day = part.slice(0, idx).trim();
+        const hours = part.slice(idx + 1).trim();
+        if (!WEEKDAYS.includes(day)) return null;
+        rows.push({ day, hours });
+    }
+    return rows;
+}
 
 interface ClinicDetails extends Clinic {
     vets: Vet[];
@@ -54,6 +76,8 @@ export default function ClinicPage() {
     const [form] = Form.useForm();
     const [activeGuideTab, setActiveGuideTab] = useState<"prep" | "emergency" | "schedule">("prep");
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+    const isAdmin = isAuthenticated && user?.role === "admin";
 
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);
@@ -120,6 +144,36 @@ export default function ClinicPage() {
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);
         message.success("Copied to clipboard!");
+    };
+
+    const handlePhotoChange = async (file: File) => {
+        if (!clinic) return;
+        setIsUploadingPhoto(true);
+        try {
+            const fd = new FormData();
+            fd.append("file", file);
+            const upRes = await fetch("/api/v1/admin/upload-clinic-logo", { method: "POST", body: fd });
+            if (!upRes.ok) {
+                const e = await upRes.json().catch(() => ({}));
+                throw new Error(e.error || "Upload failed");
+            }
+            const { url } = await upRes.json();
+
+            const patchRes = await fetch("/api/v1/admin/clinics", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ clinic_id: clinic.clinic_id, logo_url: url }),
+            });
+            if (!patchRes.ok) throw new Error("Failed to save photo");
+
+            setClinic({ ...clinic, logo_url: url });
+            message.success("Clinic photo updated");
+        } catch (err) {
+            console.error("Error updating clinic photo:", err);
+            message.error(err instanceof Error ? err.message : "Failed to update photo");
+        } finally {
+            setIsUploadingPhoto(false);
+        }
     };
 
     const handleReviewClick = () => {
@@ -226,13 +280,32 @@ export default function ClinicPage() {
                                                 (e.target as HTMLImageElement).src = "/placeholder-clinic.png";
                                             }}
                                             alt={clinic.name}
-                                            className="w-full h-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                                            className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
                                             onClick={() => setIsImagePreviewOpen(true)}
                                         />
-                                        {clinic.is_verified && (
-                                            <div className="absolute bottom-2 right-2 bg-primary text-white rounded-full p-2 shadow-lg" title="Verified Clinic">
-                                                <MdVerified className="text-lg" />
-                                            </div>
+                                        {isAdmin && (
+                                            <label
+                                                className="absolute bottom-2 right-2 bg-black/60 hover:bg-black/75 text-white rounded-full p-2 shadow-lg cursor-pointer transition-colors"
+                                                title="Change clinic photo"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                {isUploadingPhoto ? (
+                                                    <MoonLoader size={14} color="#ffffff" />
+                                                ) : (
+                                                    <FaCamera className="text-sm" />
+                                                )}
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    disabled={isUploadingPhoto}
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) handlePhotoChange(file);
+                                                        e.target.value = "";
+                                                    }}
+                                                />
+                                            </label>
                                         )}
                                     </div>
 
@@ -383,15 +456,53 @@ export default function ClinicPage() {
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="text-xs text-gray-500 mb-1">Operating Hours</div>
-                                                    <div className="text-sm font-medium text-gray-900 whitespace-pre-line">
-                                                        {clinic.operating_hours}
-                                                    </div>
+                                                    {(() => {
+                                                        const schedule = parseOperatingHours(clinic.operating_hours!);
+                                                        const today = WEEKDAYS[(new Date().getDay() + 6) % 7];
+                                                        if (!schedule) {
+                                                            return (
+                                                                <div className="text-sm font-medium text-gray-900 whitespace-pre-line">
+                                                                    {clinic.operating_hours}
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return (
+                                                            <div className="space-y-1">
+                                                                {schedule.map(({ day, hours }) => (
+                                                                    <div
+                                                                        key={day}
+                                                                        className={`flex items-center justify-between text-sm gap-3 ${
+                                                                            day === today ? "text-gray-900 font-semibold" : "text-gray-600"
+                                                                        }`}
+                                                                    >
+                                                                        <span>{day}</span>
+                                                                        <span className="text-right">{hours}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </div>
                                             </div>
                                         </div>
                                     )}
                                 </div>
                             </div>
+
+                            {/* Clinic Type */}
+                            {clinic.category && (
+                                <div className="bg-white rounded-3xl p-6 shadow-sm">
+                                    <h2 className="text-lg font-bold text-gray-900 mb-4">Clinic Type</h2>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                            <FaClinicMedical className="text-primary text-sm" />
+                                        </div>
+                                        <div className="text-sm font-medium text-gray-900">
+                                            {clinic.category}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 

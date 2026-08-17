@@ -23,9 +23,7 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
         !clinic.discount_details.toLowerCase().includes("pending negotiation");
 
     const isHomeVet = clinic.listing_type === "home_vet";
-    const locationText = isHomeVet
-        ? (clinic.coverage_area || clinic.address)
-        : clinic.address;
+    const locationText = isHomeVet ? (clinic.coverage_area || "") : clinic.address;
 
     return (
         <div
@@ -42,7 +40,9 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
                 {hasDiscount && (
                     <div className="absolute top-6 left-6 right-6 z-20 flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#c94060] to-primary text-white text-[11px] font-extrabold uppercase tracking-wide py-1.5 rounded-lg shadow-lg pointer-events-none">
                         <FaPercentage className="text-[10px]" />
-                        Discounts Available
+                        {clinic.discount_details && clinic.discount_details.length <= 40
+                            ? clinic.discount_details
+                            : "Discounts Available"}
                     </div>
                 )}
 

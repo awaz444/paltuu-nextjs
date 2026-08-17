@@ -11,7 +11,16 @@ ALTER TABLE clinics
   ADD COLUMN IF NOT EXISTS coverage_area TEXT;
 
 UPDATE clinics
-SET listing_type = 'home_vet'
+SET
+  listing_type = 'home_vet',
+  name = 'Dr Moiz Home Vet Services',
+  coverage_area = 'All over Karachi',
+  address = '',
+  google_maps_link = NULL,
+  latitude = NULL,
+  longitude = NULL,
+  discount_details = '20% discount',
+  is_paltuu_partner = true
 WHERE clinic_id = 496 OR name ILIKE '%moiz%';
 
 COMMIT;

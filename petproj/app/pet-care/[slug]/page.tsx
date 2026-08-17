@@ -203,12 +203,17 @@ export default async function SlugPage({
 
         let clinics: any[] = [];
         try {
+            const { ensureClinicListingColumns } = await import("@/lib/clinicListing");
+            const hasListingCols = await ensureClinicListingColumns();
+            const listingFilter = hasListingCols
+                ? "AND (c.listing_type = 'clinic' OR c.listing_type IS NULL)"
+                : "";
             const result = await db.query(
                 `SELECT c.*, COUNT(cv.vet_id)::int AS vet_count
                  FROM clinics c
                  LEFT JOIN clinic_vets cv ON c.clinic_id = cv.clinic_id
                  WHERE LOWER(c.city) = LOWER($1) AND c.logo_url IS NOT NULL
-                   AND (c.listing_type = 'clinic' OR c.listing_type IS NULL)
+                   ${listingFilter}
                  GROUP BY c.clinic_id
                  ORDER BY c.rating DESC NULLS LAST, c.created_at DESC`,
                 [cityName]

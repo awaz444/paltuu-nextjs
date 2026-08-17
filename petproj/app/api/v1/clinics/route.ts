@@ -1,5 +1,6 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
+import { ensureClinicListingColumns } from "@/lib/clinicListing";
 
 export const dynamic = "force-dynamic";
 
@@ -101,6 +102,8 @@ export async function GET(req: NextRequest) {
         );
         const offset = (page - 1) * limit;
 
+        const hasListingCols = await ensureClinicListingColumns();
+
         // Always require a logo, and hide deactivated listings — neither shown publicly
         const conditions: string[] = ["c.logo_url IS NOT NULL", "c.is_active IS NOT FALSE"];
         const params: any[] = [];
@@ -118,10 +121,14 @@ export async function GET(req: NextRequest) {
         if (search) {
             params.push(`%${search}%`);
             const idx = params.length;
-            conditions.push(`(c.name ILIKE $${idx} OR c.address ILIKE $${idx} OR c.city ILIKE $${idx} OR c.coverage_area ILIKE $${idx})`);
+            conditions.push(
+                hasListingCols
+                    ? `(c.name ILIKE $${idx} OR c.address ILIKE $${idx} OR c.city ILIKE $${idx} OR c.coverage_area ILIKE $${idx})`
+                    : `(c.name ILIKE $${idx} OR c.address ILIKE $${idx} OR c.city ILIKE $${idx})`
+            );
         }
 
-        if (listingType) {
+        if (listingType && hasListingCols) {
             params.push(listingType);
             conditions.push(`c.listing_type = $${params.length}`);
         }

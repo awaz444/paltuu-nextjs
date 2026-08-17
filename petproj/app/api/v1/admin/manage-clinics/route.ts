@@ -100,9 +100,7 @@ export async function PATCH(req: NextRequest) {
         const coverage_area = coverageAreaRaw === undefined
             ? null
             : (typeof coverageAreaRaw === "string" && coverageAreaRaw.trim() ? coverageAreaRaw.trim() : null);
-        const resolvedAddress = listing_type === "home_vet"
-            ? (address || coverage_area)
-            : address;
+        const resolvedAddress = listing_type === "home_vet" ? "" : address;
 
         const client = await db.connect();
         try {

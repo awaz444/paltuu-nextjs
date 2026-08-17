@@ -369,7 +369,7 @@ export default function ManageClinicsPage() {
             const values = await clinicForm.validateFields();
             if (values.listing_type === "home_vet") {
                 values.coverage_area = (values.coverage_area || "").trim();
-                values.address = values.coverage_area || values.address;
+                values.address = "";
             }
             setSavingClinic(true);
 

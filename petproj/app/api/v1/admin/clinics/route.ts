@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/utils/authServer";
+import { ensureClinicListingColumns } from "@/lib/clinicListing";
 
 /**
  * @swagger
@@ -55,15 +56,19 @@ export async function POST(req: NextRequest) {
         const coverage_area = typeof coverageAreaRaw === "string" && coverageAreaRaw.trim()
             ? coverageAreaRaw.trim()
             : null;
-        const resolvedAddress = listing_type === "home_vet"
-            ? (address || coverage_area)
-            : address;
+        const resolvedAddress = listing_type === "home_vet" ? "" : address;
 
-        if (!name || !resolvedAddress) {
-            return NextResponse.json({
-                error: listing_type === "home_vet" ? "Name and coverage area required" : "Name and address required",
-            }, { status: 400 });
+        if (!name) {
+            return NextResponse.json({ error: "Name is required" }, { status: 400 });
         }
+        if (listing_type === "home_vet" && !coverage_area) {
+            return NextResponse.json({ error: "Name and coverage area required" }, { status: 400 });
+        }
+        if (listing_type === "clinic" && !resolvedAddress) {
+            return NextResponse.json({ error: "Name and address required" }, { status: 400 });
+        }
+
+        await ensureClinicListingColumns();
 
         const client = await db.connect();
         try {
@@ -129,15 +134,15 @@ export async function PATCH(req: NextRequest) {
         } = body;
         if (!clinic_id) return NextResponse.json({ error: "Clinic ID required" }, { status: 400 });
 
+        await ensureClinicListingColumns();
+
         const listing_type = listingTypeRaw === "home_vet" || listingTypeRaw === "clinic"
             ? listingTypeRaw
             : null;
         const coverage_area = coverageAreaRaw === undefined
             ? null
             : (typeof coverageAreaRaw === "string" && coverageAreaRaw.trim() ? coverageAreaRaw.trim() : null);
-        const resolvedAddress = listing_type === "home_vet"
-            ? (address || coverage_area)
-            : address;
+        const resolvedAddress = listing_type === "home_vet" ? "" : address;
 
         const result = await db.query(`
             UPDATE clinics SET

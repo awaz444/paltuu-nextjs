@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import { archiveDeletedComments } from "@/lib/activityArchive";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
         const client = await db.connect();
         try {
+            await archiveDeletedComments(client, commentId, userId);
+
             await client.query('BEGIN');
 
             // Deeper reply_counts die along with their rows below — only the

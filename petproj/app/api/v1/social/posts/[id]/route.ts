@@ -14,6 +14,7 @@ import { resolveRepostTarget } from "@/lib/reposts";
 import { invalidateViewerPostCache, removePostFromCaches } from "@/lib/redis";
 import { originalPostAccessibleExpr } from "@/lib/feedQueryFragments";
 import { redactModerationFields } from "@/lib/moderationRedaction";
+import { archiveDeletedPost } from "@/lib/activityArchive";
 
 export const dynamic = "force-dynamic";
 
@@ -203,6 +204,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
         const client = await db.connect();
         try {
+            await archiveDeletedPost(client, postId, userId);
+
             await client.query('BEGIN');
             // Decrement post_count for all hashtags linked to this post
             await client.query(`
@@ -214,7 +217,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             `, [postId]);
 
             await client.query(
-                "UPDATE social_posts SET is_deleted = true WHERE post_id = $1",
+                "UPDATE social_posts SET is_deleted = true, updated_at = NOW() WHERE post_id = $1",
                 [postId]
             );
             await client.query(

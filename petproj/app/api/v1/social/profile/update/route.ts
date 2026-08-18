@@ -2,7 +2,6 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { validateUsername } from "@/utils/usernameValidation";
-import { validateEmail } from "@/utils/emailValidation";
 import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 
 export const dynamic = "force-dynamic";
@@ -49,13 +48,11 @@ export async function PATCH(req: NextRequest) {
             }
         }
 
-        // ── Email validation (was completely missing — only client-side "@." check) ──
+        // Email changes go through the dedicated OTP-verified flow
+        // (/api/v1/auth/request-email-change + /api/v1/auth/change-email) —
+        // never write it directly here, that would skip ownership verification.
         if (body.email !== undefined) {
-            const validation = validateEmail(body.email);
-            if (!validation.valid) {
-                return NextResponse.json({ error: validation.error }, { status: 400 });
-            }
-            body.email = validation.normalised!;
+            return NextResponse.json({ error: "Use /api/v1/auth/change-email to update your email address." }, { status: 400 });
         }
 
         const updates: string[] = [];
@@ -73,10 +70,6 @@ export async function PATCH(req: NextRequest) {
         if (body.bio !== undefined) {
             updates.push(`bio = $${paramIndex++}`);
             values.push(body.bio);
-        }
-        if (body.email !== undefined) {
-            updates.push(`email = $${paramIndex++}`);
-            values.push(body.email);
         }
         if (body.phone_number !== undefined) {
             updates.push(`phone_number = $${paramIndex++}`);

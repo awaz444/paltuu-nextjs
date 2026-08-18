@@ -56,7 +56,7 @@ export async function PUT(req: NextRequest) {
         // 2. Start Update Process
         if (status === 'approved') {
             // Approve this one
-            await db.query(`UPDATE ${tableName} SET status = 'approved', updated_at = NOW() WHERE ${idCol} = $1`, [application_id]);
+            await db.query(`UPDATE ${tableName} SET status = 'approved' WHERE ${idCol} = $1`, [application_id]);
 
             // Update Pet Status
             const petStatus = type === 'adoption' ? 'adopted' : 'fostered';
@@ -64,7 +64,7 @@ export async function PUT(req: NextRequest) {
 
             // Reject Others
             const rejectResult = await db.query(`
-                UPDATE ${tableName} SET status = 'rejected', updated_at = NOW()
+                UPDATE ${tableName} SET status = 'rejected'
                 WHERE pet_id = $1 AND ${idCol} != $2
                 RETURNING user_id
             `, [application.pet_id, application_id]);
@@ -86,12 +86,11 @@ export async function PUT(req: NextRequest) {
             }
         } else {
             // Just reject this one
-            await db.query(`UPDATE ${tableName} SET status = 'rejected', updated_at = NOW() WHERE ${idCol} = $1`, [application_id]);
+            await db.query(`UPDATE ${tableName} SET status = 'rejected' WHERE ${idCol} = $1`, [application_id]);
 
             AdoptionNotifications.onApplicationRejected(
                 application.user_id,
                 application_id,
-                application.pet_id,
                 application.pet_name
             ).catch(() => {});
         }

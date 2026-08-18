@@ -53,7 +53,7 @@ export async function PATCH(req: NextRequest) {
         try {
             await client.query('BEGIN');
             const result = await client.query(`
-                UPDATE adoption_applications SET status = $1, updated_at = CURRENT_TIMESTAMP
+                UPDATE adoption_applications SET status = $1
                 WHERE adoption_id = $2 RETURNING *
             `, [status, id]);
 

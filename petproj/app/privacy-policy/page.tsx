@@ -58,6 +58,7 @@ export default function PrivacyPolicyPage() {
                   { id: "info-we-collect", label: "Information we collect" },
                   { id: "how-we-use", label: "How we use your information" },
                   { id: "sharing", label: "Sharing of information" },
+                  { id: "mobile-app", label: "Mobile app permissions" },
                   { id: "rights", label: "Your rights" },
                   { id: "security", label: "Data security" },
                   { id: "cookies", label: "Cookies & tracking" },
@@ -84,7 +85,7 @@ export default function PrivacyPolicyPage() {
                 <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 mb-6 sm:mb-8">
                   <span>Last updated:</span>
                   <span className="bg-primary/10 text-primary px-2 py-0.5 sm:px-3 sm:py-1 rounded-full">
-                    January 2024
+                    August 2026
                   </span>
                 </div>
 
@@ -191,10 +192,61 @@ export default function PrivacyPolicyPage() {
                   </ul>
                 </section>
 
+                <section id="mobile-app" className="scroll-mt-20 mt-6 sm:mt-10">
+                  <h2 className="flex items-center gap-2 sm:gap-3 text-lg sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full"></div>
+                    4. Mobile app permissions & data
+                  </h2>
+                  <p className="text-gray-700 text-sm sm:text-base">
+                    The Paltuu mobile app (iOS and Android) requests the
+                    following device permissions. Each is only used for the
+                    purpose stated, and only when you choose to use the
+                    related feature:
+                  </p>
+                  <ul className="list-disc pl-4 sm:pl-5 space-y-1.5 sm:space-y-2 text-gray-700 text-sm sm:text-base">
+                    <li>
+                      <strong>Camera & photo library:</strong> to let you take
+                      or choose photos and videos of your pets for posts and
+                      listings.
+                    </li>
+                    <li>
+                      <strong>Microphone:</strong> to record sound when you
+                      capture video within the app.
+                    </li>
+                    <li>
+                      <strong>Location:</strong> to show pets, vets, and
+                      shelters near you. You can deny this and still use the
+                      app; nearby results just won't be available.
+                    </li>
+                    <li>
+                      <strong>Notifications:</strong> to alert you about
+                      messages, adoption requests, and activity on your
+                      posts. You can turn these off in your device settings.
+                    </li>
+                  </ul>
+                  <p className="text-gray-700 text-sm sm:text-base mt-3 sm:mt-4">
+                    You can sign in to the app using Google or Apple
+                    Sign-In. When you do, we receive your name and email
+                    address from that provider to create and authenticate
+                    your account — we do not receive your password.
+                  </p>
+                  <p className="text-gray-700 text-sm sm:text-base mt-3 sm:mt-4">
+                    You can delete your account and associated data directly
+                    from within the app (Profile → Settings), or by emailing{" "}
+                    <a
+                      href="mailto:support@paltuu.pk"
+                      className="text-primary hover:underline"
+                    >
+                      support@paltuu.pk
+                    </a>
+                    .
+                  </p>
+                </section>
+
                 <section id="rights" className="scroll-mt-20 mt-6 sm:mt-10">
                   <h2 className="flex items-center gap-2 sm:gap-3 text-lg sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">
                     <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full"></div>
-                    4. Your rights
+                    5. Your rights
                   </h2>
                   <p className="text-gray-700 text-sm sm:text-base">
                     You have rights including:
@@ -213,7 +265,7 @@ export default function PrivacyPolicyPage() {
                 <section id="security" className="scroll-mt-20 mt-6 sm:mt-10">
                   <h2 className="flex items-center gap-2 sm:gap-3 text-lg sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">
                     <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full"></div>
-                    5. Data security
+                    6. Data security
                   </h2>
                   <p className="text-gray-700 text-sm sm:text-base">
                     We use encryption, secure servers, and access controls to
@@ -226,7 +278,7 @@ export default function PrivacyPolicyPage() {
                 <section id="cookies" className="scroll-mt-20 mt-6 sm:mt-10">
                   <h2 className="flex items-center gap-2 sm:gap-3 text-lg sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">
                     <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full"></div>
-                    6. Cookies & tracking
+                    7. Cookies & tracking
                   </h2>
                   <p className="text-gray-700 text-sm sm:text-base">
                     Cookies help us keep you signed in, personalize your
@@ -238,7 +290,7 @@ export default function PrivacyPolicyPage() {
                 <section id="children" className="scroll-mt-20 mt-6 sm:mt-10">
                   <h2 className="flex items-center gap-2 sm:gap-3 text-lg sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">
                     <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full"></div>
-                    7. Children's privacy
+                    8. Children's privacy
                   </h2>
                   <p className="text-gray-700 text-sm sm:text-base">
                     Paltuu.pk is not designed for children under 13. We do not
@@ -250,7 +302,7 @@ export default function PrivacyPolicyPage() {
                 <section id="changes" className="scroll-mt-20 mt-6 sm:mt-10">
                   <h2 className="flex items-center gap-2 sm:gap-3 text-lg sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">
                     <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full"></div>
-                    8. Changes to this policy
+                    9. Changes to this policy
                   </h2>
                   <p className="text-gray-700 text-sm sm:text-base">
                     We may update this Privacy Policy occasionally. Updates will
@@ -261,7 +313,7 @@ export default function PrivacyPolicyPage() {
                 <section id="contact" className="scroll-mt-20 mt-6 sm:mt-10">
                   <h2 className="flex items-center gap-2 sm:gap-3 text-lg sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">
                     <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full"></div>
-                    9. Contact
+                    10. Contact
                   </h2>
                   <p className="text-gray-700 text-sm sm:text-base">
                     If you have questions, please contact us:

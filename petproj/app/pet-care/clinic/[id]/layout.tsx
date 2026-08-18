@@ -1,24 +1,12 @@
-import { db } from "@/db/index";
 import { Metadata } from "next";
-
-async function fetchClinic(id: string) {
-    try {
-        const result = await db.query(
-            "SELECT * FROM clinics WHERE slug = $1 OR CAST(clinic_id AS TEXT) = $1",
-            [id]
-        );
-        return result.rows[0] ?? null;
-    } catch {
-        return null;
-    }
-}
+import { getClinicDetail } from "./data";
 
 export async function generateMetadata({
     params,
 }: {
     params: { id: string };
 }): Promise<Metadata> {
-    const c = await fetchClinic(String(params.id));
+    const c = await getClinicDetail(String(params.id));
 
     if (!c) {
         return {
@@ -27,8 +15,13 @@ export async function generateMetadata({
         };
     }
 
-    const title = `${c.name} — Vet Clinic in ${c.city} | Paltuu.pk`;
-    const description = `${c.name} is a verified veterinary clinic in ${c.city}, Pakistan. Address: ${c.address}${c.contact_number ? `. Phone: ${c.contact_number}` : ""}. View vets, hours, and contact info on Paltuu.pk.`;
+    const isHomeVet = c.listing_type === "home_vet";
+    const title = isHomeVet
+        ? `${c.name} — Home Vet${c.city ? ` in ${c.city}` : ""} | Paltuu.pk`
+        : `${c.name} — Vet Clinic in ${c.city} | Paltuu.pk`;
+    const description = isHomeVet
+        ? `${c.name} is a verified home-visit vet service${c.coverage_area ? ` covering ${c.coverage_area}` : ""}${c.city ? ` in ${c.city}, Pakistan` : ""}${c.contact_number ? `. Phone: ${c.contact_number}` : ""}. View vets, availability, and contact info on Paltuu.pk.`
+        : `${c.name} is a verified veterinary clinic in ${c.city}, Pakistan. Address: ${c.address}${c.contact_number ? `. Phone: ${c.contact_number}` : ""}. View vets, hours, and contact info on Paltuu.pk.`;
     const canonicalId = c.slug || params.id;
 
     return {
@@ -71,8 +64,9 @@ export default async function ClinicDetailLayout({
     children: React.ReactNode;
     params: { id: string };
 }) {
-    const c = await fetchClinic(String(params.id));
+    const c = await getClinicDetail(String(params.id));
     const canonicalId = c?.slug || params.id;
+    const isHomeVet = c?.listing_type === "home_vet";
 
     const breadcrumb = {
         "@context": "https://schema.org",
@@ -106,13 +100,22 @@ export default async function ClinicDetailLayout({
               image: c.logo_url || undefined,
               url: `https://www.paltuu.pk/pet-care/clinic/${canonicalId}`,
               telephone: c.contact_number || undefined,
-              address: {
-                  "@type": "PostalAddress",
-                  streetAddress: c.address,
-                  addressLocality: c.city,
-                  addressRegion: c.city,
-                  addressCountry: "PK",
-              },
+              ...(isHomeVet
+                  ? {
+                        areaServed: {
+                            "@type": "City",
+                            name: c.coverage_area || c.city || "Pakistan",
+                        },
+                    }
+                  : {
+                        address: {
+                            "@type": "PostalAddress",
+                            streetAddress: c.address,
+                            addressLocality: c.city,
+                            addressRegion: c.city,
+                            addressCountry: "PK",
+                        },
+                    }),
               ...(c.latitude && c.longitude
                   ? {
                         geo: {

@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { MoonLoader } from "react-spinners";
+import { formatAge } from "@/utils/formatAge";
 
 interface Application {
     adoption_id: number;
@@ -10,6 +11,7 @@ interface Application {
     pet_name: string;
     pet_id: number;
     adopter_name: string;
+    adopter_image: string | null;
     adopter_address: string;
     created_at: string;
     status: string;
@@ -23,6 +25,17 @@ interface Application {
     agree_to_terms: boolean;
 }
 
+interface PetOverview {
+    pet_id: number;
+    pet_name: string;
+    pet_breed: string | null;
+    city: string;
+    area: string;
+    age_months: number;
+    adoption_status: string;
+    images: { image_id: number; image_url: string }[];
+}
+
 const AdoptionApplications = () => {
     const searchParams = useSearchParams();
     const petId = searchParams.get("pet_id");
@@ -30,6 +43,7 @@ const AdoptionApplications = () => {
         null
     );
     const [error, setError] = useState<string | null>(null);
+    const [pet, setPet] = useState<PetOverview | null>(null);
     const [expandedApplication, setExpandedApplication] = useState<
         number | null
     >(null);
@@ -64,7 +78,19 @@ const AdoptionApplications = () => {
             }
         };
 
+        const fetchPet = async () => {
+            try {
+                const response = await fetch(`/api/v1/pets/${petId}`);
+                if (response.ok) {
+                    setPet(await response.json());
+                }
+            } catch (error) {
+                console.error("Error fetching pet overview:", error);
+            }
+        };
+
         fetchApplications();
+        fetchPet();
     }, [petId]);
 
     const handleApprove = async (fosterId: number) => {
@@ -161,13 +187,56 @@ const AdoptionApplications = () => {
 
     return (
         <>
-            <div className="max-w-5xl min-h-screen mx-auto p-6">
+            <div className="max-w-6xl min-h-screen mx-auto p-6">
                 {error ? (
                     <p className="text-red-600 text-center text-lg mt-6">
                         {error}
                     </p>
                 ) : applications ? (
-                    applications.length > 0 ? (
+                    <div className="flex flex-col md:flex-row gap-6 items-start">
+                        {/* Pet overview sidebar */}
+                        <aside className="w-full md:w-64 md:sticky md:top-6 shrink-0 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                            <img
+                                src={pet?.images?.[0]?.image_url || "/dog-placeholder.png"}
+                                alt={pet?.pet_name || "Pet"}
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "/dog-placeholder.png";
+                                }}
+                                className="w-full aspect-square object-cover"
+                            />
+                            <div className="p-4">
+                                <h1 className="text-lg font-bold text-gray-900">
+                                    {pet?.pet_name || "Loading..."}
+                                </h1>
+                                {pet && (
+                                    <>
+                                        <p className="text-sm text-gray-500 mt-0.5">
+                                            {pet.pet_breed || "Mixed Breed"} · {formatAge(pet.age_months)}
+                                        </p>
+                                        <p className="text-sm text-gray-500">
+                                            {pet.city}{pet.area ? ` — ${pet.area}` : ""}
+                                        </p>
+                                        <span
+                                            className={`inline-block mt-3 text-xs font-semibold px-3 py-1 rounded-full capitalize ${
+                                                pet.adoption_status === "available"
+                                                    ? "bg-green-100 text-green-800"
+                                                    : "bg-gray-200 text-gray-700"
+                                            }`}
+                                        >
+                                            {pet.adoption_status}
+                                        </span>
+                                    </>
+                                )}
+                                <p className="text-xs text-gray-400 mt-3">
+                                    {applications.length} application
+                                    {applications.length !== 1 ? "s" : ""} received
+                                </p>
+                            </div>
+                        </aside>
+
+                        {/* Applications */}
+                        <div className="flex-1 w-full">
+                    {applications.length > 0 ? (
                         <ul className="space-y-6">
                             {applications.map((app) => (
                                 <li
@@ -182,7 +251,15 @@ const AdoptionApplications = () => {
                                     }>
                                     {/* Application Header */}
                                     <div className="flex justify-between items-center">
-                                        <div className="flex flex-row gap-3">
+                                        <div className="flex flex-row items-center gap-3">
+                                            <img
+                                                src={app.adopter_image || "/default-avatar.png"}
+                                                alt={app.adopter_name}
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = "/default-avatar.png";
+                                                }}
+                                                className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                                            />
                                             <h2 className="text-xl font-bold text-gray-800">
                                                 {app.adopter_name}
                                             </h2>
@@ -354,7 +431,9 @@ const AdoptionApplications = () => {
                         <p className="text-gray-700 text-center text-lg">
                             No applications found for this pet.
                         </p>
-                    )
+                    )}
+                        </div>
+                    </div>
                 ) : (
                     <div className="flex justify-center items-center min-h-screen">
                         <MoonLoader size={30} color={primaryColor} />

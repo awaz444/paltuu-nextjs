@@ -33,10 +33,11 @@ export async function GET(req: NextRequest) {
         }
 
         const result = await db.query(`
-            SELECT 
+            SELECT
                 a.*,
                 p.pet_name,
-                u.name as adopter_name
+                u.name as adopter_name,
+                u.profile_image_url as adopter_image
             FROM adoption_applications a
             JOIN pets p ON a.pet_id = p.pet_id
             JOIN users u ON a.user_id = u.user_id

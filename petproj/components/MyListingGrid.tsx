@@ -7,7 +7,7 @@ import Link from "next/link";
 import { fetchAdoptionPets } from "@/app/store/slices/adoptionPetsSlice";
 import { fetchFosterPets } from "@/app/store/slices/fosterPetsSlice";
 import { formatAge } from "@/utils/formatAge";
-import { X, Plus } from "lucide-react";
+import { X, Plus, Users } from "lucide-react";
 
 export interface Pet {
     pet_id: number;
@@ -85,7 +85,12 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true, 
         return () => { document.body.style.overflow = ""; };
     }, [editingPet]);
 
-    const handleViewApplications = (petId: number) => router.push(`/adoption-applicants?pet_id=${petId}`);
+    const handleViewApplications = (pet: Pet) =>
+        router.push(
+            pet.listing_type === "foster"
+                ? `/foster-applicants?pet_id=${pet.pet_id}`
+                : `/adoption-applicants?pet_id=${pet.pet_id}`
+        );
 
     const handleDelete = async (petId: number) => {
         setDeleteLoading(true);
@@ -218,6 +223,13 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true, 
                     <div className="relative">
                         {/* Action buttons */}
                         <div className="absolute top-2 right-2 flex gap-2 z-10">
+                            <button
+                                className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 rounded-full hover:bg-gray-100 transition"
+                                onClick={() => handleViewApplications(pet)}
+                                title="View applications"
+                            >
+                                <Users size={16} className="text-gray-600" />
+                            </button>
                             <button
                                 className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 rounded-full hover:bg-gray-100 transition"
                                 onClick={() => setDeleteConfirm(pet.pet_id)}

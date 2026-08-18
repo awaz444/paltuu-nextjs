@@ -3,7 +3,6 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
-import Navbar from '@/components/navbar';
 
 interface FosterApplication {
     foster_id: number;
@@ -129,7 +128,6 @@ const FosterApplications = () => {
 
     return (
         <>
-        <Navbar></Navbar>
         <div className="max-w-5xl min-h-screen mx-auto p-6">
 
     {loading ? (

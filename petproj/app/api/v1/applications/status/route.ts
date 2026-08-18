@@ -49,7 +49,7 @@ export async function PUT(req: NextRequest) {
         if (appRes.rowCount === 0) return NextResponse.json({ error: "Application not found" }, { status: 404 });
         const application = appRes.rows[0];
 
-        if (application.owner_id !== userId) {
+        if (String(application.owner_id) !== String(userId)) {
             return NextResponse.json({ error: "Forbidden: You do not own this pet" }, { status: 403 });
         }
 

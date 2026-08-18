@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
         if (petCheck.rowCount === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
         
         // Allow the owner OR the applicant to see their own? No, the legacy page is for pet owners.
-        if (petCheck.rows[0].owner_id !== userId) {
+        if (String(petCheck.rows[0].owner_id) !== String(userId)) {
             return NextResponse.json({ error: "Forbidden: You do not own this pet" }, { status: 403 });
         }
 

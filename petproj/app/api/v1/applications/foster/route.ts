@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
         const petCheck = await db.query('SELECT owner_id FROM pets WHERE pet_id = $1', [petId]);
         if (petCheck.rowCount === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
         
-        if (petCheck.rows[0].owner_id !== userId) {
+        if (String(petCheck.rows[0].owner_id) !== String(userId)) {
             return NextResponse.json({ error: "Forbidden: You do not own this pet" }, { status: 403 });
         }
 

@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Navbar from "@/components/navbar";
 import { MoonLoader } from "react-spinners";
 
 interface Application {
@@ -30,6 +29,7 @@ const AdoptionApplications = () => {
     const [applications, setApplications] = useState<Application[] | null>(
         null
     );
+    const [error, setError] = useState<string | null>(null);
     const [expandedApplication, setExpandedApplication] = useState<
         number | null
     >(null);
@@ -46,20 +46,21 @@ const AdoptionApplications = () => {
                     const data = await response.json();
                     setApplications(Array.isArray(data) ? data : [data]);
                 } else if (response.status === 404) {
-                    console.error(
-                        "No applications found for the given pet ID."
-                    );
                     setApplications([]); // Set applications to an empty array for 404
                 } else {
+                    const errorData = await response.json().catch(() => null);
                     console.error(
                         "Failed to fetch applications:",
                         response.statusText
                     );
-                    setApplications(null); // Optionally handle other errors
+                    setError(
+                        errorData?.error ||
+                            "Failed to load applications. Please try again."
+                    );
                 }
             } catch (error) {
                 console.error("Error fetching applications:", error);
-                setApplications(null); // Handle network or unexpected errors
+                setError("Failed to load applications. Please try again.");
             }
         };
 
@@ -160,9 +161,12 @@ const AdoptionApplications = () => {
 
     return (
         <>
-            <Navbar></Navbar>
             <div className="max-w-5xl min-h-screen mx-auto p-6">
-                {applications ? (
+                {error ? (
+                    <p className="text-red-600 text-center text-lg mt-6">
+                        {error}
+                    </p>
+                ) : applications ? (
                     applications.length > 0 ? (
                         <ul className="space-y-6">
                             {applications.map((app) => (

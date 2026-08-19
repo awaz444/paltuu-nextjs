@@ -56,6 +56,68 @@ const STATUS_STYLES: Record<string, string> = {
     rejected: "bg-gray-200 text-gray-600",
 };
 
+// Demo-only mock data for pet_id 292 (Siamese Cat) — hides the real applications on this listing.
+const DEMO_PET_ID = "292";
+const MOCK_APPLICATIONS: Application[] = [
+    {
+        adoption_id: -1,
+        user_id: -1,
+        pet_name: "Siamese Cat",
+        pet_id: 292,
+        adopter_name: "Ayesha Khan",
+        adopter_image: "https://i.pravatar.cc/150?img=47",
+        adopter_address: "Clifton Block 5, Karachi",
+        created_at: "2026-08-17T10:00:00.000Z",
+        status: "pending",
+        age_of_youngest_child: "6",
+        other_pets_details: "One friendly Labrador",
+        other_pets_neutered: true,
+        has_secure_outdoor_area: true,
+        pet_sleep_location: "In our bedroom",
+        pet_left_alone: "2-3 hours on weekdays",
+        additional_details: "We've always wanted a Siamese cat and have a calm home for it.",
+        agree_to_terms: true,
+    },
+    {
+        adoption_id: -2,
+        user_id: -2,
+        pet_name: "Siamese Cat",
+        pet_id: 292,
+        adopter_name: "Bilal Ahmed",
+        adopter_image: null,
+        adopter_address: "Gulshan-e-Iqbal Block 13, Karachi",
+        created_at: "2026-08-16T15:30:00.000Z",
+        status: "pending",
+        age_of_youngest_child: null,
+        other_pets_details: "None",
+        other_pets_neutered: null,
+        has_secure_outdoor_area: false,
+        pet_sleep_location: "Living room",
+        pet_left_alone: "Rarely, work from home",
+        additional_details: "First-time cat owner, done a lot of research on Siamese care.",
+        agree_to_terms: true,
+    },
+    {
+        adoption_id: -3,
+        user_id: -3,
+        pet_name: "Siamese Cat",
+        pet_id: 292,
+        adopter_name: "Fatima Noor",
+        adopter_image: "https://i.pravatar.cc/150?img=32",
+        adopter_address: "DHA Phase 6, Karachi",
+        created_at: "2026-08-14T09:15:00.000Z",
+        status: "rejected",
+        age_of_youngest_child: "1",
+        other_pets_details: "Two cats already at home",
+        other_pets_neutered: true,
+        has_secure_outdoor_area: false,
+        pet_sleep_location: "Not specified",
+        pet_left_alone: "8+ hours daily",
+        additional_details: null,
+        agree_to_terms: true,
+    },
+];
+
 const DetailRow = ({
     icon,
     label,
@@ -93,7 +155,12 @@ const AdoptionApplications = () => {
     useEffect(() => {
         if (!petId) return;
 
+        if (petId === DEMO_PET_ID) {
+            setApplications(MOCK_APPLICATIONS);
+        }
+
         const fetchApplications = async () => {
+            if (petId === DEMO_PET_ID) return;
             try {
                 const response = await fetch(
                     `/api/v1/applications/adoption?pet_id=${petId}`
@@ -142,6 +209,18 @@ const AdoptionApplications = () => {
     }, []);
 
     const handleApprove = async (adoptionId: number) => {
+        if (adoptionId < 0) {
+            setApplications((prev) =>
+                prev
+                    ? prev.map((app) =>
+                          app.adoption_id === adoptionId
+                              ? { ...app, status: "approved" }
+                              : { ...app, status: "rejected" }
+                      )
+                    : prev
+            );
+            return;
+        }
         try {
             const response = await fetch(`/api/v1/applications/status`, {
                 method: "PUT",
@@ -176,6 +255,18 @@ const AdoptionApplications = () => {
     };
 
     const handleReject = async (adoptionId: number) => {
+        if (adoptionId < 0) {
+            setApplications((prev) =>
+                prev
+                    ? prev.map((app) =>
+                          app.adoption_id === adoptionId
+                              ? { ...app, status: "rejected" }
+                              : app
+                      )
+                    : prev
+            );
+            return;
+        }
         try {
             const response = await fetch(`/api/v1/applications/status`, {
                 method: "PUT",

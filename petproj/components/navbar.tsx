@@ -120,11 +120,11 @@ const Navbar = ({
   const navbarBackground: Record<UserRole, string> = {
     guest: "#A03048",
     "regular user": "#A03048",
-    vet: "#A03048",
-    admin: "#A03048",
-    "shelter admin": "#A03048",
-    "shop admin": "#A03048",
-    "ecommerce admin": "#A03048",
+    vet: "#480777",
+    admin: "#065758",
+    "shelter admin": "#004a99",
+    "shop admin": "#b86b00",
+    "ecommerce admin": "#004a99",
   };
 
   // Updated dropdown items with isAction flag

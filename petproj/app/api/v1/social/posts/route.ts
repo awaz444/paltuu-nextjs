@@ -25,6 +25,7 @@ import {
 } from "@/lib/tagInference";
 import { validateSocialMediaPayload } from "@/lib/giphyMedia";
 import { hasSevereMatch, redactSevereWords } from "@/lib/moderation/badWords";
+import { hasPetSaleMatch } from "@/lib/moderation/petSaleDetection";
 import {
     TAGGED_PETS_AGG_CTE,
     SAVED_COLLECTIONS_AGG_CTE,
@@ -278,8 +279,10 @@ export async function GET(req: NextRequest) {
             const posts  = result.rows;
             redactUnavailableOriginals(posts);
             // Never let the shadow-hide flag reach the app — an author who could
-            // see it would know their post had been moderated.
-            redactModerationFields(posts);
+            // see it would know their post had been moderated. shadow_hide_reason
+            // is the one deliberate exception, and only for its own author — see
+            // lib/moderationRedaction.ts.
+            redactModerationFields(posts, viewerId);
 
             // Log impressions for the A/B experiment (fire-and-forget).
             logFeedImpressions(
@@ -541,8 +544,10 @@ export async function GET(req: NextRequest) {
         const posts  = result.rows;
         redactUnavailableOriginals(posts);
         // Never let the shadow-hide flag reach the app — an author who could
-        // see it would know their post had been moderated.
-        redactModerationFields(posts);
+        // see it would know their post had been moderated. shadow_hide_reason
+        // is the one deliberate exception, and only for its own author — see
+        // lib/moderationRedaction.ts.
+        redactModerationFields(posts, viewerId);
 
         // Cursor = next offset (null when we got fewer rows than requested)
         const nextCursor = posts.length === limit ? String(offset + limit) : null;
@@ -611,15 +616,25 @@ export async function POST(req: NextRequest) {
         // uses the censored copy.
         const publicContent = autoRedact ? redactSevereWords(content) : content;
 
+        // Auto-moderation: pet-for-sale language (see
+        // lib/moderation/petSaleDetection.ts) shadow-hides the post outright
+        // rather than redacting it — Paltuu doesn't condone selling pets at
+        // all, so covering a word isn't the right remedy here. Takes
+        // priority over autoRedact when both match: shadow-hidden means
+        // nobody but the author ever sees the content, so censoring a word
+        // in it is moot.
+        const autoPetSale = content ? hasPetSaleMatch(content) : false;
+        const initialModerationState = autoPetSale ? 'shadow_hidden' : (autoRedact ? 'redacted' : 'none');
+
         const client = await db.connect();
         try {
             await client.query('BEGIN');
             // 1. Create Post
             const postRes = await client.query(`
-                INSERT INTO social_posts (user_id, post_type, content, moderation_state, is_shadow_hidden)
-                VALUES ($1, $2, $3, $4, $5)
+                INSERT INTO social_posts (user_id, post_type, content, moderation_state, is_shadow_hidden, shadow_hide_reason)
+                VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING *
-            `, [userId, post_type, content, autoRedact ? 'redacted' : 'none', false]);
+            `, [userId, post_type, content, initialModerationState, autoPetSale, autoPetSale ? 'pet_sale' : null]);
             const post = postRes.rows[0];
 
             // 2. Add Media — collect inserted rows so we can return media_id to the client
@@ -715,10 +730,25 @@ export async function POST(req: NextRequest) {
                     [`post:${post.post_id}`]
                 ).catch(() => {});
             }
+            if (autoPetSale) {
+                // Logged for the admin queue so a human can review — the
+                // keyword detector is a first-pass heuristic, not a
+                // classifier (see lib/moderation/petSaleDetection.ts).
+                db.query(
+                    `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
+                     VALUES (NULL, 'auto_shadow_hide:pet_sale', $1, 'successful')`,
+                    [`post:${post.post_id}`]
+                ).catch(() => {});
+            }
 
-            // Fan-out to follower feed caches (fire and forget — non-blocking)
-            fanOutPostToFollowers(post.post_id, userId, post.created_at, db)
-                .catch(() => {}); // never block the response
+            // Fan-out to follower feed caches (fire and forget — non-blocking).
+            // Skipped for an auto shadow-hidden post — it must not land in any
+            // follower's cached feed, same as the admin moderate endpoint's
+            // cache reconciliation on a shadow-hide transition.
+            if (!autoPetSale) {
+                fanOutPostToFollowers(post.post_id, userId, post.created_at, db)
+                    .catch(() => {}); // never block the response
+            }
 
             // Notify mentioned users/pet-owners (fire and forget — non-blocking).
             if (parsedMentions.length > 0) {
@@ -738,7 +768,7 @@ export async function POST(req: NextRequest) {
             // Censored in place when redacted, and carries moderation_state so
             // the composer can warn the author their wording was covered.
             const responsePost = { ...post, media: insertedMedia };
-            redactModerationFields(responsePost);
+            redactModerationFields(responsePost, userId);
             return NextResponse.json(responsePost, { status: 201 });
 
         } catch (e) {

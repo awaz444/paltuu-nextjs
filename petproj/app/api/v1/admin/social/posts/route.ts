@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
            sp.moderation_state,
            sp.is_hidden,
            sp.is_shadow_hidden,
+           sp.shadow_hide_reason,
            u.name,
            u.social_username AS username,
            COALESCE(r.report_count, 0)::int AS report_count,

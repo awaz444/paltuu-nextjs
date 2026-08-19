@@ -24,6 +24,7 @@ interface Post {
   report_weighted_score: number;
   is_hidden: boolean;
   is_shadow_hidden: boolean;
+  shadow_hide_reason: string | null;
   tags: ContentTag[];
   username: string;
   name: string;
@@ -103,13 +104,13 @@ export default function PostBrowserPage() {
     none: "Restored",
   };
 
-  async function handleModerate(postId: number, state: ModerationState) {
+  async function handleModerate(postId: number, state: ModerationState, reason?: "pet_sale") {
     setActingId(postId);
     try {
       const res = await fetch(`/api/v1/admin/social/posts/${postId}/moderate`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ state }),
+        body: JSON.stringify({ state, ...(reason ? { reason } : {}) }),
       });
       if (!res.ok) { showToast("Failed"); return; }
       setPosts(prev => prev.map(p =>
@@ -119,10 +120,11 @@ export default function PostBrowserPage() {
               moderation_state: state,
               is_hidden: state === "hidden",
               is_shadow_hidden: state === "shadow_hidden",
+              shadow_hide_reason: state === "shadow_hidden" ? (reason ?? null) : null,
             }
           : p
       ));
-      showToast(ACTION_TOAST[state]);
+      showToast(reason === "pet_sale" ? "Shadow-hidden — author will see a 'we don't condone this' notice" : ACTION_TOAST[state]);
     } finally { setActingId(null); }
   }
 
@@ -207,6 +209,9 @@ export default function PostBrowserPage() {
                     {post.tagging_status === "untagged" && (
                       <span className="text-xs bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded-full">untagged</span>
                     )}
+                    {post.shadow_hide_reason === "pet_sale" && (
+                      <span className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">pet sale</span>
+                    )}
                     {post.report_count > 0 && (
                       <span className="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded-full">{post.report_count} reports</span>
                     )}
@@ -259,6 +264,14 @@ export default function PostBrowserPage() {
                         className="text-xs px-3 py-1.5 rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-50 disabled:opacity-50 transition-all"
                       >
                         Shadow-hide
+                      </button>
+                      <button
+                        onClick={() => handleModerate(post.post_id, "shadow_hidden", "pet_sale")}
+                        disabled={actingId === post.post_id}
+                        title="Hide from everyone except the author. Unlike a plain shadow-hide, the author WILL see a 'Paltuu doesn't condone this' notice on their own copy."
+                        className="text-xs px-3 py-1.5 rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-50 disabled:opacity-50 transition-all"
+                      >
+                        Shadow-hide (pet sale)
                       </button>
                       <button
                         onClick={() => handleModerate(post.post_id, "hidden")}

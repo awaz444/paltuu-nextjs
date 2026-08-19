@@ -6,7 +6,6 @@ export const useSetPrimaryColor = () => {
   const role = user?.role || "guest";
 
   useEffect(() => {
-    return; // disabled temporarily for screenshots
     const roleColors: Record<string, string> = {
       guest: "#A03048",
       "regular user": "#A03048",

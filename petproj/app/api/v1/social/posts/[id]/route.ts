@@ -172,10 +172,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         ).catch(() => {});
 
         // Never let the shadow-hide flag reach the app — an author who could
-        // see it would know their post had been moderated. shadow_hide_reason
-        // is the one deliberate exception, and only for its own author — see
-        // lib/moderationRedaction.ts.
-        redactModerationFields(row, userId);
+        // see it would know their post had been moderated.
+        redactModerationFields(row);
         return NextResponse.json(row);
 
     } catch (error) {

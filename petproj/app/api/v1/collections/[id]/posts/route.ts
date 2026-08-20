@@ -105,10 +105,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const result = await db.query(query, queryParams);
     redactUnavailableOriginals(result.rows);
     // Never let the shadow-hide flag reach the app — an author who could see
-    // it would know their post had been moderated. shadow_hide_reason is the
-    // one deliberate exception, and only for its own author — see
-    // lib/moderationRedaction.ts.
-    redactModerationFields(result.rows, userId);
+    // it would know their post had been moderated.
+    redactModerationFields(result.rows);
     const posts = result.rows.map(row => ({
       ...row,
       is_saved: true

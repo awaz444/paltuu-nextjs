@@ -37,6 +37,8 @@ export async function GET(req: NextRequest) {
       conditions.push(`sp.moderation_state = 'hidden'`);
     } else if (status === "shadow_hidden") {
       conditions.push(`sp.is_shadow_hidden = true`);
+    } else if (status === "pet_sale") {
+      conditions.push(`sp.content_notice_reason = 'pet_sale'`);
     }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -52,7 +54,7 @@ export async function GET(req: NextRequest) {
            sp.moderation_state,
            sp.is_hidden,
            sp.is_shadow_hidden,
-           sp.shadow_hide_reason,
+           sp.content_notice_reason,
            u.name,
            u.social_username AS username,
            COALESCE(r.report_count, 0)::int AS report_count,

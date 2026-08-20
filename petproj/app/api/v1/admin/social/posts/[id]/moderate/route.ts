@@ -6,24 +6,26 @@ import { fanOutPostToFollowers, removePostFromCaches } from "@/lib/redis";
 export const dynamic = "force-dynamic";
 
 const VALID_STATES = ['none', 'quarantined', 'hidden', 'shadow_hidden', 'redacted'];
-// Public content notices a post can carry — shown to every viewer, not just
-// admins (see lib/moderationRedaction.ts). Keep this narrow rather than
-// accepting arbitrary free text into a field the client renders verbatim.
-const VALID_NOTICE_REASONS = ['pet_sale'];
+// The only reasons a shadow-hide is allowed to carry back to its own author
+// (see lib/moderationRedaction.ts) — keep this narrow and deliberate rather
+// than accepting arbitrary free text into a field the client can read.
+const VALID_REASONS = ['pet_sale'];
 
 /**
  * PATCH /api/v1/admin/social/posts/:id/moderate
- * Body: { state?: 'none' | 'quarantined' | 'hidden' | 'shadow_hidden' | 'redacted', notice_reason?: 'pet_sale' | null }
- * At least one of `state` / `notice_reason` must be present; each updates
- * independently of the other, so setting one never disturbs the other.
+ * Body: { state: 'none' | 'quarantined' | 'hidden' | 'shadow_hidden' | 'redacted', reason?: 'pet_sale' }
  *
- * `state` — is_hidden / is_shadow_hidden are kept in sync so existing feed
- * queries behave correctly:
+ * is_hidden / is_shadow_hidden are kept in sync so existing feed queries
+ * behave correctly:
  *   hidden        -> is_hidden = true (dropped everywhere, author included)
  *   shadow_hidden -> is_shadow_hidden = true (dropped for everyone EXCEPT the
  *                    author, whose feed/profile look completely unchanged —
  *                    they are never told, and the flag is redacted out of
- *                    every client response; see lib/moderationRedaction.ts)
+ *                    every client response; see lib/moderationRedaction.ts).
+ *                    Optionally pair with `reason` (currently only
+ *                    'pet_sale') to additionally tell the author why — the
+ *                    one deliberate exception to "they are never told",
+ *                    scoped to just that field and just that author.
  *   quarantined   -> both false (still visible to followers; global/personalized exclude it in Pass 2)
  *   redacted      -> both false — the post stays visible to EVERYONE
  *                    (unlike shadow_hidden), but lib/moderationRedaction.ts
@@ -33,10 +35,9 @@ const VALID_NOTICE_REASONS = ['pet_sale'];
  *                    is fine and only the slur itself needs covering.
  *   none          -> both false
  *
- * `notice_reason` (currently only 'pet_sale', or null to clear) — unlike
- * `state`, this does NOT change the post's visibility at all. It's a public
- * badge shown to every viewer (see PostCard's MediaBlock on the client),
- * used for content Paltuu wants to visibly flag without hiding it.
+ * `reason` is only meaningful (and only stored) alongside state ===
+ * 'shadow_hidden' — any other state always clears it, so restoring a post
+ * never leaves a stale reason behind.
  */
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const admin = await checkAdmin(req);
@@ -46,22 +47,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   try {
     const postId = params.id;
     const body = await req.json();
-    const state: string | undefined = body.state;
-    const hasNoticeReason = Object.prototype.hasOwnProperty.call(body, 'notice_reason');
-    const noticeReason: string | null = body.notice_reason ?? null;
+    const state: string = body.state;
+    const reason: string | null = body.reason ?? null;
 
-    if (state === undefined && !hasNoticeReason) {
-      return NextResponse.json({ error: "Provide state and/or notice_reason" }, { status: 400 });
-    }
-    if (state !== undefined && !VALID_STATES.includes(state)) {
+    if (!VALID_STATES.includes(state)) {
       return NextResponse.json({ error: `state must be one of ${VALID_STATES.join(', ')}` }, { status: 400 });
     }
-    if (hasNoticeReason && noticeReason !== null && !VALID_NOTICE_REASONS.includes(noticeReason)) {
-      return NextResponse.json({ error: `notice_reason must be one of ${VALID_NOTICE_REASONS.join(', ')}` }, { status: 400 });
+    if (reason !== null && !VALID_REASONS.includes(reason)) {
+      return NextResponse.json({ error: `reason must be one of ${VALID_REASONS.join(', ')}` }, { status: 400 });
     }
 
     const isHidden = state === 'hidden';
     const isShadowHidden = state === 'shadow_hidden';
+    const shadowHideReason = isShadowHidden ? reason : null;
 
     // Read the current flag first: the cache reconciliation below only wants
     // to act on an actual transition, and a subselect in RETURNING would be
@@ -75,20 +73,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
     const { user_id: authorId, created_at: createdAt, is_shadow_hidden: wasShadowHidden } = before.rows[0];
 
-    const setClauses: string[] = [];
-    const values: any[] = [postId];
-    if (state !== undefined) {
-      setClauses.push(`moderation_state = $${values.length + 1}`, `is_hidden = $${values.length + 2}`, `is_shadow_hidden = $${values.length + 3}`);
-      values.push(state, isHidden, isShadowHidden);
-    }
-    if (hasNoticeReason) {
-      setClauses.push(`content_notice_reason = $${values.length + 1}`);
-      values.push(noticeReason);
-    }
-
     const updated = await db.query(
-      `UPDATE social_posts SET ${setClauses.join(', ')} WHERE post_id = $1 RETURNING post_id`,
-      values
+      `UPDATE social_posts
+         SET moderation_state = $2, is_hidden = $3, is_shadow_hidden = $4, shadow_hide_reason = $5
+       WHERE post_id = $1
+       RETURNING post_id`,
+      [postId, state, isHidden, isShadowHidden, shadowHideReason]
     );
     if ((updated.rowCount ?? 0) === 0) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
@@ -98,30 +88,20 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     // the flag in Postgres alone would leave the post sitting in other users'
     // cached feeds. Pull it out when shadow-hiding, and put it back on
     // restore, so the change takes effect immediately rather than whenever
-    // the 24h ZSET TTL happens to expire. Only relevant when `state` changed.
-    if (state !== undefined) {
-      if (isShadowHidden && !wasShadowHidden) {
-        removePostFromCaches(postId, authorId, db).catch(() => {});
-      } else if (!isShadowHidden && wasShadowHidden) {
-        fanOutPostToFollowers(postId, authorId, createdAt, db).catch(() => {});
-      }
+    // the 24h ZSET TTL happens to expire.
+    if (isShadowHidden && !wasShadowHidden) {
+      removePostFromCaches(postId, authorId, db).catch(() => {});
+    } else if (!isShadowHidden && wasShadowHidden) {
+      fanOutPostToFollowers(postId, authorId, createdAt, db).catch(() => {});
     }
 
-    const actionParts = [
-      state !== undefined ? `state:${state}` : null,
-      hasNoticeReason ? `notice:${noticeReason ?? 'cleared'}` : null,
-    ].filter(Boolean).join(',');
     await db.query(
       `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
        VALUES ($1, $2, $3, 'successful')`,
-      [adminId, `moderate_post:${actionParts}`, `post:${postId}`]
+      [adminId, shadowHideReason ? `moderate_post:${state}:${shadowHideReason}` : `moderate_post:${state}`, `post:${postId}`]
     );
 
-    return NextResponse.json({
-      success: true,
-      ...(state !== undefined ? { moderation_state: state } : {}),
-      ...(hasNoticeReason ? { content_notice_reason: noticeReason } : {}),
-    });
+    return NextResponse.json({ success: true, moderation_state: state, shadow_hide_reason: shadowHideReason });
   } catch (error) {
     console.error("Admin moderate-post PATCH error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

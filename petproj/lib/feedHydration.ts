@@ -46,8 +46,11 @@ export async function hydratePostsByIds(
         const result = await db.query(HYDRATE_POSTS_BY_IDS_QUERY, [viewerId, missingIds]);
         redactUnavailableOriginals(result.rows);
         // Strip the shadow-hide flag BEFORE caching, so it can't be served
-        // back out of Redis on a later cache hit.
-        redactModerationFields(result.rows);
+        // back out of Redis on a later cache hit. shadow_hide_reason is kept
+        // only for its own author (see lib/moderationRedaction.ts) — safe to
+        // cache as-is since cacheKey is already scoped per-viewer, so it can
+        // never leak into another viewer's cached copy of the same post.
+        redactModerationFields(result.rows, viewerId);
         for (const row of result.rows) {
             const id = String(row.post_id);
             byId.set(id, row);

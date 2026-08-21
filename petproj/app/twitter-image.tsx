@@ -1,10 +1,15 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 export const alt = "Paltuu — Pakistan's First Pet Adoption Platform";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function Image() {
+export default async function Image() {
+  const logoData = await readFile(join(process.cwd(), "public/og-full-logo.png"));
+  const logoSrc = `data:image/png;base64,${logoData.toString("base64")}`;
+
   return new ImageResponse(
     (
       <div
@@ -19,24 +24,13 @@ export default function Image() {
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ display: "flex", fontSize: 120 }}>🐾</div>
-        <div
-          style={{
-            display: "flex",
-            fontSize: 104,
-            fontWeight: 700,
-            color: "#FFFFFF",
-            marginTop: 8,
-          }}
-        >
-          Paltuu
-        </div>
+        <img src={logoSrc} width={640} height={170} style={{ display: "flex" }} />
         <div
           style={{
             display: "flex",
             fontSize: 36,
             color: "#F3D2DB",
-            marginTop: 16,
+            marginTop: 32,
           }}
         >
           Pakistan's First Pet Adoption Platform

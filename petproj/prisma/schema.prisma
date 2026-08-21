@@ -1303,10 +1303,18 @@ model express_vet_rate_cards {
 }
 
 model express_vet_dispatcher_status {
-  dispatcher_id Int       @id
-  is_on_duty    Boolean   @default(false)
-  last_seen_at  DateTime? @db.Timestamptz(6)
-  updated_at    DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  dispatcher_id    Int       @id
+  is_on_duty       Boolean   @default(false)
+  last_seen_at     DateTime? @db.Timestamptz(6)
+  // Ringing-call push tokens — deliberately separate from `user_devices.fcm_token`
+  // (which only ever holds Expo-format tokens today, see registerForPushNotificationsAsync.ts).
+  // These are RAW native tokens: an APNs PushKit/VoIP token on iOS, a raw FCM token on
+  // Android — neither goes through Expo's push service, both are needed to ring a native
+  // CallKeep incoming-call screen even when the app is backgrounded or killed.
+  push_platform    String?   @db.VarChar(10)  // 'ios' | 'android'
+  voip_push_token  String?                    // iOS only — PushKit token from react-native-voip-push-notification
+  fcm_push_token   String?                    // Android only — raw FCM token (getDevicePushTokenAsync().data), NOT the Expo token
+  updated_at       DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
 
   users users @relation(fields: [dispatcher_id], references: [user_id], onDelete: Cascade)
 }

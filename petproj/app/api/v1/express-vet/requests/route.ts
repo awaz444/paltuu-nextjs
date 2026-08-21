@@ -5,6 +5,7 @@ import { validate } from "@/utils/validation";
 import { isValidExpressVetCategory, isValidExpressVetSpecies, EXPRESS_VET_CATEGORY_LABELS } from "@/lib/expressVet/catalog";
 import { ExpressVetNotifications } from "@/lib/notifications";
 import { emitExpressVetNewRequest } from "@/utils/realtimeEmitter";
+import { sendDispatcherCallAlert } from "@/lib/expressVet/dispatcherCallPush";
 
 export const dynamic = "force-dynamic";
 
@@ -124,11 +125,35 @@ export async function POST(req: NextRequest) {
         `SELECT dispatcher_id FROM express_vet_dispatcher_status WHERE is_on_duty = true`
       );
       const categoryLabel = EXPRESS_VET_CATEGORY_LABELS[category] ?? category;
+
+      // Client profile snapshot for the ringing-call alert's on-screen "who's calling"
+      // info — looked up once and reused for every on-duty dispatcher.
+      const clientRes = await db.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]);
+      const clientProfile = clientRes.rows[0] ?? {};
+
       await Promise.allSettled(
         onDutyRes.rows.map((row: { dispatcher_id: number }) =>
           ExpressVetNotifications.onNewRequest(row.dispatcher_id, request.request_id, categoryLabel)
         )
       );
+
+      // Native ringing-call alert — separate channel from the push notification above,
+      // see lib/expressVet/dispatcherCallPush.ts for why. Fire-and-forget in parallel,
+      // never lets a single dispatcher's failed/missing token affect the others.
+      await Promise.allSettled(
+        onDutyRes.rows.map((row: { dispatcher_id: number }) =>
+          sendDispatcherCallAlert(row.dispatcher_id, {
+            request_id: request.request_id,
+            category,
+            client_name: clientProfile.name ?? "A Paltuu user",
+            client_photo_url: clientProfile.profile_image_url ?? null,
+            address_line,
+            starting_price_pkr: rateCard.starting_price_pkr,
+            contact_phone,
+          })
+        )
+      );
+
       await emitExpressVetNewRequest(request);
     } catch (notifyError) {
       console.error("express-vet requests POST — dispatcher alert failed:", notifyError);

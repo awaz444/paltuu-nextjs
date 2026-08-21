@@ -57,6 +57,12 @@ export enum NotificationType {
   PETCARE_REVIEW_APPROVED = "petcare_review_approved",
   PETCARE_VET_VERIFIED = "petcare_vet_verified",
 
+  // Vets at Home (Express Vet)
+  EXPRESS_VET_NEW_REQUEST = "express_vet_new_request",
+  EXPRESS_VET_REQUEST_EXPIRED = "express_vet_request_expired",
+  EXPRESS_VET_ASSIGNED = "express_vet_assigned",
+  EXPRESS_VET_COMPLETED = "express_vet_completed",
+
   // System
   SYSTEM_BROADCAST = "system_broadcast",
   SYSTEM_PLATFORM_UPDATE = "system_platform_update",
@@ -74,6 +80,7 @@ export enum EntityType {
   CLINIC = "clinics",
   VET = "vets",
   LOST_FOUND = "lost_and_found_posts",
+  EXPRESS_VET_REQUEST = "express_vet_requests",
 }
 
 interface NotificationTemplate {
@@ -262,6 +269,33 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
     title: "Credentials Verified",
     body: "Your credentials are verified. You're live on the panel!",
     deepLinkPattern: "paltuu://vet-panel",
+  },
+
+  // ──── Vets at Home (Express Vet) ────────────────────────────────────────
+  [NotificationType.EXPRESS_VET_NEW_REQUEST]: {
+    type: NotificationType.EXPRESS_VET_NEW_REQUEST,
+    title: "New Vets at Home request",
+    body: (data) => `${data.category_label || 'A request'} just came in — first to claim it gets it`,
+    deepLinkPattern: "paltuu://express-vet-dispatch/requests/{entity_id}",
+  },
+  [NotificationType.EXPRESS_VET_REQUEST_EXPIRED]: {
+    type: NotificationType.EXPRESS_VET_REQUEST_EXPIRED,
+    title: "Request expired",
+    body: (data) => `No one was available to take your ${data.category_label || 'Vets at Home'} request. Please try again.`,
+    deepLinkPattern: "paltuu://express-vet/requests/{entity_id}",
+  },
+  [NotificationType.EXPRESS_VET_ASSIGNED]: {
+    type: NotificationType.EXPRESS_VET_ASSIGNED,
+    title: "Appointment confirmed",
+    body: (data) =>
+      `${data.provider_name || 'Your provider'} is confirmed for PKR ${data.final_price_pkr ?? ''}`,
+    deepLinkPattern: "paltuu://express-vet/requests/{entity_id}",
+  },
+  [NotificationType.EXPRESS_VET_COMPLETED]: {
+    type: NotificationType.EXPRESS_VET_COMPLETED,
+    title: "How did it go?",
+    body: "Your visit is complete — rate your experience",
+    deepLinkPattern: "paltuu://express-vet/requests/{entity_id}/rate",
   },
 
   // ──── System ──────────────────────────────────────────────────────────

@@ -84,3 +84,20 @@ export async function emitNotification(recipientUserId: number, notification: Re
 export async function emitFollow(followedUserId: number, followerData: Record<string, any>) {
     await emitToRoom(`user:${followedUserId}`, "follow:new", followerData);
 }
+
+/**
+ * Vets at Home (Express Vet) — broadcast a new pending_dispatch request to every
+ * on-duty dispatcher's socket (see server/social-realtime.js's "express_vet:dispatchers" room).
+ */
+export async function emitExpressVetNewRequest(request: Record<string, any>) {
+    await emitToRoom("express_vet:dispatchers", "express_vet:new_request", request);
+}
+
+/**
+ * Vets at Home (Express Vet) — tell every other on-duty dispatcher a request was just
+ * claimed, so it disappears from their inbox instantly. UX only — the atomic SQL
+ * UPDATE in the claim route is the actual correctness guard against a double-claim.
+ */
+export async function emitExpressVetClaimed(requestId: string | number) {
+    await emitToRoom("express_vet:dispatchers", "express_vet:claimed", { request_id: requestId });
+}

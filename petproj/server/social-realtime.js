@@ -82,6 +82,7 @@ io.use((socket, next) => {
             return next(new Error('Invalid auth token'));
         }
         socket.data.userId = userId;
+        socket.data.role = decoded.role;
         next();
     } catch (error) {
         return next(new Error('Authentication failed'));
@@ -115,6 +116,13 @@ io.on('connection', (socket) => {
 
     // Join personal notification room
     socket.join(`user:${userId}`);
+
+    // Vets at Home (Express Vet) — on-duty dispatchers get the ride-hailing-style
+    // "new request" / "claimed" broadcasts. Role comes from the JWT at connect time,
+    // so a role change only takes effect on the dispatcher's next reconnect.
+    if (socket.data.role === 'dispatcher' || socket.data.role === 'admin') {
+        socket.join('express_vet:dispatchers');
+    }
 
     // ── Subscribe to a specific post's live updates ──────────────────────────
     socket.on('post:join', (postId) => {
@@ -203,9 +211,38 @@ emitterServer.listen(EMITTER_PORT, () => {
     console.log(`   Emitter API: http://localhost:${EMITTER_PORT} (internal only)\n`);
 });
 
+// ─── Vets at Home (Express Vet) expiry sweep ──────────────────────────────────
+// This process is the only always-running Node process in the deployment (Next.js
+// API routes are request-scoped, not persistent), so it's the natural place for the
+// periodic "flip overdue pending_dispatch requests to expired" clock. The actual
+// business logic (DB update, client push) lives in the Next.js app and gets reused
+// as-is — this just pings it on an interval.
+const EXPIRE_SWEEP_INTERVAL_MS = parseInt(process.env.EXPRESS_VET_EXPIRE_SWEEP_MS || String(5 * 60 * 1000));
+let expireSweepTimer = null;
+if (process.env.REALTIME_INTERNAL_KEY) {
+    expireSweepTimer = setInterval(async () => {
+        try {
+            const res = await fetch(`${NEXT_ORIGIN}/api/v1/express-vet/cron/expire`, {
+                method: 'POST',
+                headers: { 'x-internal-key': process.env.REALTIME_INTERNAL_KEY },
+                signal: AbortSignal.timeout(10000),
+            });
+            const body = await res.json().catch(() => ({}));
+            if (body?.expired_count) {
+                console.log(`[express-vet] Expiry sweep: ${body.expired_count} request(s) expired`);
+            }
+        } catch (err) {
+            console.error('[express-vet] Expiry sweep failed:', err.message);
+        }
+    }, EXPIRE_SWEEP_INTERVAL_MS);
+} else {
+    console.warn('[express-vet] REALTIME_INTERNAL_KEY not set — expiry sweep disabled');
+}
+
 // Graceful shutdown
 process.on('SIGTERM', async () => {
     console.log('[ws] Shutting down...');
+    if (expireSweepTimer) clearInterval(expireSweepTimer);
     io.close();
     httpServer.close();
     emitterServer.close();

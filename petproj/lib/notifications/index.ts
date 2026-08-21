@@ -16,5 +16,6 @@ export {
   BazaarNotifications,
   PetCareNotifications,
   SystemNotifications,
+  ExpressVetNotifications,
 } from "./notificationTriggers";
 export { initializeFirebase, getMessaging, getFirebaseAdmin } from "./firebase";

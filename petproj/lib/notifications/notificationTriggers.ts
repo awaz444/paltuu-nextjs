@@ -609,3 +609,70 @@ export const SystemNotifications = {
     });
   },
 };
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * VETS AT HOME (EXPRESS VET) TRIGGERS
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
+export const ExpressVetNotifications = {
+  /**
+   * New pending_dispatch request — sent to one on-duty dispatcher (called once per
+   * on-duty dispatcher, not a broadcast helper, since createAndSend targets one user).
+   */
+  async onNewRequest(dispatcherId: number, requestId: number | string, categoryLabel: string) {
+    return NotificationService.createAndSend({
+      userId: dispatcherId,
+      type: NotificationType.EXPRESS_VET_NEW_REQUEST,
+      entityType: EntityType.EXPRESS_VET_REQUEST,
+      entityId: Number(requestId),
+      customData: {
+        category_label: categoryLabel,
+      },
+    });
+  },
+
+  /**
+   * A pending_dispatch request auto-expired with no dispatcher claiming it in time.
+   */
+  async onRequestExpired(clientUserId: number, requestId: number | string, categoryLabel: string) {
+    return NotificationService.createAndSend({
+      userId: clientUserId,
+      type: NotificationType.EXPRESS_VET_REQUEST_EXPIRED,
+      entityType: EntityType.EXPRESS_VET_REQUEST,
+      entityId: Number(requestId),
+      customData: {
+        category_label: categoryLabel,
+      },
+    });
+  },
+
+  /**
+   * Dispatcher confirmed a price + provider — this is the moment the booking actually exists.
+   */
+  async onAssigned(clientUserId: number, requestId: number | string, providerName: string, finalPricePkr: number) {
+    return NotificationService.createAndSend({
+      userId: clientUserId,
+      type: NotificationType.EXPRESS_VET_ASSIGNED,
+      entityType: EntityType.EXPRESS_VET_REQUEST,
+      entityId: Number(requestId),
+      customData: {
+        provider_name: providerName,
+        final_price_pkr: finalPricePkr,
+      },
+    });
+  },
+
+  /**
+   * Dispatcher marked the visit done — prompts the client's rating screen (Phase F).
+   */
+  async onCompleted(clientUserId: number, requestId: number | string) {
+    return NotificationService.createAndSend({
+      userId: clientUserId,
+      type: NotificationType.EXPRESS_VET_COMPLETED,
+      entityType: EntityType.EXPRESS_VET_REQUEST,
+      entityId: Number(requestId),
+    });
+  },
+};

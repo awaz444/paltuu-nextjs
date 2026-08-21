@@ -439,13 +439,15 @@ model carts {
 }
 
 model cities {
-  city_id               Int                     @id @default(autoincrement())
-  city_name             String                  @db.VarChar(255)
-  adoption_applications adoption_applications[]
-  lost_and_found_posts  lost_and_found_posts[]
-  pets                  pets[]
-  users                 users[]
-  vendors               vendors[]
+  city_id                Int                      @id @default(autoincrement())
+  city_name              String                   @db.VarChar(255)
+  adoption_applications  adoption_applications[]
+  lost_and_found_posts   lost_and_found_posts[]
+  pets                   pets[]
+  users                  users[]
+  vendors                vendors[]
+  express_vet_requests   express_vet_requests[]
+  express_vet_rate_cards express_vet_rate_cards[]
 }
 
 model clinic_vets {
@@ -937,38 +939,38 @@ model user_devices {
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model users {
-  user_id                                           Int                     @id @default(autoincrement())
-  name                                              String                  @db.VarChar(255)
-  dob                                               DateTime?               @db.Date
+  user_id                                           Int                            @id @default(autoincrement())
+  name                                              String                         @db.VarChar(255)
+  dob                                               DateTime?                      @db.Date
   city_id                                           Int?
-  email                                             String                  @unique @db.VarChar(255)
-  password                                          String                  @db.VarChar(255)
-  phone_number                                      String?                 @db.VarChar(255)
-  profile_image_url                                 String?                 @db.VarChar(255)
-  role                                              String?                 @db.VarChar(255)
-  created_at                                        DateTime?               @default(now()) @db.Timestamp(6)
+  email                                             String                         @unique @db.VarChar(255)
+  password                                          String                         @db.VarChar(255)
+  phone_number                                      String?                        @db.VarChar(255)
+  profile_image_url                                 String?                        @db.VarChar(255)
+  role                                              String?                        @db.VarChar(255)
+  created_at                                        DateTime?                      @default(now()) @db.Timestamp(6)
   oauth_provider                                    String?
   oauth_id                                          String?
   username                                          String?
-  phone_verified                                    Boolean?                @default(false)
-  founding_club                                     Boolean?                @default(false)
-  verified                                          Boolean?                @default(false)
-  social_username                                   String?                 @unique
+  phone_verified                                    Boolean?                       @default(false)
+  founding_club                                     Boolean?                       @default(false)
+  verified                                          Boolean?                       @default(false)
+  social_username                                   String?                        @unique
   bio                                               String?
-  follower_count                                    Int?                    @default(0)
-  following_count                                   Int?                    @default(0)
-  post_count                                        Int?                    @default(0)
-  is_private                                        Boolean?                @default(false)
-  cover_photo_url                                   String?                 @db.VarChar
+  follower_count                                    Int?                           @default(0)
+  following_count                                   Int?                           @default(0)
+  post_count                                        Int?                           @default(0)
+  is_private                                        Boolean?                       @default(false)
+  cover_photo_url                                   String?                        @db.VarChar
   // Reporter trust (weighted moderation)
-  reporter_trust                                    Float?                  @default(1.0)
-  lifetime_dismissals                               Int?                    @default(0)
-  trust_ceiling                                     Float?                  @default(1.0)
-  last_dismissal_at                                 DateTime?               @db.Timestamptz(6)
+  reporter_trust                                    Float?                         @default(1.0)
+  lifetime_dismissals                               Int?                           @default(0)
+  trust_ceiling                                     Float?                         @default(1.0)
+  last_dismissal_at                                 DateTime?                      @db.Timestamptz(6)
   // Feed experiment / personalization
-  feed_experiment_bucket                            String?                 @default("control") @db.VarChar(20)
-  feed_personalization_tier                         String?                 @default("cold_start") @db.VarChar(20)
-  feed_experiment_assigned                          Boolean?                @default(false)
+  feed_experiment_bucket                            String?                        @default("control") @db.VarChar(20)
+  feed_personalization_tier                         String?                        @default("cold_start") @db.VarChar(20)
+  feed_experiment_assigned                          Boolean?                       @default(false)
   admin_action_logs                                 admin_action_logs[]
   adoption_applications                             adoption_applications[]
   carts                                             carts[]
@@ -977,7 +979,7 @@ model users {
   lost_and_found_posts                              lost_and_found_posts[]
   mobile_refresh_tokens                             mobile_refresh_tokens[]
   notifications                                     notifications[]
-  notifications_notifications_user_idTousers        notifications[]         @relation("notifications_user_idTousers")
+  notifications_notifications_user_idTousers        notifications[]                @relation("notifications_user_idTousers")
   pets                                              pets[]
   refresh_tokens                                    refresh_tokens[]
   reports                                           reports[]
@@ -986,21 +988,29 @@ model users {
   saved_posts                                       saved_posts[]
   hidden_posts                                      hidden_posts[]
   social_comments                                   social_comments[]
-  social_follows_social_follows_follower_idTousers  social_follows[]        @relation("social_follows_follower_idTousers")
-  social_follows_social_follows_following_idTousers social_follows[]        @relation("social_follows_following_idTousers")
+  social_follows_social_follows_follower_idTousers  social_follows[]               @relation("social_follows_follower_idTousers")
+  social_follows_social_follows_following_idTousers social_follows[]               @relation("social_follows_following_idTousers")
   social_likes                                      social_likes[]
   social_posts                                      social_posts[]
   social_reposts                                    social_reposts[]
-  user_blocks_user_blocks_blocked_idTousers         user_blocks[]           @relation("user_blocks_blocked_idTousers")
-  user_blocks_user_blocks_blocker_idTousers         user_blocks[]           @relation("user_blocks_blocker_idTousers")
+  user_blocks_user_blocks_blocked_idTousers         user_blocks[]                  @relation("user_blocks_blocked_idTousers")
+  user_blocks_user_blocks_blocker_idTousers         user_blocks[]                  @relation("user_blocks_blocker_idTousers")
   user_devices                                      user_devices[]
-  cities                                            cities?                 @relation(fields: [city_id], references: [city_id], onDelete: Cascade, onUpdate: NoAction)
+  cities                                            cities?                        @relation(fields: [city_id], references: [city_id], onDelete: Cascade, onUpdate: NoAction)
   vendors                                           vendors?
   vet_reviews                                       vet_reviews[]
   vets                                              vets[]
   pet_profiles                                      pet_profiles[]
-  social_mentions_mentioned                         social_mentions[]       @relation("social_mentions_mentioned_userTousers")
-  social_mentions_by                                social_mentions[]       @relation("social_mentions_mentioned_byTousers")
+  social_mentions_mentioned                         social_mentions[]              @relation("social_mentions_mentioned_userTousers")
+  social_mentions_by                                social_mentions[]              @relation("social_mentions_mentioned_byTousers")
+  express_vet_requests_client                       express_vet_requests[]         @relation("express_vet_requests_client")
+  express_vet_requests_claimed_by                   express_vet_requests[]         @relation("express_vet_requests_claimed_by")
+  express_vet_requests_assigned_by                  express_vet_requests[]         @relation("express_vet_requests_assigned_by")
+  express_vet_claims                                express_vet_claims[]
+  express_vet_providers_created_by                  express_vet_providers[]        @relation("express_vet_providers_created_by")
+  express_vet_providers_linked_user                 express_vet_providers[]        @relation("express_vet_providers_linked_user")
+  express_vet_reviews                               express_vet_reviews[]
+  express_vet_dispatcher_status                     express_vet_dispatcher_status?
 }
 
 model save_collections {
@@ -1161,6 +1171,146 @@ model app_settings {
   updated_at    DateTime? @default(now()) @db.Timestamptz(6)
 }
 
+// Vets at Home ("Express Vet") — on-demand home-visit vet/grooming dispatch, Karachi-only at launch.
+// category/species/status are plain validated strings, not Postgres enums — matching this schema's
+// existing convention (role, moderation_state, etc.) — see migrations/016_express_vet_schema.sql for
+// the CHECK constraints that enforce the value sets at the DB layer.
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model express_vet_requests {
+  request_id     BigInt  @id @default(autoincrement())
+  client_user_id Int
+  category       String  @db.VarChar(20)
+  species        String  @db.VarChar(10)
+  sub_service    String? @db.VarChar(100)
+  city_id        Int // denormalized at submit time for the city gate
+  status         String  @default("pending_dispatch") @db.VarChar(20)
+
+  questionnaire_version String @db.VarChar(20) // pins to the app_settings schema version rendered
+  questionnaire_answers Json
+
+  address_line     String
+  address_landmark String?
+  latitude         Decimal? @db.Decimal(10, 8)
+  longitude        Decimal? @db.Decimal(11, 8)
+
+  contact_phone String @db.VarChar(30) // snapshotted at submit
+
+  starting_price_pkr Int // snapshotted from the rate card at submit
+  final_price_pkr    Int? // pre-visit agreed price, set on assignment — not a transaction record
+
+  dispatcher_notes String? // free-text, e.g. "taken to clinic instead of home visit" for rare exceptions
+
+  claimed_by_dispatcher_id  Int?
+  claimed_at                DateTime? @db.Timestamptz(6)
+  assigned_provider_id      BigInt?
+  assigned_by_dispatcher_id Int?
+  assigned_at               DateTime? @db.Timestamptz(6)
+  completed_at              DateTime? @db.Timestamptz(6)
+  cancelled_at              DateTime? @db.Timestamptz(6)
+  cancel_reason             String?
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  users       users                  @relation("express_vet_requests_client", fields: [client_user_id], references: [user_id], onDelete: Cascade)
+  claimed_by  users?                 @relation("express_vet_requests_claimed_by", fields: [claimed_by_dispatcher_id], references: [user_id])
+  assigned_by users?                 @relation("express_vet_requests_assigned_by", fields: [assigned_by_dispatcher_id], references: [user_id])
+  cities      cities                 @relation(fields: [city_id], references: [city_id])
+  provider    express_vet_providers? @relation(fields: [assigned_provider_id], references: [provider_id])
+  claims      express_vet_claims[]
+  review      express_vet_reviews?
+
+  @@index([status, city_id, category], map: "idx_express_vet_requests_dispatch_queue")
+  @@index([client_user_id, status], map: "idx_express_vet_requests_client")
+  @@index([claimed_by_dispatcher_id, status], map: "idx_express_vet_requests_dispatcher")
+  @@index([assigned_provider_id, status], map: "idx_express_vet_requests_provider_active")
+}
+
+model express_vet_claims {
+  claim_id       BigInt    @id @default(autoincrement())
+  request_id     BigInt
+  dispatcher_id  Int
+  claimed_at     DateTime  @default(now()) @db.Timestamptz(6)
+  released_at    DateTime? @db.Timestamptz(6) // set if released back to the pool
+  release_reason String?
+
+  request    express_vet_requests @relation(fields: [request_id], references: [request_id], onDelete: Cascade)
+  dispatcher users                @relation(fields: [dispatcher_id], references: [user_id])
+
+  @@index([request_id])
+  @@index([dispatcher_id, claimed_at])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model express_vet_providers {
+  provider_id              BigInt   @id @default(autoincrement())
+  name                     String   @db.VarChar(255)
+  photo_url                String?
+  years_experience         Int?
+  qualifications           String?
+  categories               String[] // validated against the category value set at the app layer + a CHECK constraint (see migration)
+  phone_number             String?  @db.VarChar(30) // dispatcher's own reference only, never shown to client
+  is_active                Boolean  @default(true) // no upfront vetting — flip false reactively on bad reviews
+  rating                   Decimal? @db.Decimal(3, 2)
+  total_reviews            Int      @default(0)
+  created_by_dispatcher_id Int
+  linked_user_id           Int? // set when the provider is also an app user (e.g. dispatcher self-assign)
+  created_at               DateTime @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  created_by  users                  @relation("express_vet_providers_created_by", fields: [created_by_dispatcher_id], references: [user_id])
+  linked_user users?                 @relation("express_vet_providers_linked_user", fields: [linked_user_id], references: [user_id])
+  requests    express_vet_requests[]
+  reviews     express_vet_reviews[]
+
+  @@index([is_active])
+}
+
+model express_vet_reviews {
+  review_id          BigInt   @id @default(autoincrement())
+  request_id         BigInt   @unique // one review per completed request
+  provider_id        BigInt
+  client_user_id     Int
+  rating             Int // 1-5
+  structured_answers Json? // fixed short Q&A, e.g. "on time?", "price as agreed?"
+  review_content     String?
+  addon_reason_tags  String[] // optional — what an on-the-spot extra charge was for
+  addon_total_pkr    Int? // optional lump-sum extra amount — transparency/reporting only, not billing
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+
+  request  express_vet_requests  @relation(fields: [request_id], references: [request_id], onDelete: Cascade)
+  provider express_vet_providers @relation(fields: [provider_id], references: [provider_id], onDelete: Cascade)
+  client   users                 @relation(fields: [client_user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([provider_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model express_vet_rate_cards {
+  rate_card_id       Int      @id @default(autoincrement())
+  category           String   @db.VarChar(20)
+  species            String   @db.VarChar(10)
+  sub_service        String?  @db.VarChar(100)
+  city_id            Int
+  starting_price_pkr Int
+  is_active          Boolean  @default(true)
+  updated_at         DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  cities cities @relation(fields: [city_id], references: [city_id])
+
+  @@unique([category, species, sub_service, city_id], map: "uq_express_vet_rate_card")
+}
+
+model express_vet_dispatcher_status {
+  dispatcher_id Int       @id
+  is_on_duty    Boolean   @default(false)
+  last_seen_at  DateTime? @db.Timestamptz(6)
+  updated_at    DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  users users @relation(fields: [dispatcher_id], references: [user_id], onDelete: Cascade)
+}
+
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model reports {
   report_id       BigInt    @id @default(autoincrement())
@@ -1224,16 +1374,16 @@ model pet_profiles {
 
 /// Gallery photos for a personal pet profile (max 20, enforced at API layer).
 model pet_profile_photos {
-  photo_id       Int          @id @default(autoincrement())
-  pet_profile_id Int
-  photo_url      String       @db.VarChar(500)
-  caption        String?      @db.VarChar(200)
-  ordering       Int          @default(0)
+  photo_id         Int          @id @default(autoincrement())
+  pet_profile_id   Int
+  photo_url        String       @db.VarChar(500)
+  caption          String?      @db.VarChar(200)
+  ordering         Int          @default(0)
   /// Admin shadow-hide: true = the polaroid still shows on the pet profile
   /// for its owner and for nobody else. Never exposed to clients.
-  is_shadow_hidden Boolean    @default(false)
-  created_at     DateTime     @default(now()) @db.Timestamptz(6)
-  pet_profiles   pet_profiles @relation(fields: [pet_profile_id], references: [pet_profile_id], onDelete: Cascade, onUpdate: NoAction)
+  is_shadow_hidden Boolean      @default(false)
+  created_at       DateTime     @default(now()) @db.Timestamptz(6)
+  pet_profiles     pet_profiles @relation(fields: [pet_profile_id], references: [pet_profile_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([pet_profile_id], map: "idx_pet_profile_photos_profile_id")
   @@index([pet_profile_id, ordering], map: "idx_pet_profile_photos_ordering")

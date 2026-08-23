@@ -8,12 +8,17 @@ import { sendDispatcherVoipPush, ExpressVetVoipPayload } from "./apnsVoipClient"
  * the socket broadcast. Those two are fine for updating an already-open app; this is the
  * channel that has to work when the dispatcher's app is backgrounded or fully killed:
  *   - iOS: a raw APNs VoIP push -> native app wakeup -> RNCallKeep.displayIncomingCall
- *   - Android: a high-priority, DATA-ONLY FCM message (no `notification` block) -> the
- *     app's background message handler (registered in index.js, works even when killed
- *     via FCM's own headless JS launch) -> RNCallKeep.displayIncomingCall
- * Both land on react-native-callkeep, which hands off to the OS's native call UI — the OS
- * itself keeps that ringing/vibrating until the dispatcher answers or declines, so there's
- * no custom ringtone-loop code to write or to fail silently.
+ *     (a real CallKit incoming-call screen — the only way to ring over a locked/killed
+ *     screen on iOS).
+ *   - Android: a high-priority, DATA-ONLY FCM message (no `notification` block — the app
+ *     builds the notification itself, see below) -> the app's background message handler
+ *     (registered in index.js, works even when killed via FCM's own headless JS launch)
+ *     -> a notifee full-screen, looping-sound notification (src/services/
+ *     androidDispatchAlert.ts in the RN app). Deliberately NOT react-native-callkeep on
+ *     Android — that required several Google Play restricted/sensitive permissions
+ *     (CALL_PHONE, READ_PHONE_STATE, foreground-service camera/microphone) for a feature
+ *     that was never actually placing a real call; notifee's fullScreenAction + loopSound
+ *     gets the same "impossible to miss, rings until acted on" result without any of that.
  *
  * Best-effort by design: any failure here (missing token, APNs/FCM error, dispatcher never
  * registered a token yet) must never throw into the request-creation path that calls this.
@@ -42,9 +47,9 @@ export async function sendDispatcherCallAlert(
       if (!messaging) return; // Firebase not configured in this environment
       await messaging.send({
         token: row.fcm_push_token,
-        // Data-only on purpose — a `notification` block would show a normal tray
-        // notification instead of silently waking the background handler that
-        // triggers the native CallKeep/ConnectionService incoming-call UI.
+        // Data-only on purpose — a `notification` block would show a plain FCM tray
+        // notification instead of silently waking the background handler that builds
+        // the real full-screen, looping-sound notifee alert itself.
         data: {
           type: "express_vet_incoming_call",
           request_id: String(payload.request_id),

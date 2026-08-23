@@ -13,6 +13,7 @@ import ThemeInitializer from "./ThemeInitializer";
 import ApplyThemeColor from "@/components/ApplyThemeColor";
 import PageTransition from "@/components/PageTransition";
 import CartSyncProvider from "@/components/CartSyncProvider";
+import CookieConsent from "@/components/CookieConsent";
 import { SITE_URL } from "@/lib/site";
 
 const montserrat = Montserrat({
@@ -168,6 +169,7 @@ export default function RootLayout({
 
         <Footer />
         <Toaster />
+        <CookieConsent />
       </body>
     </html>
   );

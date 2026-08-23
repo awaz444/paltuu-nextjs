@@ -9,10 +9,24 @@ import path from 'path';
 //   - app_settings['express_vet_enabled_cities']    — city gate (Karachi only at launch)
 //   - app_settings['express_vet_request_expiry_hours'] — per-category pending_dispatch expiry window
 //   - app_settings['express_vet_questionnaires']    — first-draft triage form schema, per category/species
-//   - express_vet_rate_cards                        — PLACEHOLDER starting prices, see warning below
+//   - express_vet_rate_cards                        — real starting prices, see paltuu-vets-at-home-rate-sheet.csv
 //
-// ⚠️ Rate card prices below are PLACEHOLDERS, not real numbers from ops. Replace them once
-// paltuu-vets-at-home-rate-sheet.csv is filled in — see the Vets at Home handoff doc §12 Phase A.
+// Rate cards below come from paltuu-vets-at-home-rate-sheet.csv (dispatcher-given numbers,
+// marked "Dispatcher" there) plus calculated estimates for anything the dispatcher didn't give
+// a figure for (marked "Calculated" there — e.g. Normal Vet, most vaccination sub-types, and
+// most grooming line items, back-derived from the dispatcher's Full Groom bundle total minus
+// the known Haircut price). Two deliberate simplifications made when seeding, see the handoff
+// doc's Vets at Home §8 grooming-cart decision:
+//   - No size(dog)/coat(cat) price variation — one flat price per (category, species,
+//     sub_service). `express_vet_rate_cards` has no size/coat column at all yet; adding real
+//     variation would need a schema change, deferred as a fast-follow alongside the cart.
+//   - Vaccination is one flat price per species (using the dispatcher's figure as the "full
+//     package" price) rather than a Core/Rabies/Full picker — no sub-service picker screen was
+//     built for vaccination the way one was for grooming, since only grooming was asked for.
+//   - Grooming's Full Groom Package price is currently identical to the sum of its component
+//     items (bath+haircut+nail trim+ear clean) because the component prices were reverse-derived
+//     FROM that bundle total — there's no bundle discount baked in. Worth asking the dispatcher
+//     whether the package should be priced a bit below the sum of its parts to incentivize it.
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
@@ -162,22 +176,53 @@ const EXPIRY_HOURS = {
   grooming: 24,
 };
 
-// PLACEHOLDER prices only — see warning at the top of this file.
-const RATE_CARDS: Array<{ category: string; species: string; starting_price_pkr: number }> = [
+// Real rate card data — see the comment block at the top of this file for sourcing notes.
+const RATE_CARDS: Array<{ category: string; species: string; sub_service?: string; starting_price_pkr: number }> = [
+  // Express Vet — dispatcher gave a flat 3000, no species split; Other gets a calculated
+  // +33% exotic/specialized-handling premium.
   { category: 'express_vet', species: 'dog', starting_price_pkr: 3000 },
   { category: 'express_vet', species: 'cat', starting_price_pkr: 3000 },
-  { category: 'express_vet', species: 'other', starting_price_pkr: 3500 },
-  { category: 'normal_vet', species: 'dog', starting_price_pkr: 2000 },
-  { category: 'normal_vet', species: 'cat', starting_price_pkr: 2000 },
-  { category: 'normal_vet', species: 'other', starting_price_pkr: 2500 },
-  { category: 'neutering', species: 'dog', starting_price_pkr: 6000 },
-  { category: 'neutering', species: 'cat', starting_price_pkr: 4000 },
-  { category: 'spaying', species: 'dog', starting_price_pkr: 8000 },
-  { category: 'spaying', species: 'cat', starting_price_pkr: 5500 },
-  { category: 'vaccination', species: 'dog', starting_price_pkr: 1500 },
-  { category: 'vaccination', species: 'cat', starting_price_pkr: 1500 },
-  { category: 'grooming', species: 'dog', starting_price_pkr: 2500 },
-  { category: 'grooming', species: 'cat', starting_price_pkr: 2000 },
+  { category: 'express_vet', species: 'other', starting_price_pkr: 4000 },
+
+  // Normal Vet — not given by the dispatcher; set per founder direction to stay below
+  // Express Vet's 3000 (urgency premium) but not too far below it.
+  { category: 'normal_vet', species: 'dog', starting_price_pkr: 2500 },
+  { category: 'normal_vet', species: 'cat', starting_price_pkr: 2500 },
+  { category: 'normal_vet', species: 'other', starting_price_pkr: 3300 },
+
+  // Neutering / Spaying — dispatcher-given, exact.
+  { category: 'neutering', species: 'dog', starting_price_pkr: 14000 },
+  { category: 'neutering', species: 'cat', starting_price_pkr: 9000 },
+  { category: 'spaying', species: 'dog', starting_price_pkr: 28000 },
+  { category: 'spaying', species: 'cat', starting_price_pkr: 13000 },
+
+  // Vaccination — dispatcher only gave one figure (5000), treated as the dog "full package"
+  // price; cat calculated at ~86% of dog. See file-header note: no Core/Rabies split for v1.
+  { category: 'vaccination', species: 'dog', starting_price_pkr: 5000 },
+  { category: 'vaccination', species: 'cat', starting_price_pkr: 4300 },
+
+  // Grooming — sub_service-keyed, single flat price per (species, item), no size/coat
+  // variation yet. Keys must match GROOMING_SUB_SERVICE_ORDER in
+  // paltuu-reactnative/src/constants/expressVet.ts exactly.
+  { category: 'grooming', species: 'dog', sub_service: 'full_groom_package', starting_price_pkr: 5000 }, // dispatcher
+  { category: 'grooming', species: 'dog', sub_service: 'medicated_bath', starting_price_pkr: 1800 }, // calculated: bundle total minus known haircut price
+  { category: 'grooming', species: 'dog', sub_service: 'haircut_trim', starting_price_pkr: 2000 }, // dispatcher
+  { category: 'grooming', species: 'dog', sub_service: 'de_shedding', starting_price_pkr: 2200 }, // calculated: not given, priced near medicated bath tier
+  { category: 'grooming', species: 'dog', sub_service: 'flea_tick_treatment', starting_price_pkr: 1500 }, // dispatcher
+  { category: 'grooming', species: 'dog', sub_service: 'shave', starting_price_pkr: 1500 }, // dispatcher
+  { category: 'grooming', species: 'dog', sub_service: 'nail_trimming', starting_price_pkr: 700 }, // calculated: bundle remainder
+  { category: 'grooming', species: 'dog', sub_service: 'ear_cleaning', starting_price_pkr: 500 }, // calculated: bundle remainder
+  { category: 'grooming', species: 'dog', sub_service: 'sanitary_trim', starting_price_pkr: 600 }, // calculated: not given, priced near nail trim/ear clean tier
+
+  { category: 'grooming', species: 'cat', sub_service: 'full_groom_package', starting_price_pkr: 3750 }, // calculated: 75% of dog baseline
+  { category: 'grooming', species: 'cat', sub_service: 'medicated_bath', starting_price_pkr: 1350 },
+  { category: 'grooming', species: 'cat', sub_service: 'haircut_trim', starting_price_pkr: 1500 },
+  { category: 'grooming', species: 'cat', sub_service: 'de_shedding', starting_price_pkr: 1650 },
+  { category: 'grooming', species: 'cat', sub_service: 'flea_tick_treatment', starting_price_pkr: 1150 },
+  { category: 'grooming', species: 'cat', sub_service: 'shave', starting_price_pkr: 1150 },
+  { category: 'grooming', species: 'cat', sub_service: 'nail_trimming', starting_price_pkr: 550 },
+  { category: 'grooming', species: 'cat', sub_service: 'ear_cleaning', starting_price_pkr: 400 },
+  { category: 'grooming', species: 'cat', sub_service: 'sanitary_trim', starting_price_pkr: 500 },
 ];
 
 async function upsertSetting(client: pg.PoolClient, key: string, value: unknown, description: string) {
@@ -222,17 +267,16 @@ async function seed() {
     for (const rc of RATE_CARDS) {
       await client.query(
         `INSERT INTO express_vet_rate_cards (category, species, sub_service, city_id, starting_price_pkr, is_active)
-         VALUES ($1, $2, NULL, $3, $4, TRUE)
+         VALUES ($1, $2, $3, $4, $5, TRUE)
          ON CONFLICT (category, species, sub_service, city_id) DO UPDATE
            SET starting_price_pkr = EXCLUDED.starting_price_pkr,
                updated_at = CURRENT_TIMESTAMP`,
-        [rc.category, rc.species, KARACHI_CITY_ID, rc.starting_price_pkr]
+        [rc.category, rc.species, rc.sub_service ?? null, KARACHI_CITY_ID, rc.starting_price_pkr]
       );
     }
 
     await client.query('COMMIT');
     console.log(`✅ Seed complete. ${RATE_CARDS.length} rate cards + 3 app_settings keys upserted.`);
-    console.log('⚠️  Rate card prices are PLACEHOLDERS — replace once the real rate sheet is filled in.');
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('❌ Seed failed:', error);

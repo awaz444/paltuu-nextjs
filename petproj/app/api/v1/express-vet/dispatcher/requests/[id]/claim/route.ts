@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { checkDispatcher } from "@/lib/expressVet/dispatcherAuth";
 import { emitExpressVetClaimed } from "@/utils/realtimeEmitter";
+import { checkSelfDeal } from "@/lib/expressVet/selfDealGuard";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,25 @@ export async function POST(req: NextRequest, context: any) {
   const id = context?.params?.id;
   if (!id) return NextResponse.json({ error: "No ID provided" }, { status: 400 });
   const dispatcherId = Number(dispatcher.id || dispatcher.user_id);
+
+  // Self-dealing gate — refuse before taking the row, so a dispatcher can never end up
+  // holding a claim on a request they themselves (or a second account of theirs) created.
+  // Runs on the pre-claim snapshot; the atomic UPDATE below still owns the race.
+  const preRes = await db.query(
+    `SELECT request_id, client_user_id, contact_phone FROM express_vet_requests WHERE request_id = $1`,
+    [id]
+  );
+  const preRow = preRes.rows[0];
+  if (!preRow) return NextResponse.json({ error: "Request not found" }, { status: 404 });
+
+  const { verdict, clientMessage } = await checkSelfDeal({
+    requestRow: preRow,
+    dispatcherId,
+    stage: "claim",
+  });
+  if (verdict.blocked) {
+    return NextResponse.json({ error: clientMessage }, { status: 403 });
+  }
 
   const client = await db.connect();
   try {

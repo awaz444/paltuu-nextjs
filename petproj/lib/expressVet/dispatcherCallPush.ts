@@ -29,7 +29,7 @@ export async function sendDispatcherCallAlert(
 ): Promise<void> {
   try {
     const res = await db.query(
-      `SELECT push_platform, voip_push_token, fcm_push_token
+      `SELECT push_platform, voip_push_token, fcm_push_token, bundle_id
        FROM express_vet_dispatcher_status
        WHERE dispatcher_id = $1`,
       [dispatcherId]
@@ -38,7 +38,7 @@ export async function sendDispatcherCallAlert(
     if (!row) return; // dispatcher has never opened the console / registered a token
 
     if (row.push_platform === "ios" && row.voip_push_token) {
-      await sendDispatcherVoipPush(row.voip_push_token, payload);
+      await sendDispatcherVoipPush(row.voip_push_token, payload, row.bundle_id);
       return;
     }
 

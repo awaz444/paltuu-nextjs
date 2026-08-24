@@ -42,6 +42,12 @@ export const LIMITS = {
     FEED:                 [120, 60],    // 120 feed loads per minute (generous)
     NOTIFICATION_READ:    [30,  60],    // 30 mark-reads per minute
     MENTION_SUGGEST:      [120, 60],    // 120 suggestion fetches per minute (debounced keystrokes)
+    // Vets at Home request creation. A real pet owner books a home visit a handful of
+    // times a year, never in bursts — a burst is either a stuck retry loop or someone
+    // manufacturing jobs to self-assign (see lib/expressVet/selfDealGuard.ts). Tight on
+    // purpose: legitimate users never come near it, and each request rings every on-duty
+    // dispatcher's phone, so the abuse ceiling matters more than headroom here.
+    EXPRESS_VET_REQUEST:  [5,   3600],  // 5 Vets at Home requests per hour
 } as const;
 
 type LimitPreset = (typeof LIMITS)[keyof typeof LIMITS];

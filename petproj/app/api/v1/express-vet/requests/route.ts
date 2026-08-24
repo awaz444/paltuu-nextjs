@@ -6,6 +6,7 @@ import { isValidExpressVetCategory, isValidExpressVetSpecies, EXPRESS_VET_CATEGO
 import { ExpressVetNotifications } from "@/lib/notifications";
 import { emitExpressVetNewRequest } from "@/utils/realtimeEmitter";
 import { sendDispatcherCallAlert } from "@/lib/expressVet/dispatcherCallPush";
+import { rateLimit, LIMITS } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,12 @@ export async function POST(req: NextRequest) {
   try {
     const userId = await getUserIdFromRequest(req);
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Every accepted request rings every on-duty dispatcher's phone, so burst creation is
+    // both a spam vector and the setup half of a self-dealing pattern (create jobs on one
+    // account, claim them on another — see lib/expressVet/selfDealGuard.ts).
+    const limited = await rateLimit(req, LIMITS.EXPRESS_VET_REQUEST, `evreq:${userId}`);
+    if (limited) return limited;
 
     const body = await req.json();
     const {

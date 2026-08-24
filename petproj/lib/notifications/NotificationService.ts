@@ -537,6 +537,26 @@ export class NotificationService {
         `,
         [userId, fcmToken, platform]
       );
+
+      // Append-only device↔account history. The upsert above deliberately REPLACES
+      // user_devices.user_id when a second account signs in on the same handset, which
+      // destroys the only evidence that the two accounts share a device — exactly the
+      // signal the Express Vet self-dealing guard needs (lib/expressVet/selfDealGuard.ts).
+      // Recorded separately so the link survives that overwrite. Best-effort: a failure
+      // here must not stop a device from registering for push.
+      try {
+        await db.query(
+          `
+          INSERT INTO user_device_account_links (fcm_token, user_id)
+          VALUES ($1, $2)
+          ON CONFLICT (fcm_token, user_id) DO UPDATE SET last_seen_at = NOW()
+          `,
+          [fcmToken, userId]
+        );
+      } catch (linkError) {
+        console.error("⚠️ Failed to record device↔account link:", linkError);
+      }
+
       return true;
     } catch (error) {
       console.error("❌ Failed to register device:", error);

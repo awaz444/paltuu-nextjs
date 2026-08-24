@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkDispatcher } from "@/lib/expressVet/dispatcherAuth";
 import { createProvider, findOrCreateSelfProvider, InvalidProviderError } from "@/lib/expressVet/providers";
 import { ExpressVetNotifications } from "@/lib/notifications";
+import { checkSelfDeal } from "@/lib/expressVet/selfDealGuard";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +61,20 @@ export async function POST(req: NextRequest, context: any) {
         { error: "Provide exactly one of: provider_id, new_provider, self_assign" },
         { status: 400 }
       );
+    }
+
+    // Self-dealing gate — the real one. Claiming is reversible and low-value; THIS is the
+    // step that decides who gets paid, and `self_assign` makes the dispatcher the provider
+    // outright. Runs after the provider is resolved so the provider's own identity (linked
+    // account, phone) is part of the comparison, not just the dispatcher's.
+    const { verdict, clientMessage } = await checkSelfDeal({
+      requestRow: requestRow,
+      dispatcherId,
+      provider,
+      stage: "assign",
+    });
+    if (verdict.blocked) {
+      return NextResponse.json({ error: clientMessage }, { status: 403 });
     }
 
     // Non-blocking same-day double-booking check — real scheduling happens by phone off-app,

@@ -20,6 +20,10 @@ export async function POST(req: NextRequest) {
     const platform: string | undefined = body?.platform;
     const voipToken: string | undefined = body?.voip_token;
     const fcmToken: string | undefined = body?.fcm_token;
+    // Which build registered this token — dev/preview/production have different bundle
+    // ids, and the APNs VoIP topic is derived from it (see lib/expressVet/apnsVoipClient).
+    const bundleId: string | undefined =
+      typeof body?.bundle_id === "string" && body.bundle_id.trim() ? body.bundle_id.trim() : undefined;
 
     if (platform !== "ios" && platform !== "android") {
       return NextResponse.json({ error: "platform must be 'ios' or 'android'" }, { status: 400 });
@@ -34,15 +38,18 @@ export async function POST(req: NextRequest) {
     const dispatcherId = Number(dispatcher.id || dispatcher.user_id);
 
     const result = await db.query(
-      `INSERT INTO express_vet_dispatcher_status (dispatcher_id, push_platform, voip_push_token, fcm_push_token, updated_at)
-       VALUES ($1, $2, $3, $4, now())
+      `INSERT INTO express_vet_dispatcher_status (dispatcher_id, push_platform, voip_push_token, fcm_push_token, bundle_id, updated_at)
+       VALUES ($1, $2, $3, $4, $5, now())
        ON CONFLICT (dispatcher_id) DO UPDATE
          SET push_platform = EXCLUDED.push_platform,
              voip_push_token = EXCLUDED.voip_push_token,
              fcm_push_token = EXCLUDED.fcm_push_token,
+             -- COALESCE so an older client that doesn't send bundle_id doesn't wipe a
+             -- value a newer one already recorded.
+             bundle_id = COALESCE(EXCLUDED.bundle_id, express_vet_dispatcher_status.bundle_id),
              updated_at = now()
        RETURNING *`,
-      [dispatcherId, platform, voipToken ?? null, fcmToken ?? null]
+      [dispatcherId, platform, voipToken ?? null, fcmToken ?? null, bundleId ?? null]
     );
 
     return NextResponse.json({ status: result.rows[0] });

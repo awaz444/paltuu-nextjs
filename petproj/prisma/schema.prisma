@@ -1193,11 +1193,13 @@ model express_vet_requests {
   address_landmark String?
   latitude         Decimal? @db.Decimal(10, 8)
   longitude        Decimal? @db.Decimal(11, 8)
+  maps_link        String? // optional client-supplied Google Maps link, shown to the dispatcher/provider alongside address_line
 
   contact_phone String @db.VarChar(30) // snapshotted at submit
 
-  starting_price_pkr Int // snapshotted from the rate card at submit
+  starting_price_pkr Int // snapshotted from the rate card at submit — for grooming, the sum of every selected cart item's price
   final_price_pkr    Int? // pre-visit agreed price, set on assignment — not a transaction record
+  scheduled_at        DateTime? @db.Timestamptz(6) // visit date/time, set by the dispatcher at assignment (required — see assign route)
 
   dispatcher_notes String? // free-text, e.g. "taken to clinic instead of home visit" for rare exceptions
 
@@ -1304,7 +1306,9 @@ model express_vet_rate_cards {
 
 model express_vet_dispatcher_status {
   dispatcher_id    Int       @id
-  is_on_duty       Boolean   @default(false)
+  // No on/off duty toggle — dispatchers are always alertable during operating hours
+  // (12pm-12am PKT, enforced in requests/route.ts). The only control is a temporary mute.
+  muted_until      DateTime? @db.Timestamptz(6) // set to now()+30min by POST /dispatcher/mute; NULL or past = alertable
   last_seen_at     DateTime? @db.Timestamptz(6)
   // Ringing-call push tokens — deliberately separate from `user_devices.fcm_token`
   // (which only ever holds Expo-format tokens today, see registerForPushNotificationsAsync.ts).

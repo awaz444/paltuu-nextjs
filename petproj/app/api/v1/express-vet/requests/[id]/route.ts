@@ -19,11 +19,16 @@ export async function GET(req: NextRequest, context: any) {
     const id = context?.params?.id;
     if (!id) return NextResponse.json({ error: "No ID provided" }, { status: 400 });
 
+    // provider_phone_number: deliberately exposed to the client here (unlike the dispatcher
+    // provider-management endpoints' internal-reference-only framing) — once a request is
+    // actually assigned, the client needs a way to reach the person coming to their home
+    // (the "Contact" button on the request detail screen). Only ever selected alongside a
+    // real assigned_provider_id, i.e. only after the dispatcher has vetted the pairing.
     const result = await db.query(
       `SELECT r.*,
               p.name AS provider_name, p.photo_url AS provider_photo_url,
               p.rating AS provider_rating, p.years_experience AS provider_years_experience,
-              p.qualifications AS provider_qualifications,
+              p.qualifications AS provider_qualifications, p.phone_number AS provider_phone_number,
               rv.rating AS review_rating, rv.review_content AS review_content
        FROM express_vet_requests r
        LEFT JOIN express_vet_providers p ON p.provider_id = r.assigned_provider_id

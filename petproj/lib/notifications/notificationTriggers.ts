@@ -651,7 +651,13 @@ export const ExpressVetNotifications = {
   /**
    * Dispatcher confirmed a price + provider — this is the moment the booking actually exists.
    */
-  async onAssigned(clientUserId: number, requestId: number | string, providerName: string, finalPricePkr: number) {
+  async onAssigned(
+    clientUserId: number,
+    requestId: number | string,
+    providerName: string,
+    finalPricePkr: number,
+    scheduledAt: Date
+  ) {
     return NotificationService.createAndSend({
       userId: clientUserId,
       type: NotificationType.EXPRESS_VET_ASSIGNED,
@@ -660,6 +666,13 @@ export const ExpressVetNotifications = {
       customData: {
         provider_name: providerName,
         final_price_pkr: finalPricePkr,
+        scheduled_at_label: scheduledAt.toLocaleString("en-PK", {
+          timeZone: "Asia/Karachi",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        }),
       },
     });
   },

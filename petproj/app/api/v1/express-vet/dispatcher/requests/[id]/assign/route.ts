@@ -28,6 +28,10 @@ export async function POST(req: NextRequest, context: any) {
     if (!Number.isFinite(finalPricePkr) || finalPricePkr <= 0) {
       return NextResponse.json({ error: "final_price_pkr must be a positive number" }, { status: 400 });
     }
+    const scheduledAt = body?.scheduled_at ? new Date(body.scheduled_at) : null;
+    if (!scheduledAt || Number.isNaN(scheduledAt.getTime())) {
+      return NextResponse.json({ error: "scheduled_at is required (visit date/time)" }, { status: 400 });
+    }
 
     const requestRes = await db.query(`SELECT * FROM express_vet_requests WHERE request_id = $1`, [id]);
     const requestRow = requestRes.rows[0];
@@ -97,13 +101,13 @@ export async function POST(req: NextRequest, context: any) {
     const result = await db.query(
       `UPDATE express_vet_requests
        SET status = 'assigned', final_price_pkr = $1, assigned_provider_id = $2,
-           assigned_by_dispatcher_id = $3, assigned_at = now()
-       WHERE request_id = $4
+           assigned_by_dispatcher_id = $3, assigned_at = now(), scheduled_at = $4
+       WHERE request_id = $5
        RETURNING *`,
-      [finalPricePkr, provider.provider_id, dispatcherId, id]
+      [finalPricePkr, provider.provider_id, dispatcherId, scheduledAt.toISOString(), id]
     );
 
-    await ExpressVetNotifications.onAssigned(requestRow.client_user_id, id, provider.name, finalPricePkr);
+    await ExpressVetNotifications.onAssigned(requestRow.client_user_id, id, provider.name, finalPricePkr, scheduledAt);
 
     return NextResponse.json({ request: result.rows[0], provider });
   } catch (error) {

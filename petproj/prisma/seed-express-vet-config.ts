@@ -13,20 +13,21 @@ import path from 'path';
 //
 // Rate cards below come from paltuu-vets-at-home-rate-sheet.csv (dispatcher-given numbers,
 // marked "Dispatcher" there) plus calculated estimates for anything the dispatcher didn't give
-// a figure for (marked "Calculated" there — e.g. Normal Vet, most vaccination sub-types, and
-// most grooming line items, back-derived from the dispatcher's Full Groom bundle total minus
-// the known Haircut price). Two deliberate simplifications made when seeding, see the handoff
-// doc's Vets at Home §8 grooming-cart decision:
+// a figure for (marked "Calculated" there — e.g. Normal Vet, and most individual grooming
+// items, back-derived from the dispatcher's "Quick Clean" bundle total). Deliberate
+// simplifications made when seeding:
 //   - No size(dog)/coat(cat) price variation — one flat price per (category, species,
 //     sub_service). `express_vet_rate_cards` has no size/coat column at all yet; adding real
-//     variation would need a schema change, deferred as a fast-follow alongside the cart.
-//   - Vaccination is one flat price per species (using the dispatcher's figure as the "full
-//     package" price) rather than a Core/Rabies/Full picker — no sub-service picker screen was
-//     built for vaccination the way one was for grooming, since only grooming was asked for.
-//   - Grooming's Full Groom Package price is currently identical to the sum of its component
-//     items (bath+haircut+nail trim+ear clean) because the component prices were reverse-derived
-//     FROM that bundle total — there's no bundle discount baked in. Worth asking the dispatcher
-//     whether the package should be priced a bit below the sum of its parts to incentivize it.
+//     variation would need a schema change, not done here.
+//   - Vaccination is one flat price (5000) for both dog and cat — no species split, no
+//     Core/Rabies/Full picker, per explicit founder direction.
+//   - Grooming is priced as a real cart (see EXPRESS_VET_GROOMING_ITEM_KEYS in
+//     lib/expressVet/catalog.ts and the client's service.tsx): every item below is
+//     individually selectable, and the request's `sub_service` column stores a comma-joined
+//     list of chosen keys, summed server-side in requests/route.ts. "quick_clean" (Medicated
+//     Bath + Haircut/Trim + Nail Trim + Ear Cleaning) is a FIXED 5000 package price, not
+//     derived from summing its parts — it's just another cart item, so a client can pick it
+//     alone, pick individual items instead, or add extras on top of it.
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
@@ -154,9 +155,11 @@ const QUESTIONNAIRES: Record<string, Record<string, { fields: Field[] }> | { fie
       { key: 'additional_details', label: 'Anything else we should know?', type: 'text', required: false },
     ],
   },
+  // No 'grooming_type' field here — which services the client wants is chosen on the
+  // dedicated cart screen (service.tsx) before this questionnaire even renders, selecting it
+  // again here via a checkbox list was the redundant, confusing second selection step.
   grooming: {
     fields: [
-      { key: 'grooming_type', label: 'What grooming services do you need?', type: 'multiselect', options: ['Bath & Shampoo', 'Haircut/Trim', 'Nail Trimming', 'Ear Cleaning', 'De-shedding Treatment', 'Flea/Tick Treatment'], required: true },
       { key: 'coat_condition', label: "Pet's coat condition", type: 'select', options: ['Normal', 'Matted/Tangled', 'Heavy shedding', 'Skin issues'], required: true },
       { key: 'pet_size', label: 'Pet size', type: 'select', options: ['Small (<10kg)', 'Medium (10-25kg)', 'Large (>25kg)'], required: true },
       { key: 'photo_optional', label: "Add a photo of your pet's coat (optional)", type: 'photo', required: false },
@@ -196,36 +199,37 @@ const RATE_CARDS: Array<{ category: string; species: string; sub_service?: strin
   { category: 'spaying', species: 'dog', starting_price_pkr: 28000 },
   { category: 'spaying', species: 'cat', starting_price_pkr: 13000 },
 
-  // Vaccination — dispatcher only gave one figure (5000), treated as the dog "full package"
-  // price; cat calculated at ~86% of dog. See file-header note: no Core/Rabies split for v1.
+  // Vaccination — flat 5000 for both dog and cat per founder direction (no species split).
   { category: 'vaccination', species: 'dog', starting_price_pkr: 5000 },
-  { category: 'vaccination', species: 'cat', starting_price_pkr: 4300 },
+  { category: 'vaccination', species: 'cat', starting_price_pkr: 5000 },
 
-  // Grooming — sub_service-keyed, single flat price per (species, item), no size/coat
-  // variation yet. Keys must match GROOMING_SUB_SERVICE_ORDER in
+  // Grooming — sub_service-keyed cart items, single flat price per (species, item), no
+  // size/coat variation yet. Keys must match GROOMING_SUB_SERVICE_ORDER in
   // paltuu-reactnative/src/constants/expressVet.ts exactly.
-  // Full Groom Package = Medicated Bath + Nail Trim + Ear Cleaning = 5000 (dispatcher's exact
-  // bundle) — does NOT include Haircut/Trim, which is a separate standalone item at 2000. (An
-  // earlier pass misread the dispatcher's list and folded haircut into the bundle; corrected.)
-  { category: 'grooming', species: 'dog', sub_service: 'full_groom_package', starting_price_pkr: 5000 }, // dispatcher
-  { category: 'grooming', species: 'dog', sub_service: 'medicated_bath', starting_price_pkr: 3000 }, // calculated: bundle total minus nail trim + ear clean
+  // "quick_clean" = Medicated Bath + Haircut/Trim + Nail Trim + Ear Cleaning, a FIXED 5000
+  // package (dispatcher-given, not derived from summing its parts — renamed from "Full Groom
+  // Package" since it's not a full groom). It's just another cart item like any other: a
+  // client can pick it alone, pick individual items instead, or pick it AND add extras on top
+  // (e.g. quick_clean + shave = 6500) — see service.tsx and requests/route.ts's cart pricing.
+  { category: 'grooming', species: 'dog', sub_service: 'quick_clean', starting_price_pkr: 5000 }, // dispatcher, fixed package price
+  { category: 'grooming', species: 'dog', sub_service: 'medicated_bath', starting_price_pkr: 1800 }, // calculated: quick_clean total minus haircut/nail trim/ear clean
   { category: 'grooming', species: 'dog', sub_service: 'haircut_trim', starting_price_pkr: 2000 }, // dispatcher
-  { category: 'grooming', species: 'dog', sub_service: 'de_shedding', starting_price_pkr: 2800 }, // calculated: not given, priced near medicated bath tier
+  { category: 'grooming', species: 'dog', sub_service: 'de_shedding', starting_price_pkr: 2200 }, // calculated: not given, priced near medicated bath tier
   { category: 'grooming', species: 'dog', sub_service: 'flea_tick_treatment', starting_price_pkr: 1500 }, // dispatcher
   { category: 'grooming', species: 'dog', sub_service: 'shave', starting_price_pkr: 1500 }, // dispatcher
-  { category: 'grooming', species: 'dog', sub_service: 'nail_trimming', starting_price_pkr: 1000 }, // calculated: bundle remainder
-  { category: 'grooming', species: 'dog', sub_service: 'ear_cleaning', starting_price_pkr: 1000 }, // calculated: bundle remainder
-  { category: 'grooming', species: 'dog', sub_service: 'sanitary_trim', starting_price_pkr: 800 }, // calculated: not given, priced near nail trim/ear clean tier
+  { category: 'grooming', species: 'dog', sub_service: 'nail_trimming', starting_price_pkr: 700 }, // calculated: quick_clean remainder
+  { category: 'grooming', species: 'dog', sub_service: 'ear_cleaning', starting_price_pkr: 500 }, // calculated: quick_clean remainder
+  { category: 'grooming', species: 'dog', sub_service: 'sanitary_trim', starting_price_pkr: 600 }, // calculated: not given, priced near nail trim/ear clean tier
 
-  { category: 'grooming', species: 'cat', sub_service: 'full_groom_package', starting_price_pkr: 3750 }, // calculated: 75% of dog baseline
-  { category: 'grooming', species: 'cat', sub_service: 'medicated_bath', starting_price_pkr: 2150 }, // calculated: bundle remainder after cat nail trim + ear clean
+  { category: 'grooming', species: 'cat', sub_service: 'quick_clean', starting_price_pkr: 3750 }, // calculated: 75% of dog baseline
+  { category: 'grooming', species: 'cat', sub_service: 'medicated_bath', starting_price_pkr: 1350 },
   { category: 'grooming', species: 'cat', sub_service: 'haircut_trim', starting_price_pkr: 1500 },
-  { category: 'grooming', species: 'cat', sub_service: 'de_shedding', starting_price_pkr: 2100 },
+  { category: 'grooming', species: 'cat', sub_service: 'de_shedding', starting_price_pkr: 1650 },
   { category: 'grooming', species: 'cat', sub_service: 'flea_tick_treatment', starting_price_pkr: 1150 },
   { category: 'grooming', species: 'cat', sub_service: 'shave', starting_price_pkr: 1150 },
-  { category: 'grooming', species: 'cat', sub_service: 'nail_trimming', starting_price_pkr: 800 },
-  { category: 'grooming', species: 'cat', sub_service: 'ear_cleaning', starting_price_pkr: 800 },
-  { category: 'grooming', species: 'cat', sub_service: 'sanitary_trim', starting_price_pkr: 650 },
+  { category: 'grooming', species: 'cat', sub_service: 'nail_trimming', starting_price_pkr: 550 },
+  { category: 'grooming', species: 'cat', sub_service: 'ear_cleaning', starting_price_pkr: 400 },
+  { category: 'grooming', species: 'cat', sub_service: 'sanitary_trim', starting_price_pkr: 500 },
 ];
 
 async function upsertSetting(client: pg.PoolClient, key: string, value: unknown, description: string) {

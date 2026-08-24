@@ -4,14 +4,16 @@ import { checkDispatcher } from "@/lib/expressVet/dispatcherAuth";
 
 export const dynamic = "force-dynamic";
 
+const MUTE_MINUTES = 30;
+
 /**
  * @swagger
- * /api/v1/express-vet/dispatcher/duty:
+ * /api/v1/express-vet/dispatcher/mute:
  *   get:
- *     summary: The current dispatcher's on-duty status for Vets at Home (Express Vet) (V1)
+ *     summary: The current dispatcher's mute status for Vets at Home (Express Vet) alerts (V1)
  *     tags: [v1 Express Vet]
  *   post:
- *     summary: Toggle a dispatcher's on-duty status for Vets at Home (Express Vet) (V1)
+ *     summary: Mute this dispatcher's Vets at Home (Express Vet) alerts for 30 minutes (V1)
  *     tags: [v1 Express Vet]
  */
 export async function GET(req: NextRequest) {
@@ -20,12 +22,13 @@ export async function GET(req: NextRequest) {
 
   try {
     const dispatcherId = Number(dispatcher.id || dispatcher.user_id);
-    const result = await db.query(`SELECT * FROM express_vet_dispatcher_status WHERE dispatcher_id = $1`, [
+    const result = await db.query(`SELECT muted_until FROM express_vet_dispatcher_status WHERE dispatcher_id = $1`, [
       dispatcherId,
     ]);
-    return NextResponse.json({ status: result.rows[0] ?? { dispatcher_id: dispatcherId, is_on_duty: false } });
+    const mutedUntil = result.rows[0]?.muted_until ?? null;
+    return NextResponse.json({ muted_until: mutedUntil && new Date(mutedUntil) > new Date() ? mutedUntil : null });
   } catch (error) {
-    console.error("express-vet dispatcher/duty GET error:", error);
+    console.error("express-vet dispatcher/mute GET error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
@@ -35,22 +38,20 @@ export async function POST(req: NextRequest) {
   if (!dispatcher) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   try {
-    const body = await req.json();
-    const isOnDuty = Boolean(body?.is_on_duty);
     const dispatcherId = Number(dispatcher.id || dispatcher.user_id);
 
     const result = await db.query(
-      `INSERT INTO express_vet_dispatcher_status (dispatcher_id, is_on_duty, last_seen_at, updated_at)
-       VALUES ($1, $2, now(), now())
+      `INSERT INTO express_vet_dispatcher_status (dispatcher_id, muted_until, last_seen_at, updated_at)
+       VALUES ($1, now() + interval '${MUTE_MINUTES} minutes', now(), now())
        ON CONFLICT (dispatcher_id) DO UPDATE
-         SET is_on_duty = EXCLUDED.is_on_duty, last_seen_at = now(), updated_at = now()
-       RETURNING *`,
-      [dispatcherId, isOnDuty]
+         SET muted_until = EXCLUDED.muted_until, last_seen_at = now(), updated_at = now()
+       RETURNING muted_until`,
+      [dispatcherId]
     );
 
-    return NextResponse.json({ status: result.rows[0] });
+    return NextResponse.json({ muted_until: result.rows[0].muted_until });
   } catch (error) {
-    console.error("express-vet dispatcher/duty POST error:", error);
+    console.error("express-vet dispatcher/mute POST error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

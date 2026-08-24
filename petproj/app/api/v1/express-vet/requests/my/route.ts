@@ -22,10 +22,15 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
     const offset = (page - 1) * PAGE_SIZE;
 
+    // review_rating included so the client can tell a completed-and-reviewed request apart
+    // from a completed-but-still-needs-a-review one — the persistent booking bar (see
+    // PetsHubScreen's usage of this endpoint) keeps showing the latter until reviewed.
     const result = await db.query(
-      `SELECT r.*, p.name AS provider_name, p.photo_url AS provider_photo_url, p.rating AS provider_rating
+      `SELECT r.*, p.name AS provider_name, p.photo_url AS provider_photo_url, p.rating AS provider_rating,
+              rv.rating AS review_rating
        FROM express_vet_requests r
        LEFT JOIN express_vet_providers p ON p.provider_id = r.assigned_provider_id
+       LEFT JOIN express_vet_reviews rv ON rv.request_id = r.request_id
        WHERE r.client_user_id = $1
        ORDER BY r.created_at DESC
        LIMIT $2 OFFSET $3`,

@@ -28,6 +28,45 @@ export function isValidExpressVetSpecies(category: string, species: unknown): sp
   return typeof species === "string" && EXPRESS_VET_CATEGORY_SPECIES[category]?.includes(species);
 }
 
+// Grooming is the only category priced as a cart: `express_vet_requests.sub_service` holds a
+// comma-joined list of these keys (e.g. "quick_clean,shave"), and the total is the sum of each
+// item's express_vet_rate_cards row — see requests/route.ts. Every other category keeps
+// sub_service as a single value (or null). Keys must match the sub_service values seeded in
+// prisma/seed-express-vet-config.ts and GROOMING_SUB_SERVICE_ORDER in the RN app's
+// src/constants/expressVet.ts exactly. "quick_clean" (medicated bath + haircut + nail trim +
+// ear clean, fixed 5000) is just another cart item, not a separate mechanism — it can be
+// selected alongside any other item, which is how "add extras on top of the package" works.
+export const EXPRESS_VET_GROOMING_ITEM_KEYS = [
+  "quick_clean",
+  "medicated_bath",
+  "haircut_trim",
+  "de_shedding",
+  "flea_tick_treatment",
+  "shave",
+  "nail_trimming",
+  "ear_cleaning",
+  "sanitary_trim",
+];
+
+export function parseGroomingCart(subService: string | null | undefined): string[] {
+  if (!subService) return [];
+  return subService
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+// Dispatchers can never manually go off duty — they're alertable any time the phone should
+// ring, which is 12pm-12am Pakistan time (a 12-hour window: noon up to, but not including,
+// midnight). Outside that window nobody gets pinged for a new request, regardless of mute
+// state; the request still lands in the inbox for whenever a dispatcher next checks the app.
+export function isWithinDispatcherAlertHoursPKT(now: Date = new Date()): boolean {
+  const pktHour = Number(
+    new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Karachi", hour: "numeric", hour12: false }).format(now)
+  );
+  return pktHour >= 12 && pktHour < 24;
+}
+
 // Must match the CHECK constraint on express_vet_reviews.addon_reason_tags in
 // migrations/016_express_vet_schema.sql exactly.
 export const EXPRESS_VET_ADDON_REASON_TAGS = [

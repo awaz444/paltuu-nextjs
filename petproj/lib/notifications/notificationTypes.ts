@@ -288,7 +288,8 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
     type: NotificationType.EXPRESS_VET_ASSIGNED,
     title: "Appointment confirmed",
     body: (data) =>
-      `${data.provider_name || 'Your provider'} is confirmed for PKR ${data.final_price_pkr ?? ''}`,
+      `${data.provider_name || 'Your provider'} is confirmed for PKR ${data.final_price_pkr ?? ''}` +
+      (data.scheduled_at_label ? ` — ${data.scheduled_at_label}` : ''),
     deepLinkPattern: "paltuu://express-vet/requests/{entity_id}",
   },
   [NotificationType.EXPRESS_VET_COMPLETED]: {

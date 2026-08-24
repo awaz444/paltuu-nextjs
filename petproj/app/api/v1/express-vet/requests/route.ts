@@ -2,7 +2,14 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { validate } from "@/utils/validation";
-import { isValidExpressVetCategory, isValidExpressVetSpecies, EXPRESS_VET_CATEGORY_LABELS } from "@/lib/expressVet/catalog";
+import {
+  isValidExpressVetCategory,
+  isValidExpressVetSpecies,
+  EXPRESS_VET_CATEGORY_LABELS,
+  EXPRESS_VET_GROOMING_ITEM_KEYS,
+  parseGroomingCart,
+  isWithinDispatcherAlertHoursPKT,
+} from "@/lib/expressVet/catalog";
 import { ExpressVetNotifications } from "@/lib/notifications";
 import { emitExpressVetNewRequest } from "@/utils/realtimeEmitter";
 import { sendDispatcherCallAlert } from "@/lib/expressVet/dispatcherCallPush";
@@ -25,8 +32,8 @@ export async function POST(req: NextRequest) {
     const userId = await getUserIdFromRequest(req);
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Every accepted request rings every on-duty dispatcher's phone, so burst creation is
-    // both a spam vector and the setup half of a self-dealing pattern (create jobs on one
+    // Every accepted request (in-hours) rings every alertable dispatcher's phone, so burst
+    // creation is both a spam vector and the setup half of a self-dealing pattern (create jobs on one
     // account, claim them on another — see lib/expressVet/selfDealGuard.ts).
     const limited = await rateLimit(req, LIMITS.EXPRESS_VET_REQUEST, `evreq:${userId}`);
     if (limited) return limited;
@@ -43,6 +50,7 @@ export async function POST(req: NextRequest) {
       latitude,
       longitude,
       contact_phone,
+      maps_link,
     } = body;
 
     const validation = validate(
@@ -63,6 +71,16 @@ export async function POST(req: NextRequest) {
     if (!isValidExpressVetSpecies(category, species)) {
       return NextResponse.json({ error: `Species '${species}' is not valid for category '${category}'` }, { status: 400 });
     }
+    if (category === "grooming") {
+      const cartKeys = parseGroomingCart(sub_service);
+      if (cartKeys.length === 0) {
+        return NextResponse.json({ error: "Select at least one grooming service" }, { status: 400 });
+      }
+      const unknownKey = cartKeys.find((k) => !EXPRESS_VET_GROOMING_ITEM_KEYS.includes(k));
+      if (unknownKey) {
+        return NextResponse.json({ error: `Unknown grooming item: ${unknownKey}` }, { status: 400 });
+      }
+    }
 
     // City gate — re-validated server-side, never trust the client's own gating decision.
     const enabledCitiesRes = await db.query(`SELECT setting_value FROM app_settings WHERE setting_key = $1`, [
@@ -73,19 +91,63 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Vets at Home is not available in this city yet" }, { status: 403 });
     }
 
-    // Price is re-derived server-side from the active rate card — the client's displayed
-    // "starting from" figure is never trusted as the price of record.
-    const rateCardRes = await db.query(
-      `SELECT starting_price_pkr FROM express_vet_rate_cards
-       WHERE category = $1 AND species = $2 AND city_id = $3
-         AND sub_service IS NOT DISTINCT FROM $4
-         AND is_active = true
+    // One active booking at a time — a second in-flight request from the same client would
+    // just confuse dispatch (which one gets the call?) and the persistent booking bar (which
+    // one does it track?). "Active" = not yet closed out: anything short of cancelled, or
+    // completed but still unreviewed (the client still has a pending action — leave a review).
+    const activeRes = await db.query(
+      `SELECT request_id FROM express_vet_requests r
+       WHERE r.client_user_id = $1
+         AND r.status != 'cancelled' AND r.status != 'expired'
+         AND (r.status != 'completed' OR NOT EXISTS (
+           SELECT 1 FROM express_vet_reviews rv WHERE rv.request_id = r.request_id
+         ))
        LIMIT 1`,
-      [category, species, city_id, sub_service ?? null]
+      [userId]
     );
-    const rateCard = rateCardRes.rows[0];
-    if (!rateCard) {
-      return NextResponse.json({ error: "No active pricing found for this selection" }, { status: 400 });
+    if (activeRes.rows[0]) {
+      return NextResponse.json(
+        {
+          error: "You already have an active Vets at Home booking. Finish or cancel it before starting a new one.",
+          existing_request_id: activeRes.rows[0].request_id,
+        },
+        { status: 409 }
+      );
+    }
+
+    // Price is re-derived server-side — the client's displayed "starting from" figure is
+    // never trusted as the price of record. Grooming sums every cart item's active rate card
+    // row; every other category is still a single (category, species) lookup.
+    let startingPricePkr: number;
+    if (category === "grooming") {
+      const cartKeys = parseGroomingCart(sub_service);
+      const rateCardsRes = await db.query(
+        `SELECT sub_service, starting_price_pkr FROM express_vet_rate_cards
+         WHERE category = $1 AND species = $2 AND city_id = $3
+           AND sub_service = ANY($4::text[])
+           AND is_active = true`,
+        [category, species, city_id, cartKeys]
+      );
+      const priceByKey = new Map(rateCardsRes.rows.map((r: any) => [r.sub_service, r.starting_price_pkr]));
+      const missing = cartKeys.find((k) => !priceByKey.has(k));
+      if (missing) {
+        return NextResponse.json({ error: `No active pricing found for '${missing}'` }, { status: 400 });
+      }
+      startingPricePkr = cartKeys.reduce((sum, k) => sum + Number(priceByKey.get(k)), 0);
+    } else {
+      const rateCardRes = await db.query(
+        `SELECT starting_price_pkr FROM express_vet_rate_cards
+         WHERE category = $1 AND species = $2 AND city_id = $3
+           AND sub_service IS NOT DISTINCT FROM $4
+           AND is_active = true
+         LIMIT 1`,
+        [category, species, city_id, sub_service ?? null]
+      );
+      const rateCard = rateCardRes.rows[0];
+      if (!rateCard) {
+        return NextResponse.json({ error: "No active pricing found for this selection" }, { status: 400 });
+      }
+      startingPricePkr = rateCard.starting_price_pkr;
     }
 
     const questionnaireSettingRes = await db.query(`SELECT setting_value FROM app_settings WHERE setting_key = $1`, [
@@ -97,13 +159,13 @@ export async function POST(req: NextRequest) {
       `INSERT INTO express_vet_requests (
          client_user_id, category, species, sub_service, city_id, status,
          questionnaire_version, questionnaire_answers,
-         address_line, address_landmark, latitude, longitude,
+         address_line, address_landmark, latitude, longitude, maps_link,
          contact_phone, starting_price_pkr
        ) VALUES (
          $1, $2, $3, $4, $5, 'pending_dispatch',
          $6, $7::jsonb,
-         $8, $9, $10, $11,
-         $12, $13
+         $8, $9, $10, $11, $12,
+         $13, $14
        ) RETURNING *`,
       [
         userId,
@@ -117,29 +179,40 @@ export async function POST(req: NextRequest) {
         address_landmark ?? null,
         latitude ?? null,
         longitude ?? null,
+        maps_link ?? null,
         contact_phone,
-        rateCard.starting_price_pkr,
+        startingPricePkr,
       ]
     );
 
     const request = result.rows[0];
 
-    // Alert on-duty dispatchers — push is the reliability layer, the socket broadcast
-    // (see server/social-realtime.js's "express_vet:dispatchers" room) is the speed layer.
+    // Alert dispatchers — push is the reliability layer, the socket broadcast (see
+    // server/social-realtime.js's "express_vet:dispatchers" room) is the speed layer.
     // Best-effort: a failure here must never fail the request submission itself.
+    //
+    // No on/off duty toggle: every dispatcher-role user is alertable any time the phone
+    // should ring at all (12pm-12am PKT — see isWithinDispatcherAlertHoursPKT), minus
+    // whoever's individually muted for the next 30 minutes. Outside that window, nobody
+    // gets pinged — the request still lands in everyone's inbox for whenever they next
+    // check the app, it just doesn't ring.
     try {
-      const onDutyRes = await db.query(
-        `SELECT dispatcher_id FROM express_vet_dispatcher_status WHERE is_on_duty = true`
-      );
+      const alertableRes = isWithinDispatcherAlertHoursPKT()
+        ? await db.query(
+            `SELECT u.user_id AS dispatcher_id FROM users u
+             LEFT JOIN express_vet_dispatcher_status s ON s.dispatcher_id = u.user_id
+             WHERE u.role = 'dispatcher' AND (s.muted_until IS NULL OR s.muted_until <= now())`
+          )
+        : { rows: [] as { dispatcher_id: number }[] };
       const categoryLabel = EXPRESS_VET_CATEGORY_LABELS[category] ?? category;
 
       // Client profile snapshot for the ringing-call alert's on-screen "who's calling"
-      // info — looked up once and reused for every on-duty dispatcher.
+      // info — looked up once and reused for every alertable dispatcher.
       const clientRes = await db.query(`SELECT name, profile_image_url FROM users WHERE user_id = $1`, [userId]);
       const clientProfile = clientRes.rows[0] ?? {};
 
       await Promise.allSettled(
-        onDutyRes.rows.map((row: { dispatcher_id: number }) =>
+        alertableRes.rows.map((row: { dispatcher_id: number }) =>
           ExpressVetNotifications.onNewRequest(row.dispatcher_id, request.request_id, categoryLabel)
         )
       );
@@ -148,14 +221,14 @@ export async function POST(req: NextRequest) {
       // see lib/expressVet/dispatcherCallPush.ts for why. Fire-and-forget in parallel,
       // never lets a single dispatcher's failed/missing token affect the others.
       await Promise.allSettled(
-        onDutyRes.rows.map((row: { dispatcher_id: number }) =>
+        alertableRes.rows.map((row: { dispatcher_id: number }) =>
           sendDispatcherCallAlert(row.dispatcher_id, {
             request_id: request.request_id,
             category,
             client_name: clientProfile.name ?? "A Paltuu user",
             client_photo_url: clientProfile.profile_image_url ?? null,
             address_line,
-            starting_price_pkr: rateCard.starting_price_pkr,
+            starting_price_pkr: request.starting_price_pkr,
             contact_phone,
           })
         )

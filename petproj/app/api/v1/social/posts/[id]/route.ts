@@ -14,6 +14,7 @@ import { resolveRepostTarget } from "@/lib/reposts";
 import { invalidateViewerPostCache, removePostFromCaches } from "@/lib/redis";
 import { originalPostAccessibleExpr } from "@/lib/feedQueryFragments";
 import { redactModerationFields } from "@/lib/moderationRedaction";
+import { hasPetSaleMatch } from "@/lib/moderation/petSaleDetection";
 import { archiveDeletedPost } from "@/lib/activityArchive";
 
 export const dynamic = "force-dynamic";
@@ -265,6 +266,18 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         const oldContent = postCheck.rows[0].content;
         let newlyAddedMentions: ParsedMention[] = [];
 
+        // Re-run the pet-sale check on the edited caption (see
+        // lib/moderation/petSaleDetection.ts) — otherwise posting clean text
+        // and editing it into a listing afterwards walks straight past the
+        // flag applied on create.
+        //
+        // Deliberately one-way: an edit can ADD the flag but never clear it.
+        // Clearing on a clean re-edit would also undo a flag a moderator set
+        // by hand, handing the author a way to remove it themselves. Admin
+        // restore stays the only way out, same as for a false positive on
+        // create.
+        const editAddsPetSale = typeof content === 'string' && hasPetSaleMatch(content);
+
         const client = await db.connect();
         try {
             await client.query('BEGIN');
@@ -273,10 +286,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                 UPDATE social_posts
                 SET content = COALESCE($1, content),
                     post_type = COALESCE($2, post_type),
+                    content_notice_reason = CASE WHEN $4 THEN 'pet_sale' ELSE content_notice_reason END,
                     updated_at = NOW()
                 WHERE post_id = $3
                 RETURNING updated_at
-            `, [content, post_type, postId]);
+            `, [content, post_type, postId, editAddsPetSale]);
 
             // If pet_profile_tags is passed, update tags
             if (pet_profile_tags !== undefined && Array.isArray(pet_profile_tags)) {
@@ -368,6 +382,17 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
                     isComment: false,
                     preview: content,
                 }).catch(() => {});
+            }
+
+            if (editAddsPetSale) {
+                // Same review trail the create path leaves — the detector is a
+                // first-pass heuristic, so a human still confirms before the
+                // post comes down.
+                db.query(
+                    `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
+                     VALUES (NULL, 'auto_flag:pet_sale_on_edit', $1, 'successful')`,
+                    [`post:${postId}`]
+                ).catch(() => {});
             }
 
             invalidateViewerPostCache(postId, userId).catch(() => {});

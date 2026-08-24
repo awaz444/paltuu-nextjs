@@ -5,6 +5,7 @@ import { emitRepost, emitNotification } from "@/utils/realtimeEmitter";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { SocialNotifications } from "@/lib/notifications";
 import { assertNotBlocked } from "@/lib/moderation";
+import { hasPetSaleMatch } from "@/lib/moderation/petSaleDetection";
 import { recordEngagementEvent } from "@/lib/interestScoring";
 import { resolveRepostTarget } from "@/lib/reposts";
 import { validateSocialMediaPayload } from "@/lib/giphyMedia";
@@ -106,6 +107,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         // 3. Ensure no blocking relationship exists
         await assertNotBlocked(userId, originalAuthorId);
 
+        // A quote carries its own caption, so it can be a sale listing just
+        // like a standalone post — run the same check the create path runs
+        // (see lib/moderation/petSaleDetection.ts). A plain repost has NULL
+        // content and never matches; it inherits the original's visibility
+        // via inheritShadowHide above, not its notice.
+        const autoPetSale = typeof content === 'string' && hasPetSaleMatch(content);
+
         const client = await db.connect();
         try {
             await client.query('BEGIN');
@@ -118,10 +126,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             // 4. Create a new post entry (the repost in feed)
             const repostEntry = await client.query(`
                 INSERT INTO social_posts
-                    (user_id, post_type, content, original_post_id, is_repost, is_shadow_hidden)
-                VALUES ($1, 'repost', $2, $3, true, $4)
+                    (user_id, post_type, content, original_post_id, is_repost, is_shadow_hidden, content_notice_reason)
+                VALUES ($1, 'repost', $2, $3, true, $4, $5)
                 RETURNING *
-            `, [userId, content, originalPostId, inheritShadowHide]);
+            `, [userId, content, originalPostId, inheritShadowHide, autoPetSale ? 'pet_sale' : null]);
             const repostPostId = repostEntry.rows[0].post_id;
 
             // 4a. Attach any media the quote carries (images/videos) to the
@@ -199,6 +207,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             }
 
             await client.query('COMMIT');
+
+            if (autoPetSale) {
+                // Same review trail the create path leaves — the detector is a
+                // first-pass heuristic, so a human still confirms.
+                db.query(
+                    `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
+                     VALUES (NULL, 'auto_flag:pet_sale', $1, 'successful')`,
+                    [`post:${repostPostId}`]
+                ).catch(() => {});
+            }
 
             // Real-time: push repost count update to post viewers
             const updatedPost = await client.query(

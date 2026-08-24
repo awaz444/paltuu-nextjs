@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get("status") ?? "all";
 
   try {
-    const conditions: string[] = [];
+    const conditions: string[] = [`COALESCE(sp.is_deleted, false) = false`];
     const params: any[] = [];
     let p = 1;
 
@@ -69,8 +69,8 @@ export async function GET(req: NextRequest) {
            sp.content_notice_reason,
            u.name,
            u.social_username AS username,
-           COALESCE(r.report_count, 0)::int AS report_count,
-           COALESCE(r.report_weighted_score, 0)::float AS report_weighted_score,
+           COALESCE(sp.report_count, 0)::int AS report_count,
+           COALESCE(sp.report_weighted_score, 0)::float AS report_weighted_score,
            COALESCE(
              json_agg(
                json_build_object('tag_id', ct.tag_id, 'slug', ct.slug, 'label', ct.label, 'role', pct.role)
@@ -96,15 +96,10 @@ export async function GET(req: NextRequest) {
            ) AS action_history
          FROM social_posts sp
          LEFT JOIN users u ON u.user_id = sp.user_id
-         LEFT JOIN (
-           SELECT post_id, COUNT(*)::int AS report_count, SUM(report_weight) AS report_weighted_score
-           FROM post_reports
-           GROUP BY post_id
-         ) r ON r.post_id = sp.post_id
          LEFT JOIN post_content_tags pct ON pct.post_id = sp.post_id
          LEFT JOIN content_tags ct ON ct.tag_id = pct.tag_id
          ${where}
-         GROUP BY sp.post_id, u.name, u.social_username, r.report_count, r.report_weighted_score
+         GROUP BY sp.post_id, u.name, u.social_username
          ORDER BY sp.created_at ${status === "pet_sale_review" ? "ASC" : "DESC"}
          LIMIT $${p} OFFSET $${p + 1}`,
         [...params, limit, offset]

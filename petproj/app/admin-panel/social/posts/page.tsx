@@ -208,6 +208,23 @@ export default function PostBrowserPage() {
     } finally { setActingId(null); }
   }
 
+  // Permanent takedown: soft-deletes the post (same path the author's own
+  // delete uses — archived to Recently Deleted, hashtag/post_count upkeep,
+  // dropped from feed caches) so it's gone everywhere, not just moderated.
+  // Unlike moderation state this can't be undone from this page, hence the
+  // harsher confirm copy.
+  async function handleDelete(postId: number) {
+    if (!confirm("Delete this post completely?\n\nThis removes it everywhere, the author included, and can't be undone from here.")) return;
+    setActingId(postId);
+    try {
+      const res = await fetch(`/api/v1/admin/social/posts/${postId}`, { method: "DELETE" });
+      if (!res.ok) { showToast("Failed"); return; }
+      setPosts(prev => prev.filter(p => p.post_id !== postId));
+      setTotal(t => Math.max(0, t - 1));
+      showToast("Post deleted");
+    } finally { setActingId(null); }
+  }
+
   if (isHydrating) {
     return <div className="flex justify-center items-center h-screen"><div className="loader" /></div>;
   }
@@ -413,6 +430,14 @@ export default function PostBrowserPage() {
                       Restore
                     </button>
                   )}
+                  <button
+                    onClick={() => handleDelete(post.post_id)}
+                    disabled={actingId === post.post_id}
+                    title="Permanently delete this post. Removes it everywhere, the author included."
+                    className="text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-all"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}

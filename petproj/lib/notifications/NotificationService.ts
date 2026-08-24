@@ -565,6 +565,25 @@ export class NotificationService {
   }
 
   /**
+   * Unregister a device's push token on logout — without this, the device keeps receiving
+   * the now-logged-out account's pushes indefinitely (see `registerDevice`'s upsert: a row
+   * persists under whichever user last registered that token, forever, until either another
+   * account registers the same token or a delivery failure prunes it). Only removes the
+   * `user_devices` row (who currently gets pushed) — deliberately does NOT touch
+   * `user_device_account_links`, which is an append-only device↔account history used by the
+   * Express Vet self-dealing guard and must survive logout.
+   */
+  static async unregisterDevice(userId: number, fcmToken: string): Promise<boolean> {
+    try {
+      await db.query(`DELETE FROM user_devices WHERE fcm_token = $1 AND user_id = $2`, [fcmToken, userId]);
+      return true;
+    } catch (error) {
+      console.error("❌ Failed to unregister device:", error);
+      return false;
+    }
+  }
+
+  /**
    * Send notification to Firebase Topic (for broadcasts)
    * Does NOT create a DB row
    */

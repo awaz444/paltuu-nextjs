@@ -204,25 +204,28 @@ const RATE_CARDS: Array<{ category: string; species: string; sub_service?: strin
   // Grooming — sub_service-keyed, single flat price per (species, item), no size/coat
   // variation yet. Keys must match GROOMING_SUB_SERVICE_ORDER in
   // paltuu-reactnative/src/constants/expressVet.ts exactly.
+  // Full Groom Package = Medicated Bath + Nail Trim + Ear Cleaning = 5000 (dispatcher's exact
+  // bundle) — does NOT include Haircut/Trim, which is a separate standalone item at 2000. (An
+  // earlier pass misread the dispatcher's list and folded haircut into the bundle; corrected.)
   { category: 'grooming', species: 'dog', sub_service: 'full_groom_package', starting_price_pkr: 5000 }, // dispatcher
-  { category: 'grooming', species: 'dog', sub_service: 'medicated_bath', starting_price_pkr: 1800 }, // calculated: bundle total minus known haircut price
+  { category: 'grooming', species: 'dog', sub_service: 'medicated_bath', starting_price_pkr: 3000 }, // calculated: bundle total minus nail trim + ear clean
   { category: 'grooming', species: 'dog', sub_service: 'haircut_trim', starting_price_pkr: 2000 }, // dispatcher
-  { category: 'grooming', species: 'dog', sub_service: 'de_shedding', starting_price_pkr: 2200 }, // calculated: not given, priced near medicated bath tier
+  { category: 'grooming', species: 'dog', sub_service: 'de_shedding', starting_price_pkr: 2800 }, // calculated: not given, priced near medicated bath tier
   { category: 'grooming', species: 'dog', sub_service: 'flea_tick_treatment', starting_price_pkr: 1500 }, // dispatcher
   { category: 'grooming', species: 'dog', sub_service: 'shave', starting_price_pkr: 1500 }, // dispatcher
-  { category: 'grooming', species: 'dog', sub_service: 'nail_trimming', starting_price_pkr: 700 }, // calculated: bundle remainder
-  { category: 'grooming', species: 'dog', sub_service: 'ear_cleaning', starting_price_pkr: 500 }, // calculated: bundle remainder
-  { category: 'grooming', species: 'dog', sub_service: 'sanitary_trim', starting_price_pkr: 600 }, // calculated: not given, priced near nail trim/ear clean tier
+  { category: 'grooming', species: 'dog', sub_service: 'nail_trimming', starting_price_pkr: 1000 }, // calculated: bundle remainder
+  { category: 'grooming', species: 'dog', sub_service: 'ear_cleaning', starting_price_pkr: 1000 }, // calculated: bundle remainder
+  { category: 'grooming', species: 'dog', sub_service: 'sanitary_trim', starting_price_pkr: 800 }, // calculated: not given, priced near nail trim/ear clean tier
 
   { category: 'grooming', species: 'cat', sub_service: 'full_groom_package', starting_price_pkr: 3750 }, // calculated: 75% of dog baseline
-  { category: 'grooming', species: 'cat', sub_service: 'medicated_bath', starting_price_pkr: 1350 },
+  { category: 'grooming', species: 'cat', sub_service: 'medicated_bath', starting_price_pkr: 2150 }, // calculated: bundle remainder after cat nail trim + ear clean
   { category: 'grooming', species: 'cat', sub_service: 'haircut_trim', starting_price_pkr: 1500 },
-  { category: 'grooming', species: 'cat', sub_service: 'de_shedding', starting_price_pkr: 1650 },
+  { category: 'grooming', species: 'cat', sub_service: 'de_shedding', starting_price_pkr: 2100 },
   { category: 'grooming', species: 'cat', sub_service: 'flea_tick_treatment', starting_price_pkr: 1150 },
   { category: 'grooming', species: 'cat', sub_service: 'shave', starting_price_pkr: 1150 },
-  { category: 'grooming', species: 'cat', sub_service: 'nail_trimming', starting_price_pkr: 550 },
-  { category: 'grooming', species: 'cat', sub_service: 'ear_cleaning', starting_price_pkr: 400 },
-  { category: 'grooming', species: 'cat', sub_service: 'sanitary_trim', starting_price_pkr: 500 },
+  { category: 'grooming', species: 'cat', sub_service: 'nail_trimming', starting_price_pkr: 800 },
+  { category: 'grooming', species: 'cat', sub_service: 'ear_cleaning', starting_price_pkr: 800 },
+  { category: 'grooming', species: 'cat', sub_service: 'sanitary_trim', starting_price_pkr: 650 },
 ];
 
 async function upsertSetting(client: pg.PoolClient, key: string, value: unknown, description: string) {
@@ -264,13 +267,23 @@ async function seed() {
       'Vets at Home (Express Vet) — first-draft triage questionnaire form schema, per category/species. Ops/founder can iterate without a deploy.'
     );
 
+    // NOT `INSERT ... ON CONFLICT (category, species, sub_service, city_id)`: Postgres unique
+    // constraints treat every NULL as distinct from every other NULL, so a conflict is never
+    // detected for the ~14 rows here whose sub_service is NULL (every category except
+    // grooming) — ON CONFLICT silently falls through to a fresh INSERT instead of updating the
+    // existing row. Running this seed script twice with that approach produced 14 duplicate
+    // rows in the real database (both old and new prices live at once, with `LIMIT 1` reads
+    // picking one at random) before this was caught — see the Vets at Home handoff doc. This
+    // NULL-safe delete-then-insert avoids relying on the constraint's conflict detection at all.
     for (const rc of RATE_CARDS) {
       await client.query(
+        `DELETE FROM express_vet_rate_cards
+         WHERE category = $1 AND species = $2 AND sub_service IS NOT DISTINCT FROM $3 AND city_id = $4`,
+        [rc.category, rc.species, rc.sub_service ?? null, KARACHI_CITY_ID]
+      );
+      await client.query(
         `INSERT INTO express_vet_rate_cards (category, species, sub_service, city_id, starting_price_pkr, is_active)
-         VALUES ($1, $2, $3, $4, $5, TRUE)
-         ON CONFLICT (category, species, sub_service, city_id) DO UPDATE
-           SET starting_price_pkr = EXCLUDED.starting_price_pkr,
-               updated_at = CURRENT_TIMESTAMP`,
+         VALUES ($1, $2, $3, $4, $5, TRUE)`,
         [rc.category, rc.species, rc.sub_service ?? null, KARACHI_CITY_ID, rc.starting_price_pkr]
       );
     }

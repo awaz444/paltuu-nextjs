@@ -1,15 +1,20 @@
 import { db } from "@/db/index";
 import { getMessaging } from "@/lib/notifications/firebase";
-import { sendDispatcherVoipPush, ExpressVetVoipPayload } from "./apnsVoipClient";
+import { sendDispatcherVoipPush, callUuidForRequest, ExpressVetVoipPayload } from "./apnsVoipClient";
 
 /**
  * Sends the "phone rings" alert for a new Vets at Home request — separate from, and in
  * addition to, the normal push notification (`ExpressVetNotifications.onNewRequest`) and
  * the socket broadcast. Those two are fine for updating an already-open app; this is the
  * channel that has to work when the dispatcher's app is backgrounded or fully killed:
- *   - iOS: a raw APNs VoIP push -> native app wakeup -> RNCallKeep.displayIncomingCall
- *     (a real CallKit incoming-call screen — the only way to ring over a locked/killed
- *     screen on iOS).
+ *   - iOS: a raw APNs VoIP push -> native app wakeup -> RNCallKeep.reportNewIncomingCall,
+ *     called directly from Swift in pushRegistry(didReceiveIncomingPushWith:) (a real
+ *     CallKit incoming-call screen — the only way to ring over a locked/killed screen on
+ *     iOS). This must happen synchronously in native code, not via a JS round-trip — see
+ *     plugins/withVoipPushAppDelegate.js — since iOS kills the app if a VoIP push doesn't
+ *     result in an immediate CallKit report. `call_uuid` below is generated here so both
+ *     the native report and the JS-side request lookup (once the bridge boots) agree on
+ *     the same call.
  *   - Android: a high-priority, DATA-ONLY FCM message (no `notification` block — the app
  *     builds the notification itself, see below) -> the app's background message handler
  *     (registered in index.js, works even when killed via FCM's own headless JS launch)
@@ -25,7 +30,7 @@ import { sendDispatcherVoipPush, ExpressVetVoipPayload } from "./apnsVoipClient"
  */
 export async function sendDispatcherCallAlert(
   dispatcherId: number,
-  payload: ExpressVetVoipPayload
+  payload: Omit<ExpressVetVoipPayload, "call_uuid">
 ): Promise<void> {
   try {
     const res = await db.query(
@@ -38,7 +43,11 @@ export async function sendDispatcherCallAlert(
     if (!row) return; // dispatcher has never opened the console / registered a token
 
     if (row.push_platform === "ios" && row.voip_push_token) {
-      await sendDispatcherVoipPush(row.voip_push_token, payload, row.bundle_id);
+      await sendDispatcherVoipPush(
+        row.voip_push_token,
+        { ...payload, call_uuid: callUuidForRequest(payload.request_id) },
+        row.bundle_id
+      );
       return;
     }
 

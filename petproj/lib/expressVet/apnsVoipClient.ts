@@ -84,6 +84,12 @@ export interface ExpressVetVoipPayload {
   address_line: string;
   starting_price_pkr: number;
   contact_phone: string;
+  // Generated server-side (see dispatcherCallPush.ts) and reported to CallKit natively —
+  // see plugins/withVoipPushAppDelegate.js for why this must happen synchronously in
+  // Swift, not via a JS round-trip. The client's `notification` listener (dispatcherVoipPush.ts)
+  // reuses this same UUID to look up the request payload rather than generating its own,
+  // since a second `displayIncomingCall` with a different UUID would show a duplicate call.
+  call_uuid: string;
 }
 
 /**

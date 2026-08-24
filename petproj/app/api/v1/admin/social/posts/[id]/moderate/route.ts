@@ -34,9 +34,16 @@ const VALID_NOTICE_REASONS = ['pet_sale'];
  *   none          -> both false
  *
  * `notice_reason` (currently only 'pet_sale', or null to clear) — unlike
- * `state`, this does NOT change the post's visibility at all. It's a public
- * badge shown to every viewer (see PostCard's MediaBlock on the client),
- * used for content Paltuu wants to visibly flag without hiding it.
+ * `state`, this does NOT change the post's visibility at all. It puts a
+ * public "flagged: buying or selling pets" banner above the post body that
+ * every viewer sees (PostCard's PetSaleNoticeBanner on the client), for
+ * content Paltuu wants to visibly flag without hiding it.
+ *
+ * Set automatically on create/edit/quote by lib/moderation/petSaleDetection.ts;
+ * this endpoint is the manual path, for the listings that detector misses
+ * (a seller who avoids price and sale language entirely) and for clearing
+ * its false positives. Passing both fields in one call is the "confirmed as
+ * a sale post" verdict: flag it and take it down in a single action.
  */
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const admin = await checkAdmin(req);

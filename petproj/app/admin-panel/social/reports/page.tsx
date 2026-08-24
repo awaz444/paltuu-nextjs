@@ -24,6 +24,7 @@ interface Report {
   post_weighted_score: number;
   post_report_count: number;
   moderation_state: string;
+  content_notice_reason: string | null;
   suspicious_burst_at: string | null;
   author_block_after_report: boolean;
   reporter: Reporter;
@@ -127,6 +128,31 @@ export default function ReportQueuePage() {
       });
       showToast(state === "quarantined" ? "Post quarantined" : "Post restored");
       setReports(prev => prev.map(r => r.post_id === postId ? { ...r, moderation_state: state } : r));
+    } catch { showToast("Failed"); }
+  }
+
+  // The manual half of the pet-sale check: the detector
+  // (lib/moderation/petSaleDetection.ts) only catches listings that use price
+  // or sale language, so a seller who writes around it lands here instead —
+  // usually reported as SCAM or OTHER. Flagging from the queue saves a trip to
+  // the Post Browser, and puts the same public banner on the post that an
+  // auto-flag would.
+  //
+  // Flag only; it deliberately does not hide anything. Taking the post down is
+  // the separate Confirm Hide below, so the two decisions stay independent.
+  async function handleFlagSale(postId: number) {
+    try {
+      const res = await fetch(`/api/v1/admin/social/posts/${postId}/moderate`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notice_reason: "pet_sale" }),
+      });
+      if (!res.ok) { showToast("Failed"); return; }
+      // Every pending report on the same post, not just this row.
+      setReports(prev => prev.map(r =>
+        r.post_id === postId ? { ...r, content_notice_reason: "pet_sale" } : r
+      ));
+      showToast("Flagged as a sale post — banner is now on the post for everyone");
     } catch { showToast("Failed"); }
   }
 
@@ -321,6 +347,23 @@ export default function ReportQueuePage() {
                       className="flex-1 lg:flex-none text-xs px-3 py-2 rounded-lg border border-green-300 text-green-700 hover:bg-green-50 transition-all"
                     >
                       Restore
+                    </button>
+                  )}
+                  {report.content_notice_reason === "pet_sale" ? (
+                    <span
+                      title="This post already carries the public sale banner."
+                      className="flex-1 lg:flex-none text-xs px-3 py-2 rounded-lg bg-purple-50 text-purple-700 text-center"
+                    >
+                      Sale flagged
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleFlagSale(report.post_id)}
+                      disabled={acting === report.report_id}
+                      title="The detector missed this one: mark it as a buying/selling post. The post stays visible, but every viewer sees a 'flagged: buying or selling pets' banner above it."
+                      className="flex-1 lg:flex-none text-xs px-3 py-2 rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-50 disabled:opacity-50 transition-all"
+                    >
+                      Flag: pet sale
                     </button>
                   )}
                   <button

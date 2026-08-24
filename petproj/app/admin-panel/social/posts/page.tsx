@@ -31,7 +31,7 @@ interface Post {
   action_history: ActionLogEntry[];
 }
 
-type StatusFilter = "all" | "untagged" | "quarantined" | "hidden" | "shadow_hidden" | "pet_sale";
+type StatusFilter = "all" | "untagged" | "quarantined" | "hidden" | "shadow_hidden" | "pet_sale_review" | "pet_sale";
 
 type ModerationState = "none" | "quarantined" | "hidden" | "shadow_hidden";
 
@@ -41,8 +41,41 @@ const FILTER_LABELS: Record<StatusFilter, string> = {
   quarantined: "Quarantined",
   hidden: "Hidden",
   shadow_hidden: "Shadow-hidden",
-  pet_sale: "Pet sale notice",
+  pet_sale_review: "⚠ Sale review",
+  pet_sale: "All sale-flagged",
 };
+
+const FILTER_ORDER: StatusFilter[] = [
+  "all", "untagged", "pet_sale_review", "pet_sale", "quarantined", "hidden", "shadow_hidden",
+];
+
+/**
+ * Whether the pet-sale flag on a post was applied by the detector rather than
+ * by a person. Read off the action log the list endpoint already returns —
+ * lib/moderation/petSaleDetection.ts writes `auto_flag:pet_sale` (and
+ * `..._on_edit`) with a NULL admin, while a manual flag from this page writes
+ * `moderate_post:notice:pet_sale` with the admin's id.
+ *
+ * Only used to label the row: an auto-flag is the detector's guess and still
+ * wants a human verdict, a manual one has already had one. The endpoint
+ * returns at most the 5 newest log entries, so on a heavily-moderated post
+ * the flag can fall out of the window and this reads "manual" — the label is
+ * advisory, the "needs review" state below is the one that actually gates the
+ * queue.
+ */
+function isAutoFlagged(post: Post): boolean {
+  const flagEntries = (post.action_history ?? []).filter(
+    e => e.action.startsWith("auto_flag:pet_sale") || e.action.includes("notice:pet_sale"),
+  );
+  // action_history comes back newest-first, so the head is the flag that stands.
+  return flagEntries[0]?.action.startsWith("auto_flag:pet_sale") ?? false;
+}
+
+/** Flagged but nothing has been done about it yet — mirrors the server's `pet_sale_review`. */
+function needsSaleReview(post: Post): boolean {
+  return post.content_notice_reason === "pet_sale"
+    && (!post.moderation_state || post.moderation_state === "none");
+}
 
 export default function PostBrowserPage() {
   const { user, isHydrating } = useAuth();
@@ -128,8 +161,10 @@ export default function PostBrowserPage() {
     } finally { setActingId(null); }
   }
 
-  // Independent of moderation_state / visibility — just a public badge shown
-  // to every viewer (see PostCard's MediaBlock on the client).
+  // Independent of moderation_state / visibility — the post stays exactly as
+  // visible as it was, it just carries a public "flagged: buying or selling
+  // pets" banner above its body that every viewer sees (see PostCard's
+  // PetSaleNoticeBanner on the client).
   async function handleNoticeReason(postId: number, reason: "pet_sale" | null) {
     setActingId(postId);
     try {
@@ -142,7 +177,34 @@ export default function PostBrowserPage() {
       setPosts(prev => prev.map(p =>
         p.post_id === postId ? { ...p, content_notice_reason: reason } : p
       ));
-      showToast(reason ? "Pet-sale notice added — visible to everyone on the post" : "Notice cleared");
+      showToast(reason ? "Sale flag added — banner is now on the post for everyone" : "Sale flag cleared");
+    } finally { setActingId(null); }
+  }
+
+  // The verdict at the end of a sale review, in one action: confirm the flag
+  // (so it stands even if the detector was what put it there) AND take the
+  // post down. Both fields go in a single PATCH so the post can't be left
+  // half-moderated if the second call fails, and so the action log records
+  // one decision rather than two unrelated ones.
+  //
+  // This is the step the composer warning promises the author ("taken down
+  // once a moderator confirms it"), so it should be the obvious button.
+  async function handleConfirmSale(postId: number) {
+    if (!confirm("Confirm this is a buying/selling post?\n\nThe post will be hidden from everyone, the author included.")) return;
+    setActingId(postId);
+    try {
+      const res = await fetch(`/api/v1/admin/social/posts/${postId}/moderate`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state: "hidden", notice_reason: "pet_sale" }),
+      });
+      if (!res.ok) { showToast("Failed"); return; }
+      setPosts(prev => prev.map(p =>
+        p.post_id === postId
+          ? { ...p, content_notice_reason: "pet_sale", moderation_state: "hidden", is_hidden: true, is_shadow_hidden: false }
+          : p
+      ));
+      showToast("Confirmed as a sale post — taken down");
     } finally { setActingId(null); }
   }
 
@@ -191,7 +253,7 @@ export default function PostBrowserPage() {
           className="flex-1 min-w-48 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
         />
         <div className="flex gap-2 flex-wrap">
-          {(["all", "untagged", "quarantined", "hidden", "shadow_hidden", "pet_sale"] as StatusFilter[]).map(s => (
+          {FILTER_ORDER.map(s => (
             <button
               key={s}
               onClick={() => { setStatusFilter(s); setOffset(0); }}
@@ -228,7 +290,21 @@ export default function PostBrowserPage() {
                       <span className="text-xs bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded-full">untagged</span>
                     )}
                     {post.content_notice_reason === "pet_sale" && (
-                      <span className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">pet sale notice</span>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full ${
+                          needsSaleReview(post)
+                            ? "bg-purple-600 text-white font-semibold"
+                            : "bg-purple-50 text-purple-700"
+                        }`}
+                        title={
+                          isAutoFlagged(post)
+                            ? "Flagged automatically by the sale detector on post/edit."
+                            : "Flagged by an admin."
+                        }
+                      >
+                        {isAutoFlagged(post) ? "sale flag (auto)" : "sale flag"}
+                        {needsSaleReview(post) ? " · needs review" : ""}
+                      </span>
                     )}
                     {post.report_count > 0 && (
                       <span className="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded-full">{post.report_count} reports</span>
@@ -266,21 +342,36 @@ export default function PostBrowserPage() {
                   <Link href={`/admin-panel/social/tagging?post_id=${post.post_id}`} className="text-xs text-center px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:border-primary hover:text-primary transition-all">
                     Edit tags
                   </Link>
-                  {/* Independent of moderation_state — a public notice that doesn't hide the post. */}
+                  {/* ── Sale flag ──
+                       The flag itself never changes visibility; it only puts
+                       the public banner on the post. Confirming a flagged
+                       post is what takes it down (handleConfirmSale). ── */}
                   {post.content_notice_reason === "pet_sale" ? (
-                    <button
-                      onClick={() => handleNoticeReason(post.post_id, null)}
-                      disabled={actingId === post.post_id}
-                      title="Remove the public 'Paltuu doesn't condone this' badge from this post."
-                      className="text-xs px-3 py-1.5 rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-50 disabled:opacity-50 transition-all"
-                    >
-                      Clear pet-sale notice
-                    </button>
+                    <>
+                      {needsSaleReview(post) && (
+                        <button
+                          onClick={() => handleConfirmSale(post.post_id)}
+                          disabled={actingId === post.post_id}
+                          title="Confirm this really is a buying/selling post: keeps the flag and hides the post from everyone, the author included."
+                          className="text-xs px-3 py-1.5 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 transition-all"
+                        >
+                          Confirm sale → take down
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleNoticeReason(post.post_id, null)}
+                        disabled={actingId === post.post_id}
+                        title="False positive — remove the public sale banner. Leaves the post's visibility untouched."
+                        className="text-xs px-3 py-1.5 rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-50 disabled:opacity-50 transition-all"
+                      >
+                        Not a sale — clear
+                      </button>
+                    </>
                   ) : (
                     <button
                       onClick={() => handleNoticeReason(post.post_id, "pet_sale")}
                       disabled={actingId === post.post_id}
-                      title="Post stays fully visible to everyone, but shows a public 'Paltuu doesn't condone this' badge on its media."
+                      title="Mark as a buying/selling post. The post stays fully visible, but every viewer sees a 'flagged: buying or selling pets' banner above it."
                       className="text-xs px-3 py-1.5 rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-50 disabled:opacity-50 transition-all"
                     >
                       Flag: pet sale

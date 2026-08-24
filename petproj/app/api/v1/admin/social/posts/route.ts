@@ -7,6 +7,12 @@ export const dynamic = "force-dynamic";
 /**
  * GET /api/v1/admin/social/posts?limit&offset&search&status
  * status: all | untagged | quarantined | hidden | shadow_hidden
+ *       | pet_sale | pet_sale_review
+ *
+ * `pet_sale` is every post carrying the public sale notice, whatever has
+ * since been done with it. `pet_sale_review` is the working queue: the ones
+ * still fully visible, i.e. flagged (usually automatically, on create) and
+ * not yet confirmed or cleared by a human.
  */
 export async function GET(req: NextRequest) {
   const admin = await checkAdmin(req);
@@ -39,6 +45,12 @@ export async function GET(req: NextRequest) {
       conditions.push(`sp.is_shadow_hidden = true`);
     } else if (status === "pet_sale") {
       conditions.push(`sp.content_notice_reason = 'pet_sale'`);
+    } else if (status === "pet_sale_review") {
+      conditions.push(`sp.content_notice_reason = 'pet_sale'`);
+      // Untouched since the flag went on: taking the post down (or restoring
+      // it) is what closes the review, and both move moderation_state off
+      // 'none'. Older rows predate the column's default, hence the IS NULL.
+      conditions.push(`(sp.moderation_state IS NULL OR sp.moderation_state = 'none')`);
     }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -93,7 +105,7 @@ export async function GET(req: NextRequest) {
          LEFT JOIN content_tags ct ON ct.tag_id = pct.tag_id
          ${where}
          GROUP BY sp.post_id, u.name, u.social_username, r.report_count, r.report_weighted_score
-         ORDER BY sp.created_at DESC
+         ORDER BY sp.created_at ${status === "pet_sale_review" ? "ASC" : "DESC"}
          LIMIT $${p} OFFSET $${p + 1}`,
         [...params, limit, offset]
       ),

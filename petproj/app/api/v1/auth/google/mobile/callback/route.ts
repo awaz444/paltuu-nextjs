@@ -42,6 +42,15 @@ export async function GET(req: NextRequest) {
     }
 
     // 1. Exchange authorization code for tokens
+    //
+    // Node's global fetch has no default timeout, so without an explicit one
+    // a stalled response from Google here hangs this handler indefinitely —
+    // no error, no redirect, nothing ever sent back. The mobile app's Custom
+    // Tab just sits on an endless spinner (the RN-side 45s race in
+    // welcome.tsx can't help: it only gives up on our own promise, it can't
+    // force-close the Custom Tab on Android, so the tab itself keeps
+    // spinning even after the app moves on). Bounding this guarantees we
+    // always send *something* back.
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -52,6 +61,7 @@ export async function GET(req: NextRequest) {
         redirect_uri: redirectUri,
         grant_type: 'authorization_code',
       }).toString(),
+      signal: AbortSignal.timeout(10_000),
     });
 
     if (!tokenResponse.ok) {
@@ -65,6 +75,7 @@ export async function GET(req: NextRequest) {
     // 2. Fetch user info from Google
     const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
+      signal: AbortSignal.timeout(10_000),
     });
 
     if (!userInfoResponse.ok) {
@@ -140,7 +151,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${deepLinkBase}?${params.toString()}`);
 
   } catch (error) {
-    console.error('[Mobile Google Callback] Unhandled error:', error);
+    const isTimeout = error instanceof Error && error.name === 'TimeoutError';
+    console.error(
+      isTimeout
+        ? '[Mobile Google Callback] Timed out waiting on Google (token exchange or userinfo)'
+        : '[Mobile Google Callback] Unhandled error:',
+      error
+    );
     return NextResponse.redirect(`${deepLinkBase}?error=${encodeURIComponent('Authentication failed. Please try again.')}`);
   }
 }

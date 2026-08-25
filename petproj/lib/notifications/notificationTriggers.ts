@@ -620,6 +620,13 @@ export const ExpressVetNotifications = {
   /**
    * New pending_dispatch request — sent to one on-duty dispatcher (called once per
    * on-duty dispatcher, not a broadcast helper, since createAndSend targets one user).
+   *
+   * skipPush: true — the actual alerting for this event is the full-screen ring push
+   * (see lib/expressVet/dispatcherCallPush.ts), sent separately to the dispatcher-specific
+   * token. Without this, the dispatcher got a second, quieter notification for the exact
+   * same job arriving at the same time via a different (general, non-dispatcher-specific)
+   * token, which just read as noise/confusion alongside the ring. This still writes the
+   * bell/notifications-list row so there's a persisted record after the ring is dismissed.
    */
   async onNewRequest(dispatcherId: number, requestId: number | string, categoryLabel: string) {
     return NotificationService.createAndSend({
@@ -630,6 +637,7 @@ export const ExpressVetNotifications = {
       customData: {
         category_label: categoryLabel,
       },
+      skipPush: true,
     });
   },
 

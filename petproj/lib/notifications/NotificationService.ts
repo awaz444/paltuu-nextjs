@@ -23,6 +23,12 @@ interface CreateNotificationParams {
   commentId?: number | null;
   imageUrl?: string;
   customData?: Record<string, any>;
+  // Still writes the bell/notifications-list row, but skips sendPushToUser — for triggers
+  // that already have their own, more specific push covering the same event (e.g. the
+  // Vets at Home dispatcher ring, which targets the dispatcher-specific token in
+  // express_vet_dispatcher_status rather than the general one this class pushes to), where
+  // this class's push would otherwise arrive as a redundant second, quieter notification.
+  skipPush?: boolean;
 }
 
 interface NotificationRow {
@@ -139,8 +145,9 @@ export class NotificationService {
 
       const notification = notificationResult.rows[0] as NotificationRow;
 
-      // 5. Send FCM push (only if userId is set)
-      if (params.userId) {
+      // 5. Send FCM push (only if userId is set and this trigger doesn't already have its
+      // own dedicated push covering the same event)
+      if (params.userId && !params.skipPush) {
         await this.sendPushToUser(params.userId, notification, template);
       }
 

@@ -47,7 +47,7 @@ export const LIMITS = {
     // manufacturing jobs to self-assign (see lib/expressVet/selfDealGuard.ts). Tight on
     // purpose: legitimate users never come near it, and each request rings every on-duty
     // dispatcher's phone, so the abuse ceiling matters more than headroom here.
-    EXPRESS_VET_REQUEST:  [5,   3600],  // 5 Vets at Home requests per hour
+    EXPRESS_VET_REQUEST:  [20,  3600],  // 20 Vets at Home requests per hour (bumped from 5 for active testing — dial back before wider rollout)
 } as const;
 
 type LimitPreset = (typeof LIMITS)[keyof typeof LIMITS];

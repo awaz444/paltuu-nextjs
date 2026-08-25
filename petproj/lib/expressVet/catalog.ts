@@ -3,8 +3,8 @@
 // Used by both the client-facing config endpoint and request creation's server-side validation.
 
 export const EXPRESS_VET_CATEGORY_LABELS: Record<string, string> = {
-  express_vet: "Express Vet",
-  normal_vet: "Normal Vet",
+  express_vet: "Urgent Visit",
+  normal_vet: "Scheduled Visit",
   neutering: "Neutering",
   spaying: "Spaying",
   vaccination: "Vaccination",

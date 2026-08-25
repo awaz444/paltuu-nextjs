@@ -164,10 +164,16 @@ export async function sendDispatcherVoipPush(
     req.on("end", () => {
       client.close();
       if (responseStatus !== 200) {
-        console.error(`❌ APNs VoIP push failed (${responseStatus}):`, responseBody);
+        console.error(`❌ APNs VoIP push failed (${responseStatus}):`, responseBody, {
+          host: APNS_HOST,
+          topic: `${topicBundleId}.voip`,
+        });
         resolve(false);
         return;
       }
+      // Temporary diagnostic logging — see push-token/route.ts for why. Confirms which
+      // gateway/topic a successful send actually used.
+      console.log("[apns-voip] sent", { host: APNS_HOST, topic: `${topicBundleId}.voip` });
       resolve(true);
     });
     req.on("error", (err) => {

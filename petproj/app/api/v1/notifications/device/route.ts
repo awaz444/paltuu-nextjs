@@ -130,12 +130,24 @@ export async function DELETE(req: NextRequest) {
     // receiving full-screen VoIP/CallKit incoming-job alerts for that account indefinitely,
     // regardless of which account is actually logged into the app now. Harmless no-op for a
     // non-dispatcher account (no row / already-null fields).
-    await db.query(
+    const cleared = await db.query(
       `UPDATE express_vet_dispatcher_status
        SET voip_push_token = NULL, fcm_push_token = NULL, push_platform = NULL, bundle_id = NULL
-       WHERE dispatcher_id = $1`,
+       WHERE dispatcher_id = $1
+       RETURNING bundle_id IS NOT NULL OR voip_push_token IS NOT NULL OR fcm_push_token IS NOT NULL AS had_row`,
       [parseInt(userId)]
     );
+
+    // Temporary diagnostic logging — see push-token/route.ts. This DELETE nulls the same
+    // globally-keyed row, so an unexpected logout (e.g. the 401 auto-logout interceptor)
+    // on any device signed into a dispatcher account can silently kill ringing for it.
+    if (cleared.rowCount) {
+      console.log("[device-unregister] cleared dispatcher push row", {
+        userId: parseInt(userId),
+        ip: req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? null,
+        userAgent: req.headers.get("user-agent"),
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

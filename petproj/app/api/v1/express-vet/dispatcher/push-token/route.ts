@@ -37,6 +37,11 @@ export async function POST(req: NextRequest) {
 
     const dispatcherId = Number(dispatcher.id || dispatcher.user_id);
 
+    const prior = await db.query(
+      `SELECT bundle_id, push_platform FROM express_vet_dispatcher_status WHERE dispatcher_id = $1`,
+      [dispatcherId]
+    );
+
     const result = await db.query(
       `INSERT INTO express_vet_dispatcher_status (dispatcher_id, push_platform, voip_push_token, fcm_push_token, bundle_id, updated_at)
        VALUES ($1, $2, $3, $4, $5, now())
@@ -51,6 +56,24 @@ export async function POST(req: NextRequest) {
        RETURNING *`,
       [dispatcherId, platform, voipToken ?? null, fcmToken ?? null, bundleId ?? null]
     );
+
+    // Temporary diagnostic logging — this row is keyed globally per dispatcher_id (not
+    // per device), so any client signed into the same account can silently overwrite
+    // another device's registration. Logging every write lets us catch which device/IP
+    // does it next time the ringing alert breaks. Remove once that's root-caused.
+    const priorRow = prior.rows[0];
+    console.log("[push-token] registration", {
+      dispatcherId,
+      platform,
+      bundleId: bundleId ?? null,
+      priorBundleId: priorRow?.bundle_id ?? null,
+      priorPlatform: priorRow?.push_platform ?? null,
+      bundleIdChanged: !!priorRow && priorRow.bundle_id !== (bundleId ?? priorRow.bundle_id),
+      ip: req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? null,
+      userAgent: req.headers.get("user-agent"),
+      hasVoipToken: !!voipToken,
+      hasFcmToken: !!fcmToken,
+    });
 
     return NextResponse.json({ status: result.rows[0] });
   } catch (error) {

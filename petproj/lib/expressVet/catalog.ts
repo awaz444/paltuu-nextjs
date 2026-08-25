@@ -56,17 +56,6 @@ export function parseGroomingCart(subService: string | null | undefined): string
     .filter(Boolean);
 }
 
-// Dispatchers can never manually go off duty — they're alertable any time the phone should
-// ring, which is 12pm-12am Pakistan time (a 12-hour window: noon up to, but not including,
-// midnight). Outside that window nobody gets pinged for a new request, regardless of mute
-// state; the request still lands in the inbox for whenever a dispatcher next checks the app.
-export function isWithinDispatcherAlertHoursPKT(now: Date = new Date()): boolean {
-  const pktHour = Number(
-    new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Karachi", hour: "numeric", hour12: false }).format(now)
-  );
-  return pktHour >= 12 && pktHour < 24;
-}
-
 // Must match the CHECK constraint on express_vet_reviews.addon_reason_tags in
 // migrations/016_express_vet_schema.sql exactly.
 export const EXPRESS_VET_ADDON_REASON_TAGS = [

@@ -1252,7 +1252,7 @@ model express_vet_providers {
   years_experience         Int?
   qualifications           String?
   categories               String[] // validated against the category value set at the app layer + a CHECK constraint (see migration)
-  phone_number             String?  @db.VarChar(30) // dispatcher's own reference only, never shown to client
+  phone_number             String?  @db.VarChar(30) // exposed to the client post-assignment as provider_phone_number, see app/api/v1/express-vet/requests/[id]/route.ts
   is_active                Boolean  @default(true) // no upfront vetting — flip false reactively on bad reviews
   rating                   Decimal? @db.Decimal(3, 2)
   total_reviews            Int      @default(0)

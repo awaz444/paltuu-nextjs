@@ -86,11 +86,8 @@ const HeroSection = () => {
                             {/* Tagline */}
                             <h2 className="text-xl md:text-xl lg:text-2xl font-medium mb-0 md:mb-1">
                                 Get the Best for Your Pet —{" "}
-                                {/* <Link href="/bazaar" className="underline decoration-gray-400 hover:decoration-black text-black">
-                                    Shop Bazaar
-                                </Link> */}
-                                <Link href="/marketplace" className="underline decoration-gray-400 hover:decoration-black text-black">
-                                    Shop Now
+                                <Link href="/browse-pets" className="underline decoration-gray-400 hover:decoration-black text-black">
+                                    Meet Them Today
                                 </Link>
                             </h2>
                             <p className="text-base md:text-md text-gray-700 mb-6 mt-2 md:mb-8 max-w-lg">
@@ -102,7 +99,7 @@ const HeroSection = () => {
                                 <Link href="/pet-care" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
                                     vets in your city
                                 </Link>
-                                , and shop pet products online across Karachi, Lahore, Islamabad, and nationwide.
+                                , and join a growing community documenting every pet across Karachi, Lahore, Islamabad, and nationwide.
                             </p>
                         </div>
                     </div>
@@ -173,10 +170,11 @@ const HeroSection = () => {
                                         </Link>.
                                     </li>
                                     <li>
-                                        <Link href="/marketplace" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
-                                            Shop pet food & accessories
+                                        Join{" "}
+                                        <Link href="/browse-pets" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
+                                            Pakistan's largest pet community
                                         </Link>{" "}
-                                        online with nationwide delivery.
+                                        and help us document every pet nationwide.
                                     </li>
                                     <li>
                                         <Link href="/pet-care" className="text-black underline decoration-gray-400 hover:decoration-black font-medium">
@@ -294,13 +292,13 @@ const HeroSection = () => {
                             Paltuu.pk provides complete pet care solutions in
                             one place, from <strong>pet adoption</strong> to{" "}
                             <strong>
-                                pet products and veterinary services
+                                veterinary care and reuniting lost pets
                             </strong>
                         </p>
                     </div>
 
                     {/* Features Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {[
                             {
                                 icon: faDog,
@@ -310,46 +308,47 @@ const HeroSection = () => {
                                 delay: "100",
                                 buttonText: "Adopt Now",
                             },
-                            {
-                                icon: faCat,
-                                title: "Cat Food",
-                                text: "Premium cat food, treats & nutrition for your feline",
-                                link: "/marketplace/cat-food",
-                                delay: "150",
-                                buttonText: "Shop Cat Food",
-                            },
-                            {
-                                icon: faDog,
-                                title: "Dog Food",
-                                text: "Quality dog food & treats for your canine",
-                                link: "/marketplace/dog-food",
-                                delay: "200",
-                                buttonText: "Shop Dog Food",
-                            },
-                            {
-                                icon: faShoppingCart,
-                                title: "Pet Litter",
-                                text: "Cat litter, training pads & hygiene products",
-                                link: "/marketplace/litter",
-                                delay: "250",
-                                buttonText: "Buy Litter",
-                            },
-                            {
-                                icon: faHeart,
-                                title: "Pet Grooming",
-                                text: "Shampoos, brushes & grooming essentials",
-                                link: "/marketplace?category=grooming", // Phase 1: was /bazaar?category=grooming
-                                delay: "300",
-                                buttonText: "Shop Grooming",
-                            },
-                            {
-                                icon: faGift,
-                                title: "Pet Accessories",
-                                text: "Toys, collars, beds & fun accessories for pets",
-                                link: "/marketplace?category=accessories", // Phase 1: was /bazaar?category=accessories
-                                delay: "350",
-                                buttonText: "Shop Accessories",
-                            },
+                            // Paused: pet products de-emphasized while the site focuses on adoption/care/community
+                            // {
+                            //     icon: faCat,
+                            //     title: "Cat Food",
+                            //     text: "Premium cat food, treats & nutrition for your feline",
+                            //     link: "/marketplace/cat-food",
+                            //     delay: "150",
+                            //     buttonText: "Shop Cat Food",
+                            // },
+                            // {
+                            //     icon: faDog,
+                            //     title: "Dog Food",
+                            //     text: "Quality dog food & treats for your canine",
+                            //     link: "/marketplace/dog-food",
+                            //     delay: "200",
+                            //     buttonText: "Shop Dog Food",
+                            // },
+                            // {
+                            //     icon: faShoppingCart,
+                            //     title: "Pet Litter",
+                            //     text: "Cat litter, training pads & hygiene products",
+                            //     link: "/marketplace/litter",
+                            //     delay: "250",
+                            //     buttonText: "Buy Litter",
+                            // },
+                            // {
+                            //     icon: faHeart,
+                            //     title: "Pet Grooming",
+                            //     text: "Shampoos, brushes & grooming essentials",
+                            //     link: "/marketplace?category=grooming", // Phase 1: was /bazaar?category=grooming
+                            //     delay: "300",
+                            //     buttonText: "Shop Grooming",
+                            // },
+                            // {
+                            //     icon: faGift,
+                            //     title: "Pet Accessories",
+                            //     text: "Toys, collars, beds & fun accessories for pets",
+                            //     link: "/marketplace?category=accessories", // Phase 1: was /bazaar?category=accessories
+                            //     delay: "350",
+                            //     buttonText: "Shop Accessories",
+                            // },
                             {
                                 icon: faStethoscope,
                                 title: "Find Vets",
@@ -415,6 +414,127 @@ const HeroSection = () => {
                 </div>
             </section>
 
+            {/* Pet Community & App Download Section */}
+            <section className="py-16 px-6 lg:px-20 bg-white">
+                <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    {/* Copy + App Badges */}
+                    <div className="text-center md:text-left">
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                            Pakistan's Largest <span className="text-primary">Pet Community</span>
+                        </h2>
+                        <p className="text-gray-600 text-lg mb-6 max-w-xl mx-auto md:mx-0">
+                            Our mission is to document every pet in Pakistan and build a
+                            complete pet ecosystem — a place where every dog, cat, and
+                            companion animal is seen, cared for, and never lost again. Adopt,
+                            find trusted home vets, report lost pets, and connect with pet
+                            lovers nationwide, all from the Paltuu app.
+                        </p>
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                            <Link
+                                href="https://play.google.com/store/apps/details?id=com.paltuu.app"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Get Paltuu on Google Play"
+                            >
+                                <Image
+                                    src="/app-download-badges/google-play-badge.svg"
+                                    alt="Get it on Google Play"
+                                    width={180}
+                                    height={54}
+                                />
+                            </Link>
+                            {/* App Store link coming soon — wrap in <Link href="..."> once available */}
+                            <Image
+                                src="/app-download-badges/app-store-badge.svg"
+                                alt="Download on the App Store — coming soon"
+                                width={160}
+                                height={54}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Pet Identity Card — web port of the app's PetIdCard, showing a real documented pet */}
+                    <div className="flex justify-center">
+                        <div
+                            className="relative w-full max-w-sm bg-white rounded-[18px] border-[1.5px] border-[rgba(160,48,72,0.55)] overflow-hidden shadow-lg"
+                            style={{ aspectRatio: "1.586" }}
+                        >
+                            {/* Header band */}
+                            <div className="bg-primary flex items-center justify-between px-3.5 py-3">
+                                <img
+                                    src="paltuu bilkul tight.svg"
+                                    alt="Paltuu"
+                                    className="h-5 w-auto brightness-0 invert"
+                                />
+                                <span className="font-bold text-white text-sm tracking-wide">
+                                    Pet Identity Card
+                                </span>
+                            </div>
+
+                            {/* Body */}
+                            <div className="flex px-3.5 py-3.5 gap-2.5">
+                                {/* Fields column */}
+                                <div className="flex-1 flex flex-col justify-center gap-1.5">
+                                    <div>
+                                        <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Name</p>
+                                        <p className="text-black text-[13px] font-bold">Lino</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Parent's Name</p>
+                                        <p className="text-black text-[13px] font-bold">raahim hussain</p>
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <div className="flex-1 flex flex-col gap-1.5">
+                                            <div>
+                                                <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Gender</p>
+                                                <p className="text-black text-[13px] font-bold">M</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Identity Number</p>
+                                                <p className="text-black text-[13px] font-bold">000-000-5</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Date of Issue</p>
+                                                <p className="text-black text-[13px] font-bold">13.07.2026</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex-[1.15] flex flex-col gap-1.5">
+                                            <div>
+                                                <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Country of Stay</p>
+                                                <p className="text-black text-[13px] font-bold">Pakistan</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Date of Birth</p>
+                                                <p className="text-black text-[13px] font-bold">19.04.2025</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Date of Expiry</p>
+                                                <p className="text-black text-[13px] font-bold">13.07.2036</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Photo column */}
+                                <div className="w-[92px] flex flex-col items-end">
+                                    <img
+                                        src="https://djw7hbeqkm7bf.cloudfront.net/posts/5deca4fc-0b26-4a9a-8096-3df02ce69311.jpg"
+                                        alt="Lino, a Persian cat documented on Paltuu"
+                                        className="w-[92px] h-[92px] rounded-[10px] border border-[rgba(160,48,72,0.55)] object-cover bg-[#FDF0F2]"
+                                    />
+                                    <div className="w-[92px] mt-auto pt-1 flex flex-col items-center">
+                                        <div className="w-full border-b border-black mb-0.5" />
+                                        <span className="text-black text-[7px] font-medium tracking-wide">
+                                            Holder's Signature
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* Impact / Numbers Section */}
             <section className="py-12 px-6 lg:px-20 bg-gray-50">
                 <div className="max-w-6xl mx-auto">
@@ -427,14 +547,13 @@ const HeroSection = () => {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6">
                         {[
-                            { count: "2000+", label: "Active Users" },
-                            { count: "842", label: "Happy Adopters" },
-                            { count: "8", label: "Rescue Partners" },
-                            { count: "1000+", label: "Animals Helped" },
+                            { count: "4000+", label: "Active Users" },
+                            { count: "1574", label: "Happy Adopters" },
+                            { count: "2000+", label: "Animals Helped" },
                             { count: "891", label: "Critical Rescues" },
-                            { count: "798", label: "Forever Homes" },
+                            { count: "972", label: "Forever Homes" },
                         ].map((stat, index) => (
                             <div key={index} className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col items-center justify-center text-center hover:-translate-y-1 transition-transform duration-300">
                                 <span className="text-3xl lg:text-4xl font-extrabold text-primary mb-2">
@@ -475,7 +594,7 @@ const HeroSection = () => {
                             To revolutionize pet care in Pakistan by making{" "}
                             <span className="font-semibold text-gray-900">pet adoption</span>,{" "}
                             <span className="font-semibold text-gray-900">veterinary care</span>, and{" "}
-                            <span className="font-semibold text-gray-900">pet products</span>{" "}
+                            <span className="font-semibold text-gray-900">a connected pet community</span>{" "}
                             easily accessible. Paltuu.pk connects pet lovers in{" "}
                             <span className="font-semibold text-gray-900">Karachi, Lahore, Islamabad</span>{" "}
                             and beyond with trusted services.
@@ -523,26 +642,20 @@ const HeroSection = () => {
                             We envision a compassionate Pakistan where{" "}
                             <span className="font-semibold text-gray-900">every pet finds a loving home</span>{" "}
                             and owners can access{" "}
-                            <span className="font-semibold text-gray-900">food, grooming, and healthcare</span>{" "}
+                            <span className="font-semibold text-gray-900">veterinary care and a caring community</span>{" "}
                             through trusted platforms. Paltuu.pk makes pet care simple, reliable, and accessible for everyone.
                         </p>
 
                         {/* Visible Micro-CTAs */}
                         <div className="flex flex-wrap gap-3 mt-auto pt-4 border-t border-primary/10 justify-center">
-                            {/* Phase 1: Bazaar paused — was linking to /bazaar */}
-                            {/* <Link
-                                href="/bazaar"
-                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
-                            >
-                                <FontAwesomeIcon icon={faShoppingCart} className="mr-2 text-sm" />
-                                <span className="whitespace-nowrap">Shop Bazaar</span>
-                            </Link> */}
                             <Link
-                                href="/marketplace"
+                                href="https://play.google.com/store/apps/details?id=com.paltuu.app"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
                             >
-                                <FontAwesomeIcon icon={faShoppingCart} className="mr-2 text-sm" />
-                                <span className="whitespace-nowrap">Shop Now</span>
+                                <FontAwesomeIcon icon={faUsers} className="mr-2 text-sm" />
+                                <span className="whitespace-nowrap">Get the App</span>
                             </Link>
                             <Link
                                 href="/lost-and-found"

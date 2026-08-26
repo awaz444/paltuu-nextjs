@@ -17,12 +17,8 @@ const FAQS = [
         q: "Which cities in Pakistan does Paltuu serve?",
         a: (
             <>
-                Paltuu is most active in Karachi, Lahore, and Islamabad, with growing listings across
-                Rawalpindi, Faisalabad, and other cities nationwide. Pet product orders on the{" "}
-                <Link href="/marketplace" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
-                    marketplace
-                </Link>{" "}
-                ship across Pakistan.
+                Paltuu is most active in Karachi, Lahore, and Islamabad, with growing listings and
+                community members across Rawalpindi, Faisalabad, and other cities nationwide.
             </>
         ),
     },
@@ -53,15 +49,16 @@ const FAQS = [
         ),
     },
     {
-        q: "Does Paltuu deliver pet food and products nationwide?",
+        q: "Is there a Paltuu mobile app?",
         a: (
             <>
-                Yes. The{" "}
-                <Link href="/marketplace" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
-                    Paltuu marketplace
+                Yes. The Paltuu app is available now on{" "}
+                <Link href="https://play.google.com/store/apps/details?id=com.paltuu.app" target="_blank" rel="noopener noreferrer" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
+                    Google Play
                 </Link>{" "}
-                ships pet food, litter, and accessories from trusted brands like Royal Canin, Pedigree,
-                and Whiskas across Pakistan.
+                for Android, with an iOS version coming soon. The app lets you adopt pets, connect
+                with verified home vets, report lost pets, and be part of our mission to document
+                every pet in Pakistan.
             </>
         ),
     },

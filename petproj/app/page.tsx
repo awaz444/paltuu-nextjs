@@ -7,7 +7,7 @@ import { getAllBlogsMetadata } from "@/lib/mdx";
 export const metadata: Metadata = {
   title: "Pet Adoption Pakistan — Adopt Dogs & Cats",
   description:
-    "Paltuu (also spelled Paltu or Paaltuu) is Pakistan's first pet super app and #1 pet adoption platform. Adopt dogs, cats, puppies, and kittens, connect with verified vets, and shop pet products in Karachi, Lahore, Islamabad, and across Pakistan. Join our growing pet community.",
+    "Paltuu (also spelled Paltu or Paaltuu) is Pakistan's first pet super app and #1 pet adoption platform. Adopt dogs, cats, puppies, and kittens, connect with verified home vets, and join Pakistan's largest pet community in Karachi, Lahore, Islamabad, and across Pakistan. Download the app on Android now.",
   keywords: [
     "paltuu",
     "paltu",
@@ -39,11 +39,13 @@ export const metadata: Metadata = {
     "pet care pakistan",
     "pakistan pet app",
     "pet community pakistan",
+    "paltuu app",
+    "pet community app pakistan",
   ],
   openGraph: {
     title: "Pet Adoption Pakistan — Adopt Dogs & Cats | Paltuu",
     description:
-      "Adopt pets, find verified vets, shop premium pet products, and connect with the pet community across Pakistan. Paltuu.pk is Pakistan's first pet super app — serving Karachi, Lahore, and Islamabad.",
+      "Adopt pets, find verified home vets, and join Pakistan's largest pet community. Paltuu.pk is Pakistan's first pet super app — serving Karachi, Lahore, and Islamabad.",
     url: "https://www.paltuu.pk",
     siteName: "Paltuu.pk",
     type: "website",
@@ -52,7 +54,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Pet Adoption Pakistan — Adopt Dogs & Cats | Paltuu",
     description:
-      "Adopt pets, find vets, shop pet products, and join Pakistan's first pet super app.",
+      "Adopt pets, find vets, and join Pakistan's largest pet community. Download Pakistan's first pet super app.",
   },
   alternates: {
     canonical: "https://www.paltuu.pk",

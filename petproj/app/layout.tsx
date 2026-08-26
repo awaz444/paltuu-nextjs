@@ -142,6 +142,12 @@ export default function RootLayout({
             gtag('config', 'G-724EM6FN42');
           `}
         </Script>
+
+        {/* Google Preferred Sources button */}
+        <Script
+          strategy="afterInteractive"
+          src="https://news.google.com/swg/js/v1/publisher.js"
+        />
       </head>
       <body className={`${montserrat.className} flex flex-col min-h-screen`}>
         <AppClientWrapper>

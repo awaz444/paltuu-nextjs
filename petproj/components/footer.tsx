@@ -84,6 +84,14 @@ export default function Footer() {
               <Facebook className="w-5 h-5 hover:text-gray-300 transition" />
             </Link>
           </div>
+
+          {/* Google Preferred Sources button */}
+          <div
+            className="flex justify-center md:justify-start mt-5"
+            dangerouslySetInnerHTML={{
+              __html: `<div google-add-preferred-source-btn data-theme="dark"></div>`,
+            }}
+          />
         </div>
 
         {/* Col 2 - Explore */}

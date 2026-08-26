@@ -89,7 +89,7 @@ export default function Footer() {
           <div
             className="flex justify-center md:justify-start mt-5"
             dangerouslySetInnerHTML={{
-              __html: `<div google-add-preferred-source-btn data-theme="dark"></div>`,
+              __html: `<div google-add-preferred-source-btn data-theme="light"></div>`,
             }}
           />
         </div>

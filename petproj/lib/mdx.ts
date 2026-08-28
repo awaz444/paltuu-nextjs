@@ -3,6 +3,7 @@ import path from 'path';
 import matter from 'gray-matter';
 import { compileMDX } from 'next-mdx-remote/rsc';
 import readingTime from 'reading-time';
+import remarkGfm from 'remark-gfm';
 
 // Export types from separate file (safe for client components)
 export type { BlogMetadata, BlogPost, BlogFAQItem } from './mdx-types';
@@ -127,6 +128,9 @@ export async function getBlogBySlug(slug: string) {
             options: {
                 parseFrontmatter: false,
                 mdxOptions: {
+                    // GitHub-flavored markdown — without this, pipe tables in
+                    // posts render as literal `| Service | Cost |` paragraphs.
+                    remarkPlugins: [remarkGfm],
                     development: process.env.NODE_ENV === 'development',
                 },
             },

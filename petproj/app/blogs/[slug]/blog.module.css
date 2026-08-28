@@ -57,6 +57,105 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
+.content ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #374151;
+}
+
+/* Tables come from GFM pipe syntax (remark-gfm in lib/mdx.ts). MDX emits a
+   bare <table> with no wrapper element, so the horizontal scroll for wide
+   pricing tables has to live on the table itself (see the media query below). */
+.content table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+    color: #374151;
+    margin: 2rem 0;
+}
+
+.content thead {
+    background-color: #F9FAFB;
+}
+
+.content th {
+    text-align: left;
+    font-weight: 700;
+    color: #111827;
+    padding: 0.875rem 1rem;
+    border-bottom: 2px solid var(--primary-color, #A03048);
+    white-space: nowrap;
+}
+
+.content td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #E5E7EB;
+    line-height: 1.6;
+}
+
+.content tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.content tbody tr:nth-child(even) {
+    background-color: #FAFAFA;
+}
+
+@media (max-width: 640px) {
+    .content table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        font-size: 0.9375rem;
+    }
+}
+
+/* App download CTA. MDX content can't reference hashed CSS-module class names,
+   so these are declared :global and used as plain className strings in .mdx. */
+.content :global(.appCtaRow) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 2rem 0;
+}
+
+.content :global(.appCtaRow a) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    border-radius: 9999px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s, transform 0.2s;
+}
+
+.content :global(.appCtaRow a:hover) {
+    transform: translateY(-1px);
+}
+
+.content :global(.appCtaPrimary) {
+    background-color: var(--primary-color, #A03048);
+    color: #ffffff;
+}
+
+.content :global(.appCtaPrimary:hover) {
+    background-color: #111827;
+}
+
+.content :global(.appCtaSecondary) {
+    background-color: #F3F4F6;
+    color: #111827;
+    border: 1px solid #E5E7EB;
+}
+
+.content :global(.appCtaSecondary:hover) {
+    background-color: #E5E7EB;
+}
+
 /* Sidebar Sticky */
 .sidebar {
     position: sticky;

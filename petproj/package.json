@@ -87,6 +87,7 @@
     "rehype-autolink-headings": "^7.1.0",
     "rehype-highlight": "^7.0.2",
     "rehype-slug": "^6.0.0",
+    "remark-gfm": "^4.0.1",
     "rimraf": "^6.0.1",
     "sharp": "^0.34.5",
     "socket.io": "^4.8.3",

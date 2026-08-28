@@ -448,14 +448,20 @@ const HeroSection = () => {
                                     className="h-12 w-auto"
                                 />
                             </Link>
-                            {/* App Store link coming soon — wrap in <Link href="..."> once available */}
-                            <Image
-                                src="/app-download-badges/app-store-badge.svg"
-                                alt="Download on the App Store — coming soon"
-                                width={144}
-                                height={48}
-                                className="h-12 w-auto"
-                            />
+                            <Link
+                                href="https://apps.apple.com/pk/app/paltuu/id6789732258"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Download Paltuu on the App Store"
+                            >
+                                <Image
+                                    src="/app-download-badges/app-store-badge.svg"
+                                    alt="Download on the App Store"
+                                    width={144}
+                                    height={48}
+                                    className="h-12 w-auto"
+                                />
+                            </Link>
                         </div>
                     </div>
 

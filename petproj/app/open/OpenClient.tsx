@@ -114,7 +114,7 @@ export default function OpenClient() {
 
             <div className="flex flex-col sm:flex-row gap-3 w-full justify-center mt-2">
               <a
-                href="https://apps.apple.com/app/paltuu/id6740698188"
+                href="https://apps.apple.com/pk/app/paltuu/id6789732258"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center bg-black hover:bg-black/90 transition-colors px-6 py-3 rounded-xl border border-white/10 shadow-lg flex-1"

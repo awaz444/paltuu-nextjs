@@ -8,6 +8,7 @@ import {
   EXPRESS_VET_CATEGORY_LABELS,
   EXPRESS_VET_GROOMING_ITEM_KEYS,
   parseGroomingCart,
+  isWithinDispatcherAlertHoursPKT,
 } from "@/lib/expressVet/catalog";
 import { ExpressVetNotifications } from "@/lib/notifications";
 import { emitExpressVetNewRequest } from "@/utils/realtimeEmitter";
@@ -34,7 +35,9 @@ export async function POST(req: NextRequest) {
     // Every accepted request (in-hours) rings every alertable dispatcher's phone, so burst
     // creation is both a spam vector and the setup half of a self-dealing pattern (create jobs on one
     // account, claim them on another — see lib/expressVet/selfDealGuard.ts).
-    const limited = await rateLimit(req, LIMITS.EXPRESS_VET_REQUEST, `evreq:${userId}`);
+    const limited = await rateLimit(req, LIMITS.EXPRESS_VET_REQUEST, `evreq:${userId}`, {
+      message: "You've been temporarily blocked due to too many requests — please try again in about an hour.",
+    });
     if (limited) return limited;
 
     const body = await req.json();
@@ -190,14 +193,19 @@ export async function POST(req: NextRequest) {
     // server/social-realtime.js's "express_vet:dispatchers" room) is the speed layer.
     // Best-effort: a failure here must never fail the request submission itself.
     //
-    // No on/off duty toggle: every dispatcher-role user is alertable at any time, minus
-    // whoever's individually muted for the next 30 minutes.
+    // No on/off duty toggle: every dispatcher-role user is alertable any time the phone
+    // should ring at all (10am-10pm PKT — see isWithinDispatcherAlertHoursPKT), minus
+    // whoever's individually muted for the next 30 minutes. Outside that window, nobody
+    // gets pinged — the request still lands in everyone's inbox for whenever they next
+    // check the app, it just doesn't ring.
     try {
-      const alertableRes = await db.query(
-        `SELECT u.user_id AS dispatcher_id FROM users u
-         LEFT JOIN express_vet_dispatcher_status s ON s.dispatcher_id = u.user_id
-         WHERE u.role = 'dispatcher' AND (s.muted_until IS NULL OR s.muted_until <= now())`
-      );
+      const alertableRes = isWithinDispatcherAlertHoursPKT()
+        ? await db.query(
+            `SELECT u.user_id AS dispatcher_id FROM users u
+             LEFT JOIN express_vet_dispatcher_status s ON s.dispatcher_id = u.user_id
+             WHERE u.role = 'dispatcher' AND (s.muted_until IS NULL OR s.muted_until <= now())`
+          )
+        : { rows: [] as { dispatcher_id: number }[] };
       const categoryLabel = EXPRESS_VET_CATEGORY_LABELS[category] ?? category;
 
       // Client profile snapshot for the ringing-call alert's on-screen "who's calling"

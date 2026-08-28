@@ -47,7 +47,7 @@ export const LIMITS = {
     // manufacturing jobs to self-assign (see lib/expressVet/selfDealGuard.ts). Tight on
     // purpose: legitimate users never come near it, and each request rings every on-duty
     // dispatcher's phone, so the abuse ceiling matters more than headroom here.
-    EXPRESS_VET_REQUEST:  [20,  3600],  // 20 Vets at Home requests per hour (bumped from 5 for active testing — dial back before wider rollout)
+    EXPRESS_VET_REQUEST:  [5,   3600],  // 5 Vets at Home requests per hour
 } as const;
 
 type LimitPreset = (typeof LIMITS)[keyof typeof LIMITS];
@@ -61,6 +61,9 @@ type LimitPreset = (typeof LIMITS)[keyof typeof LIMITS];
  * @param opts.blocking - Default true. When false, the Redis check is fired
  *                        without being awaited and the request is always
  *                        allowed to proceed immediately (best-effort limiting).
+ * @param opts.message  - Optional override for the user-facing `message` field
+ *                        on the 429 body (the generic "Rate limit exceeded…"
+ *                        default otherwise).
  *
  * @returns null if allowed, or a NextResponse(429) if rate limited
  */
@@ -68,7 +71,7 @@ export async function rateLimit(
     req: NextRequest,
     preset: LimitPreset,
     keyExtra?: string,
-    opts?: { blocking?: boolean }
+    opts?: { blocking?: boolean; message?: string }
 ): Promise<NextResponse | null> {
     const redis = getRedis();
     if (!redis) return null; // Redis not configured — allow all (fail open)
@@ -99,7 +102,7 @@ export async function rateLimit(
                 return NextResponse.json(
                     {
                         error: "Too many requests",
-                        message: `Rate limit exceeded. Try again in ${retryAfter} seconds.`,
+                        message: opts?.message ?? `Rate limit exceeded. Try again in ${retryAfter} seconds.`,
                         retry_after: retryAfter,
                     },
                     {

@@ -47,6 +47,30 @@ export async function createProvider(dispatcherId: number, input: NewProviderInp
 }
 
 /**
+ * Get-or-create the dispatcher's own provider row without needing a category.
+ *
+ * Backs the "My vet profile" entry on the dispatcher dashboard: a dispatcher is also a vet
+ * and should be able to set up their profile (photo, qualifications, experience) *before*
+ * ever self-assigning a job. The row starts with empty categories — harmless, since the
+ * roster filters on is_active not categories, and the edit screen requires at least one
+ * category before it will save. A later self-assign reuses this same row via linked_user_id
+ * and appends whatever category it needs (see findOrCreateSelfProvider).
+ */
+export async function ensureSelfProvider(dispatcherId: number, dispatcherName: string) {
+  const existing = await db.query(`SELECT * FROM express_vet_providers WHERE linked_user_id = $1`, [dispatcherId]);
+  if (existing.rows[0]) return existing.rows[0];
+
+  const result = await db.query(
+    `INSERT INTO express_vet_providers (
+       name, categories, created_by_dispatcher_id, linked_user_id
+     ) VALUES ($1, '{}', $2, $2)
+     RETURNING *`,
+    [dispatcherName, dispatcherId]
+  );
+  return result.rows[0];
+}
+
+/**
  * Find-or-create the provider row for a dispatcher assigning himself ("Assign to Myself").
  * Reused across requests via linked_user_id, so a given dispatcher only ever has one such row.
  */

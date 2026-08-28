@@ -60,7 +60,7 @@ export default function Footer() {
         {/* Col 1 - Logo, About & Address */}
         <div className="text-center md:text-left">
           <img
-            src="paltuu bilkul tight.svg"
+            src="/paltuu bilkul tight.svg"
             alt="paltuu logo"
             width={90}
             height={100}

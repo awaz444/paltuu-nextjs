@@ -24,6 +24,7 @@ import {
     faHome,
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
+import PetIdCard from "./PetIdCard";
 // import PaltuuBazaarSection from "./PaltuuBazaarSection"; // Phase 1: Bazaar paused
 {
     /* Add this to your global CSS */
@@ -436,101 +437,41 @@ const HeroSection = () => {
                                 rel="noopener noreferrer"
                                 aria-label="Get Paltuu on Google Play"
                             >
+                                {/* Both badges are sized by height with width auto — the two
+                                    SVGs have different aspect ratios, so matching widths made
+                                    them sit at different heights. */}
                                 <Image
                                     src="/app-download-badges/google-play-badge.svg"
                                     alt="Get it on Google Play"
-                                    width={180}
-                                    height={54}
+                                    width={162}
+                                    height={48}
+                                    className="h-12 w-auto"
                                 />
                             </Link>
                             {/* App Store link coming soon — wrap in <Link href="..."> once available */}
                             <Image
                                 src="/app-download-badges/app-store-badge.svg"
                                 alt="Download on the App Store — coming soon"
-                                width={160}
-                                height={54}
+                                width={144}
+                                height={48}
+                                className="h-12 w-auto"
                             />
                         </div>
                     </div>
 
                     {/* Pet Identity Card — web port of the app's PetIdCard, showing a real documented pet */}
-                    <div className="flex justify-center">
-                        <div
-                            className="relative w-full max-w-sm bg-white rounded-[18px] border-[1.5px] border-[rgba(160,48,72,0.55)] overflow-hidden shadow-lg"
-                            style={{ aspectRatio: "1.586" }}
-                        >
-                            {/* Header band */}
-                            <div className="bg-primary flex items-center justify-between px-3.5 py-3">
-                                <img
-                                    src="paltuu bilkul tight.svg"
-                                    alt="Paltuu"
-                                    className="h-5 w-auto brightness-0 invert"
-                                />
-                                <span className="font-bold text-white text-sm tracking-wide">
-                                    Pet Identity Card
-                                </span>
-                            </div>
-
-                            {/* Body */}
-                            <div className="flex px-3.5 py-3.5 gap-2.5">
-                                {/* Fields column */}
-                                <div className="flex-1 flex flex-col justify-center gap-1.5">
-                                    <div>
-                                        <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Name</p>
-                                        <p className="text-black text-[13px] font-bold">Lino</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Parent's Name</p>
-                                        <p className="text-black text-[13px] font-bold">raahim hussain</p>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <div className="flex-1 flex flex-col gap-1.5">
-                                            <div>
-                                                <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Gender</p>
-                                                <p className="text-black text-[13px] font-bold">M</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Identity Number</p>
-                                                <p className="text-black text-[13px] font-bold">000-000-5</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Date of Issue</p>
-                                                <p className="text-black text-[13px] font-bold">13.07.2026</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex-[1.15] flex flex-col gap-1.5">
-                                            <div>
-                                                <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Country of Stay</p>
-                                                <p className="text-black text-[13px] font-bold">Pakistan</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Date of Birth</p>
-                                                <p className="text-black text-[13px] font-bold">19.04.2025</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-primary text-[8px] font-semibold uppercase tracking-wide">Date of Expiry</p>
-                                                <p className="text-black text-[13px] font-bold">13.07.2036</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Photo column */}
-                                <div className="w-[92px] flex flex-col items-end">
-                                    <img
-                                        src="https://djw7hbeqkm7bf.cloudfront.net/posts/5deca4fc-0b26-4a9a-8096-3df02ce69311.jpg"
-                                        alt="Lino, a Persian cat documented on Paltuu"
-                                        className="w-[92px] h-[92px] rounded-[10px] border border-[rgba(160,48,72,0.55)] object-cover bg-[#FDF0F2]"
-                                    />
-                                    <div className="w-[92px] mt-auto pt-1 flex flex-col items-center">
-                                        <div className="w-full border-b border-black mb-0.5" />
-                                        <span className="text-black text-[7px] font-medium tracking-wide">
-                                            Holder's Signature
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div className="flex justify-center w-full">
+                        <PetIdCard
+                            name="Lino"
+                            parentName="raahim hussain"
+                            gender="M"
+                            identityNumber="000-000-5"
+                            dateOfBirth="19.04.2025"
+                            dateOfIssue="13.07.2026"
+                            dateOfExpiry="13.07.2036"
+                            photoUrl="https://djw7hbeqkm7bf.cloudfront.net/posts/5deca4fc-0b26-4a9a-8096-3df02ce69311.jpg"
+                            photoAlt="Lino, a Persian cat documented on Paltuu"
+                        />
                     </div>
                 </div>
             </section>

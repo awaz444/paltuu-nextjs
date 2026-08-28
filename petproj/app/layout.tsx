@@ -15,6 +15,7 @@ import PageTransition from "@/components/PageTransition";
 import CartSyncProvider from "@/components/CartSyncProvider";
 import CookieConsent from "@/components/CookieConsent";
 import { SITE_URL } from "@/lib/site";
+import { cheeseMilky, dmSans } from "./fonts";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -149,7 +150,7 @@ export default function RootLayout({
           src="https://news.google.com/swg/js/v1/publisher.js"
         />
       </head>
-      <body className={`${montserrat.className} flex flex-col min-h-screen`}>
+      <body className={`${montserrat.className} ${cheeseMilky.variable} ${dmSans.variable} flex flex-col min-h-screen`}>
         <AppClientWrapper>
           <ClientProvider>
             <CartSyncProvider>

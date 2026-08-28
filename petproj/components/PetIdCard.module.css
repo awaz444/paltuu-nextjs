@@ -1,0 +1,175 @@
+/* Web port of the app's PetIdCard (paltuu-reactnative/src/components/pets/PetIdCard.tsx).
+   Every dimension inside the card is expressed in `em` against the card's own
+   font-size, so the whole card scales as a single unit. That single font-size is
+   the only scaling knob — driven by container width, not the viewport, because
+   the card sits in a grid column whose width doesn't track the viewport on
+   desktop. Fixed px sizing was what cramped the fields on narrow phones. */
+
+.shell {
+    width: 100%;
+    max-width: 384px;
+}
+
+.card {
+    /* Fallback for browsers without container query units: the reference size
+       the em values were derived from (16px at a 384px-wide card). */
+    font-size: 16px;
+    width: 100%;
+    aspect-ratio: 1.586;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1.5px solid rgba(160, 48, 72, 0.55);
+    border-radius: 1.125em;
+    overflow: hidden;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+@supports (width: 1cqi) {
+    .shell {
+        container-type: inline-size;
+    }
+
+    /* 16 / 384 * 100 — keeps the card visually identical to the reference at
+       any container width. */
+    .card {
+        font-size: 4.1667cqi;
+    }
+}
+
+/* Header band — top corners match the card's radius minus its border width so
+   the fill nests inside the curve instead of leaving a white sliver. */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5em;
+    padding: 0.9375em 0.875em;
+    background: var(--primary-color);
+    border-top-left-radius: 1.03125em;
+    border-top-right-radius: 1.03125em;
+}
+
+.wordmark {
+    width: 3.625em;
+    height: 1.3125em;
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: brightness(0) invert(1);
+}
+
+.headerTitle {
+    font-family: var(--font-cheese-milky), Montserrat, system-ui, sans-serif;
+    font-size: 0.9375em;
+    line-height: 1.1;
+    color: #ffffff;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+/* Body: all fields in the left column, photo column on the right — mirrors the
+   CNIC, where nothing runs underneath the photo. */
+.body {
+    flex: 1;
+    display: flex;
+    padding: 0.875em;
+    min-height: 0;
+}
+
+.fields {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0.5em 0.625em 0.5em 0;
+    min-width: 0;
+}
+
+.fieldGap {
+    margin-bottom: 0.3125em;
+}
+
+/* One flex computation for the whole pair grid, so the second column's left
+   edge is identical across all three rows. */
+.pairedGrid {
+    display: flex;
+    min-width: 0;
+}
+
+.colNarrow {
+    flex: 1;
+    min-width: 0;
+}
+
+.colWide {
+    flex: 1.15;
+    padding-left: 1.125em;
+    min-width: 0;
+}
+
+.label {
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 0.5em;
+    line-height: 1.2;
+    color: var(--primary-color);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.value {
+    font-family: var(--font-cheese-milky), Montserrat, system-ui, sans-serif;
+    font-size: 0.8125em;
+    line-height: 1.25;
+    color: #111111;
+    margin-top: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.photoCol {
+    width: 5.75em;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+/* Forced 1:1 — the pet photo is whatever aspect the owner uploaded, so it gets
+   cropped to a square rather than letterboxed. */
+.photo {
+    display: block;
+    width: 5.75em;
+    height: 5.75em;
+    border-radius: 0.625em;
+    border: 1px solid rgba(160, 48, 72, 0.55);
+    object-fit: cover;
+    background: #fdf0f2;
+}
+
+.signature {
+    width: 5.75em;
+    margin-top: auto;
+    margin-bottom: -0.25em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.signatureLine {
+    align-self: stretch;
+    border-bottom: 1px solid #111111;
+    margin-bottom: 0.1875em;
+}
+
+.signatureCaption {
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 0.4375em;
+    line-height: 1.2;
+    color: #111111;
+    letter-spacing: 0.0286em;
+    white-space: nowrap;
+}

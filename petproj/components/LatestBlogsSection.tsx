@@ -6,20 +6,20 @@ const LatestBlogsSection = ({ posts }: { posts: BlogMetadata[] }) => {
     if (posts.length === 0) return null;
 
     return (
-        <section className="py-16 px-6 lg:px-20 bg-gray-50 border-t border-gray-100">
+        <section className="py-16 px-6 lg:px-20 bg-primary">
             <div className="max-w-6xl mx-auto">
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10 text-center md:text-left">
                     <div>
-                        <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">
+                        <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-2">
                             Latest from the Paltuu Blog
                         </h2>
-                        <p className="text-lg text-gray-600 max-w-2xl">
+                        <p className="text-lg text-white/80 max-w-2xl">
                             Guides on pet adoption, health, and care for pet parents across Pakistan.
                         </p>
                     </div>
                     <Link
                         href="/blogs"
-                        className="inline-flex items-center justify-center gap-2 self-center md:self-auto bg-primary text-white font-semibold px-6 py-3 rounded-full hover:bg-primary/90 transition-colors whitespace-nowrap"
+                        className="inline-flex items-center justify-center gap-2 self-center md:self-auto bg-white text-primary font-semibold px-6 py-3 rounded-full hover:bg-gray-100 transition-colors whitespace-nowrap"
                     >
                         View All Articles
                     </Link>

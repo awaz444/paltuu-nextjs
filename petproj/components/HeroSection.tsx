@@ -483,13 +483,13 @@ const HeroSection = () => {
             </section>
 
             {/* Impact / Numbers Section */}
-            <section className="py-12 px-6 lg:px-20 bg-gray-50">
+            <section className="py-12 px-6 lg:px-20 bg-primary">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-10">
-                        <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-3">
-                            Making a <span className="text-primary">Difference</span>
+                        <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-3">
+                            Making a <span className="text-white">Difference</span>
                         </h2>
-                        <p className="text-lg text-gray-600 font-medium max-w-2xl mx-auto">
+                        <p className="text-lg text-white/80 font-medium max-w-2xl mx-auto">
                             Every number represents a life touched and a story changed forever.
                         </p>
                     </div>
@@ -516,10 +516,10 @@ const HeroSection = () => {
             </section>
 
             {/* Mission & Vision Sections - Theme Matched */}
-            <section className="py-12 px-6 lg:px-20 bg-white relative bg-primary">
+            <section className="py-12 px-6 lg:px-20 bg-white relative">
                 <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Mission Card */}
-                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden flex flex-col h-full bg-white">
+                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden flex flex-col h-full">
                         <div className="absolute -bottom-4 -right-4 w-24 h-24 opacity-10">
                             <FontAwesomeIcon
                                 icon={faPaw}
@@ -527,7 +527,7 @@ const HeroSection = () => {
                             />
                         </div>
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="bg-primary/10 p-3 rounded-full">
+                            <div className="bg-gray-200 p-3 rounded-full">
                                 <FontAwesomeIcon
                                     icon={faBullseye}
                                     className="text-primary text-xl"
@@ -551,14 +551,14 @@ const HeroSection = () => {
                         <div className="flex flex-wrap gap-3 mt-auto pt-4 border-t border-primary/10 justify-center">
                             <Link
                                 href="/browse-pets"
-                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
+                                className="inline-flex items-center px-4 py-2 bg-gray-200 text-primary rounded-full hover:bg-gray-300 transition-colors text-sm font-medium"
                             >
                                 <FontAwesomeIcon icon={faDog} className="mr-2 text-sm" />
                                 <span className="whitespace-nowrap">Adopt Pets</span>
                             </Link>
                             <Link
                                 href="/pet-care"
-                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
+                                className="inline-flex items-center px-4 py-2 bg-gray-200 text-primary rounded-full hover:bg-gray-300 transition-colors text-sm font-medium"
                             >
                                 <FontAwesomeIcon icon={faStethoscope} className="mr-2 text-sm" />
                                 <span className="whitespace-nowrap">Find Vets</span>
@@ -567,7 +567,7 @@ const HeroSection = () => {
                     </div>
 
                     {/* Vision Card */}
-                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden flex flex-col h-full bg-white">
+                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 md:p-8 shadow-md relative overflow-hidden flex flex-col h-full">
                         <div className="absolute -top-4 -left-4 w-24 h-24 opacity-10">
                             <FontAwesomeIcon
                                 icon={faHeart}
@@ -575,7 +575,7 @@ const HeroSection = () => {
                             />
                         </div>
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="bg-primary/10 p-3 rounded-full">
+                            <div className="bg-gray-200 p-3 rounded-full">
                                 <FontAwesomeIcon
                                     icon={faEye}
                                     className="text-primary text-xl"
@@ -599,14 +599,14 @@ const HeroSection = () => {
                                 href="https://play.google.com/store/apps/details?id=com.paltuu.app"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
+                                className="inline-flex items-center px-4 py-2 bg-gray-200 text-primary rounded-full hover:bg-gray-300 transition-colors text-sm font-medium"
                             >
                                 <FontAwesomeIcon icon={faUsers} className="mr-2 text-sm" />
                                 <span className="whitespace-nowrap">Get the App</span>
                             </Link>
                             <Link
                                 href="/lost-and-found"
-                                className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors text-sm font-medium"
+                                className="inline-flex items-center px-4 py-2 bg-gray-200 text-primary rounded-full hover:bg-gray-300 transition-colors text-sm font-medium"
                             >
                                 <FontAwesomeIcon icon={faSearch} className="mr-2 text-sm" />
                                 <span className="whitespace-nowrap">Lost & Found</span>
@@ -617,17 +617,13 @@ const HeroSection = () => {
             </section>
 
             {/* Testimonials Section */}
-            <section className="py-20 px-6 lg:px-20 bg-gray-50 relative overflow-hidden">
-                {/* Background Decoration */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -z-0"></div>
-
+            <section className="py-20 px-6 lg:px-20 bg-primary relative overflow-hidden">
                 <div className="max-w-6xl mx-auto relative z-10">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-4">
-                            Loved by the <span className="text-primary">Community</span>
+                        <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4">
+                            Loved by the <span className="text-white">Community</span>
                         </h2>
-                        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                        <p className="text-lg text-white/80 max-w-2xl mx-auto">
                             Don't just take our word for it, hear from pet lovers across Pakistan.
                         </p>
                     </div>
@@ -676,7 +672,7 @@ const HeroSection = () => {
             </section>
 
             {/* Local SEO & Keyword Navigation */}
-            <section className="py-16 px-6 lg:px-20 bg-white border-t border-gray-100">
+            <section className="py-16 px-6 lg:px-20 bg-white">
                 <div className="max-w-6xl mx-auto">
                     <div className="mb-10 text-center md:text-left">
                         <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">

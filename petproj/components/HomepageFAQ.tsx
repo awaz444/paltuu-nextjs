@@ -79,7 +79,7 @@ const HomepageFAQ = () => {
     };
 
     return (
-        <section className="py-16 px-6 lg:px-20 bg-white border-t border-gray-100">
+        <section className="py-16 px-6 lg:px-20 bg-white">
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}

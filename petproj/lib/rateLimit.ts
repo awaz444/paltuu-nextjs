@@ -48,6 +48,11 @@ export const LIMITS = {
     // purpose: legitimate users never come near it, and each request rings every on-duty
     // dispatcher's phone, so the abuse ceiling matters more than headroom here.
     EXPRESS_VET_REQUEST:  [5,   3600],  // 5 Vets at Home requests per hour
+    // Dispatcher editing a Vets at Home provider profile (their own or a teammate's),
+    // incl. the is_active toggle which hits the same endpoint. A real edit session is
+    // a handful of saves; a burst is the Save button being spammed or a retry loop.
+    // Well clear of any legitimate editing.
+    EXPRESS_VET_PROVIDER_UPDATE: [20, 60],  // 20 provider edits per minute
 } as const;
 
 type LimitPreset = (typeof LIMITS)[keyof typeof LIMITS];

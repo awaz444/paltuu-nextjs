@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { checkDispatcher } from "@/lib/expressVet/dispatcherAuth";
 import { EXPRESS_VET_CATEGORY_SPECIES } from "@/lib/expressVet/catalog";
+import { rateLimit, LIMITS } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,9 @@ export async function GET(req: NextRequest, context: any) {
 export async function PATCH(req: NextRequest, context: any) {
   const dispatcher = await checkDispatcher(req);
   if (!dispatcher) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const limited = await rateLimit(req, LIMITS.EXPRESS_VET_PROVIDER_UPDATE);
+  if (limited) return limited;
 
   const id = context?.params?.id;
   if (!id) return NextResponse.json({ error: "No ID provided" }, { status: 400 });

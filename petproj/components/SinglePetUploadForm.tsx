@@ -138,16 +138,30 @@ export default function SinglePetUploadForm({
     }
   };
 
+  const MAX_UPLOAD_MB = 25;
   const beforeUpload = (file: File) => {
-    const isImage = file.type.startsWith("image/");
-    if (!isImage) {
-      message.error("You can only upload image files!");
+    // Server re-decodes and compresses every file, so this is a light gate.
+    // Don't reject on file.type — iPhone HEIC often has an empty MIME type in
+    // non-Safari browsers. Only SVG is blocked up front (script-injection risk).
+    const name = file.name.toLowerCase();
+    if (file.type === "image/svg+xml" || name.endsWith(".svg")) {
+      message.error("SVG images aren't supported. Please use a JPG, PNG, HEIC or WebP.");
+      return Upload.LIST_IGNORE;
     }
-    const isSmallEnough = file.size / 1024 / 1024 < 5;
+    const looksImage =
+      file.type.startsWith("image/") ||
+      file.type === "" ||
+      /\.(jpe?g|png|webp|gif|bmp|tiff?|heic|heif|avif|jfif)$/.test(name);
+    if (!looksImage) {
+      message.error("That doesn't look like an image file.");
+      return Upload.LIST_IGNORE;
+    }
+    const isSmallEnough = file.size / 1024 / 1024 < MAX_UPLOAD_MB;
     if (!isSmallEnough) {
-      message.error("Image must be smaller than 5MB!");
+      message.error(`Image must be smaller than ${MAX_UPLOAD_MB}MB.`);
+      return Upload.LIST_IGNORE;
     }
-    return isImage && isSmallEnough;
+    return true;
   };
 
   const getBase64 = (file: File): Promise<string> =>

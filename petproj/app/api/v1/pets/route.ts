@@ -134,12 +134,19 @@ export async function POST(req: NextRequest) {
 
         const body = await req.json();
         
-        // Validation
+        // Validation. The `max` limits mirror the underlying column widths so an
+        // oversized field returns a 400 instead of blowing up as a Postgres
+        // "value too long for type character varying" (22001) error.
         const validation = validate(body, {
-            pet_name: { required: true, min: 2 },
+            pet_name: { required: true, min: 2, max: 255 },
             pet_type: { required: true },
             city_id: { required: true },
-            listing_type: { required: true }
+            listing_type: { required: true, max: 255 },
+            pet_breed: { max: 255 },
+            area: { max: 255 },
+            sex: { max: 255 },
+            description: { max: 1000 },
+            contact_number: { max: 255 }
         });
 
         if (!validation.success) {

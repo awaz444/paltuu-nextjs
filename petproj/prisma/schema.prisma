@@ -643,7 +643,7 @@ model pets {
   pet_breed                 String?                     @db.VarChar(255)
   city_id                   Int?
   area                      String?                     @db.VarChar(255)
-  description               String?                     @db.VarChar(255)
+  description               String?                     @db.VarChar(1000)
   adoption_status           String?                     @db.VarChar(255)
   price                     Decimal?                    @default(0) @db.Decimal(10, 2)
   min_age_of_children       Int?

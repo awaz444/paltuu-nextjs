@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
 import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
+import { validate } from "@/utils/validation";
 
 /**
  * @swagger
@@ -87,6 +88,24 @@ export async function PUT(req: NextRequest) {
 
         if ((pet_name && hasSevereIdentityMatch(pet_name)) || (description && hasSevereIdentityMatch(description))) {
             return NextResponse.json({ error: "Listing contains language that isn't allowed" }, { status: 400 });
+        }
+
+        // Guard field lengths against the underlying column widths so an
+        // oversized value returns a 400 rather than a Postgres 22001 ("value
+        // too long for type character varying") surfacing as a 500.
+        const validation = validate(body, {
+            pet_name: { max: 255 },
+            pet_breed: { max: 255 },
+            area: { max: 255 },
+            sex: { max: 255 },
+            listing_type: { max: 255 },
+            contact_number: { max: 255 },
+            health_issues: { max: 255 },
+            adoption_status: { max: 255 },
+            description: { max: 1000 }
+        });
+        if (!validation.success) {
+            return NextResponse.json({ errors: validation.errors }, { status: 400 });
         }
 
         const client = await db.connect();

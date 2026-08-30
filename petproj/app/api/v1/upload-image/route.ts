@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import sharp from "sharp";
 import { uploadToS3Main } from "@/lib/s3";
 import { db } from "@/db/index";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { sendNewListingNotification } from "@/utils/mailjet";
 import { withRetry } from "@/utils/retry";
+
+// Per-file cap on the *original* upload. This is generous on purpose — HEIC
+// straight off an iPhone and high-res camera JPEGs routinely land in the
+// 10-20 MB range. Everything is re-encoded to WebP below, so what actually
+// gets stored is a fraction of this.
+const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB
+// Cap on the whole multipart request (all files + overhead). Keep this in
+// sync with whatever the hosting platform allows for a request body.
+const MAX_REQUEST_BYTES = 60 * 1024 * 1024; // 60 MB
+// Longest edge kept after downscaling. 2560px is plenty for full-bleed
+// display and keeps the stored file small.
+const MAX_EDGE = 2560;
+const MAX_FILES = 10;
 
 /**
  * @swagger
@@ -21,7 +35,7 @@ export async function POST(req: NextRequest) {
         }
 
         const contentLength = Number(req.headers.get("content-length") || "0");
-        if (contentLength > 20 * 1024 * 1024) {
+        if (contentLength > MAX_REQUEST_BYTES) {
             return NextResponse.json({ error: "Payload too large" }, { status: 413 });
         }
 
@@ -34,25 +48,56 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "No files provided" }, { status: 400 });
         }
 
-        if (files.length > 10) {
-            return NextResponse.json({ error: "Maximum 10 files per upload" }, { status: 400 });
+        if (files.length > MAX_FILES) {
+            return NextResponse.json({ error: `Maximum ${MAX_FILES} files per upload` }, { status: 400 });
         }
 
         const urls: string[] = [];
 
         for (const file of files) {
-            if (!file.type.startsWith("image/")) {
-                return NextResponse.json({ error: "Only image uploads are allowed" }, { status: 400 });
+            const mimeType = (file.type || "").toLowerCase();
+
+            // SVG is rejected outright: it's a markup format that can carry
+            // <script>, so serving user-supplied SVGs from our CDN is an XSS
+            // vector. Everything else is handed to sharp, which is the real
+            // gate — if it can decode the bytes, we accept it, regardless of
+            // what the browser claimed the MIME type was (HEIC/HEIF often
+            // arrive with an empty or wrong type from non-Safari browsers).
+            if (mimeType === "image/svg+xml" || (file.name || "").toLowerCase().endsWith(".svg")) {
+                return NextResponse.json({ error: "SVG images aren't supported. Please upload a JPG, PNG, HEIC or WebP." }, { status: 400 });
             }
 
-            if (file.size > 5 * 1024 * 1024) {
-                return NextResponse.json({ error: "Each file must be 5 MB or smaller" }, { status: 413 });
+            if (file.size > MAX_FILE_BYTES) {
+                return NextResponse.json(
+                    { error: `Each file must be ${Math.floor(MAX_FILE_BYTES / 1024 / 1024)} MB or smaller` },
+                    { status: 413 }
+                );
             }
 
-            const buffer = Buffer.from(await file.arrayBuffer());
-            const ext = file.type.split("/")[1] || "jpg";
+            const original = Buffer.from(await file.arrayBuffer());
+
+            // Normalize + compress every upload:
+            //  - failOnError:false tolerates minor HEIC header quirks
+            //  - .rotate() bakes in EXIF orientation (iPhone photos)
+            //  - downscale only if larger than MAX_EDGE (never upscale)
+            //  - re-encode to WebP; strips EXIF/GPS metadata as a side effect
+            let optimized: Buffer;
+            try {
+                optimized = await sharp(original, { failOnError: false })
+                    .rotate()
+                    .resize({ width: MAX_EDGE, height: MAX_EDGE, fit: "inside", withoutEnlargement: true })
+                    .webp({ quality: 80 })
+                    .toBuffer();
+            } catch (sharpErr) {
+                console.error(`[upload-image] sharp failed for ${file.name || "image"}:`, sharpErr instanceof Error ? sharpErr.message : sharpErr);
+                return NextResponse.json(
+                    { error: `"${file.name || "That file"}" isn't a readable image. Try saving it as JPG or PNG and re-uploading.` },
+                    { status: 400 }
+                );
+            }
+
             const imageUrl = await withRetry(
-                () => uploadToS3Main(buffer, "adoption", file.type, ext),
+                () => uploadToS3Main(optimized, "adoption", "image/webp", "webp"),
                 { label: `S3 upload (${file.name || "image"})` }
             );
             urls.push(imageUrl);

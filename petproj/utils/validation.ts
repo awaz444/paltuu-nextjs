@@ -41,6 +41,14 @@ export function validate(data: any, schema: ValidationSchema): { success: boolea
           errors.push(`${key} must be at least ${rules.min}`);
         }
       }
+
+      if (rules.max !== undefined) {
+        if (typeof value === 'string' && value.length > rules.max) {
+          errors.push(`${key} must be at most ${rules.max} characters`);
+        } else if (typeof value === 'number' && value > rules.max) {
+          errors.push(`${key} must be at most ${rules.max}`);
+        }
+      }
     }
   }
 

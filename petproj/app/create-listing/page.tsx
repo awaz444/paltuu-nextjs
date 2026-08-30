@@ -160,12 +160,33 @@ export default function CreatePetListing() {
 
     // ── Image upload ─────────────────────────────────────────────────────────
 
+    const MAX_UPLOAD_MB = 25;
     const beforeUpload = (file: File) => {
-        const isImage = file.type.startsWith("image/");
-        if (!isImage) message.error("You can only upload image files!");
-        const isSmallEnough = file.size / 1024 / 1024 < 5;
-        if (!isSmallEnough) message.error("Image must be smaller than 5MB!");
-        return isImage && isSmallEnough;
+        // Don't hard-reject on file.type: iPhone HEIC/HEIF photos frequently
+        // arrive with an empty or non-image MIME type in Chrome/Firefox/Windows.
+        // The server re-decodes and compresses every file, so let anything that
+        // looks image-ish through and let the API be the real gate. SVG is the
+        // one format we do block up front (script-injection risk).
+        const name = file.name.toLowerCase();
+        const isSvg = file.type === "image/svg+xml" || name.endsWith(".svg");
+        if (isSvg) {
+            message.error("SVG images aren't supported. Please use a JPG, PNG, HEIC or WebP.");
+            return Upload.LIST_IGNORE;
+        }
+        const looksImage =
+            file.type.startsWith("image/") ||
+            file.type === "" ||
+            /\.(jpe?g|png|webp|gif|bmp|tiff?|heic|heif|avif|jfif)$/.test(name);
+        if (!looksImage) {
+            message.error("That doesn't look like an image file.");
+            return Upload.LIST_IGNORE;
+        }
+        const isSmallEnough = file.size / 1024 / 1024 < MAX_UPLOAD_MB;
+        if (!isSmallEnough) {
+            message.error(`Image must be smaller than ${MAX_UPLOAD_MB}MB.`);
+            return Upload.LIST_IGNORE;
+        }
+        return true;
     };
 
     const getBase64 = (file: File): Promise<string> =>

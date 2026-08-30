@@ -551,7 +551,7 @@ export default function BulkPetUploadForm({
                       <div style={{ marginTop: 8 }}>Upload</div>
                     </div>
                   </Upload>
-                  <Text type="secondary">Upload 1-5 images (max 5MB each)</Text>
+                  <Text type="secondary">Upload 1-5 images (max 25MB each; JPG, PNG, HEIC or WebP)</Text>
                 </Form.Item>
               </Col>
             </Row>

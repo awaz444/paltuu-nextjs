@@ -691,32 +691,32 @@ const HeroSection = () => {
                             </h3>
                             <ul className="space-y-2">
                                 <li>
-                                    <Link href="/browse-pets?city=karachi" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/karachi" className="hover:text-primary hover:underline">
                                         Pet Adoption Karachi
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?city=karachi&type=cat" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/cats/karachi" className="hover:text-primary hover:underline">
                                         Cat Karachi / Cat Adoption
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?city=karachi&type=dog" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/dogs/karachi" className="hover:text-primary hover:underline">
                                         Dog in Karachi / Dog Adoption
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?city=karachi&type=puppy" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/dogs/karachi" className="hover:text-primary hover:underline">
                                         Puppy Adoption in Karachi
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?city=karachi&type=kitten" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/cats/karachi" className="hover:text-primary hover:underline">
                                         Kitten Adoption in Karachi
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/pet-care?city=karachi" className="hover:text-primary hover:underline">
+                                    <Link href="/pet-care/karachi" className="hover:text-primary hover:underline">
                                         Vets & Pet Care in Karachi
                                     </Link>
                                 </li>
@@ -730,32 +730,32 @@ const HeroSection = () => {
                             </h3>
                             <ul className="space-y-2">
                                 <li>
-                                    <Link href="/browse-pets?city=lahore" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/lahore" className="hover:text-primary hover:underline">
                                         Pet Adoption Lahore
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?city=lahore&type=cat" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/cats/lahore" className="hover:text-primary hover:underline">
                                         Cat Lahore / Cat Adoption
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?city=lahore&type=dog" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/dogs/lahore" className="hover:text-primary hover:underline">
                                         Dog in Lahore / Dog Adoption
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?city=lahore&type=puppy" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/dogs/lahore" className="hover:text-primary hover:underline">
                                         Puppy Adoption in Lahore
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?city=lahore&type=kitten" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/cats/lahore" className="hover:text-primary hover:underline">
                                         Kitten Adoption in Lahore
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/pet-care?city=lahore" className="hover:text-primary hover:underline">
+                                    <Link href="/pet-care/lahore" className="hover:text-primary hover:underline">
                                         Vets & Pet Care in Lahore
                                     </Link>
                                 </li>
@@ -769,32 +769,32 @@ const HeroSection = () => {
                             </h3>
                             <ul className="space-y-2">
                                 <li>
-                                    <Link href="/browse-pets?city=islamabad" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/islamabad" className="hover:text-primary hover:underline">
                                         Pet Adoption Islamabad
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?city=islamabad&type=cat" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/cats/islamabad" className="hover:text-primary hover:underline">
                                         Cat Islamabad / Cat Adoption
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?city=islamabad&type=dog" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/dogs/islamabad" className="hover:text-primary hover:underline">
                                         Dog in Islamabad / Dog Adoption
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?city=islamabad&type=puppy" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/dogs/islamabad" className="hover:text-primary hover:underline">
                                         Puppy Adoption in Islamabad
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?city=islamabad&type=kitten" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/cats/islamabad" className="hover:text-primary hover:underline">
                                         Kitten Adoption in Islamabad
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/pet-care?city=islamabad" className="hover:text-primary hover:underline">
+                                    <Link href="/pet-care/islamabad" className="hover:text-primary hover:underline">
                                         Vets & Pet Care in Islamabad
                                     </Link>
                                 </li>
@@ -813,22 +813,22 @@ const HeroSection = () => {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?type=cat" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/cats" className="hover:text-primary hover:underline">
                                         Cat in My City / Cat Pakistan
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?type=dog" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/dogs" className="hover:text-primary hover:underline">
                                         Dog in My City / Dog Adoption
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?type=puppy" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/dogs" className="hover:text-primary hover:underline">
                                         Puppy in My City / Puppy Adoption
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/browse-pets?type=kitten" className="hover:text-primary hover:underline">
+                                    <Link href="/adopt/cats" className="hover:text-primary hover:underline">
                                         Kitten in My City / Kitten Adoption
                                     </Link>
                                 </li>

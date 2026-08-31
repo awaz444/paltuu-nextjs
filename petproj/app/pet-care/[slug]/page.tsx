@@ -3,10 +3,11 @@ import { Metadata } from "next";
 import Link from "next/link";
 import ClinicCard from "@/components/ClinicCard";
 import VetDetailsClient from "./VetDetailsClient";
+import { VET_CITIES } from "@/lib/vetCities";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const KNOWN_CITIES = ["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan"];
+const KNOWN_CITIES: readonly string[] = VET_CITIES;
 
 function isCitySlug(slug: string) {
     return KNOWN_CITIES.some((c) => c.toLowerCase() === slug.toLowerCase());

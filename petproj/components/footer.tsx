@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Facebook, Instagram, Twitter } from "lucide-react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { VET_CITIES } from "@/lib/vetCities";
 
 export default function Footer() {
   const pathname = usePathname();
@@ -103,9 +104,34 @@ export default function Footer() {
             <li><Link href="/lost-and-found" className="hover:text-gray-300">Lost &amp; Found</Link></li>
             <li><Link href="/blogs" className="hover:text-gray-300">Pet Care Blog</Link></li>
           </ul>
+          <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Adopt by City</h3>
+          <ul className="space-y-2 text-sm mb-5">
+            {["Karachi", "Lahore", "Islamabad"].map((city) => (
+              <li key={city}>
+                <Link href={`/adopt/cats/${city.toLowerCase()}`} className="hover:text-gray-300">
+                  Cat Adoption in {city}
+                </Link>
+              </li>
+            ))}
+            {["Karachi", "Lahore", "Islamabad"].map((city) => (
+              <li key={city}>
+                <Link href={`/adopt/dogs/${city.toLowerCase()}`} className="hover:text-gray-300">
+                  Dog Adoption in {city}
+                </Link>
+              </li>
+            ))}
+            <li>
+              <Link href="/adopt" className="hover:text-gray-300 font-medium">
+                All Cities & Pet Types →
+              </Link>
+            </li>
+          </ul>
+          {/* Cities with actual clinic coverage only (Karachi, Lahore,
+              Islamabad — see lib/vetCities.ts). Rawalpindi, Faisalabad and
+              Multan were listed here with zero clinics behind them. */}
           <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Vets by City</h3>
           <ul className="space-y-2 text-sm">
-            {["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan"].map((city) => (
+            {VET_CITIES.map((city) => (
               <li key={city}>
                 <Link href={`/pet-care/${city.toLowerCase()}`} className="hover:text-gray-300">
                   Vets in {city}
@@ -166,7 +192,7 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-gray-400 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between text-sm text-gray-200 gap-4">
         <p className="text-center md:text-left">
-          © {new Date().getFullYear()} Paltuu. All rights reserved.
+          © {new Date().getFullYear()} Paltuu Pvt Ltd. All rights reserved.
         </p>
 
         {/* Payment Icons */}

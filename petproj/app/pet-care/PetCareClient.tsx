@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { VET_CITIES } from "@/lib/vetCities";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../store/store";
 import { fetchClinics, fetchClinicsForMap } from "../store/slices/clinicSlice";
@@ -272,12 +273,11 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
                                         className="border rounded-xl w-full p-3"
                                     >
                                         <option value="All">All Cities</option>
-                                        <option value="Karachi">Karachi</option>
-                                        <option value="Lahore">Lahore</option>
-                                        <option value="Islamabad">Islamabad</option>
-                                        <option value="Rawalpindi">Rawalpindi</option>
+                                        {VET_CITIES.map((city) => (
+                                            <option key={city} value={city}>{city}</option>
+                                        ))}
                                         {availableCities
-                                            .filter((c) => !["karachi", "lahore", "islamabad", "rawalpindi"].includes(c.toLowerCase()))
+                                            .filter((c) => !(VET_CITIES as readonly string[]).map((v) => v.toLowerCase()).includes(c.toLowerCase()))
                                             .map((city) => (
                                                 <option key={city} value={city}>{city}</option>
                                             ))}
@@ -451,7 +451,7 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
                 <div className="mx-0 md:mx-8">
                     <p className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-3">Browse vets by city</p>
                     <div className="flex flex-wrap gap-2">
-                        {["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan"].map((city) => (
+                        {VET_CITIES.map((city) => (
                             <a
                                 key={city}
                                 href={`/pet-care/${city.toLowerCase()}`}

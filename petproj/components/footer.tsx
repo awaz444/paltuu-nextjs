@@ -57,7 +57,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-primary text-white px-6 md:px-16 py-10 rounded-t-3xl mt-6">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10">
         {/* Col 1 - Logo, About & Address */}
         <div className="text-center md:text-left">
           <img
@@ -98,25 +98,24 @@ export default function Footer() {
         {/* Col 2 - Explore */}
         <div className="text-center md:text-left">
           <h3 className="text-lg font-semibold mb-4">Explore Paltuu</h3>
-          <ul className="space-y-2 text-sm mb-5">
+          <ul className="space-y-2 text-sm">
             <li><Link href="/browse-pets" className="hover:text-gray-300">Adopt a Pet</Link></li>
             <li><Link href="/pet-care" className="hover:text-gray-300">Find a Vet</Link></li>
             <li><Link href="/lost-and-found" className="hover:text-gray-300">Lost &amp; Found</Link></li>
             <li><Link href="/blogs" className="hover:text-gray-300">Pet Care Blog</Link></li>
           </ul>
+        </div>
+
+        {/* Col 3 - Adopt & Vets by City. Kept short on purpose: /adopt is now
+            the full city x pet-type directory, so this only needs to seed
+            the busiest few and point to it, not duplicate it. */}
+        <div className="text-center md:text-left">
           <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Adopt by City</h3>
           <ul className="space-y-2 text-sm mb-5">
             {["Karachi", "Lahore", "Islamabad"].map((city) => (
               <li key={city}>
-                <Link href={`/adopt/cats/${city.toLowerCase()}`} className="hover:text-gray-300">
-                  Cat Adoption in {city}
-                </Link>
-              </li>
-            ))}
-            {["Karachi", "Lahore", "Islamabad"].map((city) => (
-              <li key={city}>
-                <Link href={`/adopt/dogs/${city.toLowerCase()}`} className="hover:text-gray-300">
-                  Dog Adoption in {city}
+                <Link href={`/adopt/${city.toLowerCase()}`} className="hover:text-gray-300">
+                  Adopt in {city}
                 </Link>
               </li>
             ))}
@@ -141,7 +140,7 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Col 3 - Newsletter + Policies */}
+        {/* Col 4 - Newsletter + Policies */}
         <div className="text-center md:text-left">
           <h3 className="text-lg font-semibold mb-2">Policies</h3>
           <ul className="space-y-1 text-sm mb-6">

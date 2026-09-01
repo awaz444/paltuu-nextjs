@@ -50,12 +50,12 @@ export default function AppLinksClient() {
   );
 
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#5c1c29] via-[#a03048] to-[#c74c65] px-6 py-16 text-white">
-      <div className="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-white/5 blur-3xl" />
+    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-white px-6 py-16 text-gray-900">
+      <div className="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-[#a03048]/5 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-[#a03048]/5 blur-3xl" />
 
       <div className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
-        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-3xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-md">
+        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-200 bg-white shadow-xl">
           <Image
             src="/app-icon.png"
             alt="Paltuu"
@@ -67,9 +67,9 @@ export default function AppLinksClient() {
         </div>
 
         <h1 className="mb-3 text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
-          Get the Paltuu app
+          Get the <span className="text-[#a03048]">Paltuu</span> app
         </h1>
-        <p className="mb-10 max-w-sm leading-relaxed text-white/80">
+        <p className="mb-10 max-w-sm leading-relaxed text-gray-600">
           Adopt pets, book at-home vet visits in Karachi, shop pet essentials,
           and help reunite lost pets — all in one app.
         </p>
@@ -84,9 +84,9 @@ export default function AppLinksClient() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={b.label}
-                  className={`inline-flex rounded-xl transition-transform duration-150 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white ${
+                  className={`inline-flex rounded-xl transition-transform duration-150 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#a03048] ${
                     recommended
-                      ? "ring-2 ring-white ring-offset-2 ring-offset-[#a03048]"
+                      ? "ring-2 ring-[#a03048] ring-offset-2 ring-offset-white"
                       : ""
                   }`}
                 >
@@ -98,7 +98,7 @@ export default function AppLinksClient() {
                     className="h-12 w-auto"
                   />
                 </Link>
-                <span className="h-4 text-[11px] font-semibold uppercase tracking-wider text-white/70">
+                <span className="h-4 text-[11px] font-semibold uppercase tracking-wider text-[#a03048]">
                   {recommended ? "For your device" : ""}
                 </span>
               </div>
@@ -106,7 +106,7 @@ export default function AppLinksClient() {
           })}
         </div>
 
-        <p className="mt-10 text-xs text-white/60">
+        <p className="mt-10 text-xs text-gray-400">
           Free &middot; iOS &amp; Android &middot; Made in Karachi
         </p>
       </div>

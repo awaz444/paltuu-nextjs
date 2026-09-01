@@ -49,6 +49,21 @@ const FAQS = [
         ),
     },
     {
+        // Vets at Home is Paltuu's own at-home vet/grooming/vaccination service — distinct
+        // from the third-party "home-visit vet" filter on /pet-care, which lists independent
+        // clinics that happen to make house calls. Karachi-only and early (soft launch), so
+        // this stays to a single honest, low-key mention rather than a dedicated landing page
+        // until there's real volume behind it.
+        q: "Does Paltuu offer at-home vet visits?",
+        a: (
+            <>
+                Yes — Paltuu's own <strong>Vets at Home</strong> service brings vet visits,
+                vaccinations, and grooming to your doorstep, currently in Karachi with more cities
+                planned. Book a visit through the Paltuu app.
+            </>
+        ),
+    },
+    {
         q: "Is there a Paltuu mobile app?",
         a: (
             <>

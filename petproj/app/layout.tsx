@@ -61,7 +61,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Organization",
               "name": "Paltuu",
-              "alternateName": ["Paltuu.pk", "Paltu"],
+              "alternateName": ["Paltuu.pk", "Paltu", "Paaltuu"],
               "url": "https://www.paltuu.pk",
               "logo": {
                 "@type": "ImageObject",
@@ -69,7 +69,7 @@ export default function RootLayout({
                 "width": 200,
                 "height": 80
               },
-              "description": "Pakistan's first pet adoption and pet care platform — connecting pets with loving homes, verified vets, and quality pet products across Pakistan.",
+              "description": "Pakistan's first pet adoption and pet care platform — connecting pets with loving homes, verified vets, and a nationwide pet community across Pakistan.",
               "foundingDate": "2023",
               "areaServed": {
                 "@type": "Country",

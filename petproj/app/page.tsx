@@ -7,7 +7,7 @@ import { getAllBlogsMetadata } from "@/lib/mdx";
 export const metadata: Metadata = {
   title: "Pet Adoption Pakistan — Adopt Dogs & Cats",
   description:
-    "Paltuu (also spelled Paltu or Paaltuu) is Pakistan's first pet super app and #1 pet adoption platform. Adopt dogs, cats, puppies, and kittens, connect with verified home vets, and join Pakistan's largest pet community in Karachi, Lahore, Islamabad, and across Pakistan. Download the app on Android now.",
+    "Paltuu is Pakistan's first pet super app and #1 pet adoption platform. Adopt dogs, cats, puppies, and kittens, connect with verified home vets, and join Pakistan's largest pet community in Karachi, Lahore, Islamabad, and across Pakistan. Download the app on Android now.",
   keywords: [
     "paltuu",
     "paltu",

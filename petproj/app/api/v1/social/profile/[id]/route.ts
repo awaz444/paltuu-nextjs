@@ -73,6 +73,10 @@ export async function GET(
                         WHERE f.follower_id = $2 AND f.following_id = u.user_id AND f.status = 'pending'
                     ) AS has_pending_request,
                     EXISTS(
+                        SELECT 1 FROM social_follows f
+                        WHERE f.follower_id = u.user_id AND f.following_id = $2 AND f.status = 'accepted'
+                    ) AS is_following_me,
+                    EXISTS(
                         SELECT 1 FROM user_blocks b
                         WHERE b.blocker_id = $2 AND b.blocked_id = u.user_id
                     ) AS is_blocked_by_me,
@@ -191,6 +195,7 @@ export async function GET(
                 is_private: user.is_private,
                 is_following: user.is_following,
                 has_pending_request: user.has_pending_request,
+                is_following_me: user.is_following_me,
                 is_own_profile: user.is_own_profile,
                 is_blocked_by_me: user.is_blocked_by_me,
                 is_blocking_me: user.is_blocking_me,

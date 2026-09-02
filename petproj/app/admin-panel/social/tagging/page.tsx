@@ -19,7 +19,7 @@ interface Post {
 interface Tag { tag_id: number; slug: string; label: string; category: string; is_active: boolean; description: string | null; }
 interface TagCategories { species: Tag[]; topic: Tag[]; content_type: Tag[]; mood: Tag[]; }
 
-type Filter = "all" | "media" | "text" | "sla_breach";
+type Filter = "recent" | "all" | "media" | "text" | "sla_breach";
 
 export default function TaggingQueuePage() {
   const { user, isHydrating } = useAuth();
@@ -28,10 +28,13 @@ export default function TaggingQueuePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [index, setIndex] = useState(0);
   const [totalUntagged, setTotalUntagged] = useState(0);
+  // Untagged posts still inside the 72h engagement-backfill window — the ones
+  // worth working. `totalUntagged` includes the engagement-lost backlog too.
+  const [totalRecoverable, setTotalRecoverable] = useState(0);
   const [tags, setTags] = useState<TagCategories>({ species: [], topic: [], content_type: [], mood: [] });
   const [selectedPrimary, setSelectedPrimary] = useState<number[]>([]);
   const [selectedSecondary, setSelectedSecondary] = useState<number[]>([]);
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>("recent");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -72,10 +75,11 @@ export default function TaggingQueuePage() {
   const fetchQueue = useCallback(async (f: Filter) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/admin/social/tagging-queue?limit=50&filter=${f}`);
+      const res = await fetch(`/api/v1/admin/social/tagging-queue?limit=100&filter=${f}`);
       const data = await res.json();
       setPosts(data.posts ?? []);
       setTotalUntagged(data.total_untagged ?? 0);
+      setTotalRecoverable(data.total_recoverable ?? 0);
       setIndex(0);
       setSelectedPrimary([]);
       setSelectedSecondary([]);
@@ -137,6 +141,7 @@ export default function TaggingQueuePage() {
       });
       if (!res.ok) { showToast("Failed to save tags"); return; }
       setTotalUntagged(n => Math.max(0, n - 1));
+      if (post.hours_untagged <= 72) setTotalRecoverable(n => Math.max(0, n - 1));
       showToast("Tagged!");
       advance();
     } finally { setSaving(false); }
@@ -153,6 +158,7 @@ export default function TaggingQueuePage() {
         body: JSON.stringify({ reason: "admin_rejected" }),
       });
       setTotalUntagged(n => Math.max(0, n - 1));
+      if (post.hours_untagged <= 72) setTotalRecoverable(n => Math.max(0, n - 1));
       showToast("Post rejected");
       advance();
     } finally { setSaving(false); }
@@ -214,18 +220,38 @@ export default function TaggingQueuePage() {
         <div className="flex items-center gap-3">
           <Link href="/admin-panel" className="text-gray-500 hover:text-primary text-sm">← Admin Panel</Link>
           <h1 className="text-xl font-bold text-primary">Tagging Queue</h1>
-          <span className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">{totalUntagged} untagged</span>
+          <span
+            className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full"
+            title="Untagged posts still inside the 72h engagement-backfill window — the ones worth tagging now."
+          >
+            {totalRecoverable} recent
+          </span>
+          {totalUntagged > totalRecoverable && (
+            <span
+              className="text-xs text-gray-400"
+              title="Total untagged including posts past the 72h window. Use the 'All' filter to work these; their engagement signal is already lost."
+            >
+              +{totalUntagged - totalRecoverable} engagement-lost
+            </span>
+          )}
         </div>
         <div className="flex gap-2 flex-wrap items-center">
-          {(["all", "media", "text", "sla_breach"] as Filter[]).map(f => (
+          {(["recent", "all", "media", "text", "sla_breach"] as Filter[]).map(f => (
             <button
               key={f}
               onClick={() => changeFilter(f)}
+              title={
+                f === "recent" ? "Only posts still inside the 72h engagement-backfill window (default)."
+                : f === "all" ? "Every untagged post, including ones whose engagement signal is already lost."
+                : undefined
+              }
               className={`text-xs px-3 py-1 rounded-full border transition-all ${
                 filter === f ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-300 hover:border-primary"
               }`}
             >
-              {f === "sla_breach" ? "⚠ SLA breach" : f.charAt(0).toUpperCase() + f.slice(1)}
+              {f === "sla_breach" ? "⚠ SLA breach"
+                : f === "recent" ? "Recent (<72h)"
+                : f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
           <button
@@ -291,7 +317,15 @@ export default function TaggingQueuePage() {
       {posts.length > 0 && index >= posts.length && (
         <div className="bg-white rounded-lg shadow p-12 text-center text-gray-500">
           <p className="text-lg font-medium">Batch complete</p>
-          <p className="text-sm mt-1">{totalUntagged > 0 ? `${totalUntagged} posts still remain.` : "All caught up!"}</p>
+          <p className="text-sm mt-1">
+            {filter === "all"
+              ? (totalUntagged > 0 ? `${totalUntagged} untagged posts still remain.` : "All caught up!")
+              : (totalRecoverable > 0
+                  ? `${totalRecoverable} recent posts still remain.`
+                  : totalUntagged > 0
+                    ? "All recent posts done — only engagement-lost ones remain (see the All filter)."
+                    : "All caught up!")}
+          </p>
           <button onClick={() => fetchQueue(filter)} className="mt-4 bg-primary text-white px-4 py-2 rounded-lg text-sm">
             Reload queue
           </button>

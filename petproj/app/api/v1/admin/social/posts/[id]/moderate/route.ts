@@ -13,9 +13,10 @@ const VALID_NOTICE_REASONS = ['pet_sale'];
 
 /**
  * PATCH /api/v1/admin/social/posts/:id/moderate
- * Body: { state?: 'none' | 'quarantined' | 'hidden' | 'shadow_hidden' | 'redacted', notice_reason?: 'pet_sale' | null }
- * At least one of `state` / `notice_reason` must be present; each updates
- * independently of the other, so setting one never disturbs the other.
+ * Body: { state?: 'none' | 'quarantined' | 'hidden' | 'shadow_hidden' | 'redacted', notice_reason?: 'pet_sale' | null, trigger_warning?: boolean }
+ * At least one of `state` / `notice_reason` / `trigger_warning` must be
+ * present; each updates independently of the others, so setting one never
+ * disturbs the rest.
  *
  * `state` — is_hidden / is_shadow_hidden are kept in sync so existing feed
  * queries behave correctly:
@@ -44,6 +45,13 @@ const VALID_NOTICE_REASONS = ['pet_sale'];
  * (a seller who avoids price and sale language entirely) and for clearing
  * its false positives. Passing both fields in one call is the "confirmed as
  * a sale post" verdict: flag it and take it down in a single action.
+ *
+ * `trigger_warning` (boolean) — like `notice_reason`, this does NOT change
+ * the post's visibility. It sets social_posts.has_trigger_warning, which the
+ * mobile client reads to blur the post's media behind a "See Post" reveal
+ * (PostCard's TriggerWarningOverlay). Manual and admin-only — there is no
+ * detector for it. Independent of `state` and `notice_reason`; a post can
+ * carry all three.
  */
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const admin = await checkAdmin(req);
@@ -56,15 +64,20 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const state: string | undefined = body.state;
     const hasNoticeReason = Object.prototype.hasOwnProperty.call(body, 'notice_reason');
     const noticeReason: string | null = body.notice_reason ?? null;
+    const hasTriggerWarning = Object.prototype.hasOwnProperty.call(body, 'trigger_warning');
+    const triggerWarning: boolean = body.trigger_warning === true;
 
-    if (state === undefined && !hasNoticeReason) {
-      return NextResponse.json({ error: "Provide state and/or notice_reason" }, { status: 400 });
+    if (state === undefined && !hasNoticeReason && !hasTriggerWarning) {
+      return NextResponse.json({ error: "Provide state, notice_reason and/or trigger_warning" }, { status: 400 });
     }
     if (state !== undefined && !VALID_STATES.includes(state)) {
       return NextResponse.json({ error: `state must be one of ${VALID_STATES.join(', ')}` }, { status: 400 });
     }
     if (hasNoticeReason && noticeReason !== null && !VALID_NOTICE_REASONS.includes(noticeReason)) {
       return NextResponse.json({ error: `notice_reason must be one of ${VALID_NOTICE_REASONS.join(', ')}` }, { status: 400 });
+    }
+    if (hasTriggerWarning && typeof body.trigger_warning !== 'boolean') {
+      return NextResponse.json({ error: "trigger_warning must be a boolean" }, { status: 400 });
     }
 
     const isHidden = state === 'hidden';
@@ -92,6 +105,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       setClauses.push(`content_notice_reason = $${values.length + 1}`);
       values.push(noticeReason);
     }
+    if (hasTriggerWarning) {
+      setClauses.push(`has_trigger_warning = $${values.length + 1}`);
+      values.push(triggerWarning);
+    }
 
     const updated = await db.query(
       `UPDATE social_posts SET ${setClauses.join(', ')} WHERE post_id = $1 RETURNING post_id`,
@@ -117,6 +134,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const actionParts = [
       state !== undefined ? `state:${state}` : null,
       hasNoticeReason ? `notice:${noticeReason ?? 'cleared'}` : null,
+      hasTriggerWarning ? `trigger_warning:${triggerWarning ? 'on' : 'off'}` : null,
     ].filter(Boolean).join(',');
     await db.query(
       `INSERT INTO admin_action_logs (admin_id, action_performed, target_entity, status)
@@ -128,6 +146,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       success: true,
       ...(state !== undefined ? { moderation_state: state } : {}),
       ...(hasNoticeReason ? { content_notice_reason: noticeReason } : {}),
+      ...(hasTriggerWarning ? { has_trigger_warning: triggerWarning } : {}),
     });
   } catch (error) {
     console.error("Admin moderate-post PATCH error:", error);

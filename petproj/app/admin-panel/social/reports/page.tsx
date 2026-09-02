@@ -25,6 +25,7 @@ interface Report {
   post_report_count: number;
   moderation_state: string;
   content_notice_reason: string | null;
+  has_trigger_warning: boolean;
   suspicious_burst_at: string | null;
   author_block_after_report: boolean;
   reporter: Reporter;
@@ -153,6 +154,23 @@ export default function ReportQueuePage() {
         r.post_id === postId ? { ...r, content_notice_reason: "pet_sale" } : r
       ));
       showToast("Flagged as a sale post — banner is now on the post for everyone");
+    } catch { showToast("Failed"); }
+  }
+
+  // Blur this post's media behind a "See Post" reveal on the app. Flag only —
+  // like the sale flag it does not hide anything; visibility is untouched.
+  async function handleFlagTrigger(postId: number) {
+    try {
+      const res = await fetch(`/api/v1/admin/social/posts/${postId}/moderate`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trigger_warning: true }),
+      });
+      if (!res.ok) { showToast("Failed"); return; }
+      setReports(prev => prev.map(r =>
+        r.post_id === postId ? { ...r, has_trigger_warning: true } : r
+      ));
+      showToast("Trigger warning added — media is now blurred for everyone");
     } catch { showToast("Failed"); }
   }
 
@@ -364,6 +382,23 @@ export default function ReportQueuePage() {
                       className="flex-1 lg:flex-none text-xs px-3 py-2 rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-50 disabled:opacity-50 transition-all"
                     >
                       Flag: pet sale
+                    </button>
+                  )}
+                  {report.has_trigger_warning ? (
+                    <span
+                      title="This post's media is already blurred behind a 'See Post' reveal."
+                      className="flex-1 lg:flex-none text-xs px-3 py-2 rounded-lg bg-amber-50 text-amber-800 text-center"
+                    >
+                      Trigger warning on
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleFlagTrigger(report.post_id)}
+                      disabled={acting === report.report_id}
+                      title="Mark as a trigger warning. The post stays visible, but every viewer sees its media blurred behind a 'See Post' reveal."
+                      className="flex-1 lg:flex-none text-xs px-3 py-2 rounded-lg border border-amber-300 text-amber-800 hover:bg-amber-50 disabled:opacity-50 transition-all"
+                    >
+                      Flag: trigger warning
                     </button>
                   )}
                   <button

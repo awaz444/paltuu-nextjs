@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
         p.report_count          AS post_report_count,
         p.moderation_state,
         p.content_notice_reason,
+        p.has_trigger_warning,
         p.suspicious_burst_at,
         p.author_block_after_report,
         u.user_id              AS reporter_user_id,
@@ -62,6 +63,7 @@ export async function GET(req: NextRequest) {
       post_report_count: row.post_report_count,
       moderation_state: row.moderation_state,
       content_notice_reason: row.content_notice_reason,
+      has_trigger_warning: row.has_trigger_warning,
       suspicious_burst_at: row.suspicious_burst_at,
       author_block_after_report: row.author_block_after_report,
       reporter: {

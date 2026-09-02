@@ -875,6 +875,11 @@ model social_posts {
   /// to everyone else. Independent of is_hidden, which drops the post for
   /// the author too. Never exposed to clients.
   is_shadow_hidden          Boolean             @default(false)
+  /// Admin trigger-warning flag: true = post stays fully visible, but the
+  /// client blurs its media behind a "See Post" reveal. Manual, admin-only,
+  /// independent of is_shadow_hidden and content_notice_reason. See
+  /// migration 018 and PostCard's TriggerWarningOverlay.
+  has_trigger_warning       Boolean             @default(false)
   created_at                DateTime?           @default(now()) @db.Timestamptz(6)
   updated_at                DateTime?           @default(now()) @db.Timestamptz(6)
   is_repost                 Boolean?            @default(false)

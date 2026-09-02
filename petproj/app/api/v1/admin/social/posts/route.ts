@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 /**
  * GET /api/v1/admin/social/posts?limit&offset&search&status
  * status: all | untagged | quarantined | hidden | shadow_hidden
- *       | pet_sale | pet_sale_review
+ *       | pet_sale | pet_sale_review | trigger_warning
  *
  * `pet_sale` is every post carrying the public sale notice, whatever has
  * since been done with it. `pet_sale_review` is the working queue: the ones
@@ -45,6 +45,8 @@ export async function GET(req: NextRequest) {
       conditions.push(`sp.is_shadow_hidden = true`);
     } else if (status === "pet_sale") {
       conditions.push(`sp.content_notice_reason = 'pet_sale'`);
+    } else if (status === "trigger_warning") {
+      conditions.push(`sp.has_trigger_warning = true`);
     } else if (status === "pet_sale_review") {
       conditions.push(`sp.content_notice_reason = 'pet_sale'`);
       // Untouched since the flag went on: taking the post down (or restoring
@@ -67,6 +69,7 @@ export async function GET(req: NextRequest) {
            sp.is_hidden,
            sp.is_shadow_hidden,
            sp.content_notice_reason,
+           sp.has_trigger_warning,
            u.name,
            u.social_username AS username,
            COALESCE(sp.report_count, 0)::int AS report_count,

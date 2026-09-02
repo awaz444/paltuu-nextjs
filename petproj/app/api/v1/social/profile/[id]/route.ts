@@ -98,7 +98,7 @@ export async function GET(
                 ${TAGGED_PETS_AGG_CTE}
                 SELECT
                     p.post_id, p.user_id, p.content, p.created_at, p.updated_at, p.post_type,
-                    p.is_repost, p.original_post_id,
+                    p.is_repost, p.original_post_id, p.has_trigger_warning,
                     -- Author block, same shape the feed returns. Every post here
                     -- belongs to the profile owner, but the client must not have
                     -- to reconstruct that: badges in particular were being

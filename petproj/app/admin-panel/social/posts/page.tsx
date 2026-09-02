@@ -25,13 +25,14 @@ interface Post {
   is_hidden: boolean;
   is_shadow_hidden: boolean;
   content_notice_reason: string | null;
+  has_trigger_warning: boolean;
   tags: ContentTag[];
   username: string;
   name: string;
   action_history: ActionLogEntry[];
 }
 
-type StatusFilter = "all" | "untagged" | "quarantined" | "hidden" | "shadow_hidden" | "pet_sale_review" | "pet_sale";
+type StatusFilter = "all" | "untagged" | "quarantined" | "hidden" | "shadow_hidden" | "pet_sale_review" | "pet_sale" | "trigger_warning";
 
 type ModerationState = "none" | "quarantined" | "hidden" | "shadow_hidden";
 
@@ -43,10 +44,11 @@ const FILTER_LABELS: Record<StatusFilter, string> = {
   shadow_hidden: "Shadow-hidden",
   pet_sale_review: "⚠ Sale review",
   pet_sale: "All sale-flagged",
+  trigger_warning: "⚠ Trigger warning",
 };
 
 const FILTER_ORDER: StatusFilter[] = [
-  "all", "untagged", "pet_sale_review", "pet_sale", "quarantined", "hidden", "shadow_hidden",
+  "all", "untagged", "pet_sale_review", "pet_sale", "trigger_warning", "quarantined", "hidden", "shadow_hidden",
 ];
 
 /**
@@ -178,6 +180,25 @@ export default function PostBrowserPage() {
         p.post_id === postId ? { ...p, content_notice_reason: reason } : p
       ));
       showToast(reason ? "Sale flag added — banner is now on the post for everyone" : "Sale flag cleared");
+    } finally { setActingId(null); }
+  }
+
+  // Independent of moderation_state and of the sale flag — the post stays
+  // exactly as visible as it was. When on, the mobile app blurs the post's
+  // media behind a "See Post" reveal (see PostCard's TriggerWarningOverlay).
+  async function handleTriggerWarning(postId: number, value: boolean) {
+    setActingId(postId);
+    try {
+      const res = await fetch(`/api/v1/admin/social/posts/${postId}/moderate`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trigger_warning: value }),
+      });
+      if (!res.ok) { showToast("Failed"); return; }
+      setPosts(prev => prev.map(p =>
+        p.post_id === postId ? { ...p, has_trigger_warning: value } : p
+      ));
+      showToast(value ? "Trigger warning added — media is now blurred for everyone" : "Trigger warning cleared");
     } finally { setActingId(null); }
   }
 
@@ -323,6 +344,14 @@ export default function PostBrowserPage() {
                         {needsSaleReview(post) ? " · needs review" : ""}
                       </span>
                     )}
+                    {post.has_trigger_warning && (
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800"
+                        title="Media on this post is blurred behind a 'See Post' reveal for every viewer."
+                      >
+                        trigger warning
+                      </span>
+                    )}
                     {post.report_count > 0 && (
                       <span className="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded-full">{post.report_count} reports</span>
                     )}
@@ -392,6 +421,29 @@ export default function PostBrowserPage() {
                       className="text-xs px-3 py-1.5 rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-50 disabled:opacity-50 transition-all"
                     >
                       Flag: pet sale
+                    </button>
+                  )}
+                  {/* ── Trigger warning ──
+                       Blurs the post's media behind a "See Post" reveal on the
+                       app. Never changes visibility; independent of the sale
+                       flag and of moderation state. ── */}
+                  {post.has_trigger_warning ? (
+                    <button
+                      onClick={() => handleTriggerWarning(post.post_id, false)}
+                      disabled={actingId === post.post_id}
+                      title="Remove the trigger warning — media shows normally again for everyone."
+                      className="text-xs px-3 py-1.5 rounded-lg border border-amber-300 text-amber-800 hover:bg-amber-50 disabled:opacity-50 transition-all"
+                    >
+                      Clear trigger warning
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleTriggerWarning(post.post_id, true)}
+                      disabled={actingId === post.post_id}
+                      title="Mark as a trigger warning. The post stays fully visible, but every viewer sees its media blurred behind a 'See Post' reveal."
+                      className="text-xs px-3 py-1.5 rounded-lg border border-amber-300 text-amber-800 hover:bg-amber-50 disabled:opacity-50 transition-all"
+                    >
+                      Flag: trigger warning
                     </button>
                   )}
                   {(post.moderation_state === "none" || !post.moderation_state) && (

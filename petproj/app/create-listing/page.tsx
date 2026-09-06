@@ -16,13 +16,14 @@ import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
+import PhoneNumberInput from "../../components/PhoneNumberInput";
+import { isValidPhone } from "@/utils/phone";
 
 const { Panel } = Collapse;
 
 // Only allow letters (Latin + Urdu range), digits, spaces and basic punctuation
 const TITLE_RE = /^[a-zA-Z0-9؀-ۿ\s\-,.'&()]+$/;
 const LETTERS_RE = /^[a-zA-Z؀-ۿ\s\-']+$/;
-const PHONE_RE = /^3\d{9}$/; // 10 digits starting with 3
 
 export default function CreatePetListing() {
 
@@ -122,11 +123,6 @@ export default function CreatePetListing() {
         if (v.length <= 1000) setDescription(v);
     };
 
-    // Phone: digits only, max 10, must start with 3
-    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const v = e.target.value.replace(/\D/g, "");
-        if (v.length <= 10) setContactNumber(v);
-    };
 
     const handleAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -224,8 +220,8 @@ export default function CreatePetListing() {
         if (!cityId) errors.cityId = "City is required";
         if (!contactNumber) {
             errors.contactNumber = "Contact number is required";
-        } else if (!PHONE_RE.test(contactNumber)) {
-            errors.contactNumber = "Enter a valid 10-digit number starting with 3 (e.g. 3001234567)";
+        } else if (!isValidPhone(contactNumber)) {
+            errors.contactNumber = "Enter a valid phone number for the selected country";
         }
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
@@ -238,8 +234,8 @@ export default function CreatePetListing() {
         if (!cityId) errors.cityId = "City is required";
         if (!contactNumber) {
             errors.contactNumber = "Contact number is required";
-        } else if (!PHONE_RE.test(contactNumber)) {
-            errors.contactNumber = "Enter a valid 10-digit number starting with 3";
+        } else if (!isValidPhone(contactNumber)) {
+            errors.contactNumber = "Enter a valid phone number for the selected country";
         }
         if ((age === null || age === 0) && (months === null || months === 0)) {
             errors.age = "Either age or months must be filled";
@@ -274,7 +270,7 @@ export default function CreatePetListing() {
                 city_id: cityId ? Number(cityId) : null,
                 area: area || "",
                 age_months: (age || 0) * 12 + (months || 0),
-                contact_number: contactNumber ? `+92${contactNumber}` : null,
+                contact_number: contactNumber || null,
                 description: description || null,
                 adoption_status: "available",
                 price: null,
@@ -496,23 +492,16 @@ export default function CreatePetListing() {
                                         {/* Phone */}
                                         <div>
                                             <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Contact Phone *</label>
-                                            <div className={`flex items-center p-5 w-full border rounded-3xl input-field bg-gray-50/50 focus-within:bg-white transition-all ${formErrors.contactNumber ? "border-red-300" : "focus-within:border-primary"}`}>
-                                                <span className="text-gray-500 font-medium mr-2 select-none">+92</span>
-                                                <input
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    required
-                                                    className="bg-transparent border-none outline-none w-full text-base font-normal placeholder:text-gray-300"
-                                                    placeholder="3001234567"
-                                                    value={contactNumber}
-                                                    onChange={handlePhoneChange}
-                                                    maxLength={10}
-                                                />
-                                                <span className="text-xs text-gray-300 select-none">{contactNumber.length}/10</span>
-                                            </div>
+                                            <PhoneNumberInput
+                                                value={contactNumber}
+                                                onChange={setContactNumber}
+                                                hasError={!!formErrors.contactNumber}
+                                                className={`p-5 w-full border rounded-3xl input-field bg-gray-50/50 focus-within:bg-white ${formErrors.contactNumber ? "border-red-300" : "focus-within:border-primary"}`}
+                                                inputClassName="text-base font-normal"
+                                            />
                                             {formErrors.contactNumber
                                                 ? <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.contactNumber}</p>
-                                                : <p className="text-gray-400 text-xs mt-1 ml-1">10-digit number after +92 (e.g. 3001234567)</p>
+                                                : <p className="text-gray-400 text-xs mt-1 ml-1">Pick your country, then enter the number without the leading zero</p>
                                             }
                                         </div>
                                     </div>

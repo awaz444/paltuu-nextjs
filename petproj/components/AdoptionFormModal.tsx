@@ -2,7 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
-import { 
+import PhoneNumberInput from "./PhoneNumberInput";
+import { isValidPhone } from "@/utils/phone";
+import {
     XMarkIcon, 
     ChevronRightIcon, 
     ChevronLeftIcon,
@@ -93,7 +95,11 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
         if (step === 1) {
             if (!formData.adopter_name) errors.adopter_name = "Name is required";
             if (!formData.city_id) errors.city_id = "City is required";
-            if (!formData.contact_number) errors.contact_number = "Phone number is required";
+            if (!formData.contact_number) {
+                errors.contact_number = "Phone number is required";
+            } else if (!isValidPhone(formData.contact_number)) {
+                errors.contact_number = "Enter a valid phone number for the selected country";
+            }
             if (!formData.adopter_address) errors.adopter_address = "Address is required";
         } else if (step === 3) {
             if (!formData.agree_to_terms) errors.agree_to_terms = "You must agree to the terms";
@@ -122,7 +128,7 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
                 pet_id: petId,
                 ...formData,
                 city_id: parseInt(formData.city_id),
-                contact_number: `+92${formData.contact_number}`
+                contact_number: formData.contact_number
             };
 
             const response = await fetch('/api/v1/applications/adoption', {
@@ -279,20 +285,21 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
                                         </div>
                                         <div>
                                             <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Phone Number *</label>
-                                            <div className="flex items-center p-4 bg-gray-50/50 rounded-2xl border border-gray-100 focus-within:bg-white focus-within:border-primary transition-all">
-                                                <span className="text-gray-400 font-bold mr-2">+92</span>
-                                                <input
-                                                    type="tel"
-                                                    name="contact_number"
-                                                    className="bg-transparent border-none outline-none w-full font-bold text-gray-900"
-                                                    placeholder="3331234567"
-                                                    value={formData.contact_number}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
-                                                        setFormData(prev => ({ ...prev, contact_number: val }));
-                                                    }}
-                                                />
-                                            </div>
+                                            <PhoneNumberInput
+                                                value={formData.contact_number}
+                                                onChange={(e164) => {
+                                                    setFormData(prev => ({ ...prev, contact_number: e164 }));
+                                                    if (formErrors.contact_number) {
+                                                        setFormErrors(prev => {
+                                                            const next = { ...prev };
+                                                            delete next.contact_number;
+                                                            return next;
+                                                        });
+                                                    }
+                                                }}
+                                                hasError={!!formErrors.contact_number}
+                                                className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100 focus-within:bg-white focus-within:border-primary"
+                                            />
                                             {formErrors.contact_number && <span className="text-red-500 text-xs ml-1 mt-1 font-bold">{formErrors.contact_number}</span>}
                                         </div>
                                     </div>

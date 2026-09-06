@@ -4,6 +4,7 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 import { AdoptionNotifications } from "@/lib/notifications";
 import { sendAdoptionApplicationEmails } from "@/utils/mailjet";
 import { withRetry } from "@/utils/retry";
+import { normalizePhone } from "@/utils/phone";
 
 /**
  * @swagger
@@ -78,6 +79,14 @@ export async function POST(req: NextRequest) {
         const sanitizedAgeOfYoungestChild = age_of_youngest_child === "" ? null : age_of_youngest_child;
         const sanitizedCityId = city_id === "" ? null : city_id;
 
+        // Canonicalise the phone number to E.164. The mobile app sends "+92" +
+        // digits and the web form sends a full E.164 string via the country-code
+        // dropdown, so this is a pass-through for current clients; unparseable
+        // input is kept verbatim rather than rejected.
+        const sanitizedContactNumber = contact_number
+            ? (normalizePhone(contact_number) ?? String(contact_number).trim().slice(0, 255))
+            : null;
+
         // Validation
         if (!pet_id || !agree_to_terms) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -106,7 +115,7 @@ export async function POST(req: NextRequest) {
                 userId, pet_id, adopter_name, adopter_address,
                 sanitizedAgeOfYoungestChild, other_pets_details, other_pets_neutered,
                 has_secure_outdoor_area, pet_sleep_location, pet_left_alone,
-                additional_details, agree_to_terms, sanitizedCityId, contact_number
+                additional_details, agree_to_terms, sanitizedCityId, sanitizedContactNumber
             ]),
             { label: "insert adoption application" }
         );

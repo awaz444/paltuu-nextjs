@@ -4,6 +4,7 @@ import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
 import { validate } from "@/utils/validation";
 import { withRetry } from "@/utils/retry";
 import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
+import { normalizePhone } from "@/utils/phone";
 
 /**
  * @swagger
@@ -163,6 +164,15 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ errors: ["Listing contains language that isn't allowed"] }, { status: 400 });
         }
 
+        // Store the phone number as a canonical E.164 string. Both the mobile app
+        // ("+92" + 10 digits) and the web forms (country-code dropdown -> full
+        // E.164) already send this shape, so this is a no-op pass-through for
+        // them; legacy / bare input is coerced, and anything unparseable is kept
+        // verbatim rather than rejected so existing clients never break.
+        const normalizedContactNumber = contact_number
+            ? (normalizePhone(contact_number) ?? String(contact_number).trim().slice(0, 255))
+            : null;
+
         // Auto-assign owner_id (Security fix)
         const result = await withRetry(
             () => db.query(
@@ -174,7 +184,7 @@ export async function POST(req: NextRequest) {
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'available', $10, $11, $12, $13, $14, $15, CURRENT_TIMESTAMP, $16, $17, false)
             RETURNING *`,
                 [
-                    userId, pet_name, pet_type, pet_breed, city_id, area, age_months, contact_number,
+                    userId, pet_name, pet_type, pet_breed, city_id, area, age_months, normalizedContactNumber,
                     description, sex, listing_type, vaccinated || false, neutered || false,
                     listing_type === 'rescue' ? null : price, rescue_story, energy_level, cuddliness_level
                 ]

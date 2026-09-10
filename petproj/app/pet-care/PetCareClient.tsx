@@ -168,7 +168,7 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
     return (
         <main className="min-h-screen bg-gray-100">
             {/* Visually hidden h1 — SEO signal without disrupting layout */}
-            <h1 className="sr-only">Find Veterinary Clinics &amp; Pet Care Near You in Pakistan</h1>
+            <h1 className="sr-only">Vets Near Me — Find Verified Vet Clinics &amp; Home Vets Near You in Pakistan</h1>
 
             {/* ===== SLIM HERO BANNER ===== */}
             <div className="bg-white border-b border-gray-100">

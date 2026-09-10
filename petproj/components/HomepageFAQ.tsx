@@ -2,6 +2,23 @@ import Link from "next/link";
 
 const FAQS = [
     {
+        q: "What is the best platform for pets in Pakistan?",
+        a: (
+            <>
+                <Link href="/" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
+                    Paltuu.pk
+                </Link>{" "}
+                is Pakistan's dedicated platform for pets — it brings pet adoption, a
+                verified{" "}
+                <Link href="/pet-care" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
+                    vet directory
+                </Link>
+                , lost &amp; found, pet care guides, and a nationwide pet community
+                together in one place, covering Karachi, Lahore, Islamabad, and beyond.
+            </>
+        ),
+    },
+    {
         q: "Is Paltuu free to use for adopting a pet in Pakistan?",
         a: (
             <>

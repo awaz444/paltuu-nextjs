@@ -2,17 +2,24 @@ import { Metadata } from "next";
 import HeroSection from "../components/HeroSection";
 import LatestBlogsSection from "@/components/LatestBlogsSection";
 import HomepageFAQ from "@/components/HomepageFAQ";
+import HomeSeoContent from "@/components/HomeSeoContent";
 import { getAllBlogsMetadata } from "@/lib/mdx";
 
 export const metadata: Metadata = {
-  title: "Pet Adoption Pakistan — Adopt Dogs & Cats",
+  title: "Pets in Pakistan — Pet Adoption, Vets Near You & Pet Care",
   description:
-    "Paltuu is Pakistan's first pet super app and #1 pet adoption platform. Adopt dogs, cats, puppies, and kittens, connect with verified home vets, and join Pakistan's largest pet community in Karachi, Lahore, Islamabad, and across Pakistan. Download the app on Android now.",
+    "Paltuu.pk is the platform for pets in Pakistan — adopt dogs, cats, puppies, and kittens, find a verified vet near you, report lost pets, and join Pakistan's largest pet community in Karachi, Lahore, Islamabad, and nationwide. Download the app on Android now.",
   keywords: [
     "paltuu",
     "paltu",
     "paaltuu",
     "paltuu.pk",
+    "pets pakistan",
+    "pets in pakistan",
+    "pet website pakistan",
+    "pet platform pakistan",
+    "vets near me",
+    "vet near me pakistan",
     "pet adoption pakistan",
     "pet super app pakistan",
     "pakistan pet platform",
@@ -43,18 +50,18 @@ export const metadata: Metadata = {
     "pet community app pakistan",
   ],
   openGraph: {
-    title: "Pet Adoption Pakistan — Adopt Dogs & Cats | Paltuu",
+    title: "Pets in Pakistan — Pet Adoption, Vets Near You & Pet Care | Paltuu",
     description:
-      "Adopt pets, find verified home vets, and join Pakistan's largest pet community. Paltuu.pk is Pakistan's first pet super app — serving Karachi, Lahore, and Islamabad.",
+      "Adopt pets, find a verified vet near you, and join Pakistan's largest pet community. Paltuu.pk is the platform for pets in Pakistan — serving Karachi, Lahore, and Islamabad.",
     url: "https://www.paltuu.pk",
     siteName: "Paltuu.pk",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Pet Adoption Pakistan — Adopt Dogs & Cats | Paltuu",
+    title: "Pets in Pakistan — Pet Adoption, Vets Near You & Pet Care | Paltuu",
     description:
-      "Adopt pets, find vets, and join Pakistan's largest pet community. Download Pakistan's first pet super app.",
+      "Adopt pets, find a vet near you, and join Pakistan's largest pet community. Download the platform for pets in Pakistan.",
   },
   alternates: {
     canonical: "https://www.paltuu.pk",
@@ -68,6 +75,7 @@ export default function HomePage() {
     <main className="overflow-hidden bg-white">
       <HeroSection />
       <LatestBlogsSection posts={latestPosts} />
+      <HomeSeoContent />
       <HomepageFAQ />
     </main>
   );

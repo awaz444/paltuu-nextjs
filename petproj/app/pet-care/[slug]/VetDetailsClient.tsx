@@ -40,6 +40,7 @@ import LoginModal from "../../../components/LoginModal";
 import './styles.css'
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
+import { formatPhoneDisplay } from "@/utils/phone";
 
 interface VetDetails {
     vet_id: string;
@@ -168,15 +169,12 @@ export default function VetDetailsClient({
 
     // Handle WhatsApp click
     const handleWhatsApp = (phone: string) => {
-        let formattedPhone = phone.trim();
-        if (formattedPhone.startsWith("0")) {
-            formattedPhone = "+92" + formattedPhone.slice(1);
-        } else if (!formattedPhone.startsWith("+92")) {
-            message.error("Invalid phone number format. Please use a valid Pakistani number.");
+        const digits = formatPhoneDisplay(phone).digits;
+        if (!digits) {
+            message.error("Invalid phone number format.");
             return;
         }
-        const whatsappUrl = `https://wa.me/${phone}`;
-        window.open(whatsappUrl, "_blank");
+        window.open(`https://wa.me/${digits}`, "_blank");
     };
 
     // Handle review button click

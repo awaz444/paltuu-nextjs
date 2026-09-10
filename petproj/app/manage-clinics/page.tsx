@@ -15,6 +15,7 @@ import {
 } from "@ant-design/icons";
 import QRCode from "qrcode";
 import type { UploadFile } from "antd/es/upload/interface";
+import PhoneNumberInput from "@/components/PhoneNumberInput";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -1038,10 +1039,10 @@ export default function ManageClinicsPage() {
                     <Input placeholder="e.g. Veterinary Clinic" className="rounded-xl" />
                 </Form.Item>
                 <Form.Item name="contact_number" label="Contact Number">
-                    <Input prefix={<PhoneOutlined />} placeholder="+92..." className="rounded-xl" />
+                    <PhoneNumberInput className="border border-[#d9d9d9] rounded-xl px-3 py-1" />
                 </Form.Item>
                 <Form.Item name="whatsapp_number" label="WhatsApp">
-                    <Input prefix={<PhoneOutlined />} placeholder="+92..." className="rounded-xl" />
+                    <PhoneNumberInput className="border border-[#d9d9d9] rounded-xl px-3 py-1" />
                 </Form.Item>
                 <Form.Item name="operating_hours" label="Operating Hours">
                     <Input prefix={<ClockCircleOutlined />} placeholder="9 AM – 9 PM" className="rounded-xl" />
@@ -1099,7 +1100,7 @@ export default function ManageClinicsPage() {
                     <InputNumber className="w-full" min={0} />
                 </Form.Item>
                 <Form.Item name="contact_details" label="Contact Details">
-                    <Input prefix={<PhoneOutlined />} placeholder="+92..." className="rounded-xl" />
+                    <PhoneNumberInput className="border border-[#d9d9d9] rounded-xl px-3 py-1" />
                 </Form.Item>
                 <Form.Item name="license_number" label="License Number">
                     <Input placeholder="Vet License #" className="rounded-xl" />

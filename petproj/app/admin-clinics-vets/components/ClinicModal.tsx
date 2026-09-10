@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Modal, Form, Input, Switch, Upload, Button, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
+import PhoneNumberInput from "@/components/PhoneNumberInput";
 
 interface ClinicModalProps {
     visible: boolean;
@@ -117,11 +118,11 @@ export default function ClinicModal({ visible, onCancel, onSuccess, initialData 
                     </Form.Item>
 
                     <Form.Item name="contact_number" label="Contact Number">
-                        <Input placeholder="E.g. +92..." className="rounded-xl p-2" />
+                        <PhoneNumberInput className="border border-[#d9d9d9] rounded-xl p-2" />
                     </Form.Item>
 
                     <Form.Item name="whatsapp_number" label="WhatsApp Number">
-                        <Input placeholder="E.g. +92..." className="rounded-xl p-2" />
+                        <PhoneNumberInput className="border border-[#d9d9d9] rounded-xl p-2" />
                     </Form.Item>
 
                     <Form.Item name="google_maps_link" label="Google Maps Link">

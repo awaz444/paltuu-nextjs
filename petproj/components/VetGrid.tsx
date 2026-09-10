@@ -5,6 +5,7 @@ import { Modal, Button, message } from "antd";
 import { CopyOutlined, WhatsAppOutlined } from "@ant-design/icons";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import PhoneOutlined from "@ant-design/icons/PhoneOutlined";
+import { formatPhoneDisplay } from "@/utils/phone";
 
 interface VetGridProps {
     vets: Vet[];
@@ -18,17 +19,12 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
 
 
     const handleWhatsApp = (phone: string) => {
-        let formattedPhone = phone.trim();
-        if (formattedPhone.startsWith("0")) {
-            formattedPhone = "+92" + formattedPhone.slice(1);
-        } else if (!formattedPhone.startsWith("+92")) {
-            message.error(
-                "Invalid phone number format. Please use a valid Pakistani number."
-            );
+        const digits = formatPhoneDisplay(phone).digits;
+        if (!digits) {
+            message.error("Invalid phone number format.");
             return;
         }
-        const whatsappUrl = `https://wa.me/${formattedPhone}`;
-        window.open(whatsappUrl, "_blank");
+        window.open(`https://wa.me/${digits}`, "_blank");
     };
 
     const handleCopy = (text: string) => {

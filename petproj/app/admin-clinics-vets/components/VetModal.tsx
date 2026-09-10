@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Modal, Form, Input, Switch, Upload, Button, message, InputNumber, Select, Space, Card } from "antd";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
+import PhoneNumberInput from "@/components/PhoneNumberInput";
 
 interface VetModalProps {
     visible: boolean;
@@ -131,7 +132,7 @@ export default function VetModal({ visible, onCancel, onSuccess, initialData, cl
                     </Form.Item>
 
                     <Form.Item name="contact_details" label="Contact Details">
-                        <Input placeholder="E.g. +92..." className="rounded-xl p-2" />
+                        <PhoneNumberInput className="border border-[#d9d9d9] rounded-xl p-2" />
                     </Form.Item>
 
                     <Form.Item name="license_number" label="License Number">

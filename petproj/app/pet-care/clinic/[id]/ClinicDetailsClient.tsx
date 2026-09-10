@@ -22,6 +22,7 @@ import {
 import { MdRateReview, MdVerified } from "react-icons/md";
 import { MoonLoader } from "react-spinners";
 import VetGrid from "../../../../components/VetGrid";
+import { formatPhoneDisplay } from "@/utils/phone";
 import LoginModal from "../../../../components/LoginModal";
 import { useAuth } from "@/context/AuthContext";
 import { ClinicDetails } from "./data";
@@ -105,15 +106,12 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
     };
 
     const handleWhatsApp = (phone: string) => {
-        let formattedPhone = phone.trim();
-        if (formattedPhone.startsWith("0")) {
-            formattedPhone = "+92" + formattedPhone.slice(1);
-        } else if (!formattedPhone.startsWith("+92")) {
-            message.error("Invalid phone number format. Please use a valid Pakistani number.");
+        const digits = formatPhoneDisplay(phone).digits;
+        if (!digits) {
+            message.error("Invalid phone number format.");
             return;
         }
-        const whatsappUrl = `https://wa.me/${phone}`;
-        window.open(whatsappUrl, "_blank");
+        window.open(`https://wa.me/${digits}`, "_blank");
     };
 
     const handleCopy = (text: string) => {

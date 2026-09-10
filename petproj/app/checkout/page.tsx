@@ -24,6 +24,8 @@ import { FaUniversity } from "react-icons/fa";
 import { useCartProtection } from "@/hooks/useCartProtection";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import PhoneNumberInput from "@/components/PhoneNumberInput";
+import { isValidPhone } from "@/utils/phone";
 
 interface CartItem {
   id: number;
@@ -165,7 +167,7 @@ const CheckoutPage = () => {
           const info = json.shippingInfo;
           setEmail(info.email || "");
           setFullName(info.full_name || "");
-          setPhone(info.phone || "+92");
+          setPhone(info.phone || "");
           setCity("Karachi"); // Force Karachi as it's the only supported city
           setPostalCode(info.postal_code || "");
           setAddress(info.address || "");
@@ -196,58 +198,12 @@ const CheckoutPage = () => {
     return emailRegex.test(email);
   };
 
-  // Phone validation function
-  const validatePhone = (phone: string) => {
-    // Remove any non-digit characters except the +92 prefix
-    const cleaned = phone.replace(/\D/g, "");
-    // Check if it starts with 92 and has exactly 12 digits total (+92 + 10 digits)
-    return cleaned.startsWith("92") && cleaned.length === 12;
-  };
+  // Phone validation: a well-formed E.164 number for the chosen country.
+  const validatePhone = (value: string) => isValidPhone(value);
 
-  // Format phone number as user types
   const handlePhoneChange = (value: string) => {
-    // Remove all non-digit characters
-    const digitsOnly = value.replace(/\D/g, "");
-
-    // If empty, set to +92
-    if (digitsOnly === "") {
-      setPhone("+92");
-      setPhoneError("");
-      return;
-    }
-
-    // Ensure it starts with 92
-    let formatted = digitsOnly;
-    if (!digitsOnly.startsWith("92")) {
-      formatted = "92" + digitsOnly.replace(/^92/, "");
-    }
-
-    // Limit to 12 digits total (92 + 10 digits)
-    formatted = formatted.slice(0, 12);
-
-    // Format as +92 XXX XXXXXXX
-    let displayValue = "+" + formatted;
-    if (formatted.length > 3) {
-      displayValue = "+" + formatted.slice(0, 3) + " " + formatted.slice(3);
-    }
-    if (formatted.length > 6) {
-      displayValue =
-        "+" +
-        formatted.slice(0, 3) +
-        " " +
-        formatted.slice(3, 6) +
-        " " +
-        formatted.slice(6);
-    }
-
-    setPhone(displayValue);
-
-    // Validate and show error if incomplete
-    if (formatted.length < 12) {
-      setPhoneError("Phone number must be 10 digits after +92");
-    } else {
-      setPhoneError("");
-    }
+    setPhone(value);
+    setPhoneError(value && !isValidPhone(value) ? "Enter a valid phone number for the selected country" : "");
   };
 
   // Email change handler with validation
@@ -333,7 +289,7 @@ const CheckoutPage = () => {
       setPhoneError("Phone number is required");
       isValid = false;
     } else if (!validatePhone(phone)) {
-      setPhoneError("Phone number must be 10 digits after +92");
+      setPhoneError("Enter a valid phone number for the selected country");
       isValid = false;
     }
 
@@ -486,12 +442,11 @@ const CheckoutPage = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Phone Number *
                       </label>
-                      <input
-                        type="tel"
-                        placeholder="+92 300 1234567"
+                      <PhoneNumberInput
                         value={phone}
-                        onChange={(e) => handlePhoneChange(e.target.value)}
-                        className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition ${phoneError ? "border-red-500" : "border-gray-300"
+                        onChange={handlePhoneChange}
+                        hasError={!!phoneError}
+                        className={`w-full p-3 border rounded-xl focus-within:ring-2 focus-within:ring-primary outline-none transition ${phoneError ? "border-red-500" : "border-gray-300"
                           }`}
                       />
                       {phoneError && (

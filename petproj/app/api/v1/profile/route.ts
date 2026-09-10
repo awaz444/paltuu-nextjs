@@ -4,6 +4,7 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 import sharp from "sharp";
 import { uploadToS3, deleteFromS3 } from "@/lib/s3";
 import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
+import { normalizePhone } from "@/utils/phone";
 
 const ACCEPTED_TYPES = new Set([
     "image/jpeg", "image/jpg", "image/png", "image/webp",
@@ -125,15 +126,21 @@ export async function PATCH(req: NextRequest) {
             return NextResponse.json({ error: "Please choose a different name." }, { status: 400 });
         }
 
+        // Canonicalise to E.164 when provided; non-rejecting so legacy clients
+        // that still send bare digits keep working.
+        const phoneToStore = phone_number
+            ? (normalizePhone(phone_number) ?? String(phone_number).trim().slice(0, 255))
+            : phone_number;
+
         const result = await db.query(`
-            UPDATE users SET 
+            UPDATE users SET
                 name = COALESCE($1, name),
                 phone_number = COALESCE($2, phone_number),
                 dob = COALESCE($3, dob),
                 city_id = COALESCE($4, city_id)
             WHERE user_id = $5
             RETURNING user_id, name, email, profile_image_url, role, created_at, phone_number, dob, city_id
-        `, [name, phone_number, dob, city_id, userId]);
+        `, [name, phoneToStore, dob, city_id, userId]);
 
         if (result.rowCount === 0) return NextResponse.json({ error: "User not found" }, { status: 404 });
         return NextResponse.json({ success: true, user: result.rows[0] });

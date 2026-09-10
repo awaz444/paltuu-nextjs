@@ -14,6 +14,7 @@ import { Modal, Button } from "antd";
 import { toast } from "react-hot-toast";
 import OTPInput from "react-otp-input";
 import PartnerModal from "./PartnerModal";
+import PhoneNumberInput from "../PhoneNumberInput";
 
 interface SignupFormProps {
     onSwitchToLogin: () => void;
@@ -486,26 +487,11 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                 <label className="block text-gray-700 text-sm font-medium mb-1">
                     Phone Number
                 </label>
-                <div className="flex space-x-2">
-                    <input
-                        type="text"
-                        value="+92"
-                        className="w-12 border border-gray-300 pl-2 rounded-xl py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                        disabled
-                    />
-                    <input
-                        type="text"
-                        value={phone_number}
-                        onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, "");
-                            if (value.length <= 10) setPhoneNumber(value);
-                        }}
-                        placeholder="3338888666"
-                        className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                        required
-                        maxLength={10}
-                    />
-                </div>
+                <PhoneNumberInput
+                    value={phone_number}
+                    onChange={setPhoneNumber}
+                    className="border border-gray-300 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-primary"
+                />
             </div>
 
             {/* City */}

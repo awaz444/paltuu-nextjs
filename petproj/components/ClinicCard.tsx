@@ -38,9 +38,9 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
             <div className="relative px-4 pt-4">
                 <img
                     alt={clinic.name}
-                    src={clinic.logo_url || "/placeholder-clinic.png"}
+                    src={clinic.logo_url || "/placeholder-hospital.png"}
                     onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/placeholder-clinic.png";
+                        (e.target as HTMLImageElement).src = "/placeholder-hospital.png";
                     }}
                     className="w-full aspect-square object-cover rounded-2xl"
                 />

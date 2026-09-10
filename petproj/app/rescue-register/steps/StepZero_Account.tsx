@@ -2,6 +2,7 @@
 "use client";
 import React, { useState } from "react";
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
+import PhoneNumberInput from "@/components/PhoneNumberInput";
 
 interface StepZeroProps {
   data: {
@@ -146,22 +147,11 @@ const StepZero: React.FC<StepZeroProps> = ({ data, setData, next, cities }) => {
         <label className="block text-gray-700 text-sm font-medium mb-1">
           Phone Number
         </label>
-        <div className="flex space-x-2">
-          <input
-            type="text"
-            value="+92"
-            className="w-14 border border-gray-300 pl-2 rounded-xl py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-            disabled
-          />
-          <input
-            type="text"
-            value={data.phone_number}
-            onChange={(e) => handleInputChange("phone_number", e.target.value)}
-            placeholder="3001234567"
-            className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-            required
-          />
-        </div>
+        <PhoneNumberInput
+          value={data.phone_number}
+          onChange={(v) => handleInputChange("phone_number", v)}
+          className="border border-gray-300 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-primary"
+        />
         {errors.phone_number && (
           <p className="text-red-500 text-xs mt-1">{errors.phone_number}</p>
         )}

@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../store/store";
 import { fetchCities } from "../../store/slices/citiesSlice";
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
+import PhoneNumberInput from "@/components/PhoneNumberInput";
 
 interface StepZeroProps {
   formData: {
@@ -159,12 +160,10 @@ const StepZero_Account: React.FC<StepZeroProps> = ({ formData, setFormData, next
         <label className="block text-gray-700 text-sm font-medium mb-1">
           Phone Number
         </label>
-        <input
-          type="tel"
+        <PhoneNumberInput
           value={formData.phoneNumber}
-          onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
-          className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-          required
+          onChange={(v) => handleInputChange("phoneNumber", v)}
+          className="border border-gray-300 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-primary"
         />
         {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
       </div>

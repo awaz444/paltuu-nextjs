@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { Button, Input, Typography } from "antd";
+import PhoneNumberInput from "@/components/PhoneNumberInput";
 
 const { Title } = Typography;
 
@@ -39,20 +40,11 @@ const RescueStepFive: React.FC<StepFiveProps> = ({
                 <label className="block text-gray-700 text-sm font-medium mb-1">
                     Primary Emergency Phone Number
                 </label>
-                <div className="flex space-x-2">
-                    <Input
-                        value="+92"
-                        disabled
-                        className="w-14 border border-gray-300 pl-2 rounded-xl py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
-                    <Input
-                        value={data.emergencyPhone}
-                        onChange={(e) => handleInputChange('emergencyPhone', e.target.value)}
-                        placeholder="3001234567"
-                        className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                        required
-                    />
-                </div>
+                <PhoneNumberInput
+                    value={data.emergencyPhone}
+                    onChange={(v) => handleInputChange('emergencyPhone', v)}
+                    className="border border-gray-300 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-primary"
+                />
             </div>
 
             {/* Backup Phone */}
@@ -60,19 +52,11 @@ const RescueStepFive: React.FC<StepFiveProps> = ({
                 <label className="block text-gray-700 text-sm font-medium mb-1">
                     Backup Contact Number (optional)
                 </label>
-                <div className="flex space-x-2">
-                    <Input
-                        value="+92"
-                        disabled
-                        className="w-14 border border-gray-300 pl-2 rounded-xl py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
-                    <Input
-                        value={data.backupPhone}
-                        onChange={(e) => handleInputChange('backupPhone', e.target.value)}
-                        placeholder="3001234567"
-                        className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
-                </div>
+                <PhoneNumberInput
+                    value={data.backupPhone}
+                    onChange={(v) => handleInputChange('backupPhone', v)}
+                    className="border border-gray-300 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-primary"
+                />
             </div>
 
             {/* Vet Name */}
@@ -93,19 +77,11 @@ const RescueStepFive: React.FC<StepFiveProps> = ({
                 <label className="block text-gray-700 text-sm font-medium mb-1">
                     Vet Phone Number (optional)
                 </label>
-                <div className="flex space-x-2">
-                    <Input
-                        value="+92"
-                        disabled
-                        className="w-14 border border-gray-300 pl-2 rounded-xl py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
-                    <Input
-                        value={data.vetPhone}
-                        onChange={(e) => handleInputChange('vetPhone', e.target.value)}
-                        placeholder="3001234567"
-                        className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
-                    />
-                </div>
+                <PhoneNumberInput
+                    value={data.vetPhone}
+                    onChange={(v) => handleInputChange('vetPhone', v)}
+                    className="border border-gray-300 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-primary"
+                />
             </div>
 
             {/* Navigation Buttons */}

@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { formatPhoneDisplay } from "@/utils/phone";
 
 interface SocialsData {
   instagram: string;
@@ -63,7 +64,11 @@ const StepThree: React.FC<StepThreeProps> = ({
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Phone:</span>
-              <span className="font-medium">+92 {data.phone_number}</span>
+              <span className="font-medium">
+                {data.phone_number
+                  ? `${formatPhoneDisplay(data.phone_number).flag} ${formatPhoneDisplay(data.phone_number).pretty}`
+                  : "—"}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">City:</span>

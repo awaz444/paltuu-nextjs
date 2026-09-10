@@ -9,6 +9,7 @@ import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { formatAge } from "@/utils/formatAge";
+import { formatPhoneDisplay } from "@/utils/phone";
 
 import {
     Spin,
@@ -167,7 +168,8 @@ const PetDetailsClient: React.FC<{
     };
 
     const handleWhatsApp = (phone: string) => {
-        const whatsappUrl = `https://wa.me/${phone}`;
+        const digits = formatPhoneDisplay(phone).digits;
+        const whatsappUrl = `https://wa.me/${digits || phone}`;
         window.open(whatsappUrl, "_blank");
     };
 
@@ -381,6 +383,7 @@ const PetDetailsClient: React.FC<{
 
     const listingTypeInfo = getListingTypeInfo();
     const isAvailable = pet.adoption_status === "available";
+    const phoneDisplay = formatPhoneDisplay(pet.contact_number);
 
     return (
         <>
@@ -392,13 +395,23 @@ const PetDetailsClient: React.FC<{
                 className="rounded-lg">
                 <div className="space-y-4">
                     <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                        <div>
-                            <p className="font-medium text-gray-700">
-                                {pet.contact_number}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                                Phone Number
-                            </p>
+                        <div className="flex items-center gap-3">
+                            <span
+                                className="text-2xl leading-none"
+                                title={phoneDisplay.countryName ?? "Unknown country"}
+                            >
+                                {phoneDisplay.flag}
+                            </span>
+                            <div>
+                                <p className="font-medium text-gray-700">
+                                    {phoneDisplay.pretty}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                    {phoneDisplay.countryName
+                                        ? `Phone Number · ${phoneDisplay.countryName}`
+                                        : "Phone Number"}
+                                </p>
+                            </div>
                         </div>
                         <Button
                             icon={<CopyOutlined className="text-primary" />}

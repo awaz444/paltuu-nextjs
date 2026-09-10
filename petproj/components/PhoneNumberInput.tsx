@@ -9,10 +9,14 @@ import {
 } from "@/utils/phone";
 
 interface PhoneNumberInputProps {
-    /** Current value as an E.164 string ("+923001234567") or "". */
-    value: string;
+    /**
+     * Current value as an E.164 string ("+923001234567") or "". Optional so the
+     * component can be dropped straight into an antd `<Form.Item name=...>`,
+     * which injects `value`/`onChange` itself.
+     */
+    value?: string;
     /** Called with the composed E.164 string, or "" while the number is blank. */
-    onChange: (e164: string) => void;
+    onChange?: (e164: string) => void;
     hasError?: boolean;
     disabled?: boolean;
     /** Extra classes for the outer wrapper (borders / radius / padding live here). */
@@ -27,7 +31,7 @@ interface PhoneNumberInputProps {
  * the backend and the mobile app keep storing phone numbers in one shape.
  */
 const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
-    value,
+    value = "",
     onChange,
     hasError = false,
     disabled = false,
@@ -54,7 +58,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
         const digits = nextNational.replace(/\D/g, "").slice(0, nextCountry.max);
         setCountry(nextCountry);
         setNational(digits);
-        onChange(toE164(nextCountry, digits));
+        onChange?.(toE164(nextCountry, digits));
     };
 
     const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

@@ -141,3 +141,44 @@ export function isValidPhone(value: string): boolean {
     const { country, national } = parseE164(value);
     return isNationalNumberComplete(country, national);
 }
+
+/** Fallback flag for a number whose country we can't identify. */
+export const UNKNOWN_FLAG = "🌐";
+
+/**
+ * Presentation helper for showing a stored `contact_number`. Splits a known
+ * E.164 number into flag + country + spaced national digits; for anything we
+ * can't confidently parse it echoes the raw value with a neutral globe flag.
+ */
+export function formatPhoneDisplay(value: string | null | undefined): {
+    flag: string;
+    countryName: string | null;
+    /** Pretty form, e.g. "+92 300 1234567". Falls back to the raw string. */
+    pretty: string;
+    /** Digits only, suitable for `wa.me/` and `tel:` links. */
+    digits: string;
+    e164: string;
+} {
+    const raw = String(value ?? "").trim();
+    const normalized = normalizePhone(raw);
+    const e164 = normalized ?? raw;
+    const { country, national } = parseE164(e164);
+    const known = !!normalized && national !== "";
+
+    let pretty = raw;
+    if (known) {
+        const grouped =
+            national.length > 6
+                ? `${national.slice(0, 3)} ${national.slice(3)}`
+                : national;
+        pretty = `+${country.dial} ${grouped}`;
+    }
+
+    return {
+        flag: known ? country.flag : UNKNOWN_FLAG,
+        countryName: known ? country.name : null,
+        pretty,
+        digits: e164.replace(/\D/g, ""),
+        e164,
+    };
+}

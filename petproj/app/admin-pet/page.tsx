@@ -12,6 +12,7 @@ import { AppDispatch, RootState } from '../store/store';
 import { fetchCities } from '../store/slices/citiesSlice';
 import { fetchFosterPets } from '../store/slices/fosterPetsSlice';
 import { fetchAdoptionPets } from '../store/slices/adoptionPetsSlice';
+import PhoneNumberInput from '@/components/PhoneNumberInput';
 
 type Pet = {
   pet_id: number;
@@ -625,12 +626,12 @@ const AdminPetInteraction: React.FC = () => {
               <p className="text-[10px] text-gray-500 mt-1">Current: {formatAge(editingPet?.age_months || 0)}</p>
             </Form.Item>
             <Form.Item label="Contact Number">
-              <Input
-                placeholder="+923..."
-                value={editingPet?.contact_number || undefined}
-                onChange={(e) =>
-                  setEditingPet((prev) => ({ ...prev!, contact_number: e.target.value }))
+              <PhoneNumberInput
+                value={editingPet?.contact_number || ""}
+                onChange={(v) =>
+                  setEditingPet((prev) => ({ ...prev!, contact_number: v }))
                 }
+                className="border border-[#d9d9d9] rounded-lg px-3 py-2"
               />
             </Form.Item>
             {/* Listing Type Switch */}

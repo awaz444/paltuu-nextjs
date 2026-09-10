@@ -11,6 +11,7 @@ import SinglePetUploadForm from "../../components/SinglePetUploadForm";
 import ProfileContent from "../../components/ProfileContent";
 import NotificationsContent from "../../components/NotificationsContent";
 import MyListingGrid from "../../components/MyListingGrid";
+import PhoneNumberInput from "../../components/PhoneNumberInput";
 import dynamic from 'next/dynamic';
 
 const ShelterProfileContent = dynamic(() => import('../../components/ShelterProfileContent'), {
@@ -398,12 +399,10 @@ function InlineEditPetForm({ pet, onUpdated, onDeleted }: { pet: any, onUpdated:
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Contact Number</label>
-          <input
-            type="text"
+          <PhoneNumberInput
             value={contactNumber}
-            onChange={(e) => setContactNumber(e.target.value)}
-            placeholder="+923..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={setContactNumber}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500"
           />
         </div>
         <div className="md:col-span-2">

@@ -8,6 +8,7 @@ import { fetchAdoptionPets } from "@/app/store/slices/adoptionPetsSlice";
 import { fetchFosterPets } from "@/app/store/slices/fosterPetsSlice";
 import { formatAge } from "@/utils/formatAge";
 import { X, Plus, Users } from "lucide-react";
+import PhoneNumberInput from "./PhoneNumberInput";
 
 export interface Pet {
     pet_id: number;
@@ -383,8 +384,11 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true, 
                             )}
 
                             {field("Contact Number",
-                                <input type="text" className={inputClass} placeholder="+923..." value={editingPet.contact_number || ""}
-                                    onChange={(e) => setEditingPet({ ...editingPet, contact_number: e.target.value })} />
+                                <PhoneNumberInput
+                                    value={editingPet.contact_number || ""}
+                                    onChange={(v) => setEditingPet({ ...editingPet, contact_number: v })}
+                                    className={inputClass}
+                                />
                             )}
 
                             {field("Description",

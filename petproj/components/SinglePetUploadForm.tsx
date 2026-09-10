@@ -25,6 +25,7 @@ import { RootState, AppDispatch } from '../app/store/store';
 import { fetchCities } from '../app/store/slices/citiesSlice';
 import { fetchPetCategories } from '../app/store/slices/petCategoriesSlice';
 import { postPet } from '../app/store/slices/petSlice';
+import PhoneNumberInput from './PhoneNumberInput';
 import axios from 'axios';
 import type { UploadFile, UploadProps } from 'antd';
 
@@ -561,11 +562,10 @@ export default function SinglePetUploadForm({
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Contact Number *
                     </label>
-                    <Input
+                    <PhoneNumberInput
                       value={contactNumber}
-                      onChange={(e) => setContactNumber(e.target.value)}
-                      placeholder="+923..."
-                      size="large"
+                      onChange={setContactNumber}
+                      className="border border-[#d9d9d9] rounded-lg px-3 py-2"
                     />
                   </div>
                 </Col>

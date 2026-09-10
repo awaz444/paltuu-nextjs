@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
 import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 import { validate } from "@/utils/validation";
+import { normalizePhone } from "@/utils/phone";
 
 /**
  * @swagger
@@ -108,6 +109,12 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ errors: validation.errors }, { status: 400 });
         }
 
+        // Canonicalise to E.164 when a number is provided; leave null/undefined
+        // alone so the COALESCE keeps the existing value. Non-rejecting.
+        const contactNumberToStore = contact_number
+            ? (normalizePhone(contact_number) ?? String(contact_number).trim().slice(0, 255))
+            : contact_number;
+
         const client = await db.connect();
         try {
             await client.query('BEGIN');
@@ -138,7 +145,7 @@ export async function PUT(req: NextRequest) {
                 WHERE pet_id = $23
                 RETURNING *`,
                 [
-                    pet_name, pet_type, pet_breed, city_id, area, age_months, contact_number,
+                    pet_name, pet_type, pet_breed, city_id, area, age_months, contactNumberToStore,
                     description, sex, listing_type, vaccinated, neutered, price === "" ? null : price, rescue_story,
                     energy_level, cuddliness_level, adoption_status, health_issues, min_age_of_children,
                     can_live_with_dogs, can_live_with_cats, must_have_someone_home, id

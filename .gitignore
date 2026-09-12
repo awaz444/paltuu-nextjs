@@ -3,10 +3,11 @@
 .AppleDouble
 .LSOverride
 
-# Environment files — NEVER commit
+# Environment files — NEVER commit (including examples/templates)
 .env
 .env.*
-!.env.example
+*.env
+env.example
 
 # Credentials & service accounts
 service-account.json
@@ -21,11 +22,24 @@ credentials.json
 *.pem
 *.key
 
-# Confidential internal documents
-petproj/Paltuu_Report_Block_Spec_v1.docx
+# Confidential internal documents — NEVER commit
+# Blog posts are .mdx and stay tracked; everything doc-shaped below is local-only.
+*.md
+docs/
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.csv
+*.txt
+!petproj/public/post-template-assets/Montserrat/OFL.txt
+*.ai
+*.psd
+*.fig
+*.sketch
+petproj/content/blogs/_*
 petproj/app/Supabase*
-petproj/db/*.csv
-schema.txt
 seo+geo/
 
 # Build artifacts

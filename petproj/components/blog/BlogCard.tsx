@@ -22,7 +22,7 @@ function formatDate(dateString: string): string {
 const BlogCard: React.FC<BlogCardProps> = ({ post }) => {
     return (
         <Link href={`/blogs/${post.slug}`} className="group h-full">
-            <div className="h-full flex flex-col bg-white rounded-2xl shadow-sm border-2 border-transparent hover:border-primary/20 hover:shadow-lg transition-all duration-300 overflow-hidden relative group-hover:-translate-y-1">
+            <div className="h-full flex flex-col bg-white rounded-2xl shadow-sm border-2 border-gray-100 hover:border-primary/20 hover:shadow-lg transition-all duration-300 overflow-hidden relative group-hover:-translate-y-1">
                 {/* Image Section */}
                 <div className="relative h-48 w-full overflow-hidden">
                     <Image

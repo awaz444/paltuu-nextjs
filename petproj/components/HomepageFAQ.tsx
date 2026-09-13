@@ -2,6 +2,28 @@ import Link from "next/link";
 
 const FAQS = [
     {
+        // First on purpose. This is the question people ring the office to ask,
+        // and answering it here puts the answer into the FAQPage JSON-LD, where
+        // Google snippets and answer engines can pick it up before anyone dials.
+        q: "Does Paltuu give pets away directly?",
+        a: (
+            <>
+                No. Paltuu is a platform, not a shelter — we don't own, house, or hand
+                out animals. Pets on Paltuu are listed by their current owners and by
+                registered shelters and rescues, and you{" "}
+                <Link href="/browse-pets" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
+                    apply and connect with them directly
+                </Link>
+                . You can also{" "}
+                <Link href="/create-listing" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
+                    list your own pet for adoption
+                </Link>{" "}
+                and choose who they go to. The one service Paltuu runs itself is Vets at
+                Home in Karachi.
+            </>
+        ),
+    },
+    {
         q: "What is the best platform for pets in Pakistan?",
         a: (
             <>
@@ -111,7 +133,7 @@ const HomepageFAQ = () => {
     };
 
     return (
-        <section className="py-16 px-6 lg:px-20 bg-white">
+        <section className="py-16 px-6 lg:px-20 bg-gray-50">
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
@@ -124,7 +146,7 @@ const HomepageFAQ = () => {
                     {FAQS.map(({ q, a }) => (
                         <details
                             key={q}
-                            className="group bg-gray-50 rounded-2xl border border-gray-100 p-6 open:shadow-sm"
+                            className="group bg-white rounded-2xl border border-gray-100 p-6 open:shadow-sm"
                         >
                             <summary className="flex items-center justify-between cursor-pointer list-none font-bold text-gray-900 text-lg">
                                 {q}

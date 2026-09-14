@@ -49,16 +49,23 @@ export default function HeroSection() {
                     {/* Kept short on purpose. The SEO weight sits in the h1, the
                         title/meta and the section headings below, not in hero body
                         copy, and every claim past this point is made again further
-                        down the page. All that has to survive here is the brand
-                        spelling variants and the anti-shelter line. */}
+                        down the page. The brand spellings have to survive here
+                        because they appear nowhere else.
+
+                        This sells rather than disclaims: "from the family or
+                        shelter rehoming them" carries the platform model without
+                        stating it as a denial. The blunt version of that point
+                        ("Paltuu never takes custody of the animal") lives in the
+                        pillar card and in the first FAQ, where a defensive tone
+                        is appropriate and expected. */}
                     <p className="text-base text-gray-600 leading-relaxed mb-6 max-w-lg">
                         <span className="font-semibold text-gray-900">Paltuu.pk</span> (also
                         searched as Paltu or Paaltuu) is Pakistan&apos;s pet adoption
-                        platform.{" "}
+                        platform. Find a pet from the family or shelter rehoming them, or{" "}
                         <span className="font-semibold text-gray-900">
-                            We don&apos;t own or give away animals.
-                        </span>{" "}
-                        We connect people who have pets to rehome with people ready to adopt.
+                            list your own and choose the home they go to
+                        </span>
+                        . Free, either way.
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-3">

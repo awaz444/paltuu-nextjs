@@ -133,20 +133,20 @@ const HomepageFAQ = () => {
     };
 
     return (
-        <section className="bg-gray-50 px-6 lg:px-12 py-14 md:py-20">
+        <section className="bg-primary px-6 lg:px-12 py-14 md:py-20">
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
             />
             <div className="max-w-3xl mx-auto">
-                <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-8 text-center">
+                <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-8 text-center">
                     Frequently Asked Questions
                 </h2>
                 <div className="space-y-3">
                     {FAQS.map(({ q, a }) => (
                         <details
                             key={q}
-                            className="group bg-white rounded-xl border border-gray-200 p-5"
+                            className="group bg-white rounded-xl border border-white/10 p-5"
                         >
                             <summary className="flex items-center justify-between cursor-pointer list-none font-bold text-gray-900 text-base">
                                 {q}

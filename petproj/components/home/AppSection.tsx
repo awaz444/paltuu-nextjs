@@ -47,7 +47,7 @@ export default function AppSection() {
                                         src={screen.src}
                                         alt={screen.alt}
                                         width={560}
-                                        height={1036}
+                                        height={1025}
                                         className="block w-full h-auto"
                                         sizes="(max-width: 1024px) 45vw, 22vw"
                                     />

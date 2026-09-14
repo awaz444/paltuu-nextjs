@@ -81,8 +81,15 @@ export const VETS_AT_HOME = {
 
 /**
  * Real screens from the iOS app, cropped out of the store screenshots in
- * /app-screenshots. Order matters: the feed first, because the social side is
- * what most visitors do not know exists.
+ * /app-screenshots/ios. Order matters: the feed first, because the social side
+ * is what most visitors do not know exists.
+ *
+ * The crops were taken per image, because the phone sits at a slightly
+ * different height in each marketing frame and one shared offset clipped the
+ * status bar on some of them. To regenerate at 560x1025:
+ *   sips --cropOffset <y> 134 -c 1860 1016 ios/<n>.png --out raw.png
+ *   sips --resampleWidth 560 raw.png --out <name>.png
+ * with y = 788 (1 feed), 781 (2 pet-profile), 791 (4 adopt), 771 (6 vets).
  */
 export const APP_SCREENS = [
     {

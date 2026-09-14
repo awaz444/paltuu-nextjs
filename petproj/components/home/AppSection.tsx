@@ -42,16 +42,20 @@ export default function AppSection() {
                     {APP_SCREENS.map((screen, i) => (
                         <Reveal key={screen.src} delay={i * 0.06}>
                             <li className="list-none">
-                                <div className="rounded-[1.25rem] border-[5px] border-gray-900 bg-gray-900 overflow-hidden shadow-xl">
-                                    <Image
-                                        src={screen.src}
-                                        alt={screen.alt}
-                                        width={560}
-                                        height={1025}
-                                        className="block w-full h-auto"
-                                        sizes="(max-width: 1024px) 45vw, 22vw"
-                                    />
-                                </div>
+                                {/* The device frame is drawn into the PNG by
+                                    scripts/make_app_screens.py, so there is no
+                                    CSS bezel here. The shadow stays in CSS
+                                    because drop-shadow follows the alpha
+                                    silhouette and can be retuned without
+                                    regenerating the images. */}
+                                <Image
+                                    src={screen.src}
+                                    alt={screen.alt}
+                                    width={656}
+                                    height={1224}
+                                    className="block w-full h-auto drop-shadow-[0_16px_28px_rgba(0,0,0,0.4)]"
+                                    sizes="(max-width: 1024px) 45vw, 22vw"
+                                />
                                 <h3 className="mt-4 text-sm md:text-base font-bold text-white">
                                     {screen.title}
                                 </h3>

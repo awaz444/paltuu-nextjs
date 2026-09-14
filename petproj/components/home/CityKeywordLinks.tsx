@@ -63,18 +63,18 @@ function Column({
 export default function CityKeywordLinks() {
     return (
         <section
-            className="py-16 px-6 lg:px-20 bg-white"
+            className="bg-white px-6 lg:px-12 py-14 md:py-16"
             aria-labelledby="city-links-heading"
         >
             <div className="max-w-6xl mx-auto">
-                <div className="mb-10 text-center md:text-left">
+                <div className="mb-8">
                     <h2
                         id="city-links-heading"
-                        className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2"
+                        className="text-xl md:text-2xl font-extrabold text-gray-900 mb-2"
                     >
                         Browse Pets &amp; Care Services in Your City
                     </h2>
-                    <p className="text-gray-600">
+                    <p className="text-sm text-gray-600 max-w-3xl">
                         Find dog, cat, puppy, and kitten adoption, along with professional pet
                         care services in Karachi, Lahore, Islamabad, and across Pakistan.
                     </p>

@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import HeroSection from "@/components/home/HeroSection";
+import AppSection from "@/components/home/AppSection";
 import PlatformPillars from "@/components/home/PlatformPillars";
 import AdoptionPathsSection from "@/components/home/AdoptionPathsSection";
 import RecentPetsSection from "@/components/home/RecentPetsSection";
@@ -13,7 +14,7 @@ import MotionProvider from "@/components/home/MotionProvider";
 import HomeJsonLd from "@/components/home/HomeJsonLd";
 import LatestBlogsSection from "@/components/LatestBlogsSection";
 import HomepageFAQ from "@/components/HomepageFAQ";
-import KarachiVetBanner from "@/components/KarachiVetBanner";
+import AppPromoBanner from "@/components/AppPromoBanner";
 import { getAllBlogsMetadata } from "@/lib/mdx";
 import { getRecentPets } from "@/lib/recentPets";
 import { SITE_URL } from "@/lib/site";
@@ -122,28 +123,31 @@ export default async function HomePage() {
     <main className="overflow-hidden bg-white">
       <HomeJsonLd />
 
-      {/* White first — the navbar above is maroon with a rounded bottom edge. */}
+      {/* White first: the navbar above is maroon with a rounded bottom edge. */}
       <HeroSection />
 
       {/* One framer-motion boundary. Everything inside stays server-rendered. */}
       <MotionProvider>
-        <PlatformPillars />
-        <AdoptionPathsSection />
-        <RecentPetsSection pets={recentPets} />
-        <VetDirectorySection />
-        <VetsAtHomeSection />
-        <ImpactStats />
-        <VisionPetIdSection />
-        <TestimonialsSection />
+        {/* The app sits second because it is the part of Paltuu most visitors
+            don't know exists, and downloads are the goal it feeds. */}
+        <AppSection />                            {/* primary */}
+        <PlatformPillars />                       {/* white   */}
+        <AdoptionPathsSection />                  {/* gray-50 */}
+        <RecentPetsSection pets={recentPets} />   {/* primary */}
+        <VetDirectorySection />                   {/* white   */}
+        <VetsAtHomeSection />                     {/* primary */}
+        <ImpactStats />                           {/* white   */}
+        <VisionPetIdSection />                    {/* gray-50 */}
+        <TestimonialsSection />                   {/* primary */}
       </MotionProvider>
 
-      <LatestBlogsSection posts={latestPosts} />
-      <HomepageFAQ />
+      <LatestBlogsSection posts={latestPosts} />  {/* white   */}
+      <HomepageFAQ />                             {/* gray-50 */}
 
-      {/* White last — the footer below is maroon with a rounded top edge. */}
+      {/* White last: the footer below is maroon with a rounded top edge. */}
       <CityKeywordLinks />
 
-      <KarachiVetBanner />
+      <AppPromoBanner />
     </main>
   );
 }

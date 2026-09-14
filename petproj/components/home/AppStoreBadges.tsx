@@ -9,7 +9,7 @@ import { APP_LINKS } from "@/lib/homeContent";
  */
 export default function AppStoreBadges({ className = "" }: { className?: string }) {
     return (
-        <div className={`flex flex-wrap items-center gap-4 ${className}`}>
+        <div className={`flex flex-wrap items-center gap-3 ${className}`}>
             <Link
                 href={APP_LINKS.android}
                 target="_blank"
@@ -21,7 +21,7 @@ export default function AppStoreBadges({ className = "" }: { className?: string 
                     alt="Get it on Google Play"
                     width={162}
                     height={48}
-                    className="h-12 w-auto"
+                    className="h-10 w-auto"
                 />
             </Link>
             <Link
@@ -35,7 +35,7 @@ export default function AppStoreBadges({ className = "" }: { className?: string 
                     alt="Download on the App Store"
                     width={144}
                     height={48}
-                    className="h-12 w-auto"
+                    className="h-10 w-auto"
                 />
             </Link>
         </div>

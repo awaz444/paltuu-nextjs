@@ -8,7 +8,7 @@ const FAQS = [
         q: "Does Paltuu give pets away directly?",
         a: (
             <>
-                No. Paltuu is a platform, not a shelter — we don't own, house, or hand
+                No. Paltuu is a platform, not a shelter. We don't own, house, or hand
                 out animals. Pets on Paltuu are listed by their current owners and by
                 registered shelters and rescues, and you{" "}
                 <Link href="/browse-pets" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
@@ -30,7 +30,7 @@ const FAQS = [
                 <Link href="/" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
                     Paltuu.pk
                 </Link>{" "}
-                is Pakistan's dedicated platform for pets — it brings pet adoption, a
+                is Pakistan's dedicated platform for pets. It brings pet adoption, a
                 verified{" "}
                 <Link href="/pet-care" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
                     vet directory
@@ -96,7 +96,7 @@ const FAQS = [
         q: "Does Paltuu offer at-home vet visits?",
         a: (
             <>
-                Yes — Paltuu's own <strong>Vets at Home</strong> service brings vet visits,
+                Yes. Paltuu's own <strong>Vets at Home</strong> service brings vet visits,
                 vaccinations, and grooming to your doorstep, currently in Karachi with more cities
                 planned. Book a visit through the Paltuu app.
             </>
@@ -133,28 +133,28 @@ const HomepageFAQ = () => {
     };
 
     return (
-        <section className="py-16 px-6 lg:px-20 bg-gray-50">
+        <section className="bg-gray-50 px-6 lg:px-12 py-14 md:py-20">
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
             />
             <div className="max-w-3xl mx-auto">
-                <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-10 text-center">
+                <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-8 text-center">
                     Frequently Asked Questions
                 </h2>
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {FAQS.map(({ q, a }) => (
                         <details
                             key={q}
-                            className="group bg-white rounded-2xl border border-gray-100 p-6 open:shadow-sm"
+                            className="group bg-white rounded-xl border border-gray-200 p-5"
                         >
-                            <summary className="flex items-center justify-between cursor-pointer list-none font-bold text-gray-900 text-lg">
+                            <summary className="flex items-center justify-between cursor-pointer list-none font-bold text-gray-900 text-base">
                                 {q}
                                 <span className="ml-4 shrink-0 text-primary transition-transform group-open:rotate-45 text-2xl leading-none">
                                     +
                                 </span>
                             </summary>
-                            <p className="mt-4 text-gray-600 leading-relaxed">{a}</p>
+                            <p className="mt-3 text-sm text-gray-600 leading-relaxed">{a}</p>
                         </details>
                     ))}
                 </div>

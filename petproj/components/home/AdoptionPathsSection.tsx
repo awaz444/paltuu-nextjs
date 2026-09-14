@@ -13,7 +13,7 @@ import Reveal from "./Reveal";
 const ADOPT_STEPS = [
     {
         title: "Browse pets near you",
-        desc: "Filter by city, species, breed and age. Every listing shows who is rehoming the pet — an owner, a shelter, or a rescue.",
+        desc: "Filter by city, species, breed and age. Every listing shows who is rehoming the pet: an owner, a shelter, or a rescue.",
     },
     {
         title: "Apply and connect",
@@ -27,7 +27,7 @@ const ADOPT_STEPS = [
 
 const REHOME_STEPS = [
     {
-        title: "List your pet — free",
+        title: "List your pet, free",
         desc: "Photos, age, temperament, and why you're rehoming. Listings are reviewed before they go live.",
     },
     {
@@ -56,20 +56,20 @@ function Path({
     href: string;
 }) {
     return (
-        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-7 md:p-8 h-full flex flex-col">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-7 h-full flex flex-col">
             <p className="text-xs font-bold uppercase tracking-wider text-primary mb-1">
                 {kicker}
             </p>
-            <h3 id={id} className="text-2xl font-extrabold text-gray-900 mb-6">
+            <h3 id={id} className="text-xl font-extrabold text-gray-900 mb-5">
                 {heading}
             </h3>
 
-            <ol className="space-y-5 flex-grow">
+            <ol className="space-y-4 flex-grow">
                 {steps.map((step, i) => (
                     <li key={step.title} className="flex gap-4">
                         <span
                             aria-hidden="true"
-                            className="shrink-0 w-8 h-8 rounded-full bg-primary text-white font-bold text-sm flex items-center justify-center"
+                            className="shrink-0 w-7 h-7 rounded-full bg-primary text-white font-bold text-xs flex items-center justify-center"
                         >
                             {i + 1}
                         </span>
@@ -83,7 +83,7 @@ function Path({
 
             <Link
                 href={href}
-                className="mt-7 inline-flex items-center justify-center bg-primary text-white font-bold px-6 py-3 rounded-full hover:scale-105 transition-transform duration-300"
+                className="mt-6 inline-flex items-center justify-center bg-primary text-white font-semibold text-sm px-6 py-3 rounded-full hover:opacity-90 transition-opacity"
             >
                 {cta}
             </Link>
@@ -94,18 +94,18 @@ function Path({
 export default function AdoptionPathsSection() {
     return (
         <section
-            className="py-16 md:py-20 px-6 lg:px-20 bg-white"
+            className="bg-gray-50 px-6 lg:px-12 py-14 md:py-20"
             aria-labelledby="how-adoption-works"
         >
             <div className="max-w-6xl mx-auto">
-                <div className="text-center mb-12 max-w-3xl mx-auto">
+                <div className="max-w-2xl mb-10">
                     <h2
                         id="how-adoption-works"
-                        className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4"
+                        className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3"
                     >
                         How adoption works on Paltuu
                     </h2>
-                    <p className="text-lg text-gray-600 leading-relaxed">
+                    <p className="text-base text-gray-600 leading-relaxed">
                         Thousands of pet parents use Paltuu to browse{" "}
                         <Link
                             href="/adopt"
@@ -120,11 +120,11 @@ export default function AdoptionPathsSection() {
                         >
                             pet care guides written for Pakistan
                         </Link>
-                        . There are two ways in — pick yours.
+                        . There are two ways in, so pick yours.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <Reveal delay={0} className="h-full">
                         <Path
                             id="path-adopt"

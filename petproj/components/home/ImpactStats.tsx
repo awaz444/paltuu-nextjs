@@ -48,7 +48,7 @@ function Counter({ stat }: { stat: HomeStat }) {
     return (
         <span
             ref={ref}
-            className="text-3xl lg:text-4xl font-extrabold text-primary mb-2 tabular-nums"
+            className="text-2xl lg:text-3xl font-extrabold text-primary mb-1 tabular-nums"
         >
             {display.toLocaleString("en-US")}
             {stat.suffix ?? ""}
@@ -59,31 +59,30 @@ function Counter({ stat }: { stat: HomeStat }) {
 export default function ImpactStats() {
     return (
         <section
-            className="py-16 md:py-20 px-6 lg:px-20 bg-white"
+            className="bg-white px-6 lg:px-12 py-14 md:py-20"
             aria-labelledby="impact-heading"
         >
             <div className="max-w-6xl mx-auto">
-                <div className="text-center mb-10 max-w-2xl mx-auto">
+                <div className="max-w-2xl mb-8">
                     <h2
                         id="impact-heading"
-                        className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3"
+                        className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3"
                     >
                         Making a difference
                     </h2>
-                    <p className="text-lg text-gray-600">
-                        Numbers from the Paltuu community across Pakistan — every one of them
-                        a life touched and a story changed.
+                    <p className="text-base text-gray-600 leading-relaxed">
+                        Numbers from the Paltuu community across Pakistan.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     {HOME_STATS.map((stat) => (
                         <div
                             key={stat.label}
-                            className="bg-primary/5 p-6 rounded-2xl border border-primary/10 flex flex-col items-center justify-center text-center hover:-translate-y-1 transition-transform duration-300"
+                            className="rounded-xl border border-gray-200 p-5 flex flex-col items-start"
                         >
                             <Counter stat={stat} />
-                            <span className="text-xs md:text-sm font-bold text-gray-600 uppercase tracking-wide">
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                                 {stat.label}
                             </span>
                         </div>

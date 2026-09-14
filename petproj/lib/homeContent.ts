@@ -79,6 +79,38 @@ export const VETS_AT_HOME = {
     ],
 } as const;
 
+/**
+ * Real screens from the iOS app, cropped out of the store screenshots in
+ * /app-screenshots. Order matters: the feed first, because the social side is
+ * what most visitors do not know exists.
+ */
+export const APP_SCREENS = [
+    {
+        src: "/app-screens/feed.png",
+        alt: "The Paltuu app feed, showing posts from pet owners in Karachi with hashtags",
+        title: "A feed for pet people",
+        desc: "Posts, photos and hashtags from pet parents across Pakistan.",
+    },
+    {
+        src: "/app-screens/pet-profile.png",
+        alt: "A pet profile in the Paltuu app for Lino, a Persian cat, with his own posts and gallery",
+        title: "Your pet gets an account",
+        desc: "Give every pet their own profile, then tag them in your posts.",
+    },
+    {
+        src: "/app-screens/adopt.png",
+        alt: "The adoption listings screen in the Paltuu app",
+        title: "Adopt from the app",
+        desc: "The same listings as the website, in your pocket.",
+    },
+    {
+        src: "/app-screens/vets.png",
+        alt: "The Paltuu app pet care directory, listing verified veterinary clinics",
+        title: "Vets and clinics near you",
+        desc: "Search verified clinics by city, with ratings and addresses.",
+    },
+] as const;
+
 export const APP_LINKS = {
     android: "https://play.google.com/store/apps/details?id=com.paltuu.app",
     ios: "https://apps.apple.com/pk/app/paltuu/id6789732258",

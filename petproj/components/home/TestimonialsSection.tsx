@@ -12,29 +12,28 @@ import { HOME_TESTIMONIALS } from "@/lib/homeContent";
 export default function TestimonialsSection() {
     return (
         <section
-            className="py-16 md:py-20 px-6 lg:px-20 bg-primary"
+            className="bg-primary px-6 lg:px-12 py-14 md:py-20"
             aria-labelledby="testimonials-heading"
         >
             <div className="max-w-6xl mx-auto">
-                <div className="text-center mb-12 max-w-2xl mx-auto">
+                <div className="max-w-2xl mb-9">
                     <h2
                         id="testimonials-heading"
-                        className="text-3xl md:text-4xl font-extrabold text-white mb-4"
+                        className="text-2xl md:text-3xl font-extrabold text-white mb-3"
                     >
                         Loved by the community
                     </h2>
-                    <p className="text-lg text-white/90">
-                        Don&apos;t just take our word for it — hear from pet lovers across
-                        Pakistan.
+                    <p className="text-base text-white/90 leading-relaxed">
+Hear from pet lovers across Pakistan.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     {HOME_TESTIMONIALS.map((testimonial, index) => (
                         <Reveal key={testimonial.name} delay={index * 0.06} className="h-full">
-                            <figure className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full hover:shadow-md transition-shadow">
-                                <blockquote className="mb-6 flex-grow">
-                                    <p className="text-gray-700 italic text-lg leading-relaxed">
+                            <figure className="bg-white p-6 rounded-xl flex flex-col h-full">
+                                <blockquote className="mb-5 flex-grow">
+                                    <p className="text-sm text-gray-700 leading-relaxed">
                                         &ldquo;{testimonial.quote}&rdquo;
                                     </p>
                                 </blockquote>

@@ -215,7 +215,11 @@ export default function CreatePetListing() {
 
     const validateStep1 = (): boolean => {
         const errors: Record<string, string> = {};
-        if (!title.trim()) errors.title = "Title is required";
+        if (!title.trim()) {
+            errors.title = "Title is required";
+        } else if (title.trim().length < 2) {
+            errors.title = "Title must be at least 2 characters";
+        }
         if (!petType) errors.petType = "Pet type is required";
         if (!cityId) errors.cityId = "City is required";
         if (!contactNumber) {
@@ -229,7 +233,11 @@ export default function CreatePetListing() {
 
     const validateForm = () => {
         const errors: Record<string, string> = {};
-        if (!title.trim()) errors.title = "Title is required";
+        if (!title.trim()) {
+            errors.title = "Title is required";
+        } else if (title.trim().length < 2) {
+            errors.title = "Title must be at least 2 characters";
+        }
         if (!petType) errors.petType = "Pet type is required";
         if (!cityId) errors.cityId = "City is required";
         if (!contactNumber) {
@@ -240,6 +248,9 @@ export default function CreatePetListing() {
         if ((age === null || age === 0) && (months === null || months === 0)) {
             errors.age = "Either age or months must be filled";
             errors.months = "Either age or months must be filled";
+        }
+        if (description && description.length > 2500) {
+            errors.description = "Description must be 2,500 characters or fewer";
         }
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
@@ -294,7 +305,7 @@ export default function CreatePetListing() {
                 });
             }
             router.push("/listing-created");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error creating pet listing:", error);
             if (petId) {
                 try {
@@ -303,7 +314,8 @@ export default function CreatePetListing() {
                     console.error("Failed to roll back pet listing creation:", deleteError);
                 }
             }
-            message.error("Failed to create pet listing. Please try again.");
+            const errMsg = error?.message || (typeof error === 'string' ? error : "Failed to create pet listing. Please try again.");
+            message.error(errMsg);
         } finally {
             setIsSubmitting(false);
         }
@@ -651,14 +663,14 @@ export default function CreatePetListing() {
                                     <div className="space-y-6">
                                         <div>
                                             <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-3 ml-1">
-                                                The Story <span className="normal-case tracking-normal font-normal text-gray-300">({description.length}/1000)</span>
+                                                The Story <span className="normal-case tracking-normal font-normal text-gray-300">({description.length}/2500)</span>
                                             </label>
                                             <textarea
                                                 className="p-6 w-full border rounded-[2.5rem] input-field bg-gray-50/50 min-h-[180px] text-gray-700 leading-relaxed font-normal"
                                                 placeholder="Tell us about their habits, favorite toys, or how you found them..."
                                                 value={description}
                                                 onChange={handleDescriptionChange}
-                                                maxLength={1000}
+                                                maxLength={2500}
                                             />
                                         </div>
 

@@ -508,12 +508,20 @@ export default function BulkPetUploadForm({
               </Col>
 
               <Col xs={24}>
-                <Form.Item label="Description *" required>
+                <Form.Item
+                  label={
+                    <span>
+                      Description * <span className="text-xs font-normal text-gray-400">({(petData.description || '').length}/2500)</span>
+                    </span>
+                  }
+                  required
+                >
                   <TextArea
                     value={petData.description}
                     onChange={(e) => updatePetForm(index, 'description', e.target.value)}
                     placeholder="Describe the pet's personality, health, and any special needs"
                     rows={3}
+                    maxLength={2500}
                   />
                 </Form.Item>
               </Col>

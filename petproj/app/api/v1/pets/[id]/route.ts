@@ -103,7 +103,7 @@ export async function PUT(req: NextRequest) {
             contact_number: { max: 255 },
             health_issues: { max: 255 },
             adoption_status: { max: 255 },
-            description: { max: 1000 }
+            description: { max: 2500 }
         });
         if (!validation.success) {
             return NextResponse.json({ errors: validation.errors }, { status: 400 });

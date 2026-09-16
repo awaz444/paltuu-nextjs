@@ -638,13 +638,14 @@ export default function SinglePetUploadForm({
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
+                  Description <span className="text-xs font-normal text-gray-400">({description.length}/2500)</span>
                 </label>
                 <TextArea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Tell potential adopters about the pet(s) - personality, history, special needs, etc."
                   rows={3}
+                  maxLength={2500}
                   className="w-full"
                 />
               </div>

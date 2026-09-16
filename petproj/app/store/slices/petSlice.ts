@@ -79,7 +79,13 @@ export const postPet = createAsyncThunk<Pet, Omit<Pet, 'pet_id'>>(
       });
 
       if (!response.ok) {
-        throw new Error('Failed to post new pet');
+        const errData = await response.json().catch(() => ({}));
+        const errMsg =
+          (Array.isArray(errData.errors) && errData.errors.join(', ')) ||
+          errData.error ||
+          errData.message ||
+          'Failed to post new pet';
+        throw new Error(errMsg);
       }
 
       return await response.json();

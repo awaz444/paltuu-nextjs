@@ -391,8 +391,8 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true, 
                                 />
                             )}
 
-                            {field("Description",
-                                <textarea className={`${inputClass} resize-none`} rows={3} placeholder="Description" value={editingPet.description}
+                            {field(`Description (${(editingPet.description || '').length}/2500)`,
+                                <textarea className={`${inputClass} resize-none`} rows={3} placeholder="Description" maxLength={2500} value={editingPet.description}
                                     onChange={(e) => setEditingPet({ ...editingPet, description: e.target.value })} />
                             )}
 

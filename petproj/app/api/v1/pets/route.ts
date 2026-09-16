@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
             pet_breed: { max: 255 },
             area: { max: 255 },
             sex: { max: 255 },
-            description: { max: 1000 },
+            description: { max: 2500 },
             contact_number: { max: 255 }
         });
 

@@ -6,8 +6,18 @@ import { APP_LINKS } from "@/lib/homeContent";
  * Both store badges are sized by height with width auto — the two SVGs have
  * different aspect ratios, so matching their widths made them sit at different
  * heights.
+ *
+ * `imgClassName` exists for the promo banners, which need a shorter badge than
+ * the h-10 the landing page sections use. Override the height there, not the
+ * width, for the reason above.
  */
-export default function AppStoreBadges({ className = "" }: { className?: string }) {
+export default function AppStoreBadges({
+    className = "",
+    imgClassName = "h-10 w-auto",
+}: {
+    className?: string;
+    imgClassName?: string;
+}) {
     return (
         <div className={`flex flex-wrap items-center gap-3 ${className}`}>
             <Link
@@ -21,7 +31,7 @@ export default function AppStoreBadges({ className = "" }: { className?: string 
                     alt="Get it on Google Play"
                     width={162}
                     height={48}
-                    className="h-10 w-auto"
+                    className={imgClassName}
                 />
             </Link>
             <Link
@@ -35,7 +45,7 @@ export default function AppStoreBadges({ className = "" }: { className?: string 
                     alt="Download on the App Store"
                     width={144}
                     height={48}
-                    className="h-10 w-auto"
+                    className={imgClassName}
                 />
             </Link>
         </div>

@@ -18,6 +18,9 @@ import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import PhoneNumberInput from "../../components/PhoneNumberInput";
 import { isValidPhone } from "@/utils/phone";
+import AppDownloadModal from "../../components/app-promo/AppDownloadModal";
+import { useAppPromoGate } from "../../components/app-promo/useAppPromoGate";
+import { APP_PROMOS } from "@/lib/appPromo";
 
 const { Panel } = Collapse;
 
@@ -56,6 +59,22 @@ export default function CreatePetListing() {
     const [previewImage, setPreviewImage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+    /**
+     * The app pitch, shown once per session over the empty form.
+     *
+     * `enabled` holds it back until auth has settled: this page renders a
+     * "Redirecting to login..." screen for signed-out visitors, and popping the
+     * promo over that would burn the one showing we get per session on someone
+     * who is about to be bounced to /auth. The hook is called unconditionally
+     * either way — the early returns below are after every hook, and must stay
+     * that way.
+     */
+    const appPromo = useAppPromoGate(APP_PROMOS.createListing.key, APP_PROMOS.createListing.scope, {
+        delayMs: 700,
+        enabled: status !== "loading" && isAuthenticated && Boolean(user),
+        waitForCookieConsent: true,
+    });
 
     const petTags = [
         { tag_id: 1, tag_name: "Playful", tag_category: "personality" },
@@ -362,6 +381,12 @@ export default function CreatePetListing() {
 
     return (
         <>
+            <AppDownloadModal
+                promo={APP_PROMOS.createListing}
+                open={appPromo.open}
+                onClose={appPromo.close}
+            />
+
             <div
                 className="fullBody min-h-screen py-12 px-4 sm:px-6"
                 style={{ maxWidth: "1200px", margin: "0 auto" }}>

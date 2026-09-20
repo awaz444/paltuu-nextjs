@@ -9,6 +9,8 @@ import VerticalSearchBar from "../../components/VerticalSearchBar";
 import FilterSection from "../../components/FilterSection";
 import PetGrid from "../../components/petGrid";
 import SkeletonCard from "../../components/SkeletonCard";
+import AppDownloadBanner from "../../components/app-promo/AppDownloadBanner";
+import { APP_PROMOS } from "@/lib/appPromo";
 import { MoonLoader } from "react-spinners";
 import "./styles.css";
 
@@ -179,6 +181,16 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
             <FilterSection
                 onSearch={handleFilterChange}
             />
+
+            {/* Under the horizontal filters, above the grid. The horizontal
+                filter card is hidden below md (phones get the floating filter
+                button instead), so on a phone this is the first thing under the
+                navbar — the margins match FilterSection's card either way. */}
+            <AppDownloadBanner
+                promo={APP_PROMOS.browsePets}
+                wrapperClassName="bg-gray-100 mx-0 md:mx-8 pt-4 md:pt-5"
+            />
+
             <main className="flex min-h-screen flex-col mx-0 md:mx-8 items-center pt-7 bg-gray-100">
                 <h1 className="sr-only">Adopt a Pet in Pakistan — Browse Dogs, Cats &amp; More</h1>
                 <div className="flex w-full">

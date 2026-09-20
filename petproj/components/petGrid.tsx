@@ -140,9 +140,16 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                             )}
                         </div>
                         <div className="py-4">
-                            <h3 className="font-bold mb-1 truncate max-w-[90%]">
-                                {pet.pet_name}
-                            </h3>
+                            <div className="flex items-baseline justify-between gap-2">
+                                <h3 className="font-bold mb-1 truncate max-w-[70%]">
+                                    {pet.pet_name}
+                                </h3>
+                                {/* Reference number, so a screenshot of this card is
+                                    still enough for support to identify the listing. */}
+                                <span className="shrink-0 font-mono text-[10px] font-semibold text-gray-400">
+                                    PET#{pet.pet_id}
+                                </span>
+                            </div>
                             <p className="text-gray-600 mb-1 truncate max-w-[90%]">
                                 {formatAge(pet.age_months)}
                             </p>

@@ -550,6 +550,18 @@ const PetDetailsClient: React.FC<{
                                                     {formatAge(pet.age_months)}
                                                 </span>
                                             </div>
+                                            {/* The listing's reference number. People message
+                                                support asking "is this one still available?",
+                                                usually with a screenshot; this gives them
+                                                something exact to quote. */}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleCopy(`PET#${pet.pet_id}`)}
+                                                title="Copy this pet's reference number"
+                                                className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 font-mono text-xs font-semibold tracking-wide text-gray-600 transition-colors hover:border-primary hover:text-primary">
+                                                PET#{pet.pet_id}
+                                                <CopyOutlined className="text-[11px]" />
+                                            </button>
                                         </div>
                                     </div>
 

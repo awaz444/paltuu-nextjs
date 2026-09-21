@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { resizeForUpload } from "@/lib/personaStudio/resizeImage";
+import ProfilesEditor from "./ProfilesEditor";
 
 type TimeOfDay = "any" | "morning" | "afternoon" | "evening" | "night";
 
@@ -85,7 +86,7 @@ export default function PersonaStudioPage() {
     const [personas, setPersonas] = useState<StudioPersona[] | null>(null);
     const [pets, setPets] = useState<StudioPet[]>([]);
     const [photos, setPhotos] = useState<Photo[]>([]);
-    const [section, setSection] = useState<"pets" | "profiles">("pets");
+    const [section, setSection] = useState<"pets" | "profiles" | "edit">("pets");
     const [selected, setSelected] = useState("all"); // "personaId/petSlug"
     const [onlyTodo, setOnlyTodo] = useState(false);
     const [activeId, setActiveId] = useState<string | null>(null);
@@ -261,7 +262,7 @@ export default function PersonaStudioPage() {
                     <Stat value={haveAvatar} of={needAvatar.length} label="profile photos in" />
                 </div>
                 <div className="flex bg-white rounded-lg border border-gray-200 p-1 self-center" role="tablist">
-                    {(["pets", "profiles"] as const).map((s) => (
+                    {(["pets", "profiles", "edit"] as const).map((s) => (
                         <button
                             key={s}
                             role="tab"
@@ -269,7 +270,7 @@ export default function PersonaStudioPage() {
                             onClick={() => setSection(s)}
                             className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${section === s ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100"}`}
                         >
-                            {s === "pets" ? "Pet photos" : "Profile photos"}
+                            {s === "pets" ? "Pet photos" : s === "profiles" ? "Profile photos" : "Edit profiles"}
                         </button>
                     ))}
                 </div>
@@ -277,7 +278,9 @@ export default function PersonaStudioPage() {
 
             {error && <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>}
 
-            {section === "profiles" ? (
+            {section === "edit" ? (
+                <ProfilesEditor onNotice={showToast} />
+            ) : section === "profiles" ? (
                 <ProfilePhotos personas={personas} pets={pets} onUpload={uploadProfile} />
             ) : (
                 <div className={`grid gap-4 grid-cols-1 lg:items-start ${active ? "lg:grid-cols-[250px_minmax(0,1fr)_390px]" : "lg:grid-cols-[250px_minmax(0,1fr)]"}`}>

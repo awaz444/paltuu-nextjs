@@ -182,15 +182,6 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
                 onSearch={handleFilterChange}
             />
 
-            {/* Under the horizontal filters, above the grid. The horizontal
-                filter card is hidden below md (phones get the floating filter
-                button instead), so on a phone this is the first thing under the
-                navbar — the margins match FilterSection's card either way. */}
-            <AppDownloadBanner
-                promo={APP_PROMOS.browsePets}
-                wrapperClassName="bg-gray-100 mx-0 md:mx-8 pt-4 md:pt-5"
-            />
-
             <main className="flex min-h-screen flex-col mx-0 md:mx-8 items-center pt-7 bg-gray-100">
                 <h1 className="sr-only">Adopt a Pet in Pakistan — Browse Dogs, Cats &amp; More</h1>
                 <div className="flex w-full">
@@ -204,6 +195,17 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
                     </div>
 
                     <div className="w-full lg:w-3/4">
+                        {/* Above the grid, inside its column, so on desktop it is
+                            exactly as wide as the grid and the vertical filters
+                            keep running up beside it. Below lg the sidebar is
+                            hidden and the column is full width, so this is
+                            full width there too. */}
+                        <AppDownloadBanner
+                            promo={APP_PROMOS.browsePets}
+                            wrapperClassName="mb-4"
+                            rowFrom="xl"
+                        />
+
                         {loading && pets.length === 0 ? (
                             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {Array.from({ length: 6 }).map((_, i) => (

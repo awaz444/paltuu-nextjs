@@ -15,6 +15,8 @@ import HomeJsonLd from "@/components/home/HomeJsonLd";
 import LatestBlogsSection from "@/components/LatestBlogsSection";
 import HomepageFAQ from "@/components/HomepageFAQ";
 import AppPromoBanner from "@/components/AppPromoBanner";
+import AppPromoImageBanner from "@/components/app-promo/AppPromoImageBanner";
+import { APP_IMAGE_BANNERS } from "@/lib/appPromo";
 import { getAllBlogsMetadata } from "@/lib/mdx";
 import { getRecentPets } from "@/lib/recentPets";
 import { SITE_URL } from "@/lib/site";
@@ -125,6 +127,17 @@ export default async function HomePage() {
 
       {/* White first: the navbar above is maroon with a rounded bottom edge. */}
       <HeroSection />
+
+      {/* Vets at Home, in the highest slot on the page after the hero.
+          VetsAtHomeSection further down is the full pitch — this is the strip
+          that catches visitors who never scroll that far. gray-50 on purpose:
+          white hero above, maroon AppSection below, so a maroon strip here
+          would run straight into the section under it. */}
+      <AppPromoImageBanner
+        promo={APP_IMAGE_BANNERS.vetsAtHome}
+        wrapperClassName="bg-gray-50 px-6 py-6 lg:px-12"
+        className="mx-auto max-w-6xl"
+      />
 
       {/* One framer-motion boundary. Everything inside stays server-rendered. */}
       <MotionProvider>

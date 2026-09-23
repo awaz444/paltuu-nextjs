@@ -1,4 +1,5 @@
 import { db } from "@/db/index";
+import { queueWhatsAppAsync } from "@/lib/whatsappNotify";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { AdoptionNotifications } from "@/lib/notifications";
@@ -121,6 +122,32 @@ export async function POST(req: NextRequest) {
         );
 
         const applicationId = result.rows[0].adoption_id;
+
+        // WhatsApp, alongside the in-app notification below. Both ends: the
+        // applicant gets an acknowledgement, the owner gets told to go look.
+        try {
+            const { rows: contacts } = await db.query(
+                `SELECT p.contact_number AS owner_number, u.phone_number AS owner_phone
+                   FROM pets p LEFT JOIN users u ON u.user_id = p.owner_id
+                  WHERE p.pet_id = $1`,
+                [pet_id]
+            );
+            queueWhatsAppAsync(
+                'application_submitted_applicant',
+                { pet_id, pet_name: petName },
+                { to: sanitizedContactNumber, dedupeKey: `app_submitted_applicant:${applicationId}` }
+            );
+            queueWhatsAppAsync(
+                'application_submitted_owner',
+                { pet_id, pet_name: petName, applicant_name: adopter_name },
+                {
+                    to: contacts[0]?.owner_number || contacts[0]?.owner_phone,
+                    dedupeKey: `app_submitted_owner:${applicationId}`,
+                }
+            );
+        } catch (err) {
+            console.error('[adoption POST] could not queue WhatsApp notifications:', err);
+        }
 
         // 3. In-app Notification
         AdoptionNotifications.onApplicationSubmitted(

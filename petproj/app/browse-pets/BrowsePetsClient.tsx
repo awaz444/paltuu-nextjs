@@ -9,6 +9,8 @@ import VerticalSearchBar from "../../components/VerticalSearchBar";
 import FilterSection from "../../components/FilterSection";
 import PetGrid from "../../components/petGrid";
 import SkeletonCard from "../../components/SkeletonCard";
+import AppPromoImageBanner from "../../components/app-promo/AppPromoImageBanner";
+import { APP_IMAGE_BANNERS } from "@/lib/appPromo";
 import { MoonLoader } from "react-spinners";
 import "./styles.css";
 
@@ -179,6 +181,7 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
             <FilterSection
                 onSearch={handleFilterChange}
             />
+
             <main className="flex min-h-screen flex-col mx-0 md:mx-8 items-center pt-7 bg-gray-100">
                 <h1 className="sr-only">Adopt a Pet in Pakistan — Browse Dogs, Cats &amp; More</h1>
                 <div className="flex w-full">
@@ -192,6 +195,16 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
                     </div>
 
                     <div className="w-full lg:w-3/4">
+                        {/* Above the grid, inside its column, so on desktop it is
+                            exactly as wide as the grid and the vertical filters
+                            keep running up beside it. Below lg the sidebar is
+                            hidden and the column is full width, so this is
+                            full width there too. */}
+                        <AppPromoImageBanner
+                            promo={APP_IMAGE_BANNERS.browsePets}
+                            wrapperClassName="mb-4"
+                        />
+
                         {loading && pets.length === 0 ? (
                             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {Array.from({ length: 6 }).map((_, i) => (

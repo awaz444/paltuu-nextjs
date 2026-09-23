@@ -1,4 +1,5 @@
 import { db } from "@/db/index";
+import { queueWhatsAppAsync } from "@/lib/whatsappNotify";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { validate } from "@/utils/validation";
@@ -186,6 +187,28 @@ export async function POST(req: NextRequest) {
         startingPricePkr,
       ]
     );
+
+
+    // Page the dispatcher on WhatsApp. Fire-and-forget: a request must never
+    // fail because an alert could not be queued.
+    try {
+      const created = result.rows[0];
+      const { rows: cityRows } = await db.query('SELECT city_name FROM cities WHERE city_id = $1', [city_id]);
+      const { rows: clientRows } = await db.query('SELECT name FROM users WHERE user_id = $1', [userId]);
+      queueWhatsAppAsync(
+        'team_vet_request',
+        {
+          category,
+          species,
+          city: cityRows[0]?.city_name ?? null,
+          client_name: clientRows[0]?.name ?? null,
+          client_phone: contact_phone ?? null,
+        },
+        { dedupeKey: `team_vet_request:${created?.request_id ?? created?.id}` }
+      );
+    } catch (err) {
+      console.error('[express-vet POST] could not queue the dispatcher alert:', err);
+    }
 
     const request = result.rows[0];
 

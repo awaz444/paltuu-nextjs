@@ -15,8 +15,8 @@ import HomeJsonLd from "@/components/home/HomeJsonLd";
 import LatestBlogsSection from "@/components/LatestBlogsSection";
 import HomepageFAQ from "@/components/HomepageFAQ";
 import AppPromoBanner from "@/components/AppPromoBanner";
-import AppDownloadBanner from "@/components/app-promo/AppDownloadBanner";
-import { APP_PROMOS } from "@/lib/appPromo";
+import AppPromoImageBanner from "@/components/app-promo/AppPromoImageBanner";
+import { APP_IMAGE_BANNERS } from "@/lib/appPromo";
 import { getAllBlogsMetadata } from "@/lib/mdx";
 import { getRecentPets } from "@/lib/recentPets";
 import { SITE_URL } from "@/lib/site";
@@ -133,8 +133,8 @@ export default async function HomePage() {
           that catches visitors who never scroll that far. gray-50 on purpose:
           white hero above, maroon AppSection below, so a maroon strip here
           would run straight into the section under it. */}
-      <AppDownloadBanner
-        promo={APP_PROMOS.vetsAtHome}
+      <AppPromoImageBanner
+        promo={APP_IMAGE_BANNERS.vetsAtHome}
         wrapperClassName="bg-gray-50 px-6 py-6 lg:px-12"
         className="mx-auto max-w-6xl"
       />

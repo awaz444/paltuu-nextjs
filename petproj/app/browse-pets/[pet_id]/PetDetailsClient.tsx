@@ -3,9 +3,9 @@ import React, { useState, useEffect } from "react";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
-import AppDownloadModal from "../../../components/app-promo/AppDownloadModal";
+import AppPromoImageModal from "../../../components/app-promo/AppPromoImageModal";
 import { hasAnsweredCookieConsent } from "../../../components/app-promo/useAppPromoGate";
-import { APP_PROMOS } from "@/lib/appPromo";
+import { APP_IMAGE_MODALS } from "@/lib/appPromo";
 import RescueDetails from "../../../components/RescueDetails";
 import { formatDistanceToNow } from "date-fns";
 import ReactMarkdown from "react-markdown";
@@ -186,7 +186,7 @@ const PetDetailsClient: React.FC<{
     const appPromoAlreadyShown = () => {
         try {
             return Boolean(
-                sessionStorage.getItem(`paltuu_app_promo_${APP_PROMOS.adopt.key}`)
+                sessionStorage.getItem(`paltuu_app_promo_${APP_IMAGE_MODALS.adopt.key}`)
             );
         } catch {
             // Storage blocked. Treat as "already shown" so a visitor who cannot
@@ -197,7 +197,7 @@ const PetDetailsClient: React.FC<{
 
     const markAppPromoShown = () => {
         try {
-            sessionStorage.setItem(`paltuu_app_promo_${APP_PROMOS.adopt.key}`, "1");
+            sessionStorage.setItem(`paltuu_app_promo_${APP_IMAGE_MODALS.adopt.key}`, "1");
         } catch {
             /* Non-fatal. */
         }
@@ -882,8 +882,8 @@ const PetDetailsClient: React.FC<{
                         />
                     )}
 
-                    <AppDownloadModal
-                        promo={APP_PROMOS.adopt}
+                    <AppPromoImageModal
+                        promo={APP_IMAGE_MODALS.adopt}
                         open={showAppPromo}
                         onClose={handleAppPromoClose}
                     />

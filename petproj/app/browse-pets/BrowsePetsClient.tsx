@@ -9,8 +9,8 @@ import VerticalSearchBar from "../../components/VerticalSearchBar";
 import FilterSection from "../../components/FilterSection";
 import PetGrid from "../../components/petGrid";
 import SkeletonCard from "../../components/SkeletonCard";
-import AppDownloadBanner from "../../components/app-promo/AppDownloadBanner";
-import { APP_PROMOS } from "@/lib/appPromo";
+import AppPromoImageBanner from "../../components/app-promo/AppPromoImageBanner";
+import { APP_IMAGE_BANNERS } from "@/lib/appPromo";
 import { MoonLoader } from "react-spinners";
 import "./styles.css";
 
@@ -200,10 +200,9 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
                             keep running up beside it. Below lg the sidebar is
                             hidden and the column is full width, so this is
                             full width there too. */}
-                        <AppDownloadBanner
-                            promo={APP_PROMOS.browsePets}
+                        <AppPromoImageBanner
+                            promo={APP_IMAGE_BANNERS.browsePets}
                             wrapperClassName="mb-4"
-                            rowFrom="xl"
                         />
 
                         {loading && pets.length === 0 ? (

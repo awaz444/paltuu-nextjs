@@ -18,9 +18,9 @@ import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import PhoneNumberInput from "../../components/PhoneNumberInput";
 import { isValidPhone } from "@/utils/phone";
-import AppDownloadModal from "../../components/app-promo/AppDownloadModal";
+import AppPromoImageModal from "../../components/app-promo/AppPromoImageModal";
 import { useAppPromoGate } from "../../components/app-promo/useAppPromoGate";
-import { APP_PROMOS } from "@/lib/appPromo";
+import { APP_IMAGE_MODALS } from "@/lib/appPromo";
 
 const { Panel } = Collapse;
 
@@ -70,7 +70,7 @@ export default function CreatePetListing() {
      * either way — the early returns below are after every hook, and must stay
      * that way.
      */
-    const appPromo = useAppPromoGate(APP_PROMOS.createListing.key, APP_PROMOS.createListing.scope, {
+    const appPromo = useAppPromoGate(APP_IMAGE_MODALS.createListing.key, APP_IMAGE_MODALS.createListing.scope, {
         delayMs: 700,
         enabled: status !== "loading" && isAuthenticated && Boolean(user),
         waitForCookieConsent: true,
@@ -381,8 +381,8 @@ export default function CreatePetListing() {
 
     return (
         <>
-            <AppDownloadModal
-                promo={APP_PROMOS.createListing}
+            <AppPromoImageModal
+                promo={APP_IMAGE_MODALS.createListing}
                 open={appPromo.open}
                 onClose={appPromo.close}
             />

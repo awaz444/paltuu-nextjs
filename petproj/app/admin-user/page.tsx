@@ -5,6 +5,7 @@ import { Table, Button, message, Select, Input } from "antd";
 import { User } from "../types/user";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
+import UserGrowthChart from "./UserGrowthChart";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -149,6 +150,8 @@ const AdminUsersPage = () => {
                     <h1 className="text-2xl font-semibold mb-6">
                         Manage Users
                     </h1>
+
+                    <UserGrowthChart users={users} />
 
                     {/* Filters and Search */}
                     <div className="bg-white p-4 rounded-lg shadow mb-6">

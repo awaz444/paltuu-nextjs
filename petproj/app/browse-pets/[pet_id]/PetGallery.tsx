@@ -4,9 +4,8 @@ import { Image } from "antd";
 import { CameraOutlined, ExpandOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 
 // Listing photos come straight from people's phones, so they're every aspect
-// ratio under the sun. The main frame shows the whole photo (object-contain)
-// over a blurred copy of itself instead of cropping, and clicking opens the
-// full-size viewer.
+// ratio under the sun. The main frame fills with the photo (object-cover) and
+// clicking opens the full-size viewer, which shows it uncropped.
 const PetGallery: React.FC<{ images: string[]; alt: string }> = ({ images, alt }) => {
     const [index, setIndex] = useState(0);
     const [loaded, setLoaded] = useState<Set<string>>(new Set());
@@ -45,16 +44,7 @@ const PetGallery: React.FC<{ images: string[]; alt: string }> = ({ images, alt }
 
     return (
         <div>
-            <div className="group relative aspect-square overflow-hidden rounded-xl border border-gray-200 bg-gray-900 sm:aspect-[4/3]">
-                {/* Blurred backdrop fills the letterbox around non-matching ratios */}
-                {isLoaded && (
-                    <div
-                        aria-hidden
-                        className="absolute inset-0 scale-110 bg-cover bg-center opacity-60 blur-2xl"
-                        style={{ backgroundImage: `url("${src}")` }}
-                    />
-                )}
-
+            <div className="group relative aspect-square overflow-hidden rounded-xl border border-gray-200 bg-gray-100 sm:aspect-[4/3]">
                 <button
                     type="button"
                     onClick={() => setViewerOpen(true)}
@@ -65,13 +55,13 @@ const PetGallery: React.FC<{ images: string[]; alt: string }> = ({ images, alt }
                         src={src}
                         alt={alt}
                         onLoad={() => markLoaded(src)}
-                        className={`h-full w-full object-contain transition-opacity duration-200 ${isLoaded ? "opacity-100" : "opacity-0"}`}
+                        className={`h-full w-full object-cover transition-opacity duration-200 ${isLoaded ? "opacity-100" : "opacity-0"}`}
                     />
                 </button>
 
                 {!isLoaded && (
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-primary" />
                     </div>
                 )}
 

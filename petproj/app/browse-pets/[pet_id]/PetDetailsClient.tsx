@@ -67,7 +67,9 @@ function buildCarouselImages(pet: PetWithImages): string[] {
 const PetDetailsClient: React.FC<{
     params: { pet_id: string };
     initialPet?: PetWithImages;
-}> = ({ params, initialPet }) => {
+    // Server-rendered sections (how adoption works, app, blogs) shown under the listing
+    extras?: React.ReactNode;
+}> = ({ params, initialPet, extras }) => {
     const { pet_id } = params;
     const router = useRouter();
     const { user, isAuthenticated, isHydrating } = useAuth();
@@ -171,6 +173,14 @@ const PetDetailsClient: React.FC<{
         const digits = formatPhoneDisplay(phone).digits;
         const whatsappUrl = `https://wa.me/${digits || phone}`;
         window.open(whatsappUrl, "_blank");
+    };
+
+    // Support line for questions about a listing (availability, scams, etc.).
+    // The reference number lets support find the pet straight away.
+    const handleAskPaltuu = () => {
+        if (!pet) return;
+        const text = `Hi Paltuu, I have a question about PET#${pet.pet_id} (${pet.pet_name}): ${window.location.origin}/browse-pets/${pet.pet_id}`;
+        window.open(`https://wa.me/923394022468?text=${encodeURIComponent(text)}`, "_blank");
     };
 
     const handleAdoptClick = async () => {
@@ -415,6 +425,19 @@ const PetDetailsClient: React.FC<{
                         <WhatsAppOutlined />
                         Message via WhatsApp
                     </button>
+
+                    <div className="border-t border-gray-100 pt-3">
+                        <button
+                            type="button"
+                            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-gray-300 text-[15px] font-semibold text-gray-800 transition-colors hover:border-primary hover:text-primary"
+                            onClick={handleAskPaltuu}>
+                            <WhatsAppOutlined />
+                            Ask Paltuu about this pet
+                        </button>
+                        <p className="mt-1.5 text-center text-xs text-gray-500">
+                            Questions or concerns about this listing? Our team replies on WhatsApp.
+                        </p>
+                    </div>
                 </div>
             </Modal>
 
@@ -694,6 +717,8 @@ const PetDetailsClient: React.FC<{
                     );
                     })()}
 
+
+                    {extras}
 
                     <AdoptionFormModal
                         petId={parseInt(pet_id)}

@@ -1,8 +1,4 @@
 /* styles.css */
-.pet-details {
-  padding: 16px;
-}
-
 .ant-card {
   border-radius: 12px;
 }
@@ -80,10 +76,6 @@ input[type="range"]::-moz-range-thumb {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .pet-details {
-    padding: 12px;
-  }
-  
   .image-nav-button {
     width: 32px;
     height: 32px;

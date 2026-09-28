@@ -4,6 +4,7 @@ import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
 import RescueDetails from "../../../components/RescueDetails";
+import PetGallery from "./PetGallery";
 import { formatDistanceToNow } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/context/AuthContext";
@@ -66,7 +67,9 @@ function buildCarouselImages(pet: PetWithImages): string[] {
 const PetDetailsClient: React.FC<{
     params: { pet_id: string };
     initialPet?: PetWithImages;
-}> = ({ params, initialPet }) => {
+    // Server-rendered sections (how adoption works, app, blogs) shown under the listing
+    extras?: React.ReactNode;
+}> = ({ params, initialPet, extras }) => {
     const { pet_id } = params;
     const router = useRouter();
     const { user, isAuthenticated, isHydrating } = useAuth();
@@ -75,7 +78,6 @@ const PetDetailsClient: React.FC<{
     const [carouselImages, setCarouselImages] = useState<string[]>(
         initialPet ? buildCarouselImages(initialPet) : []
     );
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [loading, setLoading] = useState(!initialPet);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [IsModalOpen, setIsModalOpen] = useState(false);
@@ -173,6 +175,14 @@ const PetDetailsClient: React.FC<{
         window.open(whatsappUrl, "_blank");
     };
 
+    // Support line for questions about a listing (availability, scams, etc.).
+    // The reference number lets support find the pet straight away.
+    const handleAskPaltuu = () => {
+        if (!pet) return;
+        const text = `Hi Paltuu, I have a question about PET#${pet.pet_id} (${pet.pet_name}): ${window.location.origin}/browse-pets/${pet.pet_id}`;
+        window.open(`https://wa.me/923394022468?text=${encodeURIComponent(text)}`, "_blank");
+    };
+
     const handleAdoptClick = async () => {
         if (pet?.adoption_status !== "available") return;
 
@@ -202,18 +212,6 @@ const PetDetailsClient: React.FC<{
 
     const handleModalClose = () => setIsModalVisible(false);
     const handleFormSubmit = (formData: any) => {};
-
-    const nextImage = () => {
-        setCurrentImageIndex((prevIndex) =>
-            prevIndex === carouselImages.length - 1 ? 0 : prevIndex + 1
-        );
-    };
-
-    const prevImage = () => {
-        setCurrentImageIndex((prevIndex) =>
-            prevIndex === 0 ? carouselImages.length - 1 : prevIndex - 1
-        );
-    };
 
     const getListingTypeInfo = () => {
         switch (pet?.listing_type) {
@@ -274,76 +272,48 @@ const PetDetailsClient: React.FC<{
     const renderSourceInfo = () => {
         if (!pet) return null;
 
-        switch (pet.listing_type) {
-            case "adoption":
-            case "sell":
-                return (
-                    <div className="flex items-center gap-4 p-5 bg-gray-50/50 rounded-3xl border border-gray-100 shadow-sm">
-                        <Avatar
-                            size={64}
-                            src={pet.owner_image || pet.profile_image_url}
-                            icon={<UserOutlined />}
-                            className="bg-white text-primary border-2 border-white shadow-md"
-                        />
-                        <div>
-                            <Text className="text-[10px] uppercase tracking-[0.2em] font-black text-primary/40 block mb-1 leading-none">
-                                Listed By
-                            </Text>
-                            <Text className="text-xl font-black text-gray-900 leading-tight">
-                                {pet.owner_name || "Member User"}
-                            </Text>
-                        </div>
-                    </div>
-                );
-            case "shop":
-                return (
-                    <Link href={`/shops/${pet.shop?.shop_id}`}>
-                        <div className="flex items-center gap-3 p-4 mt-6 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
-                            <Avatar
-                                size={48}
-                                src={pet.shop?.logo_url}
-                                icon={<ShopOutlined />}
-                                className="bg-purple-100 text-purple-600"
-                            />
-                            <div>
-                                <Text className="text-sm font-medium text-gray-500 block">
-                                    Shop
-                                </Text>
-                                <Text className="text-lg font-semibold text-gray-800">
-                                    {pet.shop?.shop_name || "Unknown Shop"}
-                                </Text>
-                            </div>
-                        </div>
-                    </Link>
-                );
-            case "rescue":
-                const rescueName = pet.shelter?.shelter_name || pet.owner_name || "Paws Rescue";
-                const rescueLogo = pet.shelter?.logo_url || pet.owner_image || pet.profile_image_url;
-                const rescueId = pet.shelter?.shelter_id || pet.shelter_id;
+        let label: string;
+        let name: string;
+        let avatar: string | null | undefined;
+        let href: string | null = null;
+        let fallbackIcon = <UserOutlined />;
 
-                return (
-                    <Link href={rescueId ? `/shelters/${rescueId}` : "#"}>
-                        <div className="flex items-center gap-4 p-5 bg-red-50/30 rounded-3xl border border-red-100/50 shadow-sm transition-all hover:shadow-md group">
-                            <Avatar
-                                size={64}
-                                src={rescueLogo}
-                                icon={<ShopOutlined />}
-                                className="bg-white text-red-500 border-2 border-white shadow-md group-hover:scale-105 transition-transform"
-                            />
-                            <div>
-                                <Text className="text-[10px] uppercase tracking-[0.2em] font-black text-red-400 block mb-1 leading-none">
-                                    Rescue Shelter
-                                </Text>
-                                <Text className="text-xl font-black text-gray-900 leading-tight">
-                                    {rescueName}
-                                </Text>
-                            </div>
-                        </div>
-                    </Link>
-                );
+        switch (pet.listing_type) {
+            case "shop":
+                label = "Shop";
+                name = pet.shop?.shop_name || "Unknown Shop";
+                avatar = pet.shop?.logo_url;
+                href = pet.shop?.shop_id ? `/shops/${pet.shop.shop_id}` : null;
+                fallbackIcon = <ShopOutlined />;
+                break;
+            case "rescue": {
+                const rescueId = pet.shelter?.shelter_id || pet.shelter_id;
+                label = "Rescue shelter";
+                name = pet.shelter?.shelter_name || pet.owner_name || "Paws Rescue";
+                avatar = pet.shelter?.logo_url || pet.owner_image || pet.profile_image_url;
+                href = rescueId ? `/shelters/${rescueId}` : null;
+                fallbackIcon = <ShopOutlined />;
+                break;
+            }
             default:
-                return null;
+                label = "Listed by";
+                name = pet.owner_name || "Member User";
+                avatar = pet.owner_image || pet.profile_image_url;
         }
+
+        const row = (
+            <div className={`flex items-center gap-3 ${href ? "group" : ""}`}>
+                <Avatar size={40} src={avatar} icon={fallbackIcon} className="flex-shrink-0 bg-gray-100 text-gray-500" />
+                <div className="min-w-0">
+                    <div className="text-xs text-gray-500">{label}</div>
+                    <div className={`truncate text-sm font-semibold text-gray-900 ${href ? "group-hover:text-primary" : ""}`}>
+                        {name}
+                    </div>
+                </div>
+            </div>
+        );
+
+        return href ? <Link href={href}>{row}</Link> : row;
     };
 
     if (loading) {
@@ -384,17 +354,44 @@ const PetDetailsClient: React.FC<{
     const listingTypeInfo = getListingTypeInfo();
     const isAvailable = pet.adoption_status === "available";
     const phoneDisplay = formatPhoneDisplay(pet.contact_number);
+    const isForSale = pet.listing_type === "sell" || pet.listing_type === "shop";
+    const priceText =
+        isForSale && hasValue(pet.price) && !isNaN(Number(pet.price))
+            ? `PKR ${Number(pet.price).toLocaleString()}`
+            : null;
+    // These columns default to false, so "No" usually just means "not filled in". Only show the "Yes" case.
+    const yesNo = (v: boolean | null | undefined) => (v === true ? "Yes" : null);
+
+    // People often type "None" / "N/A" into the health field; don't give that its own card.
+    const hasHealthNotes =
+        hasValue(pet.health_issues) &&
+        !/^(none|no|n\/?a|nil|-+|nothing|no issues?)\.?$/i.test(pet.health_issues!.trim());
+
+    const facts: Array<{ label: string; value: React.ReactNode }> = [
+        { label: "Breed", value: pet.pet_breed || "Mixed breed" },
+        { label: "Age", value: formatAge(pet.age_months) },
+        { label: "Sex", value: hasValue(pet.sex) ? <span className="capitalize">{pet.sex}</span> : null },
+        { label: "Location", value: [pet.area, pet.city].filter(Boolean).join(", ") || null },
+        { label: "Vaccinated", value: yesNo(pet.vaccinated) },
+        { label: "Neutered", value: yesNo(pet.neutered) },
+    ].filter((f) => f.value);
+
+    // Health tags read as caveats, everything else as selling points.
+    const sortedTags = [...(pet.tags ?? [])].sort(
+        (a, b) =>
+            ["personality", "lifestyle", "compatibility", "health"].indexOf(a.tag_category) -
+            ["personality", "lifestyle", "compatibility", "health"].indexOf(b.tag_category)
+    );
 
     return (
         <>
             <Modal
                 title="Contact Information"
-                visible={IsModalOpen}
+                open={IsModalOpen}
                 onCancel={() => setIsModalOpen(false)}
-                footer={null}
-                className="rounded-lg">
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                footer={null}>
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
                         <div className="flex items-center gap-3">
                             <span
                                 className="text-2xl leading-none"
@@ -403,10 +400,10 @@ const PetDetailsClient: React.FC<{
                                 {phoneDisplay.flag}
                             </span>
                             <div>
-                                <p className="font-medium text-gray-700">
+                                <p className="font-medium text-gray-800">
                                     {phoneDisplay.pretty}
                                 </p>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-xs text-gray-500">
                                     {phoneDisplay.countryName
                                         ? `Phone Number · ${phoneDisplay.countryName}`
                                         : "Phone Number"}
@@ -421,291 +418,187 @@ const PetDetailsClient: React.FC<{
                         />
                     </div>
 
-                    <Button
-                        type="primary"
-                        block
-                        icon={<WhatsAppOutlined />}
-                        className="bg-green-500 hover:bg-green-600 text-white h-16 rounded-2xl flex items-center justify-center text-base font-bold shadow-lg shadow-green-500/20"
+                    <button
+                        type="button"
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-green-500 text-[15px] font-semibold text-white transition-colors hover:bg-green-600"
                         onClick={() => pet.contact_number && handleWhatsApp(pet.contact_number)}>
+                        <WhatsAppOutlined />
                         Message via WhatsApp
-                    </Button>
+                    </button>
+
+                    <div className="border-t border-gray-100 pt-3">
+                        <button
+                            type="button"
+                            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-gray-300 text-[15px] font-semibold text-gray-800 transition-colors hover:border-primary hover:text-primary"
+                            onClick={handleAskPaltuu}>
+                            <WhatsAppOutlined />
+                            Ask Paltuu about this pet
+                        </button>
+                        <p className="mt-1.5 text-center text-xs text-gray-500">
+                            Questions or concerns about this listing? Our team replies on WhatsApp.
+                        </p>
+                    </div>
                 </div>
             </Modal>
 
-            <div className="pet-details min-h-screen bg-gray-50 py-8 px-4 md:px-8">
+            <div className="pet-details min-h-screen bg-gray-50 px-4 py-4 md:px-8 md:py-6">
                 <div className="mx-auto max-w-6xl">
-                    {/* Breadcrumb */}
-                    <div className="mb-2">
-                        <Button
-                            type="text"
-                            onClick={() => window.history.back()}
-                            className="flex items-center text-gray-600 p-2">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5 mr-1"
-                                viewBox="0 0 20 20"
-                                fill="currentColor">
-                                <path
-                                    fillRule="evenodd"
-                                    d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-                                    clipRule="evenodd"
-                                />
-                            </svg>
-                            Back to listings
-                        </Button>
-                    </div>
+                    <button
+                        type="button"
+                        onClick={() => window.history.back()}
+                        className="mb-3 inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-primary">
+                        <ArrowLeftOutlined className="text-xs" />
+                        Back to listings
+                    </button>
 
-                    <Card className="shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] rounded-[3rem] overflow-hidden border border-gray-50">
-                        <div className="flex flex-col lg:flex-row gap-8">
-                            {/* Image Gallery */}
-                            <div className="lg:w-1/2">
-                                {carouselImages.length > 0 ? (
-                                    <div className="relative rounded-xl overflow-hidden">
-                                        <div className="aspect-square bg-gray-100 rounded-xl">
-                                            <img
-                                                src={carouselImages[currentImageIndex]}
-                                                alt={`${pet.pet_name} — ${pet.pet_breed || "pet"} available for adoption in ${pet.city}, Pakistan`}
-                                                className="w-full h-full object-cover rounded-xl"
-                                            />
-                                        </div>
+                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:gap-8">
+                        {/* Gallery */}
+                        <div className="lg:col-span-7">
+                            <PetGallery
+                                images={carouselImages}
+                                alt={`${pet.pet_name} — ${pet.pet_breed || "pet"} available for adoption in ${pet.city}, Pakistan`}
+                            />
+                        </div>
 
-                                        {carouselImages.length > 1 && (
-                                            <>
-                                                <button
-                                                    onClick={prevImage}
-                                                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-70 hover:bg-opacity-100 p-2 rounded-full shadow-md">
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        className="h-6 w-6"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor">
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M15 19l-7-7 7-7"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                                <button
-                                                    onClick={nextImage}
-                                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-70 hover:bg-opacity-100 p-2 rounded-full shadow-md">
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        className="h-6 w-6"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor">
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M9 5l7 7-7 7"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </>
-                                        )}
-
-                                        <div className="flex justify-center mt-4 space-x-2">
-                                            {carouselImages.map((_, index) => (
-                                                <button
-                                                    key={index}
-                                                    onClick={() => setCurrentImageIndex(index)}
-                                                    className={`w-3 h-3 rounded-full ${index === currentImageIndex
-                                                        ? "bg-primary"
-                                                        : "bg-gray-300"
-                                                        }`}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="aspect-square bg-gray-100 rounded-xl flex items-center justify-center">
-                                        <div className="text-center text-gray-400">
-                                            <UserOutlined className="text-5xl mb-2" />
-                                            <p>No image available</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Pet Information */}
-                            <div className="lg:w-1/2 flex flex-col h-full">
-                                <div className="flex-1 space-y-6">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <Title
-                                                level={1}
-                                                className="mb-2 text-gray-800">
-                                                {pet.pet_name}
-                                            </Title>
-                                            <div className="flex items-center gap-2 text-lg text-gray-600">
-                                                <span>
-                                                    {pet.pet_breed || "Mixed Breed"}
-                                                </span>
-                                                <span>•</span>
-                                                <span>
-                                                    {formatAge(pet.age_months)}
-                                                </span>
-                                            </div>
-                                            {/* The listing's reference number. People message
-                                                support asking "is this one still available?",
-                                                usually with a screenshot; this gives them
-                                                something exact to quote. */}
-                                            <button
-                                                type="button"
-                                                onClick={() => handleCopy(`PET#${pet.pet_id}`)}
-                                                title="Copy this pet's reference number"
-                                                className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 font-mono text-xs font-semibold tracking-wide text-gray-600 transition-colors hover:border-primary hover:text-primary">
-                                                PET#{pet.pet_id}
-                                                <CopyOutlined className="text-[11px]" />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Adoption Status Tag */}
-                                    {!isAvailable && (
-                                        <Tag
-                                            color="red"
-                                            className="rounded-full px-4 py-1 text-base">
-                                            Already Adopted
-                                        </Tag>
-                                    )}
-
-                                    {/* Source Information (Owner/Shop/Shelter) */}
-                                    {renderSourceInfo()}
-
-                                    {/* Information Grid - 2x2 layout */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {/* Location */}
-                                        <div className="col-span-2 bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 h-full group hover:bg-white hover:shadow-xl transition-all duration-300">
-                                            <div className="flex items-center gap-5">
-                                                <div className="bg-primary text-white p-4 rounded-2xl shadow-lg shadow-primary/20">
-                                                    <EnvironmentOutlined className="text-xl" />
-                                                </div>
-                                                <div>
-                                                    <Text className="text-[10px] uppercase tracking-[0.2em] font-black text-primary/40 block mb-1">
-                                                        Residence
-                                                    </Text>
-                                                    <Text className="text-xl font-bold text-gray-900">
-                                                        {pet.city}, {pet.area}
-                                                    </Text>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Sex */}
-                                        {hasValue(pet.sex) && (
-                                            <div className="col-span-2 bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 h-full group hover:bg-white hover:shadow-xl transition-all duration-300">
-                                                <div className="flex items-center gap-5">
-                                                    <div className="bg-primary text-white p-4 rounded-2xl shadow-lg shadow-primary/20">
-                                                        {pet.sex === "male" ? <ManOutlined className="text-xl" /> : <WomanOutlined className="text-xl" />}
-                                                    </div>
-                                                    <div>
-                                                        <Text className="text-[10px] uppercase tracking-[0.2em] font-black text-primary/40 block mb-1">
-                                                            Sex
-                                                        </Text>
-                                                        <Text className="text-xl font-bold text-gray-900 capitalize">
-                                                            {pet.sex}
-                                                        </Text>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                        {/* Summary panel — sticks alongside the gallery and story on desktop */}
+                        <aside className="lg:col-span-5 lg:row-span-2 lg:self-start lg:sticky lg:top-24">
+                            <div className="rounded-xl border border-gray-200 bg-white p-5">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${
+                                        isAvailable ? "bg-primary/10 text-primary" : "bg-red-50 text-red-600"
+                                    }`}>
+                                        {isAvailable ? listingTypeInfo.icon : null}
+                                        {isAvailable ? listingTypeInfo.text : "Already adopted"}
+                                    </span>
+                                    {/* The listing's reference number. People message
+                                        support asking "is this one still available?",
+                                        usually with a screenshot; this gives them
+                                        something exact to quote. */}
+                                    <button
+                                        type="button"
+                                        onClick={() => handleCopy(`PET#${pet.pet_id}`)}
+                                        title="Copy this pet's reference number"
+                                        className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-0.5 font-mono text-xs text-gray-500 transition-colors hover:border-primary hover:text-primary">
+                                        PET#{pet.pet_id}
+                                        <CopyOutlined className="text-[10px]" />
+                                    </button>
                                 </div>
 
-                                {/* Action Buttons - Fixed at bottom */}
-                                <div className="flex flex-col sm:flex-row gap-4 mt-12">
+                                <h1 className="mt-3 text-2xl font-semibold leading-tight text-gray-900 md:text-[28px]">
+                                    {pet.pet_name}
+                                </h1>
+                                <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
+                                    <span className="inline-flex items-center gap-1">
+                                        <EnvironmentOutlined />
+                                        {[pet.area, pet.city].filter(Boolean).join(", ")}
+                                    </span>
+                                    {pet.created_at && (
+                                        <span className="inline-flex items-center gap-1">
+                                            <CalendarOutlined />
+                                            Listed {formatListingDate(pet.created_at)}
+                                        </span>
+                                    )}
+                                </p>
+
+                                {priceText && (
+                                    <p className="mt-3 text-xl font-semibold text-gray-900">{priceText}</p>
+                                )}
+
+                                {sortedTags.length > 0 && (
+                                    <div className="mt-4 flex flex-wrap gap-1.5">
+                                        {sortedTags.map((tag) => (
+                                            <span
+                                                key={tag.tag_id}
+                                                title={tag.tag_category}
+                                                className={`rounded-md border px-2.5 py-1 text-[13px] font-medium ${
+                                                    tag.tag_category === "health"
+                                                        ? "border-amber-200 bg-amber-50 text-amber-800"
+                                                        : "border-primary/20 bg-primary/5 text-primary"
+                                                }`}>
+                                                {tag.tag_name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-gray-100 pt-4">
+                                    {facts.map((f) => (
+                                        <div key={f.label} className="min-w-0">
+                                            <dt className="text-xs text-gray-500">{f.label}</dt>
+                                            <dd className="truncate text-sm font-medium text-gray-900">{f.value}</dd>
+                                        </div>
+                                    ))}
+                                </dl>
+
+                                <div className="mt-4 border-t border-gray-100 pt-4">
+                                    {renderSourceInfo()}
+                                </div>
+
+                                {/* Grid, not flex: flex-1 in a column flex container zeroes the
+                                    basis and collapses the buttons to line height on mobile. */}
+                                <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                                     <button
-                                        className={`flex-1 h-[72px] text-lg font-black rounded-[2rem] flex items-center justify-center gap-3 shadow-2xl transition-all ${isAvailable
-                                            ? "bg-primary text-white hover:shadow-primary/30 hover:scale-[1.02]"
-                                            : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                            }`}
+                                        type="button"
+                                        className={`flex h-12 items-center justify-center gap-2 rounded-lg px-4 text-[15px] font-semibold transition-colors ${
+                                            isAvailable
+                                                ? "bg-primary text-white hover:opacity-90"
+                                                : "cursor-not-allowed bg-gray-100 text-gray-400"
+                                        }`}
                                         onClick={handleAdoptClick}
                                         disabled={!isAvailable}>
                                         <HeartOutlined />
                                         {getActionButtonText()}
                                     </button>
-
                                     <button
-                                        className={`flex-1 h-[72px] text-lg font-black rounded-[2rem] flex items-center justify-center gap-3 transition-all border-2 ${isAvailable
-                                            ? "border-primary text-primary hover:bg-primary/5 hover:scale-[1.02]"
-                                            : "border-gray-200 text-gray-500 cursor-not-allowed"
-                                            }`}
+                                        type="button"
+                                        className={`flex h-12 items-center justify-center gap-2 rounded-lg border px-4 text-[15px] font-semibold transition-colors ${
+                                            isAvailable
+                                                ? "border-primary text-primary hover:bg-primary/5"
+                                                : "cursor-not-allowed border-gray-200 text-gray-400"
+                                        }`}
                                         onClick={handleContactClick}
                                         disabled={!isAvailable}>
                                         <PhoneOutlined />
-                                        {isAvailable ? "Contact Listing" : "Unavailable"}
+                                        {isAvailable ? "Contact" : "Unavailable"}
                                     </button>
                                 </div>
                             </div>
-                        </div>
+                        </aside>
 
-                        <Divider className="my-10 border-gray-100" />
-
-                        <div className="space-y-10">
+                        {/* Story, health, rescue details */}
+                        <div className="space-y-5 lg:col-span-7">
                             {hasValue(pet.description) && (
-                                <div className="p-8 rounded-3xl border border-gray-100 bg-gray-50/30">
-                                    <h3 className="text-xl font-black text-gray-900 mb-4 flex items-center gap-2">
-                                        <InfoCircleOutlined className="text-primary" />
-                                        The Story
-                                    </h3>
-                                    <Paragraph className="text-gray-700 leading-relaxed text-lg font-medium italic">
-                                        "{pet.description}"
-                                    </Paragraph>
-                                </div>
+                                <section className="rounded-xl border border-gray-200 bg-white p-5">
+                                    <h2 className="mb-2 text-base font-semibold text-gray-900">
+                                        Description
+                                    </h2>
+                                    <p className="whitespace-pre-line break-words text-[15px] leading-7 text-gray-700">
+                                        {pet.description}
+                                    </p>
+                                </section>
                             )}
 
-                            {pet.tags && pet.tags.length > 0 && (
-                                <div className="p-8 rounded-[2.5rem] border border-gray-100 bg-white shadow-sm">
-                                    <h3 className="text-xl font-black text-gray-900 mb-8 flex items-center gap-2">
-                                        <TeamOutlined className="text-primary" />
-                                        Attributes & Personality
-                                    </h3>
-
-                                    <div className="space-y-10 font-Montserrat">
-                                        {["personality", "lifestyle", "compatibility", "health"].map((cat) => {
-                                            const catTags = pet.tags?.filter(t => t.tag_category === cat);
-                                            if (!catTags || catTags.length === 0) return null;
-
-                                            return (
-                                                <div key={cat} className="space-y-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="text-[10px] uppercase tracking-[0.3em] font-black text-primary/40 leading-none">{cat}</span>
-                                                        <div className="h-[1px] flex-1 bg-gray-100"></div>
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {catTags.map((tag) => (
-                                                            <div
-                                                                key={tag.tag_id}
-                                                                className="px-6 py-3 rounded-2xl text-xs font-bold transition-all border-2 bg-white border-gray-100 text-gray-400">
-                                                                {tag.tag_name}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-
-                            {hasValue(pet.health_issues) && (
-                                <div className="p-8 rounded-3xl border border-red-50 bg-red-50/20">
-                                    <h3 className="text-xl font-black text-gray-900 mb-4 flex items-center gap-2">
-                                        <MedicineBoxOutlined className="text-red-500" />
-                                        Health Notes
-                                    </h3>
-                                    <Paragraph className="text-red-800 font-bold">
+                            {hasHealthNotes && (
+                                <section className="rounded-xl border border-amber-200 bg-amber-50/60 p-5">
+                                    <h2 className="mb-2 flex items-center gap-2 text-base font-semibold text-gray-900">
+                                        <MedicineBoxOutlined className="text-amber-600" />
+                                        Health notes
+                                    </h2>
+                                    <p className="whitespace-pre-line text-[15px] leading-7 text-gray-800">
                                         {pet.health_issues}
-                                    </Paragraph>
-                                </div>
+                                    </p>
+                                </section>
+                            )}
+
+                            {pet.listing_type === "rescue" && (
+                                <RescueDetails
+                                    rescue_story={pet.rescue_story || null}
+                                    special_needs={pet.special_needs || []}
+                                    medical_conditions={pet.medical_conditions || []}
+                                />
                             )}
                         </div>
-                    </Card>
+                    </div>
                     {/* AI Summary card hidden from frontend */}
                     {false && (() => {
                     if (!pet) return null;
@@ -824,14 +717,8 @@ const PetDetailsClient: React.FC<{
                     );
                     })()}
 
-                    {/* Add Rescue Details for rescue pets */}
-                    {pet.listing_type === "rescue" && (
-                        <RescueDetails
-                            rescue_story={pet.rescue_story || null}
-                            special_needs={pet.special_needs || []}
-                            medical_conditions={pet.medical_conditions || []}
-                        />
-                    )}
+
+                    {extras}
 
                     <AdoptionFormModal
                         petId={parseInt(pet_id)}

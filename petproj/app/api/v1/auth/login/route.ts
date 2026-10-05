@@ -171,14 +171,25 @@ export async function POST(req: Request) {
       }, { status: 403 });
     }
 
-    // 3. Generate tokens
+    // 3. Record login event
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip') ?? null;
+    const userAgent = req.headers.get('user-agent') ?? null;
+    await Promise.all([
+      db.query('UPDATE users SET last_login_at = NOW() WHERE user_id = $1', [user.user_id]),
+      db.query(
+        'INSERT INTO audit_logs (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
+        [user.user_id, 'login', ip, userAgent]
+      ),
+    ]);
+
+    // 4. Generate tokens
     const tokens = await generateMobileTokenPair({
       user_id: user.user_id,
       email: user.email,
       role: user.role
     });
 
-    // 4. Set httpOnly cookie for Web clients
+    // 5. Set httpOnly cookie for Web clients
     const response = NextResponse.json({
       success: true,
       ...tokens,

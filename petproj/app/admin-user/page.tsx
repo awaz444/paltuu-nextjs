@@ -126,6 +126,13 @@ const AdminUsersPage = () => {
             render: (date: string) => date ? new Date(date).toLocaleDateString() : "N/A",
         },
         {
+            title: "Last Login",
+            dataIndex: "last_login_at",
+            key: "last_login_at",
+            responsive: ["lg"] as any,
+            render: (date: string) => date ? new Date(date).toLocaleString() : "Never",
+        },
+        {
             title: "Actions",
             key: "actions",
             render: (_: any, record: User) => (

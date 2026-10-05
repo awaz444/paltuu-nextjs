@@ -11,7 +11,8 @@ export interface User {
     phone_number: string;
     role: 'admin' | 'regular user' | 'vet' | 'shelter admin' | 'shop admin';
     profile_image_url?: string; // Optional
-    created_at?: string; // Date user was created
+    created_at?: string;
+    last_login_at?: string;
     otp?: string; // One-time password for registration
 }
 

@@ -13,6 +13,7 @@ import {
     YAxis,
 } from "recharts";
 import { User } from "../types/user";
+import { LEGACY_USER_COUNT } from "./legacyUsers";
 
 const { RangePicker } = DatePicker;
 
@@ -60,6 +61,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                 <span style={{ color: SECONDARY_TEXT, fontSize: 12 }}>total users</span>
             </div>
             <div style={{ color: MUTED_TEXT, fontSize: 12, marginTop: 2 }}>
+                incl. {formatCount(LEGACY_USER_COUNT)} legacy
+            </div>
+            <div style={{ color: MUTED_TEXT, fontSize: 12, marginTop: 2 }}>
                 +{formatCount(point.newUsers)} new that day
             </div>
         </div>
@@ -91,8 +95,8 @@ const UserGrowthChart = ({ users }: UserGrowthChartProps) => {
         const start = range[0].startOf("day");
         const end = range[1].endOf("day");
 
-        // Cumulative total as of `start` (users created before the visible window).
-        let runningTotal = validDates.filter((d) => d.isBefore(start)).length;
+        // Cumulative total as of `start`: legacy users plus users created before the visible window.
+        let runningTotal = LEGACY_USER_COUNT + validDates.filter((d) => d.isBefore(start)).length;
 
         const points: DayPoint[] = [];
         let cursor = start.clone();
@@ -162,6 +166,9 @@ const UserGrowthChart = ({ users }: UserGrowthChartProps) => {
                             {netGrowth >= 0 ? "+" : ""}{formatCount(netGrowth)} in range
                         </span>
                     </div>
+                    <p className="text-xs text-gray-500 mb-2">
+                        Includes {formatCount(LEGACY_USER_COUNT)} legacy users from before the platform rework (pre-migration, not listed below)
+                    </p>
                     <ResponsiveContainer width="100%" height={280}>
                         <AreaChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
                             <defs>

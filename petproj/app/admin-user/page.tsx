@@ -6,6 +6,7 @@ import { User } from "../types/user";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import UserGrowthChart from "./UserGrowthChart";
+import { LEGACY_USER_COUNT } from "./legacyUsers";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -126,6 +127,13 @@ const AdminUsersPage = () => {
             render: (date: string) => date ? new Date(date).toLocaleDateString() : "N/A",
         },
         {
+            title: "Last Login",
+            dataIndex: "last_login_at",
+            key: "last_login_at",
+            responsive: ["lg"] as any,
+            render: (date: string) => date ? new Date(date).toLocaleString() : "Never",
+        },
+        {
             title: "Actions",
             key: "actions",
             render: (_: any, record: User) => (
@@ -203,6 +211,9 @@ const AdminUsersPage = () => {
                         {/* Results Count */}
                         <div className="mt-4 text-sm text-gray-600">
                             Showing {filteredUsers.length} of {users.length} users
+                            {" · "}
+                            {(users.length + LEGACY_USER_COUNT).toLocaleString("en-US")} total incl.{" "}
+                            {LEGACY_USER_COUNT.toLocaleString("en-US")} legacy (pre-migration)
                         </div>
                     </div>
 

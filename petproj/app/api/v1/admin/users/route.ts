@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
         }
 
         const result = await db.query(`
-            SELECT user_id, name, email, role, created_at, profile_image_url
+            SELECT user_id, name, email, role, created_at, last_login_at, profile_image_url
             FROM users
             ORDER BY created_at DESC
         `);

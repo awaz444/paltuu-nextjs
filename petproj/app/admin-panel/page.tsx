@@ -64,7 +64,7 @@ const AdminPanel = () => {
     const [userId, setUserId] = useState<string | null>(null);
     const [data, setData] = useState<UserProfileData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
-    const [socialCounts, setSocialCounts] = useState<{ untagged: number; reports: number }>({ untagged: 0, reports: 0 });
+    const [socialCounts, setSocialCounts] = useState<{ untagged: number; reports: number; personaInbox: number }>({ untagged: 0, reports: 0, personaInbox: 0 });
 
     const fetchedRef = React.useRef(false);
 
@@ -117,10 +117,12 @@ const AdminPanel = () => {
         Promise.all([
             fetch("/api/v1/admin/social/tagging-queue?limit=1").then(r => r.json()).catch(() => ({})),
             fetch("/api/v1/admin/social/reports?status=pending&limit=50").then(r => r.json()).catch(() => ({})),
-        ]).then(([queueData, reportsData]) => {
+            fetch("/api/v1/admin/persona-studio/inbox").then(r => r.json()).catch(() => []),
+        ]).then(([queueData, reportsData, inboxData]) => {
             setSocialCounts({
                 untagged: queueData.total_untagged ?? 0,
                 reports: (reportsData.reports ?? []).length,
+                personaInbox: Array.isArray(inboxData) ? inboxData.length : 0,
             });
         });
     }, [user, isHydrating]);
@@ -239,6 +241,8 @@ const AdminPanel = () => {
                 { href: "/admin-panel/social/tags", title: "🗂 Tag Taxonomy", desc: "Add, edit, and manage content tags" },
                 { href: "/admin-panel/social/posts", title: "🔍 Post Browser", desc: "Search and moderate any post" },
                 { href: "/admin-panel/social/pet-photos", title: "🖼 Pet Photo Browser", desc: "Search and shadow-hide pet gallery polaroids" },
+                { href: "/admin-panel/social/persona-studio", title: "🐾 Persona Studio", desc: "Upload and describe photos for the seeded personas and their pets" },
+                { href: "/admin-panel/social/persona-inbox", title: "📥 Persona Inbox", desc: "Comments from real people that a persona did not answer", badge: socialCounts.personaInbox },
                 { href: "/admin-panel/social/experiment", title: "🧪 A/B Experiment", desc: "Compare personalized vs. current feed" },
             ],
         },

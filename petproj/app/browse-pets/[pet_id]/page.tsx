@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PetDetailsClient from "./PetDetailsClient";
+import PetPageExtras from "./PetPageExtras";
 
 export const dynamic = "force-dynamic";
 
@@ -132,7 +133,11 @@ export default async function PetPage({
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(petJsonLd) }}
             />
-            <PetDetailsClient params={params} initialPet={pet} />
+            <PetDetailsClient
+                params={params}
+                initialPet={pet}
+                extras={<PetPageExtras listingType={pet.listing_type} />}
+            />
         </>
     );
 }

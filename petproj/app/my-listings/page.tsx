@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Pet } from "@/components/MyListingGrid";
 import MyListingGrid from "@/components/MyListingGrid";
+import BrandAdSlot from "@/components/brand-ads/BrandAdSlot";
 import "./styles.css";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -89,6 +90,14 @@ const UserListingsPage = () => {
             </div>
 
             <div style={{ maxWidth: "90%", margin: "0 auto" }} className="py-8 px-4 md:px-8">
+                <BrandAdSlot
+                    tier={3}
+                    format="banner"
+                    placement="My listings · footer banner"
+                    size="1200×180 desktop / 640×220 mobile"
+                    pitch="rehoming kit, pet insurance, upcoming-listing promotion"
+                    className="mb-6"
+                />
                 {listings.length === 0 ? (
                     <div className="bg-white rounded-3xl p-12 shadow-sm text-center max-w-lg mx-auto">
                         <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

@@ -36,6 +36,7 @@ import { MdRateReview, MdVerified } from "react-icons/md";
 import { IoMdMedical } from "react-icons/io";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "../../../components/navbar";
+import BrandAdSlot from "../../../components/brand-ads/BrandAdSlot";
 import LoginModal from "../../../components/LoginModal";
 import './styles.css'
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
@@ -456,6 +457,14 @@ export default function VetDetailsClient({
                                         )}
                                     </div>
                                 </div>
+
+                                <BrandAdSlot
+                                    tier={2}
+                                    format="sidebar"
+                                    placement="Vet profile · desktop left-sidebar sponsor (sticky)"
+                                    size="300×600 desktop / full-width mobile"
+                                    pitch='"Recommended by Dr. X" — pharma / supplements (needs clinic consent)'
+                                />
                             </div>
                         </div>
 

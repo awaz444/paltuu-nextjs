@@ -2,16 +2,17 @@
 
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
+import BrandAdSlot from "@/components/brand-ads/BrandAdSlot";
 
 const ListingCreated = () => {
     return (
         <>
-            
+
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 py-10 ">
                 <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
                     <h1 className="text-3xl font-semibold text-primary mb-4">Listing Created Successfully!</h1>
                     <p className="text-lg text-gray-700 mb-6">
-                        Your Lost & Found listing has been created and is now public! 
+                        Your Lost & Found listing has been created and is now public!
                         We are thankful for your contribution to our community.
                     </p>
                     <div className="flex justify-center gap-4">
@@ -28,6 +29,16 @@ const ListingCreated = () => {
                             Go Back to Home Page
                         </button>
                     </div>
+                </div>
+
+                <div className="mt-6 w-full max-w-md px-4">
+                    <BrandAdSlot
+                        tier={2}
+                        format="sponsor-block"
+                        placement="Lost & Found success · post-creation sponsor block"
+                        size="440×220 desktop / 640×240 mobile"
+                        pitch='"Protect your pet next time" — microchip / tracker brand'
+                    />
                 </div>
             </div>
         </>

@@ -2,16 +2,26 @@
 
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
+import BrandAdSlot from "@/components/brand-ads/BrandAdSlot";
+import BrandAdSlotModal from "@/components/brand-ads/BrandAdSlotModal";
 
 const ListingCreated = () => {
     return (
         <>
-            
+            <BrandAdSlotModal
+                tier={4}
+                placement='Listing created · "Welcome home kit" interstitial'
+                size="480×400 modal"
+                pitch="single highest-converting moment on the site"
+                sessionKey="listingCreated"
+                continueLabel="See my listing"
+            />
+
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 py-10 ">
                 <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
                     <h1 className="text-3xl font-semibold text-primary mb-4">Listing Created Successfully!</h1>
                     <p className="text-lg text-gray-700 mb-6">
-                        Your pet listing has been created and is now awaiting approval from our Admins. 
+                        Your pet listing has been created and is now awaiting approval from our Admins.
                         You can view your listing in the My Listings section.
                     </p>
                     <div className="flex justify-center gap-4">
@@ -28,6 +38,16 @@ const ListingCreated = () => {
                             Go Back to Home Page
                         </button>
                     </div>
+                </div>
+
+                <div className="mt-6 w-full max-w-md px-4">
+                    <BrandAdSlot
+                        tier={4}
+                        format="sponsor-block"
+                        placement="Listing created · post-listing sponsor block"
+                        size="440×220 desktop / 640×240 mobile"
+                        pitch="rehoming kit / pet supplies brand"
+                    />
                 </div>
             </div>
         </>

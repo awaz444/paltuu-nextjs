@@ -6,6 +6,7 @@ import AdoptionFormModal from "../../../components/AdoptionFormModal";
 import AppPromoImageModal from "../../../components/app-promo/AppPromoImageModal";
 import { hasAnsweredCookieConsent } from "../../../components/app-promo/useAppPromoGate";
 import { APP_IMAGE_MODALS } from "@/lib/appPromo";
+import BrandAdSlot from "../../../components/brand-ads/BrandAdSlot";
 import RescueDetails from "../../../components/RescueDetails";
 import { formatDistanceToNow } from "date-fns";
 import ReactMarkdown from "react-markdown";
@@ -504,6 +505,16 @@ const PetDetailsClient: React.FC<{
                         </Button>
                     </div>
 
+                    <div className="mb-6">
+                        <BrandAdSlot
+                            tier={1}
+                            format="banner"
+                            placement="Pet detail · above-the-fold leaderboard"
+                            size="1200×200 desktop / 640×240 mobile"
+                            pitch="food, pet insurance, starter kit"
+                        />
+                    </div>
+
                     <Card className="shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] rounded-[3rem] overflow-hidden border border-gray-50">
                         <div className="flex flex-col lg:flex-row gap-8">
                             {/* Image Gallery */}
@@ -881,6 +892,23 @@ const PetDetailsClient: React.FC<{
                             medical_conditions={pet.medical_conditions || []}
                         />
                     )}
+
+                    <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        <BrandAdSlot
+                            tier={1}
+                            format="sponsor-block"
+                            placement={`Pet detail · "Care kit for a ${pet.pet_type || "pet"} like ${pet.pet_name}" product recs`}
+                            size="580×220 desktop / 640×240 mobile"
+                            pitch="food / grooming / accessories, keyed to species + age"
+                        />
+                        <BrandAdSlot
+                            tier={1}
+                            format="sponsor-block"
+                            placement="Pet detail · medical-care sponsor badge (vet clinic)"
+                            size="580×220 desktop / 640×240 mobile"
+                            pitch="local vet / pet pharma"
+                        />
+                    </div>
 
                     <AppPromoImageModal
                         promo={APP_IMAGE_MODALS.adopt}

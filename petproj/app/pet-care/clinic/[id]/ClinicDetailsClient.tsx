@@ -25,6 +25,7 @@ import VetGrid from "../../../../components/VetGrid";
 import { formatPhoneDisplay } from "@/utils/phone";
 import LoginModal from "../../../../components/LoginModal";
 import { useAuth } from "@/context/AuthContext";
+import BrandAdSlot from "../../../../components/brand-ads/BrandAdSlot";
 import { ClinicDetails } from "./data";
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -470,6 +471,14 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                                     </div>
                                 </div>
                             )}
+
+                            <BrandAdSlot
+                                tier={2}
+                                format="sidebar"
+                                placement="Clinic profile · desktop left-sidebar sponsor (sticky)"
+                                size="300×600 desktop / full-width mobile"
+                                pitch="pharma / supplements / insurance (clinic-adjacent)"
+                            />
                         </div>
                     </div>
 

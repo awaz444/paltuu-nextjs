@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { formatAge } from "@/utils/formatAge";
 import { useAuth } from "@/context/AuthContext";
+import BrandAdSlot from "@/components/brand-ads/BrandAdSlot";
 
 interface Application {
     application_type: "foster" | "adoption";
@@ -137,6 +138,14 @@ export default function MyApplicationsPage() {
             </div>
 
             <div style={{ maxWidth: "90%", margin: "0 auto" }} className="py-8 px-4 md:px-8">
+                <BrandAdSlot
+                    tier={3}
+                    format="banner"
+                    placement="My applications · footer banner (new-adopter products)"
+                    size="1200×180 desktop / 640×220 mobile"
+                    pitch="pet insurance, starter kit, vet booking — high-intent audience"
+                    className="mb-6"
+                />
                 {applications.length === 0 ? (
                     <div className="bg-white rounded-3xl p-12 shadow-sm text-center max-w-lg mx-auto">
                         <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

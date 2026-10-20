@@ -4,6 +4,7 @@ import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import Navbar from "../../components/navbar";
 import RescueFilter from "../../components/RescueFilter";
 import RescueGrid from "../../components/RescueGrid";
+import BrandAdSlot from "../../components/brand-ads/BrandAdSlot";
 import { MoonLoader } from "react-spinners";
 import "./styles.css";
 
@@ -140,7 +141,18 @@ export default function RescuePets() {
                                 </button>
                             </div>
                         ) : (
-                            <RescueGrid pets={sortedPets} />
+                            <>
+                                <RescueGrid pets={sortedPets} />
+                                <div className="mt-6">
+                                    <BrandAdSlot
+                                        tier={2}
+                                        format="native-card"
+                                        placement="Rescue pets · in-grid native card (repeats every 8–12 tiles in prod)"
+                                        size="matches rescue pet card"
+                                        pitch="pet food / rescue-partner brands"
+                                    />
+                                </div>
+                            </>
                         )}
                     </div>
                 </main>

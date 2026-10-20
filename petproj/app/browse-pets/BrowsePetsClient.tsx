@@ -10,6 +10,7 @@ import FilterSection from "../../components/FilterSection";
 import PetGrid from "../../components/petGrid";
 import SkeletonCard from "../../components/SkeletonCard";
 import AppPromoImageBanner from "../../components/app-promo/AppPromoImageBanner";
+import BrandAdSlot from "../../components/brand-ads/BrandAdSlot";
 import { APP_IMAGE_BANNERS } from "@/lib/appPromo";
 import { MoonLoader } from "react-spinners";
 import "./styles.css";
@@ -205,6 +206,15 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
                             wrapperClassName="mb-4"
                         />
 
+                        <BrandAdSlot
+                            tier={1}
+                            format="banner"
+                            placement="Browse pets · between filters and the grid (currently house-ad, sellable to brand)"
+                            size="1200×200 desktop / 640×240 mobile"
+                            pitch="food / pharma, 30-day run"
+                            className="mb-4"
+                        />
+
                         {loading && pets.length === 0 ? (
                             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {Array.from({ length: 6 }).map((_, i) => (
@@ -219,6 +229,16 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
                         ) : (
                             <>
                                 <PetGrid pets={pets} />
+
+                                <div className="mt-6">
+                                    <BrandAdSlot
+                                        tier={1}
+                                        format="native-card"
+                                        placement="Browse pets · in-grid native card (will repeat every 8–12 tiles in prod)"
+                                        size="matches pet card aspect — 1 col mobile, 1 col of 3 on desktop"
+                                        pitch="highest-value slot — people are in tap-and-browse mode"
+                                    />
+                                </div>
 
                                 {meta && totalPages > 1 && (
                                     <div className="flex justify-center items-center mt-10 mb-6 space-x-2 flex-wrap">

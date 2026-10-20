@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Navbar from "../../../components/navbar";
 import PartnerPetGrid from "../../../components/PartnerPetGrid";
+import BrandAdSlot from "../../../components/brand-ads/BrandAdSlot";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
 
@@ -118,6 +119,15 @@ const ShopProfilePage: React.FC = () => {
             
             <div className="shop-profile min-h-screen bg-gray-50 py-8 px-4 md:px-8">
                 <div className="mx-auto max-w-6xl">
+                    <BrandAdSlot
+                        tier={2}
+                        format="banner"
+                        placement="Shop page · top banner (cross-promo)"
+                        size="1200×200 desktop / 640×240 mobile"
+                        pitch="brands adjacent to shop category (groomer page → food brand)"
+                        className="mb-8"
+                    />
+
                     {/* Header Section */}
                     <div className="bg-white shadow-xl rounded-2xl overflow-hidden mb-8 p-6">
                         <div className="flex flex-col md:flex-row gap-8 items-start">

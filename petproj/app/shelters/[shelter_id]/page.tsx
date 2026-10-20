@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Navbar from "../../../components/navbar";
 import RescuePetGrid from "../../../components/PartnerPetGrid";
+import BrandAdSlot from "../../../components/brand-ads/BrandAdSlot";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
 import "./styles.css";
@@ -138,6 +139,15 @@ const ShelterProfilePage: React.FC = () => {
 
             <div className="shelter-profile min-h-screen bg-gray-50 py-8 px-4 md:px-8">
                 <div className="mx-auto max-w-6xl">
+                    <BrandAdSlot
+                        tier={2}
+                        format="sponsor-block"
+                        placement='Shelter page · "Sponsor this shelter" (brand pays slot + donation, CSR angle)'
+                        size="1200×240 desktop / 640×280 mobile"
+                        pitch="premium / PR-friendly — pairs ad spend with cause marketing"
+                        className="mb-8"
+                    />
+
                     {/* Header Section */}
                     <div className="bg-white shadow-xl rounded-2xl overflow-hidden mb-8 p-6">
                         <div className="flex flex-col md:flex-row gap-8 items-start">
@@ -553,6 +563,16 @@ const ShelterProfilePage: React.FC = () => {
                             )}
                         </div>
                     )}
+
+                    <div className="mt-8">
+                        <BrandAdSlot
+                            tier={2}
+                            format="banner"
+                            placement="Shelter page · end-of-page banner"
+                            size="1200×200 desktop / 640×240 mobile"
+                            pitch="pet food / supplies — fits post-adoption intent"
+                        />
+                    </div>
                 </div>
             </div>
         </>

@@ -11,6 +11,7 @@ import {
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import ProductFilterSection from "@/components/ProductFilterSection";
 import ProductGrid from "@/components/ProductGrid";
+import BrandAdSlot from "@/components/brand-ads/BrandAdSlot";
 import { ArrowLeft } from "lucide-react";
 import "./styles.css";
 
@@ -170,6 +171,17 @@ function MarketplaceClient() {
         onSearch={handleSearch}
         onReset={handleReset}
       />
+
+      <div className="px-4 py-4 sm:px-6">
+        <BrandAdSlot
+          tier={1}
+          format="strip"
+          placement="Marketplace · category sponsor header (monthly title sponsor)"
+          size="1200×60 desktop / 640×72 mobile"
+          pitch="brand owning the category this month"
+          className="mx-auto max-w-6xl"
+        />
+      </div>
 
       {/* ✅ Pass click handler for scroll memory */}
       <ProductGrid products={products} onProductClick={handleProductClick} />

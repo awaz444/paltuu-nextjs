@@ -4,6 +4,7 @@ import LostAndFoundVerticalFilter from "../../components/LostAndFoundVerticalFil
 import LostAndFoundFilter from "../../components/Lost&FoundFilter";
 import LostAndFoundGrid from "../../components/LostAndFoundGrid";
 import SkeletonCard from "../../components/SkeletonCard";
+import BrandAdSlot from "../../components/brand-ads/BrandAdSlot";
 import axios from "axios";
 import "./styles.css";
 
@@ -137,6 +138,15 @@ export default function LostFound() {
 
                         {/* Main content */}
                         <div className="w-full lg:w-3/4">
+                            <BrandAdSlot
+                                tier={2}
+                                format="banner"
+                                placement="Lost & Found · top banner above tab toggle"
+                                size="1200×200 desktop / 640×240 mobile"
+                                pitch="microchip brand / pet insurance / city shelter"
+                                className="mb-4"
+                            />
+
                             {/* Lost / Found tab toggle */}
                             <div className="tab-switch-container mb-4">
                                 <div

@@ -214,6 +214,7 @@ export default async function SlugPage({
                  FROM clinics c
                  LEFT JOIN clinic_vets cv ON c.clinic_id = cv.clinic_id
                  WHERE LOWER(c.city) = LOWER($1) AND c.logo_url IS NOT NULL
+                   AND c.is_active IS NOT FALSE
                    ${listingFilter}
                  GROUP BY c.clinic_id
                  ORDER BY c.rating DESC NULLS LAST, c.created_at DESC`,

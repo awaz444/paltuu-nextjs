@@ -358,6 +358,7 @@ export async function GET(req: NextRequest) {
                         to_tsvector('english', c.name || ' ' || coalesce(c.address, '')) @@ plainto_tsquery('english', $1)
                         OR similarity(c.name, $1) > 0.2
                     )
+                      AND c.is_active IS NOT FALSE
                 ) sub
             `;
             const params: any[] = [plainTsQuery, lim + 1];

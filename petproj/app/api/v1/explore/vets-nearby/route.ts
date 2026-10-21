@@ -61,6 +61,7 @@ export async function GET(req: NextRequest) {
                         ))) AS distance_km
                     FROM clinics c
                     WHERE c.latitude IS NOT NULL AND c.longitude IS NOT NULL
+                      AND c.is_active IS NOT FALSE
                 ) d
                 WHERE d.distance_km <= $3
                 ORDER BY d.distance_km ASC
@@ -85,7 +86,7 @@ export async function GET(req: NextRequest) {
             const cityRes = await db.query(`
                 SELECT ${CLINIC_FIELDS}, NULL::float AS distance_km
                 FROM clinics c
-                WHERE LOWER(c.city) = LOWER($1)
+                WHERE LOWER(c.city) = LOWER($1) AND c.is_active IS NOT FALSE
                 ORDER BY c.rating DESC NULLS LAST, c.total_reviews DESC NULLS LAST
                 LIMIT $2
             `, [viewerCityName, limit]);
@@ -99,6 +100,7 @@ export async function GET(req: NextRequest) {
         const globalRes = await db.query(`
             SELECT ${CLINIC_FIELDS}, NULL::float AS distance_km
             FROM clinics c
+            WHERE c.is_active IS NOT FALSE
             ORDER BY c.rating DESC NULLS LAST, c.total_reviews DESC NULLS LAST
             LIMIT $1
         `, [limit]);

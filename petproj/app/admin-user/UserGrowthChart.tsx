@@ -61,9 +61,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                 <span style={{ color: SECONDARY_TEXT, fontSize: 12 }}>total users</span>
             </div>
             <div style={{ color: MUTED_TEXT, fontSize: 12, marginTop: 2 }}>
-                incl. {formatCount(LEGACY_USER_COUNT)} legacy
-            </div>
-            <div style={{ color: MUTED_TEXT, fontSize: 12, marginTop: 2 }}>
                 +{formatCount(point.newUsers)} new that day
             </div>
         </div>

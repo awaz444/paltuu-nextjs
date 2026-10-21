@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import BlogCard from "@/components/blog/BlogCard";
+import BrandAdSlot from "@/components/brand-ads/BrandAdSlot";
 import { BlogMetadata } from "@/lib/mdx-types";
 
 interface BlogsPageClientProps {
@@ -90,6 +91,15 @@ export default function BlogsPageClient({ allBlogs, categories }: BlogsPageClien
                         />
                     </div>
                 </div>
+
+                <BrandAdSlot
+                    tier={1}
+                    format="banner"
+                    placement="Blogs listing · banner between filters and the grid"
+                    size="1200×200 desktop / 640×240 mobile"
+                    pitch="food / pharma / insurance (content audience)"
+                    className="mb-10"
+                />
 
                 {/* SECTION HEADER */}
                 {filteredPosts.length > 0 && (

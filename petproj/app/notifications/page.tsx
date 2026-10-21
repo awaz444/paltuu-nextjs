@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { useAuth } from "@/context/AuthContext";
 import { Bell, Check, Smartphone } from "lucide-react";
+import BrandAdSlot from "@/components/brand-ads/BrandAdSlot";
 
 interface Sender {
     user_id: number;
@@ -179,6 +180,14 @@ const NotificationsPage = () => {
             </div>
 
             <div style={{ maxWidth: "90%", margin: "0 auto" }} className="py-8 px-4 md:px-8 max-w-2xl">
+                <BrandAdSlot
+                    tier={3}
+                    format="notification-row"
+                    placement='Notifications · sponsored row (clearly labelled "Sponsored", 1/day cap)'
+                    size="640×90 — matches notification row"
+                    pitch="premium slot — single highest brand recall surface"
+                    className="mb-4"
+                />
                 {loading ? (
                     <div className="flex items-center justify-center py-24">
                         <div className="w-8 h-8 border-[3px] border-[#a03048] border-t-transparent rounded-full animate-spin" />

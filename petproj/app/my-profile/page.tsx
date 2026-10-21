@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { format } from "date-fns";
 import { AtSign, Camera, Check, ChevronRight, Edit2, Eye, EyeOff, Lock, Mail, Shield, User, X } from "lucide-react";
 import Link from "next/link";
+import BrandAdSlot from "@/components/brand-ads/BrandAdSlot";
 import "./styles.css";
 
 interface UserProfileData {
@@ -692,6 +693,16 @@ const MyProfile = () => {
             )}
 
             {/* Toast */}
+            <div style={{ maxWidth: "90%", margin: "0 auto" }} className="px-4 md:px-8 mt-8">
+                <BrandAdSlot
+                    tier={3}
+                    format="banner"
+                    placement="My profile · bottom sponsor"
+                    size="1200×160 desktop / 640×200 mobile"
+                    pitch="pet insurance renewal / health reminder brands"
+                />
+            </div>
+
             {toast && (
                 <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-lg text-sm font-medium text-white ${toast.type === "success" ? "bg-green-500" : "bg-red-500"}`}>
                     {toast.text}

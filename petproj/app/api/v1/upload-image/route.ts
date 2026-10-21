@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { uploadToS3Main } from "@/lib/s3";
 import { db } from "@/db/index";
+import { queueWhatsApp } from "@/lib/whatsappNotify";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { sendNewListingNotification } from "@/utils/mailjet";
 import { withRetry } from "@/utils/retry";
@@ -161,6 +162,30 @@ export async function POST(req: NextRequest) {
                         neutered: pet.neutered,
                         image_urls: urls,
                     });
+
+                    // Same trigger as the email above: the listing is only worth
+                    // looking at once it has its photos.
+                    const { rows: pending } = await db.query(
+                        `SELECT count(*)::int AS n FROM pets WHERE COALESCE(approved, false) = false`
+                    );
+                    await queueWhatsApp(
+                        'team_listing_pending',
+                        {
+                            pet_id: pet.pet_id,
+                            pet_name: pet.pet_name,
+                            city: pet.city,
+                            owner_name: pet.owner_name,
+                            pending_count: pending[0]?.n ?? null,
+                        },
+                        { dedupeKey: `team_listing_pending:${pet.pet_id}` }
+                    );
+
+                    // And tell the person who listed it that it is under review.
+                    await queueWhatsApp(
+                        'listing_submitted',
+                        { pet_id: pet.pet_id, pet_name: pet.pet_name },
+                        { to: pet.contact_number, dedupeKey: `listing_submitted:${pet.pet_id}` }
+                    );
                 } catch (err) {
                     console.error('❌ [upload-image/POST] listing notification email failed:', err);
                 }

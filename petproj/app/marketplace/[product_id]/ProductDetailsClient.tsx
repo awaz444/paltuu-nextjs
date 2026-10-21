@@ -5,6 +5,7 @@ import { addToCart as addToCartThunk } from "../../store/slices/cartSlice";
 import type { AppDispatch } from "@/app/store/store";
 import { useSelector, useDispatch } from "react-redux";
 import Navbar from "../../../components/navbar";
+import BrandAdSlot from "../../../components/brand-ads/BrandAdSlot";
 import { formatDistanceToNow } from "date-fns";
 import { useSetPrimaryColor } from "../../hooks/useSetPrimaryColor";
 import {
@@ -732,6 +733,16 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="mx-auto mt-6 max-w-6xl px-3 pb-10 sm:px-6">
+          <BrandAdSlot
+            tier={1}
+            format="sponsor-block"
+            placement='Marketplace PDP · "Related products" position 1 (sponsored tile)'
+            size="1200×240 desktop / 640×280 mobile"
+            pitch="brands owning category adjacency (food brand on a food PDP)"
+          />
         </div>
       </div>
 

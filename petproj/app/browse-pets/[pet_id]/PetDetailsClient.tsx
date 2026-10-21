@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
+import BrandAdSlot from "../../../components/brand-ads/BrandAdSlot";
 import RescueDetails from "../../../components/RescueDetails";
 import PetGallery from "./PetGallery";
 import { formatDistanceToNow } from "date-fns";
@@ -451,6 +452,16 @@ const PetDetailsClient: React.FC<{
                         Back to listings
                     </button>
 
+                    <div className="mb-6">
+                        <BrandAdSlot
+                            tier={1}
+                            format="banner"
+                            placement="Pet detail · above-the-fold leaderboard"
+                            size="1200×200 desktop / 640×240 mobile"
+                            pitch="food, pet insurance, starter kit"
+                        />
+                    </div>
+
                     <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:gap-8">
                         {/* Gallery */}
                         <div className="lg:col-span-7">
@@ -719,6 +730,23 @@ const PetDetailsClient: React.FC<{
 
 
                     {extras}
+
+                    <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        <BrandAdSlot
+                            tier={1}
+                            format="sponsor-block"
+                            placement={`Pet detail · "Care kit for a ${pet.pet_type || "pet"} like ${pet.pet_name}" product recs`}
+                            size="580×220 desktop / 640×240 mobile"
+                            pitch="food / grooming / accessories, keyed to species + age"
+                        />
+                        <BrandAdSlot
+                            tier={1}
+                            format="sponsor-block"
+                            placement="Pet detail · medical-care sponsor badge (vet clinic)"
+                            size="580×220 desktop / 640×240 mobile"
+                            pitch="local vet / pet pharma"
+                        />
+                    </div>
 
                     <AdoptionFormModal
                         petId={parseInt(pet_id)}

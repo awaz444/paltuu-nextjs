@@ -14,6 +14,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Metadata } from "next";
 import ShareButtons from "@/components/blog/ShareButtons";
+import BrandAdSlot from "@/components/brand-ads/BrandAdSlot";
 
 // Generate static params for all blog posts
 export async function generateStaticParams() {
@@ -250,9 +251,18 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                                         {metadata.description}
                                     </p>
 
+                                    <BrandAdSlot
+                                        tier={1}
+                                        format="banner"
+                                        placement="Blog post · in-article leaderboard (after excerpt, before body)"
+                                        size="760×180 desktop / 640×240 mobile"
+                                        pitch="contextual to article topic (food article → food brand)"
+                                        className="mb-10"
+                                    />
+
                                     {/* Main MDX Content */}
                                     <div
-                                        className={`${styles.content} prose prose-xl prose-slate max-w-none 
+                                        className={`${styles.content} prose prose-xl prose-slate max-w-none
                                         prose-headings:font-bold prose-headings:text-gray-900 prose-headings:mb-6 prose-headings:mt-10
                                         prose-h2:text-3xl prose-h3:text-2xl prose-h4:text-xl
                                         prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6
@@ -265,6 +275,15 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                                     >
                                         {content}
                                     </div>
+
+                                    <BrandAdSlot
+                                        tier={1}
+                                        format="sponsor-block"
+                                        placement="Blog post · end-of-article sponsor block"
+                                        size="760×220 desktop / 640×260 mobile"
+                                        pitch='"More from [Brand]" + two product tiles'
+                                        className="mt-10"
+                                    />
                                 </div>
 
                                 {/* Article Footer */}

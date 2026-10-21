@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/navbar";
+import BrandAdSlot from "@/components/brand-ads/BrandAdSlot";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import { useAuth } from "@/context/AuthContext";
 // removed useSession import
@@ -251,6 +252,15 @@ const MyOrdersPage = () => {
 
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+        <BrandAdSlot
+          tier={3}
+          format="banner"
+          placement="My orders · banner above order history"
+          size="1200×180 desktop / 640×220 mobile"
+          pitch='"Add to your next order" — food subscription / consumables brand'
+          className="mb-8"
+        />
 
         {/* Page Header */}
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">

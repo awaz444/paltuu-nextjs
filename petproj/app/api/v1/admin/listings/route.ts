@@ -1,4 +1,5 @@
 import { db } from "@/db/index";
+import { queueWhatsAppAsync } from "@/lib/whatsappNotify";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/utils/authServer";
 import { NotificationService } from "@/lib/notifications/NotificationService";
@@ -60,6 +61,13 @@ export async function PATCH(req: NextRequest) {
         const pet = result.rows[0];
 
         if (approved) {
+            // WhatsApp, alongside the existing in-app notification.
+            queueWhatsAppAsync(
+                'listing_approved',
+                { pet_id: pet.pet_id, pet_name: pet.pet_name },
+                { to: pet.contact_number, dedupeKey: `listing_approved:${pet.pet_id}` }
+            );
+
             await NotificationService.createAndSend({
                 userId: pet.owner_id,
                 senderId: null, // System/admin notification, prevents self-notification skip during tests

@@ -9,6 +9,7 @@ import VerticalSearchBar from "../../components/VerticalSearchBar";
 import FilterSection from "../../components/FilterSection";
 import PetGrid from "../../components/petGrid";
 import SkeletonCard from "../../components/SkeletonCard";
+import BrandAdSlot from "../../components/brand-ads/BrandAdSlot";
 import { MoonLoader } from "react-spinners";
 import "./styles.css";
 
@@ -179,6 +180,7 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
             <FilterSection
                 onSearch={handleFilterChange}
             />
+
             <main className="flex min-h-screen flex-col mx-0 md:mx-8 items-center pt-7 bg-gray-100">
                 <h1 className="sr-only">Adopt a Pet in Pakistan — Browse Dogs, Cats &amp; More</h1>
                 <div className="flex w-full">
@@ -192,6 +194,20 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
                     </div>
 
                     <div className="w-full lg:w-3/4">
+                        {/* Above the grid, inside its column, so on desktop it is
+                            exactly as wide as the grid and the vertical filters
+                            keep running up beside it. Below lg the sidebar is
+                            hidden and the column is full width, so this is
+                            full width there too. */}
+                        <BrandAdSlot
+                            tier={1}
+                            format="banner"
+                            placement="Browse pets · between filters and the grid"
+                            size="1200×200 desktop / 640×240 mobile"
+                            pitch="food / pharma, 30-day run"
+                            className="mb-4"
+                        />
+
                         {loading && pets.length === 0 ? (
                             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {Array.from({ length: 6 }).map((_, i) => (
@@ -206,6 +222,16 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
                         ) : (
                             <>
                                 <PetGrid pets={pets} />
+
+                                <div className="mt-6">
+                                    <BrandAdSlot
+                                        tier={1}
+                                        format="native-card"
+                                        placement="Browse pets · in-grid native card (will repeat every 8–12 tiles in prod)"
+                                        size="matches pet card aspect — 1 col mobile, 1 col of 3 on desktop"
+                                        pitch="highest-value slot — people are in tap-and-browse mode"
+                                    />
+                                </div>
 
                                 {meta && totalPages > 1 && (
                                     <div className="flex justify-center items-center mt-10 mb-6 space-x-2 flex-wrap">

@@ -1,4 +1,5 @@
 import { db } from "@/db/index";
+import { normalizeWhatsAppNumber } from "@/lib/whatsappNotify";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
 import { AdoptionNotifications } from "@/lib/notifications";
@@ -56,6 +57,29 @@ export async function PATCH(req: NextRequest) {
                 UPDATE adoption_applications SET status = $1
                 WHERE adoption_id = $2 RETURNING *
             `, [status, id]);
+
+            // WhatsApp to the applicant. Queued inside the transaction so it
+            // cannot be sent for a status change that then rolls back.
+            if (status === 'approved' || status === 'rejected') {
+                const applicantNumber =
+                    result.rows[0]?.contact_number ??
+                    (await client.query('SELECT phone_number FROM users WHERE user_id = $1', [applicant_id]))
+                        .rows[0]?.phone_number;
+                const number = normalizeWhatsAppNumber(applicantNumber);
+                if (number) {
+                    await client.query(
+                        `INSERT INTO bots.wa_outbox (to_number, kind, audience, params, dedupe_key)
+                         VALUES ($1, $2, 'customer', $3::jsonb, $4)
+                         ON CONFLICT (dedupe_key) DO NOTHING`,
+                        [
+                            number,
+                            status === 'approved' ? 'application_accepted' : 'application_rejected',
+                            JSON.stringify({ pet_id: result.rows[0]?.pet_id, pet_name }),
+                            `app_${status}:${id}`,
+                        ]
+                    );
+                }
+            }
 
             // 3. Notify Applicant using new trigger system
             if (status === 'approved') {

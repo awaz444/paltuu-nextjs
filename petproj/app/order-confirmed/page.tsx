@@ -18,6 +18,8 @@ import {
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import Link from "next/link";
+import BrandAdSlot from "../../components/brand-ads/BrandAdSlot";
+import BrandAdSlotModal from "../../components/brand-ads/BrandAdSlotModal";
 
 const OrderConfirmedContent = () => {
   const { isAuthenticated, user } = useAuth();
@@ -584,7 +586,24 @@ const OrderConfirmedContent = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-white py-8 px-4 sm:px-6 lg:px-8">
+      <BrandAdSlotModal
+        tier={4}
+        placement='Order confirmed · "Add to your next order" interstitial'
+        size="480×400 modal"
+        pitch="food subscription / consumables (bundle up-sell)"
+        sessionKey="orderConfirmed"
+        continueLabel="See order details"
+      />
       <div className="max-w-4xl mx-auto">
+        <BrandAdSlot
+          tier={4}
+          format="sponsor-block"
+          placement="Order confirmed · post-purchase sponsored tile"
+          size="880×220 desktop / 640×240 mobile"
+          pitch='"Add to your next order" — recurring purchase brand'
+          className="mb-8"
+        />
+
         {/* Success Animation */}
         <div className="text-center mb-12">
           <div className="relative inline-block">

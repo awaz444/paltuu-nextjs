@@ -7,6 +7,7 @@ import { RootState, AppDispatch } from "../store/store";
 import { fetchClinics, fetchClinicsForMap } from "../store/slices/clinicSlice";
 import ClinicGrid from "../../components/ClinicGrid";
 import SkeletonCard, { SidebarSkeleton, MapSkeleton } from "../../components/SkeletonCard";
+import BrandAdSlot from "../../components/brand-ads/BrandAdSlot";
 import dynamic from "next/dynamic";
 import {
     FaClinicMedical,
@@ -199,6 +200,15 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
 
             {/* ===== CLINICS SECTION ===== */}
             <section id="clinics-listings-start" className="scroll-mt-6" style={{ maxWidth: "90%", margin: "0 auto" }}>
+                <div className="mx-0 md:mx-8 mt-6">
+                    <BrandAdSlot
+                        tier={2}
+                        format="banner"
+                        placement="Pet-care / vet directory · top banner above clinic listings"
+                        size="1200×200 desktop / 640×240 mobile"
+                        pitch="pet pharma, supplements, pet insurance"
+                    />
+                </div>
                 <div className="flex mx-0 md:mx-8 mt-6 pb-16 items-start">
 
                     {/* Vertical Sidebar — desktop only, matches Browse Pets & Lost & Found */}

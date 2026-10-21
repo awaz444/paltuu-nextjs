@@ -9,9 +9,7 @@ import VerticalSearchBar from "../../components/VerticalSearchBar";
 import FilterSection from "../../components/FilterSection";
 import PetGrid from "../../components/petGrid";
 import SkeletonCard from "../../components/SkeletonCard";
-import AppPromoImageBanner from "../../components/app-promo/AppPromoImageBanner";
 import BrandAdSlot from "../../components/brand-ads/BrandAdSlot";
-import { APP_IMAGE_BANNERS } from "@/lib/appPromo";
 import { MoonLoader } from "react-spinners";
 import "./styles.css";
 
@@ -201,15 +199,10 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
                             keep running up beside it. Below lg the sidebar is
                             hidden and the column is full width, so this is
                             full width there too. */}
-                        <AppPromoImageBanner
-                            promo={APP_IMAGE_BANNERS.browsePets}
-                            wrapperClassName="mb-4"
-                        />
-
                         <BrandAdSlot
                             tier={1}
                             format="banner"
-                            placement="Browse pets · between filters and the grid (currently house-ad, sellable to brand)"
+                            placement="Browse pets · between filters and the grid"
                             size="1200×200 desktop / 640×240 mobile"
                             pitch="food / pharma, 30-day run"
                             className="mb-4"

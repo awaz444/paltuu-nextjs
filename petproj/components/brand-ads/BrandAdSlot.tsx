@@ -66,9 +66,8 @@ const FORMAT_HEIGHT: Record<AdFormat, string> = {
 
 /**
  * Placeholder brand ad slot used on the Vercel preview URL so advertisers can
- * see where their creative would appear. Not meant to ship to production —
- * when a real creative is sold, the slot is replaced by the regular
- * AppPromoImageBanner / AppPromoImageModal pointing at the brand's artwork.
+ * see where their creative would appear. When a real creative is sold, replace
+ * the slot with a flat image + link pointing at the brand's artwork.
  */
 export default function BrandAdSlot({
     tier,

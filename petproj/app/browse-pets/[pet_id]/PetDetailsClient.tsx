@@ -3,9 +3,6 @@ import React, { useState, useEffect } from "react";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
-import AppPromoImageModal from "../../../components/app-promo/AppPromoImageModal";
-import { hasAnsweredCookieConsent } from "../../../components/app-promo/useAppPromoGate";
-import { APP_IMAGE_MODALS } from "@/lib/appPromo";
 import BrandAdSlot from "../../../components/brand-ads/BrandAdSlot";
 import RescueDetails from "../../../components/RescueDetails";
 import PetGallery from "./PetGallery";
@@ -84,8 +81,6 @@ const PetDetailsClient: React.FC<{
     );
     const [loading, setLoading] = useState(!initialPet);
     const [isModalVisible, setIsModalVisible] = useState(false);
-    // Shown once per session in front of the adoption form — see handleAdoptClick.
-    const [showAppPromo, setShowAppPromo] = useState(false);
     const [IsModalOpen, setIsModalOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [primaryColor, setPrimaryColor] = useState("#000000");
@@ -181,42 +176,6 @@ const PetDetailsClient: React.FC<{
         window.open(whatsappUrl, "_blank");
     };
 
-    /**
-     * True once this browser has already been shown the app pitch in this
-     * sitting. Read at click time rather than on mount: a visitor who opens
-     * three pets in a row should see it on the first one only.
-     */
-    const appPromoAlreadyShown = () => {
-        try {
-            return Boolean(
-                sessionStorage.getItem(`paltuu_app_promo_${APP_IMAGE_MODALS.adopt.key}`)
-            );
-        } catch {
-            // Storage blocked. Treat as "already shown" so a visitor who cannot
-            // be remembered is not asked on every single pet.
-            return true;
-        }
-    };
-
-    const markAppPromoShown = () => {
-        try {
-            sessionStorage.setItem(`paltuu_app_promo_${APP_IMAGE_MODALS.adopt.key}`, "1");
-        } catch {
-            /* Non-fatal. */
-        }
-    };
-
-    /**
-     * Closing the app promo always opens the adoption form behind it. The promo
-     * is an interstitial, never a gate — a visitor who came here to adopt a pet
-     * gets to adopt the pet.
-     */
-    const handleAppPromoClose = () => {
-        markAppPromoShown();
-        setShowAppPromo(false);
-        setIsModalVisible(true);
-    };
-
     // Support line for questions about a listing (availability, scams, etc.).
     // The reference number lets support find the pet straight away.
     const handleAskPaltuu = () => {
@@ -240,15 +199,7 @@ const PetDetailsClient: React.FC<{
 
             const profileData = await res.json();
 
-            // The profile check has passed, so the adoption form is definitely
-            // opening. Only now is it worth interrupting with the app pitch —
-            // and not while the cookie bar is still up, since it sits above the
-            // promo and covers its "continue on the website" button.
-            if (appPromoAlreadyShown() || !hasAnsweredCookieConsent()) {
-                setIsModalVisible(true);
-            } else {
-                setShowAppPromo(true);
-            }
+            setIsModalVisible(true);
         } catch (error) {
             console.error("Error checking profile:", error);
             message.error("Failed to verify profile information");
@@ -796,12 +747,6 @@ const PetDetailsClient: React.FC<{
                             pitch="local vet / pet pharma"
                         />
                     </div>
-
-                    <AppPromoImageModal
-                        promo={APP_IMAGE_MODALS.adopt}
-                        open={showAppPromo}
-                        onClose={handleAppPromoClose}
-                    />
 
                     <AdoptionFormModal
                         petId={parseInt(pet_id)}

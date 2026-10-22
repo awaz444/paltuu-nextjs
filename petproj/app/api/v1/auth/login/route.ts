@@ -171,16 +171,19 @@ export async function POST(req: Request) {
       }, { status: 403 });
     }
 
-    // 3. Record login event
+    // 3. Record login event — best-effort: a tracking failure must never block a login
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip') ?? null;
     const userAgent = req.headers.get('user-agent') ?? null;
-    await Promise.all([
+    const tracking = await Promise.allSettled([
       db.query('UPDATE users SET last_login_at = NOW() WHERE user_id = $1', [user.user_id]),
       db.query(
         'INSERT INTO audit_logs (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
         [user.user_id, 'login', ip, userAgent]
       ),
     ]);
+    for (const result of tracking) {
+      if (result.status === 'rejected') console.error('V1 Login tracking error:', result.reason);
+    }
 
     // 4. Generate tokens
     const tokens = await generateMobileTokenPair({

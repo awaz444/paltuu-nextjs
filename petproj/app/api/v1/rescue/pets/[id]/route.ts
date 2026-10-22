@@ -10,7 +10,11 @@ export async function GET(req: NextRequest) {
             SELECT 
                 p.*,
                 COALESCE((SELECT json_agg(rmc.*) FROM rescue_medical_conditions rmc WHERE rmc.pet_id = p.pet_id), '[]'::json) as medical_conditions,
-                COALESCE((SELECT json_agg(ri.image_url) FROM rescue_images ri WHERE ri.pet_id = p.pet_id), '[]'::json) as images,
+                COALESCE(
+                    (SELECT json_agg(pi.image_url ORDER BY pi."order") FROM pet_images pi WHERE pi.pet_id = p.pet_id),
+                    (SELECT json_agg(ri.image_url) FROM rescue_images ri WHERE ri.pet_id = p.pet_id),
+                    '[]'::json
+                ) as images,
                 COALESCE((SELECT json_agg(rsn.special_need) FROM rescue_special_needs rsn WHERE rsn.pet_id = p.pet_id), '[]'::json) as special_needs,
                 (SELECT json_build_object(
                     'id', rs.shelter_id, 
@@ -21,7 +25,7 @@ export async function GET(req: NextRequest) {
                     'verified', rs.approved
                 ) 
                  FROM rescue_shelters rs 
-                 JOIN users ON rs.user_id = users.user_id
+                 LEFT JOIN users ON rs.user_id = users.user_id
                  WHERE rs.shelter_id = p.shelter_id) as shelter
             FROM pets p
             WHERE p.pet_id = $1 AND p.listing_type = 'rescue'

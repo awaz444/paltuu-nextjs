@@ -5,41 +5,8 @@ import Navbar from "../../components/navbar";
 import RescueFilter from "../../components/RescueFilter";
 import RescueGrid from "../../components/RescueGrid";
 import { MoonLoader } from "react-spinners";
+import { RescuePet } from "@/types/rescue";
 import "./styles.css";
-
-export type RescuePet = {
-    rescue_id: number;
-    rescue_org_id: number;
-    pet_name: string;
-    pet_type: number;
-    approximate_age_lower: number;
-    approximate_age_higher: number;
-    description: string;
-    rescue_story: string;
-    rescue_date: string;
-    urgency_level: 'critical' | 'high' | 'moderate' | 'stable';
-    status: 'at shelter' | 'adopted' | 'fostered' | 'medical care';
-    medical_conditions: {
-        condition: string;
-        treatment_cost?: number;
-        treated?: boolean;
-    }[];
-    special_needs: string[];
-    current_location: string | null;
-    sex: string;
-    images: string[];
-    adoption_fee: number | null;
-    foster_available: boolean;
-    vaccinated: boolean | null;
-    neutered: boolean | null;
-    temperament: 'calm' | 'energetic' | 'anxious' | 'playful' | 'independent';
-    shelter: {
-        id: number;
-        name: string;
-        profilePicture: string;
-        location: string;
-    };
-};
 
 export default function RescuePets() {
     
@@ -47,7 +14,7 @@ export default function RescuePets() {
     const [pets, setPets] = useState<RescuePet[]>([]);
     const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState({
-        urgency: "",
+        status: "",
         petType: "",
         location: "",
     });
@@ -78,23 +45,21 @@ export default function RescuePets() {
     }, []);
 
     const filteredPets = pets.filter((pet) => {
-        const matchesUrgency = filters.urgency 
-            ? pet.urgency_level === filters.urgency
+        const matchesStatus = filters.status
+            ? (pet.adoption_status || "available") === filters.status
             : true;
         const matchesType = filters.petType
             ? pet.pet_type === Number(filters.petType)
             : true;
         const matchesLocation = filters.location
-            ? pet.shelter.location.toLowerCase().includes(filters.location.toLowerCase())
+            ? pet.city_id === Number(filters.location)
             : true;
 
-        return matchesUrgency && matchesType && matchesLocation;
+        return matchesStatus && matchesType && matchesLocation;
     });
 
-    const sortedPets = [...filteredPets].sort((a, b) => {
-        const urgencyOrder = { critical: 0, high: 1, moderate: 2, stable: 3 };
-        return urgencyOrder[a.urgency_level] - urgencyOrder[b.urgency_level];
-    });
+    // The API already returns adopted pets last, newest first.
+    const sortedPets = filteredPets;
 
     return (
         <>
@@ -104,7 +69,7 @@ export default function RescuePets() {
                     onSearch={(filters) => setFilters(filters)}
                     onReset={() =>
                         setFilters({
-                            urgency: "",
+                            status: "",
                             petType: "",
                             location: "",
                         })
@@ -130,7 +95,7 @@ export default function RescuePets() {
                                     className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark"
                                     onClick={() =>
                                         setFilters({
-                                            urgency: "",
+                                            status: "",
                                             petType: "",
                                             location: "",
                                         })

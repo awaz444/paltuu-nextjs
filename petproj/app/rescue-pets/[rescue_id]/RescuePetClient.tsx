@@ -14,46 +14,12 @@ import {
     ManOutlined,
     WomanOutlined,
     QuestionOutlined,
-    HomeOutlined,
 } from "@ant-design/icons";
+import { RescuePet, rescueStatusLabel } from "@/types/rescue";
+import { formatAge } from "@/utils/formatAge";
 import "./styles.css";
 
-export type RescuePet = {
-    rescue_id: number;
-    rescue_org_id: number;
-    pet_name: string;
-    pet_type: number;
-    approximate_age_lower: number;
-    approximate_age_higher: number;
-    description: string;
-    rescue_story: string;
-    rescue_date: string;
-    urgency_level: "critical" | "high" | "moderate" | "stable";
-    status: "at shelter" | "adopted" | "fostered" | "medical care";
-    medical_conditions: {
-        condition: string;
-        treatment_cost?: number;
-        treated?: boolean;
-    }[];
-    special_needs: string[];
-    current_location: string | null;
-    sex: string;
-    images: string[];
-    adoption_fee: number | null;
-    foster_available: boolean;
-    vaccinated: boolean | null;
-    neutered: boolean | null;
-    temperament: "calm" | "energetic" | "anxious" | "playful" | "independent";
-    shelter: {
-        id: number;
-        name: string;
-        profilePicture: string;
-        location: string;
-        contactInfo: string;
-        verified: boolean;
-        website?: string;
-    };
-};
+export type { RescuePet };
 
 export default function RescuePetClient({
     params,
@@ -189,16 +155,8 @@ export default function RescuePetClient({
                             {/* Status Badges */}
                             <div className="badge-container">
                                 <span
-                                    className={`urgency-badge ${pet.urgency_level}`}>
-                                    Urgency Level:{" "}
-                                    {pet.urgency_level.toUpperCase()}
-                                </span>
-                                <span
-                                    className={`status-badge ${pet.status.replace(
-                                        " ",
-                                        "-"
-                                    )}`}>
-                                    {pet.status.toUpperCase()}
+                                    className={`status-badge ${pet.adoption_status || "available"}`}>
+                                    {rescueStatusLabel(pet.adoption_status).toUpperCase()}
                                 </span>
                             </div>
 
@@ -214,9 +172,7 @@ export default function RescuePetClient({
                                 </div>
                                 <div className="meta-item">
                                     <HeartOutlined style={{ color: primaryColor }} />
-                                    <span>
-                                        Age: {pet.approximate_age_lower}-{pet.approximate_age_higher} years
-                                    </span>
+                                    <span>Age: {formatAge(pet.age_months)}</span>
                                 </div>
                                 <div className="meta-item">
                                     {pet.sex === "male" ? (
@@ -231,9 +187,22 @@ export default function RescuePetClient({
                             </div>
 
                             {/* Shelter Info */}
+                            {pet.shelter && (
                             <div className="shelter-card">
                                 <div className="shelter-avatar">
-                                    <img src={pet.shelter.profilePicture} alt={pet.shelter.name} />
+                                    <img
+                                        src={pet.shelter.profilePicture || "/dog-placeholder.png"}
+                                        alt={pet.shelter.name}
+                                        // SSR'd images can fail before hydration attaches onError
+                                        ref={(img) => {
+                                            if (img?.complete && img.naturalWidth === 0) {
+                                                img.src = "/dog-placeholder.png";
+                                            }
+                                        }}
+                                        onError={(e) => {
+                                            e.currentTarget.src = "/dog-placeholder.png";
+                                        }}
+                                    />
                                     {pet.shelter.verified && (
                                         <SafetyOutlined
                                             className="verified-badge"
@@ -245,16 +214,17 @@ export default function RescuePetClient({
                                     <h2>{pet.shelter.name}</h2>
                                     <div className="shelter-location">
                                         <EnvironmentOutlined style={{ color: primaryColor }} />
-                                        <span>{pet.shelter.location}</span>
+                                        <span>{pet.shelter.location || pet.area}</span>
                                     </div>
                                 </div>
                             </div>
+                            )}
                         </div>
 
                         {/* Image Carousel */}
                         <div className="image-carousel">
                             <Carousel autoplay>
-                                {pet.images.map((img, index) => (
+                                {(pet.images?.length ? pet.images : ["/dog-placeholder.png"]).map((img, index) => (
                                     <div key={index} className="carousel-image">
                                         <img
                                             src={img}
@@ -267,15 +237,18 @@ export default function RescuePetClient({
                     </div>
 
                     {/* Rescue Story */}
+                    {(pet.rescue_story || pet.description) && (
                     <div className="rescue-story">
                         <h2>
                             <HeartOutlined style={{ color: primaryColor }} />
                             Rescue Story
                         </h2>
-                        <p>{pet.rescue_story}</p>
+                        <p>{pet.rescue_story || pet.description}</p>
                     </div>
+                    )}
 
                     {/* Medical Section */}
+                    {pet.medical_conditions?.length > 0 && (
                     <div className="medical-section">
                         <h2>
                             <MedicineBoxOutlined style={{ color: primaryColor }} />
@@ -291,7 +264,7 @@ export default function RescuePetClient({
                                         {condition.treated
                                             ? "✓ Treatment completed"
                                             : condition.treatment_cost
-                                            ? `$${condition.treatment_cost} needed`
+                                            ? `Rs ${Number(condition.treatment_cost).toLocaleString()} needed`
                                             : "Treatment required"}
                                     </p>
                                     {!condition.treated && <span className="warning-icon">⚠️</span>}
@@ -299,9 +272,10 @@ export default function RescuePetClient({
                             ))}
                         </div>
                     </div>
+                    )}
 
                     {/* Special Needs */}
-                    {pet.special_needs.length > 0 && (
+                    {pet.special_needs?.length > 0 && (
                         <div className="special-needs">
                             <h2>Special Requirements</h2>
                             <div className="needs-tags">
@@ -319,14 +293,9 @@ export default function RescuePetClient({
                         <div className="action-details">
                             <h3>Adoption Details</h3>
                             <p>
-                                {pet.adoption_fee
-                                    ? `Adoption fee: $${pet.adoption_fee}`
+                                {pet.price
+                                    ? `Adoption fee: Rs ${Number(pet.price).toLocaleString()}`
                                     : "No adoption fee"}
-                            </p>
-                            <p>
-                                {pet.foster_available
-                                    ? "Fostering available"
-                                    : "Fostering not available"}
                             </p>
                         </div>
 
@@ -334,15 +303,6 @@ export default function RescuePetClient({
                             <CustomButton type="primary" icon={<HeartOutlined />}>
                                 Apply to Adopt
                             </CustomButton>
-
-                            {pet.foster_available && (
-                                <CustomButton
-                                    type="primary"
-                                    icon={<HomeOutlined />}
-                                    className="foster-btn">
-                                    Apply to Foster
-                                </CustomButton>
-                            )}
 
                             <CustomButton
                                 type="outline"

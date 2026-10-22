@@ -8,7 +8,6 @@ import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 
 interface RescueFilterProps {
     onSearch: (filters: {
-        urgency: string;
         petType: string;
         location: string;
         status: string;
@@ -21,7 +20,6 @@ const RescueFilter: React.FC<RescueFilterProps> = ({ onSearch, onReset }) => {
     const { cities } = useSelector((state: RootState) => state.cities);
     const { categories } = useSelector((state: RootState) => state.categories);
 
-    const [urgency, setUrgency] = useState("");
     const [petType, setPetType] = useState("");
     const [location, setLocation] = useState("");
     const [status, setStatus] = useState("");
@@ -35,7 +33,6 @@ const RescueFilter: React.FC<RescueFilterProps> = ({ onSearch, onReset }) => {
     }, [dispatch]);
 
     const handleReset = () => {
-        setUrgency("");
         setPetType("");
         setLocation("");
         setStatus("");
@@ -44,7 +41,6 @@ const RescueFilter: React.FC<RescueFilterProps> = ({ onSearch, onReset }) => {
 
     const handleSearch = () => {
         onSearch({
-            urgency,
             petType,
             location,
             status
@@ -73,21 +69,6 @@ const RescueFilter: React.FC<RescueFilterProps> = ({ onSearch, onReset }) => {
                     </div>
 
                     <div className="flex-1 min-w-[150px]">
-                        <label className="text-xs">Urgency</label>
-                        <select 
-                            className="w-full p-3 border rounded-xl" 
-                            value={urgency} 
-                            onChange={(e) => setUrgency(e.target.value)}
-                        >
-                            <option value="">All Urgency Levels</option>
-                            <option value="critical">Critical</option>
-                            <option value="high">High</option>
-                            <option value="moderate">Moderate</option>
-                            <option value="stable">Stable</option>
-                        </select>
-                    </div>
-
-                    <div className="flex-1 min-w-[150px]">
                         <label className="text-xs">Shelter Location</label>
                         <select 
                             className="w-full p-3 border rounded-xl" 
@@ -96,7 +77,7 @@ const RescueFilter: React.FC<RescueFilterProps> = ({ onSearch, onReset }) => {
                         >
                             <option value="">All Locations</option>
                             {cities.map((city) => (
-                                <option key={city.city_id} value={city.city_name}>
+                                <option key={city.city_id} value={city.city_id}>
                                     {city.city_name}
                                 </option>
                             ))}
@@ -111,9 +92,8 @@ const RescueFilter: React.FC<RescueFilterProps> = ({ onSearch, onReset }) => {
                             onChange={(e) => setStatus(e.target.value)}
                         >
                             <option value="">All Statuses</option>
-                            <option value="at shelter">At Shelter</option>
-                            <option value="fostered">In Foster Care</option>
-                            <option value="medical care">In Medical Care</option>
+                            <option value="available">Available</option>
+                            <option value="foster">In Foster Care</option>
                             <option value="adopted">Adopted</option>
                         </select>
                     </div>
@@ -137,17 +117,18 @@ const RescueFilter: React.FC<RescueFilterProps> = ({ onSearch, onReset }) => {
                 {/* Mobile Layout */}
                 <div className="md:hidden flex flex-col gap-4">
                     <div className="flex-1 min-w-[150px]">
-                        <label className="text-xs">Urgency</label>
+                        <label className="text-xs">Pet Type</label>
                         <select 
                             className="w-full p-3 border rounded-xl" 
-                            value={urgency} 
-                            onChange={(e) => setUrgency(e.target.value)}
+                            value={petType} 
+                            onChange={(e) => setPetType(e.target.value)}
                         >
-                            <option value="">All Urgency Levels</option>
-                            <option value="critical">Critical</option>
-                            <option value="high">High</option>
-                            <option value="moderate">Moderate</option>
-                            <option value="stable">Stable</option>
+                            <option value="">All Types</option>
+                            {categories.map((category) => (
+                                <option key={category.category_id} value={category.category_id}>
+                                    {category.category_name}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
@@ -183,22 +164,6 @@ const RescueFilter: React.FC<RescueFilterProps> = ({ onSearch, onReset }) => {
 
                         <div className="mt-4 flex flex-col gap-4">
                             <div>
-                                <label className="text-xs">Pet Type</label>
-                                <select 
-                                    className="w-full p-3 border rounded-xl" 
-                                    value={petType} 
-                                    onChange={(e) => setPetType(e.target.value)}
-                                >
-                                    <option value="">All Types</option>
-                                    {categories.map((category) => (
-                                        <option key={category.category_id} value={category.category_id}>
-                                            {category.category_name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
                                 <label className="text-xs">Shelter Location</label>
                                 <select 
                                     className="w-full p-3 border rounded-xl" 
@@ -207,7 +172,7 @@ const RescueFilter: React.FC<RescueFilterProps> = ({ onSearch, onReset }) => {
                                 >
                                     <option value="">All Locations</option>
                                     {cities.map((city) => (
-                                        <option key={city.city_id} value={city.city_name}>
+                                        <option key={city.city_id} value={city.city_id}>
                                             {city.city_name}
                                         </option>
                                     ))}
@@ -222,9 +187,8 @@ const RescueFilter: React.FC<RescueFilterProps> = ({ onSearch, onReset }) => {
                                     onChange={(e) => setStatus(e.target.value)}
                                 >
                                     <option value="">All Statuses</option>
-                                    <option value="at shelter">At Shelter</option>
-                                    <option value="fostered">In Foster Care</option>
-                                    <option value="medical care">In Medical Care</option>
+                                    <option value="available">Available</option>
+                                    <option value="foster">In Foster Care</option>
                                     <option value="adopted">Adopted</option>
                                 </select>
                             </div>

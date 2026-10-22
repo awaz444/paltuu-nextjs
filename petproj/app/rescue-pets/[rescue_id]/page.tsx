@@ -1,5 +1,6 @@
 import { Metadata } from "next";
-import RescuePetClient, { RescuePet } from "./RescuePetClient";
+import RescuePetClient from "./RescuePetClient";
+import { RescuePet } from "@/types/rescue";
 
 export const dynamic = "force-dynamic";
 
@@ -31,15 +32,9 @@ export async function generateMetadata({
         };
     }
 
-    const shelterLocation = pet.shelter?.location || "Pakistan";
-    const urgencyPrefix =
-        pet.urgency_level === "critical"
-            ? "URGENT — "
-            : pet.urgency_level === "high"
-            ? "Urgent — "
-            : "";
+    const shelterLocation = pet.shelter?.location || pet.area || "Pakistan";
 
-    const title = `${urgencyPrefix}Rescue ${pet.pet_name} — ${pet.shelter?.name || "Shelter"} in ${shelterLocation} | Paltuu.pk`;
+    const title = `Rescue ${pet.pet_name} — ${pet.shelter?.name || "Shelter"} in ${shelterLocation} | Paltuu.pk`;
 
     const description = (pet.rescue_story || pet.description || "")
         .replace(/\s+/g, " ")
@@ -48,7 +43,7 @@ export async function generateMetadata({
 
     const metaDescription = description
         ? `${description}…`
-        : `Help ${pet.pet_name} find a loving home. ${pet.urgency_level === "critical" || pet.urgency_level === "high" ? "Urgent adoption needed. " : ""}Adopt or foster through ${pet.shelter?.name || "a verified shelter"} on Paltuu.pk.`;
+        : `Help ${pet.pet_name} find a loving home. Adopt or foster through ${pet.shelter?.name || "a verified shelter"} on Paltuu.pk.`;
 
     const firstImage = pet.images?.[0] ?? null;
 

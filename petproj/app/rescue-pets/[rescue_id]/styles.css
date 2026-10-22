@@ -121,7 +121,7 @@
     text-transform: uppercase;
 }
 
-.status-badge.at-shelter {
+.status-badge.available {
     background-color: #dbeafe;
     color: #1d4ed8;
 }
@@ -131,7 +131,7 @@
     color: #166534;
 }
 
-.status-badge.fostered {
+.status-badge.foster {
     background-color: #f3e8ff;
     color: #7e22ce;
 }

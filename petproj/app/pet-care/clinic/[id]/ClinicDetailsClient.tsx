@@ -357,6 +357,7 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                                         {!isHomeVet && googleMapsLink && (
                                             <a
                                                 href={googleMapsLink}
+                                                data-cta="clinic_directions"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1"
@@ -390,6 +391,7 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                                             <div className="flex gap-2 ml-13">
                                                 <button
                                                     onClick={() => handleCopy(clinic.contact_number || '')}
+                                                    data-cta="clinic_copy_phone"
                                                     className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm"
                                                 >
                                                     <FaCopy className="text-gray-600 text-xs" />
@@ -398,6 +400,7 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                                                 {clinic.whatsapp_number && (
                                                     <button
                                                         onClick={() => handleWhatsApp(clinic.whatsapp_number || '')}
+                                                        data-cta="clinic_whatsapp"
                                                         className="flex-1 py-2 px-3 rounded-lg bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center gap-2 text-sm"
                                                     >
                                                         <FaWhatsapp className="text-white text-sm" />

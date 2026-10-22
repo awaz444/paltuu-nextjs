@@ -613,6 +613,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     // Add to Cart Button - Original styling
                     <button
                       onClick={handleAddToCart}
+                      data-cta="add_to_cart"
                       disabled={
                         ((selectedVariant
                           ? selectedVariant.stock

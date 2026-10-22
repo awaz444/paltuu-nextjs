@@ -249,6 +249,7 @@ const AdminPanel = () => {
         {
             name: "Data",
             tiles: [
+                { href: "/admin-panel/traffic", title: "📈 Traffic & CTAs", desc: "Page views, button clicks, and brand ad slot reports, with CSV export" },
                 { href: "/admin-panel/whatsapp-data", title: "WhatsApp Data", desc: "View collected WhatsApp lead data" },
             ],
         },

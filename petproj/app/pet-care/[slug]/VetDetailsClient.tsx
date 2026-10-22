@@ -352,6 +352,7 @@ export default function VetDetailsClient({
                                             {googleMapsLink && (
                                                 <a
                                                     href={googleMapsLink}
+                                                    data-cta="vet_directions"
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1"
@@ -384,6 +385,7 @@ export default function VetDetailsClient({
                                                 <div className="flex gap-2 ml-13">
                                                     <button
                                                         onClick={() => handleCopy(vetDetails.contact_details)}
+                                                        data-cta="vet_copy_phone"
                                                         className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm"
                                                     >
                                                         <FaCopy className="text-gray-600 text-xs" />
@@ -391,6 +393,7 @@ export default function VetDetailsClient({
                                                     </button>
                                                     <button
                                                         onClick={() => handleWhatsApp(vetDetails.contact_details)}
+                                                        data-cta="vet_whatsapp"
                                                         className="flex-1 py-2 px-3 rounded-lg bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center gap-2 text-sm"
                                                     >
                                                         <FaWhatsapp className="text-white text-sm" />
@@ -439,6 +442,7 @@ export default function VetDetailsClient({
                                                 <div className="flex gap-2 ml-13">
                                                     <button
                                                         onClick={() => handleCopy(vetDetails.clinic_whatsapp)}
+                                                        data-cta="vet_clinic_copy_phone"
                                                         className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm"
                                                     >
                                                         <FaCopy className="text-gray-600 text-xs" />
@@ -446,6 +450,7 @@ export default function VetDetailsClient({
                                                     </button>
                                                     <button
                                                         onClick={() => handleWhatsApp(vetDetails.clinic_whatsapp)}
+                                                        data-cta="vet_clinic_whatsapp"
                                                         className="flex-1 py-2 px-3 rounded-lg bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center gap-2 text-sm"
                                                     >
                                                         <FaWhatsapp className="text-white text-sm" />

@@ -71,12 +71,14 @@ export default function HeroSection() {
                     <div className="flex flex-col sm:flex-row gap-3">
                         <Link
                             href="/browse-pets"
+                            data-cta="home_hero_browse_pets"
                             className="inline-flex items-center justify-center bg-primary text-white font-semibold px-6 py-3 rounded-full text-sm shadow-sm hover:opacity-90 transition-opacity"
                         >
                             Browse pets for adoption
                         </Link>
                         <Link
                             href="/create-listing"
+                            data-cta="home_hero_list_pet"
                             className="inline-flex items-center justify-center bg-white text-primary border border-primary font-semibold px-6 py-3 rounded-full text-sm hover:bg-primary/5 transition-colors"
                         >
                             List a pet for adoption
@@ -96,6 +98,7 @@ export default function HeroSection() {
                         <li key={title} className="flex-1">
                             <Link
                                 href={href}
+                                data-cta={`home_action${href.replace(/\W+/g, "_")}`}
                                 className="group flex h-full flex-col justify-center rounded-xl border border-gray-200 bg-white px-5 py-4 hover:border-primary hover:bg-primary/[0.03] transition-colors"
                             >
                                 <span className="block font-bold text-gray-900 group-hover:text-primary transition-colors">

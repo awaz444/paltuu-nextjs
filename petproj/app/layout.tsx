@@ -14,6 +14,7 @@ import ApplyThemeColor from "@/components/ApplyThemeColor";
 import PageTransition from "@/components/PageTransition";
 import CartSyncProvider from "@/components/CartSyncProvider";
 import CookieConsent from "@/components/CookieConsent";
+import AnalyticsTracker from "@/components/analytics/AnalyticsTracker";
 import { SITE_URL } from "@/lib/site";
 import { cheeseMilky, dmSans } from "./fonts";
 
@@ -170,6 +171,7 @@ export default function RootLayout({
               </div>
               */}
               <Analytics />
+              <AnalyticsTracker />
             </CartSyncProvider>
           </ClientProvider>
         </AppClientWrapper>

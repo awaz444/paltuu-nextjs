@@ -127,6 +127,7 @@ export default function AppPromoBanner() {
                         <Link
                             href={copy.href}
                             onClick={dismiss}
+                            data-cta={isKarachi ? "app_promo_vets_at_home" : "app_promo_download"}
                             className="flex-1 whitespace-nowrap rounded-full px-5 py-2 text-center text-sm font-semibold text-white transition-opacity hover:opacity-90 sm:flex-none"
                             style={{ backgroundColor: "var(--primary-color)" }}
                         >

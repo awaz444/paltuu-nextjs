@@ -326,6 +326,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                         <Link
                                             href="/pet-care"
+                                            data-cta="blog_find_vet"
                                             className="inline-flex items-center justify-center gap-2 bg-white text-primary font-bold py-4 px-8 rounded-xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -335,6 +336,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                                         </Link>
                                         <Link
                                             href="/marketplace"
+                                            data-cta="blog_shop_supplies"
                                             className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white font-bold py-4 px-8 rounded-xl border-2 border-white/30 hover:bg-white/20 hover:border-white/50 transition-all duration-300"
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -377,6 +379,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                                                 <Link
                                                     key={relatedPost.slug}
                                                     href={`/blogs/${relatedPost.slug}`}
+                                                    data-cta="blog_related_post"
                                                     className="flex gap-4 group items-start"
                                                 >
                                                     <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100 border border-gray-200">
@@ -418,7 +421,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                                                 placeholder="Your email address"
                                                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                                             />
-                                            <button className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/90 hover:shadow-lg transition-all duration-300">
+                                            <button data-cta="blog_newsletter_subscribe" className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/90 hover:shadow-lg transition-all duration-300">
                                                 Subscribe Now
                                             </button>
                                         </div>

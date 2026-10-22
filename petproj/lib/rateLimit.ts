@@ -53,6 +53,10 @@ export const LIMITS = {
     // a handful of saves; a burst is the Save button being spammed or a retry loop.
     // Well clear of any legitimate editing.
     EXPRESS_VET_PROVIDER_UPDATE: [20, 60],  // 20 provider edits per minute
+    // Traffic tracking beacons (/api/v1/track). The client batches up to 20 events
+    // per request, so a real visitor sends a few per minute; this only stops a
+    // script from flooding page_events and skewing the traffic dashboard.
+    TRACK_EVENTS:         [60,  60],    // 60 event batches per minute
 } as const;
 
 type LimitPreset = (typeof LIMITS)[keyof typeof LIMITS];

@@ -414,6 +414,7 @@ const PetDetailsClient: React.FC<{
                             icon={<CopyOutlined className="text-primary" />}
                             size="small"
                             onClick={() => pet.contact_number && handleCopy(pet.contact_number)}
+                            data-cta="pet_copy_phone"
                             className="border-none shadow-none"
                         />
                     </div>
@@ -421,7 +422,8 @@ const PetDetailsClient: React.FC<{
                     <button
                         type="button"
                         className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-green-500 text-[15px] font-semibold text-white transition-colors hover:bg-green-600"
-                        onClick={() => pet.contact_number && handleWhatsApp(pet.contact_number)}>
+                        onClick={() => pet.contact_number && handleWhatsApp(pet.contact_number)}
+                        data-cta="pet_whatsapp_owner">
                         <WhatsAppOutlined />
                         Message via WhatsApp
                     </button>
@@ -430,7 +432,8 @@ const PetDetailsClient: React.FC<{
                         <button
                             type="button"
                             className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-gray-300 text-[15px] font-semibold text-gray-800 transition-colors hover:border-primary hover:text-primary"
-                            onClick={handleAskPaltuu}>
+                            onClick={handleAskPaltuu}
+                            data-cta="pet_ask_paltuu">
                             <WhatsAppOutlined />
                             Ask Paltuu about this pet
                         </button>
@@ -545,6 +548,7 @@ const PetDetailsClient: React.FC<{
                                                 : "cursor-not-allowed bg-gray-100 text-gray-400"
                                         }`}
                                         onClick={handleAdoptClick}
+                                        data-cta="pet_adopt"
                                         disabled={!isAvailable}>
                                         <HeartOutlined />
                                         {getActionButtonText()}
@@ -557,6 +561,7 @@ const PetDetailsClient: React.FC<{
                                                 : "cursor-not-allowed border-gray-200 text-gray-400"
                                         }`}
                                         onClick={handleContactClick}
+                                        data-cta="pet_contact"
                                         disabled={!isAvailable}>
                                         <PhoneOutlined />
                                         {isAvailable ? "Contact" : "Unavailable"}

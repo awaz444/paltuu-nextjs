@@ -109,6 +109,7 @@ export default function PlatformPillars() {
                             <div className="mt-5 pt-4 border-t border-primary/20 text-sm font-semibold">
                                 <Link
                                     href={VETS_AT_HOME.deepLink}
+                                    data-cta="home_pillar_vets_at_home_book"
                                     className="text-primary hover:underline"
                                 >
                                     Book in the app →

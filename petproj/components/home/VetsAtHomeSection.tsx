@@ -49,6 +49,7 @@ export default function VetsAtHomeSection() {
                                 <div className="mt-auto">
                                     <Link
                                         href={VETS_AT_HOME.deepLink}
+                                        data-cta="home_vets_at_home_book"
                                         className="inline-flex items-center justify-center bg-primary text-white font-semibold text-sm px-6 py-3 rounded-full hover:opacity-90 transition-opacity"
                                     >
                                         Book in the Paltuu app

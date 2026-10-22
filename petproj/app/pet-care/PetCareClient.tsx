@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../store/store";
 import { fetchClinics, fetchClinicsForMap } from "../store/slices/clinicSlice";
 import ClinicGrid from "../../components/ClinicGrid";
-import SkeletonCard, { SidebarSkeleton, MapSkeleton } from "../../components/SkeletonCard";
+import SkeletonCard, { MapSkeleton } from "../../components/SkeletonCard";
 import dynamic from "next/dynamic";
 import {
     FaClinicMedical,
@@ -204,7 +204,9 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
                     {/* Vertical Sidebar — desktop only, matches Browse Pets & Lost & Found */}
                     {!error && (
                         <div className="w-1/4 mr-4 vertical-search-bar hidden lg:block">
-                            {loading && clinics.length === 0 ? <SidebarSkeleton /> :
+                            {/* Always rendered: the filters don't depend on clinic data, and
+                                swapping in a skeleton while a search loads unmounts the search
+                                input and drops its focus mid-typing. */}
                             <div className="bg-white shadow-sm p-6 rounded-3xl sticky top-4">
 
                                 {/* Search */}
@@ -326,7 +328,6 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
                                     </button>
                                 </div>
                             </div>
-                        }
                         </div>
                     )}
 

@@ -9,6 +9,7 @@ import { fetchFosterPets } from "@/app/store/slices/fosterPetsSlice";
 import { formatAge } from "@/utils/formatAge";
 import { X, Plus, Users } from "lucide-react";
 import PhoneNumberInput from "./PhoneNumberInput";
+import { compressImageFiles } from "@/utils/imageCompression";
 
 export interface Pet {
     pet_id: number;
@@ -145,8 +146,10 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true, 
         try {
             let uploadedUrls: string[] = [];
             if (newFiles.length > 0) {
+                const raw = newFiles.map((f) => f.file).filter(Boolean);
+                const compressed = await compressImageFiles(raw);
                 const formData = new FormData();
-                newFiles.forEach((f) => formData.append("files", f.file));
+                compressed.forEach((f) => formData.append("files", f));
                 const uploadRes = await fetch("/api/v1/upload-image", { method: "POST", body: formData });
                 if (uploadRes.ok) {
                     const uploadData = await uploadRes.json();

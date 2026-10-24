@@ -28,6 +28,7 @@ import { postPet } from '../app/store/slices/petSlice';
 import PhoneNumberInput from './PhoneNumberInput';
 import axios from 'axios';
 import type { UploadFile, UploadProps } from 'antd';
+import { compressImageFiles } from '../utils/imageCompression';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -284,11 +285,13 @@ export default function SinglePetUploadForm({
 
       // Upload images if any
       if (fileList.length > 0) {
+        const rawFiles = fileList
+          .map((file) => file.originFileObj as File)
+          .filter(Boolean);
+        const compressedFiles = await compressImageFiles(rawFiles);
         const formData = new FormData();
-        fileList.forEach((file) => {
-          if (file.originFileObj) {
-            formData.append("files", file.originFileObj);
-          }
+        compressedFiles.forEach((file) => {
+          formData.append("files", file);
         });
         formData.append("pet_id", String(petId));
         formData.append("notify_new_listing", "true");

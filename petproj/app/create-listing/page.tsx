@@ -18,6 +18,7 @@ import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import PhoneNumberInput from "../../components/PhoneNumberInput";
 import { isValidPhone } from "@/utils/phone";
+import { compressImageFiles } from "@/utils/imageCompression";
 
 const { Panel } = Collapse;
 
@@ -294,9 +295,13 @@ export default function CreatePetListing() {
             petId = petResult?.pet_id;
             if (!petId) throw new Error("Failed to get pet ID from response");
             if (fileList.length > 0) {
+                const rawFiles = fileList
+                    .map((file) => file.originFileObj as File)
+                    .filter(Boolean);
+                const compressedFiles = await compressImageFiles(rawFiles);
                 const formData = new FormData();
-                fileList.forEach((file) => {
-                    if (file.originFileObj) formData.append("files", file.originFileObj);
+                compressedFiles.forEach((file) => {
+                    formData.append("files", file);
                 });
                 formData.append("pet_id", String(petId));
                 formData.append("notify_new_listing", "true");
@@ -314,7 +319,10 @@ export default function CreatePetListing() {
                     console.error("Failed to roll back pet listing creation:", deleteError);
                 }
             }
-            const errMsg = error?.message || (typeof error === 'string' ? error : "Failed to create pet listing. Please try again.");
+            const is413 = error?.response?.status === 413 || error?.message?.includes("413");
+            const errMsg = is413
+                ? "The uploaded photos are too large. Please try with smaller photos."
+                : (error?.response?.data?.error || error?.message || (typeof error === 'string' ? error : "Failed to create pet listing. Please try again."));
             message.error(errMsg);
         } finally {
             setIsSubmitting(false);

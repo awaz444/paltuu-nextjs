@@ -25,6 +25,7 @@ import {
   InfoCircleOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
+import { compressImageFiles } from '../utils/imageCompression';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -306,8 +307,9 @@ export default function BulkPetUploadForm({
   };
 
   const uploadImages = async (images: File[]): Promise<string[]> => {
+    const compressed = await compressImageFiles(images);
     const formData = new FormData();
-    images.forEach(image => {
+    compressed.forEach(image => {
       formData.append('files', image);
     });
 
@@ -325,8 +327,9 @@ export default function BulkPetUploadForm({
   };
 
   const uploadImagesWithPetId = async (images: File[], petId: number): Promise<string[]> => {
+    const compressed = await compressImageFiles(images);
     const formData = new FormData();
-    images.forEach(image => {
+    compressed.forEach(image => {
       formData.append('files', image);
     });
     formData.append('pet_id', petId.toString());

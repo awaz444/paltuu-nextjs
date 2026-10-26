@@ -193,6 +193,24 @@ export default function PersonaStudioPage() {
         }
     }
 
+    async function removeProfile(kind: "avatar" | "pet_avatar", personaId: string, petSlug?: string) {
+        const targetLabel = kind === "pet_avatar" ? "pet profile picture" : "persona profile picture";
+        if (!window.confirm(`Remove this ${targetLabel}?`)) return;
+        setError(null);
+        try {
+            const res = await fetch(`${API}/photos`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ kind, persona_id: personaId, pet_slug: petSlug ?? null }),
+            });
+            if (!res.ok) throw new Error(await readError(res, "Could not remove that profile photo."));
+            showToast("Profile photo removed.");
+            await reload();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Could not remove that profile photo.");
+        }
+    }
+
     async function save(photo: Photo, patch: { note: string; time_of_day: TimeOfDay; pet_slug: string | null }, advance: boolean) {
         setError(null);
         const res = await fetch(`${API}/photos/${photo.id}`, {
@@ -278,7 +296,7 @@ export default function PersonaStudioPage() {
             {error && <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>}
 
             {section === "profiles" ? (
-                <ProfilePhotos personas={personas} pets={pets} onUpload={uploadProfile} />
+                <ProfilePhotos personas={personas} pets={pets} onUpload={uploadProfile} onRemove={removeProfile} />
             ) : (
                 <div className={`grid gap-4 grid-cols-1 lg:items-start ${active ? "lg:grid-cols-[250px_minmax(0,1fr)_390px]" : "lg:grid-cols-[250px_minmax(0,1fr)]"}`}>
                     {/* Pets: a swipeable strip on a phone, a column on a wide screen */}
@@ -300,7 +318,12 @@ export default function PersonaStudioPage() {
                     {/* Photos */}
                     <section aria-label="Photos" className="min-w-0">
                         {selectedPet ? (
-                            <Dropzone pet={selectedPet} progress={progress} onUpload={(f) => upload(f, { personaId: selectedPet.persona_id, petSlug: selectedPet.pet_slug })} />
+                            <Dropzone
+                                pet={selectedPet}
+                                progress={progress}
+                                onUpload={(f) => upload(f, { personaId: selectedPet.persona_id, petSlug: selectedPet.pet_slug })}
+                                onRemoveAvatar={selectedPet.avatar_url ? () => removeProfile("pet_avatar", selectedPet.persona_id, selectedPet.pet_slug) : undefined}
+                            />
                         ) : (
                             <div className="bg-white rounded-lg border border-gray-200 p-4 mb-3">
                                 <p className="font-semibold text-gray-800">Pick a pet to add photos.</p>
@@ -399,7 +422,17 @@ function PetChip({ active, onClick, face, title, sub, meter }: { active: boolean
     );
 }
 
-function Dropzone({ pet, progress, onUpload }: { pet: StudioPet; progress: { done: number; total: number } | null; onUpload: (f: FileList | null) => void }) {
+function Dropzone({
+    pet,
+    progress,
+    onUpload,
+    onRemoveAvatar,
+}: {
+    pet: StudioPet;
+    progress: { done: number; total: number } | null;
+    onUpload: (f: FileList | null) => void;
+    onRemoveAvatar?: () => void;
+}) {
     const input = useRef<HTMLInputElement>(null);
     const [dragging, setDragging] = useState(false);
     const remaining = Math.max(0, READY_TARGET - pet.described);
@@ -410,14 +443,51 @@ function Dropzone({ pet, progress, onUpload }: { pet: StudioPet; progress: { don
             onDragLeave={() => setDragging(false)}
             onDrop={(e) => { e.preventDefault(); setDragging(false); onUpload(e.dataTransfer.files); }}
         >
-            <h2 className="font-bold text-gray-900">
-                {pet.name} <span className="font-normal text-gray-500 text-sm">· {pet.breed ?? pet.species} · {pet.persona_name}</span>
-            </h2>
-            <p className="text-xs text-gray-500 mt-1">
-                {pet.described >= READY_TARGET
-                    ? `Ready to post. ${pet.available} described photo${pet.available === 1 ? "" : "s"} not used recently.`
-                    : `${remaining} more described photo${remaining === 1 ? "" : "s"} before ${pet.name} can start posting. Use one animal, phone-shot, no watermarks.`}
-            </p>
+            <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                    {pet.avatar_url && (
+                        <div className="relative group w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-gray-200">
+                            <img src={pet.avatar_url} alt="" className="w-full h-full object-cover" />
+                            {onRemoveAvatar && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onRemoveAvatar();
+                                    }}
+                                    title="Remove pet profile picture"
+                                    className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity"
+                                >
+                                    ✕
+                                </button>
+                            )}
+                        </div>
+                    )}
+                    <div>
+                        <h2 className="font-bold text-gray-900">
+                            {pet.name} <span className="font-normal text-gray-500 text-sm">· {pet.breed ?? pet.species} · {pet.persona_name}</span>
+                        </h2>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                            {pet.described >= READY_TARGET
+                                ? `Ready to post. ${pet.available} described photo${pet.available === 1 ? "" : "s"} not used recently.`
+                                : `${remaining} more described photo${remaining === 1 ? "" : "s"} before ${pet.name} can start posting. Use one animal, phone-shot, no watermarks.`}
+                        </p>
+                    </div>
+                </div>
+
+                {pet.avatar_url && onRemoveAvatar && (
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onRemoveAvatar();
+                        }}
+                        className="text-xs text-red-600 hover:text-red-700 hover:underline font-medium shrink-0 pt-1"
+                    >
+                        Remove profile pic
+                    </button>
+                )}
+            </div>
             <button onClick={() => input.current?.click()} disabled={progress !== null} className="mt-3 w-full min-h-[44px] rounded-lg bg-primary text-white font-semibold hover:opacity-90 disabled:opacity-60">
                 {progress ? `Uploading ${progress.done} of ${progress.total}…` : `+ Add photos of ${pet.name}`}
                 <span className="hidden lg:inline">{progress ? "" : ", or drop them here"}</span>
@@ -559,9 +629,16 @@ function Editor({ photo, pets, remaining, hasNext, onClose, onSave, onDelete }: 
     );
 }
 
-function ProfilePhotos({ personas, pets, onUpload }: {
-    personas: StudioPersona[]; pets: StudioPet[];
+function ProfilePhotos({
+    personas,
+    pets,
+    onUpload,
+    onRemove,
+}: {
+    personas: StudioPersona[];
+    pets: StudioPet[];
     onUpload: (files: FileList | null, kind: "avatar" | "pet_avatar", personaId: string, petSlug?: string) => void;
+    onRemove: (kind: "avatar" | "pet_avatar", personaId: string, petSlug?: string) => void;
 }) {
     const needs = personas.filter((p) => p.needs_avatar);
     const skips = personas.filter((p) => !p.needs_avatar);
@@ -583,14 +660,29 @@ function ProfilePhotos({ personas, pets, onUpload }: {
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Needs a photo · {needs.length}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7 gap-3 mb-6">
                 {needs.map((p) => (
-                    <AvatarSlot key={p.persona_id} name={p.name} sub={p.city ?? ""} url={p.avatar_url} round onPick={(f) => onUpload(f, "avatar", p.persona_id)} />
+                    <AvatarSlot
+                        key={p.persona_id}
+                        name={p.name}
+                        sub={p.city ?? ""}
+                        url={p.avatar_url}
+                        round
+                        onPick={(f) => onUpload(f, "avatar", p.persona_id)}
+                        onRemove={() => onRemove("avatar", p.persona_id)}
+                    />
                 ))}
             </div>
 
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Pet profile photos</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7 gap-3 mb-6">
                 {pets.map((p) => (
-                    <AvatarSlot key={`${p.persona_id}/${p.pet_slug}`} name={p.name} sub={`${p.persona_name.split(" ")[0]}'s ${p.species}`} url={p.avatar_url} onPick={(f) => onUpload(f, "pet_avatar", p.persona_id, p.pet_slug)} />
+                    <AvatarSlot
+                        key={`${p.persona_id}/${p.pet_slug}`}
+                        name={p.name}
+                        sub={`${p.persona_name.split(" ")[0]}'s ${p.species}`}
+                        url={p.avatar_url}
+                        onPick={(f) => onUpload(f, "pet_avatar", p.persona_id, p.pet_slug)}
+                        onRemove={() => onRemove("pet_avatar", p.persona_id, p.pet_slug)}
+                    />
                 ))}
             </div>
 
@@ -610,18 +702,108 @@ function ProfilePhotos({ personas, pets, onUpload }: {
     );
 }
 
-function AvatarSlot({ name, sub, url, round, onPick }: { name: string; sub: string; url: string | null; round?: boolean; onPick: (f: FileList | null) => void }) {
+function AvatarSlot({
+    name,
+    sub,
+    url,
+    round,
+    onPick,
+    onRemove,
+}: {
+    name: string;
+    sub: string;
+    url: string | null;
+    round?: boolean;
+    onPick: (f: FileList | null) => void;
+    onRemove?: () => void;
+}) {
     const input = useRef<HTMLInputElement>(null);
     return (
-        <button onClick={() => input.current?.click()} className="flex flex-col items-center gap-1 rounded-lg border border-gray-200 bg-white p-3 text-center hover:border-primary">
-            {url ? (
-                <img src={url} alt="" loading="lazy" className={`w-20 h-20 object-cover mb-1 ${round ? "rounded-full" : "rounded-2xl"}`} />
-            ) : (
-                <span className={`w-20 h-20 mb-1 grid place-items-center border-2 border-dashed border-gray-300 text-primary text-3xl font-light ${round ? "rounded-full" : "rounded-2xl"}`}>+</span>
+        <div className="relative group flex flex-col items-center justify-between rounded-lg border border-gray-200 bg-white p-3 text-center hover:border-primary transition-colors">
+            {url && onRemove && (
+                <button
+                    type="button"
+                    title={`Remove photo for ${name}`}
+                    aria-label={`Remove photo for ${name}`}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onRemove();
+                    }}
+                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-600/90 hover:bg-red-700 text-white flex items-center justify-center text-xs font-bold shadow transition z-10"
+                >
+                    ✕
+                </button>
             )}
-            <span className="text-sm font-semibold text-gray-900">{name}</span>
-            <span className="text-xs text-gray-500">{url ? "Tap to replace" : sub || "Add a photo"}</span>
-            <input ref={input} type="file" accept="image/*" hidden onChange={(e) => { onPick(e.target.files); e.target.value = ""; }} />
-        </button>
+
+            <button
+                type="button"
+                onClick={() => input.current?.click()}
+                className="flex flex-col items-center w-full focus:outline-none"
+            >
+                {url ? (
+                    <img
+                        src={url}
+                        alt=""
+                        loading="lazy"
+                        className={`w-20 h-20 object-cover mb-1 ${round ? "rounded-full" : "rounded-2xl"}`}
+                    />
+                ) : (
+                    <span
+                        className={`w-20 h-20 mb-1 grid place-items-center border-2 border-dashed border-gray-300 text-primary text-3xl font-light hover:border-primary ${
+                            round ? "rounded-full" : "rounded-2xl"
+                        }`}
+                    >
+                        +
+                    </span>
+                )}
+                <span className="text-sm font-semibold text-gray-900 truncate max-w-full">{name}</span>
+            </button>
+
+            {url ? (
+                <div className="flex items-center gap-1.5 mt-1 text-xs">
+                    <button
+                        type="button"
+                        onClick={() => input.current?.click()}
+                        className="text-primary hover:underline font-medium"
+                    >
+                        Change
+                    </button>
+                    {onRemove && (
+                        <>
+                            <span className="text-gray-300">·</span>
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRemove();
+                                }}
+                                className="text-red-600 hover:underline font-medium"
+                            >
+                                Remove
+                            </button>
+                        </>
+                    )}
+                </div>
+            ) : (
+                <button
+                    type="button"
+                    onClick={() => input.current?.click()}
+                    className="text-xs text-gray-500 hover:text-primary mt-1 truncate max-w-full"
+                >
+                    {sub || "Add a photo"}
+                </button>
+            )}
+
+            <input
+                ref={input}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => {
+                    onPick(e.target.files);
+                    e.target.value = "";
+                }}
+            />
+        </div>
     );
 }

@@ -136,3 +136,65 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
+/**
+ * DELETE /api/v1/admin/persona-studio/photos
+ * Body or query params: { kind: 'pet_avatar' | 'avatar', persona_id: string, pet_slug?: string }
+ * Removes the profile photo from bots.persona_pets and pet_profiles (or bots.personas and users).
+ */
+export async function DELETE(req: NextRequest) {
+    const admin = await checkAdmin(req);
+    if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    try {
+        const body = await req.json().catch(() => ({}));
+        const personaId = body.persona_id || req.nextUrl.searchParams.get("persona_id");
+        const kind = body.kind || req.nextUrl.searchParams.get("kind");
+        const petSlug = body.pet_slug || req.nextUrl.searchParams.get("pet_slug");
+
+        if (!personaId || !kind || !["pet_avatar", "avatar"].includes(kind)) {
+            return NextResponse.json({ error: "persona_id and a valid kind ('pet_avatar' or 'avatar') are required" }, { status: 400 });
+        }
+
+        if (kind === "pet_avatar" && !petSlug) {
+            return NextResponse.json({ error: "pet_slug is required to remove a pet profile photo" }, { status: 400 });
+        }
+
+        const client = await db.connect();
+        try {
+            await client.query("BEGIN");
+            if (kind === "pet_avatar") {
+                await client.query(
+                    `UPDATE bots.persona_pets SET avatar_url = NULL WHERE persona_id = $1 AND pet_slug = $2`,
+                    [personaId, petSlug]
+                );
+                await client.query(
+                    `UPDATE pet_profiles SET avatar_url = NULL
+                      WHERE owner_id = (SELECT user_id FROM bots.persona_registry WHERE persona_id = $1)
+                        AND lower(name) = (SELECT lower(name) FROM bots.persona_pets WHERE persona_id = $1 AND pet_slug = $2)`,
+                    [personaId, petSlug]
+                );
+            } else if (kind === "avatar") {
+                await client.query(
+                    `UPDATE bots.personas SET avatar_url = NULL WHERE persona_id = $1`,
+                    [personaId]
+                );
+                await client.query(
+                    `UPDATE users SET profile_image_url = NULL
+                      WHERE user_id = (SELECT user_id FROM bots.persona_registry WHERE persona_id = $1)`,
+                    [personaId]
+                );
+            }
+            await client.query("COMMIT");
+            return NextResponse.json({ ok: true, removed: kind, persona_id: personaId, pet_slug: petSlug ?? null });
+        } catch (err) {
+            await client.query("ROLLBACK");
+            throw err;
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Persona studio photo avatar DELETE error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}

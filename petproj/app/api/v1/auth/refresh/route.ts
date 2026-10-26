@@ -51,6 +51,22 @@ export async function POST(req: NextRequest) {
             refreshToken
         );
 
+        // Best-effort: touch last_app_seen_at for mobile client
+        const xClient = req.headers.get('x-client')?.toLowerCase();
+        const xPlatform = req.headers.get('x-platform')?.toLowerCase();
+        const userAgent = req.headers.get('user-agent') ?? '';
+        const isApp = xClient === 'app' || /okhttp|darwin|cfnetwork|expo/i.test(userAgent);
+        if (isApp) {
+            const platform = xPlatform || (/iphone|ipad|ios|darwin/i.test(userAgent) ? 'ios' : 'android');
+            db.query(
+                `UPDATE users 
+                 SET last_app_seen_at = NOW(),
+                     app_platform = COALESCE(app_platform, $2)
+                 WHERE user_id = $1`,
+                [user.user_id, platform]
+            ).catch(err => console.error('Refresh app touch error:', err));
+        }
+
         return NextResponse.json({
             success: true,
             accessToken: tokens.accessToken,

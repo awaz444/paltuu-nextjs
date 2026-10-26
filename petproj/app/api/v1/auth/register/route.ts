@@ -62,16 +62,34 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "User already exists" }, { status: 400 });
     }
 
-    // 3. Create user (social_username is picked explicitly by the client afterwards —
+    // 3. Detect client platform (app vs web)
+    const userAgent = req.headers.get('user-agent') ?? '';
+    const xClient = req.headers.get('x-client')?.toLowerCase();
+    const xPlatform = req.headers.get('x-platform')?.toLowerCase();
+    const isApp = xClient === 'app' || /okhttp|darwin|cfnetwork|expo/i.test(userAgent);
+    const platform = xPlatform || (isApp ? (/iphone|ipad|ios|darwin/i.test(userAgent) ? 'ios' : 'android') : null);
+    const signupSource = isApp ? 'app' : 'web';
+
+    // 4. Create user (social_username is picked explicitly by the client afterwards —
     // via the RN app's own username step, or the webapp's UsernameGateModal)
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUserResult = await db.query(
-      'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING user_id, name, email, role, social_username',
-      [name, email, hashedPassword, 'regular user']
+      `INSERT INTO users (name, email, password, role, signup_source, app_platform, last_app_seen_at) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) 
+       RETURNING user_id, name, email, role, social_username`,
+      [name, email, hashedPassword, 'regular user', signupSource, platform, isApp ? new Date() : null]
     );
     const user = newUserResult.rows[0];
 
-    // 3b. Create Default "All Posts" Collection
+    // 4b. Record registration in audit_logs (best-effort)
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip') ?? null;
+    const loggedUserAgent = isApp ? `[app:${platform || 'unknown'}] ${userAgent}`.trim() : (userAgent || null);
+    db.query(
+      'INSERT INTO audit_logs (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
+      [user.user_id, isApp ? 'signup_app' : 'signup_web', ip, loggedUserAgent]
+    ).catch(err => console.error('Register audit log error:', err));
+
+    // 4c. Create Default "All Posts" Collection
     await db.query(
       'INSERT INTO save_collections (user_id, name, is_default) VALUES ($1, $2, $3)',
       [user.user_id, 'All Posts', true]

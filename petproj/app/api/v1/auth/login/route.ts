@@ -173,12 +173,24 @@ export async function POST(req: Request) {
 
     // 3. Record login event — best-effort: a tracking failure must never block a login
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip') ?? null;
-    const userAgent = req.headers.get('user-agent') ?? null;
+    const userAgent = req.headers.get('user-agent') ?? '';
+    const xClient = req.headers.get('x-client')?.toLowerCase();
+    const xPlatform = req.headers.get('x-platform')?.toLowerCase();
+    const isApp = xClient === 'app' || /okhttp|darwin|cfnetwork|expo/i.test(userAgent);
+    const platform = xPlatform || (isApp ? (/iphone|ipad|ios|darwin/i.test(userAgent) ? 'ios' : 'android') : 'web');
+    const loggedUserAgent = isApp ? `[app:${platform}] ${userAgent}`.trim() : (userAgent || null);
+
     const tracking = await Promise.allSettled([
-      db.query('UPDATE users SET last_login_at = NOW() WHERE user_id = $1', [user.user_id]),
+      db.query(
+        `UPDATE users 
+         SET last_login_at = NOW()
+             ${isApp ? ', last_app_seen_at = NOW(), app_platform = COALESCE(app_platform, $2)' : ''}
+         WHERE user_id = $1`,
+        isApp ? [user.user_id, platform] : [user.user_id]
+      ),
       db.query(
         'INSERT INTO audit_logs (user_id, action, ip_address, user_agent) VALUES ($1, $2, $3, $4)',
-        [user.user_id, 'login', ip, userAgent]
+        [user.user_id, isApp ? 'login_app' : 'login', ip, loggedUserAgent]
       ),
     ]);
     for (const result of tracking) {

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "coral9": {
+      "type": "http",
+      "url": "https://www.coral9.com/api/mcp?project=paltuu-pk",
+      "headers": {
+        "Authorization": "Bearer ${CORAL9_TOKEN}"
+      }
+    }
+  }
+}

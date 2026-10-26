@@ -181,7 +181,7 @@ const NotificationsPage = () => {
 
             <div style={{ maxWidth: "90%", margin: "0 auto" }} className="py-8 px-4 md:px-8 max-w-2xl">
                 <BrandAdSlot
-                    tier={3}
+                    price={10000}
                     format="notification-row"
                     placement='Notifications · sponsored row (clearly labelled "Sponsored", 1/day cap)'
                     size="640×90 — matches notification row"

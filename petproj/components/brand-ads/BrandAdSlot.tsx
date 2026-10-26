@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
-export type AdTier = 1 | 2 | 3 | 4;
-
 export type AdFormat =
     | "banner"
     | "native-card"
@@ -15,7 +13,8 @@ export type AdFormat =
     | "inline-tile";
 
 export interface BrandAdSlotProps {
-    tier: AdTier;
+    /** Monthly price for this slot, in PKR. */
+    price: number;
     format: AdFormat;
     /** Short name of the slot ("Home hero", "Browse grid card #8"). */
     placement: string;
@@ -30,29 +29,6 @@ export interface BrandAdSlotProps {
      */
     dismissible?: boolean;
 }
-
-const TIER_META: Record<AdTier, { label: string; chipClass: string; ringClass: string }> = {
-    1: {
-        label: "TIER 1 · PREMIUM",
-        chipClass: "bg-emerald-100 text-emerald-800 border-emerald-300",
-        ringClass: "border-emerald-300",
-    },
-    2: {
-        label: "TIER 2 · CONTEXTUAL",
-        chipClass: "bg-sky-100 text-sky-800 border-sky-300",
-        ringClass: "border-sky-300",
-    },
-    3: {
-        label: "TIER 3 · HIGH-INTENT",
-        chipClass: "bg-amber-100 text-amber-800 border-amber-300",
-        ringClass: "border-amber-300",
-    },
-    4: {
-        label: "TIER 4 · INTERSTITIAL",
-        chipClass: "bg-fuchsia-100 text-fuchsia-800 border-fuchsia-300",
-        ringClass: "border-fuchsia-300",
-    },
-};
 
 const FORMAT_HEIGHT: Record<AdFormat, string> = {
     banner: "min-h-[160px] sm:min-h-[200px]",
@@ -70,7 +46,7 @@ const FORMAT_HEIGHT: Record<AdFormat, string> = {
  * the slot with a flat image + link pointing at the brand's artwork.
  */
 export default function BrandAdSlot({
-    tier,
+    price,
     format,
     placement,
     size,
@@ -81,14 +57,13 @@ export default function BrandAdSlot({
     const [open, setOpen] = useState(true);
     if (!open) return null;
 
-    const meta = TIER_META[tier];
     const height = FORMAT_HEIGHT[format];
 
     return (
         <div
             role="complementary"
             aria-label={`Brand ad slot preview — ${placement}`}
-            className={`relative flex w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed bg-gray-50 px-5 py-6 text-center ${meta.ringClass} ${height} ${className}`}
+            className={`relative flex w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed bg-gray-50 px-5 py-6 text-center border-[#A03048]/40 ${height} ${className}`}
         >
             {dismissible && (
                 <button
@@ -102,9 +77,9 @@ export default function BrandAdSlot({
             )}
 
             <span
-                className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${meta.chipClass}`}
+                className="inline-flex items-center gap-1 rounded-full border border-[#A03048]/30 bg-[#A03048]/10 px-3 py-1 text-xs font-semibold text-[#A03048]"
             >
-                {meta.label}
+                PKR {price.toLocaleString("en-US")} / month
             </span>
 
             <div className="flex flex-col items-center gap-1">

@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import BrandAdSlot, { type AdTier } from "./BrandAdSlot";
+import BrandAdSlot from "./BrandAdSlot";
 
 export interface BrandAdSlotModalProps {
-    tier: AdTier;
+    /** Monthly price for this slot, in PKR. */
+    price: number;
     placement: string;
     size: string;
     pitch?: string;
@@ -25,7 +26,7 @@ const STORAGE_PREFIX = "paltuu_brand_ad_modal_";
  * blocks the page under it.
  */
 export default function BrandAdSlotModal({
-    tier,
+    price,
     placement,
     size,
     pitch,
@@ -77,7 +78,7 @@ export default function BrandAdSlotModal({
                 </button>
 
                 <BrandAdSlot
-                    tier={tier}
+                    price={price}
                     format="banner"
                     placement={placement}
                     size={size}

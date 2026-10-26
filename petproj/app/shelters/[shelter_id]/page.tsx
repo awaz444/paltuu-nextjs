@@ -140,7 +140,7 @@ const ShelterProfilePage: React.FC = () => {
             <div className="shelter-profile min-h-screen bg-gray-50 py-8 px-4 md:px-8">
                 <div className="mx-auto max-w-6xl">
                     <BrandAdSlot
-                        tier={2}
+                        price={8000}
                         format="sponsor-block"
                         placement='Shelter page · "Sponsor this shelter" (brand pays slot + donation, CSR angle)'
                         size="1200×240 desktop / 640×280 mobile"
@@ -566,7 +566,7 @@ const ShelterProfilePage: React.FC = () => {
 
                     <div className="mt-8">
                         <BrandAdSlot
-                            tier={2}
+                            price={8000}
                             format="banner"
                             placement="Shelter page · end-of-page banner"
                             size="1200×200 desktop / 640×240 mobile"

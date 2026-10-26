@@ -33,7 +33,7 @@ const ListingCreated = () => {
 
                 <div className="mt-6 w-full max-w-md px-4">
                     <BrandAdSlot
-                        tier={2}
+                        price={8000}
                         format="sponsor-block"
                         placement="Lost & Found success · post-creation sponsor block"
                         size="440×220 desktop / 640×240 mobile"

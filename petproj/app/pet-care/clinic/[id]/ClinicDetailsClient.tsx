@@ -473,7 +473,7 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                             )}
 
                             <BrandAdSlot
-                                tier={2}
+                                price={8000}
                                 format="sidebar"
                                 placement="Clinic profile · desktop left-sidebar sponsor (sticky)"
                                 size="300×600 desktop / full-width mobile"

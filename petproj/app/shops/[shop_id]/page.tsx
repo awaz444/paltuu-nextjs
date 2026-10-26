@@ -120,7 +120,7 @@ const ShopProfilePage: React.FC = () => {
             <div className="shop-profile min-h-screen bg-gray-50 py-8 px-4 md:px-8">
                 <div className="mx-auto max-w-6xl">
                     <BrandAdSlot
-                        tier={2}
+                        price={8000}
                         format="banner"
                         placement="Shop page · top banner (cross-promo)"
                         size="1200×200 desktop / 640×240 mobile"

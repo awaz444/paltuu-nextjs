@@ -93,7 +93,7 @@ export default function BlogsPageClient({ allBlogs, categories }: BlogsPageClien
                 </div>
 
                 <BrandAdSlot
-                    tier={1}
+                    price={8000}
                     format="banner"
                     placement="Blogs listing · banner between filters and the grid"
                     size="1200×200 desktop / 640×240 mobile"

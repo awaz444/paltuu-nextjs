@@ -252,7 +252,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                                     </p>
 
                                     <BrandAdSlot
-                                        tier={1}
+                                        price={8000}
                                         format="banner"
                                         placement="Blog post · in-article leaderboard (after excerpt, before body)"
                                         size="760×180 desktop / 640×240 mobile"
@@ -277,7 +277,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                                     </div>
 
                                     <BrandAdSlot
-                                        tier={1}
+                                        price={8000}
                                         format="sponsor-block"
                                         placement="Blog post · end-of-article sponsor block"
                                         size="760×220 desktop / 640×260 mobile"

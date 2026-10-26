@@ -202,7 +202,7 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
             <section id="clinics-listings-start" className="scroll-mt-6" style={{ maxWidth: "90%", margin: "0 auto" }}>
                 <div className="mx-0 md:mx-8 mt-6">
                     <BrandAdSlot
-                        tier={2}
+                        price={12000}
                         format="banner"
                         placement="Pet-care / vet directory · top banner above clinic listings"
                         size="1200×200 desktop / 640×240 mobile"

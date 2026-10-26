@@ -139,7 +139,7 @@ export default function LostFound() {
                         {/* Main content */}
                         <div className="w-full lg:w-3/4">
                             <BrandAdSlot
-                                tier={2}
+                                price={10000}
                                 format="banner"
                                 placement="Lost & Found · top banner above tab toggle"
                                 size="1200×200 desktop / 640×240 mobile"

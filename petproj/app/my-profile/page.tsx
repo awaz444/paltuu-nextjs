@@ -695,7 +695,7 @@ const MyProfile = () => {
             {/* Toast */}
             <div style={{ maxWidth: "90%", margin: "0 auto" }} className="px-4 md:px-8 mt-8">
                 <BrandAdSlot
-                    tier={3}
+                    price={8000}
                     format="banner"
                     placement="My profile · bottom sponsor"
                     size="1200×160 desktop / 640×200 mobile"

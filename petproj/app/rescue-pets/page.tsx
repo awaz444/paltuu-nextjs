@@ -145,7 +145,7 @@ export default function RescuePets() {
                                 <RescueGrid pets={sortedPets} />
                                 <div className="mt-6">
                                     <BrandAdSlot
-                                        tier={2}
+                                        price={8000}
                                         format="native-card"
                                         placement="Rescue pets · in-grid native card (repeats every 8–12 tiles in prod)"
                                         size="matches rescue pet card"

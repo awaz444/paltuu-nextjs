@@ -587,7 +587,7 @@ const OrderConfirmedContent = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-white py-8 px-4 sm:px-6 lg:px-8">
       <BrandAdSlotModal
-        tier={4}
+        price={8000}
         placement='Order confirmed · "Add to your next order" interstitial'
         size="480×400 modal"
         pitch="food subscription / consumables (bundle up-sell)"
@@ -596,7 +596,7 @@ const OrderConfirmedContent = () => {
       />
       <div className="max-w-4xl mx-auto">
         <BrandAdSlot
-          tier={4}
+          price={8000}
           format="sponsor-block"
           placement="Order confirmed · post-purchase sponsored tile"
           size="880×220 desktop / 640×240 mobile"

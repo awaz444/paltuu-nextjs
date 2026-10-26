@@ -459,7 +459,7 @@ export default function VetDetailsClient({
                                 </div>
 
                                 <BrandAdSlot
-                                    tier={2}
+                                    price={8000}
                                     format="sidebar"
                                     placement="Vet profile · desktop left-sidebar sponsor (sticky)"
                                     size="300×600 desktop / full-width mobile"

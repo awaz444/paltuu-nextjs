@@ -454,7 +454,7 @@ const PetDetailsClient: React.FC<{
 
                     <div className="mb-6">
                         <BrandAdSlot
-                            tier={1}
+                            price={25000}
                             format="banner"
                             placement="Pet detail · above-the-fold leaderboard"
                             size="1200×200 desktop / 640×240 mobile"
@@ -733,14 +733,14 @@ const PetDetailsClient: React.FC<{
 
                     <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
                         <BrandAdSlot
-                            tier={1}
+                            price={15000}
                             format="sponsor-block"
                             placement={`Pet detail · "Care kit for a ${pet.pet_type || "pet"} like ${pet.pet_name}" product recs`}
                             size="580×220 desktop / 640×240 mobile"
                             pitch="food / grooming / accessories, keyed to species + age"
                         />
                         <BrandAdSlot
-                            tier={1}
+                            price={12000}
                             format="sponsor-block"
                             placement="Pet detail · medical-care sponsor badge (vet clinic)"
                             size="580×220 desktop / 640×240 mobile"

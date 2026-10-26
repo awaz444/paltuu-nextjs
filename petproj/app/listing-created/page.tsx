@@ -9,7 +9,7 @@ const ListingCreated = () => {
     return (
         <>
             <BrandAdSlotModal
-                tier={4}
+                price={15000}
                 placement='Listing created · "Welcome home kit" interstitial'
                 size="480×400 modal"
                 pitch="single highest-converting moment on the site"
@@ -42,7 +42,7 @@ const ListingCreated = () => {
 
                 <div className="mt-6 w-full max-w-md px-4">
                     <BrandAdSlot
-                        tier={4}
+                        price={8000}
                         format="sponsor-block"
                         placement="Listing created · post-listing sponsor block"
                         size="440×220 desktop / 640×240 mobile"

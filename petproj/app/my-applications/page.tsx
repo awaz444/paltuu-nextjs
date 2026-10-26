@@ -139,7 +139,7 @@ export default function MyApplicationsPage() {
 
             <div style={{ maxWidth: "90%", margin: "0 auto" }} className="py-8 px-4 md:px-8">
                 <BrandAdSlot
-                    tier={3}
+                    price={8000}
                     format="banner"
                     placement="My applications · footer banner (new-adopter products)"
                     size="1200×180 desktop / 640×220 mobile"

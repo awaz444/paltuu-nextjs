@@ -174,7 +174,7 @@ function MarketplaceClient() {
 
       <div className="px-4 py-4 sm:px-6">
         <BrandAdSlot
-          tier={1}
+          price={8000}
           format="strip"
           placement="Marketplace · category sponsor header (monthly title sponsor)"
           size="1200×60 desktop / 640×72 mobile"

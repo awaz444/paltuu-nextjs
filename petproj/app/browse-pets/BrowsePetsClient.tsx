@@ -200,7 +200,7 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
                             hidden and the column is full width, so this is
                             full width there too. */}
                         <BrandAdSlot
-                            tier={1}
+                            price={25000}
                             format="banner"
                             placement="Browse pets · between filters and the grid"
                             size="1200×200 desktop / 640×240 mobile"
@@ -225,7 +225,7 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
 
                                 <div className="mt-6">
                                     <BrandAdSlot
-                                        tier={1}
+                                        price={30000}
                                         format="native-card"
                                         placement="Browse pets · in-grid native card (will repeat every 8–12 tiles in prod)"
                                         size="matches pet card aspect — 1 col mobile, 1 col of 3 on desktop"

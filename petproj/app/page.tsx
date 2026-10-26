@@ -128,7 +128,7 @@ export default async function HomePage() {
 
       <section className="bg-white px-6 py-6 lg:px-12">
         <BrandAdSlot
-          tier={1}
+          price={20000}
           format="banner"
           placement="Home · hero band (below the fold hero)"
           size="1200×250 desktop / 640×320 mobile"
@@ -146,7 +146,7 @@ export default async function HomePage() {
         <AdoptionPathsSection />                  {/* gray-50 */}
         <div className="bg-gray-50 px-6 py-4 lg:px-12">
           <BrandAdSlot
-            tier={1}
+            price={15000}
             format="strip"
             placement='Home · "Powered by" strip above Recently Listed Pets'
             size="1200×60 desktop / 640×72 mobile"

@@ -737,7 +737,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
         <div className="mx-auto mt-6 max-w-6xl px-3 pb-10 sm:px-6">
           <BrandAdSlot
-            tier={1}
+            price={8000}
             format="sponsor-block"
             placement='Marketplace PDP · "Related products" position 1 (sponsored tile)'
             size="1200×240 desktop / 640×280 mobile"

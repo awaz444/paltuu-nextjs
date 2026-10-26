@@ -254,7 +254,7 @@ const MyOrdersPage = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
         <BrandAdSlot
-          tier={3}
+          price={8000}
           format="banner"
           placement="My orders · banner above order history"
           size="1200×180 desktop / 640×220 mobile"

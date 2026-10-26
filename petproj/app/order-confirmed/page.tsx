@@ -531,7 +531,7 @@ const OrderConfirmedContent = () => {
                   Continue Shopping
                 </button>
                 <a
-                  href="mailto:support@paltuu.pk"
+                  href="mailto:contact@paltuu.pk"
                   className="flex-1 px-4 py-2 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors text-center"
                 >
                   Contact Support

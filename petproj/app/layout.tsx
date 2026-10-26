@@ -86,7 +86,7 @@ export default function RootLayout({
                 "@type": "ContactPoint",
                 "contactType": "customer service",
                 "telephone": "+92-339-4022468",
-                "email": "support@paltuu.pk",
+                "email": "contact@paltuu.pk",
                 "areaServed": "PK"
               },
               "knowsAbout": [

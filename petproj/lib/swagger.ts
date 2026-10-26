@@ -7,7 +7,7 @@ export const getApiDocs = () => {
       description: 'Comprehensive API documentation for Paltuu - Pet adoption, marketplace, and veterinary services platform',
       contact: {
         name: 'Paltuu Support',
-        email: 'support@paltuu.pk',
+        email: 'contact@paltuu.pk',
         url: 'https://paltuu.pk',
       },
       license: {

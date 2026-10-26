@@ -162,10 +162,10 @@ export default function AppPrivacyPolicyPage() {
                     your account and data, go to Profile → Settings, or
                     email{" "}
                     <a
-                      href="mailto:support@paltuu.pk"
+                      href="mailto:contact@paltuu.pk"
                       className="text-primary hover:underline"
                     >
-                      support@paltuu.pk
+                      contact@paltuu.pk
                     </a>
                     .
                   </p>
@@ -203,10 +203,10 @@ export default function AppPrivacyPolicyPage() {
                   <p className="text-gray-700 text-sm sm:text-base">
                     Questions? Email us at{" "}
                     <a
-                      href="mailto:support@paltuu.pk"
+                      href="mailto:contact@paltuu.pk"
                       className="text-primary hover:underline"
                     >
-                      support@paltuu.pk
+                      contact@paltuu.pk
                     </a>
                     .
                   </p>

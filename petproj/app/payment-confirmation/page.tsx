@@ -372,7 +372,7 @@ function PaymentConfirmationClient() {
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Need Help?</h3>
           <p className="text-gray-600 mb-4">Having trouble with the payment? Our support team is here to help</p>
           <a
-            href="mailto:support@paltuu.pk"
+            href="mailto:contact@paltuu.pk"
             className="inline-block px-6 py-2 bg-gray-100 text-primary border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors font-medium"
           >
             Contact Support

@@ -234,10 +234,10 @@ export default function PrivacyPolicyPage() {
                     You can delete your account and associated data directly
                     from within the app (Profile → Settings), or by emailing{" "}
                     <a
-                      href="mailto:support@paltuu.pk"
+                      href="mailto:contact@paltuu.pk"
                       className="text-primary hover:underline"
                     >
-                      support@paltuu.pk
+                      contact@paltuu.pk
                     </a>
                     .
                   </p>
@@ -322,10 +322,10 @@ export default function PrivacyPolicyPage() {
                     <li>
                       <strong>Email:</strong>{" "}
                       <a
-                        href="mailto:support@paltuu.pk"
+                        href="mailto:contact@paltuu.pk"
                         className="text-primary hover:underline"
                       >
-                        support@paltuu.pk
+                        contact@paltuu.pk
                       </a>
                     </li>
                     <li>

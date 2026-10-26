@@ -17,22 +17,22 @@ const faqs = [
   {
     question: "How do I contact Paltuu support?",
     answer:
-      'Email us at support@paltuu.pk and we will get back to you within 2 business days.',
+      'Email us at contact@paltuu.pk and we will get back to you within 2 business days.',
   },
   {
     question: "How do I delete my account?",
     answer:
-      'You can delete your account from Profile → Settings → Delete Account in the app, or by emailing support@paltuu.pk. See our Delete Account page for full details.',
+      'You can delete your account from Profile → Settings → Delete Account in the app, or by emailing contact@paltuu.pk. See our Delete Account page for full details.',
   },
   {
     question: "I found a bug or the app is crashing. What should I do?",
     answer:
-      'Email support@paltuu.pk with your device model, OS version, and a short description of what happened. Screenshots or screen recordings help us fix it faster.',
+      'Email contact@paltuu.pk with your device model, OS version, and a short description of what happened. Screenshots or screen recordings help us fix it faster.',
   },
   {
     question: "How do I report a listing, user, or lost & found post?",
     answer:
-      'Use the report option available on the listing or profile inside the app. For anything urgent, email support@paltuu.pk.',
+      'Use the report option available on the listing or profile inside the app. For anything urgent, email contact@paltuu.pk.',
   },
 ];
 
@@ -85,10 +85,10 @@ export default function SupportPage() {
             <p className="text-gray-700 text-sm sm:text-base mb-2">
               For any questions, issues, or feedback about the Paltuu app, email us at{" "}
               <a
-                href="mailto:support@paltuu.pk"
+                href="mailto:contact@paltuu.pk"
                 className="text-primary font-medium hover:underline"
               >
-                support@paltuu.pk
+                contact@paltuu.pk
               </a>
               .
             </p>

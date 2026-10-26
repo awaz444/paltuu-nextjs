@@ -182,10 +182,10 @@ const TermsAndConditionsPage = () => {
                     <li>
                       <strong>Email:</strong>{" "}
                       <a
-                        href="mailto:support@paltuu.pk"
+                        href="mailto:contact@paltuu.pk"
                         className="text-primary hover:underline"
                       >
-                        support@paltuu.pk
+                        contact@paltuu.pk
                       </a>
                     </li>
                     <li>

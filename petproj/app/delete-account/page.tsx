@@ -150,10 +150,10 @@ export default function DeleteAccountPage() {
               If you are unable to access your account or the app, you can request deletion by
               emailing us. Send a message to{" "}
               <a
-                href="mailto:support@paltuu.pk?subject=Account%20Deletion%20Request"
+                href="mailto:contact@paltuu.pk?subject=Account%20Deletion%20Request"
                 className="text-primary font-medium hover:underline"
               >
-                support@paltuu.pk
+                contact@paltuu.pk
               </a>{" "}
               with the subject line <strong>"Account Deletion Request"</strong> and include:
             </p>

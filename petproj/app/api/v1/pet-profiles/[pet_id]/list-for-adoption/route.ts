@@ -61,6 +61,7 @@ export async function POST(
         }
 
         // ── Body params ───────────────────────────────────────────────────────
+        const body = await req.json().catch(() => ({}));
         const {
             listing_type  = "adoption",
             price         = 0,

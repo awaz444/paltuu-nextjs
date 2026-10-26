@@ -55,7 +55,18 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
     }, [value]);
 
     const emit = (nextCountry: CountryDial, nextNational: string) => {
-        const digits = nextNational.replace(/\D/g, "").slice(0, nextCountry.max);
+        let clean = nextNational.replace(/\D/g, "");
+        // When typing/pasting a Pakistani number, strip leading 0 (03XX -> 3XX)
+        // or a redundant leading 92 if pasted with country code
+        if (nextCountry.dial === "92") {
+            if (clean.startsWith("92") && clean.length > 10) {
+                clean = clean.slice(2);
+            }
+            if (clean.startsWith("0")) {
+                clean = clean.replace(/^0+/, "");
+            }
+        }
+        const digits = clean.slice(0, nextCountry.max);
         setCountry(nextCountry);
         setNational(digits);
         onChange?.(toE164(nextCountry, digits));

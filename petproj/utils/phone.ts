@@ -59,14 +59,21 @@ export function isE164(value: string): boolean {
 }
 
 /**
- * Best-effort normalisation to E.164. Returns null only when the input can't
- * plausibly be a phone number.
+ * Best-effort normalisation to E.164. Returns null when the input cannot
+ * be parsed as a valid phone number.
  *
- *  "+923001234567"      -> "+923001234567"   (app / new web forms: pass-through)
- *  "+971 50 123 4567"   -> "+971501234567"
+ *  "+923001234567"      -> "+923001234567"   (valid pass-through)
+ *  "03001234567"        -> "+923001234567"   (11-digit PK national starting with 03)
+ *  "3001234567"         -> "+923001234567"   (10-digit PK national starting with 3)
+ *  "+92 300 1234567"    -> "+923001234567"
  *  "00923001234567"     -> "+923001234567"
- *  "03001234567"        -> "+923001234567"   (legacy PK national, 11 digits)
- *  "3001234567"         -> "+923001234567"   (legacy PK national, 10 digits)
+ *  "+9203001234567"     -> "+923001234567"   (11 digits after +92 starting with 03: recovers by dropping stray 0)
+ *  "+920327390998"      -> null              (10 digits after +92 starting with 03: 1 digit short!)
+ *  "+92327390998"       -> null              (9 digits after +92: 1 digit short!)
+ *  "0327390998"         -> null              (10 digits: 1 digit short!)
+ *  "327390998"          -> null              (9 digits: 1 digit short!)
+ *  "+922885555558"      -> null              (invalid Pakistani mobile prefix)
+ *  "+971 50 123 4567"   -> "+971501234567"   (valid international E.164)
  *  "gibberish"          -> null
  */
 export function normalizePhone(raw: string | null | undefined): string | null {
@@ -80,17 +87,65 @@ export function normalizePhone(raw: string | null | undefined): string | null {
 
     if (s.startsWith("+")) {
         const digits = s.slice(1).replace(/\D/g, "");
-        return digits.length >= 7 && digits.length <= 15 && digits[0] !== "0"
-            ? `+${digits}`
-            : null;
+        if (digits.length < 7 || digits.length > 15 || digits[0] === "0") return null;
+
+        // Specific handling for Pakistan (+92)
+        if (digits.startsWith("92")) {
+            let national = digits.slice(2);
+            // If user typed +9203XXXXXXXXX (11 digits national starting with 03), recover by dropping stray 0
+            if (national.length === 11 && national.startsWith("03")) {
+                national = national.slice(1);
+            }
+            // Valid Pakistani mobile must be exactly 10 digits starting with 3
+            if (national.length === 10 && national.startsWith("3")) {
+                return `+92${national}`;
+            }
+            // Any other Pakistani number shape (e.g. starting with +920, short, or wrong prefix) is invalid
+            return null;
+        }
+
+        // Other countries: national portion must not start with 0
+        for (const dial of KNOWN_DIALS) {
+            if (digits.startsWith(dial)) {
+                const national = digits.slice(dial.length);
+                if (national.startsWith("0")) return null;
+                const country = COUNTRY_DIALS.find(
+                    (c) => c.dial === dial && national.length >= c.min && national.length <= c.max
+                );
+                if (country) return `+${digits}`;
+            }
+        }
+        return `+${digits}`;
     }
 
     const digits = s.replace(/\D/g, "");
-    // Legacy Pakistani national formats.
-    if (digits.length === 11 && digits.startsWith("0")) return `+92${digits.slice(1)}`;
-    if (digits.length === 10 && digits.startsWith("3")) return `+92${digits}`;
-    // Last resort: assume the country code is already baked in.
-    if (digits.length >= 8 && digits.length <= 15 && digits[0] !== "0") return `+${digits}`;
+    // Pakistani national numbers
+    if (digits.length === 11 && digits.startsWith("03")) {
+        return `+92${digits.slice(1)}`;
+    }
+    if (digits.length === 10 && digits.startsWith("3")) {
+        return `+92${digits}`;
+    }
+    if (digits.length === 12 && digits.startsWith("923")) {
+        return `+${digits}`;
+    }
+    if (digits.length === 13 && digits.startsWith("9203")) {
+        return `+92${digits.slice(3)}`;
+    }
+
+    // Bare numbers matching known international dial codes (excluding Pakistan)
+    for (const dial of KNOWN_DIALS.filter((d) => d !== "92")) {
+        if (digits.startsWith(dial)) {
+            const national = digits.slice(dial.length);
+            if (!national.startsWith("0")) {
+                const country = COUNTRY_DIALS.find(
+                    (c) => c.dial === dial && national.length >= c.min && national.length <= c.max
+                );
+                if (country) return `+${digits}`;
+            }
+        }
+    }
+
     return null;
 }
 
@@ -127,19 +182,29 @@ export function toE164(country: CountryDial, national: string): string {
 
 /** Whether the national number has a plausible length for the chosen country. */
 export function isNationalNumberComplete(country: CountryDial, national: string): boolean {
-    const len = String(national ?? "").replace(/\D/g, "").length;
-    return len >= country.min && len <= country.max;
+    const digits = String(national ?? "").replace(/\D/g, "");
+    if (country.dial === "92") {
+        return digits.length === 10 && digits.startsWith("3");
+    }
+    return digits.length >= country.min && digits.length <= country.max && !digits.startsWith("0");
 }
 
 /**
  * Form-level check: a well-formed E.164 string whose national part has a
- * plausible length for the detected country. Use this to validate the value
- * emitted by <PhoneNumberInput/>.
+ * valid length and prefix for the detected country.
  */
 export function isValidPhone(value: string): boolean {
-    if (!isE164(value)) return false;
-    const { country, national } = parseE164(value);
-    return isNationalNumberComplete(country, national);
+    const normalized = normalizePhone(value);
+    if (!normalized || !isE164(normalized)) return false;
+    const digits = normalized.slice(1);
+    for (const dial of KNOWN_DIALS) {
+        if (digits.startsWith(dial)) {
+            const national = digits.slice(dial.length);
+            const country = COUNTRY_DIALS.find((c) => c.dial === dial);
+            if (country) return isNationalNumberComplete(country, national);
+        }
+    }
+    return false;
 }
 
 /** Fallback flag for a number whose country we can't identify. */

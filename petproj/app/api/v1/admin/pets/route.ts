@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/utils/authServer";
+import { normalizePhone, isValidPhone } from "@/utils/phone";
 
 /**
  * @swagger
@@ -51,6 +52,22 @@ export async function PATCH(req: NextRequest) {
         
         if (!pet_id) return NextResponse.json({ error: "Pet ID required" }, { status: 400 });
 
+        let normalizedContactNumber: string | null | undefined = undefined;
+        if (contact_number !== undefined) {
+            if (contact_number === null || String(contact_number).trim() === "") {
+                normalizedContactNumber = null;
+            } else {
+                const normalized = normalizePhone(contact_number);
+                if (!normalized || !isValidPhone(normalized)) {
+                    return NextResponse.json(
+                        { error: "Invalid contact number. Pakistani mobile numbers must be 11 digits starting with 03 (e.g. 0300 1234567) or +92 3XX XXXXXXX." },
+                        { status: 400 }
+                    );
+                }
+                normalizedContactNumber = normalized;
+            }
+        }
+
         const client = await db.connect();
         try {
             await client.query('BEGIN');
@@ -68,7 +85,7 @@ export async function PATCH(req: NextRequest) {
                     approved = COALESCE($10, approved)
                 WHERE pet_id = $11
                 RETURNING *
-            `, [pet_name, pet_type, pet_breed, description, adoption_status, price, age_months, contact_number, listing_type, approved, pet_id]);
+            `, [pet_name, pet_type, pet_breed, description, adoption_status, price, age_months, normalizedContactNumber, listing_type, approved, pet_id]);
 
             if (result.rowCount === 0) {
                 await client.query('ROLLBACK');

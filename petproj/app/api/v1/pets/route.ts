@@ -4,7 +4,7 @@ import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
 import { validate } from "@/utils/validation";
 import { withRetry } from "@/utils/retry";
 import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
-import { normalizePhone } from "@/utils/phone";
+import { normalizePhone, isValidPhone } from "@/utils/phone";
 
 /**
  * @swagger
@@ -164,14 +164,17 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ errors: ["Listing contains language that isn't allowed"] }, { status: 400 });
         }
 
-        // Store the phone number as a canonical E.164 string. Both the mobile app
-        // ("+92" + 10 digits) and the web forms (country-code dropdown -> full
-        // E.164) already send this shape, so this is a no-op pass-through for
-        // them; legacy / bare input is coerced, and anything unparseable is kept
-        // verbatim rather than rejected so existing clients never break.
-        const normalizedContactNumber = contact_number
-            ? (normalizePhone(contact_number) ?? String(contact_number).trim().slice(0, 255))
-            : null;
+        // Canonicalise contact_number to E.164. Rejects malformed or short numbers.
+        let normalizedContactNumber: string | null = null;
+        if (contact_number && String(contact_number).trim()) {
+            normalizedContactNumber = normalizePhone(contact_number);
+            if (!normalizedContactNumber || !isValidPhone(normalizedContactNumber)) {
+                return NextResponse.json(
+                    { errors: ["Invalid contact number. Pakistani mobile numbers must be 11 digits starting with 03 (e.g. 0300 1234567) or +92 3XX XXXXXXX."] },
+                    { status: 400 }
+                );
+            }
+        }
 
         // Auto-assign owner_id (Security fix)
         const result = await withRetry(

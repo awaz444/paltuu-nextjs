@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
 import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 import { validate } from "@/utils/validation";
-import { normalizePhone } from "@/utils/phone";
+import { normalizePhone, isValidPhone } from "@/utils/phone";
 
 /**
  * @swagger
@@ -109,11 +109,23 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ errors: validation.errors }, { status: 400 });
         }
 
-        // Canonicalise to E.164 when a number is provided; leave null/undefined
-        // alone so the COALESCE keeps the existing value. Non-rejecting.
-        const contactNumberToStore = contact_number
-            ? (normalizePhone(contact_number) ?? String(contact_number).trim().slice(0, 255))
-            : contact_number;
+        // Canonicalise to E.164 when a number is provided; leave undefined
+        // alone so the COALESCE keeps the existing value. Rejects invalid numbers.
+        let contactNumberToStore: string | null | undefined = undefined;
+        if (contact_number !== undefined) {
+            if (contact_number === null || String(contact_number).trim() === "") {
+                contactNumberToStore = null;
+            } else {
+                const normalized = normalizePhone(contact_number);
+                if (!normalized || !isValidPhone(normalized)) {
+                    return NextResponse.json(
+                        { errors: ["Invalid contact number. Pakistani mobile numbers must be 11 digits starting with 03 (e.g. 0300 1234567) or +92 3XX XXXXXXX."] },
+                        { status: 400 }
+                    );
+                }
+                contactNumberToStore = normalized;
+            }
+        }
 
         const client = await db.connect();
         try {

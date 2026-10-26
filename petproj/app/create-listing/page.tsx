@@ -226,7 +226,7 @@ export default function CreatePetListing() {
         if (!contactNumber) {
             errors.contactNumber = "Contact number is required";
         } else if (!isValidPhone(contactNumber)) {
-            errors.contactNumber = "Enter a valid phone number for the selected country";
+            errors.contactNumber = "Enter a valid mobile number (e.g. 03XX XXXXXXX or +92 3XX XXXXXXX)";
         }
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
@@ -244,7 +244,7 @@ export default function CreatePetListing() {
         if (!contactNumber) {
             errors.contactNumber = "Contact number is required";
         } else if (!isValidPhone(contactNumber)) {
-            errors.contactNumber = "Enter a valid phone number for the selected country";
+            errors.contactNumber = "Enter a valid mobile number (e.g. 03XX XXXXXXX or +92 3XX XXXXXXX)";
         }
         if ((age === null || age === 0) && (months === null || months === 0)) {
             errors.age = "Either age or months must be filled";

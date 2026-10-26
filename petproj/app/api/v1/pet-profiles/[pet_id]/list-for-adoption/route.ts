@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import { normalizePhone, isValidPhone } from "@/utils/phone";
 
 export const dynamic = "force-dynamic";
 
@@ -60,13 +61,23 @@ export async function POST(
         }
 
         // ── Body params ───────────────────────────────────────────────────────
-        const body = await req.json().catch(() => ({}));
         const {
             listing_type  = "adoption",
             price         = 0,
             contact_number,
             description,
         } = body;
+
+        let normalizedContactNumber: string | null = null;
+        if (contact_number && String(contact_number).trim()) {
+            normalizedContactNumber = normalizePhone(contact_number);
+            if (!normalizedContactNumber || !isValidPhone(normalizedContactNumber)) {
+                return NextResponse.json(
+                    { error: "Invalid contact number. Pakistani mobile numbers must be 11 digits starting with 03 (e.g. 0300 1234567) or +92 3XX XXXXXXX." },
+                    { status: 400 }
+                );
+            }
+        }
 
         let cityId = body.city_id || profile.owner_city_id;
         if (!cityId) {
@@ -123,7 +134,7 @@ export async function POST(
                     : null,
                     listing_type,
                     listing_type === "rescue" ? null : parseFloat(price) || 0,
-                    contact_number || null,
+                    normalizedContactNumber || null,
                 ]
             );
 

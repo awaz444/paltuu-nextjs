@@ -13,10 +13,10 @@ export default function CommunityStrip({ className = "" }: { className?: string 
             {COMMUNITY_SPECIES.slice(0, 3).map((s) => (
                 <Link
                     key={s.slug}
-                    href={`/community/${s.slug}`}
+                    href={`/${s.slug}`}
                     className="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary hover:bg-primary hover:text-white"
                 >
-                    {s.name} community
+                    {s.name}
                 </Link>
             ))}
         </div>

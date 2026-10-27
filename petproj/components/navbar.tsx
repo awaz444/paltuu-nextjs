@@ -29,6 +29,8 @@ interface OverrideDropdownItem {
   isAction?: boolean;
 }
 
+const FEED_SEGMENTS = ["feed", "p", "cats", "dogs", "birds", "rabbits", "fish", "reptiles"];
+
 const Navbar = ({
   linksOverride,
   dropdownOverride,
@@ -323,8 +325,8 @@ const Navbar = ({
 
   // Navigation Links
   const defaultLinks = [
-    { name: "Pets", href: "browse-pets" },
-    { name: "Community", href: "community" },
+    { name: "Adopt", href: "browse-pets" },
+    { name: "Feed", href: "feed" },
     // { name: "Bazaar", href: "bazaar" }, // Phase 1: Bazaar paused
     { name: "Pet Care", href: "pet-care" },
     { name: "Lost & Found", href: "lost-and-found" },
@@ -333,7 +335,11 @@ const Navbar = ({
   const links = linksOverride || defaultLinks;
 
 
-  const activeLink = useMemo(() => pathname.split("/")[1] ?? "", [pathname]);
+  const activeLink = useMemo(() => {
+    const segment = pathname.split("/")[1] ?? "";
+    // Forum and post pages live at the top level (/cats, /cats/persian, /p/123) but belong to the feed.
+    return FEED_SEGMENTS.includes(segment) ? "feed" : segment;
+  }, [pathname]);
 
   const dropdownWidth = `${Math.max(
     displayName.length,

@@ -16,7 +16,7 @@ export default async function BreedCommunityPanel({ petId }: { petId: number }) 
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h2 id="breed-community-heading" className="text-lg font-bold text-gray-900">
-                        {community.name} community
+                        {community.name} on Paltuu
                     </h2>
                     <p className="mt-1 text-sm text-gray-600">
                         {community.postCount > 0
@@ -28,7 +28,7 @@ export default async function BreedCommunityPanel({ petId }: { petId: number }) 
                     href={community.href}
                     className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
                 >
-                    Visit community →
+                    Open forum →
                 </Link>
             </div>
 

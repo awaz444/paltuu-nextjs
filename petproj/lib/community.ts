@@ -106,7 +106,7 @@ const PLACEMENT_CTES = `
     )`;
 
 const POST_COLUMNS = `
-    sp.post_id, sp.content, sp.post_type, sp.like_count, sp.comment_count, sp.created_at, sp.updated_at,
+    sp.post_id, sp.content, sp.post_type, sp.like_count, sp.comment_count, sp.repost_count, sp.created_at, sp.updated_at,
     u.name AS author_name, u.social_username AS author_username,
     u.profile_image_url AS author_avatar, COALESCE(u.verified, false) AS author_verified,
     (SELECT json_agg(json_build_object('type', m.media_type, 'url', m.url, 'thumb', m.thumbnail_url)
@@ -127,6 +127,7 @@ export type CommunityPost = {
     postType: string;
     likeCount: number;
     commentCount: number;
+    repostCount: number;
     createdAt: string;
     updatedAt: string;
     author: { name: string; username: string | null; avatar: string | null; verified: boolean };
@@ -166,6 +167,7 @@ function toPost(r: any): CommunityPost {
         postType: r.post_type,
         likeCount: r.like_count ?? 0,
         commentCount: r.comment_count ?? 0,
+        repostCount: r.repost_count ?? 0,
         createdAt: new Date(r.created_at).toISOString(),
         updatedAt: new Date(r.updated_at ?? r.created_at).toISOString(),
         author: {
@@ -393,7 +395,7 @@ export function primaryPlace(post: CommunityPost): PostPlace | null {
 }
 
 export function placeHref(place: PostPlace): string {
-    return place.breedSlug ? `/community/${place.species}/${place.breedSlug}` : `/community/${place.species}`;
+    return place.breedSlug ? `/${place.species}/${place.breedSlug}` : `/${place.species}`;
 }
 
 export function placeLabel(place: PostPlace): string {
@@ -439,10 +441,10 @@ function slugify(s: string): string {
         .replace(/-+$/, "");
 }
 
-/** /community/p/123-title-words. The id is what resolves the post; the words are for people and search. */
+/** /p/123-title-words. The id is what resolves the post; the words are for people and search. */
 export function postPath(post: CommunityPost): string {
     const words = slugify(postTitle(post));
-    return `/community/p/${post.id}${words ? `-${words}` : ""}`;
+    return `/p/${post.id}${words ? `-${words}` : ""}`;
 }
 
 export function parsePostParam(param: string): number | null {
@@ -494,7 +496,7 @@ export async function getCommunityForListing(petId: number): Promise<PetCommunit
             if (found?.kind === "community") {
                 const posts = await listCommunityPosts({ breedId: found.community.breedId, limit: 3 });
                 return {
-                    href: `/community/${species.slug}/${found.community.slug}`,
+                    href: `/${species.slug}/${found.community.slug}`,
                     name: found.community.communityName,
                     speciesName: species.name,
                     postCount: found.community.postCount,
@@ -505,7 +507,7 @@ export async function getCommunityForListing(petId: number): Promise<PetCommunit
 
         const [counts, posts] = await Promise.all([getSpeciesCounts(), listCommunityPosts({ species: species.slug, limit: 3 })]);
         return {
-            href: `/community/${species.slug}`,
+            href: `/${species.slug}`,
             name: species.name,
             speciesName: species.name,
             postCount: counts[species.slug] ?? 0,
@@ -523,16 +525,16 @@ export type CommunitySitemapEntry = { path: string; lastModified: Date };
 
 /** Only pages that pass the thin-content rules above. */
 export async function getCommunitySitemapEntries(): Promise<CommunitySitemapEntry[]> {
-    const entries: CommunitySitemapEntry[] = [{ path: "/community", lastModified: new Date() }];
+    const entries: CommunitySitemapEntry[] = [{ path: "/feed", lastModified: new Date() }];
 
     const counts = await getSpeciesCounts();
     for (const species of COMMUNITY_SPECIES) {
         if ((counts[species.slug] ?? 0) >= MIN_POSTS_TO_INDEX) {
-            entries.push({ path: `/community/${species.slug}`, lastModified: new Date() });
+            entries.push({ path: `/${species.slug}`, lastModified: new Date() });
         }
         for (const breed of await getBreedCommunities(species)) {
             if (breed.postCount >= MIN_POSTS_TO_INDEX) {
-                entries.push({ path: `/community/${species.slug}/${breed.slug}`, lastModified: new Date() });
+                entries.push({ path: `/${species.slug}/${breed.slug}`, lastModified: new Date() });
             }
         }
     }

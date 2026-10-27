@@ -64,8 +64,7 @@ const PUBLIC_POST = `
     AND (LENGTH(TRIM(COALESCE(sp.content, ''))) > 0
          OR EXISTS (SELECT 1 FROM social_post_media m0 WHERE m0.post_id = sp.post_id AND m0.url IS NOT NULL))
     AND COALESCE(u.is_private, false) = false
-    AND COALESCE(u.is_suspended, false) = false
-    AND NOT EXISTS (SELECT 1 FROM bots.persona_registry pr WHERE pr.user_id = u.user_id)`;
+    AND COALESCE(u.is_suspended, false) = false`;
 
 const PUBLIC_COMMENT = `
     c.is_deleted = false
@@ -73,8 +72,7 @@ const PUBLIC_COMMENT = `
     AND COALESCE(c.moderation_state, 'none') = 'none'
     AND LENGTH(TRIM(COALESCE(c.content, ''))) > 0
     AND COALESCE(u.is_private, false) = false
-    AND COALESCE(u.is_suspended, false) = false
-    AND NOT EXISTS (SELECT 1 FROM bots.persona_registry pr WHERE pr.user_id = u.user_id)`;
+    AND COALESCE(u.is_suspended, false) = false`;
 
 const SPECIES_VALUES = COMMUNITY_SPECIES.map((s) => `('${s.slug}', '${s.key}')`).join(", ");
 

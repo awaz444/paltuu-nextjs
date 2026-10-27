@@ -27,6 +27,8 @@ export const metadata: Metadata = {
         description: "Adopt or foster rescue animals from verified shelters across Pakistan.",
     },
     alternates: { canonical: "https://www.paltuu.pk/rescue-pets" },
+    // Rescue pets is on hold (PALTU-73): the pages still work but are unlinked and kept out of search.
+    robots: { index: false, follow: false },
 };
 
 export default function RescuePetsLayout({

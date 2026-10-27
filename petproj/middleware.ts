@@ -85,7 +85,7 @@ export async function middleware(request: NextRequest) {
     const sessionToken = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
     const custom = request.cookies.get('token')?.value;
     const signedIn = !!sessionToken || (custom ? !!(await verifyCustomToken(custom)) : false);
-    return signedIn ? NextResponse.rewrite(new URL('/feed', request.url)) : NextResponse.next();
+    return signedIn ? NextResponse.rewrite(new URL('/home', request.url)) : NextResponse.next();
   }
 
   // Define public paths that don't require authentication
@@ -154,7 +154,7 @@ export async function middleware(request: NextRequest) {
       case 'admin':
         return '/admin-panel';
       default:
-        return '/feed';
+        return '/home';
     }
   };
 
@@ -167,7 +167,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(getRoleRedirect(customAuthPayload.role), request.url));
     }
 
-    return NextResponse.redirect(new URL('/feed', request.url));
+    return NextResponse.redirect(new URL('/home', request.url));
   }
 
   if (isAdminPath) {

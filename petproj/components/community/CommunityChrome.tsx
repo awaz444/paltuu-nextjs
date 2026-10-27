@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 import AppStoreBadges from "@/components/home/AppStoreBadges";
 import { COMMUNITY_SPECIES, type BreedCommunity, type CommunityPost } from "@/lib/community";
+import { VETS_AT_HOME } from "@/lib/homeContent";
 import FeedPost from "./FeedPost";
 import { speciesEmoji } from "./forumMeta";
 
@@ -33,13 +34,11 @@ export function ForumHeader({
     emoji,
     name,
     parent,
-    postCount,
     intro,
 }: {
     emoji: string;
     name: string;
     parent?: { name: string; href: string };
-    postCount: number;
     intro: string;
 }) {
     return (
@@ -55,15 +54,11 @@ export function ForumHeader({
                     </span>
                     <div className="min-w-0 pb-1">
                         <h1 className="truncate text-2xl font-extrabold text-gray-900 md:text-3xl">{name}</h1>
-                        <p className="text-sm text-gray-500">
-                            {parent && (
-                                <>
-                                    <Link href={parent.href} className="font-medium text-gray-700 hover:underline">{parent.name}</Link>
-                                    <span className="mx-1.5" aria-hidden>•</span>
-                                </>
-                            )}
-                            {postCount} {postCount === 1 ? "post" : "posts"}
-                        </p>
+                        {parent && (
+                            <p className="text-sm text-gray-500">
+                                <Link href={parent.href} className="font-medium text-gray-700 hover:underline">{parent.name}</Link>
+                            </p>
+                        )}
                     </div>
                 </div>
                 <p className="mb-4 line-clamp-2 text-sm text-gray-600 lg:hidden">{intro}</p>
@@ -76,10 +71,9 @@ type NavProps = {
     activeSpecies?: string;
     activeBreed?: string;
     breeds?: BreedCommunity[];
-    speciesCounts?: Record<string, number>;
 };
 
-/** Mobile: scrolling chips above the feed. */
+/** Mobile: scrolling chips above the posts. */
 function ForumChips({ activeSpecies, activeBreed, breeds = [] }: NavProps) {
     const chip = (active: boolean) =>
         `shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium ${
@@ -88,7 +82,7 @@ function ForumChips({ activeSpecies, activeBreed, breeds = [] }: NavProps) {
     return (
         <div className="min-w-0 space-y-2 lg:hidden">
             <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-                <Link href="/feed" className={chip(!activeSpecies)}>All</Link>
+                <Link href="/home" className={chip(!activeSpecies)}>Home</Link>
                 {COMMUNITY_SPECIES.map((s) => (
                     <Link key={s.slug} href={`/${s.slug}`} className={chip(s.slug === activeSpecies && !activeBreed)}>
                         {speciesEmoji(s.slug)} {s.name}
@@ -108,31 +102,29 @@ function ForumChips({ activeSpecies, activeBreed, breeds = [] }: NavProps) {
     );
 }
 
-/** Desktop: forum list on the left, breeds nested under the open species. */
-function ForumList({ activeSpecies, activeBreed, breeds = [], speciesCounts = {} }: NavProps) {
+/** Desktop left column: the forums, with breeds nested under the open species. */
+function ForumList({ activeSpecies, activeBreed, breeds = [] }: NavProps) {
     const item = (active: boolean) =>
         `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
             active ? "bg-gray-200 font-semibold text-gray-900" : "text-gray-700 hover:bg-gray-100"
         }`;
     return (
-        <nav aria-label="Forums" className="sticky top-24 space-y-1">
-            <Link href="/feed" className={item(!activeSpecies)}>
-                <Home size={18} /> Feed
+        <nav aria-label="Forums" className="sticky top-4 max-h-[calc(100vh-2rem)] space-y-1 overflow-y-auto pb-4">
+            <Link href="/home" className={item(!activeSpecies)}>
+                <Home size={18} /> Home
             </Link>
             <p className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-gray-400">Pets</p>
             {COMMUNITY_SPECIES.map((s) => (
                 <div key={s.slug}>
                     <Link href={`/${s.slug}`} className={item(s.slug === activeSpecies && !activeBreed)}>
                         <span aria-hidden className="text-base">{speciesEmoji(s.slug)}</span>
-                        <span className="flex-1">{s.name}</span>
-                        {speciesCounts[s.slug] ? <span className="text-xs text-gray-400">{speciesCounts[s.slug]}</span> : null}
+                        {s.name}
                     </Link>
                     {s.slug === activeSpecies && breeds.length > 0 && (
                         <div className="ml-5 mt-1 space-y-0.5 border-l border-gray-200 pl-2">
                             {breeds.map((b) => (
                                 <Link key={b.slug} href={`/${s.slug}/${b.slug}`} className={item(b.slug === activeBreed)}>
-                                    <span className="flex-1 truncate">{b.communityName}</span>
-                                    {b.postCount > 0 && <span className="text-xs text-gray-400">{b.postCount}</span>}
+                                    <span className="truncate">{b.communityName}</span>
                                 </Link>
                             ))}
                         </div>
@@ -143,17 +135,21 @@ function ForumList({ activeSpecies, activeBreed, breeds = [], speciesCounts = {}
     );
 }
 
-/** Three columns on desktop (forums · feed · about), one column with chips on mobile. */
+/**
+ * Three columns on desktop: forums on the left, posts in the middle, the rest
+ * of Paltuu on the right. On mobile the forums become chips above the posts
+ * and the right column follows them.
+ */
 export function CommunityLayout({ nav, aside, children }: { nav: NavProps; aside: React.ReactNode; children: React.ReactNode }) {
     return (
         <div className="mx-auto max-w-7xl px-4 py-5 md:py-6">
-            <div className="flex flex-col gap-5 lg:flex-row lg:gap-6">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-6">
                 <ForumChips {...nav} />
-                <aside className="hidden w-56 shrink-0 lg:block">
+                <aside className="hidden w-56 shrink-0 self-stretch lg:block">
                     <ForumList {...nav} />
                 </aside>
                 <div className="min-w-0 flex-1 lg:max-w-2xl">{children}</div>
-                <aside className="hidden w-80 shrink-0 space-y-4 lg:block">{aside}</aside>
+                <aside className="w-full shrink-0 space-y-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:w-80 lg:overflow-y-auto lg:pb-4">{aside}</aside>
             </div>
         </div>
     );
@@ -178,36 +174,13 @@ export function Feed({ posts, showForum = true, empty }: { posts: CommunityPost[
     );
 }
 
-/** Right-hand "About" box, Reddit style. */
-export function AboutCard({
-    title,
-    intro,
-    stats,
-    topics = [],
-    children,
-}: {
-    title: string;
-    intro: string;
-    stats?: { label: string; value: string }[];
-    topics?: string[];
-    children?: React.ReactNode;
-}) {
+/** Short description of the forum you're in. */
+export function AboutCard({ title, intro, topics = [], children }: { title: string; intro: string; topics?: string[]; children?: React.ReactNode }) {
     return (
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
             <div className="px-4 py-3">
                 <h2 className="text-sm font-bold text-gray-900">{title}</h2>
                 <p className="mt-1.5 text-sm leading-relaxed text-gray-600">{intro}</p>
-                {stats && stats.length > 0 && (
-                    <dl className="mt-3 flex gap-6">
-                        {stats.map((s) => (
-                            <div key={s.label}>
-                                <dt className="sr-only">{s.label}</dt>
-                                <dd className="text-base font-bold text-gray-900">{s.value}</dd>
-                                <dd className="text-xs text-gray-500">{s.label}</dd>
-                            </div>
-                        ))}
-                    </dl>
-                )}
             </div>
             {topics.length > 0 && (
                 <div className="border-t border-gray-100 px-4 py-3">
@@ -224,16 +197,50 @@ export function AboutCard({
     );
 }
 
-/** Posting happens in the app; the web is read-only for now. */
-export function AppCta({ compact = false, forumName }: { compact?: boolean; forumName?: string }) {
+const FEATURES = [
+    { emoji: "🏡", title: "Adopt a pet", body: "Dogs, cats and more, listed by owners and shelters across Pakistan.", href: "/browse-pets" },
+    { emoji: "🩺", title: "Find a vet", body: "Vets and clinics near you in Karachi, Lahore, Islamabad and more.", href: "/pet-care" },
+    { emoji: "🚗", title: "Vets at Home", body: `A vet at your door in ${VETS_AT_HOME.city}. Book in the Paltuu app.`, href: VETS_AT_HOME.deepLink },
+    { emoji: "🔎", title: "Lost & Found", body: "Report a lost pet or help one find its way home.", href: "/lost-and-found" },
+    { emoji: "📖", title: "Pet care guides", body: "Food, health and care advice written for Pakistan.", href: "/blogs" },
+];
+
+/** The right column: everything else Paltuu does, as link cards. */
+export function FeatureCards() {
     return (
-        <div className={`rounded-2xl bg-primary text-white ${compact ? "p-4" : "p-5 md:p-6"}`}>
-            <h2 className={`font-bold ${compact ? "mb-1.5 text-sm" : "mb-2 text-lg"}`}>
-                {forumName ? `Post in ${forumName}` : "Join the conversation"}
+        <nav aria-label="More on Paltuu" className="space-y-2">
+            {FEATURES.map((f) => (
+                <Link
+                    key={f.title}
+                    href={f.href}
+                    className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-3.5 transition-colors hover:border-primary"
+                >
+                    <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xl">
+                        {f.emoji}
+                    </span>
+                    <span className="min-w-0">
+                        <span className="block text-sm font-bold text-gray-900">{f.title}</span>
+                        <span className="block text-xs leading-relaxed text-gray-500">{f.body}</span>
+                    </span>
+                </Link>
+            ))}
+        </nav>
+    );
+}
+
+/** Posting happens in the app; the web is read-only for now. */
+export function AppCta() {
+    return (
+        <div className="rounded-2xl border border-gray-200 bg-white p-4">
+            <h2 className="flex flex-wrap items-center gap-1.5 text-base font-bold text-gray-900">
+                Download the
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/paltuu%20bilkul%20tight.svg" alt="Paltuu" width={45} height={24} className="h-6 w-auto" />
+                app
             </h2>
-            <p className={`mb-3 text-white/90 ${compact ? "text-xs leading-relaxed" : "text-sm"}`}>
-                Share photos, ask other owners and reply to posts in the free Paltuu app. Tag your pet&apos;s profile and
-                your post shows up in its breed&apos;s forum.
+            <p className="mb-3 mt-1.5 text-xs leading-relaxed text-gray-600">
+                Share photos, ask other owners and reply to posts. Tag your pet&apos;s profile and your post shows up in
+                its breed&apos;s forum.
             </p>
             <AppStoreBadges />
         </div>

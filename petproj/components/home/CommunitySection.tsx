@@ -30,10 +30,10 @@ export default function CommunitySection({ posts }: { posts: CommunityPost[] }) 
 
                 <div className="flex flex-wrap items-center gap-2">
                     <Link
-                        href="/feed"
+                        href="/home"
                         className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
                     >
-                        Open the feed →
+                        See what owners are sharing →
                     </Link>
                     {COMMUNITY_SPECIES.slice(0, 3).map((s) => (
                         <Link

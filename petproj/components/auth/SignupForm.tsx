@@ -76,7 +76,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         try {
             setGoogleLoading(true);
             await signIn("google", {
-                callbackUrl: "/feed",
+                callbackUrl: "/home",
             });
         } catch (error) {
             console.error("Google login failed:", error);
@@ -90,7 +90,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         try {
             setAppleLoading(true);
             await signIn("apple", {
-                callbackUrl: "/feed",
+                callbackUrl: "/home",
             });
         } catch (error) {
             console.error("Apple login failed:", error);
@@ -223,7 +223,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                 return;
             }
 
-            router.push("/feed");
+            router.push("/home");
         } catch (error) {
             setGeneralError("An unexpected error occurred. Please try again.");
         } finally {

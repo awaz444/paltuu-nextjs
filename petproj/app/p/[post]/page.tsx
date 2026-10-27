@@ -122,13 +122,11 @@ export default async function PostPage({ params }: { params: { post: string } })
 
     const title = postTitle(post);
     const crumbs: Crumb[] = [
-        { name: "Home", href: "/" },
-        { name: "Feed", href: "/feed" },
+        { name: "Home", href: "/home" },
         ...(breedSpecies ? [{ name: breedSpecies.name, href: `/${breedSpecies.slug}` }] : []),
         ...(place ? [{ name: placeLabel(place), href: placeHref(place) }] : []),
         { name: title.length > 40 ? `${title.slice(0, 37)}…` : title },
     ];
-    const visibleComments = comments.reduce((n, c) => n + 1 + c.replies.length, 0);
     const body = postBody(post);
     // When the title is the post's own first line, show it as the heading; a made-up title ("Photo by …") stays for screen readers only.
     const titleFromText = Boolean(post.content) && body !== post.content;
@@ -215,7 +213,7 @@ export default async function PostPage({ params }: { params: { post: string } })
 
                     <section aria-labelledby="comments-heading" className="border-t border-gray-200">
                         <h2 id="comments-heading" className="px-4 pb-1 pt-3 text-sm font-semibold text-gray-700">
-                            {visibleComments > 0 ? `${visibleComments} ${visibleComments === 1 ? "reply" : "replies"}` : "Replies"}
+                            Replies
                         </h2>
                         {comments.length > 0 ? (
                             <ul className="divide-y divide-gray-100 pb-2">
@@ -230,7 +228,7 @@ export default async function PostPage({ params }: { params: { post: string } })
                 </article>
 
                 <div className="mt-6">
-                    <AppCta forumName={place ? placeLabel(place) : undefined} />
+                    <AppCta />
                 </div>
 
                 {related.length > 0 && (

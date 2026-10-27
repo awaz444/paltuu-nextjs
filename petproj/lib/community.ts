@@ -525,7 +525,7 @@ export type CommunitySitemapEntry = { path: string; lastModified: Date };
 
 /** Only pages that pass the thin-content rules above. */
 export async function getCommunitySitemapEntries(): Promise<CommunitySitemapEntry[]> {
-    const entries: CommunitySitemapEntry[] = [{ path: "/feed", lastModified: new Date() }];
+    const entries: CommunitySitemapEntry[] = [{ path: "/home", lastModified: new Date() }];
 
     const counts = await getSpeciesCounts();
     for (const species of COMMUNITY_SPECIES) {

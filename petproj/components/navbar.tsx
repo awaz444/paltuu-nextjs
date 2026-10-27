@@ -29,7 +29,7 @@ interface OverrideDropdownItem {
   isAction?: boolean;
 }
 
-const FEED_SEGMENTS = ["feed", "p", "cats", "dogs", "birds", "rabbits", "fish", "reptiles"];
+const HOME_SEGMENTS = ["home", "p", "cats", "dogs", "birds", "rabbits", "fish", "reptiles"];
 
 const Navbar = ({
   linksOverride,
@@ -325,8 +325,8 @@ const Navbar = ({
 
   // Navigation Links
   const defaultLinks = [
+    { name: "Home", href: "home" },
     { name: "Adopt", href: "browse-pets" },
-    { name: "Feed", href: "feed" },
     // { name: "Bazaar", href: "bazaar" }, // Phase 1: Bazaar paused
     { name: "Pet Care", href: "pet-care" },
     { name: "Lost & Found", href: "lost-and-found" },
@@ -337,8 +337,8 @@ const Navbar = ({
 
   const activeLink = useMemo(() => {
     const segment = pathname.split("/")[1] ?? "";
-    // Forum and post pages live at the top level (/cats, /cats/persian, /p/123) but belong to the feed.
-    return FEED_SEGMENTS.includes(segment) ? "feed" : segment;
+    // Forum and post pages live at the top level (/cats, /cats/persian, /p/123) but belong to Home.
+    return HOME_SEGMENTS.includes(segment) ? "home" : segment;
   }, [pathname]);
 
   const dropdownWidth = `${Math.max(

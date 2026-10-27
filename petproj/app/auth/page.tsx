@@ -20,7 +20,7 @@ function getRoleRedirect(role?: string | null) {
     case "admin":
       return "/admin-panel";
     default:
-      return "/feed";
+      return "/home";
   }
 }
 

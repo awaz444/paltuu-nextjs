@@ -29,7 +29,8 @@ const nextConfig = {
   async redirects() {
     return [
       // Community launched under /community, then moved to the top level the same day.
-      { source: '/community', destination: '/feed', permanent: true },
+      { source: '/community', destination: '/home', permanent: true },
+      { source: '/feed', destination: '/home', permanent: true },
       { source: '/community/p/:post', destination: '/p/:post', permanent: true },
       { source: '/community/:species/:breed', destination: '/:species/:breed', permanent: true },
       { source: '/community/:species', destination: '/:species', permanent: true },

@@ -7,7 +7,6 @@ import {
     findBreed,
     findSpecies,
     getBreedCommunities,
-    getSpeciesCounts,
     listCommunityPosts,
 } from "@/lib/community";
 import { breedGuide } from "@/lib/breedGuides";
@@ -16,6 +15,7 @@ import {
     AboutCard,
     AppCta,
     CommunityLayout,
+    FeatureCards,
     Feed,
     ForumHeader,
     JsonLd,
@@ -74,17 +74,15 @@ export default async function BreedForumPage({ params }: { params: Params }) {
     if (found.kind === "child") permanentRedirect(`/${species.slug}/${found.parentSlug}`);
     const community = found.community;
 
-    const [posts, breeds, counts] = await Promise.all([
+    const [posts, breeds] = await Promise.all([
         listCommunityPosts({ breedId: community.breedId }),
         getBreedCommunities(species),
-        getSpeciesCounts(),
     ]);
     const guide = breedGuide(species.slug, community.slug, community.name, species.name);
     const path = `/${species.slug}/${community.slug}`;
     const name = community.communityName;
     const crumbs: Crumb[] = [
-        { name: "Home", href: "/" },
-        { name: "Feed", href: "/feed" },
+        { name: "Home", href: "/home" },
         { name: species.name, href: `/${species.slug}` },
         { name },
     ];
@@ -99,25 +97,20 @@ export default async function BreedForumPage({ params }: { params: Params }) {
                 emoji={speciesEmoji(species.slug)}
                 name={name}
                 parent={{ name: species.name, href: `/${species.slug}` }}
-                postCount={community.postCount}
                 intro={guide.intro}
             />
 
             <CommunityLayout
-                nav={{ activeSpecies: species.slug, activeBreed: community.slug, breeds, speciesCounts: counts }}
+                nav={{ activeSpecies: species.slug, activeBreed: community.slug, breeds }}
                 aside={
                     <>
-                        <AboutCard
-                            title={`About ${name}`}
-                            intro={guide.intro}
-                            stats={[{ label: "Posts", value: String(community.postCount) }]}
-                            topics={guide.topics}
-                        >
+                        <AboutCard title={`About ${name}`} intro={guide.intro} topics={guide.topics}>
                             <Link href={`/adopt/${species.slug}`} className="text-sm font-semibold text-primary hover:underline">
                                 {species.name} for adoption →
                             </Link>
                         </AboutCard>
-                        <AppCta compact forumName={name} />
+                        <FeatureCards />
+                        <AppCta />
                     </>
                 }
             >
@@ -138,9 +131,6 @@ export default async function BreedForumPage({ params }: { params: Params }) {
                         .
                     </p>
                 )}
-                <div className="mt-6 lg:hidden">
-                    <AppCta forumName={name} />
-                </div>
             </CommunityLayout>
         </main>
     );

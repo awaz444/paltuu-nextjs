@@ -17,8 +17,8 @@ export function GET() {
 - [Browse pets](${SITE_URL}/browse-pets): every pet currently listed for adoption
 - [Adopt by species and city](${SITE_URL}/adopt): adoption landing pages for cats, dogs and other pets across Pakistani cities
 
-## Feed and forums
-- [Feed](${SITE_URL}/feed): public posts from pet owners on the Paltuu app. Forums are organised by species and then breed (for example /cats/persian)
+## Home and forums
+- [Home](${SITE_URL}/home): public posts from pet owners on the Paltuu app. Forums are organised by species and then breed (for example /cats/persian)
 ${communities}
 - Post pages live at ${SITE_URL}/p/{id}. Only public posts from public accounts are shown on the web.
 

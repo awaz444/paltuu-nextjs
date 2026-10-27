@@ -21,7 +21,6 @@ import {
     JsonLd,
     type Crumb,
 } from "@/components/community/CommunityChrome";
-import { speciesEmoji } from "@/components/community/forumMeta";
 
 export const revalidate = 600;
 // Breeds come from the database, so a breed added later still resolves on first visit.
@@ -94,7 +93,7 @@ export default async function BreedForumPage({ params }: { params: Params }) {
             <JsonLd data={breadcrumbJsonLd(crumbs, path)} />
 
             <ForumHeader
-                emoji={speciesEmoji(species.slug)}
+                speciesSlug={species.slug}
                 name={name}
                 parent={{ name: species.name, href: `/${species.slug}` }}
                 intro={guide.intro}

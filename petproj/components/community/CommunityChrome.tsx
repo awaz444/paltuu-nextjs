@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { Home } from "lucide-react";
 import AppStoreBadges from "@/components/home/AppStoreBadges";
 import { COMMUNITY_SPECIES, type BreedCommunity, type CommunityPost } from "@/lib/community";
 import { VETS_AT_HOME } from "@/lib/homeContent";
 import FeedPost from "./FeedPost";
 import MobileActions from "./MobileActions";
-import { speciesEmoji } from "./forumMeta";
+import ForumIcon from "./ForumIcon";
 
 export type Crumb = { name: string; href?: string };
 
@@ -32,26 +31,27 @@ export function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
 
 /** Forum banner: a short colour band, the forum's icon and name. Only on species and breed pages. */
 export function ForumHeader({
-    emoji,
+    speciesSlug,
     name,
     parent,
     intro,
 }: {
-    emoji: string;
+    speciesSlug: string;
     name: string;
     parent?: { name: string; href: string };
     intro: string;
 }) {
     return (
         <header className="border-b border-gray-200 bg-white">
-            <div className="hidden h-20 bg-primary md:block" />
+            {/* Starts 1rem up, behind the navbar, so the navbar's rounded corners sit on maroon instead of white. */}
+            <div className="hidden h-24 -mt-4 bg-primary md:block" />
             <div className="mx-auto max-w-7xl px-4">
-                <div className="flex items-center gap-3 pb-4 pt-4 md:items-end md:gap-4 md:pt-0">
+                <div className="flex items-center gap-3 pb-4 pt-4 md:items-end md:gap-4 md:pt-3">
                     <span
                         aria-hidden
-                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-2xl md:-mt-10 md:h-20 md:w-20 md:border-4 md:border-white md:text-4xl md:shadow-sm"
+                        className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-white text-2xl md:-mt-14 md:h-20 md:w-20 md:border-4 md:border-white md:text-4xl md:shadow-sm"
                     >
-                        {emoji}
+                        <ForumIcon speciesSlug={speciesSlug} size={80} />
                     </span>
                     <div className="min-w-0 pb-1">
                         <h1 className="truncate text-2xl font-extrabold text-gray-900 md:text-3xl">{name}</h1>
@@ -112,13 +112,17 @@ function ForumList({ activeSpecies, activeBreed, breeds = [] }: NavProps) {
     return (
         <nav aria-label="Forums" className="sticky top-4 max-h-[calc(100vh-2rem)] space-y-1 overflow-y-auto pb-4">
             <Link href="/home" className={item(!activeSpecies)}>
-                <Home size={18} /> Home
+                {/* Same home icon as the app's tab bar (paltuu-reactnative/assets/icons). */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={`/icons/social/home-${!activeSpecies ? "select" : "unselect"}.svg`} alt="" aria-hidden width={18} height={18} className="h-[18px] w-[18px]" /> Home
             </Link>
             <p className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-gray-400">Pets</p>
             {COMMUNITY_SPECIES.map((s) => (
                 <div key={s.slug}>
                     <Link href={`/${s.slug}`} className={item(s.slug === activeSpecies && !activeBreed)}>
-                        <span aria-hidden className="text-base">{speciesEmoji(s.slug)}</span>
+                        <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full text-base">
+                            <ForumIcon speciesSlug={s.slug} size={24} />
+                        </span>
                         {s.name}
                     </Link>
                     {s.slug === activeSpecies && breeds.length > 0 && (
@@ -237,7 +241,7 @@ export function AppCta() {
             <h2 className="flex flex-wrap items-center gap-1.5 text-base font-bold text-gray-900">
                 Download the
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/paltuu%20bilkul%20tight.svg" alt="Paltuu" width={45} height={24} className="h-6 w-auto" />
+                <img src="/paltuu%20bilkul%20tight.svg" alt="Paltuu" width={45} height={24} className="h-6 w-auto -translate-y-[3px]" />
                 app
             </h2>
             <p className="mb-3 mt-1.5 text-xs leading-relaxed text-gray-600">

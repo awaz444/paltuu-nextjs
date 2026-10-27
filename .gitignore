@@ -46,3 +46,6 @@ seo+geo/
 *.tsbuildinfo
 node_modules/
 .cursor/plans
+
+# app/llms.txt is a route folder, not a text file
+!petproj/app/llms.txt/

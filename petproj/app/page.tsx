@@ -17,6 +17,8 @@ import HomepageFAQ from "@/components/HomepageFAQ";
 import AppPromoBanner from "@/components/AppPromoBanner";
 import { getAllBlogsMetadata } from "@/lib/mdx";
 import { getRecentPets } from "@/lib/recentPets";
+import { listCommunityPosts } from "@/lib/community";
+import CommunitySection from "@/components/home/CommunitySection";
 import { SITE_URL } from "@/lib/site";
 
 /**
@@ -117,7 +119,10 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const latestPosts = getAllBlogsMetadata().slice(0, 3);
-  const recentPets = await getRecentPets(3);
+  const [recentPets, communityPosts] = await Promise.all([
+    getRecentPets(3),
+    listCommunityPosts({ limit: 3, requireMedia: true }),
+  ]);
 
   return (
     <main className="overflow-hidden bg-white">
@@ -134,6 +139,7 @@ export default async function HomePage() {
         <PlatformPillars />                       {/* white   */}
         <AdoptionPathsSection />                  {/* gray-50 */}
         <RecentPetsSection pets={recentPets} />   {/* primary */}
+        <CommunitySection posts={communityPosts} /> {/* gray-50 */}
         <VetDirectorySection />                   {/* white   */}
         <VetsAtHomeSection />                     {/* primary */}
         <ImpactStats />                           {/* white   */}

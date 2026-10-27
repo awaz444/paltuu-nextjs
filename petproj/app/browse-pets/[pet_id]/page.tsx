@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PetDetailsClient from "./PetDetailsClient";
 import PetPageExtras from "./PetPageExtras";
+import BreedCommunityPanel from "@/components/community/BreedCommunityPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -136,7 +137,12 @@ export default async function PetPage({
             <PetDetailsClient
                 params={params}
                 initialPet={pet}
-                extras={<PetPageExtras listingType={pet.listing_type} />}
+                extras={
+                    <>
+                        <BreedCommunityPanel petId={Number(params.pet_id)} />
+                        <PetPageExtras listingType={pet.listing_type} />
+                    </>
+                }
             />
         </>
     );

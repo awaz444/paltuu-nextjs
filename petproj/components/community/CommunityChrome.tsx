@@ -4,6 +4,7 @@ import AppStoreBadges from "@/components/home/AppStoreBadges";
 import { COMMUNITY_SPECIES, type BreedCommunity, type CommunityPost } from "@/lib/community";
 import { VETS_AT_HOME } from "@/lib/homeContent";
 import FeedPost from "./FeedPost";
+import MobileTabBar from "./MobileTabBar";
 import { speciesEmoji } from "./forumMeta";
 
 export type Crumb = { name: string; href?: string };
@@ -151,6 +152,7 @@ export function CommunityLayout({ nav, aside, children }: { nav: NavProps; aside
                 <div className="min-w-0 flex-1 lg:max-w-2xl">{children}</div>
                 <aside className="w-full shrink-0 space-y-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:w-80 lg:overflow-y-auto lg:pb-4">{aside}</aside>
             </div>
+            <MobileTabBar />
         </div>
     );
 }

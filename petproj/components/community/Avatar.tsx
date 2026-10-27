@@ -32,7 +32,7 @@ export default function Avatar({ src, name, size = 36 }: { src: string | null; n
         <span
             aria-hidden
             style={{ ...style, fontSize: Math.round(size * 0.42) }}
-            className="flex shrink-0 items-center justify-center rounded-full bg-primary/15 font-semibold text-primary"
+            className="flex shrink-0 items-center justify-center rounded-full bg-gray-200 font-semibold text-gray-700"
         >
             {name.trim().charAt(0).toUpperCase() || "P"}
         </span>

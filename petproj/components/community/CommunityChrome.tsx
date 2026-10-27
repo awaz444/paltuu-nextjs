@@ -237,7 +237,7 @@ export function AppCta() {
             <h2 className="flex flex-wrap items-center gap-1.5 text-base font-bold text-gray-900">
                 Download the
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/paltuu%20bilkul%20tight.svg" alt="Paltuu" width={45} height={24} className="h-6 w-auto" />
+                <img src="/paltuu%20bilkul%20tight.svg" alt="Paltuu" width={45} height={24} className="h-6 w-auto -translate-y-[3px]" />
                 app
             </h2>
             <p className="mb-3 mt-1.5 text-xs leading-relaxed text-gray-600">

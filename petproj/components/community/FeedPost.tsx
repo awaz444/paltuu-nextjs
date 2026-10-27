@@ -48,62 +48,84 @@ export default function FeedPost({ post, showForum = true }: { post: CommunityPo
         <article className="relative px-4 py-3 transition-colors hover:bg-gray-50">
             <Link href={postPath(post)} className="absolute inset-0" aria-label={title} />
 
-            <div className="flex min-w-0 items-center gap-2 text-xs text-gray-500">
-                {place ? (
-                    <>
-                        <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm">
-                            {speciesEmoji(findSpecies(place.species)?.slug)}
-                        </span>
-                        <Link href={placeHref(place)} className="relative z-10 truncate font-semibold text-gray-900 hover:underline">
-                            {placeLabel(place)}
-                        </Link>
-                        <span aria-hidden>•</span>
-                        <span className="truncate">{post.author.name}</span>
-                    </>
-                ) : (
-                    <>
-                        <Avatar src={post.author.avatar} name={post.author.name} size={24} />
-                        <span className="truncate font-semibold text-gray-900">{post.author.name}</span>
-                    </>
-                )}
-                <span aria-hidden>•</span>
-                <time dateTime={post.createdAt} className="shrink-0">{shortAge(post.createdAt)}</time>
-            </div>
-
-            {titleFromText && <h3 className="mt-1.5 text-lg font-semibold leading-snug text-gray-900">{title}</h3>}
-            {(titleFromText ? body : post.content) && (
-                <p className="mt-1 line-clamp-3 whitespace-pre-line break-words text-sm leading-relaxed text-gray-700">
-                    {titleFromText ? body : post.content}
-                </p>
-            )}
-
-            {cover && (
-                <div className="relative mt-2.5 overflow-hidden rounded-xl border border-gray-200 bg-gray-900">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={cover} alt={title} className="mx-auto block max-h-[520px] w-full object-contain" loading="lazy" />
-                    {first?.type === "video" && (
-                        <span className="absolute inset-0 flex items-center justify-center">
-                            <span className="rounded-full bg-black/60 p-4 text-white">
-                                <Play size={22} fill="currentColor" />
-                            </span>
-                        </span>
-                    )}
-                    {post.media.length > 1 && (
-                        <span className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">
-                            1/{post.media.length}
-                        </span>
-                    )}
+            <div className="flex gap-3">
+                {/* Phones: thread layout, author avatar in its own column. */}
+                <div className="shrink-0 sm:hidden">
+                    <Avatar src={post.author.avatar} name={post.author.name} size={40} />
                 </div>
-            )}
+                <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-center gap-1.5 text-sm sm:hidden">
+                        <span className="truncate font-semibold text-gray-900">{post.author.name}</span>
+                        {place && (
+                            <>
+                                <span className="text-gray-300" aria-hidden>›</span>
+                                <Link href={placeHref(place)} className="relative z-10 truncate text-gray-500 hover:underline">
+                                    {placeLabel(place)}
+                                </Link>
+                            </>
+                        )}
+                        <time dateTime={post.createdAt} className="ml-auto shrink-0 pl-2 text-xs text-gray-400">{shortAge(post.createdAt)}</time>
+                    </div>
 
-            <div className="mt-2.5">
-                <PostActions
-                    likes={post.likeCount}
-                    comments={post.commentCount}
-                    reposts={post.repostCount}
-                    path={postPath(post)}
-                    title={title}
-                />
+                    {/* Larger screens: Reddit-style forum line. */}
+                    <div className="hidden min-w-0 items-center gap-2 text-xs text-gray-500 sm:flex">
+                        {place ? (
+                            <>
+                                <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm">
+                                    {speciesEmoji(findSpecies(place.species)?.slug)}
+                                </span>
+                                <Link href={placeHref(place)} className="relative z-10 truncate font-semibold text-gray-900 hover:underline">
+                                    {placeLabel(place)}
+                                </Link>
+                                <span aria-hidden>•</span>
+                                <span className="truncate">{post.author.name}</span>
+                            </>
+                        ) : (
+                            <>
+                                <Avatar src={post.author.avatar} name={post.author.name} size={24} />
+                                <span className="truncate font-semibold text-gray-900">{post.author.name}</span>
+                            </>
+                        )}
+                        <span aria-hidden>•</span>
+                        <time dateTime={post.createdAt} className="shrink-0">{shortAge(post.createdAt)}</time>
+                    </div>
+
+                    {titleFromText && <h3 className="mt-1 text-[15px] font-semibold leading-snug text-gray-900 sm:mt-1.5 sm:text-lg">{title}</h3>}
+                    {(titleFromText ? body : post.content) && (
+                        <p className="mt-1 line-clamp-3 whitespace-pre-line break-words text-sm leading-relaxed text-gray-700">
+                            {titleFromText ? body : post.content}
+                        </p>
+                    )}
+
+                    {cover && (
+                        <div className="relative mt-2.5 overflow-hidden rounded-xl border border-gray-200 bg-gray-900">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={cover} alt={title} className="mx-auto block max-h-[520px] w-full object-contain" loading="lazy" />
+                            {first?.type === "video" && (
+                                <span className="absolute inset-0 flex items-center justify-center">
+                                    <span className="rounded-full bg-black/60 p-4 text-white">
+                                        <Play size={22} fill="currentColor" />
+                                    </span>
+                                </span>
+                            )}
+                            {post.media.length > 1 && (
+                                <span className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">
+                                    1/{post.media.length}
+                                </span>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="mt-2.5">
+                        <PostActions
+                            likes={post.likeCount}
+                            comments={post.commentCount}
+                            reposts={post.repostCount}
+                            path={postPath(post)}
+                            title={title}
+                        />
+                    </div>
+                </div>
             </div>
         </article>
     );

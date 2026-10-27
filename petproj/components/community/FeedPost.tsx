@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Play } from "lucide-react";
 import {
+    renderMentions,
     findSpecies,
     placeHref,
     placeLabel,
@@ -10,7 +11,7 @@ import {
     primaryPlace,
     type CommunityPost,
 } from "@/lib/community";
-import { speciesEmoji } from "./forumMeta";
+import ForumIcon from "./ForumIcon";
 import Avatar from "./Avatar";
 import PostActions from "./PostActions";
 
@@ -71,8 +72,8 @@ export default function FeedPost({ post, showForum = true }: { post: CommunityPo
                     <div className="hidden min-w-0 items-center gap-2 text-xs text-gray-500 sm:flex">
                         {place ? (
                             <>
-                                <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm">
-                                    {speciesEmoji(findSpecies(place.species)?.slug)}
+                                <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-sm">
+                                    <ForumIcon speciesSlug={findSpecies(place.species)?.slug} size={24} />
                                 </span>
                                 <Link href={placeHref(place)} className="relative z-10 truncate font-semibold text-gray-900 hover:underline">
                                     {placeLabel(place)}
@@ -118,6 +119,9 @@ export default function FeedPost({ post, showForum = true }: { post: CommunityPo
 
                     <div className="mt-2.5">
                         <PostActions
+                            postId={post.id}
+                            author={post.author}
+                            excerpt={renderMentions(post.content)}
                             likes={post.likeCount}
                             comments={post.commentCount}
                             reposts={post.repostCount}

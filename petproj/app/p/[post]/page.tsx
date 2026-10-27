@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { BadgeCheck } from "lucide-react";
 import { SITE_URL } from "@/lib/site";
 import {
+    renderMentions,
     getCommunityComments,
     getCommunityPost,
     isIndexablePost,
@@ -202,6 +203,9 @@ export default async function PostPage({ params }: { params: { post: string } })
 
                             <div className="mt-3">
                                 <PostActions
+                                    postId={post.id}
+                                    author={post.author}
+                                    excerpt={renderMentions(post.content)}
                                     likes={post.likeCount}
                                     comments={post.commentCount}
                                     reposts={post.repostCount}
@@ -223,7 +227,7 @@ export default async function PostPage({ params }: { params: { post: string } })
                                 ))}
                             </ul>
                         ) : (
-                            <p className="px-4 pb-4 text-sm text-gray-500">No replies yet. Be the first to reply in the Paltuu app.</p>
+                            <p className="px-4 pb-4 text-sm text-gray-500">No replies yet. Be the first to reply.</p>
                         )}
                     </section>
                 </article>

@@ -21,7 +21,6 @@ import {
     JsonLd,
     type Crumb,
 } from "@/components/community/CommunityChrome";
-import { speciesEmoji } from "@/components/community/forumMeta";
 
 export const revalidate = 600;
 export const dynamicParams = false;
@@ -69,7 +68,7 @@ export default async function SpeciesForumPage({ params }: { params: { species: 
             <JsonLd data={collectionJsonLd({ name: species.name, description: guide.intro, path, posts })} />
             <JsonLd data={breadcrumbJsonLd(crumbs, path)} />
 
-            <ForumHeader emoji={speciesEmoji(species.slug)} name={species.name} intro={guide.intro} />
+            <ForumHeader speciesSlug={species.slug} name={species.name} intro={guide.intro} />
 
             <CommunityLayout
                 nav={{ activeSpecies: species.slug, breeds }}

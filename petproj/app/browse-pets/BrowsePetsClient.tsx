@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense, type ReactNode } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { RootState, AppDispatch } from "../store/store";
@@ -53,9 +53,11 @@ interface Meta {
 interface BrowsePetsClientProps {
     initialPets?: Pet[];
     initialMeta?: Meta;
+    /** Server-rendered content shown above the grid. */
+    topSlot?: ReactNode;
 }
 
-function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientProps) {
+function BrowsePetsContent({ initialPets = [], initialMeta, topSlot }: BrowsePetsClientProps) {
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const pathname = usePathname();
@@ -192,6 +194,7 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
                     </div>
 
                     <div className="w-full lg:w-3/4">
+                        {topSlot}
                         {loading && pets.length === 0 ? (
                             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {Array.from({ length: 6 }).map((_, i) => (
@@ -261,10 +264,10 @@ function BrowsePetsContent({ initialPets = [], initialMeta }: BrowsePetsClientPr
     );
 }
 
-export default function BrowsePetsClient({ initialPets, initialMeta }: BrowsePetsClientProps) {
+export default function BrowsePetsClient({ initialPets, initialMeta, topSlot }: BrowsePetsClientProps) {
     return (
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><MoonLoader size={30} color="#A00000" /></div>}>
-            <BrowsePetsContent initialPets={initialPets} initialMeta={initialMeta} />
+            <BrowsePetsContent initialPets={initialPets} initialMeta={initialMeta} topSlot={topSlot} />
         </Suspense>
     );
 }

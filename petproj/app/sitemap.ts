@@ -4,6 +4,7 @@ import { db } from '@/db/index';
 import { SITE_URL } from '@/lib/site';
 import { getTaxonomy } from '@/lib/adoptTaxonomy';
 import { VET_CITIES } from '@/lib/vetCities';
+import { getCommunitySitemapEntries } from '@/lib/community';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = SITE_URL;
@@ -122,10 +123,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         console.error('Sitemap: failed to build adoption landing pages', e);
     }
 
+    // Community (app/community): the hub, species and breed communities and post
+    // pages that pass the thin-content rules in lib/community.ts. Thin pages
+    // still render, but are noindex and stay out of here.
+    let communityPages: MetadataRoute.Sitemap = [];
+    try {
+        const entries = await getCommunitySitemapEntries();
+        communityPages = entries.map((e) => ({
+            url: `${baseUrl}${e.path}`,
+            lastModified: e.lastModified,
+            changeFrequency: e.path.startsWith('/community/p/') ? ('weekly' as const) : ('daily' as const),
+            priority: e.path === '/community' ? 0.9 : e.path.startsWith('/community/p/') ? 0.6 : 0.8,
+        }));
+    } catch (e) {
+        console.error('Sitemap: failed to build community pages', e);
+    }
+
     // Marketplace product pages are intentionally excluded while Bazaar is paused.
     // /marketplace/{id} currently returns 404, and listing dead URLs wastes crawl
     // budget and reads as a site-quality problem. Re-add this block once the
     // product route serves 200 again.
 
-    return [...routes, ...vetCityPages, ...adoptPages, ...blogPosts, ...petPages, ...vetPages, ...clinicPages];
+    return [...routes, ...communityPages, ...vetCityPages, ...adoptPages, ...blogPosts, ...petPages, ...vetPages, ...clinicPages];
 }

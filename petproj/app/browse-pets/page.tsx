@@ -1,5 +1,6 @@
 import { db } from "@/db/index";
 import BrowsePetsClient from "./BrowsePetsClient";
+import CommunityStrip from "@/components/community/CommunityStrip";
 
 export const dynamic = "force-dynamic";
 
@@ -36,5 +37,11 @@ async function getInitialPets() {
 
 export default async function BrowsePetsPage() {
     const { pets: initialPets, meta: initialMeta } = await getInitialPets();
-    return <BrowsePetsClient initialPets={initialPets} initialMeta={initialMeta} />;
+    return (
+        <BrowsePetsClient
+            initialPets={initialPets}
+            initialMeta={initialMeta}
+            topSlot={<CommunityStrip className="mb-4" />}
+        />
+    );
 }

@@ -324,6 +324,7 @@ const Navbar = ({
   // Navigation Links
   const defaultLinks = [
     { name: "Pets", href: "browse-pets" },
+    { name: "Community", href: "community" },
     // { name: "Bazaar", href: "bazaar" }, // Phase 1: Bazaar paused
     { name: "Pet Care", href: "pet-care" },
     { name: "Lost & Found", href: "lost-and-found" },

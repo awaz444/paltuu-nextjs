@@ -604,6 +604,32 @@ model pet_category {
   lost_and_found_posts lost_and_found_posts[]
   pets                 pets[]
   shelter_animals      shelter_animals[]
+  breeds               breeds[]
+}
+
+/// Picked breed list, one community per row (PALTU-70; db/breeds_migration.ts,
+/// seeded from lib/breeds.ts). Names are English only; aliases hold the typed
+/// spellings used for matching. kind: breed | street | mixed | not_sure | other.
+model breeds {
+  breed_id        Int            @id @default(autoincrement())
+  category_id     Int
+  name            String         @db.VarChar(100)
+  slug            String         @db.VarChar(100)
+  kind            String         @default("breed") @db.VarChar(20)
+  aliases         String[]       @default([])
+  parent_breed_id Int?
+  sort_order      Int            @default(0)
+  is_active       Boolean        @default(true)
+  created_at      DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime       @default(now()) @db.Timestamptz(6)
+  pet_category    pet_category   @relation(fields: [category_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction)
+  parent          breeds?        @relation("breedsToParent", fields: [parent_breed_id], references: [breed_id], onDelete: SetNull, onUpdate: NoAction)
+  children        breeds[]       @relation("breedsToParent")
+  pets            pets[]
+  pet_profiles    pet_profiles[]
+
+  @@unique([category_id, slug], map: "uq_breeds_category_slug")
+  @@index([category_id, sort_order], map: "idx_breeds_category_order")
 }
 
 model pet_images {
@@ -641,6 +667,7 @@ model pets {
   pet_name                  String                      @db.VarChar(255)
   pet_type                  Int?
   pet_breed                 String?                     @db.VarChar(255)
+  breed_id                  Int?
   city_id                   Int?
   area                      String?                     @db.VarChar(255)
   description               String?                     @db.VarChar(1000)
@@ -671,6 +698,7 @@ model pets {
   cities                    cities?                     @relation(fields: [city_id], references: [city_id], onDelete: Cascade, onUpdate: NoAction)
   users                     users?                      @relation(fields: [owner_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
   pet_category              pet_category?               @relation(fields: [pet_type], references: [category_id], onUpdate: NoAction)
+  breeds                    breeds?                     @relation(fields: [breed_id], references: [breed_id], onDelete: SetNull, onUpdate: NoAction)
   rescue_shelters           rescue_shelters?            @relation(fields: [shelter_id], references: [shelter_id], onDelete: NoAction, onUpdate: NoAction)
   rescue_images             rescue_images[]
   rescue_medical_conditions rescue_medical_conditions[]
@@ -1370,6 +1398,7 @@ model pet_profiles {
   name                   String               @db.VarChar(100)
   species                String               @db.VarChar(50)
   breed                  String?              @db.VarChar(100)
+  breed_id               Int?
   gender                 String               @default("unknown") @db.VarChar(20)
   date_of_birth          DateTime?            @db.Date
   bio                    String?              @db.VarChar(500)
@@ -1380,6 +1409,7 @@ model pet_profiles {
   updated_at             DateTime             @default(now()) @db.Timestamptz(6)
   users                  users                @relation(fields: [owner_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
   pets                   pets?                @relation(fields: [adoption_listing_id], references: [pet_id], onDelete: SetNull, onUpdate: NoAction)
+  breeds                 breeds?              @relation(fields: [breed_id], references: [breed_id], onDelete: SetNull, onUpdate: NoAction)
   pet_profile_photos     pet_profile_photos[]
   post_pet_tags          post_pet_tags[]
   social_mentions        social_mentions[]

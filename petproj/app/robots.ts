@@ -62,6 +62,8 @@ export default function robots(): MetadataRoute.Robots {
                     '/bulk-upload-pets',
                     '/pwa-debug',
                     '/api-docs',
+                    '/open',
+                    '/open/',
 
                     // Shop / rescue onboarding
                     '/shop-register',

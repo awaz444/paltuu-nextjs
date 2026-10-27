@@ -123,8 +123,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         console.error('Sitemap: failed to build adoption landing pages', e);
     }
 
-    // Community (app/community): the hub, species and breed communities and post
-    // pages that pass the thin-content rules in lib/community.ts. Thin pages
+    // Feed (app/feed), species and breed forums (app/[species]) and post pages (app/p)
+    // that pass the thin-content rules in lib/community.ts. Thin pages
     // still render, but are noindex and stay out of here.
     let communityPages: MetadataRoute.Sitemap = [];
     try {
@@ -132,8 +132,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         communityPages = entries.map((e) => ({
             url: `${baseUrl}${e.path}`,
             lastModified: e.lastModified,
-            changeFrequency: e.path.startsWith('/community/p/') ? ('weekly' as const) : ('daily' as const),
-            priority: e.path === '/community' ? 0.9 : e.path.startsWith('/community/p/') ? 0.6 : 0.8,
+            changeFrequency: e.path.startsWith('/p/') ? ('weekly' as const) : ('daily' as const),
+            priority: e.path === '/feed' ? 0.9 : e.path.startsWith('/p/') ? 0.6 : 0.8,
         }));
     } catch (e) {
         console.error('Sitemap: failed to build community pages', e);

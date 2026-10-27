@@ -48,11 +48,11 @@ export const BREED_GUIDES: Record<string, Record<string, CommunityGuide>> = {
     cats: {
         "street-cat": {
             communityName: "Desi and street cats",
-            intro: "Most cats in Pakistan are desi cats with no particular breed, and that includes many of the friendliest ones. Rescued, adopted or fed on the street, this is their community.",
+            intro: "Most cats in Pakistan are desi cats with no particular breed, and that includes many of the friendliest ones. Rescued, adopted or fed on the street, they all belong here.",
             topics: ["Rescue and adoption", "Neutering and vaccinations", "Feeding street cats", "Settling a rescued cat in"],
         },
         persian: {
-            intro: "Persians are one of the most popular cat breeds in Pakistan, known for long coats and calm temperaments. This community also includes Persian mixes.",
+            intro: "Persians are one of the most popular cat breeds in Pakistan, known for long coats and calm temperaments. Persian mixes are included here too.",
             topics: ["Daily brushing and matting", "Eye cleaning", "Summer heat and long coats", "Food and hairballs"],
         },
         siamese: {
@@ -130,7 +130,7 @@ export const BREED_GUIDES: Record<string, Record<string, CommunityGuide>> = {
         },
         "street-dog": {
             communityName: "Desi and street dogs",
-            intro: "Desi dogs are hardy, smart and well suited to Pakistan's climate. Rescued, adopted or cared for on the street, this is their community.",
+            intro: "Desi dogs are hardy, smart and well suited to Pakistan's climate. Rescued, adopted or cared for on the street, they all belong here.",
             topics: ["Rescue and adoption", "Vaccinations and neutering", "Feeding street dogs", "Settling a rescue in"],
         },
         mixed: {

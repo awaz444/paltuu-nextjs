@@ -28,6 +28,11 @@ const nextConfig = {
 
   async redirects() {
     return [
+      // Community launched under /community, then moved to the top level the same day.
+      { source: '/community', destination: '/feed', permanent: true },
+      { source: '/community/p/:post', destination: '/p/:post', permanent: true },
+      { source: '/community/:species/:breed', destination: '/:species/:breed', permanent: true },
+      { source: '/community/:species', destination: '/:species', permanent: true },
       {
         // This URL was live while the file and its frontmatter slug disagreed.
         // Preserve any equity it picked up now that the post lives at the

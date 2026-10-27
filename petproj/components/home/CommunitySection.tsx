@@ -14,7 +14,7 @@ export default function CommunitySection({ posts }: { posts: CommunityPost[] }) 
             <div className="mx-auto max-w-6xl">
                 <header className="mb-9 max-w-2xl">
                     <h2 id="community-heading" className="mb-3 text-2xl font-extrabold text-gray-900 md:text-3xl">
-                        From the Paltuu community
+                        Latest on Paltuu
                     </h2>
                     <p className="text-base leading-relaxed text-gray-600">
                         Owners across Pakistan sharing their pets and asking each other for advice, organised by
@@ -30,15 +30,15 @@ export default function CommunitySection({ posts }: { posts: CommunityPost[] }) 
 
                 <div className="flex flex-wrap items-center gap-2">
                     <Link
-                        href="/community"
+                        href="/feed"
                         className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
                     >
-                        Explore the community →
+                        Open the feed →
                     </Link>
                     {COMMUNITY_SPECIES.slice(0, 3).map((s) => (
                         <Link
                             key={s.slug}
-                            href={`/community/${s.slug}`}
+                            href={`/${s.slug}`}
                             className="rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:border-primary hover:text-primary"
                         >
                             {s.name}

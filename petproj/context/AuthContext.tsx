@@ -325,7 +325,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             else if (role === "vet") router.replace("/vet-panel");
             else if (role === "vendor") router.replace("/vendor-panel");
             else if (role === "admin") router.replace("/admin-panel");
-            else router.replace("/browse-pets");
+            else router.replace("/feed");
           }
         } catch {}
       });
@@ -386,7 +386,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else if (userWithMethod.role === "admin") {
         router.replace("/admin-panel");
       } else {
-        router.replace("/browse-pets");
+        router.replace("/feed");
       }
     } catch {}
   };

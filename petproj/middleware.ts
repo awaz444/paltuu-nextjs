@@ -73,6 +73,21 @@ async function verifyCustomToken(token: string): Promise<CustomTokenPayload | nu
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Signed-in visitors see the feed at "/"; everyone else gets the (static) home page.
+  // Visitors with no auth cookie at all skip the token checks entirely.
+  if (pathname === '/') {
+    const hasAuthCookie =
+      request.cookies.has('token') ||
+      request.cookies.has('next-auth.session-token') ||
+      request.cookies.has('__Secure-next-auth.session-token');
+    if (!hasAuthCookie) return NextResponse.next();
+
+    const sessionToken = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const custom = request.cookies.get('token')?.value;
+    const signedIn = !!sessionToken || (custom ? !!(await verifyCustomToken(custom)) : false);
+    return signedIn ? NextResponse.rewrite(new URL('/feed', request.url)) : NextResponse.next();
+  }
+
   // Define public paths that don't require authentication
   // Allow guest checkout and order confirmation without login
   const publicPaths = [
@@ -139,7 +154,7 @@ export async function middleware(request: NextRequest) {
       case 'admin':
         return '/admin-panel';
       default:
-        return '/browse-pets';
+        return '/feed';
     }
   };
 
@@ -152,7 +167,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(getRoleRedirect(customAuthPayload.role), request.url));
     }
 
-    return NextResponse.redirect(new URL('/browse-pets', request.url));
+    return NextResponse.redirect(new URL('/feed', request.url));
   }
 
   if (isAdminPath) {
@@ -182,6 +197,7 @@ export async function middleware(request: NextRequest) {
 // Update matcher to include all protected routes
 export const config = {
   matcher: [
+    '/',
     '/auth',
     '/profile',
     '/my-listings',

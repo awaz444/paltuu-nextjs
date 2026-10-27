@@ -25,7 +25,7 @@ import { breadcrumbJsonLd, postJsonLd } from "@/lib/communitySeo";
 import { AppCta, Breadcrumbs, Feed, JsonLd, type Crumb } from "@/components/community/CommunityChrome";
 import Avatar from "@/components/community/Avatar";
 import PostActions from "@/components/community/PostActions";
-import MobileTabBar from "@/components/community/MobileTabBar";
+import MobileActions from "@/components/community/MobileActions";
 
 export const revalidate = 600;
 export const dynamicParams = true;
@@ -241,7 +241,7 @@ export default async function PostPage({ params }: { params: { post: string } })
                     </section>
                 )}
             </div>
-            <MobileTabBar />
+            <MobileActions />
         </main>
     );
 }

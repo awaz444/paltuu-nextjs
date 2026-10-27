@@ -4,7 +4,7 @@ import AppStoreBadges from "@/components/home/AppStoreBadges";
 import { COMMUNITY_SPECIES, type BreedCommunity, type CommunityPost } from "@/lib/community";
 import { VETS_AT_HOME } from "@/lib/homeContent";
 import FeedPost from "./FeedPost";
-import MobileTabBar from "./MobileTabBar";
+import MobileActions from "./MobileActions";
 import { speciesEmoji } from "./forumMeta";
 
 export type Crumb = { name: string; href?: string };
@@ -44,12 +44,12 @@ export function ForumHeader({
 }) {
     return (
         <header className="border-b border-gray-200 bg-white">
-            <div className="h-14 bg-primary md:h-20" />
+            <div className="hidden h-20 bg-primary md:block" />
             <div className="mx-auto max-w-7xl px-4">
-                <div className="flex items-end gap-3 pb-4 md:gap-4">
+                <div className="flex items-center gap-3 pb-4 pt-4 md:items-end md:gap-4 md:pt-0">
                     <span
                         aria-hidden
-                        className="-mt-8 flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-white bg-white text-3xl shadow-sm md:-mt-10 md:h-20 md:w-20 md:text-4xl"
+                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-2xl md:-mt-10 md:h-20 md:w-20 md:border-4 md:border-white md:text-4xl md:shadow-sm"
                     >
                         {emoji}
                     </span>
@@ -86,7 +86,7 @@ function ForumChips({ activeSpecies, activeBreed, breeds = [] }: NavProps) {
                 <Link href="/home" className={chip(!activeSpecies)}>Home</Link>
                 {COMMUNITY_SPECIES.map((s) => (
                     <Link key={s.slug} href={`/${s.slug}`} className={chip(s.slug === activeSpecies && !activeBreed)}>
-                        {speciesEmoji(s.slug)} {s.name}
+                        {s.name}
                     </Link>
                 ))}
             </div>
@@ -152,7 +152,7 @@ export function CommunityLayout({ nav, aside, children }: { nav: NavProps; aside
                 <div className="min-w-0 flex-1 lg:max-w-2xl">{children}</div>
                 <aside className="w-full shrink-0 space-y-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:w-80 lg:overflow-y-auto lg:pb-4">{aside}</aside>
             </div>
-            <MobileTabBar />
+            <MobileActions />
         </div>
     );
 }

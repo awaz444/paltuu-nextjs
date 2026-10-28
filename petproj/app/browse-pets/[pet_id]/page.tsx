@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import PetDetailsClient from "./PetDetailsClient";
 import PetPageExtras from "./PetPageExtras";
 import BreedCommunityPanel from "@/components/community/BreedCommunityPanel";
+import { getCommunityForListing } from "@/lib/community";
 
 export const dynamic = "force-dynamic";
 
@@ -93,6 +94,8 @@ export default async function PetPage({
         notFound();
     }
 
+    const community = await getCommunityForListing(Number(params.pet_id));
+
     const firstImage =
         pet.images?.length > 0
             ? [...pet.images].sort((a: any, b: any) => a.order - b.order)[0]?.image_url
@@ -137,9 +140,10 @@ export default async function PetPage({
             <PetDetailsClient
                 params={params}
                 initialPet={pet}
+                forums={community ? { species: community.species, breed: community.breed } : null}
                 extras={
                     <>
-                        <BreedCommunityPanel petId={Number(params.pet_id)} />
+                        <BreedCommunityPanel community={community} />
                         <PetPageExtras listingType={pet.listing_type} />
                     </>
                 }

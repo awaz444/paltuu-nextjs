@@ -24,7 +24,8 @@ const { Panel } = Collapse;
 
 // Only allow letters (Latin + Urdu range), digits, spaces and basic punctuation
 const TITLE_RE = /^[a-zA-Z0-9؀-ۿ\s\-,.'&()]+$/;
-const LETTERS_RE = /^[a-zA-Z؀-ۿ\s\-']+$/;
+
+type Breed = { breed_id: number; category_id: number; name: string };
 
 export default function CreatePetListing() {
 
@@ -44,7 +45,8 @@ export default function CreatePetListing() {
     const [contactNumber, setContactNumber] = useState("");
     const [description, setDescription] = useState("");
     const [sex, setSex] = useState("male");
-    const [breed, setBreed] = useState("");
+    const [breedId, setBreedId] = useState("");
+    const [breeds, setBreeds] = useState<Breed[]>([]);
     const [age, setAge] = useState<number | null>(null);
     const [months, setMonths] = useState<number | null>(null);
     const [healthIssues, setHealthIssues] = useState("");
@@ -89,7 +91,12 @@ export default function CreatePetListing() {
     useEffect(() => {
         dispatch(fetchCities());
         dispatch(fetchPetCategories());
+        axios.get<Breed[]>("/api/v1/breeds").then((r) => setBreeds(r.data)).catch(() => setBreeds([]));
     }, [dispatch]);
+
+    // Only species with a breed list can be listed (PALTU-70 breeds table).
+    const listableCategories = categories.filter((c) => breeds.some((b) => b.category_id === c.category_id));
+    const breedOptions = breeds.filter((b) => String(b.category_id) === petType);
 
     useEffect(() => {
         if (status !== "loading" && !isAuthenticated) {
@@ -107,11 +114,6 @@ export default function CreatePetListing() {
     const handleAreaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const v = e.target.value;
         if (v === "" || (TITLE_RE.test(v) && v.length <= 100)) setArea(v);
-    };
-
-    const handleBreedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const v = e.target.value;
-        if (v === "" || (LETTERS_RE.test(v) && v.length <= 60)) setBreed(v);
     };
 
     const handleHealthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -246,6 +248,7 @@ export default function CreatePetListing() {
         } else if (!isValidPhone(contactNumber)) {
             errors.contactNumber = "Enter a valid mobile number (e.g. 03XX XXXXXXX or +92 3XX XXXXXXX)";
         }
+        if (!breedId) errors.breed = "Pick a breed, or Not sure";
         if ((age === null || age === 0) && (months === null || months === 0)) {
             errors.age = "Either age or months must be filled";
             errors.months = "Either age or months must be filled";
@@ -278,7 +281,8 @@ export default function CreatePetListing() {
             const newPet = {
                 pet_name: title || null,
                 pet_type: petType ? Number(petType) : null,
-                pet_breed: breed || null,
+                breed_id: breedId ? Number(breedId) : null,
+                pet_breed: breedOptions.find((b) => String(b.breed_id) === breedId)?.name ?? null,
                 city_id: cityId ? Number(cityId) : null,
                 area: area || "",
                 age_months: (age || 0) * 12 + (months || 0),
@@ -343,6 +347,11 @@ export default function CreatePetListing() {
             }
             setCurrentStep(2);
         } else if (currentStep === 2) {
+            if (!breedId) {
+                setFormErrors((prev) => ({ ...prev, breed: "Pick a breed, or Not sure" }));
+                message.error("Breed is required");
+                return;
+            }
             if ((age === null || age === 0) && (months === null || months === 0)) {
                 message.error("Age is required");
                 return;
@@ -448,9 +457,12 @@ export default function CreatePetListing() {
                                                     className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 font-normal appearance-none"
                                                     value={petType}
                                                     required
-                                                    onChange={(e) => setPetType(e.target.value)}>
+                                                    onChange={(e) => {
+                                                        setPetType(e.target.value);
+                                                        setBreedId("");
+                                                    }}>
                                                     <option value="">Select Category</option>
-                                                    {categories.map((category) => (
+                                                    {listableCategories.map((category) => (
                                                         <option key={category.category_id} value={category.category_id}>
                                                             {category.category_name}
                                                         </option>
@@ -581,14 +593,16 @@ export default function CreatePetListing() {
                                         <div className="space-y-6">
                                             <div>
                                                 <label className="block text-[10px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Breed</label>
-                                                <input
-                                                    type="text"
-                                                    className="p-5 w-full border rounded-3xl input-field bg-white font-normal"
-                                                    placeholder="e.g. Persian"
-                                                    value={breed}
-                                                    onChange={handleBreedChange}
-                                                    maxLength={60}
-                                                />
+                                                <select
+                                                    className="p-5 w-full border rounded-3xl input-field bg-white font-normal appearance-none"
+                                                    value={breedId}
+                                                    onChange={(e) => setBreedId(e.target.value)}>
+                                                    <option value="">Select breed</option>
+                                                    {breedOptions.map((b) => (
+                                                        <option key={b.breed_id} value={b.breed_id}>{b.name}</option>
+                                                    ))}
+                                                </select>
+                                                {formErrors.breed && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.breed}</p>}
                                             </div>
                                             <div>
                                                 <label className="block text-[10px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Health Issues</label>

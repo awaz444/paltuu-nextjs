@@ -236,9 +236,9 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                                     {/* Clinic Logo */}
                                     <div className="relative w-full mb-4 rounded-2xl border-2 border-gray-100 shadow-sm bg-gray-50 overflow-hidden">
                                         <img
-                                            src={clinic.logo_url || "/placeholder-hospital.png"}
+                                            src={clinic.logo_url || "/placeholder-clinic.jpg"}
                                             onError={(e) => {
-                                                (e.target as HTMLImageElement).src = "/placeholder-hospital.png";
+                                                (e.target as HTMLImageElement).src = "/placeholder-clinic.jpg";
                                             }}
                                             alt={clinic.name}
                                             className="block w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
@@ -780,9 +780,9 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
             >
                 <div className="relative bg-black rounded-2xl overflow-hidden flex items-center justify-center">
                     <img
-                        src={clinic.logo_url || "/placeholder-hospital.png"}
+                        src={clinic.logo_url || "/placeholder-clinic.jpg"}
                         onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/placeholder-hospital.png";
+                            (e.target as HTMLImageElement).src = "/placeholder-clinic.jpg";
                         }}
                         alt={clinic.name}
                         className="w-full h-auto max-h-[85vh] object-contain"

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-const BUTTON =
+/** Floating mobile button style, shared with the browse pets page so both look the same. */
+export const MOBILE_BUTTON =
     "rounded-xl border-2 border-primary bg-white px-4 py-2 text-xs font-semibold text-primary shadow-lg transition-transform duration-300 hover:scale-105";
 
 /**
@@ -12,10 +13,10 @@ export default function MobileActions() {
     return (
         <>
             <div aria-hidden className="h-14 md:hidden" />
-            <Link href="/browse-pets" className={`fixed bottom-4 left-4 z-40 md:hidden ${BUTTON}`}>
+            <Link href="/browse-pets" className={`fixed bottom-4 left-4 z-40 md:hidden ${MOBILE_BUTTON}`}>
                 Adopt
             </Link>
-            <Link href="/app" className={`fixed bottom-4 right-4 z-40 md:hidden ${BUTTON}`}>
+            <Link href="/app" className={`fixed bottom-4 right-4 z-40 md:hidden ${MOBILE_BUTTON}`}>
                 Get App
             </Link>
         </>

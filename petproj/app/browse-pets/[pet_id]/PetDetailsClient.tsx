@@ -11,6 +11,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { formatAge } from "@/utils/formatAge";
 import { formatPhoneDisplay } from "@/utils/phone";
+import ForumIcon from "@/components/community/ForumIcon";
+import type { PetCommunity } from "@/lib/community";
 
 import {
     Spin,
@@ -69,7 +71,9 @@ const PetDetailsClient: React.FC<{
     initialPet?: PetWithImages;
     // Server-rendered sections (how adoption works, app, blogs) shown under the listing
     extras?: React.ReactNode;
-}> = ({ params, initialPet, extras }) => {
+    // The pet's species and breed forums, when its species has one
+    forums?: Pick<PetCommunity, "species" | "breed"> | null;
+}> = ({ params, initialPet, extras, forums }) => {
     const { pet_id } = params;
     const router = useRouter();
     const { user, isAuthenticated, isHydrating } = useAuth();
@@ -367,8 +371,22 @@ const PetDetailsClient: React.FC<{
         hasValue(pet.health_issues) &&
         !/^(none|no|n\/?a|nil|-+|nothing|no issues?)\.?$/i.test(pet.health_issues!.trim());
 
+    // Type and Breed link to their forums, with the species drawing.
+    const forumLink = (href: string, label: string) => (
+        <Link href={href} className="inline-flex max-w-full items-center gap-1.5 text-primary hover:underline">
+            <span aria-hidden className="h-5 w-5 shrink-0 overflow-hidden rounded-full">
+                <ForumIcon speciesSlug={forums!.species.slug} size={20} />
+            </span>
+            <span className="truncate">{label}</span>
+        </Link>
+    );
+
     const facts: Array<{ label: string; value: React.ReactNode }> = [
-        { label: "Breed", value: pet.pet_breed || "Mixed breed" },
+        ...(forums ? [{ label: "Type", value: forumLink(forums.species.href, forums.species.name) }] : []),
+        {
+            label: "Breed",
+            value: forums?.breed ? forumLink(forums.breed.href, pet.pet_breed || forums.breed.name) : pet.pet_breed || "Mixed breed",
+        },
         { label: "Age", value: formatAge(pet.age_months) },
         { label: "Sex", value: hasValue(pet.sex) ? <span className="capitalize">{pet.sex}</span> : null },
         { label: "Location", value: [pet.area, pet.city].filter(Boolean).join(", ") || null },

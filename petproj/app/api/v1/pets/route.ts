@@ -155,10 +155,27 @@ export async function POST(req: NextRequest) {
         }
 
         const {
-            pet_name, pet_type, pet_breed, city_id, area, age_months, contact_number,
+            pet_name, pet_type, city_id, area, age_months, contact_number,
             description, sex, listing_type, vaccinated, neutered, price, rescue_story,
-            energy_level, cuddliness_level, tags
+            energy_level, cuddliness_level, tags, breed_id
         } = body;
+        let { pet_breed } = body;
+
+        // A picked breed (website, newer app) must be an active breed of the chosen
+        // species, and its name becomes pet_breed. Clients that still send only a
+        // typed pet_breed (older app versions) are accepted as before.
+        let breedId: number | null = null;
+        if (breed_id != null && breed_id !== "") {
+            const breed = await db.query(
+                `SELECT breed_id, name FROM breeds WHERE breed_id = $1 AND category_id = $2 AND is_active = true`,
+                [Number(breed_id), Number(pet_type)]
+            );
+            if (!breed.rows.length) {
+                return NextResponse.json({ errors: ["Pick a breed from the list for this pet type"] }, { status: 400 });
+            }
+            breedId = breed.rows[0].breed_id;
+            pet_breed = breed.rows[0].name;
+        }
 
         if (hasSevereIdentityMatch(pet_name) || (description && hasSevereIdentityMatch(description))) {
             return NextResponse.json({ errors: ["Listing contains language that isn't allowed"] }, { status: 400 });
@@ -182,14 +199,14 @@ export async function POST(req: NextRequest) {
                 `INSERT INTO pets (
                 owner_id, pet_name, pet_type, pet_breed, city_id, area, age_months, contact_number,
                 description, adoption_status, sex, listing_type, vaccinated, neutered, price,
-                rescue_story, created_at, energy_level, cuddliness_level, approved
+                rescue_story, created_at, energy_level, cuddliness_level, approved, breed_id
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'available', $10, $11, $12, $13, $14, $15, CURRENT_TIMESTAMP, $16, $17, false)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'available', $10, $11, $12, $13, $14, $15, CURRENT_TIMESTAMP, $16, $17, false, $18)
             RETURNING *`,
                 [
                     userId, pet_name, pet_type, pet_breed, city_id, area, age_months, normalizedContactNumber,
                     description, sex, listing_type, vaccinated || false, neutered || false,
-                    listing_type === 'rescue' ? null : price, rescue_story, energy_level, cuddliness_level
+                    listing_type === 'rescue' ? null : price, rescue_story, energy_level, cuddliness_level, breedId
                 ]
             ),
             { label: "insert pet listing" }

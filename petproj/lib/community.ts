@@ -470,6 +470,9 @@ export type PetCommunity = {
     speciesName: string;
     postCount: number;
     posts: CommunityPost[];
+    /** Both forums the pet belongs to, for links: its species', and its breed's when it has one. */
+    species: { slug: string; name: string; href: string };
+    breed: { name: string; href: string } | null;
 };
 
 /** The community a listing's pet belongs to: its breed's, else its species'. */
@@ -487,18 +490,22 @@ export async function getCommunityForListing(petId: number): Promise<PetCommunit
         const row = res.rows[0];
         const species = speciesByKey(row?.category_name);
         if (!species) return null;
+        const speciesLink = { slug: species.slug, name: species.name, href: `/${species.slug}` };
 
         const breedSlug = row.parent_slug ?? (["breed", "street", "mixed"].includes(row.kind) ? row.slug : null);
         if (breedSlug) {
             const found = await findBreed(species, breedSlug);
             if (found?.kind === "community") {
                 const posts = await listCommunityPosts({ breedId: found.community.breedId, limit: 3 });
+                const href = `/${species.slug}/${found.community.slug}`;
                 return {
-                    href: `/${species.slug}/${found.community.slug}`,
+                    href,
                     name: found.community.communityName,
                     speciesName: species.name,
                     postCount: found.community.postCount,
                     posts,
+                    species: speciesLink,
+                    breed: { name: found.community.name, href },
                 };
             }
         }
@@ -510,6 +517,8 @@ export async function getCommunityForListing(petId: number): Promise<PetCommunit
             speciesName: species.name,
             postCount: counts[species.slug] ?? 0,
             posts,
+            species: speciesLink,
+            breed: null,
         };
     } catch (e) {
         console.error("community: getCommunityForListing failed", e);

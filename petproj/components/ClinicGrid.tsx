@@ -36,14 +36,10 @@ const ClinicGrid: React.FC<ClinicGridProps> = ({ clinics, listingType = "all" })
 
     return (
         <div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Same grid as Browse Pets */}
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                 {clinics.map((clinic) => (
-                    <div
-                        key={clinic.clinic_id}
-                        className="h-full transform transition-all duration-300 hover:-translate-y-1"
-                    >
-                        <ClinicCard clinic={clinic} />
-                    </div>
+                    <ClinicCard key={clinic.clinic_id} clinic={clinic} />
                 ))}
             </div>
         </div>

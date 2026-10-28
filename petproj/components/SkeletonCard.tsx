@@ -1,7 +1,7 @@
 /**
  * Skeleton card — animates pulse in the same shape as pet/clinic cards.
  * variant="pet"    — square image + 3 text lines (Browse Pets & Lost & Found)
- * variant="clinic" — square image + 3 text lines + button (Pet Care)
+ * variant="clinic" — same as pet (Pet Care cards match Browse Pets)
  */
 const SkeletonCard = ({ variant = "pet" }: { variant?: "pet" | "clinic" }) => (
     <div className="bg-white pr-3 pl-3 pt-3 rounded-3xl shadow-sm animate-pulse">
@@ -13,9 +13,6 @@ const SkeletonCard = ({ variant = "pet" }: { variant?: "pet" | "clinic" }) => (
             <div className="h-5 bg-gray-200 rounded-lg w-2/3" />
             <div className="h-4 bg-gray-200 rounded-lg w-1/2" />
             <div className="h-4 bg-gray-200 rounded-lg w-2/5" />
-            {variant === "clinic" && (
-                <div className="h-9 bg-gray-200 rounded-xl mt-3 w-full" />
-            )}
         </div>
     </div>
 );

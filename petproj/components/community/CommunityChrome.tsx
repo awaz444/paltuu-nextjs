@@ -165,7 +165,8 @@ export function Feed({ posts, showForum = true, empty }: { posts: CommunityPost[
     if (posts.length === 0) {
         return (
             <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
-                <div className="mb-3 text-4xl" aria-hidden>🐾</div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/icons/features/paws.jpg" alt="" aria-hidden width={96} height={96} className="mx-auto mb-3 h-24 w-24" />
                 <h2 className="mb-1 text-base font-bold text-gray-900">{empty.title}</h2>
                 <p className="mx-auto max-w-sm text-sm text-gray-500">{empty.body}</p>
             </div>

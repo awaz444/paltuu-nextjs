@@ -165,7 +165,8 @@ export function Feed({ posts, showForum = true, empty }: { posts: CommunityPost[
     if (posts.length === 0) {
         return (
             <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
-                <div className="mb-3 text-4xl" aria-hidden>🐾</div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/icons/features/paws.jpg" alt="" aria-hidden width={96} height={96} className="mx-auto mb-3 h-24 w-24" />
                 <h2 className="mb-1 text-base font-bold text-gray-900">{empty.title}</h2>
                 <p className="mx-auto max-w-sm text-sm text-gray-500">{empty.body}</p>
             </div>
@@ -204,11 +205,11 @@ export function AboutCard({ title, intro, topics = [], children }: { title: stri
 }
 
 const FEATURES = [
-    { emoji: "🏡", title: "Adopt a pet", body: "Dogs, cats and more, listed by owners and shelters across Pakistan.", href: "/browse-pets" },
-    { emoji: "🩺", title: "Find a vet", body: "Vets and clinics near you in Karachi, Lahore, Islamabad and more.", href: "/pet-care" },
-    { emoji: "🚗", title: "Vets at Home", body: `A vet at your door in ${VETS_AT_HOME.city}. Book in the Paltuu app.`, href: VETS_AT_HOME.deepLink },
-    { emoji: "🔎", title: "Lost & Found", body: "Report a lost pet or help one find its way home.", href: "/lost-and-found" },
-    { emoji: "📖", title: "Pet care guides", body: "Food, health and care advice written for Pakistan.", href: "/blogs" },
+    { art: "/icons/features/adopt.jpg", title: "Adopt a pet", body: "Dogs, cats and more, listed by owners and shelters across Pakistan.", href: "/browse-pets" },
+    { art: "/icons/features/vet.jpg", title: "Find a vet", body: "Vets and clinics near you in Karachi, Lahore, Islamabad and more.", href: "/pet-care" },
+    { art: "/icons/features/vets-at-home.jpg", title: "Vets at Home", body: `A vet at your door in ${VETS_AT_HOME.city}. Book in the Paltuu app.`, href: VETS_AT_HOME.deepLink },
+    { art: "/icons/features/lost-found.jpg", title: "Lost & Found", body: "Report a lost pet or help one find its way home.", href: "/lost-and-found" },
+    { art: "/icons/features/guides.jpg", title: "Pet care guides", body: "Food, health and care advice written for Pakistan.", href: "/blogs" },
 ];
 
 /** The right column: everything else Paltuu does, as link cards. */
@@ -221,9 +222,9 @@ export function FeatureCards() {
                     href={f.href}
                     className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-3.5 transition-colors hover:border-primary"
                 >
-                    <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xl">
-                        {f.emoji}
-                    </span>
+                    {/* Hand-drawn art on white, so the tile is white too. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={f.art} alt="" aria-hidden width={40} height={40} className="h-10 w-10 shrink-0 rounded-xl border border-gray-100 bg-white object-contain" />
                     <span className="min-w-0">
                         <span className="block text-sm font-bold text-gray-900">{f.title}</span>
                         <span className="block text-xs leading-relaxed text-gray-500">{f.body}</span>

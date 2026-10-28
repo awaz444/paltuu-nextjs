@@ -335,7 +335,7 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
                     <div className="w-full lg:w-3/4">
 
                         {loading && clinics.length === 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                                 {Array.from({ length: 6 }).map((_, i) => (
                                     <SkeletonCard key={i} variant="clinic" />
                                 ))}
@@ -384,7 +384,7 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
                                     automatically once it scrolls into view. */}
                                 <div ref={loadMoreRef} className="h-1" />
                                 {loading && currentPage > 1 && (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mt-6">
                                         {Array.from({ length: 3 }).map((_, i) => (
                                             <SkeletonCard key={i} variant="clinic" />
                                         ))}

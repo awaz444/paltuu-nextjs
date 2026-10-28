@@ -44,12 +44,12 @@ export function ForumHeader({
     return (
         <header className="border-b border-gray-200 bg-white">
             {/* Starts 1rem up, behind the navbar, so the navbar's rounded corners sit on maroon instead of white. */}
-            <div className="hidden h-24 -mt-4 bg-primary md:block" />
+            <div className="hidden h-12 -mt-4 bg-primary md:block" />
             <div className="mx-auto max-w-7xl px-4">
                 <div className="flex items-center gap-3 pb-4 pt-4 md:items-end md:gap-4 md:pt-3">
                     <span
                         aria-hidden
-                        className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-white text-2xl md:-mt-14 md:h-20 md:w-20 md:border-4 md:border-white md:text-4xl md:shadow-sm"
+                        className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-white text-2xl md:-mt-8 md:h-20 md:w-20 md:border-4 md:border-white md:text-4xl md:shadow-sm"
                     >
                         <ForumIcon speciesSlug={speciesSlug} size={80} />
                     </span>

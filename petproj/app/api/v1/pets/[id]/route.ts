@@ -80,12 +80,37 @@ export async function PUT(req: NextRequest) {
 
         // Update Logic
         const {
-            pet_name, pet_type, pet_breed, city_id, area, age_months, contact_number,
+            pet_name, pet_type, city_id, area, age_months, contact_number,
             description, sex, listing_type, vaccinated, neutered, price, rescue_story,
             energy_level, cuddliness_level, adoption_status, health_issues, min_age_of_children,
             can_live_with_dogs, can_live_with_cats, must_have_someone_home,
-            images, tags
+            images, tags, breed_id
         } = body;
+        let { pet_breed } = body;
+
+        // If breed_id is supplied, validate it belongs to the species and sync pet_breed
+        let breedIdToStore: number | null | undefined = undefined;
+        if (breed_id !== undefined) {
+            if (breed_id === null || breed_id === "") {
+                breedIdToStore = null;
+            } else {
+                const targetSpecies = pet_type !== undefined ? Number(pet_type) : null;
+                const breedQuery = targetSpecies
+                    ? await db.query(
+                        `SELECT breed_id, name FROM breeds WHERE breed_id = $1 AND category_id = $2 AND is_active = true`,
+                        [Number(breed_id), targetSpecies]
+                    )
+                    : await db.query(
+                        `SELECT b.breed_id, b.name FROM breeds b JOIN pets p ON p.pet_type = b.category_id WHERE b.breed_id = $1 AND p.pet_id = $2 AND b.is_active = true`,
+                        [Number(breed_id), id]
+                    );
+                if (!breedQuery.rows.length) {
+                    return NextResponse.json({ errors: ["Pick a breed from the list for this pet type"] }, { status: 400 });
+                }
+                breedIdToStore = breedQuery.rows[0].breed_id;
+                pet_breed = breedQuery.rows[0].name;
+            }
+        }
 
         if ((pet_name && hasSevereIdentityMatch(pet_name)) || (description && hasSevereIdentityMatch(description))) {
             return NextResponse.json({ error: "Listing contains language that isn't allowed" }, { status: 400 });
@@ -153,14 +178,15 @@ export async function PUT(req: NextRequest) {
                     min_age_of_children = COALESCE($19, min_age_of_children),
                     can_live_with_dogs = COALESCE($20, can_live_with_dogs),
                     can_live_with_cats = COALESCE($21, can_live_with_cats),
-                    must_have_someone_home = COALESCE($22, must_have_someone_home)
-                WHERE pet_id = $23
+                    must_have_someone_home = COALESCE($22, must_have_someone_home),
+                    breed_id = COALESCE($23, breed_id)
+                WHERE pet_id = $24
                 RETURNING *`,
                 [
                     pet_name, pet_type, pet_breed, city_id, area, age_months, contactNumberToStore,
                     description, sex, listing_type, vaccinated, neutered, price === "" ? null : price, rescue_story,
                     energy_level, cuddliness_level, adoption_status, health_issues, min_age_of_children,
-                    can_live_with_dogs, can_live_with_cats, must_have_someone_home, id
+                    can_live_with_dogs, can_live_with_cats, must_have_someone_home, breedIdToStore, id
                 ].map(v => v === undefined ? null : v)
             );
 

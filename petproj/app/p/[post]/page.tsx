@@ -25,6 +25,7 @@ import {
 import { breadcrumbJsonLd, postJsonLd } from "@/lib/communitySeo";
 import { AppCta, Breadcrumbs, Feed, JsonLd, type Crumb } from "@/components/community/CommunityChrome";
 import Avatar from "@/components/community/Avatar";
+import LinkifiedText from "@/components/community/LinkifiedText";
 import PostActions from "@/components/community/PostActions";
 import MobileActions from "@/components/community/MobileActions";
 
@@ -87,7 +88,7 @@ function Comment({ c, isReply = false }: { c: CommunityComment; isReply?: boolea
                             {format(new Date(c.createdAt), "d MMM yyyy")}
                         </time>
                     </p>
-                    <p className="mt-0.5 whitespace-pre-line break-words text-[15px] text-gray-800">{c.content}</p>
+                    <p className="mt-0.5 whitespace-pre-line break-words text-[15px] text-gray-800"><LinkifiedText text={c.content} /></p>
                     {c.likeCount > 0 && (
                         <p className="mt-1 inline-flex items-center gap-1 text-xs text-gray-400">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -171,7 +172,7 @@ export default async function PostPage({ params }: { params: { post: string } })
                                 <h1 className="sr-only">{title}</h1>
                             )}
                             {body && (
-                                <p className="mt-1 whitespace-pre-line break-words text-[15px] leading-relaxed text-gray-800">{body}</p>
+                                <p className="mt-1 whitespace-pre-line break-words text-[15px] leading-relaxed text-gray-800"><LinkifiedText text={body} /></p>
                             )}
 
                             {post.media.length > 0 && (

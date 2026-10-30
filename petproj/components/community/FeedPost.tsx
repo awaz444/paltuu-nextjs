@@ -13,6 +13,7 @@ import {
 } from "@/lib/community";
 import ForumIcon from "./ForumIcon";
 import Avatar from "./Avatar";
+import LinkifiedText from "./LinkifiedText";
 import PostActions from "./PostActions";
 
 /** "4m", "3h", "2d", "5w", "3mo", "1y". */
@@ -94,7 +95,7 @@ export default function FeedPost({ post, showForum = true }: { post: CommunityPo
                     {titleFromText && <h3 className="mt-1 text-[15px] font-semibold leading-snug text-gray-900 sm:mt-1.5 sm:text-lg">{title}</h3>}
                     {(titleFromText ? body : post.content) && (
                         <p className="mt-1 line-clamp-3 whitespace-pre-line break-words text-sm leading-relaxed text-gray-700">
-                            {titleFromText ? body : post.content}
+                            <LinkifiedText text={titleFromText ? body : post.content} linkClassName="relative z-10" />
                         </p>
                     )}
 

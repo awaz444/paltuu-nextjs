@@ -11,6 +11,7 @@ import {
     type CommunityPost,
 } from "@/lib/community";
 import Avatar from "./Avatar";
+import LinkifiedText from "./LinkifiedText";
 
 /** One post in a community feed. Server-rendered; the whole card links to the post page. */
 export default function PostCard({ post, showPlace = true }: { post: CommunityPost; showPlace?: boolean }) {
@@ -60,7 +61,7 @@ export default function PostCard({ post, showPlace = true }: { post: CommunityPo
                     </Link>
                 </h3>
                 {body && (
-                    <p className="line-clamp-3 whitespace-pre-line text-sm leading-relaxed text-gray-600">{body}</p>
+                    <p className="line-clamp-3 whitespace-pre-line text-sm leading-relaxed text-gray-600"><LinkifiedText text={body} linkClassName="relative z-10" /></p>
                 )}
 
                 <div className="mt-auto flex items-center gap-4 pt-4 text-xs text-gray-500">

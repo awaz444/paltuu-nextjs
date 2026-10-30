@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        const { pet_id } = await req.json();
+        const { pet_id, image_url } = await req.json();
         if (!pet_id || typeof pet_id !== "number") {
             return NextResponse.json({ error: "pet_id is required and must be a number" }, { status: 400 });
         }
@@ -21,11 +21,12 @@ export async function POST(req: NextRequest) {
                 c.city_name,
                 (SELECT image_url FROM pet_images
                  WHERE pet_id = p.pet_id
+                   AND ($2::text IS NULL OR image_url = $2)
                  ORDER BY "order" ASC LIMIT 1) AS first_image
              FROM pets p
              LEFT JOIN cities c ON p.city_id = c.city_id
              WHERE p.pet_id = $1`,
-            [pet_id]
+            [pet_id, typeof image_url === "string" && image_url ? image_url : null]
         );
 
         if (result.rowCount === 0) {
@@ -35,7 +36,10 @@ export async function POST(req: NextRequest) {
         const { listing_type, health_issues, city_name, first_image } = result.rows[0];
 
         if (!first_image) {
-            return NextResponse.json({ error: "Pet has no images" }, { status: 422 });
+            return NextResponse.json(
+                { error: image_url ? "That photo doesn't belong to this pet. Save the listing first." : "Pet has no images" },
+                { status: 422 }
+            );
         }
 
         if (!city_name) {
@@ -49,7 +53,7 @@ export async function POST(req: NextRequest) {
             healthIssue: health_issues ?? null,
         });
 
-        const social_card_url = await uploadSocialCardToS3(cardBuffer, pet_id);
+        const social_card_url = await uploadSocialCardToS3(cardBuffer, pet_id, Date.now());
 
         await db.query(
             `UPDATE pets SET social_card_url = $1 WHERE pet_id = $2`,

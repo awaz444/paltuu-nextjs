@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { rateLimit } from "@/utils/rateLimit";
 import { validate } from "@/utils/validation";
 import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
+import { captureServerEvent } from "@/lib/analytics/serverEvents";
 
 /**
  * @swagger
@@ -94,6 +95,8 @@ export async function POST(req: Request) {
       'INSERT INTO save_collections (user_id, name, is_default) VALUES ($1, $2, $3)',
       [user.user_id, 'All Posts', true]
     );
+
+    await captureServerEvent("signup_completed", user.user_id, req, { method: "email" });
 
     // 5. Clean up OTP
     await db.query('DELETE FROM "OTP" WHERE email = $1', [email]);

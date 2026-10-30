@@ -6,6 +6,7 @@ import appleSignin from "apple-signin-auth";
 import { db } from "@/db/index";
 import bcrypt from "bcryptjs";
 import { createHash, randomBytes } from "crypto";
+import { captureServerEvent } from "@/lib/analytics/serverEvents";
 
 function buildAppleClientSecret(): string | null {
   const clientID = process.env.APPLE_ID;
@@ -254,6 +255,7 @@ export const authOptions: NextAuthOptions = {
                 profile.sub,
               ]
             );
+            await captureServerEvent("signup_completed", res.rows[0].user_id, null, { method: "google" });
           } else {
             // Returning user: backfill oauth + missing name/avatar so navbar stays correct after hydrate
             const existing = res.rows[0];
@@ -369,6 +371,7 @@ export const authOptions: NextAuthOptions = {
                   "INSERT INTO save_collections (user_id, name, is_default) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
                   [userRow!.user_id, "All Posts", true]
                 );
+                await captureServerEvent("signup_completed", userRow!.user_id, null, { method: "apple" });
               }
             } else {
               console.error(

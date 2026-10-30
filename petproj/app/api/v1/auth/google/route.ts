@@ -3,6 +3,7 @@ import { generateMobileTokenPair } from "@/utils/mobileAuth";
 import { NextResponse } from "next/server";
 import { OAuth2Client } from "google-auth-library";
 import bcrypt from 'bcryptjs';
+import { captureServerEvent } from "@/lib/analytics/serverEvents";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -49,6 +50,7 @@ export async function POST(req: Request) {
         [username, name, email, placeholderPassword, 'regular user']
       );
       user = newUserResult.rows[0];
+      await captureServerEvent("signup_completed", user.user_id, req, { method: "google" });
     } else {
       user = userResult.rows[0];
     }

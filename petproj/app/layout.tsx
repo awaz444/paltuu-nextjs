@@ -100,7 +100,11 @@ export default function RootLayout({
               ],
               "sameAs": [
                 "https://www.instagram.com/paltuu.pk",
-                "https://www.facebook.com/paltuu.pk"
+                "https://www.facebook.com/paltuu.pk",
+                "https://www.linkedin.com/company/paltuu",
+                "https://x.com/paltuupk",
+                "https://play.google.com/store/apps/details?id=com.paltuu.app",
+                "https://apps.apple.com/pk/app/paltuu/id6789732258"
               ]
             })
           }}

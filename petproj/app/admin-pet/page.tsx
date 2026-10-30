@@ -41,6 +41,21 @@ type Pet = {
   images?: { image_id?: number; image_url: string; order?: number }[];
 };
 
+const PET_TYPE_LABELS: Record<number, string> = { 1: 'Dog', 2: 'Cat', 3: 'Bird' };
+const MOBILE_PAGE_SIZE = 20;
+
+const StatusBadge = ({ status }: { status: string }) => {
+  const tone =
+    status === 'available' ? 'bg-green-100 text-green-800'
+      : status === 'adopted' ? 'bg-gray-200 text-gray-700'
+        : 'bg-amber-100 text-amber-800';
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${tone}`}>
+      {status || 'unknown'}
+    </span>
+  );
+};
+
 const AdminPetInteraction: React.FC = () => {
   const [pets, setPets] = useState<Pet[]>([]);
   const [filteredPets, setFilteredPets] = useState<Pet[]>([]);
@@ -56,6 +71,9 @@ const AdminPetInteraction: React.FC = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [generatingCard, setGeneratingCard] = useState(false);
+  // Which saved photo the social card is built from (defaults to the first).
+  const [cardImageUrl, setCardImageUrl] = useState<string | null>(null);
+  const [mobileVisible, setMobileVisible] = useState(MOBILE_PAGE_SIZE);
 
   const dispatch = useDispatch<AppDispatch>();
   const { cities } = useSelector((state: RootState) => state.cities);
@@ -74,6 +92,12 @@ const AdminPetInteraction: React.FC = () => {
       setFileList([]);
     }
   }, [editingPet]);
+
+  // Reset the card photo choice whenever a different pet is opened.
+  useEffect(() => {
+    setCardImageUrl(editingPet?.images?.[0]?.image_url ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingPet?.pet_id]);
 
   useEffect(() => {
     // Fetch cities and pets in parallel for better performance
@@ -137,7 +161,11 @@ const AdminPetInteraction: React.FC = () => {
     });
 
     setFilteredPets(result);
+    setMobileVisible(MOBILE_PAGE_SIZE);
   }, [pets, sortBy, statusFilter, typeFilter, searchTerm]);
+
+  const cityName = (cityId: number | null) =>
+    cities.find((city) => city.city_id === cityId)?.city_name || 'Unknown';
 
   // Delete pet
   const handleDelete = async (petId: number) => {
@@ -296,7 +324,7 @@ const AdminPetInteraction: React.FC = () => {
       const res = await fetch('/api/v1/admin/generate-social-card', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pet_id: editingPet.pet_id }),
+        body: JSON.stringify({ pet_id: editingPet.pet_id, image_url: cardImageUrl ?? undefined }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -429,19 +457,20 @@ const AdminPetInteraction: React.FC = () => {
   return (
     <>
 
-      <div className="bg-gray-100 min-h-screen px-4 md:px-10 py-8">
+      <div className="bg-gray-100 min-h-screen px-3 py-4 sm:px-4 md:px-10 md:py-8">
         <div className="container mx-auto">
-          <h1 className="text-2xl font-bold mb-6">Admin Pet Management</h1>
+          <h1 className="mb-4 text-xl font-bold md:mb-6 md:text-2xl">Admin Pet Management</h1>
 
           {/* Filters and Search */}
-          <div className="bg-white p-4 rounded-lg shadow mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="mb-4 rounded-lg bg-white p-3 shadow md:mb-6 md:p-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
               {/* Search */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Search Pets</label>
+              <div className="col-span-2 md:col-span-1">
+                <label className="mb-2 hidden text-sm font-medium md:block">Search Pets</label>
                 <Input
                   placeholder="Search by name or breed"
                   allowClear
+                  size="large"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full"
@@ -450,12 +479,8 @@ const AdminPetInteraction: React.FC = () => {
 
               {/* Status Filter */}
               <div>
-                <label className="block text-sm font-medium mb-2">Adoption Status</label>
-                <Select
-                  value={statusFilter}
-                  onChange={setStatusFilter}
-                  className="w-full"
-                >
+                <label className="mb-2 hidden text-sm font-medium md:block">Adoption Status</label>
+                <Select value={statusFilter} onChange={setStatusFilter} size="large" className="w-full">
                   <Select.Option value="all">All Status</Select.Option>
                   <Select.Option value="available">Available</Select.Option>
                   <Select.Option value="adopted">Adopted</Select.Option>
@@ -465,12 +490,8 @@ const AdminPetInteraction: React.FC = () => {
 
               {/* Type Filter */}
               <div>
-                <label className="block text-sm font-medium mb-2">Listing Type</label>
-                <Select
-                  value={typeFilter}
-                  onChange={setTypeFilter}
-                  className="w-full"
-                >
+                <label className="mb-2 hidden text-sm font-medium md:block">Listing Type</label>
+                <Select value={typeFilter} onChange={setTypeFilter} size="large" className="w-full">
                   <Select.Option value="all">All Types</Select.Option>
                   <Select.Option value="adoption">Adoption</Select.Option>
                   <Select.Option value="foster">Foster</Select.Option>
@@ -478,13 +499,9 @@ const AdminPetInteraction: React.FC = () => {
               </div>
 
               {/* Sort */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Sort By</label>
-                <Select
-                  value={sortBy}
-                  onChange={setSortBy}
-                  className="w-full"
-                >
+              <div className="col-span-2 md:col-span-1">
+                <label className="mb-2 hidden text-sm font-medium md:block">Sort By</label>
+                <Select value={sortBy} onChange={setSortBy} size="large" className="w-full">
                   <Select.Option value="newest">Newest First</Select.Option>
                   <Select.Option value="oldest">Oldest First</Select.Option>
                   <Select.Option value="name">Name (A-Z)</Select.Option>
@@ -493,13 +510,103 @@ const AdminPetInteraction: React.FC = () => {
             </div>
 
             {/* Results Count */}
-            <div className="mt-4 text-sm text-gray-600">
+            <div className="mt-3 text-sm text-gray-600 md:mt-4">
               Showing {filteredPets.length} of {pets.length} pets
             </div>
           </div>
 
-          {/* Table */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          {/* Mobile: card list */}
+          <div className="space-y-3 md:hidden">
+            {loading && pets.length === 0 ? (
+              <div className="rounded-lg bg-white p-8 text-center text-gray-500 shadow">Loading pets…</div>
+            ) : filteredPets.length === 0 ? (
+              <div className="rounded-lg bg-white p-8 text-center text-gray-500 shadow">No pets match these filters</div>
+            ) : (
+              <>
+                {filteredPets.slice(0, mobileVisible).map((pet) => {
+                  const thumb = pet.images?.[0]?.image_url;
+                  const facts = [
+                    pet.pet_type !== null ? (PET_TYPE_LABELS[pet.pet_type] || 'Other') : null,
+                    pet.pet_breed?.trim() || null,
+                    pet.age_months !== null ? formatAge(pet.age_months) : null,
+                    pet.sex || null,
+                  ].filter(Boolean);
+                  return (
+                    <div key={pet.pet_id} className="rounded-xl bg-white p-3 shadow-sm">
+                      <div className="flex gap-3">
+                        {thumb ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={thumb}
+                            alt=""
+                            loading="lazy"
+                            className="h-20 w-20 shrink-0 rounded-lg bg-gray-100 object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-xs text-gray-400">
+                            No image
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 break-words text-base font-semibold leading-snug text-gray-900">
+                              {pet.pet_name || 'N/A'}
+                            </div>
+                            <StatusBadge status={pet.adoption_status} />
+                          </div>
+                          <div className="mt-0.5 text-xs text-gray-400">
+                            #{pet.pet_id} · <span className="capitalize">{pet.listing_type}</span>
+                            {pet.social_card_url ? ' · Card ready' : ''}
+                          </div>
+                          <div className="mt-1 text-sm capitalize text-gray-600">{facts.join(' · ')}</div>
+                          <div className="text-sm text-gray-500">
+                            {cityName(pet.city_id)} · {pet.vaccinated ? 'Vaccinated' : 'Not vaccinated'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditingPet(pet)}
+                          className="min-h-[44px] rounded-lg bg-primary text-sm font-semibold text-white active:opacity-90"
+                        >
+                          Edit
+                        </button>
+                        <Popconfirm
+                          title="Delete this pet?"
+                          onConfirm={() => confirmDelete(pet.pet_id)}
+                          onCancel={cancelDelete}
+                          okText="Delete"
+                          okButtonProps={{ danger: true }}
+                          cancelText="No"
+                        >
+                          <button
+                            type="button"
+                            className="min-h-[44px] w-full rounded-lg border border-red-200 bg-white text-sm font-semibold text-red-600 active:bg-red-50"
+                          >
+                            Delete
+                          </button>
+                        </Popconfirm>
+                      </div>
+                    </div>
+                  );
+                })}
+                {filteredPets.length > mobileVisible && (
+                  <button
+                    type="button"
+                    onClick={() => setMobileVisible((n) => n + MOBILE_PAGE_SIZE)}
+                    className="min-h-[44px] w-full rounded-lg bg-white text-sm font-semibold text-gray-700 shadow"
+                  >
+                    Show more ({filteredPets.length - mobileVisible} left)
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Desktop: table */}
+          <div className="hidden overflow-hidden rounded-lg bg-white shadow md:block">
             <Table
               columns={columns}
               dataSource={filteredPets}
@@ -518,12 +625,27 @@ const AdminPetInteraction: React.FC = () => {
 
         {/* Edit Modal */}
         <Modal
-          title="Edit Pet Listing"
-          visible={!!editingPet}
+          title={editingPet ? `Edit: ${editingPet.pet_name || 'Pet'} (#${editingPet.pet_id})` : 'Edit Pet Listing'}
+          open={!!editingPet}
           onCancel={handleCancel}
-          onOk={handleUpdate}
-          okText="Update"
-          cancelText="Cancel"
+          width={640}
+          style={{ top: 12, maxWidth: 'calc(100vw - 16px)' }}
+          footer={
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+              <Button size="large" className="w-full sm:w-auto" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button
+                size="large"
+                type="primary"
+                className="w-full bg-primary text-white sm:w-auto"
+                loading={loading}
+                onClick={handleUpdate}
+              >
+                Update
+              </Button>
+            </div>
+          }
         >
           <Form layout="vertical" initialValues={editingPet || undefined}>
             <Form.Item label="Upload Pictures (Maximum 5)">
@@ -637,7 +759,8 @@ const AdminPetInteraction: React.FC = () => {
             {/* Listing Type Switch */}
             <div className="flex justify-between mb-4">
               <button
-                className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet?.listing_type === "adoption"
+                type="button"
+                className={`w-1/2 min-h-[44px] py-2 px-4 text-center rounded-lg ${editingPet?.listing_type === "adoption"
                   ? "bg-primary text-white"
                   : "bg-gray-100"
                   }`}
@@ -648,7 +771,8 @@ const AdminPetInteraction: React.FC = () => {
                 Adoption
               </button>
               <button
-                className={`w-1/2 py-2 px-4 text-center rounded-lg ${editingPet?.listing_type === "foster"
+                type="button"
+                className={`w-1/2 min-h-[44px] py-2 px-4 text-center rounded-lg ${editingPet?.listing_type === "foster"
                   ? "bg-primary text-white"
                   : "bg-gray-100"
                   }`}
@@ -661,47 +785,79 @@ const AdminPetInteraction: React.FC = () => {
             </div>
 
             {/* Social Card */}
-            <div className="mt-2 mb-2 border rounded-lg p-4 bg-gray-50">
-              <p className="text-sm font-semibold text-gray-700 mb-3">Social Card</p>
-              {editingPet?.social_card_url ? (
-                <div className="flex flex-col items-center gap-3">
+            <div className="mt-2 mb-2 rounded-lg border bg-gray-50 p-3 sm:p-4">
+              <p className="mb-1 text-sm font-semibold text-gray-700">Social Card</p>
+              {editingPet?.images && editingPet.images.length > 0 ? (
+                <>
+                  <p className="mb-2 text-xs text-gray-500">Pick the photo to build the card from</p>
+                  <div className="mb-3 grid grid-cols-4 gap-2 sm:grid-cols-5">
+                    {editingPet.images.map((img, i) => {
+                      const selected = cardImageUrl === img.image_url;
+                      return (
+                        <button
+                          key={img.image_id ?? img.image_url}
+                          type="button"
+                          onClick={() => setCardImageUrl(img.image_url)}
+                          aria-pressed={selected}
+                          aria-label={`Use photo ${i + 1}`}
+                          className={`relative aspect-square overflow-hidden rounded-lg border-2 ${
+                            selected ? 'border-primary' : 'border-transparent opacity-70'
+                          }`}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={img.image_url} alt="" className="h-full w-full object-cover" />
+                          {selected && (
+                            <span className="absolute right-1 top-1 rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">
+                              ✓
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {fileList.some((f) => f.originFileObj) && (
+                    <p className="mb-2 text-xs text-amber-700">New uploads can be used for the card after you press Update.</p>
+                  )}
+                </>
+              ) : (
+                <p className="mb-2 text-xs text-gray-500">Add a photo and press Update to make a card.</p>
+              )}
+
+              <div className="flex flex-col items-center gap-3">
+                {editingPet?.social_card_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={editingPet.social_card_url}
                     alt="Social card preview"
-                    className="w-40 rounded-lg shadow"
+                    className="w-48 rounded-lg shadow"
                     style={{ aspectRatio: '4/5', objectFit: 'cover' }}
                   />
-                  <div className="flex gap-2">
+                ) : (
+                  <p className="text-xs text-gray-500">No card generated yet</p>
+                )}
+                <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+                  {editingPet?.social_card_url && (
                     <a
                       href={editingPet.social_card_url}
                       download={`listing_${editingPet.pet_id}_social.jpg`}
                       target="_blank"
                       rel="noreferrer"
-                      className="px-3 py-1 text-sm bg-primary text-white rounded-lg"
+                      className="flex min-h-[40px] items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:text-white"
                     >
                       Download
                     </a>
-                    <Button
-                      size="small"
-                      loading={generatingCard}
-                      onClick={handleGenerateSocialCard}
-                    >
-                      Regenerate
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <p className="text-xs text-gray-500">No card generated yet</p>
+                  )}
                   <Button
-                    size="small"
+                    size="large"
+                    className={editingPet?.social_card_url ? '' : 'col-span-2'}
                     loading={generatingCard}
+                    disabled={!cardImageUrl}
                     onClick={handleGenerateSocialCard}
                   >
-                    Generate Card
+                    {editingPet?.social_card_url ? 'Regenerate' : 'Generate Card'}
                   </Button>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Caption Generator */}

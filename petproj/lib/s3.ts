@@ -128,8 +128,10 @@ export async function deleteFromS3Main(urlOrKey: string): Promise<void> {
  * Upload a JPEG buffer to paltuu-main/social-cards/ with a deterministic key
  * based on the pet ID, so re-generation overwrites the previous card.
  */
-export async function uploadSocialCardToS3(buffer: Buffer, petId: number): Promise<string> {
-    const key = `social-cards/listing_${petId}_social.jpg`;
+export async function uploadSocialCardToS3(buffer: Buffer, petId: number, version?: string | number): Promise<string> {
+    const key = version
+        ? `social-cards/listing_${petId}_social_${version}.jpg`
+        : `social-cards/listing_${petId}_social.jpg`;
 
     await getS3Main().send(
         new PutObjectCommand({

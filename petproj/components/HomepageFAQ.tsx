@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BRAND_STATS } from "@/lib/brandStats";
 
 const FAQS = [
     {
@@ -56,8 +57,8 @@ const FAQS = [
         q: "Which cities in Pakistan does Paltuu serve?",
         a: (
             <>
-                Paltuu is most active in Karachi, Lahore, and Islamabad, with growing listings and
-                community members across Rawalpindi, Faisalabad, and other cities nationwide.
+                Paltuu has pet owners in {BRAND_STATS.cities} cities across Pakistan,{" "}
+                {BRAND_STATS.citySpan}, and is most active in Karachi, Lahore, and Islamabad.
             </>
         ),
     },
@@ -69,8 +70,8 @@ const FAQS = [
                 <Link href="/browse-pets" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
                     pets available for adoption
                 </Link>
-                , message the shelter or owner directly, and arrange to meet the pet before bringing them
-                home. Verified shelters and rescue partners are marked on each listing.
+                , open a listing and submit an adoption application. The owner or shelter reviews
+                applications and arranges a meeting with the person they choose.
             </>
         ),
     },
@@ -110,7 +111,11 @@ const FAQS = [
                 <Link href="https://play.google.com/store/apps/details?id=com.paltuu.app" target="_blank" rel="noopener noreferrer" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
                     Google Play
                 </Link>{" "}
-                for Android, with an iOS version coming soon. The app lets you adopt pets, connect
+                for Android and on the{" "}
+                <Link href="https://apps.apple.com/pk/app/paltuu/id6789732258" target="_blank" rel="noopener noreferrer" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
+                    App Store
+                </Link>{" "}
+                for iPhone. The app lets you adopt pets, connect
                 with verified home vets, report lost pets, and be part of our mission to document
                 every pet in Pakistan.
             </>

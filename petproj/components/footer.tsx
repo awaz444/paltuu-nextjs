@@ -144,6 +144,7 @@ export default function Footer() {
         <div className="text-center md:text-left">
           <h3 className="text-lg font-semibold mb-2">Policies</h3>
           <ul className="space-y-1 text-sm mb-6">
+            <li><Link href="/about" className="hover:text-gray-300">About Paltuu</Link></li>
             <li><Link href="/terms-and-conditions" className="hover:text-gray-300">Terms &amp; Conditions</Link></li>
             <li><Link href="/privacy-policy" className="hover:text-gray-300">Privacy Policy</Link></li>
           </ul>

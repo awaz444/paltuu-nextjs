@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { db } from "@/db/index";
 import { SITE_URL } from "@/lib/site";
+import { BRAND_STATS, BRAND_STATS_SENTENCE } from "@/lib/brandStats";
 
 // The one page answer engines can quote for "what is Paltuu / is it free / where
 // does it work". Answer-first on purpose: each section opens with the fact,
@@ -52,6 +53,10 @@ export default async function AboutPage() {
             a: "Paltuu (paltuu.pk) is a Pakistani pet platform on the web and as a free app for Android and iOS. People use it to adopt pets, list pets for adoption, find vets, report lost and found pets, and ask other pet owners for advice in species and breed forums.",
         },
         {
+            q: "How big is Paltuu?",
+            a: BRAND_STATS_SENTENCE,
+        },
+        {
             q: "Is Paltuu free?",
             a: "Yes. Browsing pets, applying to adopt, listing a pet for adoption, using the vet directory and posting in the community are all free. The only paid service is Vets at Home in Karachi, where you pay for the vet visit itself.",
         },
@@ -73,7 +78,7 @@ export default async function AboutPage() {
         },
         {
             q: "Which cities does Paltuu work in?",
-            a: "Adoption listings, the community and the vet directory cover cities across Pakistan, and are most active in Karachi, Lahore and Islamabad. Vets at Home is available in Karachi only.",
+            a: `Paltuu has pet owners in ${BRAND_STATS.cities} cities across Pakistan, ${BRAND_STATS.citySpan}, and is most active in Karachi, Lahore and Islamabad. Vets at Home is available in Karachi only.`,
         },
         {
             q: "Is there a Paltuu app?",
@@ -129,6 +134,7 @@ export default async function AboutPage() {
                     <a href={ANDROID_URL} target="_blank" rel="noopener noreferrer" className={link}>Android</a> and{" "}
                     <a href={IOS_URL} target="_blank" rel="noopener noreferrer" className={link}>iOS</a>.
                 </p>
+                <p className="mt-4 text-lg leading-relaxed text-gray-700">{BRAND_STATS_SENTENCE}</p>
 
                 <section className="mt-10 space-y-6">
                     {faqs.map(({ q, a }) => (

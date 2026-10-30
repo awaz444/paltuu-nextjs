@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BRAND_STATS } from "@/lib/brandStats";
 
 const FAQS = [
     {
@@ -56,8 +57,8 @@ const FAQS = [
         q: "Which cities in Pakistan does Paltuu serve?",
         a: (
             <>
-                Paltuu is most active in Karachi, Lahore, and Islamabad, with growing listings and
-                community members across Rawalpindi, Faisalabad, and other cities nationwide.
+                Paltuu has pet owners in {BRAND_STATS.cities} cities across Pakistan,{" "}
+                {BRAND_STATS.citySpan}, and is most active in Karachi, Lahore, and Islamabad.
             </>
         ),
     },

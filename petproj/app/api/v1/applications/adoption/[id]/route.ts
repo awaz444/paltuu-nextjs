@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
 import { AdoptionNotifications } from "@/lib/notifications";
+import { captureServerEvent } from "@/lib/analytics/serverEvents";
 
 /**
  * @swagger
@@ -30,7 +31,7 @@ export async function PATCH(req: NextRequest) {
 
         // 1. Verify Ownership
         const check = await db.query(`
-            SELECT aa.user_id as applicant_id, p.owner_id, p.pet_name
+            SELECT aa.user_id as applicant_id, aa.pet_id, aa.status as previous_status, p.owner_id, p.pet_name
             FROM adoption_applications aa
             JOIN pets p ON aa.pet_id = p.pet_id
             WHERE aa.adoption_id = $1
@@ -38,9 +39,11 @@ export async function PATCH(req: NextRequest) {
 
         if (check.rowCount === 0) return NextResponse.json({ error: "Application not found" }, { status: 404 });
 
-        const { owner_id, applicant_id, pet_name } = check.rows[0] as {
+        const { owner_id, applicant_id, pet_id, previous_status, pet_name } = check.rows[0] as {
             owner_id: number;
             applicant_id: number;
+            pet_id: number;
+            previous_status: string | null;
             pet_name: string;
         };
 
@@ -73,6 +76,16 @@ export async function PATCH(req: NextRequest) {
             }
 
             await client.query('COMMIT');
+
+            if ((status === 'approved' || status === 'rejected') && previous_status !== status) {
+                await captureServerEvent(
+                    status === 'approved' ? 'adoption_application_approved' : 'adoption_application_rejected',
+                    userId ?? owner_id,
+                    req,
+                    { application_id: parseInt(id), pet_id, applicant_id, previous_status, by_admin: isAdmin }
+                );
+            }
+
             return NextResponse.json(result.rows[0]);
         } catch (e) {
             await client.query('ROLLBACK');

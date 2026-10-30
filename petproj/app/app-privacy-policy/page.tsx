@@ -150,6 +150,13 @@ export default function AppPrivacyPolicyPage() {
                     shelters/rescues when you apply to adopt, and with
                     authorities only when legally required.
                   </p>
+                  <p className="text-gray-700 text-sm sm:text-base mt-3">
+                    We use PostHog, an analytics service, to count key actions
+                    such as sign-ups, new listings and adoption applications,
+                    with your account ID and device platform. We do not send
+                    form contents such as addresses or phone numbers to
+                    PostHog.
+                  </p>
                 </section>
 
                 <section id="rights" className="scroll-mt-20 mt-6 sm:mt-10">

@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { db } from "@/db/index";
 import { generateMobileTokenPair } from "@/utils/mobileAuth";
 import bcrypt from "bcryptjs";
+import { captureServerEvent } from "@/lib/analytics/serverEvents";
 
 export const dynamic = "force-dynamic";
 
@@ -120,6 +121,7 @@ export async function GET(req: NextRequest) {
         'INSERT INTO save_collections (user_id, name, is_default) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
         [user.user_id, 'All Posts', true]
       );
+      await captureServerEvent("signup_completed", user.user_id, req, { method: "google" });
     } else {
       user = userResult.rows[0];
     }

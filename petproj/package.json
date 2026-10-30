@@ -75,6 +75,7 @@
     "opentype.js": "^2.0.0",
     "pg": "^8.13.1",
     "pluralize": "^8.0.0",
+    "posthog-js": "^1.442.1",
     "qrcode": "^1.5.4",
     "react": "^18",
     "react-confetti": "^6.4.0",

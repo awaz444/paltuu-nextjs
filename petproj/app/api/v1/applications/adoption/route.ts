@@ -5,6 +5,7 @@ import { AdoptionNotifications } from "@/lib/notifications";
 import { sendAdoptionApplicationEmails } from "@/utils/mailjet";
 import { withRetry } from "@/utils/retry";
 import { normalizePhone } from "@/utils/phone";
+import { captureServerEvent } from "@/lib/analytics/serverEvents";
 
 /**
  * @swagger
@@ -152,6 +153,11 @@ export async function POST(req: NextRequest) {
             } catch (err) {
                 console.error('❌ [adoption/POST] application email failed:', err);
             }
+        });
+
+        await captureServerEvent("adoption_application_submitted", userId, req, {
+            application_id: applicationId,
+            pet_id,
         });
 
         return NextResponse.json({ success: true, applicationId });

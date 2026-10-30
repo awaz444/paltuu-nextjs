@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { normalizePhone, isValidPhone } from "@/utils/phone";
+import { captureServerEvent } from "@/lib/analytics/serverEvents";
 
 export const dynamic = "force-dynamic";
 
@@ -152,6 +153,14 @@ export async function POST(
             );
 
             await client.query("COMMIT");
+
+            await captureServerEvent("listing_created", userId, req, {
+                pet_id: newPetId,
+                listing_type,
+                pet_type: petTypeId,
+                city_id: cityId,
+                source: "pet_profile",
+            });
 
             return NextResponse.json(
                 {

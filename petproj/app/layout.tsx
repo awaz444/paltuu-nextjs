@@ -15,6 +15,7 @@ import PageTransition from "@/components/PageTransition";
 import CartSyncProvider from "@/components/CartSyncProvider";
 import CookieConsent from "@/components/CookieConsent";
 import AnalyticsTracker from "@/components/analytics/AnalyticsTracker";
+import PostHogTracker from "@/components/analytics/PostHogTracker";
 import { SITE_URL } from "@/lib/site";
 import { cheeseMilky, dmSans } from "./fonts";
 
@@ -172,6 +173,7 @@ export default function RootLayout({
               */}
               <Analytics />
               <AnalyticsTracker />
+              <PostHogTracker />
             </CartSyncProvider>
           </ClientProvider>
         </AppClientWrapper>

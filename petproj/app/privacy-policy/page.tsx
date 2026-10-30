@@ -285,6 +285,14 @@ export default function PrivacyPolicyPage() {
                     experience, and analyze traffic. You can disable cookies in
                     your browser, but some features may stop working.
                   </p>
+                  <p className="text-gray-700 text-sm sm:text-base mt-3">
+                    We use PostHog, an analytics service, to count page views
+                    and key actions such as sign-ups, new listings, adoption
+                    applications and app download clicks. This helps us see
+                    which pages are useful. We do not record your screen, and
+                    we do not send form contents such as addresses or phone
+                    numbers to PostHog.
+                  </p>
                 </section>
 
                 <section id="children" className="scroll-mt-20 mt-6 sm:mt-10">

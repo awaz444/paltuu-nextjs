@@ -27,6 +27,20 @@ const PET_TYPE_LABELS: Record<number, string> = {
   15: 'Mouse',
 };
 
+// Listings up to this ID predate the current review flow. Everything newer is
+// routinely approved, so legacy ones get a marker and their own filter.
+const LEGACY_MAX_PET_ID = 873;
+const isLegacy = (petId: number) => petId <= LEGACY_MAX_PET_ID;
+const MOBILE_PAGE_SIZE = 20;
+
+const LegacyBadge = () => (
+  <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-800">
+    Legacy
+  </span>
+);
+
+type Era = 'all' | 'new' | 'legacy';
+
 type Pet = {
   pet_id: number;
   owner_id: number;
@@ -81,6 +95,9 @@ const AdminPetApproval: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>("newest");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [era, setEra] = useState<Era>("all");
+  const [approvingId, setApprovingId] = useState<number | null>(null);
+  const [mobileVisible, setMobileVisible] = useState(MOBILE_PAGE_SIZE);
 
   // Modal detail states
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
@@ -159,6 +176,10 @@ const AdminPetApproval: React.FC = () => {
       }
     }
 
+    // Filter by legacy / new
+    if (era === "new") result = result.filter((pet) => !isLegacy(pet.pet_id));
+    if (era === "legacy") result = result.filter((pet) => isLegacy(pet.pet_id));
+
     // Filter by search term
     if (searchTerm) {
       result = result.filter(
@@ -181,7 +202,16 @@ const AdminPetApproval: React.FC = () => {
     });
 
     setFilteredPets(result);
-  }, [pets, sortBy, typeFilter, searchTerm]);
+    setMobileVisible(MOBILE_PAGE_SIZE);
+  }, [pets, sortBy, typeFilter, searchTerm, era]);
+
+  const pending = filteredPets.filter((pet) => !pet.approved);
+  const allPending = pets.filter((pet) => !pet.approved);
+  const eraCounts: Record<Era, number> = {
+    all: allPending.length,
+    new: allPending.filter((pet) => !isLegacy(pet.pet_id)).length,
+    legacy: allPending.filter((pet) => isLegacy(pet.pet_id)).length,
+  };
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -207,7 +237,7 @@ const AdminPetApproval: React.FC = () => {
   const handleApprove = async (petId: number) => {
     dispatch(fetchAdoptionPets({}));
     dispatch(fetchFosterPets());
-    setLoading(true);
+    setApprovingId(petId);
     try {
       const response = await fetch('/api/v1/admin/listings', {
         method: 'PATCH',
@@ -242,7 +272,7 @@ const AdminPetApproval: React.FC = () => {
       console.error('Approval error:', error);
       message.error(error instanceof Error ? error.message : 'Failed to approve pet listing');
     } finally {
-      setLoading(false);
+      setApprovingId(null);
     }
   };
 
@@ -257,7 +287,12 @@ const AdminPetApproval: React.FC = () => {
       title: 'Pet Name',
       dataIndex: 'pet_name',
       key: 'pet_name',
-      render: (name: string | null) => (name ? name : 'N/A'),
+      render: (name: string | null, record: Pet) => (
+        <span className="inline-flex flex-wrap items-center gap-2">
+          {name ? name : 'N/A'}
+          {isLegacy(record.pet_id) && <LegacyBadge />}
+        </span>
+      ),
     },
     {
       title: 'Type',
@@ -318,6 +353,7 @@ const AdminPetApproval: React.FC = () => {
             <Button
               className="bg-primary text-white rounded-lg"
               size="small"
+              loading={approvingId === record.pet_id}
               onClick={() => handleApprove(record.pet_id)}
             >
               Approve
@@ -332,19 +368,40 @@ const AdminPetApproval: React.FC = () => {
 
   return (
     <>
-      <div className="bg-gray-100 min-h-screen px-4 md:px-10 py-8">
+      <div className="bg-gray-100 min-h-screen px-3 py-4 sm:px-4 md:px-10 md:py-8">
         <div className="container mx-auto">
-          <h1 className="text-2xl font-bold mb-6">Pet Listing Approvals</h1>
+          <h1 className="mb-4 text-xl font-bold md:mb-6 md:text-2xl">Pet Listing Approvals</h1>
 
           {/* Filters and Search */}
-          <div className="bg-white p-4 rounded-lg shadow mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mb-4 rounded-lg bg-white p-3 shadow md:mb-6 md:p-4">
+            {/* New / Legacy / All */}
+            <div className="mb-3 grid grid-cols-3 gap-1 rounded-lg bg-gray-100 p-1 md:mb-4 md:inline-grid md:w-auto">
+              {([
+                ['new', 'New'],
+                ['legacy', 'Legacy'],
+                ['all', 'All'],
+              ] as [Era, string][]).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setEra(key)}
+                  className={`min-h-[40px] rounded-md px-3 text-sm font-semibold transition-colors md:px-5 ${
+                    era === key ? 'bg-white text-gray-900 shadow' : 'text-gray-500'
+                  }`}
+                >
+                  {label} <span className="font-normal text-gray-400">{eraCounts[key]}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
               {/* Search */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Search Pets</label>
+              <div className="col-span-2 md:col-span-1">
+                <label className="mb-1 hidden text-sm font-medium md:mb-2 md:block">Search Pets</label>
                 <Input
                   placeholder="Search by name or breed"
                   allowClear
+                  size="large"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full"
@@ -353,12 +410,8 @@ const AdminPetApproval: React.FC = () => {
 
               {/* Type Filter */}
               <div>
-                <label className="block text-sm font-medium mb-2">Pet Type</label>
-                <Select
-                  value={typeFilter}
-                  onChange={setTypeFilter}
-                  className="w-full"
-                >
+                <label className="mb-1 hidden text-sm font-medium md:mb-2 md:block">Pet Type</label>
+                <Select value={typeFilter} onChange={setTypeFilter} size="large" className="w-full">
                   <Option value="all">All Types</Option>
                   <Option value="1">Dog</Option>
                   <Option value="2">Cat</Option>
@@ -369,12 +422,8 @@ const AdminPetApproval: React.FC = () => {
 
               {/* Sort */}
               <div>
-                <label className="block text-sm font-medium mb-2">Sort By</label>
-                <Select
-                  value={sortBy}
-                  onChange={setSortBy}
-                  className="w-full"
-                >
+                <label className="mb-1 hidden text-sm font-medium md:mb-2 md:block">Sort By</label>
+                <Select value={sortBy} onChange={setSortBy} size="large" className="w-full">
                   <Option value="newest">Newest First</Option>
                   <Option value="oldest">Oldest First</Option>
                   <Option value="name">Name (A-Z)</Option>
@@ -383,18 +432,92 @@ const AdminPetApproval: React.FC = () => {
             </div>
 
             {/* Results Count */}
-            <div className="mt-4 text-sm text-gray-600">
-              Showing {filteredPets.filter((pet) => !pet.approved).length} pending approvals
+            <div className="mt-3 text-sm text-gray-600 md:mt-4">
+              Showing {pending.length} pending approvals
+              <span className="text-gray-400"> · Legacy = pet ID {LEGACY_MAX_PET_ID} and older</span>
             </div>
           </div>
 
-          {/* Table */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          {/* Mobile: card list */}
+          <div className="space-y-3 md:hidden">
+            {loading && pets.length === 0 ? (
+              <div className="flex justify-center py-12"><Spin size="large" /></div>
+            ) : pending.length === 0 ? (
+              <div className="rounded-lg bg-white p-8 text-center text-gray-500 shadow">No pending approvals</div>
+            ) : (
+              <>
+                {pending.slice(0, mobileVisible).map((pet) => {
+                  const legacy = isLegacy(pet.pet_id);
+                  const facts = [
+                    pet.pet_type !== null ? (PET_TYPE_LABELS[pet.pet_type] || 'Other') : null,
+                    pet.pet_breed?.trim() || null,
+                    pet.age_months !== null ? formatAge(pet.age_months) : null,
+                    pet.sex || null,
+                  ].filter(Boolean);
+                  return (
+                    <div
+                      key={pet.pet_id}
+                      className={`rounded-xl border bg-white p-4 shadow-sm ${legacy ? 'border-amber-200' : 'border-transparent'}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="break-words text-base font-semibold leading-snug text-gray-900">
+                            {pet.pet_name || 'N/A'}
+                          </div>
+                          <div className="mt-0.5 text-xs text-gray-400">#{pet.pet_id}</div>
+                        </div>
+                        {legacy && <LegacyBadge />}
+                      </div>
+
+                      <div className="mt-2 text-sm capitalize text-gray-600">{facts.join(' · ')}</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
+                        <span>{pet.city || 'Unknown city'}</span>
+                        <span className={pet.vaccinated ? 'text-green-700' : 'text-gray-400'}>
+                          {pet.vaccinated ? 'Vaccinated' : 'Not vaccinated'}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleView(pet.pet_id)}
+                          className="min-h-[44px] rounded-lg border border-gray-300 bg-white text-sm font-semibold text-gray-700 active:bg-gray-50"
+                        >
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          disabled={approvingId === pet.pet_id}
+                          onClick={() => handleApprove(pet.pet_id)}
+                          className="min-h-[44px] rounded-lg bg-primary text-sm font-semibold text-white active:opacity-90 disabled:opacity-60"
+                        >
+                          {approvingId === pet.pet_id ? 'Approving…' : 'Approve'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {pending.length > mobileVisible && (
+                  <button
+                    type="button"
+                    onClick={() => setMobileVisible((n) => n + MOBILE_PAGE_SIZE)}
+                    className="min-h-[44px] w-full rounded-lg bg-white text-sm font-semibold text-gray-700 shadow"
+                  >
+                    Show more ({pending.length - mobileVisible} left)
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Desktop: table */}
+          <div className="hidden overflow-hidden rounded-lg bg-white shadow md:block">
             <Table
               columns={columns}
-              dataSource={filteredPets.filter((pet) => !pet.approved)}
+              dataSource={pending}
               rowKey="pet_id"
               loading={loading}
+              rowClassName={(record: Pet) => (isLegacy(record.pet_id) ? 'bg-amber-50/60' : '')}
               pagination={{
                 pageSize: 10,
                 showSizeChanger: true,
@@ -409,28 +532,37 @@ const AdminPetApproval: React.FC = () => {
 
       {/* Review Detail Modal */}
       <Modal
-        title={petDetail ? `Review Listing: ${petDetail.pet_name || 'Unnamed'}` : "Review Listing"}
+        title={
+          <span className="inline-flex flex-wrap items-center gap-2 pr-6">
+            {petDetail ? `Review Listing: ${petDetail.pet_name || 'Unnamed'}` : "Review Listing"}
+            {petDetail && isLegacy(petDetail.pet_id) && <LegacyBadge />}
+          </span>
+        }
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         width={800}
-        footer={[
-          <Button key="close" onClick={() => setModalOpen(false)}>
-            Close
-          </Button>,
-          petDetail && !petDetail.approved && (
-            <Button
-              key="approve"
-              type="primary"
-              className="bg-primary text-white"
-              onClick={async () => {
-                await handleApprove(petDetail.pet_id);
-                setModalOpen(false);
-              }}
-            >
-              Approve
+        style={{ top: 12, maxWidth: 'calc(100vw - 16px)' }}
+        footer={
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+            <Button size="large" className="w-full sm:w-auto" onClick={() => setModalOpen(false)}>
+              Close
             </Button>
-          )
-        ]}
+            {petDetail && !petDetail.approved && (
+              <Button
+                size="large"
+                type="primary"
+                className="w-full bg-primary text-white sm:w-auto"
+                loading={approvingId === petDetail.pet_id}
+                onClick={async () => {
+                  await handleApprove(petDetail.pet_id);
+                  setModalOpen(false);
+                }}
+              >
+                Approve
+              </Button>
+            )}
+          </div>
+        }
       >
         {detailLoading ? (
           <div className="flex justify-center items-center py-12">
@@ -449,7 +581,7 @@ const AdminPetApproval: React.FC = () => {
                   {petDetail.images.map((img, idx) => (
                     <div
                       key={img.image_id}
-                      className="relative aspect-square w-full h-32 overflow-hidden rounded-lg border cursor-pointer"
+                      className="relative aspect-square w-full overflow-hidden rounded-lg border cursor-pointer"
                     >
                       <NextImage
                         src={getOptimizedImageUrl(img.image_url, 400)}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Table, Button, Space, message, Select, Input, Modal, Image, Spin } from 'antd';
+import { Table, Button, Space, message, Select, Input, Modal, Image, Spin, Popconfirm } from 'antd';
 import NextImage from 'next/image';
 import Navbar from '@/components/navbar';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
@@ -97,6 +97,7 @@ const AdminPetApproval: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [era, setEra] = useState<Era>("all");
   const [approvingId, setApprovingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [mobileVisible, setMobileVisible] = useState(MOBILE_PAGE_SIZE);
 
   // Modal detail states
@@ -276,6 +277,37 @@ const AdminPetApproval: React.FC = () => {
     }
   };
 
+  // Delete pet
+  const handleDelete = async (petId: number) => {
+    setDeletingId(petId);
+    dispatch(fetchAdoptionPets({}));
+    dispatch(fetchFosterPets());
+    try {
+      const response = await fetch(`/api/v1/admin/pets?pet_id=${petId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || 'Failed to delete pet');
+      }
+
+      message.success('Pet listing deleted successfully');
+      setPets((prevPets) => prevPets.filter((pet) => pet.pet_id !== petId));
+      if (selectedPetId === petId) {
+        setModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      message.error(error instanceof Error ? error.message : 'Failed to delete pet listing');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const columns = [
     {
       title: 'Pet ID',
@@ -361,6 +393,22 @@ const AdminPetApproval: React.FC = () => {
           ) : (
             <span className="text-green-600 font-medium">Approved</span>
           )}
+          <Popconfirm
+            title="Delete Pet"
+            description="Are you sure you want to permanently delete this pet listing?"
+            onConfirm={() => handleDelete(record.pet_id)}
+            okText="Yes, Delete"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true, loading: deletingId === record.pet_id }}
+          >
+            <Button
+              danger
+              size="small"
+              loading={deletingId === record.pet_id}
+            >
+              Delete
+            </Button>
+          </Popconfirm>
         </Space>
       ),
     },
@@ -477,7 +525,7 @@ const AdminPetApproval: React.FC = () => {
                         </span>
                       </div>
 
-                      <div className="mt-4 grid grid-cols-2 gap-2">
+                      <div className="mt-4 grid grid-cols-3 gap-2">
                         <button
                           type="button"
                           onClick={() => handleView(pet.pet_id)}
@@ -493,6 +541,22 @@ const AdminPetApproval: React.FC = () => {
                         >
                           {approvingId === pet.pet_id ? 'Approving…' : 'Approve'}
                         </button>
+                        <Popconfirm
+                          title="Delete Pet"
+                          description="Are you sure you want to permanently delete this pet listing?"
+                          onConfirm={() => handleDelete(pet.pet_id)}
+                          okText="Delete"
+                          cancelText="Cancel"
+                          okButtonProps={{ danger: true }}
+                        >
+                          <button
+                            type="button"
+                            disabled={deletingId === pet.pet_id}
+                            className="min-h-[44px] rounded-lg border border-red-200 bg-red-50 text-sm font-semibold text-red-600 active:bg-red-100 disabled:opacity-60"
+                          >
+                            {deletingId === pet.pet_id ? 'Deleting…' : 'Delete'}
+                          </button>
+                        </Popconfirm>
                       </div>
                     </div>
                   );
@@ -543,7 +607,26 @@ const AdminPetApproval: React.FC = () => {
         width={800}
         style={{ top: 12, maxWidth: 'calc(100vw - 16px)' }}
         footer={
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+          <div className="grid grid-cols-3 gap-2 sm:flex sm:justify-end">
+            {petDetail && (
+              <Popconfirm
+                title="Delete Pet"
+                description="Are you sure you want to permanently delete this pet listing?"
+                onConfirm={() => handleDelete(petDetail.pet_id)}
+                okText="Delete"
+                cancelText="Cancel"
+                okButtonProps={{ danger: true }}
+              >
+                <Button
+                  danger
+                  size="large"
+                  className="w-full sm:w-auto"
+                  loading={deletingId === petDetail.pet_id}
+                >
+                  Delete
+                </Button>
+              </Popconfirm>
+            )}
             <Button size="large" className="w-full sm:w-auto" onClick={() => setModalOpen(false)}>
               Close
             </Button>

@@ -151,9 +151,24 @@ export async function DELETE(req: NextRequest) {
         const pet_id = searchParams.get('pet_id');
         if (!pet_id) return NextResponse.json({ error: "Pet ID required" }, { status: 400 });
 
-        await db.query('DELETE FROM pets WHERE pet_id = $1', [pet_id]);
-        return NextResponse.json({ success: true });
+        const client = await db.connect();
+        try {
+            await client.query('BEGIN');
+            await client.query('DELETE FROM pet_tag_assignments WHERE pet_id = $1', [pet_id]);
+            await client.query('DELETE FROM pet_images WHERE pet_id = $1', [pet_id]);
+            await client.query('DELETE FROM adoption_applications WHERE pet_id = $1', [pet_id]);
+            await client.query('DELETE FROM pets WHERE pet_id = $1', [pet_id]);
+            await client.query('COMMIT');
+            return NextResponse.json({ success: true });
+        } catch (e) {
+            await client.query('ROLLBACK');
+            throw e;
+        } finally {
+            client.release();
+        }
     } catch (error) {
+        console.error("Admin Pet Delete error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+

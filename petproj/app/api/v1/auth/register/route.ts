@@ -52,6 +52,15 @@ export async function POST(req: Request) {
     }
 
     const latestOtp = otpResult.rows[otpResult.rows.length - 1];
+
+    // Check expiration (10 minutes)
+    const tokenCreatedTime = new Date(latestOtp.created_at).getTime();
+    const tenMinutesMs = 10 * 60 * 1000;
+    if (Date.now() - tokenCreatedTime > tenMinutesMs) {
+      await db.query('DELETE FROM "OTP" WHERE email = $1', [email]);
+      return NextResponse.json({ message: "Verification code has expired. Please request a new one." }, { status: 410 });
+    }
+
     const isOtpValid = await bcrypt.compare(otp.toString(), latestOtp.otp);
     if (!isOtpValid) {
       return NextResponse.json({ message: "Invalid OTP" }, { status: 400 });

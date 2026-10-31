@@ -6,6 +6,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { captureServerEvent } from "@/lib/analytics/serverEvents";
 
+import crypto from "crypto";
+
 export const dynamic = "force-dynamic";
 
 /**
@@ -18,7 +20,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { identityToken, fullName, email } = body;
+    const { identityToken, fullName } = body;
 
     if (!identityToken) {
       return NextResponse.json(
@@ -52,14 +54,10 @@ export async function POST(req: NextRequest) {
     }
 
     const { sub, email: appleEmail } = applePayload;
-    const resolvedEmail = email || appleEmail;
-
-    if (!resolvedEmail) {
-      return NextResponse.json(
-        { error: "No email returned from Apple or provided by client." },
-        { status: 400 }
-      );
-    }
+    // CRITICAL: Only use verified email from Apple's identity token for linking/creation
+    const verifiedEmail = typeof appleEmail === "string" && appleEmail.trim()
+      ? appleEmail.trim().toLowerCase()
+      : null;
 
     // 2. Find or create the user in the database
     // Step 2a: Lookup by oauth_provider = 'apple' AND oauth_id = sub
@@ -73,24 +71,24 @@ export async function POST(req: NextRequest) {
 
     if ((userResult.rowCount ?? 0) > 0) {
       user = userResult.rows[0];
-    } else {
-      // Step 2b: Lookup by email to link existing accounts
+    } else if (verifiedEmail) {
+      // Step 2b: Lookup strictly by VERIFIED Apple email to link existing accounts
       const emailResult = await db.query(
-        "SELECT user_id, name, email, role, profile_image_url, phone_number, is_suspended FROM users WHERE email = $1",
-        [resolvedEmail]
+        "SELECT user_id, name, email, role, profile_image_url, phone_number, is_suspended FROM users WHERE LOWER(email) = LOWER($1)",
+        [verifiedEmail]
       );
 
       if ((emailResult.rowCount ?? 0) > 0) {
         user = emailResult.rows[0];
-        console.log(`[Mobile Apple Auth] Linking existing user (${resolvedEmail}) to Apple OAuth`);
+        console.log(`[Mobile Apple Auth] Linking existing user (${verifiedEmail}) to Apple OAuth`);
         await db.query(
           "UPDATE users SET oauth_provider = $1, oauth_id = $2 WHERE user_id = $3",
           ["apple", sub, user.user_id]
         );
       } else {
-        // Step 2c: Register a new user
+        // Step 2c: Register a new user with verified email
         isNewUser = true;
-        console.log(`[Mobile Apple Auth] Auto-registering new Apple user: ${resolvedEmail}`);
+        console.log(`[Mobile Apple Auth] Auto-registering new Apple user: ${verifiedEmail}`);
 
         let resolvedName = "Apple User";
         if (fullName) {
@@ -99,14 +97,14 @@ export async function POST(req: NextRequest) {
           resolvedName = `${first} ${last}`.trim() || "Apple User";
         }
 
-        const username = resolvedEmail.split("@")[0];
-        const placeholderPassword = await bcrypt.hash(Math.random().toString(36), 10);
+        const username = verifiedEmail.split("@")[0];
+        const placeholderPassword = await bcrypt.hash(crypto.randomBytes(32).toString("hex"), 10);
 
         const newUserResult = await db.query(
           `INSERT INTO users (username, name, email, password, role, oauth_provider, oauth_id)
            VALUES ($1, $2, $3, $4, $5, $6, $7)
            RETURNING user_id, name, email, role, profile_image_url, phone_number`,
-          [username, resolvedName, resolvedEmail, placeholderPassword, "regular user", "apple", sub]
+          [username, resolvedName, verifiedEmail, placeholderPassword, "regular user", "apple", sub]
         );
         user = newUserResult.rows[0];
 
@@ -117,6 +115,11 @@ export async function POST(req: NextRequest) {
         );
         await captureServerEvent("signup_completed", user.user_id, req, { method: "apple" });
       }
+    } else {
+      return NextResponse.json(
+        { error: "Apple account is not linked to any user and token did not contain a verified email." },
+        { status: 400 }
+      );
     }
 
     if (user.is_suspended) {

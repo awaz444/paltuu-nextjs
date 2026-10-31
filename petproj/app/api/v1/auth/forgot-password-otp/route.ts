@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sendEmail } from "@/utils/email";
 import bcrypt from "bcryptjs";
 import { rateLimit } from "@/utils/rateLimit";
+import { randomInt } from "crypto";
 
 /**
  * @swagger
@@ -49,8 +50,8 @@ export async function POST(req: NextRequest) {
 
         const user = userRes.rows[0];
 
-        // 2. Generate a 6-digit OTP
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        // 2. Generate a 6-digit OTP (cryptographically secure)
+        const otp = randomInt(100000, 1000000).toString();
         const hashedOtp = await bcrypt.hash(otp, 10);
 
         // 3. Store in OTP table (delete old entries first)

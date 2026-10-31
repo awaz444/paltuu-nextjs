@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { db } from "@/db/index";
 import { generateMobileTokenPair } from "@/utils/mobileAuth";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { captureServerEvent } from "@/lib/analytics/serverEvents";
 
 export const dynamic = "force-dynamic";
@@ -106,7 +107,7 @@ export async function GET(req: NextRequest) {
     if (isNewUser) {
       console.log(`[Mobile Google Callback] Auto-registering new Google user: ${email}`);
       const username = email.split('@')[0];
-      const placeholderPassword = await bcrypt.hash(Math.random().toString(36), 10);
+      const placeholderPassword = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
 
       const newUserResult = await db.query(
         `INSERT INTO users (username, name, email, password, role, profile_image_url, oauth_provider, oauth_id)

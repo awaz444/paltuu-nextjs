@@ -3,6 +3,7 @@ import { generateMobileTokenPair } from "@/utils/mobileAuth";
 import { NextResponse } from "next/server";
 import { OAuth2Client } from "google-auth-library";
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { captureServerEvent } from "@/lib/analytics/serverEvents";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
 
     if ((userResult.rowCount ?? 0) === 0) {
       const username = email.split('@')[0];
-      const placeholderPassword = await bcrypt.hash(Math.random().toString(36), 10);
+      const placeholderPassword = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
       
       const newUserResult = await db.query(
         'INSERT INTO users (username, name, email, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING user_id, name, email, role',

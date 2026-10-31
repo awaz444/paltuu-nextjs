@@ -4,6 +4,7 @@ import { getUserIdFromRequest } from "@/utils/authServer";
 import { sendEmail } from "@/utils/email";
 import bcrypt from "bcryptjs";
 import { rateLimit } from "@/utils/rateLimit";
+import { randomInt } from "crypto";
 
 /**
  * @swagger
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });
         }
 
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otp = randomInt(100000, 1000000).toString();
         const hashedOtp = await bcrypt.hash(otp, 10);
 
         await db.query('DELETE FROM "OTP" WHERE email = $1', [currentEmail]);

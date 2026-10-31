@@ -22,7 +22,17 @@ export async function POST(req: NextRequest) {
         const result = await db.query('SELECT * FROM "OTP" WHERE email = $1', [email]);
         if ((result.rowCount ?? 0) === 0) return NextResponse.json({ error: "OTP not found or expired" }, { status: 400 });
 
-        const storedOtp = result.rows[0].otp;
+        const storedRecord = result.rows[0];
+        const storedOtp = storedRecord.otp;
+
+        // Check expiration (10 minutes)
+        const tokenCreatedTime = new Date(storedRecord.created_at).getTime();
+        const tenMinutesMs = 10 * 60 * 1000;
+        if (Date.now() - tokenCreatedTime > tenMinutesMs) {
+            await db.query('DELETE FROM "OTP" WHERE email = $1', [email]);
+            return NextResponse.json({ error: "Verification code has expired. Please request a new one." }, { status: 410 });
+        }
+
         const isValid = await bcrypt.compare(otp.toString(), storedOtp);
 
         if (!isValid) return NextResponse.json({ error: "Invalid OTP" }, { status: 400 });

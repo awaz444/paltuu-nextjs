@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from 'bcryptjs';
 import { rateLimit } from "@/utils/rateLimit";
+import { randomInt } from "crypto";
 // Helper to send email (reusing existing logic or standardizing)
 import { sendEmail } from "../../../../../utils/email";
 
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
         const limiter = await rateLimit(`otp:${email}`, 3, 300, { failOpen: false });
         if (!limiter.success) return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });
 
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otp = randomInt(100000, 1000000).toString();
         const hashedOtp = await bcrypt.hash(otp, 10);
 
         // Store OTP (Delete old ones first)

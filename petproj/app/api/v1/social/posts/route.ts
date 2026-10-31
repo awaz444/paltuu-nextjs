@@ -24,6 +24,7 @@ import {
     personalizedAffinityCtes,
 } from "@/lib/tagInference";
 import { validateSocialMediaPayload } from "@/lib/giphyMedia";
+import { inferForum, resolveForum, setPostForum, type ForumPlacement } from "@/lib/forumPlacement";
 import { hasSevereMatch, redactSevereWords } from "@/lib/moderation/badWords";
 import { hasPetSaleMatch } from "@/lib/moderation/petSaleDetection";
 import {
@@ -583,10 +584,21 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { post_type, content, media = [], pet_profile_tags = [] } = body;
+        const { post_type, content, media = [], pet_profile_tags = [], forum } = body;
 
         if (!post_type || (!content && media.length === 0)) {
             return NextResponse.json({ error: "Post content or media is required" }, { status: 400 });
+        }
+
+        // Posted from inside a forum: `forum` is "cats/siamese", "cats", or
+        // { species, breed }. It places the post there (PALTU-97).
+        let authorForum: ForumPlacement | null = null;
+        if (forum != null && forum !== "") {
+            const [species, breed] = typeof forum === "string" ? forum.split("/") : [forum.species, forum.breed];
+            authorForum = await resolveForum(db, { species, breed });
+            if (!authorForum) {
+                return NextResponse.json({ error: "Unknown forum" }, { status: 400 });
+            }
         }
 
         const mediaError = validateSocialMediaPayload(media);
@@ -713,7 +725,22 @@ export async function POST(req: NextRequest) {
                 }
             }
 
+            if (authorForum) {
+                await setPostForum(client, post.post_id, authorForum, "author", userId);
+            }
+
             await client.query('COMMIT');
+
+            // Not posted in a forum: place it by the breed its text names, if
+            // exactly one. Best effort, after commit, so it never fails a post.
+            if (!authorForum) {
+                try {
+                    const inferred = await inferForum(db, content);
+                    if (inferred) await setPostForum(db, post.post_id, inferred, "auto", null);
+                } catch (e) {
+                    console.error("[posts] forum inference failed", e);
+                }
+            }
 
             if (autoRedact) {
                 // Logged for the admin queue so a human can review the original

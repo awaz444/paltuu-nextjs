@@ -96,7 +96,10 @@ export async function GET(req: NextRequest) {
                 LIMIT 5
               ) h),
              '[]'::json
-           ) AS action_history
+           ) AS action_history,
+           (SELECT json_build_object('species', pf.species, 'breed', b.slug, 'breed_name', b.name, 'source', pf.source)
+              FROM post_forums pf LEFT JOIN breeds b ON b.breed_id = pf.breed_id
+             WHERE pf.post_id = sp.post_id) AS forum
          FROM social_posts sp
          LEFT JOIN users u ON u.user_id = sp.user_id
          LEFT JOIN post_content_tags pct ON pct.post_id = sp.post_id

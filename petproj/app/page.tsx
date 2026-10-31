@@ -14,7 +14,7 @@ import MotionProvider from "@/components/home/MotionProvider";
 import HomeJsonLd from "@/components/home/HomeJsonLd";
 import LatestBlogsSection from "@/components/LatestBlogsSection";
 import HomepageFAQ from "@/components/HomepageFAQ";
-import AppPromoBanner from "@/components/AppPromoBanner";
+import BrandAdSlot from "@/components/brand-ads/BrandAdSlot";
 import { getAllBlogsMetadata } from "@/lib/mdx";
 import { getRecentPets } from "@/lib/recentPets";
 import { listCommunityPosts } from "@/lib/community";
@@ -131,6 +131,17 @@ export default async function HomePage() {
       {/* White first: the navbar above is maroon with a rounded bottom edge. */}
       <HeroSection />
 
+      <section className="bg-white px-6 py-6 lg:px-12">
+        <BrandAdSlot
+          price={20000}
+          format="banner"
+          placement="Home · hero band (below the fold hero)"
+          size="1200×250 desktop / 640×320 mobile"
+          pitch="anchor sponsor (food, pharma, insurance)"
+          className="mx-auto max-w-6xl"
+        />
+      </section>
+
       {/* One framer-motion boundary. Everything inside stays server-rendered. */}
       <MotionProvider>
         {/* The app sits second because it is the part of Paltuu most visitors
@@ -138,6 +149,16 @@ export default async function HomePage() {
         <AppSection />                            {/* primary */}
         <PlatformPillars />                       {/* white   */}
         <AdoptionPathsSection />                  {/* gray-50 */}
+        <div className="bg-gray-50 px-6 py-4 lg:px-12">
+          <BrandAdSlot
+            price={15000}
+            format="strip"
+            placement='Home · "Powered by" strip above Recently Listed Pets'
+            size="1200×60 desktop / 640×72 mobile"
+            pitch="monthly title sponsor"
+            className="mx-auto max-w-6xl"
+          />
+        </div>
         <RecentPetsSection pets={recentPets} />   {/* primary */}
         <CommunitySection posts={communityPosts} /> {/* gray-50 */}
         <VetDirectorySection />                   {/* white   */}
@@ -152,8 +173,6 @@ export default async function HomePage() {
 
       {/* White last: the footer below is maroon with a rounded top edge. */}
       <CityKeywordLinks />
-
-      <AppPromoBanner />
     </main>
   );
 }

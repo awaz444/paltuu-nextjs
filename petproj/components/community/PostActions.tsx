@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import GetAppModal from "./GetAppModal";
 import ReplyModal, { type ReplyTarget } from "./ReplyModal";
 import { fetchLiked, rememberLiked } from "./likedPosts";
+import { usePostThread } from "./PostThreadContext";
 
 /** Same icons as the app's PostCard (assets/icons/*-select / -unselect.svg in paltuu-reactnative). */
 const ICON = {
@@ -70,10 +71,12 @@ export default function PostActions({
     author: ReplyTarget["author"];
     excerpt: string;
 }) {
+    const thread = usePostThread();
     const { isAuthenticated } = useAuth();
     const [liked, setLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(likes);
-    const [commentCount, setCommentCount] = useState(comments);
+    const [localCommentCount, setLocalCommentCount] = useState(comments);
+    const commentCount = thread ? thread.commentCount : localCommentCount;
     const [busy, setBusy] = useState(false);
     const [replying, setReplying] = useState(false);
     const [prompt, setPrompt] = useState<Prompt>(null);
@@ -130,7 +133,11 @@ export default function PostActions({
     const openReply = (e: React.MouseEvent) => {
         stop(e);
         if (!isAuthenticated) return setPrompt("signin-reply");
-        setReplying(true);
+        if (thread) {
+            thread.openReplyModal();
+        } else {
+            setReplying(true);
+        }
     };
 
     const share = async (e: React.MouseEvent) => {
@@ -170,12 +177,14 @@ export default function PostActions({
 
             {/* Modals portal to <body>; this wrapper stops their clicks reaching the feed card's link. */}
             <span className="contents" onClick={(e) => e.stopPropagation()}>
-                <ReplyModal
-                    open={replying}
-                    onClose={() => setReplying(false)}
-                    target={{ postId, path, author, excerpt }}
-                    onPosted={() => setCommentCount((c) => c + 1)}
-                />
+                {!thread && (
+                    <ReplyModal
+                        open={replying}
+                        onClose={() => setReplying(false)}
+                        target={{ postId, path, author, excerpt }}
+                        onPosted={() => setLocalCommentCount((c) => c + 1)}
+                    />
+                )}
                 <GetAppModal
                     open={prompt === "repost"}
                     onClose={() => setPrompt(null)}

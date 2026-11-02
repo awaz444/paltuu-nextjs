@@ -692,6 +692,9 @@ model pets {
   contact_number            String?                     @db.VarChar
   age_months                Int?
   post_count                Int?                        @default(0)
+  bumped_at                 DateTime?                   @db.Timestamp(6)
+  availability_check_sent_at DateTime?                  @db.Timestamp(6)
+  availability_email_sent_at DateTime?                  @db.Timestamp(6)
   adoption_applications     adoption_applications[]
   pet_images                pet_images[]
   pet_tag_assignments       pet_tag_assignments[]

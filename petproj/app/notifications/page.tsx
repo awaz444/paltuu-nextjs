@@ -111,7 +111,10 @@ const NotificationsPage = () => {
         if (SOCIAL_TYPES.has(n.type)) return;
 
         switch (n.type) {
-            case "adoption_listing_approved": router.push("/my-listings"); break;
+            case "adoption_listing_approved":
+            case "adoption_availability_check":
+            case "adoption_listing_paused":
+                router.push("/my-listings"); break;
             case "adoption_new_application":
                 router.push(n.entity_id ? `/adoption-applicants?pet_id=${n.entity_id}` : "/my-listings");
                 break;

@@ -43,6 +43,8 @@ export interface Pet {
     image_url: string | null;
     primary_image?: string | null;
     approved: boolean | null;
+    bumped_at?: string | null;
+    availability_check_sent_at?: string | null;
 }
 
 interface PetGridProps {
@@ -69,6 +71,11 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true, 
     const [editingPet, setEditingPet] = useState<Pet | null>(null);
     const [updateLoading, setUpdateLoading] = useState(false);
     const [successToast, setSuccessToast] = useState(false);
+
+    // "Still available?" check-in (PALTU-102). Local overrides so a card updates
+    // immediately without the parent refetching the whole list.
+    const [statusOverrides, setStatusOverrides] = useState<Record<number, Partial<Pet>>>({});
+    const [availabilityLoading, setAvailabilityLoading] = useState<number | null>(null);
 
     // Images
     const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
@@ -118,6 +125,30 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true, 
         } finally {
             setDeleteLoading(false);
             setDeleteConfirm(null);
+        }
+    };
+
+    const handleAvailability = async (pet: Pet, available: boolean) => {
+        setAvailabilityLoading(pet.pet_id);
+        try {
+            const res = await fetch(`/api/v1/pets/${pet.pet_id}/availability`, {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ available }),
+            });
+            const data = await res.json().catch(() => null);
+            if (!res.ok) {
+                toast.error(data?.error || "Couldn't update the listing. Please try again.");
+                return;
+            }
+            setStatusOverrides((prev) => ({ ...prev, [pet.pet_id]: data }));
+            toast.success(available ? `${pet.pet_name} is back at the top of the adoption page` : `Marked ${pet.pet_name} as adopted 🎉`);
+            dispatch(fetchAdoptionPets({}));
+        } catch (err: any) {
+            toast.error(err?.message || "Network error. Please try again.");
+        } finally {
+            setAvailabilityLoading(null);
         }
     };
 
@@ -231,7 +262,16 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true, 
                 </Link>
             )}
 
-            {pets.map((pet) => (
+            {pets.map((basePet) => {
+                const pet = { ...basePet, ...statusOverrides[basePet.pet_id] } as Pet;
+                const isPaused = pet.adoption_status === "paused";
+                const needsCheckIn = pet.approved && (isPaused || (pet.adoption_status === "available" && !!pet.availability_check_sent_at));
+                const statusBadge =
+                    pet.adoption_status === "adopted" ? { label: "Adopted", cls: "bg-gray-500" }
+                    : isPaused ? { label: "Paused", cls: "bg-gray-500" }
+                    : pet.approved ? { label: "Approved", cls: "bg-green-600" }
+                    : { label: "Pending", cls: "bg-orange-500" };
+                return (
                 <div
                     key={pet.pet_id}
                     className="bg-white p-4 rounded-3xl shadow-sm overflow-hidden border-2 border-transparent hover:border-[#a03048] hover:scale-[1.02] transition-all duration-300 relative"
@@ -261,8 +301,8 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true, 
                         </div>
                         {/* Status badge */}
                         <div className="absolute top-2 left-2 z-10">
-                            <span className={`text-white text-xs font-semibold px-3 py-1 rounded-full ${pet.approved ? "bg-green-600" : "bg-orange-500"}`}>
-                                {pet.approved ? "Approved" : "Pending"}
+                            <span className={`text-white text-xs font-semibold px-3 py-1 rounded-full ${statusBadge.cls}`}>
+                                {statusBadge.label}
                             </span>
                         </div>
                         <img
@@ -276,8 +316,34 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true, 
                         <p className="text-gray-500 text-sm mb-0.5">{formatAge(pet.age_months)}</p>
                         <p className="text-gray-500 text-sm">{pet.city} — {pet.area}</p>
                     </div>
+                    {needsCheckIn && (
+                        <div className="mt-3 rounded-2xl bg-[#a03048]/5 border border-[#a03048]/20 p-3">
+                            <p className="text-sm font-medium text-gray-800">
+                                {isPaused
+                                    ? `${pet.pet_name}'s listing is paused and hidden from the adoption page.`
+                                    : `Is ${pet.pet_name} still looking for a home?`}
+                            </p>
+                            <div className="mt-2 flex gap-2">
+                                <button
+                                    onClick={() => handleAvailability(pet, true)}
+                                    disabled={availabilityLoading === pet.pet_id}
+                                    className="flex-1 py-2 bg-primary text-white text-sm rounded-xl font-medium disabled:opacity-60"
+                                >
+                                    {isPaused ? "Relist" : "Yes, keep listed"}
+                                </button>
+                                <button
+                                    onClick={() => handleAvailability(pet, false)}
+                                    disabled={availabilityLoading === pet.pet_id}
+                                    className="flex-1 py-2 border-2 border-gray-200 text-gray-700 text-sm rounded-xl font-medium hover:border-gray-300 disabled:opacity-60"
+                                >
+                                    Adopted
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            ))}
+                );
+            })}
 
             {/* Delete confirm modal */}
             {deleteConfirm !== null && (

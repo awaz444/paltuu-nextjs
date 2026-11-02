@@ -182,7 +182,13 @@ export async function PUT(req: NextRequest) {
                     can_live_with_dogs = COALESCE($20, can_live_with_dogs),
                     can_live_with_cats = COALESCE($21, can_live_with_cats),
                     must_have_someone_home = COALESCE($22, must_have_someone_home),
-                    breed_id = COALESCE($23, breed_id)
+                    breed_id = COALESCE($23, breed_id),
+                    -- Relisting (e.g. a paused listing toggled back to available) counts as a renewal.
+                    bumped_at = CASE WHEN $17::varchar = 'available' AND adoption_status IS DISTINCT FROM 'available'
+                                     THEN now() ELSE bumped_at END,
+                    -- Any explicit status change answers a pending "still available?" check.
+                    availability_check_sent_at = CASE WHEN $17::varchar IS NOT NULL AND $17::varchar IS DISTINCT FROM adoption_status
+                                     THEN NULL ELSE availability_check_sent_at END
                 WHERE pet_id = $24
                 RETURNING *`,
                 [

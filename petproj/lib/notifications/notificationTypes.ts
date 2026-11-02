@@ -44,6 +44,8 @@ export enum NotificationType {
   ADOPTION_APPLICATION_REJECTED = "adoption_application_rejected",
   ADOPTION_NEW_LISTING_MATCH = "adoption_new_listing_match",
   ADOPTION_LISTING_APPROVED = "adoption_listing_approved",
+  ADOPTION_AVAILABILITY_CHECK = "adoption_availability_check",
+  ADOPTION_LISTING_PAUSED = "adoption_listing_paused",
 
   // Bazaar
   BAZAAR_ORDER_CONFIRMED = "bazaar_order_confirmed",
@@ -217,6 +219,18 @@ const TEMPLATES: Record<NotificationType, NotificationTemplate> = {
     title: "Listing Approved",
     body: (data) => `Your listing "${data.pet_name}" has been approved!`,
     deepLinkPattern: "paltuu://adoptions/{entity_id}",
+  },
+  [NotificationType.ADOPTION_AVAILABILITY_CHECK]: {
+    type: NotificationType.ADOPTION_AVAILABILITY_CHECK,
+    title: (data) => `Is ${data.pet_name || "your pet"} still looking for a home?`,
+    body: "Tap to confirm and we'll move the listing back to the top of the adoption page.",
+    deepLinkPattern: "paltuu://my-listings",
+  },
+  [NotificationType.ADOPTION_LISTING_PAUSED]: {
+    type: NotificationType.ADOPTION_LISTING_PAUSED,
+    title: (data) => `${data.pet_name || "Your listing"} has been paused`,
+    body: "We didn't hear back, so it's hidden from the adoption page. Relist it anytime from My Listings.",
+    deepLinkPattern: "paltuu://my-listings",
   },
 
   // ──── Bazaar ──────────────────────────────────────────────────────────

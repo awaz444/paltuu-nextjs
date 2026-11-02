@@ -386,6 +386,34 @@ export const AdoptionNotifications = {
       },
     });
   },
+
+  /**
+   * Listing has been live a while: ask the owner to confirm it's still available (PALTU-102)
+   */
+  async onAvailabilityCheck(ownerId: number, petId: number, petName: string, petImageUrl?: string) {
+    return NotificationService.createAndSend({
+      userId: ownerId,
+      type: NotificationType.ADOPTION_AVAILABILITY_CHECK,
+      entityType: EntityType.ADOPTION_PET,
+      entityId: petId,
+      imageUrl: petImageUrl,
+      customData: { pet_name: petName },
+    });
+  },
+
+  /**
+   * Owner didn't answer the availability check in time; listing was paused (PALTU-102)
+   */
+  async onListingPaused(ownerId: number, petId: number, petName: string, petImageUrl?: string) {
+    return NotificationService.createAndSend({
+      userId: ownerId,
+      type: NotificationType.ADOPTION_LISTING_PAUSED,
+      entityType: EntityType.ADOPTION_PET,
+      entityId: petId,
+      imageUrl: petImageUrl,
+      customData: { pet_name: petName },
+    });
+  },
 };
 
 /**

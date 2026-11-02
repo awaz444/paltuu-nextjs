@@ -886,3 +886,47 @@ export async function sendCartActivityNotification(activityData: {
     // Don't throw - cart activity emails are nice-to-have
   }
 }
+
+const escapeHtml = (s: string) =>
+  s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+
+/**
+ * "Is <pet> still looking for a home?" reminder for owners who can't get a push
+ * (no app device registered). PALTU-102.
+ */
+export async function sendListingAvailabilityCheckEmail(data: {
+  to: string;
+  owner_name?: string | null;
+  pet_name: string;
+  grace_days: number;
+}): Promise<void> {
+  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://www.paltuu.pk";
+  const pet = escapeHtml(data.pet_name);
+  const owner = escapeHtml(data.owner_name || "there");
+  const subject = `Is ${data.pet_name} still looking for a home?`;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"></head>
+    <body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f5f5f5;">
+      <div style="max-width:600px;margin:20px auto;background-color:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+        <div style="background-color:#8B1538;padding:30px;text-align:center;">
+          <h1 style="color:#ffffff;margin:0;font-size:22px;">Is ${pet} still looking for a home?</h1>
+        </div>
+        <div style="padding:30px;">
+          <p style="color:#666;line-height:1.6;">Hi ${owner},</p>
+          <p style="color:#666;line-height:1.6;">${pet}'s adoption listing has been up for a while. If ${pet} still needs a home, confirm it from My Listings and we'll move the listing back to the top of the adoption page.</p>
+          <p style="color:#666;line-height:1.6;">If ${pet} has already been adopted, you can mark it as adopted there too. If we don't hear back in ${data.grace_days} days, we'll pause the listing — you can relist it anytime.</p>
+          <div style="text-align:center;margin:30px 0;">
+            <a href="${site}/my-listings"
+               style="display:inline-block;background-color:#8B1538;color:#ffffff;text-decoration:none;padding:12px 30px;border-radius:5px;font-weight:600;">
+              Go to My Listings
+            </a>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+  await sendEmailViaBrevo(data.to, data.owner_name || "Pet Owner", subject, html);
+}

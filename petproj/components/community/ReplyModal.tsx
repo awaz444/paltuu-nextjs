@@ -12,6 +12,7 @@ export type ReplyTarget = {
     path: string;
     author: { name: string; username: string | null; avatar: string | null };
     excerpt: string;
+    parentCommentId?: number | null;
 };
 
 function Face({ src, size = 40 }: { src: string | null | undefined; size?: number }) {
@@ -39,11 +40,13 @@ export default function ReplyModal({
     onClose,
     target,
     onPosted,
+    onSubmitComment,
 }: {
     open: boolean;
     onClose: () => void;
     target: ReplyTarget;
     onPosted: () => void;
+    onSubmitComment?: (text: string, target: ReplyTarget) => Promise<void> | void;
 }) {
     const { user } = useAuth();
     const router = useRouter();
@@ -74,11 +77,22 @@ export default function ReplyModal({
         setSending(true);
         setError(null);
         try {
+            if (onSubmitComment) {
+                await onSubmitComment(trimmed, target);
+                setText("");
+                onPosted();
+                onClose();
+                return;
+            }
+
             const res = await fetch(`/api/v1/social/posts/${target.postId}/comments`, {
                 method: "POST",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ content: trimmed }),
+                body: JSON.stringify({
+                    content: trimmed,
+                    ...(target.parentCommentId ? { parent_comment_id: target.parentCommentId } : {}),
+                }),
             });
             if (res.status === 401) {
                 window.location.href = `/auth?callbackUrl=${encodeURIComponent(target.path)}`;

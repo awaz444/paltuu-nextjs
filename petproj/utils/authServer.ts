@@ -39,14 +39,37 @@ export async function getUserIdFromRequest(req: NextRequest): Promise<string | n
 
     // 2. Check NextAuth session token (for Google OAuth/Web users)
     const secureCookie = req.url?.startsWith("https://") || req.nextUrl?.protocol === "https:" || req.headers.get("x-forwarded-proto") === "https";
-    const nextAuthToken = await getToken({
+    let nextAuthToken = await getToken({
       req: req as any,
       secret: process.env.NEXTAUTH_SECRET!,
       secureCookie,
     });
 
+    if (!nextAuthToken) {
+      // Behind reverse proxies (e.g. ALB/Cloudflare), secureCookie can mismatch the actual cookie name. Try opposite fallback.
+      nextAuthToken = await getToken({
+        req: req as any,
+        secret: process.env.NEXTAUTH_SECRET!,
+        secureCookie: !secureCookie,
+      });
+    }
+
     if (nextAuthToken) {
-      const userId = String(nextAuthToken.user_id || nextAuthToken.sub || nextAuthToken.id || '');
+      let userId = String(nextAuthToken.user_id || nextAuthToken.id || '');
+      if ((!userId || isNaN(Number(userId))) && nextAuthToken.email) {
+        try {
+          const { db } = await import('@/db/index');
+          const uRes = await db.query('SELECT user_id FROM users WHERE LOWER(email) = LOWER($1)', [nextAuthToken.email]);
+          if (uRes.rows.length > 0) {
+            userId = String(uRes.rows[0].user_id);
+          }
+        } catch {
+          // ignore
+        }
+      }
+      if (!userId && nextAuthToken.sub) {
+        userId = String(nextAuthToken.sub);
+      }
       console.log('✅ [Server Auth] Extracted userId from NextAuth token:', userId, 'Full token keys:', Object.keys(nextAuthToken));
       if (userId) {
         return userId;
@@ -97,15 +120,38 @@ export async function getUserFromRequest(req: NextRequest): Promise<JWTPayload |
 
     // Check NextAuth token
     const secureCookie = req.url?.startsWith("https://") || req.nextUrl?.protocol === "https:" || req.headers.get("x-forwarded-proto") === "https";
-    const nextAuthToken = await getToken({
+    let nextAuthToken = await getToken({
       req: req as any,
       secret: process.env.NEXTAUTH_SECRET!,
       secureCookie,
     });
 
+    if (!nextAuthToken) {
+      nextAuthToken = await getToken({
+        req: req as any,
+        secret: process.env.NEXTAUTH_SECRET!,
+        secureCookie: !secureCookie,
+      });
+    }
+
     if (nextAuthToken) {
+      let resolvedUserId = nextAuthToken.user_id || nextAuthToken.id;
+      if ((!resolvedUserId || isNaN(Number(resolvedUserId))) && nextAuthToken.email) {
+        try {
+          const { db } = await import('@/db/index');
+          const uRes = await db.query('SELECT user_id FROM users WHERE LOWER(email) = LOWER($1)', [nextAuthToken.email]);
+          if (uRes.rows.length > 0) {
+            resolvedUserId = uRes.rows[0].user_id;
+          }
+        } catch {
+          // ignore
+        }
+      }
+
       return {
-        id: nextAuthToken.user_id || nextAuthToken.sub || nextAuthToken.id,
+        id: resolvedUserId || nextAuthToken.sub || nextAuthToken.id,
+        user_id: resolvedUserId || nextAuthToken.sub || nextAuthToken.id,
+        sub: nextAuthToken.sub,
         email: nextAuthToken.email,
         name: nextAuthToken.name,
         role: nextAuthToken.role || 'regular user',

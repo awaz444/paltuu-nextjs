@@ -21,8 +21,9 @@ import { normalizePhone, isValidPhone } from "@/utils/phone";
 
 export async function GET(req: NextRequest) {
     try {
-        const id = req.nextUrl.pathname.split("/").pop();
-        if (!id || isNaN(parseInt(id, 10))) return NextResponse.json({ error: "Invalid or missing ID" }, { status: 400 });
+        const rawId = req.nextUrl.pathname.replace(/\/+$/, '').split("/").pop();
+        if (!rawId || isNaN(parseInt(rawId, 10))) return NextResponse.json({ error: "Invalid or missing ID" }, { status: 400 });
+        const id = parseInt(rawId, 10);
 
         const result = await db.query(`
             SELECT 
@@ -65,15 +66,17 @@ export async function PUT(req: NextRequest) {
         const user = await getUserFromRequest(req);
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const id = req.nextUrl.pathname.split("/").pop();
-        if (!id || isNaN(parseInt(id, 10))) return NextResponse.json({ error: "Invalid or missing ID" }, { status: 400 });
+        const rawId = req.nextUrl.pathname.replace(/\/+$/, '').split("/").pop();
+        if (!rawId || isNaN(parseInt(rawId, 10))) return NextResponse.json({ error: "Invalid or missing ID" }, { status: 400 });
+        const id = parseInt(rawId, 10);
         const body = await req.json();
 
         // Ownership & Auth Check
         const petCheck = await db.query('SELECT owner_id FROM pets WHERE pet_id = $1', [id]);
         if (petCheck.rowCount === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
 
-        const isOwner = String(petCheck.rows[0].owner_id) === String(user.user_id || user.id || user.sub);
+        const currentUserId = String(user.user_id || user.id || user.sub);
+        const isOwner = String(petCheck.rows[0].owner_id) === currentUserId;
         const isAdmin = user.role === 'admin';
 
         if (!isOwner && !isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -248,14 +251,16 @@ export async function DELETE(req: NextRequest) {
         const user = await getUserFromRequest(req);
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const id = req.nextUrl.pathname.split("/").pop();
-        if (!id || isNaN(parseInt(id, 10))) return NextResponse.json({ error: "Invalid or missing ID" }, { status: 400 });
+        const rawId = req.nextUrl.pathname.replace(/\/+$/, '').split("/").pop();
+        if (!rawId || isNaN(parseInt(rawId, 10))) return NextResponse.json({ error: "Invalid or missing ID" }, { status: 400 });
+        const id = parseInt(rawId, 10);
 
         // Ownership check
         const petCheck = await db.query('SELECT owner_id FROM pets WHERE pet_id = $1', [id]);
         if (petCheck.rowCount === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
 
-        const isOwner = String(petCheck.rows[0].owner_id) === String(user.user_id || user.id || user.sub);
+        const currentUserId = String(user.user_id || user.id || user.sub);
+        const isOwner = String(petCheck.rows[0].owner_id) === currentUserId;
         const isAdmin = user.role === 'admin';
 
         if (!isOwner && !isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -264,9 +269,15 @@ export async function DELETE(req: NextRequest) {
         const client = await db.connect();
         try {
             await client.query('BEGIN');
+            // Clean up dependent tables without ON DELETE CASCADE
+            await client.query('DELETE FROM rescue_images WHERE pet_id = $1', [id]);
+            await client.query('DELETE FROM rescue_medical_conditions WHERE pet_id = $1', [id]);
+            await client.query('DELETE FROM rescue_special_needs WHERE pet_id = $1', [id]);
             await client.query('DELETE FROM pet_tag_assignments WHERE pet_id = $1', [id]);
             await client.query('DELETE FROM pet_images WHERE pet_id = $1', [id]);
             await client.query('DELETE FROM adoption_applications WHERE pet_id = $1', [id]);
+            await client.query('UPDATE pet_profiles SET adoption_listing_id = NULL WHERE adoption_listing_id = $1', [id]);
+            await client.query('UPDATE social_posts SET pet_id = NULL WHERE pet_id = $1', [id]);
             await client.query('DELETE FROM pets WHERE pet_id = $1', [id]);
             await client.query('COMMIT');
             return NextResponse.json({ message: "Pet deleted successfully" });

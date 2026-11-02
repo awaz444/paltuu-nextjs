@@ -154,9 +154,14 @@ export async function DELETE(req: NextRequest) {
         const client = await db.connect();
         try {
             await client.query('BEGIN');
+            await client.query('DELETE FROM rescue_images WHERE pet_id = $1', [pet_id]);
+            await client.query('DELETE FROM rescue_medical_conditions WHERE pet_id = $1', [pet_id]);
+            await client.query('DELETE FROM rescue_special_needs WHERE pet_id = $1', [pet_id]);
             await client.query('DELETE FROM pet_tag_assignments WHERE pet_id = $1', [pet_id]);
             await client.query('DELETE FROM pet_images WHERE pet_id = $1', [pet_id]);
             await client.query('DELETE FROM adoption_applications WHERE pet_id = $1', [pet_id]);
+            await client.query('UPDATE pet_profiles SET adoption_listing_id = NULL WHERE adoption_listing_id = $1', [pet_id]);
+            await client.query('UPDATE social_posts SET pet_id = NULL WHERE pet_id = $1', [pet_id]);
             await client.query('DELETE FROM pets WHERE pet_id = $1', [pet_id]);
             await client.query('COMMIT');
             return NextResponse.json({ success: true });

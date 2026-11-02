@@ -10,6 +10,7 @@ import { formatAge } from "@/utils/formatAge";
 import { X, Plus, Users } from "lucide-react";
 import PhoneNumberInput from "./PhoneNumberInput";
 import { compressImageFiles } from "@/utils/imageCompression";
+import { toast } from "react-hot-toast";
 
 export interface Pet {
     pet_id: number;
@@ -97,12 +98,23 @@ const MyListingGrid: React.FC<PetGridProps> = ({ pets, showCreateButton = true, 
     const handleDelete = async (petId: number) => {
         setDeleteLoading(true);
         try {
-            const res = await fetch(`/api/v1/pets/${petId}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
+            const res = await fetch(`/api/v1/pets/${petId}`, {
+                method: "DELETE",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" }
+            });
             if (res.ok) {
+                toast.success("Listing deleted successfully");
                 onPetDeleted?.(petId);
                 dispatch(fetchAdoptionPets({}));
                 dispatch(fetchFosterPets());
+            } else {
+                const data = await res.json().catch(() => null);
+                const errMsg = data?.error || data?.message || "Failed to delete listing";
+                toast.error(errMsg);
             }
+        } catch (err: any) {
+            toast.error(err?.message || "Network error. Failed to delete listing.");
         } finally {
             setDeleteLoading(false);
             setDeleteConfirm(null);

@@ -1,6 +1,6 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
-import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
+import { getUserFromRequest } from "@/utils/authServer";
 import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 import { validate } from "@/utils/validation";
 import { normalizePhone, isValidPhone } from "@/utils/phone";

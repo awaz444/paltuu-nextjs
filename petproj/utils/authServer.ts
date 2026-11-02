@@ -3,6 +3,7 @@
 import { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { getToken } from 'next-auth/jwt';
+import { db } from '@/db/index';
 
 interface JWTPayload {
   id?: number | string;
@@ -58,7 +59,6 @@ export async function getUserIdFromRequest(req: NextRequest): Promise<string | n
       let userId = String(nextAuthToken.user_id || nextAuthToken.id || '');
       if ((!userId || isNaN(Number(userId))) && nextAuthToken.email) {
         try {
-          const { db } = await import('@/db/index');
           const uRes = await db.query('SELECT user_id FROM users WHERE LOWER(email) = LOWER($1)', [nextAuthToken.email]);
           if (uRes.rows.length > 0) {
             userId = String(uRes.rows[0].user_id);
@@ -138,7 +138,6 @@ export async function getUserFromRequest(req: NextRequest): Promise<JWTPayload |
       let resolvedUserId = nextAuthToken.user_id || nextAuthToken.id;
       if ((!resolvedUserId || isNaN(Number(resolvedUserId))) && nextAuthToken.email) {
         try {
-          const { db } = await import('@/db/index');
           const uRes = await db.query('SELECT user_id FROM users WHERE LOWER(email) = LOWER($1)', [nextAuthToken.email]);
           if (uRes.rows.length > 0) {
             resolvedUserId = uRes.rows[0].user_id;

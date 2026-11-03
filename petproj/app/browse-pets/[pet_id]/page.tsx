@@ -7,18 +7,16 @@ import { getCommunityForListing } from "@/lib/community";
 
 export const dynamic = "force-dynamic";
 
+// null only when the listing really is gone. The page answers that with a 404,
+// so a database blip must not look like one or Google drops live listings.
 async function getPet(petId: string) {
-    try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
-        const res = await fetch(`${apiUrl}/api/v1/pets/${petId}`, {
-            cache: "no-store",
-        });
-        if (!res.ok) return null;
-        return res.json();
-    } catch (e) {
-        console.error("Pet SSR fetch error:", e);
-        return null;
-    }
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+    const res = await fetch(`${apiUrl}/api/v1/pets/${petId}`, {
+        cache: "no-store",
+    });
+    if (res.status === 404 || res.status === 400) return null;
+    if (!res.ok) throw new Error(`Pet SSR fetch failed: ${res.status}`);
+    return res.json();
 }
 
 export async function generateMetadata({
@@ -32,6 +30,7 @@ export async function generateMetadata({
         return {
             title: "Pet Not Found | Paltuu.pk",
             description: "Browse pets available for adoption across Pakistan on Paltuu.pk.",
+            robots: { index: false },
         };
     }
 

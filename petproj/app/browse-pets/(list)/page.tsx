@@ -1,6 +1,6 @@
 import { db } from "@/db/index";
 import { adoptionFeedOrderBy } from "@/lib/adoptionFeed";
-import BrowsePetsClient from "./BrowsePetsClient";
+import BrowsePetsClient from "../BrowsePetsClient";
 import CommunityStrip from "@/components/community/CommunityStrip";
 
 export const dynamic = "force-dynamic";

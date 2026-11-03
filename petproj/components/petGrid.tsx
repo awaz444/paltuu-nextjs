@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import "./petGrid.css";
 import { MOBILE_BUTTON } from "./community/MobileActions";
 import { formatAge } from "@/utils/formatAge";
+import { getWaitingLabel } from "@/utils/waitingLabel";
 
 interface Pet {
     pet_id: number;
@@ -128,6 +129,14 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                                     ).toLocaleString()}
                                 </div>
                             )} */}
+                            {(() => {
+                                const waiting = getWaitingLabel(pet.created_at);
+                                return waiting ? (
+                                    <div className="absolute top-2 left-2 bg-white/95 text-primary text-[10px] sm:text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
+                                        🐾 {waiting}
+                                    </div>
+                                ) : null;
+                            })()}
                             {pet.listing_type === "rescue" && (
                                 <div className="absolute top-2 right-2 bg-primary text-white text-[10px] sm:text-xs font-semibold px-2 sm:px-2 py-1 rounded-full flex items-center">
                                     <span className="mr-1">+</span> Rescue

@@ -239,10 +239,34 @@ if (process.env.REALTIME_INTERNAL_KEY) {
     console.warn('[express-vet] REALTIME_INTERNAL_KEY not set — expiry sweep disabled');
 }
 
+// ─── Adoption listing "still available?" sweep (PALTU-102) ────────────────────
+// Same pattern as above: the Next.js route pauses unanswered listings and sends
+// reminders (in daily-capped batches); this only provides the clock.
+const ADOPTION_SWEEP_INTERVAL_MS = parseInt(process.env.ADOPTION_AVAILABILITY_SWEEP_MS || String(30 * 60 * 1000));
+let adoptionSweepTimer = null;
+if (process.env.REALTIME_INTERNAL_KEY) {
+    adoptionSweepTimer = setInterval(async () => {
+        try {
+            const res = await fetch(`${NEXT_ORIGIN}/api/v1/pets/cron/availability-check`, {
+                method: 'POST',
+                headers: { 'x-internal-key': process.env.REALTIME_INTERNAL_KEY },
+                signal: AbortSignal.timeout(120000),
+            });
+            const body = await res.json().catch(() => ({}));
+            if (body?.paused_count || body?.reminded_count) {
+                console.log(`[adoption] Availability sweep: ${body.reminded_count} reminded (${body.emailed_count} by email), ${body.paused_count} paused`);
+            }
+        } catch (err) {
+            console.error('[adoption] Availability sweep failed:', err.message);
+        }
+    }, ADOPTION_SWEEP_INTERVAL_MS);
+}
+
 // Graceful shutdown
 process.on('SIGTERM', async () => {
     console.log('[ws] Shutting down...');
     if (expireSweepTimer) clearInterval(expireSweepTimer);
+    if (adoptionSweepTimer) clearInterval(adoptionSweepTimer);
     io.close();
     httpServer.close();
     emitterServer.close();

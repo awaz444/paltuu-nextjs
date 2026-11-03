@@ -1,4 +1,5 @@
 import { db } from "@/db/index";
+import { adoptionFeedOrderBy } from "@/lib/adoptionFeed";
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -177,7 +178,7 @@ async function getPets(species?: SpeciesEntry, city?: CityEntry): Promise<PetRow
              JOIN users u ON p.owner_id = u.user_id
              JOIN cities c ON p.city_id = c.city_id
              WHERE ${conds.join(" AND ")}
-             ORDER BY p.created_at DESC
+             ORDER BY ${adoptionFeedOrderBy("p")}
              LIMIT 48`,
             vals
         );

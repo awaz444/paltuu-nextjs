@@ -1,4 +1,5 @@
 import { db } from "@/db/index";
+import { adoptionFeedOrderBy } from "@/lib/adoptionFeed";
 import BrowsePetsClient from "./BrowsePetsClient";
 import CommunityStrip from "@/components/community/CommunityStrip";
 
@@ -22,7 +23,7 @@ async function getInitialPets() {
             JOIN users ON pets.owner_id = users.user_id
             JOIN cities ON pets.city_id = cities.city_id
             ${baseWhere}
-            ORDER BY pets.created_at DESC
+            ORDER BY ${adoptionFeedOrderBy("pets")}
             LIMIT 11 OFFSET 0
         `);
 

@@ -1,4 +1,5 @@
 import { db } from "@/db/index";
+import { adoptionFeedOrderBy } from "@/lib/adoptionFeed";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -56,7 +57,7 @@ export async function GET(req: NextRequest) {
             JOIN users ON pets.owner_id = users.user_id
             JOIN cities ON pets.city_id = cities.city_id
             ${where}
-            ORDER BY pets.created_at DESC
+            ORDER BY ${adoptionFeedOrderBy("pets")}
             LIMIT $${pIndex++} OFFSET $${pIndex++}
         `;
 

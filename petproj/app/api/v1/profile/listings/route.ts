@@ -21,7 +21,24 @@ export async function GET(req: NextRequest) {
                 p.*,
                 cat.category_name AS category,
                 cities.city_name AS city_name,
-                (SELECT image_url FROM pet_images WHERE pet_id = p.pet_id ORDER BY "order" ASC LIMIT 1) AS image_url
+                (SELECT image_url FROM pet_images WHERE pet_id = p.pet_id ORDER BY "order" ASC LIMIT 1) AS image_url,
+                (SELECT COUNT(*) FROM pet_images WHERE pet_id = p.pet_id)::int AS photo_count,
+                -- Application summary for the owner's dashboard. Foster listings
+                -- collect foster applications; every other type collects adoption ones.
+                CASE WHEN p.listing_type = 'foster'
+                    THEN (SELECT COUNT(*) FROM foster_applications fa WHERE fa.pet_id = p.pet_id)
+                    ELSE (SELECT COUNT(*) FROM adoption_applications aa WHERE aa.pet_id = p.pet_id)
+                END::int AS application_count,
+                CASE WHEN p.listing_type = 'foster'
+                    THEN (SELECT COUNT(*) FROM foster_applications fa WHERE fa.pet_id = p.pet_id AND fa.status = 'pending')
+                    ELSE (SELECT COUNT(*) FROM adoption_applications aa WHERE aa.pet_id = p.pet_id AND aa.status = 'pending')
+                END::int AS pending_application_count,
+                CASE WHEN p.listing_type = 'foster'
+                    THEN ARRAY(SELECT u.name FROM foster_applications fa JOIN users u ON u.user_id = fa.user_id
+                               WHERE fa.pet_id = p.pet_id ORDER BY fa.created_at DESC LIMIT 3)
+                    ELSE ARRAY(SELECT u.name FROM adoption_applications aa JOIN users u ON u.user_id = aa.user_id
+                               WHERE aa.pet_id = p.pet_id ORDER BY aa.created_at DESC LIMIT 3)
+                END AS recent_applicant_names
             FROM pets p
             LEFT JOIN pet_category cat ON p.pet_type = cat.category_id
             LEFT JOIN cities ON p.city_id = cities.city_id

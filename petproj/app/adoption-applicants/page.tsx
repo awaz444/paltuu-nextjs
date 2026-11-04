@@ -303,82 +303,80 @@ const AdoptionApplications = () => {
 
     return (
         <main className="min-h-screen bg-[#F5F4F1] text-[#18181B]">
-            {/* Header band */}
-            <section aria-label="Listing overview" className="bg-primary text-white">
-                <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 pt-6 flex flex-col gap-7">
-                    <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[13px] text-white/75">
-                        <Link href="/my-listings" className="inline-flex items-center gap-1.5 min-h-[44px] hover:text-white transition-colors">
-                            <ChevronLeft size={16} aria-hidden="true" />
-                            My listings
-                        </Link>
-                        <span aria-hidden="true">/</span>
-                        <span className="text-white font-semibold truncate">{petName}</span>
-                        <span aria-hidden="true">/</span>
-                        <span>Applications</span>
-                    </nav>
+            {/* Header: light pet summary with a primary-colour stats strip */}
+            <section aria-label="Listing overview" className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 pt-6 flex flex-col gap-6">
+                <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[13px] text-[#6B6B73]">
+                    <Link href="/my-listings" className="inline-flex items-center gap-1.5 min-h-[44px] hover:text-[#18181B] transition-colors">
+                        <ChevronLeft size={16} aria-hidden="true" />
+                        My listings
+                    </Link>
+                    <span aria-hidden="true">/</span>
+                    <span className="text-[#18181B] font-semibold truncate">{petName}</span>
+                    <span aria-hidden="true">/</span>
+                    <span>Applications</span>
+                </nav>
 
-                    <div className="flex flex-wrap items-center gap-7">
-                        <img
-                            src={photo}
-                            alt={petName}
-                            onError={(e) => { (e.target as HTMLImageElement).src = "/dog-placeholder.png"; }}
-                            className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl object-cover shrink-0 bg-white/10"
-                        />
-                        <div className="flex-1 basis-[320px] min-w-0 flex flex-col gap-2.5">
-                            <div className="flex items-center gap-3 flex-wrap">
-                                <span className="text-xs font-semibold tracking-[0.1em] uppercase text-white/75">
-                                    {pet ? listingKindLabel(pet.listing_type, pet.pet_type) : "Adoption"}
+                <div className="flex flex-wrap items-center gap-7">
+                    <img
+                        src={photo}
+                        alt={petName}
+                        onError={(e) => { (e.target as HTMLImageElement).src = "/dog-placeholder.png"; }}
+                        className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl object-cover shrink-0 bg-[#ECE8E1]"
+                    />
+                    <div className="flex-1 basis-[320px] min-w-0 flex flex-col gap-2.5">
+                        <div className="flex items-center gap-3 flex-wrap">
+                            <span className="text-xs font-semibold tracking-[0.1em] uppercase text-[#6B6B73]">
+                                {pet ? listingKindLabel(pet.listing_type, pet.pet_type) : "Adoption"}
+                            </span>
+                            {listingStatus && (
+                                <span className="inline-flex items-center gap-1.5 bg-white border border-[#E6E4DF] text-[#18181B] rounded-full pl-2.5 pr-3 py-1 text-xs font-semibold">
+                                    <span className="w-[7px] h-[7px] rounded-full" style={{ background: LISTING_STATUS_META[listingStatus].dot }} />
+                                    {LISTING_STATUS_META[listingStatus].label}
                                 </span>
-                                {listingStatus && (
-                                    <span className="inline-flex items-center gap-1.5 bg-white text-[#18181B] rounded-full pl-2.5 pr-3 py-1 text-xs font-semibold">
-                                        <span className="w-[7px] h-[7px] rounded-full" style={{ background: LISTING_STATUS_META[listingStatus].dot }} />
-                                        {LISTING_STATUS_META[listingStatus].label}
-                                    </span>
-                                )}
-                            </div>
-                            <h1 className="text-[32px] lg:text-[44px] leading-[1.05] font-semibold tracking-[-0.025em] truncate">{petName}</h1>
-                            {meta && <p className="text-[15px] text-white/80">{meta}</p>}
-                            {traits.length > 0 && (
-                                <ul className="mt-1 flex flex-wrap gap-1.5">
-                                    {traits.map((t) => (
-                                        <li key={t} className="text-xs font-medium border border-white/30 rounded-full px-2.5 py-1">{t}</li>
-                                    ))}
-                                </ul>
                             )}
                         </div>
-                        <div className="flex gap-2.5 flex-wrap">
-                            {listingStatus === "live" && (
-                                <Link
-                                    href={`/browse-pets/${petId}`}
-                                    className="inline-flex items-center gap-2 min-h-[44px] px-[18px] rounded-xl border border-white/30 text-sm font-semibold hover:bg-white/10 transition-colors"
-                                >
-                                    <ExternalLink size={16} aria-hidden="true" />
-                                    Public page
-                                </Link>
-                            )}
-                            <Link
-                                href="/my-listings"
-                                className="inline-flex items-center gap-2 min-h-[44px] px-[18px] rounded-xl bg-white text-primary text-sm font-semibold hover:bg-white/90 transition-colors"
-                            >
-                                Manage listings
-                            </Link>
-                        </div>
+                        <h1 className="text-[32px] lg:text-[44px] leading-[1.05] font-semibold tracking-[-0.025em] truncate">{petName}</h1>
+                        {meta && <p className="text-[15px] text-[#52525B]">{meta}</p>}
+                        {traits.length > 0 && (
+                            <ul className="mt-1 flex flex-wrap gap-1.5">
+                                {traits.map((t) => (
+                                    <li key={t} className="text-xs font-medium text-[#3F3F46] bg-white border border-[#E6E4DF] rounded-full px-2.5 py-1">{t}</li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
-
-                    <dl className="grid grid-cols-2 md:grid-cols-4 border-t border-white/20">
-                        {[
-                            { label: "Applications", value: applications ? apps.length : "–" },
-                            { label: "Awaiting review", value: applications ? counts.pending : "–" },
-                            { label: "Listed", value: pet?.created_at ? formatShortDate(pet.created_at) : "–" },
-                            { label: "Photos", value: pet?.images?.length ?? "–" },
-                        ].map((s) => (
-                            <div key={s.label} className="py-5 pr-5 flex flex-col gap-1.5">
-                                <dt className="text-[13px] text-white/75">{s.label}</dt>
-                                <dd className="text-[26px] leading-tight font-semibold tracking-[-0.02em] tabular-nums">{s.value}</dd>
-                            </div>
-                        ))}
-                    </dl>
+                    <div className="flex gap-2.5 flex-wrap">
+                        {listingStatus === "live" && (
+                            <Link
+                                href={`/browse-pets/${petId}`}
+                                className="inline-flex items-center gap-2 min-h-[44px] px-[18px] rounded-xl bg-white border border-[#D9D6D0] text-sm font-semibold hover:border-[#A1A1AA] transition-colors"
+                            >
+                                <ExternalLink size={16} aria-hidden="true" />
+                                Public page
+                            </Link>
+                        )}
+                        <Link
+                            href="/my-listings"
+                            className="inline-flex items-center gap-2 min-h-[44px] px-[18px] rounded-xl bg-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                        >
+                            Manage listings
+                        </Link>
+                    </div>
                 </div>
+
+                <dl className="grid grid-cols-2 lg:grid-cols-4 bg-primary text-white rounded-[18px] overflow-hidden">
+                    {[
+                        { label: "Applications", value: applications ? apps.length : "–" },
+                        { label: "Awaiting review", value: applications ? counts.pending : "–" },
+                        { label: "Listed", value: pet?.created_at ? formatShortDate(pet.created_at) : "–" },
+                        { label: "Photos", value: pet?.images?.length ?? "–" },
+                    ].map((s, i) => (
+                        <div key={s.label} className={`px-5 sm:px-6 py-5 flex flex-col gap-1.5 border-white/15 ${i % 2 === 1 ? "border-l" : ""} ${i >= 2 ? "border-t lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}>
+                            <dt className="text-[13px] text-white/75">{s.label}</dt>
+                            <dd className="text-[26px] leading-tight font-semibold tracking-[-0.02em] tabular-nums">{s.value}</dd>
+                        </div>
+                    ))}
+                </dl>
             </section>
 
             <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 pt-8 pb-24">

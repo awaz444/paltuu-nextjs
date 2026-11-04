@@ -178,40 +178,38 @@ const UserListingsPage = () => {
 
     return (
         <main className="min-h-screen bg-[#F5F4F1] text-[#18181B]">
-            {/* Header band */}
-            <section aria-label="Overview" className="bg-primary text-white">
-                <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 pt-10 lg:pt-12 flex flex-col gap-8">
-                    <div className="flex flex-wrap items-end justify-between gap-6">
-                        <div className="flex flex-col gap-2.5 max-w-2xl">
-                            <p className="text-xs font-semibold tracking-[0.1em] uppercase text-white/75">
-                                {firstName ? `Hi, ${firstName}` : "Your account"}
-                            </p>
-                            <h1 className="text-[32px] lg:text-[44px] leading-[1.1] font-semibold tracking-[-0.025em]">My listings</h1>
-                            <p className="text-[15px] leading-relaxed text-white/80">
-                                {newApplications > 0
-                                    ? `${newApplications} ${newApplications === 1 ? "person is" : "people are"} waiting to hear back from you. Review applications and keep your listings up to date.`
-                                    : "Keep your listings up to date so the right adopters find them."}
-                            </p>
-                        </div>
-                        <Link
-                            href="/create-listing"
-                            className="inline-flex items-center gap-2 min-h-[46px] px-[22px] rounded-xl bg-white text-primary text-sm font-semibold hover:bg-white/90 transition-colors"
-                        >
-                            <Plus size={18} aria-hidden="true" />
-                            New listing
-                        </Link>
+            {/* Header: light title area with a primary-colour stats strip */}
+            <section aria-label="Overview" className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 pt-10 lg:pt-12 flex flex-col gap-7">
+                <div className="flex flex-wrap items-end justify-between gap-6">
+                    <div className="flex flex-col gap-2.5 max-w-2xl">
+                        <p className="text-xs font-semibold tracking-[0.1em] uppercase text-[#6B6B73]">
+                            {firstName ? `Hi, ${firstName}` : "Your account"}
+                        </p>
+                        <h1 className="text-[32px] lg:text-[44px] leading-[1.1] font-semibold tracking-[-0.025em]">My listings</h1>
+                        <p className="text-[15px] leading-relaxed text-[#52525B]">
+                            {newApplications > 0
+                                ? `${newApplications} ${newApplications === 1 ? "person is" : "people are"} waiting to hear back from you. Review applications and keep your listings up to date.`
+                                : "Keep your listings up to date so the right adopters find them."}
+                        </p>
                     </div>
-
-                    <dl className="grid grid-cols-2 lg:grid-cols-4 border-t border-white/20">
-                        {stats.map((s) => (
-                            <div key={s.label} className="py-5 pr-6 flex flex-col gap-1.5">
-                                <dt className="text-[13px] font-medium text-white/75">{s.label}</dt>
-                                <dd className="text-[28px] lg:text-[32px] leading-none font-semibold tracking-[-0.02em] tabular-nums">{s.value}</dd>
-                                <dd className="text-xs text-white/70">{s.note}</dd>
-                            </div>
-                        ))}
-                    </dl>
+                    <Link
+                        href="/create-listing"
+                        className="inline-flex items-center gap-2 min-h-[46px] px-[22px] rounded-xl bg-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                    >
+                        <Plus size={18} aria-hidden="true" />
+                        New listing
+                    </Link>
                 </div>
+
+                <dl className="grid grid-cols-2 lg:grid-cols-4 bg-primary text-white rounded-[18px] overflow-hidden">
+                    {stats.map((s, i) => (
+                        <div key={s.label} className={`px-5 sm:px-6 py-5 flex flex-col gap-1.5 border-white/15 ${i % 2 === 1 ? "border-l" : ""} ${i >= 2 ? "border-t lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}>
+                            <dt className="text-[13px] font-medium text-white/75">{s.label}</dt>
+                            <dd className="text-[28px] lg:text-[32px] leading-none font-semibold tracking-[-0.02em] tabular-nums">{s.value}</dd>
+                            <dd className="text-xs text-white/70">{s.note}</dd>
+                        </div>
+                    ))}
+                </dl>
             </section>
 
             <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 pt-10 pb-24 flex flex-col gap-12">

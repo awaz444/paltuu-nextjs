@@ -167,16 +167,20 @@ const UserListingsPage = () => {
     const firstName = user.name?.split(" ")[0];
     const stats = [
         { label: "Live listings", value: counts.live, note: "Visible on Paltuu" },
-        { label: "In review", value: counts.review, note: "Being checked by the Paltuu team" },
-        { label: "New applications", value: newApplications, note: `Across ${listingsWithNew} ${listingsWithNew === 1 ? "listing" : "listings"}` },
-        { label: "Homes found", value: counts.adopted, note: "Pets you have rehomed" },
+        { label: "In review", value: counts.review, note: counts.review > 0 ? "Being checked by the Paltuu team" : "Nothing waiting on us" },
+        {
+            label: "New applications",
+            value: newApplications,
+            note: newApplications > 0 ? `Across ${listingsWithNew} ${listingsWithNew === 1 ? "listing" : "listings"}` : "None waiting on you",
+        },
+        { label: "Homes found", value: counts.adopted, note: counts.adopted === 1 ? "Pet you have rehomed" : "Pets you have rehomed" },
     ];
 
     return (
         <main className="min-h-screen bg-[#F5F4F1] text-[#18181B]">
             {/* Header band */}
             <section aria-label="Overview" className="bg-primary text-white">
-                <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 pt-12 lg:pt-14 flex flex-col gap-10">
+                <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 pt-10 lg:pt-12 flex flex-col gap-8">
                     <div className="flex flex-wrap items-end justify-between gap-6">
                         <div className="flex flex-col gap-2.5 max-w-2xl">
                             <p className="text-xs font-semibold tracking-[0.1em] uppercase text-white/75">
@@ -200,9 +204,9 @@ const UserListingsPage = () => {
 
                     <dl className="grid grid-cols-2 lg:grid-cols-4 border-t border-white/20">
                         {stats.map((s) => (
-                            <div key={s.label} className="py-6 pr-6 flex flex-col gap-2">
+                            <div key={s.label} className="py-5 pr-6 flex flex-col gap-1.5">
                                 <dt className="text-[13px] font-medium text-white/75">{s.label}</dt>
-                                <dd className="text-[30px] lg:text-[36px] leading-none font-semibold tracking-[-0.02em] tabular-nums">{s.value}</dd>
+                                <dd className="text-[28px] lg:text-[32px] leading-none font-semibold tracking-[-0.02em] tabular-nums">{s.value}</dd>
                                 <dd className="text-xs text-white/70">{s.note}</dd>
                             </div>
                         ))}
@@ -222,139 +226,97 @@ const UserListingsPage = () => {
                     </div>
                 ) : (
                     <>
-                        <div className="flex flex-col lg:flex-row gap-6 items-stretch">
-                            {/* Needs your attention */}
-                            <section aria-labelledby="attention-title" className="lg:flex-[2] min-w-0 bg-white border border-[#E6E4DF] rounded-[18px] flex flex-col">
-                                <header className="px-6 py-[22px] flex items-center gap-2.5 border-b border-[#EEECE8]">
+                        {/* Needs your attention: only shown when something does */}
+                        {attention.length > 0 && (
+                            <section aria-labelledby="attention-title" className="bg-white border border-[#E6E4DF] rounded-[18px]">
+                                <header className="px-6 py-[18px] flex items-center gap-2.5 border-b border-[#EEECE8]">
                                     <h2 id="attention-title" className="text-[17px] font-semibold">Needs your attention</h2>
-                                    {attention.length > 0 && (
-                                        <span className="min-w-[24px] h-6 px-2 rounded-full bg-[#18181B] text-white text-xs font-semibold inline-flex items-center justify-center tabular-nums">
-                                            {attention.length}
-                                        </span>
-                                    )}
+                                    <span className="min-w-[24px] h-6 px-2 rounded-full bg-[#18181B] text-white text-xs font-semibold inline-flex items-center justify-center tabular-nums">
+                                        {attention.length}
+                                    </span>
                                 </header>
-                                {attention.length === 0 ? (
-                                    <div className="px-6 py-10 flex flex-col items-center gap-1.5 text-center flex-1 justify-center">
-                                        <p className="text-[15px] font-semibold">You&apos;re all caught up</p>
-                                        <p className="text-[13px] text-[#6B6B73]">New applications and check-ins will show up here.</p>
-                                    </div>
-                                ) : (
-                                    <ul>
-                                        {attention.map((item) => {
-                                            const { pet } = item;
-                                            const busy = busyPet === pet.pet_id;
-                                            return (
-                                                <li key={`${item.kind}-${pet.pet_id}`} className="px-6 py-4 flex flex-wrap items-center gap-4 border-b border-[#F0EEEA] last:border-b-0">
-                                                    <img src={petPhoto(pet)} alt="" className="w-[52px] h-[52px] rounded-xl object-cover shrink-0 bg-[#ECE8E1]" />
-                                                    <div className="flex-1 basis-[220px] min-w-0 flex flex-col gap-0.5">
-                                                        {item.kind === "applications" && (
-                                                            <>
-                                                                <p className="text-[15px] font-semibold">
-                                                                    {item.count} new {item.count === 1 ? "application" : "applications"} for {pet.pet_name}
-                                                                </p>
-                                                                <p className="text-[13px] text-[#6B6B73] truncate">
-                                                                    {pet.recent_applicant_names?.[0] ? `Most recent from ${pet.recent_applicant_names[0]}` : "Waiting for your review"}
-                                                                </p>
-                                                            </>
-                                                        )}
-                                                        {item.kind === "check-in" && (
-                                                            <>
-                                                                <p className="text-[15px] font-semibold">Is {pet.pet_name} still looking for a home?</p>
-                                                                <p className="text-[13px] text-[#6B6B73]">Listed {formatShortDate(pet.created_at)} · confirm to keep it near the top</p>
-                                                            </>
-                                                        )}
-                                                        {item.kind === "paused" && (
-                                                            <>
-                                                                <p className="text-[15px] font-semibold">{pet.pet_name} is paused</p>
-                                                                <p className="text-[13px] text-[#6B6B73]">Hidden from the adoption page until you relist</p>
-                                                            </>
-                                                        )}
-                                                        {item.kind === "review" && (
-                                                            <>
-                                                                <p className="text-[15px] font-semibold">{pet.pet_name} is being reviewed</p>
-                                                                <p className="text-[13px] text-[#6B6B73]">The Paltuu team checks every new listing</p>
-                                                            </>
-                                                        )}
-                                                    </div>
+                                <ul>
+                                    {attention.map((item) => {
+                                        const { pet } = item;
+                                        const busy = busyPet === pet.pet_id;
+                                        return (
+                                            <li key={`${item.kind}-${pet.pet_id}`} className="px-6 py-4 flex flex-wrap items-center gap-4 border-b border-[#F0EEEA] last:border-b-0">
+                                                <img src={petPhoto(pet)} alt="" className="w-[52px] h-[52px] rounded-xl object-cover shrink-0 bg-[#ECE8E1]" />
+                                                <div className="flex-1 basis-[220px] min-w-0 flex flex-col gap-0.5">
                                                     {item.kind === "applications" && (
-                                                        <Link href={applicantsHref(pet)} className="inline-flex items-center gap-1.5 min-h-[42px] px-[18px] rounded-[10px] bg-primary text-white text-[13px] font-semibold">
-                                                            Review
-                                                            <ArrowRight size={15} aria-hidden="true" />
-                                                        </Link>
+                                                        <>
+                                                            <p className="text-[15px] font-semibold">
+                                                                {item.count} new {item.count === 1 ? "application" : "applications"} for {pet.pet_name}
+                                                            </p>
+                                                            <p className="text-[13px] text-[#6B6B73] truncate">
+                                                                {pet.recent_applicant_names?.[0] ? `Most recent from ${pet.recent_applicant_names[0]}` : "Waiting for your review"}
+                                                            </p>
+                                                        </>
                                                     )}
                                                     {item.kind === "check-in" && (
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() => handleAvailability(pet, false)}
-                                                                disabled={busy}
-                                                                className="min-h-[42px] px-4 rounded-[10px] border border-[#D9D6D0] bg-white text-[13px] font-semibold hover:border-[#A1A1AA] transition-colors disabled:opacity-60"
-                                                            >
-                                                                Adopted
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleAvailability(pet, true)}
-                                                                disabled={busy}
-                                                                className="min-h-[42px] px-4 rounded-[10px] bg-[#18181B] text-white text-[13px] font-semibold disabled:opacity-60"
-                                                            >
-                                                                Still available
-                                                            </button>
-                                                        </div>
+                                                        <>
+                                                            <p className="text-[15px] font-semibold">Is {pet.pet_name} still looking for a home?</p>
+                                                            <p className="text-[13px] text-[#6B6B73]">Listed {formatShortDate(pet.created_at)} · confirm to keep it near the top</p>
+                                                        </>
                                                     )}
                                                     {item.kind === "paused" && (
+                                                        <>
+                                                            <p className="text-[15px] font-semibold">{pet.pet_name} is paused</p>
+                                                            <p className="text-[13px] text-[#6B6B73]">Hidden from the adoption page until you relist</p>
+                                                        </>
+                                                    )}
+                                                    {item.kind === "review" && (
+                                                        <>
+                                                            <p className="text-[15px] font-semibold">{pet.pet_name} is being reviewed</p>
+                                                            <p className="text-[13px] text-[#6B6B73]">The Paltuu team checks every new listing</p>
+                                                        </>
+                                                    )}
+                                                </div>
+                                                {item.kind === "applications" && (
+                                                    <Link href={applicantsHref(pet)} className="inline-flex items-center gap-1.5 min-h-[42px] px-[18px] rounded-[10px] bg-primary text-white text-[13px] font-semibold">
+                                                        Review
+                                                        <ArrowRight size={15} aria-hidden="true" />
+                                                    </Link>
+                                                )}
+                                                {item.kind === "check-in" && (
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => handleAvailability(pet, false)}
+                                                            disabled={busy}
+                                                            className="min-h-[42px] px-4 rounded-[10px] border border-[#D9D6D0] bg-white text-[13px] font-semibold hover:border-[#A1A1AA] transition-colors disabled:opacity-60"
+                                                        >
+                                                            Adopted
+                                                        </button>
                                                         <button
                                                             onClick={() => handleAvailability(pet, true)}
                                                             disabled={busy}
-                                                            className="min-h-[42px] px-[18px] rounded-[10px] border border-[#D9D6D0] bg-white text-[13px] font-semibold hover:border-[#A1A1AA] transition-colors disabled:opacity-60"
+                                                            className="min-h-[42px] px-4 rounded-[10px] bg-[#18181B] text-white text-[13px] font-semibold disabled:opacity-60"
                                                         >
-                                                            Relist
+                                                            Still available
                                                         </button>
-                                                    )}
-                                                    {item.kind === "review" && (
-                                                        <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#3F3F46]">
-                                                            <span className="w-[7px] h-[7px] rounded-full bg-[#B45309]" />
-                                                            In review
-                                                        </span>
-                                                    )}
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
-                                )}
+                                                    </div>
+                                                )}
+                                                {item.kind === "paused" && (
+                                                    <button
+                                                        onClick={() => handleAvailability(pet, true)}
+                                                        disabled={busy}
+                                                        className="min-h-[42px] px-[18px] rounded-[10px] border border-[#D9D6D0] bg-white text-[13px] font-semibold hover:border-[#A1A1AA] transition-colors disabled:opacity-60"
+                                                    >
+                                                        Relist
+                                                    </button>
+                                                )}
+                                                {item.kind === "review" && (
+                                                    <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#3F3F46]">
+                                                        <span className="w-[7px] h-[7px] rounded-full bg-[#B45309]" />
+                                                        In review
+                                                    </span>
+                                                )}
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
                             </section>
-
-                            {/* Adopter checklist */}
-                            <aside aria-labelledby="checklist-title" className="lg:flex-1 min-w-0 bg-white border border-[#E6E4DF] rounded-[18px] px-6 pt-[22px] pb-4 flex flex-col gap-4">
-                                <div>
-                                    <h2 id="checklist-title" className="text-[17px] font-semibold">Choosing the right adopter</h2>
-                                    <p className="text-[13px] text-[#6B6B73] mt-1">What to look for in every application.</p>
-                                </div>
-                                <ol className="flex flex-col">
-                                    {ADOPTER_CHECKLIST.map((item, i) => (
-                                        <li key={item.title} className="flex gap-3.5 py-[11px] border-t border-[#F0EEEA]">
-                                            <span className="w-[22px] shrink-0 pt-0.5 text-xs font-semibold text-[#6B6B73] tabular-nums">{String(i + 1).padStart(2, "0")}</span>
-                                            <div className="flex flex-col gap-0.5">
-                                                <span className="text-sm font-semibold">{item.title}</span>
-                                                <span className="text-[13px] leading-normal text-[#6B6B73]">{item.description}</span>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ol>
-                                <details className="group border-t border-[#F0EEEA] pt-2">
-                                    <summary className="cursor-pointer list-none min-h-[44px] flex items-center justify-between text-sm font-semibold">
-                                        Why these checks matter
-                                        <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </summary>
-                                    <ul className="mt-1 mb-2 pl-4 space-y-1.5 text-[13px] leading-relaxed text-[#52525B] list-disc">
-                                        <li>Pets end up in safe, loving and permanent homes.</li>
-                                        <li>Fewer pets get returned or rehomed a second time.</li>
-                                        <li>Each pet is matched with someone who can care for them.</li>
-                                        <li>Adopters understand the responsibility before they commit.</li>
-                                    </ul>
-                                </details>
-                            </aside>
-                        </div>
+                        )}
 
                         {/* All listings */}
                         <section aria-labelledby="all-listings-title" className="flex flex-col gap-6">
@@ -414,6 +376,41 @@ const UserListingsPage = () => {
                                     onPetDeleted={(petId) => setListings((prev) => prev.filter((p) => p.pet_id !== petId))}
                                 />
                             )}
+                        </section>
+
+                        {/* Adopter checklist */}
+                        <section aria-labelledby="checklist-title" className="border-t border-[#E2E0DB] pt-10 flex flex-col gap-6">
+                            <div className="flex flex-wrap items-end justify-between gap-3">
+                                <div>
+                                    <h2 id="checklist-title" className="text-lg font-semibold">Choosing the right adopter</h2>
+                                    <p className="text-[13px] text-[#6B6B73] mt-1">What to look for in every application.</p>
+                                </div>
+                            </div>
+                            <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-5">
+                                {ADOPTER_CHECKLIST.map((item, i) => (
+                                    <li key={item.title} className="flex gap-3.5">
+                                        <span className="w-[22px] shrink-0 pt-0.5 text-xs font-semibold text-[#6B6B73] tabular-nums">{String(i + 1).padStart(2, "0")}</span>
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="text-sm font-semibold">{item.title}</span>
+                                            <span className="text-[13px] leading-normal text-[#6B6B73]">{item.description}</span>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ol>
+                            <details className="group max-w-xl">
+                                <summary className="cursor-pointer list-none min-h-[44px] inline-flex items-center gap-2 text-sm font-semibold">
+                                    Why these checks matter
+                                    <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </summary>
+                                <ul className="mt-1 pl-4 space-y-1.5 text-[13px] leading-relaxed text-[#52525B] list-disc">
+                                    <li>Pets end up in safe, loving and permanent homes.</li>
+                                    <li>Fewer pets get returned or rehomed a second time.</li>
+                                    <li>Each pet is matched with someone who can care for them.</li>
+                                    <li>Adopters understand the responsibility before they commit.</li>
+                                </ul>
+                            </details>
                         </section>
                     </>
                 )}

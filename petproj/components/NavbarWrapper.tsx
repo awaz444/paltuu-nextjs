@@ -29,6 +29,8 @@ const hideNavbarRoutes = [
 export default function NavbarWrapper() {
   const pathname = usePathname();
   const isBazaarPage = pathname === "/bazaar";
+  // Pages whose header band continues straight on from the navbar.
+  const flatNavbar = isBazaarPage || pathname === "/my-listings" || pathname === "/adoption-applicants";
 
   // only render navbar if not in hide list
   if (hideNavbarRoutes.includes(pathname)) {
@@ -36,7 +38,7 @@ export default function NavbarWrapper() {
   }
 
   return (
-    <div className={isBazaarPage ? "no-navbar-radius" : ""}>
+    <div className={flatNavbar ? "no-navbar-radius" : ""}>
       <Navbar hideCart={true} />
     </div>
   );

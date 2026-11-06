@@ -122,9 +122,12 @@ function ForumList({ activeSpecies, activeBreed, activeCity, breeds = [] }: NavP
     return (
         <nav aria-label="Forums" className="sticky top-4 max-h-[calc(100vh-2rem)] space-y-1 overflow-y-auto pb-4">
             <Link href="/home" className={item(homeActive)}>
-                {/* Same home icon as the app's tab bar (paltuu-reactnative/assets/icons). */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`/icons/social/home-${homeActive ? "select" : "unselect"}.svg`} alt="" aria-hidden width={18} height={18} className="h-[18px] w-[18px]" /> Home
+                <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full">
+                    {/* Hand-drawn like the other forums, in place of the app's tab-bar icon. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/icons/features/home.jpg" alt="" width={24} height={24} className="h-full w-full rounded-full object-cover" />
+                </span>
+                Home
             </Link>
             <p className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-gray-400">Pets</p>
             {COMMUNITY_SPECIES.map((s) => (

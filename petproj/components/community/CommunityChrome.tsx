@@ -1,6 +1,6 @@
 import Link from "next/link";
 import AppStoreBadges from "@/components/home/AppStoreBadges";
-import { COMMUNITY_SPECIES, type BreedCommunity, type CommunityPost } from "@/lib/community";
+import { COMMUNITY_CITIES, COMMUNITY_SPECIES, type BreedCommunity, type CommunityPost } from "@/lib/community";
 import { VETS_AT_HOME } from "@/lib/homeContent";
 import FeedPost from "./FeedPost";
 import MobileActions from "./MobileActions";
@@ -71,24 +71,33 @@ export function ForumHeader({
 type NavProps = {
     activeSpecies?: string;
     activeBreed?: string;
+    activeCity?: string;
     breeds?: BreedCommunity[];
 };
 
 /** Mobile: scrolling chips above the posts. */
-function ForumChips({ activeSpecies, activeBreed, breeds = [] }: NavProps) {
+function ForumChips({ activeSpecies, activeBreed, activeCity, breeds = [] }: NavProps) {
     const chip = (active: boolean) =>
         `shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium ${
             active ? "border-primary bg-primary text-white" : "border-gray-200 bg-white text-gray-700"
         }`;
+    const speciesChips = COMMUNITY_SPECIES.map((s) => (
+        <Link key={s.slug} href={`/${s.slug}`} className={chip(s.slug === activeSpecies && !activeBreed)}>
+            {s.name}
+        </Link>
+    ));
+    const cityChips = COMMUNITY_CITIES.map((c) => (
+        <Link key={c.slug} href={`/${c.slug}`} className={chip(c.slug === activeCity)}>
+            {c.name}
+        </Link>
+    ));
     return (
         <div className="min-w-0 space-y-2 lg:hidden">
             <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-                <Link href="/home" className={chip(!activeSpecies)}>Home</Link>
-                {COMMUNITY_SPECIES.map((s) => (
-                    <Link key={s.slug} href={`/${s.slug}`} className={chip(s.slug === activeSpecies && !activeBreed)}>
-                        {s.name}
-                    </Link>
-                ))}
+                <Link href="/home" className={chip(!activeSpecies && !activeCity)}>Home</Link>
+                {/* The row scrolls, so a city page leads with the cities to keep its own chip on screen. */}
+                {activeCity ? cityChips : speciesChips}
+                {activeCity ? speciesChips : cityChips}
             </div>
             {breeds.length > 0 && (
                 <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
@@ -104,17 +113,18 @@ function ForumChips({ activeSpecies, activeBreed, breeds = [] }: NavProps) {
 }
 
 /** Desktop left column: the forums, with breeds nested under the open species. */
-function ForumList({ activeSpecies, activeBreed, breeds = [] }: NavProps) {
+function ForumList({ activeSpecies, activeBreed, activeCity, breeds = [] }: NavProps) {
     const item = (active: boolean) =>
         `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
             active ? "bg-gray-200 font-semibold text-gray-900" : "text-gray-700 hover:bg-gray-100"
         }`;
+    const homeActive = !activeSpecies && !activeCity;
     return (
         <nav aria-label="Forums" className="sticky top-4 max-h-[calc(100vh-2rem)] space-y-1 overflow-y-auto pb-4">
-            <Link href="/home" className={item(!activeSpecies)}>
+            <Link href="/home" className={item(homeActive)}>
                 {/* Same home icon as the app's tab bar (paltuu-reactnative/assets/icons). */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`/icons/social/home-${!activeSpecies ? "select" : "unselect"}.svg`} alt="" aria-hidden width={18} height={18} className="h-[18px] w-[18px]" /> Home
+                <img src={`/icons/social/home-${homeActive ? "select" : "unselect"}.svg`} alt="" aria-hidden width={18} height={18} className="h-[18px] w-[18px]" /> Home
             </Link>
             <p className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-gray-400">Pets</p>
             {COMMUNITY_SPECIES.map((s) => (
@@ -135,6 +145,15 @@ function ForumList({ activeSpecies, activeBreed, breeds = [] }: NavProps) {
                         </div>
                     )}
                 </div>
+            ))}
+            <p className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-gray-400">Cities</p>
+            {COMMUNITY_CITIES.map((c) => (
+                <Link key={c.slug} href={`/${c.slug}`} className={item(c.slug === activeCity)}>
+                    <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full text-base">
+                        <ForumIcon speciesSlug={c.slug} size={24} />
+                    </span>
+                    {c.name}
+                </Link>
             ))}
         </nav>
     );

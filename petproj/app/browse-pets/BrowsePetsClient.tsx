@@ -3,14 +3,26 @@ import { useEffect, useState, useRef, Suspense, type ReactNode } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { RootState, AppDispatch } from "../store/store";
-import { fetchAdoptionPets, clearAdoptionPets, setAdoptionPets } from "../store/slices/adoptionPetsSlice";
+import { fetchAdoptionPets, fetchMoreAdoptionPets, clearAdoptionPets, setAdoptionPets, setAdoptionListKey } from "../store/slices/adoptionPetsSlice";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import VerticalSearchBar from "../../components/VerticalSearchBar";
 import FilterSection from "../../components/FilterSection";
 import PetGrid from "../../components/petGrid";
 import SkeletonCard from "../../components/SkeletonCard";
+import BackToTop from "../../components/BackToTop";
 import { MoonLoader } from "react-spinners";
 import "./styles.css";
+
+const PAGE_SIZE = 11;
+
+// Where the visitor was when they opened a pet, so the back button returns them there.
+let savedScrollY = 0;
+let arrivedByBack = false;
+if (typeof window !== "undefined") {
+    window.addEventListener("popstate", () => {
+        arrivedByBack = true;
+    });
+}
 
 interface Pet {
     pet_id: number;
@@ -62,12 +74,10 @@ function BrowsePetsContent({ initialPets = [], initialMeta, topSlot }: BrowsePet
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
-    const isFirstRender = useRef(true);
-    const { pets, loading, error, meta } = useSelector((state: RootState) => state.adoptionPets);
-
-    // Initialize state from URL params
-    const initialPage = parseInt(searchParams.get("page") || "1", 10);
-    const [page, setPage] = useState(initialPage);
+    // The filters the list was last loaded for. Also keeps React's double-run of effects in dev from wiping a restored list.
+    const loadedFor = useRef<string | null>(null);
+    const { pets, loading, error, meta, requestId, loadingMore, loadMoreError, listKey } = useSelector((state: RootState) => state.adoptionPets);
+    const sentinel = useRef<HTMLDivElement>(null);
 
     const [filters, setFilters] = useState({
         selectedSex: searchParams.get("sex") || "",
@@ -94,41 +104,55 @@ function BrowsePetsContent({ initialPets = [], initialMeta, topSlot }: BrowsePet
         if (color) setPrimaryColor(color);
     }, []);
 
+    // Prepare filters for API
+    const apiFilters: any = {
+        ...(filters.selectedSex && { sex: filters.selectedSex }),
+        ...(filters.minAge && { minAge: filters.minAge }),
+        ...(filters.maxAge && { maxAge: filters.maxAge }),
+        ...(filters.minPrice && { minPrice: filters.minPrice }),
+        ...(filters.maxPrice && { maxPrice: filters.maxPrice }),
+        ...(filters.area && { area: filters.area }),
+        ...(filters.minChildAge && { minChildAge: filters.minChildAge }),
+        ...(filters.canLiveWithDogs && { dogs: "true" }),
+        ...(filters.canLiveWithCats && { cats: "true" }),
+        ...(filters.vaccinated && { vaccinated: "true" }),
+        ...(filters.neutered && { neutered: "true" }),
+        ...(filters.selectedCity && { city: filters.selectedCity }),
+        ...(filters.selectedSpecies && { species: filters.selectedSpecies }),
+        ...(filters.breed && { breed: filters.breed }),
+    };
+    const filterKey = JSON.stringify(apiFilters);
+
     useEffect(() => {
-        // On first render: hydrate Redux from SSR data and skip the API call.
-        // This keeps the content Google already saw in the HTML visible without a flash.
-        if (isFirstRender.current) {
-            isFirstRender.current = false;
+        if (loadedFor.current === filterKey) return;
+        const isFirstLoad = loadedFor.current === null;
+        loadedFor.current = filterKey;
+
+        if (isFirstLoad) {
+            const cameBack = arrivedByBack;
+            arrivedByBack = false;
+
+            // Back from a pet page: keep everything already scrolled through, in place.
+            if (cameBack && listKey === filterKey && pets.length > 0) {
+                requestAnimationFrame(() => window.scrollTo(0, savedScrollY));
+                return;
+            }
+
+            // On first render: hydrate Redux from SSR data and skip the API call.
+            // This keeps the content Google already saw in the HTML visible without a flash.
             const hasURLFilters = Object.values(filters).some(v => v !== "" && v !== false);
-            if (initialPets.length > 0 && !hasURLFilters && page === 1) {
+            if (initialPets.length > 0 && !hasURLFilters) {
                 dispatch(setAdoptionPets({ pets: initialPets, meta: initialMeta }));
+                dispatch(setAdoptionListKey(filterKey));
                 return;
             }
         }
 
-        // Prepare filters for API
-        const apiFilters: any = {
-            ...(filters.selectedSex && { sex: filters.selectedSex }),
-            ...(filters.minAge && { minAge: filters.minAge }),
-            ...(filters.maxAge && { maxAge: filters.maxAge }),
-            ...(filters.minPrice && { minPrice: filters.minPrice }),
-            ...(filters.maxPrice && { maxPrice: filters.maxPrice }),
-            ...(filters.area && { area: filters.area }),
-            ...(filters.minChildAge && { minChildAge: filters.minChildAge }),
-            ...(filters.canLiveWithDogs && { dogs: "true" }),
-            ...(filters.canLiveWithCats && { cats: "true" }),
-            ...(filters.vaccinated && { vaccinated: "true" }),
-            ...(filters.neutered && { neutered: "true" }),
-            ...(filters.selectedCity && { city: filters.selectedCity }),
-            ...(filters.selectedSpecies && { species: filters.selectedSpecies }),
-            ...(filters.breed && { breed: filters.breed }),
-        };
-
+        dispatch(setAdoptionListKey(filterKey));
         dispatch(clearAdoptionPets());
-        dispatch(fetchAdoptionPets({ page, limit: 11, filters: apiFilters }));
+        dispatch(fetchAdoptionPets({ page: 1, limit: PAGE_SIZE, filters: apiFilters }));
 
         const params = new URLSearchParams();
-        if (page > 1) params.set("page", page.toString());
         if (filters.selectedSex) params.set("sex", filters.selectedSex);
         if (filters.minAge) params.set("minAge", filters.minAge);
         if (filters.maxAge) params.set("maxAge", filters.maxAge);
@@ -146,12 +170,35 @@ function BrowsePetsContent({ initialPets = [], initialMeta, topSlot }: BrowsePet
 
         const queryString = params.toString();
         router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
+        // apiFilters is rebuilt each render; filterKey is its stable form.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filterKey, dispatch, router]);
 
-    }, [page, filters, dispatch, router]);
+    const hasMore = Boolean(meta && meta.page < meta.totalPages);
+
+    const loadMore = () => {
+        if (!meta || !hasMore || loading || loadingMore) return;
+        dispatch(fetchMoreAdoptionPets({ page: meta.page + 1, limit: PAGE_SIZE, filters: apiFilters, listRequestId: requestId }));
+    };
+
+    // Starts loading before the end comes into view. Re-observing after each page matters:
+    // if a page is short and the sentinel is still on screen, nothing else would fire.
+    useEffect(() => {
+        const el = sentinel.current;
+        if (!el || !hasMore || loadMoreError) return;
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0]?.isIntersecting) loadMore();
+            },
+            { rootMargin: "700px 0px" }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [hasMore, loadMoreError, loading, loadingMore, pets.length, filterKey]);
 
     const handleFilterChange = (newFilters: any) => {
         setFilters(prev => ({ ...prev, ...newFilters }));
-        setPage(1);
     };
 
     const handleReset = () => {
@@ -171,10 +218,7 @@ function BrowsePetsContent({ initialPets = [], initialMeta, topSlot }: BrowsePet
             selectedSpecies: "",
             breed: "",
         });
-        setPage(1);
     };
-
-    const totalPages = meta ? meta.totalPages : 0;
 
     return (
         <div className="fullBody" style={{ maxWidth: "90%", margin: "0 auto" }}>
@@ -208,53 +252,34 @@ function BrowsePetsContent({ initialPets = [], initialMeta, topSlot }: BrowsePet
                             </div>
                         ) : (
                             <>
-                                <PetGrid pets={pets} />
+                                <div
+                                    onClickCapture={() => {
+                                        savedScrollY = window.scrollY;
+                                    }}
+                                >
+                                    <PetGrid pets={pets} />
+                                </div>
 
-                                {meta && totalPages > 1 && (
-                                    <div className="flex justify-center items-center mt-10 mb-6 space-x-2 flex-wrap">
-                                        <button
-                                            onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                            disabled={page === 1}
-                                            className="px-3 py-1 bg-white border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
-                                        >
-                                            Previous
-                                        </button>
-
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => {
-                                            if (totalPages > 7) {
-                                                if (num === 1 || num === totalPages || (num >= page - 1 && num <= page + 1)) {
-                                                    // show
-                                                } else if (num === page - 2 || num === page + 2) {
-                                                    return <span key={num} className="px-2">...</span>;
-                                                } else {
-                                                    return null;
-                                                }
-                                            }
-
-                                            return (
-                                                <button
-                                                    key={num}
-                                                    onClick={() => setPage(num)}
-                                                    className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-150 ${
-                                                        page === num
-                                                            ? "bg-primary text-white shadow-md font-bold"
-                                                            : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                                                    }`}
-                                                >
-                                                    {num}
-                                                </button>
-                                            );
-                                        })}
-
-                                        <button
-                                            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                                            disabled={page === totalPages}
-                                            className="px-3 py-1 bg-white border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
-                                        >
-                                            Next
+                                {loadingMore && (
+                                    <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-3" aria-label="Loading more pets" role="status">
+                                        {Array.from({ length: 3 }).map((_, i) => (
+                                            <SkeletonCard key={i} />
+                                        ))}
+                                    </div>
+                                )}
+                                {loadMoreError && (
+                                    <div className="my-8 text-center text-sm text-gray-600">
+                                        <p>Couldn&apos;t load more pets.</p>
+                                        <button type="button" onClick={loadMore} className="mt-2 rounded-full border border-gray-300 bg-white px-4 py-1.5 font-semibold text-gray-800 hover:bg-gray-50">
+                                            Try again
                                         </button>
                                     </div>
                                 )}
+                                {hasMore && !loadMoreError && <div ref={sentinel} aria-hidden className="h-px" />}
+                                {!hasMore && !loadingMore && (meta?.totalPages ?? 0) > 1 && (
+                                    <p className="my-8 text-center text-sm text-gray-500">That&apos;s everyone for now. New pets are added every week.</p>
+                                )}
+                                <BackToTop />
                             </>
                         )}
                     </div>

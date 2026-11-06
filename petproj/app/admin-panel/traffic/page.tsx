@@ -79,6 +79,7 @@ interface TrafficData {
     pages: PageRow[];
     ctas: CtaRow[];
     ads: AdRow[];
+    channels: { channel: string; sessions: number; pet_sessions: number; pet_pct: number | null; contact_sessions: number }[];
     referrers: { source: string; page_views: number }[];
     cities: { city: string; page_views: number; visitors: number }[];
     page_types: PageTypeRow[];
@@ -543,6 +544,21 @@ export default function TrafficDashboard() {
                                     align: "right",
                                     render: (v: number, r: PageTypeRow) => (r.scrolled_views ? `${v}%` : "—"),
                                 },
+                            ]}
+                        />
+                    </Section>
+                    <Section title="Channels" desc="Where each visit started. AI assistant is mostly ChatGPT, which Search Console can't see.">
+                        <Table
+                            size="small"
+                            rowKey="channel"
+                            loading={loading}
+                            pagination={false}
+                            dataSource={data?.channels ?? []}
+                            columns={[
+                                { title: "Channel", dataIndex: "channel" },
+                                { title: "Visits", dataIndex: "sessions", align: "right", render: fmt },
+                                { title: "Reached a pet", dataIndex: "pet_pct", align: "right", render: (v: number | null) => (v == null ? "–" : `${v}%`) },
+                                { title: "Contacted / applied", dataIndex: "contact_sessions", align: "right", render: fmt },
                             ]}
                         />
                     </Section>

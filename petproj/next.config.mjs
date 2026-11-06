@@ -35,6 +35,13 @@ const nextConfig = {
       { source: '/lost-and-found-create-listing', destination: '/browse-pets', permanent: false },
       { source: '/lost-and-found-images', destination: '/browse-pets', permanent: false },
       { source: '/listing-created-lost-and-found', destination: '/browse-pets', permanent: false },
+      // Shelters are hidden from the public for now: /adopt is the one place to
+      // find a pet. Temporary, so the pages can come back when shelters work.
+      { source: '/shelters', destination: '/adopt', permanent: false },
+      { source: '/shelters/:path*', destination: '/adopt', permanent: false },
+      { source: '/rescue-pets', destination: '/adopt', permanent: false },
+      { source: '/rescue-pets/:path*', destination: '/adopt', permanent: false },
+      { source: '/rescue-profile/:path*', destination: '/adopt', permanent: false },
       { source: '/community', destination: '/home', permanent: true },
       { source: '/feed', destination: '/home', permanent: true },
       { source: '/community/p/:post', destination: '/p/:post', permanent: true },

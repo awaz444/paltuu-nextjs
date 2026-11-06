@@ -1,12 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { safeCallbackUrl } from "@/lib/authRedirect";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import PartnerModal from "./PartnerModal";
+
+/** The page that sent them to log in, if any (see lib/authRedirect). */
+const returnUrl = () =>
+  typeof window === "undefined" ? null : safeCallbackUrl(new URLSearchParams(window.location.search).get("callbackUrl"));
 
 interface LoginFormProps {
   onSwitchToSignup: () => void;
@@ -67,7 +72,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const handleGoogleLogin = async () => {
     try {
       setGoogleLoading(true);
-      await signIn("google");
+      await signIn("google", { callbackUrl: returnUrl() ?? undefined });
     } catch (error) {
       console.error("Google login failed:", error);
       toast.error("Google login failed. Please try again!");
@@ -79,7 +84,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const handleAppleLogin = async () => {
     try {
       setAppleLoading(true);
-      await signIn("apple");
+      await signIn("apple", { callbackUrl: returnUrl() ?? undefined });
     } catch (error) {
       console.error("Apple login failed:", error);
       toast.error("Apple login failed. Please try again!");

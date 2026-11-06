@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useState, useEffect, useLayoutEffect, ReactNode, useRef } from "react";
+import { safeCallbackUrl } from "@/lib/authRedirect";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 import { clearGuestSessionId } from "@/utils/guest";
@@ -371,10 +372,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const callbackUrl = urlParams.get('callbackUrl');
+      const callbackUrl = safeCallbackUrl(urlParams.get('callbackUrl'));
 
-      if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
-        router.replace(decodeURIComponent(callbackUrl));
+      if (callbackUrl) {
+        router.replace(callbackUrl);
       } else if (userWithMethod.role === "shop admin") {
         router.replace("/shop-panel");
       } else if (userWithMethod.role === "shelter admin") {

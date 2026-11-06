@@ -11,6 +11,7 @@ import "./petGrid.css";
 import { MOBILE_BUTTON } from "./community/MobileActions";
 import { formatAge } from "@/utils/formatAge";
 import { getWaitingLabel } from "@/utils/waitingLabel";
+import { authUrl } from "@/lib/authRedirect";
 
 interface Pet {
     pet_id: number;
@@ -78,7 +79,7 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
         e.preventDefault();
 
         if (!isAuthenticated) {
-            router.push("/auth");
+            router.push(authUrl("/create-listing"));
             return;
         }
 

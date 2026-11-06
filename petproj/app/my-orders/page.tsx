@@ -19,6 +19,7 @@ import {
   X
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { authUrl } from "@/lib/authRedirect";
 
 interface OrderItem {
   order_item_id: number;
@@ -67,7 +68,7 @@ const MyOrdersPage = () => {
   useEffect(() => {
     // Redirect to login if not authenticated
     if (!isHydrating && !isAuthenticated) {
-      router.push("/auth?error=Please log in to view your orders");
+      router.push(authUrl("/my-orders"));
       return;
     }
 
@@ -87,7 +88,7 @@ const MyOrdersPage = () => {
 
         if (!res.ok) {
           if (res.status === 401) {
-            router.push('/auth');
+            router.push(authUrl("/my-orders"));
             return;
           }
           throw new Error("Failed to fetch orders");

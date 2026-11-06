@@ -58,6 +58,7 @@ import "./styles.css";
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { authUrl, currentPath } from "@/lib/authRedirect";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -201,10 +202,12 @@ const PetDetailsClient: React.FC<{
 
     const handleAdoptClick = async () => {
         if (pet?.adoption_status !== "available") return;
+        // Login status is still loading; don't send a logged-in user to /auth.
+        if (isHydrating) return;
 
         if (!isAuthenticated || !user?.id) {
             message.info("Please log in to apply for adoption");
-            router.push("/auth");
+            router.push(authUrl(currentPath()));
             return;
         }
 
@@ -303,11 +306,10 @@ const PetDetailsClient: React.FC<{
                 fallbackIcon = <ShopOutlined />;
                 break;
             case "rescue": {
-                const rescueId = pet.shelter?.shelter_id || pet.shelter_id;
                 label = "Rescue shelter";
                 name = pet.shelter?.shelter_name || pet.owner_name || "Paws Rescue";
                 avatar = pet.shelter?.logo_url || pet.owner_image || pet.profile_image_url;
-                href = rescueId ? `/shelters/${rescueId}` : null;
+                href = null; // shelter pages are hidden for now
                 fallbackIcon = <ShopOutlined />;
                 break;
             }
@@ -340,14 +342,9 @@ const PetDetailsClient: React.FC<{
         );
     }
 
-    if (isHydrating) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <MoonLoader size={30} color={primaryColor} />
-                <span className="ml-3">Loading authentication...</span>
-            </div>
-        );
-    }
+    // No waiting on the login check here: the listing is public and rendered
+    // on the server, so blocking on it only delayed the photo and text. The
+    // Apply button below handles the brief moment before login is known.
 
     if (error || !pet) {
         return (

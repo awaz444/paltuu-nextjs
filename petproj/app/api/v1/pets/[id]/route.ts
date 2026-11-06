@@ -5,6 +5,7 @@ import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 import { validate } from "@/utils/validation";
 import { normalizePhone, isValidPhone } from "@/utils/phone";
 import { notifyTeam, userName } from "@/lib/whatsappNotify";
+import { getPetDetails } from "@/lib/petDetails";
 
 /**
  * @swagger
@@ -26,35 +27,10 @@ export async function GET(req: NextRequest) {
         if (!rawId || isNaN(parseInt(rawId, 10))) return NextResponse.json({ error: "Invalid or missing ID" }, { status: 400 });
         const id = parseInt(rawId, 10);
 
-        const result = await db.query(`
-            SELECT 
-                pets.*,                      
-                cities.city_name AS city,     
-                users.name as owner_name,
-                users.email as owner_email,
-                users.phone_number as owner_phone,
-                users.profile_image_url as owner_image
-            FROM pets
-            JOIN users ON pets.owner_id = users.user_id
-            JOIN cities ON pets.city_id = cities.city_id
-            WHERE pets.pet_id = $1
-        `, [id]);
+        const pet = await getPetDetails(id);
+        if (!pet) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
 
-        if (result.rowCount === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
-
-        const pet = result.rows[0];
-
-        // Fetch images and tags
-        const [images, tags] = await Promise.all([
-            db.query('SELECT image_id, image_url, "order" FROM pet_images WHERE pet_id = $1 ORDER BY "order" ASC', [id]),
-            db.query('SELECT t.tag_id, t.tag_name, t.tag_category FROM pet_tag_assignments pta JOIN pet_tags t ON pta.tag_id = t.tag_id WHERE pta.pet_id = $1', [id])
-        ]);
-
-        return NextResponse.json({
-            ...pet,
-            images: images.rows,
-            tags: tags.rows
-        });
+        return NextResponse.json(pet);
 
     } catch (error) {
         console.error("V1 Pet Details error:", error);

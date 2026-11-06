@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { authUrl } from "@/lib/authRedirect";
 
 /** /my-profile and /profile open your own page at /profile/<id>, so there is one profile page for everyone. */
 export default function MyProfileRedirect() {
@@ -27,7 +28,7 @@ export default function MyProfileRedirect() {
         <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 px-4 text-center">
             <h1 className="mb-2 text-xl font-bold text-gray-900">Sign in required</h1>
             <p className="mb-4 text-sm text-gray-600">Log in to see your profile.</p>
-            <Link href="/auth" className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white">
+            <Link href={authUrl("/my-profile")} className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white">
                 Log in
             </Link>
         </div>

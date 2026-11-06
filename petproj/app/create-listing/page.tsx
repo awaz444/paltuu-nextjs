@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import PhoneNumberInput from "../../components/PhoneNumberInput";
 import { isValidPhone } from "@/utils/phone";
 import { compressImageFiles } from "@/utils/imageCompression";
+import { authUrl } from "@/lib/authRedirect";
 
 const { Panel } = Collapse;
 
@@ -100,7 +101,7 @@ export default function CreatePetListing() {
 
     useEffect(() => {
         if (status !== "loading" && !isAuthenticated) {
-            router.push("/auth");
+            router.push(authUrl("/create-listing"));
         }
     }, [isAuthenticated, status, router]);
 
@@ -272,7 +273,7 @@ export default function CreatePetListing() {
         }
         if (!user?.id) {
             message.error("Authentication required. Please log in.");
-            router.push("/auth");
+            router.push(authUrl("/create-listing"));
             return;
         }
         setIsSubmitting(true);

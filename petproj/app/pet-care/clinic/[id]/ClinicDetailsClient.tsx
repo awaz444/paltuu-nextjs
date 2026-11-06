@@ -26,6 +26,8 @@ import { formatPhoneDisplay } from "@/utils/phone";
 import LoginModal from "../../../../components/LoginModal";
 import { useAuth } from "@/context/AuthContext";
 import { ClinicDetails } from "./data";
+import Link from "next/link";
+import { VET_CITIES } from "@/lib/vetCities";
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -200,6 +202,11 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
 
     const isHomeVet = clinic.listing_type === "home_vet";
     const coverageText = clinic.coverage_area || clinic.address;
+    // Shelter and rescue searches land on these directory pages. Most of those
+    // visitors want a pet, so send them to the adoption listings for their city.
+    const isShelter = /shelter|rescue/i.test(clinic.name || "");
+    const shelterCity = VET_CITIES.find((c) => `${clinic.name} ${clinic.address ?? ""}`.toLowerCase().includes(c.toLowerCase()));
+    const adoptHref = shelterCity ? `/adopt/${shelterCity.toLowerCase()}` : "/adopt";
 
     const googleMapsLink = (() => {
         if (isHomeVet) return undefined;
@@ -286,6 +293,18 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                                         <span className="mt-2 inline-flex items-center gap-1.5 bg-primary/10 text-primary text-[11px] font-bold uppercase px-3 py-1 rounded-full tracking-wide">
                                             Discounts Available
                                         </span>
+                                    )}
+                                    {isShelter && (
+                                        <Link
+                                            href={adoptHref}
+                                            data-cta="clinic_shelter_adopt"
+                                            className="mt-4 flex w-full flex-col items-center rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-center hover:bg-primary/10"
+                                        >
+                                            <span className="text-sm font-semibold text-gray-900">Looking to adopt?</span>
+                                            <span className="mt-0.5 text-sm text-primary font-semibold">
+                                                See pets for adoption{shelterCity ? ` in ${shelterCity}` : ""} →
+                                            </span>
+                                        </Link>
                                     )}
                                 </div>
 

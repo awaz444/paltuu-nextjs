@@ -142,7 +142,7 @@ const PLACEMENT_CTES = `
     )`;
 
 const POST_COLUMNS = `
-    sp.post_id, sp.content, sp.post_type, sp.like_count, sp.comment_count, sp.repost_count, sp.created_at, sp.updated_at,
+    sp.post_id, sp.user_id AS author_id, sp.content, sp.post_type, sp.like_count, sp.comment_count, sp.repost_count, sp.created_at, sp.updated_at,
     u.name AS author_name, u.social_username AS author_username,
     u.profile_image_url AS author_avatar, COALESCE(u.verified, false) AS author_verified,
     (SELECT json_agg(json_build_object('type', m.media_type, 'url', m.url, 'thumb', m.thumbnail_url)
@@ -166,7 +166,7 @@ export type CommunityPost = {
     repostCount: number;
     createdAt: string;
     updatedAt: string;
-    author: { name: string; username: string | null; avatar: string | null; verified: boolean };
+    author: { id?: number; name: string; username: string | null; avatar: string | null; verified: boolean };
     media: PostMedia[];
     species: string[];
     breeds: { slug: string; name: string; species: string }[];
@@ -179,7 +179,7 @@ export type CommunityComment = {
     content: string;
     likeCount: number;
     createdAt: string;
-    author: { name: string; username: string | null; avatar: string | null; verified: boolean };
+    author: { id?: number; name: string; username: string | null; avatar: string | null; verified: boolean };
     replies: CommunityComment[];
 };
 
@@ -207,6 +207,7 @@ function toPost(r: any): CommunityPost {
         createdAt: new Date(r.created_at).toISOString(),
         updatedAt: new Date(r.updated_at ?? r.created_at).toISOString(),
         author: {
+            id: Number(r.author_id),
             name: r.author_name || r.author_username || "Paltuu member",
             username: r.author_username || null,
             avatar: r.author_avatar || null,
@@ -220,7 +221,7 @@ function toPost(r: any): CommunityPost {
 
 // ─── Feeds ───────────────────────────────────────────────────────────────────
 
-type FeedFilter = { species?: string; breedId?: number; city?: string; excludePostId?: number; limit?: number; requireMedia?: boolean };
+type FeedFilter = { species?: string; breedId?: number; authorId?: number; city?: string; excludePostId?: number; limit?: number; requireMedia?: boolean };
 
 /**
  * Latest public posts, optionally limited to one community. Listing pages are
@@ -241,6 +242,10 @@ export async function listCommunityPosts(filter: FeedFilter = {}): Promise<Commu
     if (filter.city) {
         vals.push(filter.city);
         conds.push(`u.city_id IN (SELECT ci.city_id FROM cities ci WHERE LOWER(ci.city_name) = $${vals.length})`);
+    }
+    if (filter.authorId) {
+        vals.push(filter.authorId);
+        conds.push(`sp.user_id = $${vals.length}`);
     }
     if (filter.requireMedia) {
         conds.push(`EXISTS (SELECT 1 FROM social_post_media m1 WHERE m1.post_id = sp.post_id AND m1.url IS NOT NULL)`);
@@ -267,6 +272,55 @@ export async function listCommunityPosts(filter: FeedFilter = {}): Promise<Commu
         console.error("community: listCommunityPosts failed", e);
         return [];
     }
+}
+
+export type CommunityProfile = {
+    id: number;
+    name: string;
+    username: string | null;
+    verified: boolean;
+    bio: string | null;
+    avatar: string | null;
+    cover: string | null;
+    followerCount: number;
+    followingCount: number;
+    postCount: number;
+    isPrivate: boolean;
+    suspended: boolean;
+    joinedAt: string | null;
+};
+
+/**
+ * The fields of a user anyone may see, matching /api/v1/social/profile/[id]. Never
+ * add email, phone or date of birth here: this renders on a public, cached page.
+ * A DB error throws rather than returning null, so an outage can't cache a 404.
+ */
+export async function getCommunityProfile(userId: number): Promise<CommunityProfile | null> {
+    const res = await db.query(
+        `SELECT user_id, name, social_username, username, COALESCE(verified, false) AS verified, bio,
+                profile_image_url, cover_photo_url, follower_count, following_count, post_count,
+                COALESCE(is_private, false) AS is_private, COALESCE(is_suspended, false) AS is_suspended, created_at
+           FROM users
+          WHERE user_id = $1`,
+        [userId]
+    );
+    const r = res.rows[0];
+    if (!r) return null;
+    return {
+        id: Number(r.user_id),
+        name: r.name || r.social_username || "Paltuu member",
+        username: r.social_username || r.username || null,
+        verified: Boolean(r.verified),
+        bio: r.bio || null,
+        avatar: r.profile_image_url || null,
+        cover: r.cover_photo_url || null,
+        followerCount: r.follower_count ?? 0,
+        followingCount: r.following_count ?? 0,
+        postCount: r.post_count ?? 0,
+        isPrivate: Boolean(r.is_private),
+        suspended: Boolean(r.is_suspended),
+        joinedAt: r.created_at ? new Date(r.created_at).toISOString() : null,
+    };
 }
 
 /** Public post counts per species slug. */
@@ -406,7 +460,7 @@ export async function getCommunityPost(postId: number): Promise<CommunityPost | 
 /** Public comments, threaded under their root. Replies whose root isn't public are dropped. */
 export async function getCommunityComments(postId: number): Promise<CommunityComment[]> {
     const res = await db.query(
-        `SELECT c.comment_id, c.parent_comment_id, c.root_comment_id, c.content, c.like_count, c.created_at,
+        `SELECT c.comment_id, c.user_id AS author_id, c.parent_comment_id, c.root_comment_id, c.content, c.like_count, c.created_at,
                 u.name AS author_name, u.social_username AS author_username,
                 u.profile_image_url AS author_avatar, COALESCE(u.verified, false) AS author_verified
            FROM social_comments c
@@ -425,6 +479,7 @@ export async function getCommunityComments(postId: number): Promise<CommunityCom
         likeCount: r.like_count ?? 0,
         createdAt: new Date(r.created_at).toISOString(),
         author: {
+            id: Number(r.author_id),
             name: r.author_name || r.author_username || "Paltuu member",
             username: r.author_username || null,
             avatar: r.author_avatar || null,

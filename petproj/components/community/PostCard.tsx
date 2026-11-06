@@ -11,6 +11,7 @@ import {
     type CommunityPost,
 } from "@/lib/community";
 import Avatar from "./Avatar";
+import AuthorLink from "./AuthorLink";
 import LinkifiedText from "./LinkifiedText";
 
 /** One post in a community feed. Server-rendered; the whole card links to the post page. */
@@ -44,9 +45,11 @@ export default function PostCard({ post, showPlace = true }: { post: CommunityPo
 
             <div className="flex flex-1 flex-col p-4">
                 <div className="mb-3 flex items-center gap-2.5">
-                    <Avatar src={post.author.avatar} name={post.author.name} size={32} />
+                    <AuthorLink id={post.author.id} className="relative z-10 shrink-0">
+                        <Avatar src={post.author.avatar} name={post.author.name} size={32} />
+                    </AuthorLink>
                     <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-gray-900">{post.author.name}</p>
+                        <AuthorLink id={post.author.id} className="relative z-10 block truncate text-sm font-semibold text-gray-900 hover:underline">{post.author.name}</AuthorLink>
                         <p className="text-xs text-gray-500">
                             <time dateTime={post.createdAt}>
                                 {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}

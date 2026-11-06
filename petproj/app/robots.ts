@@ -43,7 +43,8 @@ export default function robots(): MetadataRoute.Robots {
                     '/my-applications',
                     '/my-listings',
                     '/notifications',
-                    '/profile',
+                    // Only the account redirect: public profiles at /profile/<id> may be crawled.
+                    '/profile$',
 
                     // Transactional pages (login walls or post-action)
                     '/cart',

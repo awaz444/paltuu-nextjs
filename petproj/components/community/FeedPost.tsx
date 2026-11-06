@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AuthorLink from "./AuthorLink";
 import { Play } from "lucide-react";
 import {
     renderMentions,
@@ -53,11 +54,13 @@ export default function FeedPost({ post, showForum = true }: { post: CommunityPo
             <div className="flex gap-3">
                 {/* Phones: thread layout, author avatar in its own column. */}
                 <div className="shrink-0 sm:hidden">
-                    <Avatar src={post.author.avatar} name={post.author.name} size={40} />
+                    <AuthorLink id={post.author.id} className="relative z-10 block">
+                        <Avatar src={post.author.avatar} name={post.author.name} size={40} />
+                    </AuthorLink>
                 </div>
                 <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-1.5 text-sm sm:hidden">
-                        <span className="truncate font-semibold text-gray-900">{post.author.name}</span>
+                        <AuthorLink id={post.author.id} className="relative z-10 truncate font-semibold text-gray-900 hover:underline">{post.author.name}</AuthorLink>
                         {place && (
                             <>
                                 <span className="text-gray-300" aria-hidden>›</span>
@@ -80,12 +83,14 @@ export default function FeedPost({ post, showForum = true }: { post: CommunityPo
                                     {placeLabel(place)}
                                 </Link>
                                 <span aria-hidden>•</span>
-                                <span className="truncate">{post.author.name}</span>
+                                <AuthorLink id={post.author.id} className="relative z-10 truncate hover:underline">{post.author.name}</AuthorLink>
                             </>
                         ) : (
                             <>
-                                <Avatar src={post.author.avatar} name={post.author.name} size={24} />
-                                <span className="truncate font-semibold text-gray-900">{post.author.name}</span>
+                                <AuthorLink id={post.author.id} className="relative z-10 shrink-0">
+                                    <Avatar src={post.author.avatar} name={post.author.name} size={24} />
+                                </AuthorLink>
+                                <AuthorLink id={post.author.id} className="relative z-10 truncate font-semibold text-gray-900 hover:underline">{post.author.name}</AuthorLink>
                             </>
                         )}
                         <span aria-hidden>•</span>

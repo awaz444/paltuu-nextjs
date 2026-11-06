@@ -117,11 +117,17 @@ const SPECIES_VALUES = COMMUNITY_SPECIES.map((s) => `('${s.slug}', '${s.key}')`)
 /** CTEs placing posts in communities. Every query below starts with this. */
 const PLACEMENT_CTES = `
     species_map(slug, key) AS (VALUES ${SPECIES_VALUES}),
+    admin_placed AS (SELECT post_id FROM post_forums WHERE source = 'admin'),
     post_species AS (
+        SELECT pf.post_id, sm.slug AS species
+          FROM post_forums pf
+          JOIN species_map sm ON sm.key = pf.species
+        UNION
         SELECT pct.post_id, sm.slug AS species
           FROM post_content_tags pct
           JOIN content_tags ct ON ct.tag_id = pct.tag_id AND ct.category = 'species'
           JOIN species_map sm ON sm.key = ct.slug
+         WHERE pct.post_id NOT IN (SELECT post_id FROM admin_placed)
         UNION
         SELECT ppt.post_id, sm.slug AS species
           FROM post_pet_tags ppt
@@ -129,8 +135,17 @@ const PLACEMENT_CTES = `
           LEFT JOIN breeds b ON b.breed_id = pp.breed_id
           LEFT JOIN pet_category pc ON pc.category_id = b.category_id
           JOIN species_map sm ON sm.key = LOWER(COALESCE(pc.category_name, pp.species))
+         WHERE ppt.post_id NOT IN (SELECT post_id FROM admin_placed)
     ),
     post_breeds AS (
+        SELECT DISTINCT pf.post_id, cb.breed_id, cb.slug, cb.name, sm.slug AS species
+          FROM post_forums pf
+          JOIN breeds b ON b.breed_id = pf.breed_id
+          JOIN breeds cb ON cb.breed_id = COALESCE(b.parent_breed_id, b.breed_id)
+          JOIN pet_category pc ON pc.category_id = cb.category_id
+          JOIN species_map sm ON sm.key = LOWER(pc.category_name)
+         WHERE cb.kind IN ('breed', 'street', 'mixed') AND cb.is_active
+        UNION
         SELECT DISTINCT ppt.post_id, cb.breed_id, cb.slug, cb.name, sm.slug AS species
           FROM post_pet_tags ppt
           JOIN pet_profiles pp ON pp.pet_profile_id = ppt.pet_profile_id
@@ -139,6 +154,7 @@ const PLACEMENT_CTES = `
           JOIN pet_category pc ON pc.category_id = cb.category_id
           JOIN species_map sm ON sm.key = LOWER(pc.category_name)
          WHERE cb.kind IN ('breed', 'street', 'mixed') AND cb.is_active
+           AND ppt.post_id NOT IN (SELECT post_id FROM admin_placed)
     )`;
 
 const POST_COLUMNS = `

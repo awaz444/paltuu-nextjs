@@ -30,6 +30,17 @@ interface Post {
   username: string;
   name: string;
   action_history: ActionLogEntry[];
+  forum: { species: string; breed: string | null; breed_name: string | null; source: "admin" | "author" | "auto" } | null;
+}
+
+type ForumOption = { species: string; key: string; speciesName: string; breeds: { slug: string; name: string }[] };
+
+/** "cats" / "cats/siamese" for a species key ("cat") + breed slug, matching the forum picker's values. */
+function forumValue(forum: Post["forum"], options: ForumOption[]): string {
+  if (!forum) return "";
+  const species = options.find((o) => o.key === forum.species);
+  if (!species) return "";
+  return forum.breed ? `${species.species}/${forum.breed}` : species.species;
 }
 
 type StatusFilter = "all" | "untagged" | "quarantined" | "hidden" | "shadow_hidden" | "pet_sale_review" | "pet_sale" | "trigger_warning";
@@ -91,6 +102,14 @@ export default function PostBrowserPage() {
   const [offset, setOffset] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [actingId, setActingId] = useState<number | null>(null);
+  const [forumOptions, setForumOptions] = useState<ForumOption[]>([]);
+
+  useEffect(() => {
+    fetch("/api/v1/admin/social/forums")
+      .then((r) => (r.ok ? r.json() : { forums: [] }))
+      .then((d) => setForumOptions(d.forums ?? []))
+      .catch(() => {});
+  }, []);
   const searchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const LIMIT = 20;
@@ -234,6 +253,28 @@ export default function PostBrowserPage() {
   // dropped from feed caches) so it's gone everywhere, not just moderated.
   // Unlike moderation state this can't be undone from this page, hence the
   // harsher confirm copy.
+  // Admin override of the forum a post shows in (PALTU-97). "" clears the
+  // override, so pet tags, species tags and the post's own text decide again.
+  async function handleForum(postId: number, value: string) {
+    setActingId(postId);
+    try {
+      const [species, breed] = value.split("/");
+      const res = await fetch(`/api/v1/admin/social/posts/${postId}/forum`, value
+        ? { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ species, breed: breed ?? null }) }
+        : { method: "DELETE" });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Failed");
+      const forum = value
+        ? { species: forumOptions.find((o) => o.species === species)?.key ?? species, breed: breed ?? null, breed_name: null, source: "admin" as const }
+        : null;
+      setPosts((prev) => prev.map((p) => (p.post_id === postId ? { ...p, forum } : p)));
+      showToast(value ? `Moved to ${value}` : "Forum override cleared");
+    } catch (e: any) {
+      showToast(e.message || "Couldn't change the forum");
+    } finally {
+      setActingId(null);
+    }
+  }
+
   async function handleDelete(postId: number) {
     if (!confirm("Delete this post completely?\n\nThis removes it everywhere, the author included, and can't be undone from here.")) return;
     setActingId(postId);
@@ -388,6 +429,32 @@ export default function PostBrowserPage() {
                   <Link href={`/admin-panel/social/tagging?post_id=${post.post_id}`} className="text-xs text-center px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:border-primary hover:text-primary transition-all">
                     Edit tags
                   </Link>
+                  {/* Forum: an admin choice overrides pet/species tags. Non-admin
+                      placements (posted in a forum, or read from the text) are shown
+                      as the default option's label. */}
+                  <label className="text-[10px] text-gray-500">
+                    Forum
+                    <select
+                      value={post.forum?.source === "admin" ? forumValue(post.forum, forumOptions) : ""}
+                      onChange={(e) => handleForum(post.post_id, e.target.value)}
+                      disabled={actingId === post.post_id || forumOptions.length === 0}
+                      className="mt-0.5 w-full text-xs px-1.5 py-1 rounded-lg border border-gray-300 bg-white text-gray-700"
+                    >
+                      <option value="">
+                        {post.forum && post.forum.source !== "admin"
+                          ? `Auto (${post.forum.source}: ${post.forum.breed_name ?? post.forum.breed ?? post.forum.species})`
+                          : "Auto (tags)"}
+                      </option>
+                      {forumOptions.map((o) => (
+                        <optgroup key={o.species} label={o.speciesName}>
+                          <option value={o.species}>{o.speciesName} (no breed)</option>
+                          {o.breeds.map((b) => (
+                            <option key={b.slug} value={`${o.species}/${b.slug}`}>{b.name}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </label>
                   {/* ── Sale flag ──
                        The flag itself never changes visibility; it only puts
                        the public banner on the post. Confirming a flagged

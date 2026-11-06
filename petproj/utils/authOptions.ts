@@ -7,6 +7,7 @@ import { db } from "@/db/index";
 import bcrypt from "bcryptjs";
 import { createHash, randomBytes } from "crypto";
 import { captureServerEvent } from "@/lib/analytics/serverEvents";
+import { notifySignup } from "@/lib/whatsappNotify";
 
 function buildAppleClientSecret(): string | null {
   const clientID = process.env.APPLE_ID;
@@ -256,6 +257,7 @@ export const authOptions: NextAuthOptions = {
               ]
             );
             await captureServerEvent("signup_completed", res.rows[0].user_id, null, { method: "google" });
+            await notifySignup(res.rows[0].user_id, "google");
           } else {
             // Returning user: backfill oauth + missing name/avatar so navbar stays correct after hydrate
             const existing = res.rows[0];
@@ -372,6 +374,7 @@ export const authOptions: NextAuthOptions = {
                   [userRow!.user_id, "All Posts", true]
                 );
                 await captureServerEvent("signup_completed", userRow!.user_id, null, { method: "apple" });
+                await notifySignup(userRow!.user_id, "apple");
               }
             } else {
               console.error(

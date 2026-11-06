@@ -5,6 +5,7 @@ import appleSignin from "apple-signin-auth";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { captureServerEvent } from "@/lib/analytics/serverEvents";
+import { notifySignup } from "@/lib/whatsappNotify";
 
 import crypto from "crypto";
 
@@ -114,6 +115,7 @@ export async function POST(req: NextRequest) {
           [user.user_id, "All Posts", true]
         );
         await captureServerEvent("signup_completed", user.user_id, req, { method: "apple" });
+        await notifySignup(user.user_id, "apple");
       }
     } else {
       return NextResponse.json(

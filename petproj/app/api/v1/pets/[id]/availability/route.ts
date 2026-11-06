@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import { notifyTeam, userName } from "@/lib/whatsappNotify";
 
 export const dynamic = "force-dynamic";
 
@@ -44,10 +45,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         if (!body.available) {
             const result = await db.query(
                 `UPDATE pets SET adoption_status = 'adopted', availability_check_sent_at = NULL
-                 WHERE pet_id = $1 RETURNING pet_id, adoption_status, bumped_at, availability_check_sent_at`,
+                 WHERE pet_id = $1 RETURNING pet_id, pet_name, adoption_status, bumped_at, availability_check_sent_at`,
                 [id]
             );
-            return NextResponse.json(result.rows[0]);
+            if (pet.adoption_status !== "adopted") {
+                await notifyTeam(
+                    "team_listing_closed",
+                    { pet_id: id, pet_name: result.rows[0]?.pet_name, reason: "adopted", by: await userName(userId) },
+                    `listing:${id}:adopted:${Date.now()}`,
+                );
+            }
+            const { pet_name: _petName, ...row } = result.rows[0];
+            return NextResponse.json(row);
         }
 
         if (pet.adoption_status !== "available" && pet.adoption_status !== "paused") {

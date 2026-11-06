@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { checkDispatcher } from "@/lib/expressVet/dispatcherAuth";
 import { ExpressVetNotifications } from "@/lib/notifications";
+import { notifyVetRequestUpdate } from "@/lib/whatsappNotify";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,7 @@ export async function POST(req: NextRequest, context: any) {
 
     const request = result.rows[0];
     await ExpressVetNotifications.onCompleted(request.client_user_id, id);
+    await notifyVetRequestUpdate(request, "completed");
 
     return NextResponse.json({ request });
   } catch (error) {

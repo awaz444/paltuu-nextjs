@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkDispatcher } from "@/lib/expressVet/dispatcherAuth";
 import { createProvider, findOrCreateSelfProvider, InvalidProviderError } from "@/lib/expressVet/providers";
 import { ExpressVetNotifications } from "@/lib/notifications";
+import { notifyVetRequestUpdate } from "@/lib/whatsappNotify";
 import { checkSelfDeal } from "@/lib/expressVet/selfDealGuard";
 
 export const dynamic = "force-dynamic";
@@ -108,6 +109,8 @@ export async function POST(req: NextRequest, context: any) {
     );
 
     await ExpressVetNotifications.onAssigned(requestRow.client_user_id, id, provider.name, finalPricePkr, scheduledAt);
+
+    await notifyVetRequestUpdate(result.rows[0], "assigned", provider.name);
 
     return NextResponse.json({ request: result.rows[0], provider });
   } catch (error) {

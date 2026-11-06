@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import { notifyTeam } from "@/lib/whatsappNotify";
 
 /**
  * @swagger
@@ -74,6 +75,23 @@ export async function POST(req: NextRequest) {
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *
         `, [userId, post_type, pet_description, city_id, location, contact_info, category_id, date || new Date()]);
+
+        const post = result.rows[0];
+        try {
+            const extra = await db.query(
+                `SELECT (SELECT city_name FROM cities WHERE city_id = $1) AS city,
+                        (SELECT category_name FROM pet_category WHERE category_id = $2) AS species,
+                        (SELECT name FROM users WHERE user_id = $3) AS by`,
+                [city_id, category_id, userId]
+            );
+            await notifyTeam(
+                "team_lost_found",
+                { post_type: post.post_type, ...extra.rows[0] },
+                `lost_found:${post.post_id}:created`
+            );
+        } catch (waErr) {
+            console.error("WhatsApp team alert for lost & found failed (non-blocking):", waErr);
+        }
 
         return NextResponse.json(result.rows[0], { status: 201 });
     } catch (error) {

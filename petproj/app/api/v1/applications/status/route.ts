@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { AdoptionNotifications } from "@/lib/notifications";
+import { notifyTeam, userName } from "@/lib/whatsappNotify";
 
 /**
  * @swagger
@@ -93,6 +94,29 @@ export async function PUT(req: NextRequest) {
                 application_id,
                 application.pet_name
             ).catch(() => {});
+        }
+
+        if (type === 'adoption' && application.status !== status) {
+            // One message for the decision. Approving also auto-rejects the
+            // other applicants and marks the pet adopted; those ride along
+            // rather than paging the team once per applicant.
+            await notifyTeam(
+                "team_application_decided",
+                {
+                    pet_id: application.pet_id,
+                    pet_name: application.pet_name,
+                    decision: status === 'approved' ? 'accepted' : 'rejected',
+                    applicant_name: application.adopter_name || (await userName(application.user_id)),
+                },
+                `application:${application_id}:${status}`,
+            );
+            if (status === 'approved') {
+                await notifyTeam(
+                    "team_listing_closed",
+                    { pet_id: application.pet_id, pet_name: application.pet_name, reason: "adopted", by: await userName(userId) },
+                    `listing:${application.pet_id}:adopted:${Date.now()}`,
+                );
+            }
         }
 
         return NextResponse.json({ success: true });

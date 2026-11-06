@@ -4,6 +4,7 @@ import { generateMobileTokenPair } from "@/utils/mobileAuth";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { captureServerEvent } from "@/lib/analytics/serverEvents";
+import { notifySignup } from "@/lib/whatsappNotify";
 
 export const dynamic = "force-dynamic";
 
@@ -123,6 +124,7 @@ export async function GET(req: NextRequest) {
         [user.user_id, 'All Posts', true]
       );
       await captureServerEvent("signup_completed", user.user_id, req, { method: "google" });
+      await notifySignup(user.user_id, "google");
     } else {
       user = userResult.rows[0];
     }

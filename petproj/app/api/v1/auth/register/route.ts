@@ -6,6 +6,7 @@ import { rateLimit } from "@/utils/rateLimit";
 import { validate } from "@/utils/validation";
 import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 import { captureServerEvent } from "@/lib/analytics/serverEvents";
+import { notifySignup } from "@/lib/whatsappNotify";
 
 /**
  * @swagger
@@ -106,6 +107,7 @@ export async function POST(req: Request) {
     );
 
     await captureServerEvent("signup_completed", user.user_id, req, { method: "email" });
+    await notifySignup(user.user_id, "email");
 
     // 5. Clean up OTP
     await db.query('DELETE FROM "OTP" WHERE email = $1', [email]);

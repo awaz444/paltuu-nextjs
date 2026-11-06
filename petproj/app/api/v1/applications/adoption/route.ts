@@ -6,6 +6,7 @@ import { sendAdoptionApplicationEmails } from "@/utils/mailjet";
 import { withRetry } from "@/utils/retry";
 import { normalizePhone } from "@/utils/phone";
 import { captureServerEvent } from "@/lib/analytics/serverEvents";
+import { notifyTeam, userName } from "@/lib/whatsappNotify";
 
 /**
  * @swagger
@@ -122,6 +123,17 @@ export async function POST(req: NextRequest) {
         );
 
         const applicationId = result.rows[0].adoption_id;
+
+        await notifyTeam(
+            "team_application_submitted",
+            {
+                pet_id: Number(pet_id),
+                pet_name: petName,
+                applicant_name: adopter_name || (await userName(userId)),
+                owner_name: await userName(ownerId),
+            },
+            `application:${applicationId}:submitted`,
+        );
 
         // 3. In-app Notification
         AdoptionNotifications.onApplicationSubmitted(

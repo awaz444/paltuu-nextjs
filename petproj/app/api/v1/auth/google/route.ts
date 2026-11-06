@@ -5,6 +5,7 @@ import { OAuth2Client } from "google-auth-library";
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { captureServerEvent } from "@/lib/analytics/serverEvents";
+import { notifySignup } from "@/lib/whatsappNotify";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -52,6 +53,7 @@ export async function POST(req: Request) {
       );
       user = newUserResult.rows[0];
       await captureServerEvent("signup_completed", user.user_id, req, { method: "google" });
+      await notifySignup(user.user_id, "google");
     } else {
       user = userResult.rows[0];
     }

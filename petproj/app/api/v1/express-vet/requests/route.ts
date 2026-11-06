@@ -11,6 +11,7 @@ import {
   isWithinDispatcherAlertHoursPKT,
 } from "@/lib/expressVet/catalog";
 import { ExpressVetNotifications } from "@/lib/notifications";
+import { notifyTeam } from "@/lib/whatsappNotify";
 import { emitExpressVetNewRequest } from "@/utils/realtimeEmitter";
 import { sendDispatcherCallAlert } from "@/lib/expressVet/dispatcherCallPush";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
@@ -188,6 +189,30 @@ export async function POST(req: NextRequest) {
     );
 
     const request = result.rows[0];
+
+    // WhatsApp the team (dispatch role and admins). Separate from the in-app
+    // alerts below because those only ring 10am-10pm and only for dispatchers.
+    try {
+      const who = await db.query(
+        `SELECT (SELECT name FROM users WHERE user_id = $1) AS client_name,
+                (SELECT city_name FROM cities WHERE city_id = $2) AS city`,
+        [userId, city_id]
+      );
+      await notifyTeam(
+        "team_vet_request",
+        {
+          request_id: request.request_id,
+          category: EXPRESS_VET_CATEGORY_LABELS[category] ?? category,
+          species,
+          city: who.rows[0]?.city,
+          client_name: who.rows[0]?.client_name,
+          client_phone: contact_phone,
+        },
+        `vet_request:${request.request_id}:created`
+      );
+    } catch (waErr) {
+      console.error("WhatsApp team alert for vet request failed (non-blocking):", waErr);
+    }
 
     // Alert dispatchers — push is the reliability layer, the socket broadcast (see
     // server/social-realtime.js's "express_vet:dispatchers" room) is the speed layer.

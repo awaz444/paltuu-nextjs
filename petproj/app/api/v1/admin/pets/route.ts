@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/utils/authServer";
 import { normalizePhone, isValidPhone } from "@/utils/phone";
+import { notifyTeam, userName } from "@/lib/whatsappNotify";
 
 /**
  * @swagger
@@ -83,8 +84,9 @@ export async function PATCH(req: NextRequest) {
                     contact_number = COALESCE($8, contact_number),
                     listing_type = COALESCE($9, listing_type),
                     approved = COALESCE($10, approved)
+                FROM (SELECT approved AS prev_approved, adoption_status AS prev_status FROM pets WHERE pet_id = $11) prev
                 WHERE pet_id = $11
-                RETURNING *
+                RETURNING pets.*, prev.prev_approved, prev.prev_status
             `, [pet_name, pet_type, pet_breed, description, adoption_status, price, age_months, normalizedContactNumber, listing_type, approved, pet_id]);
 
             if (result.rowCount === 0) {
@@ -126,8 +128,26 @@ export async function PATCH(req: NextRequest) {
             );
 
             await client.query('COMMIT');
+
+            const { prev_approved, prev_status, ...pet } = result.rows[0];
+            const by = user.name || (await userName(user.user_id || user.id));
+            if (pet.approved !== prev_approved) {
+                await notifyTeam(
+                    "team_listing_decided",
+                    { pet_id: pet.pet_id, pet_name: pet.pet_name, decision: pet.approved ? "approved" : "rejected", by },
+                    `listing:${pet.pet_id}:${pet.approved ? "approved" : "rejected"}:${Date.now()}`,
+                );
+            }
+            if (pet.adoption_status !== prev_status && (pet.adoption_status === "adopted" || pet.adoption_status === "unavailable")) {
+                await notifyTeam(
+                    "team_listing_closed",
+                    { pet_id: pet.pet_id, pet_name: pet.pet_name, reason: pet.adoption_status, by },
+                    `listing:${pet.pet_id}:${pet.adoption_status}:${Date.now()}`,
+                );
+            }
+
             return NextResponse.json({
-                ...result.rows[0],
+                ...pet,
                 images: updatedImages.rows
             });
         } catch (e) {
@@ -162,8 +182,22 @@ export async function DELETE(req: NextRequest) {
             await client.query('DELETE FROM adoption_applications WHERE pet_id = $1', [pet_id]);
             await client.query('UPDATE pet_profiles SET adoption_listing_id = NULL WHERE adoption_listing_id = $1', [pet_id]);
             await client.query('UPDATE social_posts SET pet_id = NULL WHERE pet_id = $1', [pet_id]);
-            await client.query('DELETE FROM pets WHERE pet_id = $1', [pet_id]);
+            const deleted = await client.query('DELETE FROM pets WHERE pet_id = $1 RETURNING pet_name', [pet_id]);
             await client.query('COMMIT');
+
+            if (deleted.rows[0]) {
+                await notifyTeam(
+                    "team_listing_closed",
+                    {
+                        pet_id: Number(pet_id),
+                        pet_name: deleted.rows[0].pet_name,
+                        reason: "deleted",
+                        by: user.name || (await userName(user.user_id || user.id)),
+                    },
+                    `listing:${pet_id}:deleted`,
+                );
+            }
+
             return NextResponse.json({ success: true });
         } catch (e) {
             await client.query('ROLLBACK');

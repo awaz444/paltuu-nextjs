@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { rateLimit } from "@/utils/rateLimit";
+import { LOST_AND_FOUND_ENABLED } from "@/lib/features";
 
 export const dynamic = "force-dynamic";
 
@@ -408,7 +409,7 @@ export async function GET(req: NextRequest) {
             else if (type === "posts")      rawResults = await searchPosts(limit, cursor);
             else if (type === "products")   rawResults = await searchProducts(limit, cursor);
             else if (type === "adoptions")  rawResults = await searchAdoptions(limit, cursor);
-            else if (type === "lost_found") rawResults = await searchLostFound(limit, cursor);
+            else if (type === "lost_found") rawResults = LOST_AND_FOUND_ENABLED ? await searchLostFound(limit, cursor) : [];
             else if (type === "hashtags")   rawResults = await searchHashtags(limit, cursor);
             else if (type === "vets")       rawResults = await searchVets(limit, cursor);
             else if (type === "breeds")     rawResults = await searchBreeds(limit, cursor);
@@ -456,7 +457,7 @@ export async function GET(req: NextRequest) {
             safe(() => searchPosts(limit, null)),
             safe(() => searchProducts(limit, null)),
             safe(() => searchAdoptions(limit, null)),
-            safe(() => searchLostFound(limit, null)),
+            LOST_AND_FOUND_ENABLED ? safe(() => searchLostFound(limit, null)) : Promise.resolve([] as any[]),
             safe(() => searchHashtags(limit, null)),
             safe(() => searchVets(limit, null)),
         ]);

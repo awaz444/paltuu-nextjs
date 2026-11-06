@@ -227,7 +227,6 @@ const FEATURES = [
     { art: "/icons/features/adopt.jpg", title: "Adopt a pet", body: "Dogs, cats and more, listed by owners and shelters across Pakistan.", href: "/browse-pets" },
     { art: "/icons/features/vet.jpg", title: "Find a vet", body: "Vets and clinics near you in Karachi, Lahore, Islamabad and more.", href: "/pet-care" },
     { art: "/icons/features/vets-at-home.jpg", title: "Vets at Home", body: `A vet at your door in ${VETS_AT_HOME.city}. Book in the Paltuu app.`, href: VETS_AT_HOME.deepLink },
-    { art: "/icons/features/lost-found.jpg", title: "Lost & Found", body: "Report a lost pet or help one find its way home.", href: "/lost-and-found" },
     { art: "/icons/features/guides.jpg", title: "Pet care guides", body: "Food, health and care advice written for Pakistan.", href: "/blogs" },
 ];
 

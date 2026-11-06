@@ -37,7 +37,6 @@ ${communities}
 - [Vets and clinics](${SITE_URL}/pet-care): directory of vets and clinics in Karachi, Lahore, Islamabad and more
 
 ## Other
-- [Lost and found](${SITE_URL}/lost-and-found): lost and found pet reports
 - [Blog](${SITE_URL}/blogs): pet care guides for Pakistan
 `;
 

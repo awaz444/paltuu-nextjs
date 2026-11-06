@@ -36,7 +36,7 @@ const FAQS = [
                 <Link href="/pet-care" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
                     vet directory
                 </Link>
-                , lost &amp; found, pet care guides, and a nationwide pet community
+                , pet care guides, and a nationwide pet community
                 together in one place, covering Karachi, Lahore, Islamabad, and beyond.
             </>
         ),
@@ -116,7 +116,7 @@ const FAQS = [
                     App Store
                 </Link>{" "}
                 for iPhone. The app lets you adopt pets, connect
-                with verified home vets, report lost pets, and be part of our mission to document
+                with verified home vets, and be part of our mission to document
                 every pet in Pakistan.
             </>
         ),

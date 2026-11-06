@@ -9,7 +9,6 @@ export const metadata: Metadata = {
 const LINKS = [
     { href: "/browse-pets", label: "Adopt a pet" },
     { href: "/pet-care", label: "Find a vet" },
-    { href: "/lost-and-found", label: "Lost & Found" },
 ];
 
 /** Site-wide 404, also shown wherever a page calls notFound(). */

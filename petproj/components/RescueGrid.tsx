@@ -116,7 +116,7 @@ const RescueGrid: React.FC<RescueGridProps> = ({ pets }) => {
                         <div className="relative">
                             <img
                                 src={pet.images[0] || "./dog-placeholder.png"}
-                                alt={pet.pet_name || "Lost or Found Pet"}
+                                alt={pet.pet_name || "Rescue pet"}
                                 className="w-full aspect-square object-cover rounded-2xl"
                             />
                         </div>

@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { useAuth } from "@/context/AuthContext";
 import type { CommunityComment } from "@/lib/community";
 import Avatar from "./Avatar";
+import AuthorLink from "./AuthorLink";
 import LinkifiedText from "./LinkifiedText";
 import GetAppModal from "./GetAppModal";
 import { usePostThread } from "./PostThreadContext";
@@ -29,10 +30,12 @@ function CommentItem({
     return (
         <li className={isReply ? "" : "px-4 py-3"}>
             <div className={`flex gap-3 ${isReply ? "mt-3" : ""}`}>
-                <Avatar src={c.author.avatar} name={c.author.name} size={isReply ? 28 : 36} />
+                <AuthorLink id={c.author.id} className="shrink-0">
+                    <Avatar src={c.author.avatar} name={c.author.name} size={isReply ? 28 : 36} />
+                </AuthorLink>
                 <div className="min-w-0 flex-1">
                     <p className="text-sm">
-                        <span className="font-semibold text-gray-900">{c.author.name}</span>{" "}
+                        <AuthorLink id={c.author.id} className="font-semibold text-gray-900 hover:underline">{c.author.name}</AuthorLink>{" "}
                         <time dateTime={c.createdAt} className="text-xs text-gray-400">
                             {formatCommentTime(c.createdAt)}
                         </time>

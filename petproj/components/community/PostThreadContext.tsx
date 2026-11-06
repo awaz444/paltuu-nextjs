@@ -11,7 +11,7 @@ function renderMentions(text: string | null | undefined): string {
 }
 
 type ReplyTargetInput = {
-    author: { name: string; username: string | null; avatar: string | null };
+    author: { id?: number; name: string; username: string | null; avatar: string | null };
     excerpt: string;
     parentCommentId?: number | null;
 };

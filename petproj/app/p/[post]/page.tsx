@@ -25,6 +25,7 @@ import {
 import { breadcrumbJsonLd, postJsonLd } from "@/lib/communitySeo";
 import { AppCta, Breadcrumbs, Feed, JsonLd, type Crumb } from "@/components/community/CommunityChrome";
 import Avatar from "@/components/community/Avatar";
+import AuthorLink from "@/components/community/AuthorLink";
 import LinkifiedText from "@/components/community/LinkifiedText";
 import PostActions from "@/components/community/PostActions";
 import MobileActions from "@/components/community/MobileActions";
@@ -122,13 +123,15 @@ export default async function PostPage({ params }: { params: { post: string } })
                 >
                     <article className="-mx-4 border-y border-gray-200 bg-white sm:mx-0 sm:overflow-hidden sm:rounded-2xl sm:border">
                         <div className="flex gap-3 px-4 pb-3 pt-4">
-                            <Avatar src={post.author.avatar} name={post.author.name} size={44} />
+                            <AuthorLink id={post.author.id} className="shrink-0">
+                                <Avatar src={post.author.avatar} name={post.author.name} size={44} />
+                            </AuthorLink>
                             <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-x-1.5 text-sm">
-                                    <span className="inline-flex items-center gap-1 font-semibold text-gray-900">
+                                    <AuthorLink id={post.author.id} className="inline-flex items-center gap-1 font-semibold text-gray-900 hover:underline">
                                         {post.author.name}
                                         {post.author.verified && <BadgeCheck size={15} className="text-primary" aria-label="Verified" />}
-                                    </span>
+                                    </AuthorLink>
                                     {place && (
                                         <>
                                             <span className="text-gray-300" aria-hidden>›</span>

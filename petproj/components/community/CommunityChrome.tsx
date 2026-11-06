@@ -72,11 +72,13 @@ type NavProps = {
     activeSpecies?: string;
     activeBreed?: string;
     activeCity?: string;
+    /** A page outside the forums, such as a profile: no item is highlighted, not even Home. */
+    outsideForums?: boolean;
     breeds?: BreedCommunity[];
 };
 
 /** Mobile: scrolling chips above the posts. */
-function ForumChips({ activeSpecies, activeBreed, activeCity, breeds = [] }: NavProps) {
+function ForumChips({ activeSpecies, activeBreed, activeCity, outsideForums, breeds = [] }: NavProps) {
     const chip = (active: boolean) =>
         `shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium ${
             active ? "border-primary bg-primary text-white" : "border-gray-200 bg-white text-gray-700"
@@ -94,7 +96,7 @@ function ForumChips({ activeSpecies, activeBreed, activeCity, breeds = [] }: Nav
     return (
         <div className="min-w-0 space-y-2 lg:hidden">
             <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-                <Link href="/home" className={chip(!activeSpecies && !activeCity)}>Home</Link>
+                <Link href="/home" className={chip(!activeSpecies && !activeCity && !outsideForums)}>Home</Link>
                 {/* The row scrolls, so a city page leads with the cities to keep its own chip on screen. */}
                 {activeCity ? cityChips : speciesChips}
                 {activeCity ? speciesChips : cityChips}
@@ -113,12 +115,12 @@ function ForumChips({ activeSpecies, activeBreed, activeCity, breeds = [] }: Nav
 }
 
 /** Desktop left column: the forums, with breeds nested under the open species. */
-function ForumList({ activeSpecies, activeBreed, activeCity, breeds = [] }: NavProps) {
+function ForumList({ activeSpecies, activeBreed, activeCity, outsideForums, breeds = [] }: NavProps) {
     const item = (active: boolean) =>
         `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
             active ? "bg-gray-200 font-semibold text-gray-900" : "text-gray-700 hover:bg-gray-100"
         }`;
-    const homeActive = !activeSpecies && !activeCity;
+    const homeActive = !activeSpecies && !activeCity && !outsideForums;
     return (
         <nav aria-label="Forums" className="sticky top-4 max-h-[calc(100vh-2rem)] space-y-1 overflow-y-auto pb-4">
             <Link href="/home" className={item(homeActive)}>

@@ -117,6 +117,47 @@ export function inferCta(href: string): string | null {
 }
 
 /**
+ * Where a visit came from, grouped the way we act on it. AI assistants are
+ * their own channel: ChatGPT links carry utm_source=chatgpt.com and usually no
+ * referrer, so without this they are lumped in with direct traffic.
+ */
+export const TRAFFIC_CHANNELS = ["AI assistant", "Search", "Social", "Email", "Paid", "Other site", "Direct"] as const;
+export type TrafficChannel = (typeof TRAFFIC_CHANNELS)[number];
+
+const AI_RE = /chatgpt|openai|perplexity|gemini\.google|copilot|claude\.ai|bard\.google|you\.com|phind/i;
+const SEARCH_RE = /(^|\.)(google|bing|yahoo|duckduckgo|yandex|baidu|ecosia)\./i;
+const SOCIAL_RE = /facebook|instagram|fb\.|t\.co$|twitter|x\.com|tiktok|linkedin|reddit|youtube|pinterest|snapchat|whatsapp|threads\.net/i;
+
+export function trafficChannel(
+    referrerHost: string | null | undefined,
+    utmSource?: string | null,
+    utmMedium?: string | null,
+): TrafficChannel {
+    const src = `${utmSource ?? ""} ${referrerHost ?? ""}`;
+    if (AI_RE.test(src)) return "AI assistant";
+    if (/cpc|ppc|paid/i.test(utmMedium ?? "")) return "Paid";
+    if (/email|newsletter/i.test(`${utmMedium ?? ""} ${utmSource ?? ""}`)) return "Email";
+    if (SOCIAL_RE.test(src)) return "Social";
+    if (SEARCH_RE.test(`${referrerHost ?? ""}.`) || /google|bing/i.test(utmSource ?? "")) return "Search";
+    if (referrerHost || utmSource) return "Other site";
+    return "Direct";
+}
+
+/** The same grouping in SQL, for the traffic dashboard. */
+export function trafficChannelSql(ref = "referrer_host", utm = "utm_source", medium = "utm_medium"): string {
+    const src = `(COALESCE(${utm}, '') || ' ' || COALESCE(${ref}, ''))`;
+    return `CASE
+        WHEN ${src} ~* '${AI_RE.source}' THEN 'AI assistant'
+        WHEN COALESCE(${medium}, '') ~* 'cpc|ppc|paid' THEN 'Paid'
+        WHEN (COALESCE(${medium}, '') || ' ' || COALESCE(${utm}, '')) ~* 'email|newsletter' THEN 'Email'
+        WHEN ${src} ~* '${SOCIAL_RE.source}' THEN 'Social'
+        WHEN (COALESCE(${ref}, '') || '.') ~* '${SEARCH_RE.source}' OR COALESCE(${utm}, '') ~* 'google|bing' THEN 'Search'
+        WHEN ${ref} IS NOT NULL OR ${utm} IS NOT NULL THEN 'Other site'
+        ELSE 'Direct'
+    END`;
+}
+
+/**
  * Human labels for the dashboard. Keys are the stable `cta` values stored in
  * page_events — rename a label freely, never a key (it would split history).
  */
@@ -138,6 +179,7 @@ export const CTA_LABELS: Record<string, string> = {
     clinic_directions: "Clinic directions",
     clinic_call_sticky: "Call clinic (mobile bar)",
     clinic_directions_sticky: "Clinic directions (mobile bar)",
+    clinic_shelter_adopt: "Shelter page → adopt listings",
     add_to_cart: "Add to cart",
     lost_found_report: "Report lost / found pet",
     home_vets_at_home_book: "Book Vets @ Home",

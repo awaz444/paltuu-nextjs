@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { safeCallbackUrl } from "@/lib/authRedirect";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../app/store/store";
 import { fetchCities } from "../../app/store/slices/citiesSlice";
@@ -15,6 +16,10 @@ import { toast } from "react-hot-toast";
 import OTPInput from "react-otp-input";
 import PartnerModal from "./PartnerModal";
 import PhoneNumberInput from "../PhoneNumberInput";
+
+/** The page that sent them to log in, if any (see lib/authRedirect). */
+const returnUrl = () =>
+  typeof window === "undefined" ? null : safeCallbackUrl(new URLSearchParams(window.location.search).get("callbackUrl"));
 
 interface SignupFormProps {
     onSwitchToLogin: () => void;
@@ -76,7 +81,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         try {
             setGoogleLoading(true);
             await signIn("google", {
-                callbackUrl: "/home",
+                callbackUrl: returnUrl() ?? "/home",
             });
         } catch (error) {
             console.error("Google login failed:", error);
@@ -90,7 +95,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         try {
             setAppleLoading(true);
             await signIn("apple", {
-                callbackUrl: "/home",
+                callbackUrl: returnUrl() ?? "/home",
             });
         } catch (error) {
             console.error("Apple login failed:", error);
@@ -223,7 +228,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                 return;
             }
 
-            router.push("/home");
+            router.push(returnUrl() ?? "/home");
         } catch (error) {
             setGeneralError("An unexpected error occurred. Please try again.");
         } finally {

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { useAuth } from "@/context/AuthContext";
 import { Bell, Check, Smartphone } from "lucide-react";
+import { authUrl } from "@/lib/authRedirect";
 
 interface Sender {
     user_id: number;
@@ -151,7 +152,7 @@ const NotificationsPage = () => {
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
                 <div className="bg-white rounded-3xl p-10 shadow-sm text-center max-w-sm w-full mx-4">
                     <p className="text-gray-500 text-sm mb-5">Please log in to view your notifications.</p>
-                    <a href="/auth" className="bg-primary text-white px-6 py-3 rounded-2xl font-medium inline-block">Sign In</a>
+                    <a href={authUrl("/notifications")} className="bg-primary text-white px-6 py-3 rounded-2xl font-medium inline-block">Sign In</a>
                 </div>
             </div>
         );

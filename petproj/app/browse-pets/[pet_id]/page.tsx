@@ -4,19 +4,18 @@ import PetDetailsClient from "./PetDetailsClient";
 import PetPageExtras from "./PetPageExtras";
 import BreedCommunityPanel from "@/components/community/BreedCommunityPanel";
 import { getCommunityForListing } from "@/lib/community";
+import { getPetDetails } from "@/lib/petDetails";
 
 export const dynamic = "force-dynamic";
 
 // null only when the listing really is gone. The page answers that with a 404,
-// so a database blip must not look like one or Google drops live listings.
+// so a database blip must not look like one or Google drops live listings:
+// getPetDetails throws on database errors.
 async function getPet(petId: string) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
-    const res = await fetch(`${apiUrl}/api/v1/pets/${petId}`, {
-        cache: "no-store",
-    });
-    if (res.status === 404 || res.status === 400) return null;
-    if (!res.ok) throw new Error(`Pet SSR fetch failed: ${res.status}`);
-    return res.json();
+    if (!/^\d+$/.test(petId)) return null;
+    const pet = await getPetDetails(Number(petId));
+    // Same JSON shape the client used to get from the API (dates as strings).
+    return pet ? JSON.parse(JSON.stringify(pet)) : null;
 }
 
 export async function generateMetadata({
@@ -87,13 +86,14 @@ export default async function PetPage({
 }: {
     params: { pet_id: string };
 }) {
-    const pet = await getPet(params.pet_id);
+    const [pet, community] = await Promise.all([
+        getPet(params.pet_id),
+        getCommunityForListing(Number(params.pet_id)),
+    ]);
 
     if (!pet) {
         notFound();
     }
-
-    const community = await getCommunityForListing(Number(params.pet_id));
 
     const firstImage =
         pet.images?.length > 0

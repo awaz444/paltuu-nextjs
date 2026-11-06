@@ -26,6 +26,7 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import PhoneNumberInput from "@/components/PhoneNumberInput";
 import { isValidPhone } from "@/utils/phone";
+import { authUrl } from "@/lib/authRedirect";
 
 interface CartItem {
   id: number;
@@ -372,7 +373,7 @@ const CheckoutPage = () => {
                         </p>
                         <button
                           onClick={() =>
-                            router.push("/auth?redirect=/checkout")
+                            router.push(authUrl("/checkout"))
                           }
                           className="px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors font-medium"
                         >

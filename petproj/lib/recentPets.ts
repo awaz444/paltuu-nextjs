@@ -1,4 +1,5 @@
 import { db } from "@/db/index";
+import { isBuildPhase } from "@/lib/buildPhase";
 
 /**
  * Server-side fetch for the homepage's "recently listed" strip.
@@ -45,7 +46,11 @@ export async function getRecentPets(limit = 3): Promise<RecentPet[]> {
     } catch (error) {
         // The homepage is statically generated, so this runs at build time too.
         // A DB blip should degrade the section to nothing, never fail the build.
+        // After that, rethrow: during revalidation a throw keeps the last good
+        // page in the cache, while an empty list would be cached and served
+        // to everyone, crawlers included, until the next revalidation.
         console.error("getRecentPets failed:", error);
-        return [];
+        if (isBuildPhase()) return [];
+        throw error;
     }
 }

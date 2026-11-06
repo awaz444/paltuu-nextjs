@@ -13,6 +13,7 @@ import {
     CityEntry,
 } from "@/lib/adoptTaxonomy";
 import { VET_CITIES } from "@/lib/vetCities";
+import { isBuildPhase } from "@/lib/buildPhase";
 
 // Listings change as pets are added/adopted, but not per-request — rebuild hourly.
 export const revalidate = 3600;
@@ -121,11 +122,15 @@ export async function generateMetadata(
                 `${sp.plural.toLowerCase()} for adoption in ${low}`,
                 `free ${sp.name.toLowerCase()} adoption in ${low}`,
                 `${sp.name.toLowerCase()} adoption in ${low}`,
-            ] : [`${sp.name.toLowerCase()} adoption pakistan`]),
+                `${sp.name.toLowerCase()} shelter ${low}`,
+                `${sp.name.toLowerCase()} rescue ${low}`,
+            ] : [`${sp.name.toLowerCase()} adoption pakistan`, `${sp.name.toLowerCase()} shelter pakistan`]),
             "paltuu",
         ]
         : [
             `pet adoption ${place.toLowerCase()}`,
+            `animal shelter ${place.toLowerCase()}`,
+            `pet shelter ${place.toLowerCase()}`,
             "pet adoption", "adopt a pet", "pets for adoption",
             "dog adoption", "cat adoption", "paltuu",
         ];
@@ -184,8 +189,11 @@ async function getPets(species?: SpeciesEntry, city?: CityEntry): Promise<PetRow
         );
         return res.rows;
     } catch (e) {
+        // Rethrow outside the build: a failed revalidation keeps serving the
+        // last good page, where an empty result would be cached as "no pets".
         console.error("Adopt page: pet query failed", e);
-        return [];
+        if (isBuildPhase()) return [];
+        throw e;
     }
 }
 
@@ -246,6 +254,11 @@ export default async function AdoptPage({ params }: { params: { slug?: string[] 
         {
             q: `Is ${sp ? sp.name.toLowerCase() : "pet"} adoption free on Paltuu?`,
             a: `Yes. Browsing listings and applying to adopt is completely free on Paltuu. Some shelters and rescues ask for a small rehoming or vaccination contribution, which is set by them and shown on the listing.`,
+        },
+        // People searching for a shelter want a pet to adopt; this page is the answer.
+        {
+            q: `Is there an animal shelter${city ? ` in ${place}` : " in Pakistan"} where I can adopt a ${sp ? sp.name.toLowerCase() : "pet"}?`,
+            a: `The ${noun.toLowerCase()} on this page are waiting for a home right now, listed by owners, rescuers and shelters${city ? ` in ${place}` : " across Pakistan"}. Instead of visiting shelters one by one, browse them here and contact whoever is rehoming the ${sp ? sp.name.toLowerCase() : "pet"} you like.`,
         },
         ...(city ? [{
             q: `Are these ${noun.toLowerCase()} located in ${place}?`,

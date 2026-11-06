@@ -18,6 +18,7 @@ import {
 } from "@/app/store/slices/cartSlice";
 import MobileCartModal from "./MobileCartModal";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { authUrl } from "@/lib/authRedirect";
 interface OverrideLink {
   name: string;
   href: string;
@@ -508,7 +509,7 @@ const Navbar = ({
                     <div className="h-6 w-24 rounded bg-white/20 animate-pulse" />
                   </div>
                 ) : (
-                  <Link href="/auth">
+                  <Link href={authUrl(pathname)}>
                     <button className="w-full text-center text-white font-medium py-2 text-xl">
                       Login
                     </button>
@@ -1029,7 +1030,7 @@ const Navbar = ({
           ) : isHydrating ? (
             <div className="h-10 w-24 rounded-full bg-white/20 animate-pulse" />
           ) : (
-            <Link href="/auth">
+            <Link href={authUrl(pathname)}>
               <button className="flex items-center justify-center gap-2 loginBtn">
                 Login
               </button>

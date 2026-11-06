@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { message, Card, Tabs, Spin } from 'antd';
 import { ShopOutlined, HeartOutlined } from '@ant-design/icons';
 import BulkPetUploadForm from '../../components/BulkPetUploadForm';
+import { authUrl } from "@/lib/authRedirect";
 
 const { TabPane } = Tabs;
 
@@ -20,7 +21,7 @@ export default function BulkUploadPets() {
       if (!isAuthenticated || !user) {
         console.log('Not authenticated, redirecting to login');
         message.warning('Please login to access this page');
-        router.push('/auth');
+        router.push(authUrl("/bulk-upload-pets"));
         return;
       }
 

@@ -11,6 +11,7 @@ import { fetchAdoptionPets } from "@/app/store/slices/adoptionPetsSlice";
 import { useAuth } from "@/context/AuthContext";
 import { getListingStatus, ListingStatus, formatShortDate } from "@/utils/listingDisplay";
 import "./styles.css";
+import { authUrl } from "@/lib/authRedirect";
 
 const ADOPTER_CHECKLIST = [
     { title: "A stable home", description: "A settled living situation that suits the pet." },
@@ -139,7 +140,7 @@ const UserListingsPage = () => {
             <PageShell>
                 <div className="bg-white border border-[#E6E4DF] rounded-2xl p-10 text-center max-w-sm w-full">
                     <p className="text-[#52525B] mb-5 text-sm">Please log in to view your listings.</p>
-                    <Link href="/auth" className="bg-primary text-white px-6 min-h-[46px] rounded-xl font-semibold text-sm inline-flex items-center">Sign in</Link>
+                    <Link href={authUrl("/my-listings")} className="bg-primary text-white px-6 min-h-[46px] rounded-xl font-semibold text-sm inline-flex items-center">Sign in</Link>
                 </div>
             </PageShell>
         );

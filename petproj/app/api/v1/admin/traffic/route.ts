@@ -1,7 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { checkAdmin } from "../adminAuth";
-import { CTA_LABELS, SECTIONS } from "@/lib/analytics/events";
+import { CTA_LABELS, SECTIONS, trafficChannelSql } from "@/lib/analytics/events";
 
 /**
  * @swagger
@@ -150,6 +150,25 @@ const summary = (source: string) => `
     FROM ${source}`;
 
 const BREAKDOWNS = {
+    // One row per channel, judged by each visit's first page view. "Reached a
+    // pet" and "clicked Contact/Apply" show which channels bring adopters.
+    channels: `
+        SELECT channel,
+               COUNT(*)::int AS sessions,
+               COUNT(*) FILTER (WHERE saw_pet)::int AS pet_sessions,
+               ROUND(100.0 * COUNT(*) FILTER (WHERE saw_pet) / NULLIF(COUNT(*), 0), 1)::float AS pet_pct,
+               COUNT(*) FILTER (WHERE contacted)::int AS contact_sessions
+        FROM (
+            SELECT DISTINCT ON (session_id) session_id,
+                   ${trafficChannelSql()} AS channel,
+                   bool_or(page_type = 'pet_detail') OVER w AS saw_pet,
+                   bool_or(event_type = 'cta_click' AND cta IN ('pet_contact', 'pet_contact_sticky', 'pet_adopt', 'pet_adopt_sticky', 'pet_whatsapp_owner', 'pet_copy_phone')) OVER w AS contacted
+            FROM ev
+            WHERE session_id IS NOT NULL
+            WINDOW w AS (PARTITION BY session_id)
+            ORDER BY session_id, (event_type = 'page_view') DESC, created_at
+        ) s
+        GROUP BY channel ORDER BY sessions DESC`,
     referrers: `
         SELECT COALESCE(referrer_host, 'Direct / internal') AS source, COUNT(*)::int AS page_views
         FROM ev WHERE event_type = 'page_view'
@@ -186,6 +205,7 @@ const DASHBOARD = `${EVENTS_CTE}, ev_prev AS (${eventsBetween("$3", "$4")})
            ${list(QUERIES.pages)} AS pages,
            ${list(QUERIES.ctas)} AS ctas,
            ${list(QUERIES.ads)} AS ads,
+           ${list(BREAKDOWNS.channels)} AS channels,
            ${list(BREAKDOWNS.referrers)} AS referrers,
            ${list(BREAKDOWNS.cities)} AS cities,
            ${list(BREAKDOWNS.page_types)} AS page_types`;

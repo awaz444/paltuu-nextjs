@@ -11,16 +11,20 @@ const PetGallery: React.FC<{ images: string[]; alt: string }> = ({ images, alt }
     const [loaded, setLoaded] = useState<Set<string>>(new Set());
     const [viewerOpen, setViewerOpen] = useState(false);
 
-    // Warm the cache for every photo up front so paging through is instant
-    // after the first pass. Until a given photo has loaded, the frame shows a
-    // spinner rather than the previous photo.
+    // Warm the cache for the other photos so paging through is instant, but
+    // only once the first one is in: on a phone connection they would
+    // otherwise share bandwidth with the photo the visitor is waiting for.
+    // Until a given photo has loaded, the frame shows a spinner rather than
+    // the previous photo.
+    const firstLoaded = images.length > 0 && loaded.has(images[0]);
     useEffect(() => {
-        images.forEach((src) => {
+        if (!firstLoaded) return;
+        images.slice(1).forEach((src) => {
             const img = new window.Image();
             img.onload = () => setLoaded((prev) => (prev.has(src) ? prev : new Set(prev).add(src)));
             img.src = src;
         });
-    }, [images]);
+    }, [images, firstLoaded]);
 
     const markLoaded = (src: string) =>
         setLoaded((prev) => (prev.has(src) ? prev : new Set(prev).add(src)));
@@ -40,7 +44,10 @@ const PetGallery: React.FC<{ images: string[]; alt: string }> = ({ images, alt }
     }
 
     const src = images[index];
-    const isLoaded = loaded.has(src);
+    // The first photo is the page's main content: it is in the server HTML and
+    // must paint as soon as it arrives, not wait for JavaScript to fade it in.
+    const isFirst = index === 0;
+    const isLoaded = isFirst || loaded.has(src);
 
     return (
         <div>
@@ -54,6 +61,9 @@ const PetGallery: React.FC<{ images: string[]; alt: string }> = ({ images, alt }
                         key={src}
                         src={src}
                         alt={alt}
+                        // React 18 only passes the lowercase attribute through.
+                        {...({ fetchpriority: isFirst ? "high" : "auto" } as Record<string, string>)}
+                        decoding={isFirst ? "sync" : "async"}
                         onLoad={() => markLoaded(src)}
                         className={`h-full w-full object-cover transition-opacity duration-200 ${isLoaded ? "opacity-100" : "opacity-0"}`}
                     />

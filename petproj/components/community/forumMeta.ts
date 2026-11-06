@@ -13,16 +13,18 @@ export function speciesEmoji(speciesSlug: string | undefined): string {
 }
 
 const ART: Record<string, string> = {
-    cats: "cat",
-    dogs: "dog",
-    birds: "bird",
-    rabbits: "rabbit",
-    fish: "fish",
-    reptiles: "turtle",
+    cats: "/icons/species/cat.jpg",
+    dogs: "/icons/species/dog.jpg",
+    birds: "/icons/species/bird.jpg",
+    rabbits: "/icons/species/rabbit.jpg",
+    fish: "/icons/species/fish.jpg",
+    reptiles: "/icons/species/turtle.jpg",
+    karachi: "/icons/cities/karachi.jpg",
+    lahore: "/icons/cities/lahore.jpg",
+    islamabad: "/icons/cities/islamabad.jpg",
 };
 
-/** Hand-drawn forum artwork in public/icons/species (not under /community, which redirects); null where there is none yet. */
-export function speciesArt(speciesSlug: string | undefined): string | null {
-    const name = speciesSlug && ART[speciesSlug];
-    return name ? `/icons/species/${name}.jpg` : null;
+/** Hand-drawn forum artwork in public/icons (not under /community, which redirects); null where there is none yet. */
+export function speciesArt(forumSlug: string | undefined): string | null {
+    return (forumSlug && ART[forumSlug]) || null;
 }

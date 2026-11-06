@@ -14,6 +14,10 @@ import { breedGuide, speciesGuide, type CommunityGuide } from "@/lib/breedGuides
  *     ("Persian mix") counts in its parent's community. "Not sure" and "Other"
  *     place the post at species level only.
  *
+ * City communities (PALTU-105) have no tag of their own: social_posts has no
+ * location, so a post lands in a city through its author's profile city
+ * (users.city_id).
+ *
  * Only public content is ever shown: see PUBLIC_POST and PUBLIC_COMMENT.
  */
 
@@ -34,6 +38,40 @@ export const COMMUNITY_SPECIES: CommunitySpecies[] = [
     { slug: "fish", key: "fish", name: "Fish", singular: "Fish", hasBreeds: false },
     { slug: "reptiles", key: "reptile", name: "Reptiles", singular: "Reptile", hasBreeds: false },
 ];
+
+export type CommunityCity = {
+    /** URL slug, and the lower-cased cities.city_name. */
+    slug: string;
+    name: string;
+    intro: string;
+    topics: string[];
+};
+
+// Vets at Home is Karachi-only: never imply it here for another city.
+export const COMMUNITY_CITIES: CommunityCity[] = [
+    {
+        slug: "karachi",
+        name: "Karachi",
+        intro: "Pet owners in Karachi sharing photos, questions and everyday life with their pets, from street cats to pedigree dogs.",
+        topics: ["Finding a good vet", "Heat and humidity", "Street cats and strays", "Adoption and rehoming", "Lost and found pets"],
+    },
+    {
+        slug: "lahore",
+        name: "Lahore",
+        intro: "Pet owners in Lahore sharing photos, questions and everyday life with their pets, through the summer heat and the winter smog.",
+        topics: ["Finding a good vet", "Summer heat", "Winter smog", "Adoption and rehoming", "Lost and found pets"],
+    },
+    {
+        slug: "islamabad",
+        name: "Islamabad",
+        intro: "Pet owners in Islamabad and nearby sharing photos, questions and everyday life with their pets, from morning walks to winter care.",
+        topics: ["Finding a good vet", "Walks and outdoor time", "Winter care", "Adoption and rehoming", "Lost and found pets"],
+    },
+];
+
+export function findCity(slug: string): CommunityCity | undefined {
+    return COMMUNITY_CITIES.find((c) => c.slug === slug.toLowerCase());
+}
 
 /** Below this many posts a community page is thin: it renders, but is noindex and kept out of the sitemap. */
 export const MIN_POSTS_TO_INDEX = 3;
@@ -182,7 +220,7 @@ function toPost(r: any): CommunityPost {
 
 // ─── Feeds ───────────────────────────────────────────────────────────────────
 
-type FeedFilter = { species?: string; breedId?: number; excludePostId?: number; limit?: number; requireMedia?: boolean };
+type FeedFilter = { species?: string; breedId?: number; city?: string; excludePostId?: number; limit?: number; requireMedia?: boolean };
 
 /**
  * Latest public posts, optionally limited to one community. Listing pages are
@@ -199,6 +237,10 @@ export async function listCommunityPosts(filter: FeedFilter = {}): Promise<Commu
     if (filter.breedId) {
         vals.push(filter.breedId);
         conds.push(`EXISTS (SELECT 1 FROM post_breeds pb WHERE pb.post_id = sp.post_id AND pb.breed_id = $${vals.length})`);
+    }
+    if (filter.city) {
+        vals.push(filter.city);
+        conds.push(`u.city_id IN (SELECT ci.city_id FROM cities ci WHERE LOWER(ci.city_name) = $${vals.length})`);
     }
     if (filter.requireMedia) {
         conds.push(`EXISTS (SELECT 1 FROM social_post_media m1 WHERE m1.post_id = sp.post_id AND m1.url IS NOT NULL)`);
@@ -242,6 +284,25 @@ export async function getSpeciesCounts(): Promise<Record<string, number>> {
         return Object.fromEntries(res.rows.map((r) => [r.species, r.n]));
     } catch (e) {
         console.error("community: getSpeciesCounts failed", e);
+        return {};
+    }
+}
+
+/** Public post counts per city slug, placed by the author's profile city. */
+export async function getCityCounts(): Promise<Record<string, number>> {
+    try {
+        const res = await db.query(
+            `SELECT LOWER(ci.city_name) AS city, COUNT(*)::int AS n
+               FROM social_posts sp
+               JOIN users u ON u.user_id = sp.user_id
+               JOIN cities ci ON ci.city_id = u.city_id
+              WHERE ${PUBLIC_POST} AND LOWER(ci.city_name) = ANY($1)
+              GROUP BY LOWER(ci.city_name)`,
+            [COMMUNITY_CITIES.map((c) => c.slug)]
+        );
+        return Object.fromEntries(res.rows.map((r) => [r.city, r.n]));
+    } catch (e) {
+        console.error("community: getCityCounts failed", e);
         return {};
     }
 }
@@ -543,6 +604,13 @@ export async function getCommunitySitemapEntries(): Promise<CommunitySitemapEntr
             if (breed.postCount >= MIN_POSTS_TO_INDEX) {
                 entries.push({ path: `/${species.slug}/${breed.slug}`, lastModified: new Date() });
             }
+        }
+    }
+
+    const cityCounts = await getCityCounts();
+    for (const city of COMMUNITY_CITIES) {
+        if ((cityCounts[city.slug] ?? 0) >= MIN_POSTS_TO_INDEX) {
+            entries.push({ path: `/${city.slug}`, lastModified: new Date() });
         }
     }
 

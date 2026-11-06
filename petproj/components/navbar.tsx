@@ -329,7 +329,6 @@ const Navbar = ({
     { name: "Adopt", href: "browse-pets" },
     // { name: "Bazaar", href: "bazaar" }, // Phase 1: Bazaar paused
     { name: "Pet Care", href: "pet-care" },
-    { name: "Lost & Found", href: "lost-and-found" },
     //{ name: "Paltuu AI", href: "llm" },
   ];
   const links = linksOverride || defaultLinks;

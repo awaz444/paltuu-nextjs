@@ -30,7 +30,7 @@ const faqs = [
       'Email contact@paltuu.pk with your device model, OS version, and a short description of what happened. Screenshots or screen recordings help us fix it faster.',
   },
   {
-    question: "How do I report a listing, user, or lost & found post?",
+    question: "How do I report a listing or user?",
     answer:
       'Use the report option available on the listing or profile inside the app. For anything urgent, email contact@paltuu.pk.',
   },

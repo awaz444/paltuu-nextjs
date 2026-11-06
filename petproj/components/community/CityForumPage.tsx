@@ -47,7 +47,6 @@ export default async function CityForumPage({ slug }: { slug: string }) {
         { label: "Cats for adoption", href: `/adopt/cats/${city.slug}` },
         { label: "Dogs for adoption", href: `/adopt/dogs/${city.slug}` },
         { label: `Vets in ${city.name}`, href: `/pet-care/${city.slug}` },
-        { label: "Lost & found", href: "/lost-and-found" },
     ];
 
     return (

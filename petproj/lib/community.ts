@@ -53,19 +53,19 @@ export const COMMUNITY_CITIES: CommunityCity[] = [
         slug: "karachi",
         name: "Karachi",
         intro: "Pet owners in Karachi sharing photos, questions and everyday life with their pets, from street cats to pedigree dogs.",
-        topics: ["Finding a good vet", "Heat and humidity", "Street cats and strays", "Adoption and rehoming", "Lost and found pets"],
+        topics: ["Finding a good vet", "Heat and humidity", "Street cats and strays", "Adoption and rehoming"],
     },
     {
         slug: "lahore",
         name: "Lahore",
         intro: "Pet owners in Lahore sharing photos, questions and everyday life with their pets, through the summer heat and the winter smog.",
-        topics: ["Finding a good vet", "Summer heat", "Winter smog", "Adoption and rehoming", "Lost and found pets"],
+        topics: ["Finding a good vet", "Summer heat", "Winter smog", "Adoption and rehoming"],
     },
     {
         slug: "islamabad",
         name: "Islamabad",
         intro: "Pet owners in Islamabad and nearby sharing photos, questions and everyday life with their pets, from morning walks to winter care.",
-        topics: ["Finding a good vet", "Walks and outdoor time", "Winter care", "Adoption and rehoming", "Lost and found pets"],
+        topics: ["Finding a good vet", "Walks and outdoor time", "Winter care", "Adoption and rehoming"],
     },
 ];
 

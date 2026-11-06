@@ -33,21 +33,14 @@ export default function VetDirectorySection() {
                         >
                             adopt a dog or cat
                         </Link>
-                        , find a{" "}
+                        {" "}or find a{" "}
                         <Link
                             href="/pet-care"
                             className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium"
                         >
                             verified vet near you
                         </Link>
-                        , or reunite a{" "}
-                        <Link
-                            href="/lost-and-found"
-                            className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium"
-                        >
-                            lost pet
-                        </Link>{" "}
-                        with its family, it starts here, across Karachi, Lahore, Islamabad and the
+                        , it starts here, across Karachi, Lahore, Islamabad and the
                         rest of the country.
                     </p>
                     <p className="text-sm text-gray-500">

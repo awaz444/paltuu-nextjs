@@ -70,8 +70,8 @@ export default function AppLinksClient() {
           Get the <span className="text-[#a03048]">Paltuu</span> app
         </h1>
         <p className="mb-10 max-w-sm leading-relaxed text-gray-600">
-          Adopt pets, book at-home vet visits in Karachi, shop pet essentials,
-          and help reunite lost pets — all in one app.
+          Adopt pets, book at-home vet visits in Karachi and shop pet essentials,
+          all in one app.
         </p>
 
         <div className="flex w-full flex-col items-center justify-center gap-4 sm:flex-row sm:items-start">

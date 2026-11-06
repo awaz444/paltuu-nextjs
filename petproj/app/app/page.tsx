@@ -6,7 +6,7 @@ import AppLinksClient from "./AppLinksClient";
 export const metadata: Metadata = {
   title: "Get the App",
   description:
-    "Download the Paltuu app for iPhone and Android — adopt pets, book at-home vet visits in Karachi, shop pet essentials, and help reunite lost pets.",
+    "Download the Paltuu app for iPhone and Android — adopt pets, book at-home vet visits in Karachi, and shop pet essentials.",
   alternates: { canonical: "/app" },
   openGraph: {
     title: "Get the Paltuu App",

@@ -50,7 +50,7 @@ export default async function AboutPage() {
     const faqs: { q: string; a: string }[] = [
         {
             q: "What is Paltuu?",
-            a: "Paltuu (paltuu.pk) is a Pakistani pet platform on the web and as a free app for Android and iOS. People use it to adopt pets, list pets for adoption, find vets, report lost and found pets, and ask other pet owners for advice in species and breed forums.",
+            a: "Paltuu (paltuu.pk) is a Pakistani pet platform on the web and as a free app for Android and iOS. People use it to adopt pets, list pets for adoption, find vets, and ask other pet owners for advice in species and breed forums.",
         },
         {
             q: "How big is Paltuu?",
@@ -127,8 +127,7 @@ export default async function AboutPage() {
                     Paltuu is a free Pakistani platform for pet owners. You can{" "}
                     <Link href="/browse-pets" className={link}>adopt a pet</Link>,{" "}
                     <Link href="/create-listing" className={link}>list a pet for adoption</Link>,{" "}
-                    <Link href="/pet-care" className={link}>find a vet</Link>, report a{" "}
-                    <Link href="/lost-and-found" className={link}>lost or found pet</Link>, and ask other owners for
+                    <Link href="/pet-care" className={link}>find a vet</Link>, and ask other owners for
                     help in the <Link href="/home" className={link}>community</Link>. It works on the web and in a
                     free app for{" "}
                     <a href={ANDROID_URL} target="_blank" rel="noopener noreferrer" className={link}>Android</a> and{" "}

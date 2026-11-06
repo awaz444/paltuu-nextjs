@@ -1,4 +1,5 @@
 import { db } from "@/db/index";
+import { LOST_AND_FOUND_ENABLED } from "@/lib/features";
 
 // Ratio decided for the feed mix: 1 injected (adoption/lost-found) card per
 // 12 regular posts, sharing a single slot skewed 2:1 toward adoption listings
@@ -51,7 +52,7 @@ export async function interleaveFeedInjections(
         if (absolutePos % INJECTION_INTERVAL === 0) {
             const seqNum = absolutePos / INJECTION_INTERVAL;
             const type: InjectedType =
-                (seqNum - 1) % ADOPTION_LOST_FOUND_CYCLE === ADOPTION_LOST_FOUND_CYCLE - 1
+                LOST_AND_FOUND_ENABLED && (seqNum - 1) % ADOPTION_LOST_FOUND_CYCLE === ADOPTION_LOST_FOUND_CYCLE - 1
                     ? "lost_found"
                     : "adoption";
             slots.push({ afterIndex: idx, type });

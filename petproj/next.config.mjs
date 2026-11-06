@@ -29,6 +29,12 @@ const nextConfig = {
   async redirects() {
     return [
       // Community launched under /community, then moved to the top level the same day.
+      // Lost & Found is hidden for now (PALTU-110). Temporary, so it can come back.
+      { source: '/lost-and-found', destination: '/browse-pets', permanent: false },
+      { source: '/lost-and-found/:path*', destination: '/browse-pets', permanent: false },
+      { source: '/lost-and-found-create-listing', destination: '/browse-pets', permanent: false },
+      { source: '/lost-and-found-images', destination: '/browse-pets', permanent: false },
+      { source: '/listing-created-lost-and-found', destination: '/browse-pets', permanent: false },
       { source: '/community', destination: '/home', permanent: true },
       { source: '/feed', destination: '/home', permanent: true },
       { source: '/community/p/:post', destination: '/p/:post', permanent: true },

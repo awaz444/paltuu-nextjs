@@ -32,7 +32,6 @@ const NATIONWIDE = [
     { href: "/adopt/dogs", label: "Puppy in My City / Puppy Adoption" },
     { href: "/adopt/cats", label: "Kitten in My City / Kitten Adoption" },
     { href: "/pet-care", label: "Pakistan Pet App & Vets" },
-    { href: "/lost-and-found", label: "Report a Lost or Found Pet" },
 ];
 
 function Column({

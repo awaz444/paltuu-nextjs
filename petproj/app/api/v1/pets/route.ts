@@ -7,6 +7,7 @@ import { withRetry } from "@/utils/retry";
 import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 import { normalizePhone, isValidPhone } from "@/utils/phone";
 import { captureServerEvent } from "@/lib/analytics/serverEvents";
+import { notifyNewListing } from "@/lib/whatsappNotify";
 
 /**
  * @swagger
@@ -229,6 +230,8 @@ export async function POST(req: NextRequest) {
         // separate request right after this one from create-listing/page.tsx).
         // It's sent from app/api/v1/upload-image/route.ts once that upload
         // completes, so the email can include the actual photos.
+
+        await notifyNewListing(newPet.pet_id);
 
         await captureServerEvent("listing_created", userId, req, {
             pet_id: newPet.pet_id,

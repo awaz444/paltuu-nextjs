@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { checkDispatcher } from "@/lib/expressVet/dispatcherAuth";
 import { emitExpressVetNewRequest } from "@/utils/realtimeEmitter";
+import { notifyVetRequestUpdate } from "@/lib/whatsappNotify";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest, context: any) {
     );
 
     await emitExpressVetNewRequest(result.rows[0]);
+    await notifyVetRequestUpdate(result.rows[0], "released");
 
     return NextResponse.json({ request: result.rows[0] });
   } catch (error) {

@@ -5,6 +5,7 @@ import { NotificationService } from "@/lib/notifications/NotificationService";
 import { NotificationType, EntityType } from "@/lib/notifications/notificationTypes";
 import { generateSocialCard } from "@/lib/social-card";
 import { uploadSocialCardToS3 } from "@/lib/s3";
+import { notifyTeam, userName } from "@/lib/whatsappNotify";
 
 /**
  * @swagger
@@ -58,6 +59,17 @@ export async function PATCH(req: NextRequest) {
 
         if ((result.rowCount ?? 0) === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
         const pet = result.rows[0];
+
+        await notifyTeam(
+            "team_listing_decided",
+            {
+                pet_id: pet.pet_id,
+                pet_name: pet.pet_name,
+                decision: approved ? "approved" : "rejected",
+                by: user.name || (await userName(user.user_id || user.id)),
+            },
+            `listing:${pet.pet_id}:${approved ? "approved" : "rejected"}:${Date.now()}`,
+        );
 
         if (approved) {
             await NotificationService.createAndSend({

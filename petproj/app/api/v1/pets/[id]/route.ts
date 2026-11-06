@@ -4,6 +4,7 @@ import { getUserFromRequest } from "@/utils/authServer";
 import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 import { validate } from "@/utils/validation";
 import { normalizePhone, isValidPhone } from "@/utils/phone";
+import { notifyTeam, userName } from "@/lib/whatsappNotify";
 
 /**
  * @swagger
@@ -72,7 +73,7 @@ export async function PUT(req: NextRequest) {
         const body = await req.json();
 
         // Ownership & Auth Check
-        const petCheck = await db.query('SELECT owner_id FROM pets WHERE pet_id = $1', [id]);
+        const petCheck = await db.query('SELECT owner_id, adoption_status FROM pets WHERE pet_id = $1', [id]);
         if (petCheck.rowCount === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
 
         const currentUserId = String(user.user_id || user.id || user.sub);
@@ -238,7 +239,23 @@ export async function PUT(req: NextRequest) {
             }
 
             await client.query('COMMIT');
-            return NextResponse.json(result.rows[0]);
+
+            const updated = result.rows[0];
+            const before = petCheck.rows[0].adoption_status;
+            if (updated && updated.adoption_status !== before && (updated.adoption_status === 'adopted' || updated.adoption_status === 'unavailable')) {
+                await notifyTeam(
+                    "team_listing_closed",
+                    {
+                        pet_id: id,
+                        pet_name: updated.pet_name,
+                        reason: updated.adoption_status,
+                        by: user.name || (await userName(currentUserId)),
+                    },
+                    `listing:${id}:${updated.adoption_status}:${Date.now()}`,
+                );
+            }
+
+            return NextResponse.json(updated);
         } catch (e) {
             await client.query('ROLLBACK');
             throw e;
@@ -262,7 +279,7 @@ export async function DELETE(req: NextRequest) {
         const id = parseInt(rawId, 10);
 
         // Ownership check
-        const petCheck = await db.query('SELECT owner_id FROM pets WHERE pet_id = $1', [id]);
+        const petCheck = await db.query('SELECT owner_id, pet_name FROM pets WHERE pet_id = $1', [id]);
         if (petCheck.rowCount === 0) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
 
         const currentUserId = String(user.user_id || user.id || user.sub);
@@ -286,6 +303,18 @@ export async function DELETE(req: NextRequest) {
             await client.query('UPDATE social_posts SET pet_id = NULL WHERE pet_id = $1', [id]);
             await client.query('DELETE FROM pets WHERE pet_id = $1', [id]);
             await client.query('COMMIT');
+
+            await notifyTeam(
+                "team_listing_closed",
+                {
+                    pet_id: id,
+                    pet_name: petCheck.rows[0].pet_name,
+                    reason: "deleted",
+                    by: user.name || (await userName(currentUserId)),
+                },
+                `listing:${id}:deleted`,
+            );
+
             return NextResponse.json({ message: "Pet deleted successfully" });
         } catch (e) {
             await client.query('ROLLBACK');

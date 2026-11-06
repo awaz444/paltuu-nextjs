@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest, getUserFromRequest } from "@/utils/authServer";
 import { AdoptionNotifications } from "@/lib/notifications";
 import { captureServerEvent } from "@/lib/analytics/serverEvents";
+import { notifyTeam, userName } from "@/lib/whatsappNotify";
 
 /**
  * @swagger
@@ -83,6 +84,16 @@ export async function PATCH(req: NextRequest) {
                     userId ?? owner_id,
                     req,
                     { application_id: parseInt(id), pet_id, applicant_id, previous_status, by_admin: isAdmin }
+                );
+                await notifyTeam(
+                    "team_application_decided",
+                    {
+                        pet_id,
+                        pet_name,
+                        decision: status === 'approved' ? 'accepted' : 'rejected',
+                        applicant_name: result.rows[0]?.adopter_name || (await userName(applicant_id)),
+                    },
+                    `application:${id}:${status}`,
                 );
             }
 

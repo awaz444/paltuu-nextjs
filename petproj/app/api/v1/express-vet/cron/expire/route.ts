@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { EXPRESS_VET_CATEGORY_LABELS } from "@/lib/expressVet/catalog";
 import { ExpressVetNotifications } from "@/lib/notifications";
+import { notifyVetRequestUpdate } from "@/lib/whatsappNotify";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,9 @@ export async function POST(req: NextRequest) {
         result.rows.map((row: { request_id: string; client_user_id: number }) =>
           ExpressVetNotifications.onRequestExpired(row.client_user_id, row.request_id, categoryLabel)
         )
+      );
+      await Promise.allSettled(
+        result.rows.map((row: { request_id: string }) => notifyVetRequestUpdate({ request_id: row.request_id, category }, "expired"))
       );
 
       expiredCount += result.rowCount ?? 0;

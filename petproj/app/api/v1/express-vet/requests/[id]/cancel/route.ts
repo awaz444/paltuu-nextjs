@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
+import { notifyVetRequestUpdate } from "@/lib/whatsappNotify";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,8 @@ export async function POST(req: NextRequest, context: any) {
         { status: 409 }
       );
     }
+
+    await notifyVetRequestUpdate(result.rows[0], "cancelled");
 
     return NextResponse.json({ request: result.rows[0] });
   } catch (error) {

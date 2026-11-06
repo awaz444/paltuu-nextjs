@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { checkDispatcher } from "@/lib/expressVet/dispatcherAuth";
 import { emitExpressVetClaimed } from "@/utils/realtimeEmitter";
+import { notifyVetRequestUpdate } from "@/lib/whatsappNotify";
 import { checkSelfDeal } from "@/lib/expressVet/selfDealGuard";
 
 export const dynamic = "force-dynamic";
@@ -66,6 +67,7 @@ export async function POST(req: NextRequest, context: any) {
     await client.query("COMMIT");
 
     await emitExpressVetClaimed(id);
+    await notifyVetRequestUpdate(claimResult.rows[0], "claimed");
 
     return NextResponse.json({ request: claimResult.rows[0] });
   } catch (error) {

@@ -270,9 +270,9 @@ export default async function AdoptPage({ params }: { params: { slug?: string[] 
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
 
             {/* Header */}
-            <section className="py-14 px-6 lg:px-20 bg-white">
+            <section className="pt-6 pb-6 px-4 md:py-14 md:px-6 lg:px-20 bg-white">
                 <div className="max-w-6xl mx-auto">
-                    <nav aria-label="Breadcrumb" className="text-sm text-gray-500 mb-4">
+                    <nav aria-label="Breadcrumb" className="text-sm text-gray-500 mb-3 md:mb-4">
                         <Link href="/" className="hover:text-primary">Home</Link>
                         <span className="mx-2">/</span>
                         <Link href="/adopt" className="hover:text-primary">Adopt</Link>
@@ -285,25 +285,27 @@ export default async function AdoptPage({ params }: { params: { slug?: string[] 
                         {city && (<><span className="mx-2">/</span><span className="text-gray-700">{place}</span></>)}
                     </nav>
 
-                    <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-4">
+                    <h1 className="text-[28px] leading-tight md:text-5xl font-extrabold text-gray-900 mb-3 md:mb-4">
                         {noun} for Adoption in <span className="text-primary">{place}</span>
                     </h1>
-                    <p className="text-lg text-gray-600 max-w-3xl">{intro}</p>
+                    <p className="text-[15px] md:text-lg text-gray-600 max-w-3xl">{intro}</p>
                 </div>
             </section>
 
             {/* Listings */}
-            <section className="py-14 px-6 lg:px-20 bg-primary">
+            <section className="py-6 px-3 md:py-14 md:px-6 lg:px-20 bg-primary">
                 <div className="max-w-6xl mx-auto">
                     {pets.length > 0 ? (
                         <>
-                            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
+                            <h2 className="px-1 text-xl md:text-3xl font-bold text-white mb-4 md:mb-8">
                                 {pets.length} {pets.length === 1 ? "pet" : "pets"} available now
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {/* Two per row on phones. One full-width card per screen made a
+                                48-listing page ~25,000px tall. */}
+                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
                                 {pets.map((pet) => (
                                     <Link key={pet.pet_id} href={`/browse-pets/${pet.pet_id}`}>
-                                        <article className="bg-white rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] hover:shadow-xl transition-all duration-300 h-full">
+                                        <article className="bg-white rounded-xl md:rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] hover:shadow-xl transition-all duration-300 h-full">
                                             <div className="relative aspect-square overflow-hidden">
                                                 <img
                                                     src={pet.image_url || "/dog-placeholder.png"}
@@ -312,18 +314,18 @@ export default async function AdoptPage({ params }: { params: { slug?: string[] 
                                                     loading="lazy"
                                                 />
                                                 {pet.listing_type === "rescue" && (
-                                                    <span className="absolute top-2 right-2 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full">
+                                                    <span className="absolute top-2 right-2 bg-primary text-white text-[11px] md:text-xs font-semibold px-2 md:px-3 py-0.5 md:py-1 rounded-full">
                                                         + Rescue
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="p-4">
-                                                <h3 className="font-bold text-gray-900 text-lg mb-1 truncate">{pet.pet_name}</h3>
-                                                <p className="text-gray-500 text-sm mb-2 truncate">
+                                            <div className="p-3 md:p-4">
+                                                <h3 className="font-bold text-gray-900 text-[15px] md:text-lg mb-0.5 md:mb-1 truncate">{pet.pet_name}</h3>
+                                                <p className="text-gray-500 text-xs md:text-sm mb-1 md:mb-2 truncate">
                                                     {formatAge(pet.age_months)}
                                                     {pet.pet_breed ? ` · ${pet.pet_breed}` : ""}
                                                 </p>
-                                                <p className="text-gray-500 text-sm">{pet.city}</p>
+                                                <p className="text-gray-500 text-xs md:text-sm truncate">{pet.city}</p>
                                             </div>
                                         </article>
                                     </Link>
@@ -341,7 +343,7 @@ export default async function AdoptPage({ params }: { params: { slug?: string[] 
                         </div>
                     )}
 
-                    <div className="text-center mt-10">
+                    <div className="text-center mt-6 md:mt-10">
                         <Link
                             href="/browse-pets"
                             className="inline-flex items-center gap-2 bg-white text-primary font-bold px-8 py-3 rounded-full shadow-lg hover:scale-105 transition-transform duration-300"
@@ -353,22 +355,22 @@ export default async function AdoptPage({ params }: { params: { slug?: string[] 
             </section>
 
             {/* Cross-links */}
-            <section className="py-14 px-6 lg:px-20 bg-white">
-                <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+            <section className="py-10 px-4 md:py-14 md:px-6 lg:px-20 bg-white">
+                <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
                     <div>
                         <h2 className="text-lg font-bold text-gray-900 mb-4">
                             {sp ? `${sp.plural} by city` : "Adopt by city"}
                         </h2>
-                        <ul className="space-y-2 text-sm">
+                        <ul className="space-y-0 md:space-y-2 text-sm">
                             {otherCities.map((c) => (
                                 <li key={c.name}>
-                                    <Link href={pathFor(sp, c)} className="text-gray-600 hover:text-primary">
+                                    <Link href={pathFor(sp, c)} className="block py-1.5 md:py-0 text-gray-600 hover:text-primary">
                                         {noun} for adoption in {c.name}
                                     </Link>
                                 </li>
                             ))}
                             <li>
-                                <Link href="/adopt" className="text-gray-600 hover:text-primary font-medium">
+                                <Link href="/adopt" className="block py-1.5 md:py-0 text-gray-600 hover:text-primary font-medium">
                                     View all cities →
                                 </Link>
                             </li>
@@ -377,17 +379,17 @@ export default async function AdoptPage({ params }: { params: { slug?: string[] 
 
                     <div>
                         <h2 className="text-lg font-bold text-gray-900 mb-4">Other pets</h2>
-                        <ul className="space-y-2 text-sm">
+                        <ul className="space-y-0 md:space-y-2 text-sm">
                             {otherSpecies.map((s) => (
                                 <li key={s.categoryId}>
-                                    <Link href={pathFor(s, city)} className="text-gray-600 hover:text-primary">
+                                    <Link href={pathFor(s, city)} className="block py-1.5 md:py-0 text-gray-600 hover:text-primary">
                                         {s.plural} for adoption{city ? ` in ${place}` : " in Pakistan"}
                                     </Link>
                                 </li>
                             ))}
                             {sp && (
                                 <li>
-                                    <Link href={pathFor(undefined, city)} className="text-gray-600 hover:text-primary">
+                                    <Link href={pathFor(undefined, city)} className="block py-1.5 md:py-0 text-gray-600 hover:text-primary">
                                         All pets for adoption{city ? ` in ${place}` : " in Pakistan"}
                                     </Link>
                                 </li>
@@ -396,7 +398,7 @@ export default async function AdoptPage({ params }: { params: { slug?: string[] 
                                 clinic coverage — see lib/vetCities.ts. */}
                             {city && (VET_CITIES as readonly string[]).includes(city.name) && (
                                 <li>
-                                    <Link href={`/pet-care/${city.slug}`} className="text-gray-600 hover:text-primary">
+                                    <Link href={`/pet-care/${city.slug}`} className="block py-1.5 md:py-0 text-gray-600 hover:text-primary">
                                         Vets in {place}
                                     </Link>
                                 </li>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
@@ -90,6 +90,10 @@ const PetDetailsClient: React.FC<{
     const [llmSummary, setLlmSummary] = useState<string | null>(null);
     const [summaryLoading, setSummaryLoading] = useState(false);
     const [summaryRequested, setSummaryRequested] = useState(false);
+    // Phones see the main buttons only after scrolling past the gallery and
+    // facts, so a bottom bar carries them whenever they're off screen.
+    const ctaRef = useRef<HTMLDivElement>(null);
+    const [ctaInView, setCtaInView] = useState(true);
 
     useEffect(() => {
         const rootStyles = getComputedStyle(document.documentElement);
@@ -98,6 +102,14 @@ const PetDetailsClient: React.FC<{
             setPrimaryColor(color);
         }
     }, []);
+
+    useEffect(() => {
+        const el = ctaRef.current;
+        if (!el || typeof IntersectionObserver === "undefined") return;
+        const io = new IntersectionObserver(([entry]) => setCtaInView(entry.isIntersecting));
+        io.observe(el);
+        return () => io.disconnect();
+    }, [pet, loading, isHydrating]);
 
     const formatListingDate = (dateString: string) => {
         return formatDistanceToNow(new Date(dateString), { addSuffix: true });
@@ -462,7 +474,7 @@ const PetDetailsClient: React.FC<{
                 </div>
             </Modal>
 
-            <div className="pet-details min-h-screen bg-gray-50 px-4 py-4 md:px-8 md:py-6">
+            <div className={`pet-details min-h-screen bg-gray-50 px-4 py-4 md:px-8 md:py-6 ${isAvailable ? "pb-24 lg:pb-6" : ""}`}>
                 <div className="mx-auto max-w-6xl">
                     <button
                         type="button"
@@ -557,7 +569,7 @@ const PetDetailsClient: React.FC<{
 
                                 {/* Grid, not flex: flex-1 in a column flex container zeroes the
                                     basis and collapses the buttons to line height on mobile. */}
-                                <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                                <div ref={ctaRef} className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                                     <button
                                         type="button"
                                         className={`flex h-12 items-center justify-center gap-2 rounded-lg px-4 text-[15px] font-semibold transition-colors ${
@@ -742,6 +754,36 @@ const PetDetailsClient: React.FC<{
 
 
                     {extras}
+
+                    {isAvailable && (
+                        <div
+                            className={`fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-3 pt-2.5 backdrop-blur transition-transform duration-200 lg:hidden ${
+                                ctaInView ? "translate-y-full" : "translate-y-0"
+                            }`}
+                            style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}
+                            aria-hidden={ctaInView}>
+                            <div className="mx-auto flex max-w-xl items-center gap-2">
+                                <button
+                                    type="button"
+                                    tabIndex={ctaInView ? -1 : 0}
+                                    className="flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-[15px] font-semibold text-white"
+                                    onClick={handleContactClick}
+                                    data-cta="pet_contact_sticky">
+                                    <WhatsAppOutlined />
+                                    Contact
+                                </button>
+                                <button
+                                    type="button"
+                                    tabIndex={ctaInView ? -1 : 0}
+                                    className="flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-primary px-3 text-[15px] font-semibold text-primary"
+                                    onClick={handleAdoptClick}
+                                    data-cta="pet_adopt_sticky">
+                                    <HeartOutlined />
+                                    <span className="truncate">{getActionButtonText()}</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     <AdoptionFormModal
                         petId={parseInt(pet_id)}

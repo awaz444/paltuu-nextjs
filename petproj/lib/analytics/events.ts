@@ -123,6 +123,8 @@ export function inferCta(href: string): string | null {
 export const CTA_LABELS: Record<string, string> = {
     pet_adopt: "Adopt this pet",
     pet_contact: "Contact owner",
+    pet_contact_sticky: "Contact owner (mobile bar)",
+    pet_adopt_sticky: "Adopt this pet (mobile bar)",
     pet_whatsapp_owner: "WhatsApp owner",
     pet_copy_phone: "Copy owner's number",
     pet_ask_paltuu: "Ask Paltuu about this pet",
@@ -134,6 +136,8 @@ export const CTA_LABELS: Record<string, string> = {
     clinic_whatsapp: "Book clinic (WhatsApp)",
     clinic_copy_phone: "Call clinic (copy number)",
     clinic_directions: "Clinic directions",
+    clinic_call_sticky: "Call clinic (mobile bar)",
+    clinic_directions_sticky: "Clinic directions (mobile bar)",
     add_to_cart: "Add to cart",
     lost_found_report: "Report lost / found pet",
     home_vets_at_home_book: "Book Vets @ Home",

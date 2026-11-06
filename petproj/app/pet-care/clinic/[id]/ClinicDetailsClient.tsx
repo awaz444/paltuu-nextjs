@@ -223,13 +223,18 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
         return link;
     })();
 
+    // Phone visitors want to call or get directions. A tel: link dials
+    // straight away; the in-page Copy button is a desktop habit.
+    const telHref = clinic.contact_number ? `tel:${clinic.contact_number.replace(/[^\d+]/g, "")}` : undefined;
+    const showActionBar = Boolean(telHref || googleMapsLink || clinic.whatsapp_number);
+
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="container mx-auto px-4 py-6 max-w-7xl">
+            <div className={`container mx-auto px-4 py-6 max-w-7xl ${showActionBar ? "pb-24 lg:pb-6" : ""}`}>
                 <div className="grid lg:grid-cols-3 gap-6">
                     {/* Left Sidebar - Sticky on desktop */}
                     <div className="lg:col-span-1">
-                        <div className="sticky top-6 space-y-6">
+                        <div className="lg:sticky lg:top-6 space-y-6">
                             {/* Clinic Header Card */}
                             <div className="bg-white rounded-3xl p-6 shadow-sm">
                                 <div className="flex flex-col items-center text-center mb-6">
@@ -321,7 +326,8 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                                 )}
 
                                 {/* Stats Row */}
-                                {reviewStats && (
+                                {/* "0.0 · 0 reviews" reads as a bad rating next to Google's, so wait for real reviews. */}
+                                {reviewStats && reviewStats.reviewsCount > 0 && (
                                     <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100">
                                         <div className="text-center">
                                             <div className="text-lg font-bold text-primary flex items-center justify-center gap-1">
@@ -760,6 +766,49 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                     </div>
                 </div>
             </div>
+
+            {showActionBar && (
+                <div
+                    className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-3 pt-2.5 backdrop-blur lg:hidden"
+                    style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}
+                >
+                    <div className="mx-auto flex max-w-xl items-center gap-2">
+                        {telHref && (
+                            <a
+                                href={telHref}
+                                data-cta="clinic_call_sticky"
+                                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-[15px] font-semibold text-white"
+                            >
+                                <FaPhone className="text-sm" />
+                                Call
+                            </a>
+                        )}
+                        {!isHomeVet && googleMapsLink && (
+                            <a
+                                href={googleMapsLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                data-cta="clinic_directions_sticky"
+                                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-primary px-3 text-[15px] font-semibold text-primary"
+                            >
+                                <FaMapMarkerAlt className="text-sm" />
+                                Directions
+                            </a>
+                        )}
+                        {clinic.whatsapp_number && (
+                            <button
+                                type="button"
+                                onClick={() => handleWhatsApp(clinic.whatsapp_number || "")}
+                                data-cta="clinic_whatsapp"
+                                aria-label="Chat on WhatsApp"
+                                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-green-500 text-white"
+                            >
+                                <FaWhatsapp className="text-xl" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Login Modal */}
             <LoginModal

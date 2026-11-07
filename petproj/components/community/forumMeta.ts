@@ -5,6 +5,9 @@ const EMOJI: Record<string, string> = {
     rabbits: "🐰",
     fish: "🐟",
     reptiles: "🐢",
+    // Stand-ins until the hand-drawn heart and magnifying glass are in public/icons.
+    adoption: "❤️",
+    "lost-found": "🔍",
 };
 
 /** The icon shown next to a forum's name. */

@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Table, Button, Space, message, Select, Input, Modal, Image, Spin, Popconfirm } from 'antd';
-import NextImage from 'next/image';
 import Navbar from '@/components/navbar';
 import { useSetPrimaryColor } from '../hooks/useSetPrimaryColor';
 import { fetchAdoptionPets } from '../store/slices/adoptionPetsSlice';
@@ -10,7 +9,7 @@ import { UseDispatch, useDispatch } from 'react-redux';
 import { fetchFosterPets } from '../store/slices/fosterPetsSlice';
 import { AppDispatch } from '../store/store';
 import { formatAge } from '@/utils/formatAge';
-import { getOptimizedImageUrl, BLUR_DATA_URL } from '@/utils/imageOptimizer';
+import { getOptimizedImageUrl } from '@/utils/imageOptimizer';
 
 const { Option } = Select;
 
@@ -657,30 +656,29 @@ const AdminPetApproval: React.FC = () => {
             <div>
               <h3 className="text-lg font-semibold mb-3">Photos</h3>
               {petDetail.images && petDetail.images.length > 0 ? (
-                // Image.PreviewGroup is kept for the Ant Design lightbox/zoom on click.
-                // The actual thumbnail rendered is next/image for WebP conversion,
-                // correct sizing, and blur-up placeholder.
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {petDetail.images.map((img, idx) => (
-                    <div
-                      key={img.image_id}
-                      className="relative aspect-square w-full overflow-hidden rounded-lg border cursor-pointer"
-                    >
-                      <NextImage
-                        src={getOptimizedImageUrl(img.image_url, 400)}
-                        alt="Pet photo"
-                        fill
-                        sizes="(max-width: 640px) 50vw, 200px"
-                        className="object-cover"
-                        // First image loads eagerly; rest are lazy
-                        priority={idx === 0}
-                        loading={idx === 0 ? 'eager' : 'lazy'}
-                        placeholder="blur"
-                        blurDataURL={BLUR_DATA_URL}
-                      />
-                    </div>
-                  ))}
-                </div>
+                // Plain antd Image (same as /admin-pet) rather than next/image:
+                // uploads are already WebP-compressed, and the PreviewGroup gives
+                // tap-to-enlarge with swipe between photos at full resolution.
+                <Image.PreviewGroup>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {petDetail.images.map((img) => (
+                      <div
+                        key={img.image_id}
+                        className="aspect-square w-full overflow-hidden rounded-lg border bg-gray-100 cursor-pointer [&_.ant-image]:!block [&_.ant-image]:!h-full [&_.ant-image]:!w-full"
+                      >
+                        <Image
+                          src={getOptimizedImageUrl(img.image_url, 400)}
+                          preview={{ src: img.image_url }}
+                          alt="Pet photo"
+                          width="100%"
+                          height="100%"
+                          className="object-cover"
+                          placeholder={<div className="h-full w-full animate-pulse bg-gray-200" />}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </Image.PreviewGroup>
               ) : (
                 <div className="bg-gray-50 border border-dashed rounded-lg p-6 text-center text-gray-500">
                   No images uploaded

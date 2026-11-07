@@ -3,12 +3,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Clinic } from "../app/types/clinic";
-import { FaHome, FaClinicMedical } from "react-icons/fa";
+import { FaHome, FaClinicMedical, FaLocationArrow } from "react-icons/fa";
+import { formatDistanceKm } from "@/lib/geo";
 import { EnvironmentOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import { MdVerified } from "react-icons/md";
 
 interface ClinicCardProps {
     clinic: Clinic;
+    /** Shown as an "x km away" chip when set (Near me mode on /pet-care). */
+    distanceKm?: number | null;
 }
 
 const PLACEHOLDER = "/placeholder-clinic.jpg";
@@ -34,7 +37,7 @@ function ClinicImage({ src, alt }: { src: string | null | undefined; alt: string
 }
 
 /** Same card as Browse Pets (components/petGrid.tsx): white, rounded-3xl, light shadow, primary border on hover. */
-const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
+const ClinicCard: React.FC<ClinicCardProps> = ({ clinic, distanceKm }) => {
     const hasDiscount =
         clinic.discount_details &&
         !clinic.discount_details.toLowerCase().includes("no discount") &&
@@ -58,6 +61,12 @@ const ClinicCard: React.FC<ClinicCardProps> = ({ clinic }) => {
                     {isHomeVet ? <FaHome className="text-[10px]" /> : <FaClinicMedical className="text-[10px]" />}
                     {isHomeVet ? "Home Visit" : "Clinic"}
                 </div>
+                {distanceKm != null && (
+                    <div className="absolute bottom-2 left-2 bg-white/95 text-gray-800 text-[10px] sm:text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                        <FaLocationArrow className="text-primary text-[9px]" />
+                        {formatDistanceKm(distanceKm)} away
+                    </div>
+                )}
             </div>
 
             <div className="py-4">

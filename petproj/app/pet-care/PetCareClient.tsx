@@ -17,6 +17,7 @@ import {
     FaArrowUp,
     FaPercentage,
     FaHome,
+    FaLocationArrow,
 } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import { Clinic } from "../types/clinic";
@@ -62,21 +63,79 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
     const isHomeVetsTab = listingType === "home_vet";
     const isAllTab = listingType === "all";
 
-    // Attempt geolocation on mount — just capture coordinates. The backend's
-    // default ordering already ranks by proximity band + verified status once
-    // it has lat/lng, so we don't need to force a strict distance sort here.
-    useEffect(() => {
-        if (typeof window !== "undefined" && navigator.geolocation) {
+    // "Near me" = strict distance-only order (sort=distance), same as the app's
+    // Pet Care screen. Off by default: the backend's default ordering already
+    // ranks by proximity band + verified status whenever it has lat/lng.
+    const [nearMe, setNearMe] = useState(false);
+    const [geoStatus, setGeoStatus] = useState<"idle" | "locating" | "granted" | "denied" | "unavailable">("idle");
+    const nearMeActive = nearMe && userCoords != null;
+
+    // `silent` = background attempt: never show "Locating…" or an error.
+    const requestLocation = (silent = false) =>
+        new Promise<{ lat: number; lng: number } | null>((resolve) => {
+            if (typeof window === "undefined" || !navigator.geolocation) {
+                if (!silent) setGeoStatus("unavailable");
+                resolve(null);
+                return;
+            }
+            if (!silent) setGeoStatus("locating");
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
-                    setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                    const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    setUserCoords(coords);
+                    setGeoStatus("granted");
+                    resolve(coords);
                 },
-                () => {
-                    // Permission denied or unavailable — keep default sort
-                }
+                (err) => {
+                    if (!silent) setGeoStatus(err.code === err.PERMISSION_DENIED ? "denied" : "unavailable");
+                    resolve(null);
+                },
+                { enableHighAccuracy: false, timeout: 10000, maximumAge: 5 * 60 * 1000 }
             );
-        }
+        });
+
+    // Attempt geolocation on mount — just capture coordinates for the default
+    // proximity-aware ordering. Failure is silent here; it only surfaces if the
+    // user explicitly taps "Near me".
+    useEffect(() => {
+        requestLocation(true);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const handleNearMe = async () => {
+        if (nearMe) {
+            setNearMe(false);
+            return;
+        }
+        const coords = userCoords ?? (await requestLocation());
+        if (!coords) return;
+        // The default city (Karachi) would otherwise limit "near me" to one
+        // city's clinics, which is wrong for anyone outside it.
+        setCityFilter("All");
+        setNearMe(true);
+    };
+
+    const nearMeButton = (fullWidth: boolean) => (
+        <button
+            type="button"
+            onClick={handleNearMe}
+            disabled={geoStatus === "locating"}
+            aria-pressed={nearMeActive}
+            className={`${fullWidth ? "w-full p-3" : "px-4 py-2.5"} rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 border-2 disabled:opacity-60 ${
+                nearMeActive ? "bg-primary text-white border-primary" : "border-primary text-primary bg-white"
+            }`}
+        >
+            <FaLocationArrow className="text-xs" />
+            {geoStatus === "locating" && !nearMe ? "Locating…" : "Near me"}
+        </button>
+    );
+
+    const geoMessage =
+        !nearMe && geoStatus === "denied"
+            ? "Location access is blocked. Allow it for paltuu.pk in your browser settings to find vets near you."
+            : !nearMe && geoStatus === "unavailable"
+            ? "We couldn't get your location. Check that location services are on and try again."
+            : null;
 
     // Debounce free-text search so we don't hit the API on every keystroke
     useEffect(() => {
@@ -87,14 +146,14 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
     // Reset page on filter changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [cityFilter, debouncedSearch, partnerFilter, verifiedFilter, listingType]);
+    }, [cityFilter, debouncedSearch, partnerFilter, verifiedFilter, listingType, nearMeActive]);
 
     // Fetch from the backend whenever filters or page change — the server
     // now owns filtering, sorting, and pagination. page 1 replaces the list
     // (a fresh search/filter); later pages append (infinite scroll). We always
-    // forward the user's coordinates (once resolved) without forcing a strict
-    // distance sort — the backend's default ordering already ranks by
-    // proximity band + verified status whenever it has lat/lng.
+    // forward the user's coordinates (once resolved); a strict distance sort
+    // is only forced when "Near me" is on — otherwise the backend's default
+    // ordering ranks by proximity band + verified status whenever it has lat/lng.
     useEffect(() => {
         dispatch(fetchClinics({
             page: currentPage,
@@ -103,10 +162,11 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
             partner: partnerFilter || undefined,
             verified: verifiedFilter || undefined,
             listing_type: listingType !== "all" ? listingType : undefined,
+            sort: nearMeActive ? "distance" : undefined,
             lat: userCoords?.lat,
             lng: userCoords?.lng,
         })).finally(() => setClientFetched(true));
-    }, [dispatch, currentPage, cityFilter, debouncedSearch, partnerFilter, verifiedFilter, userCoords, listingType]);
+    }, [dispatch, currentPage, cityFilter, debouncedSearch, partnerFilter, verifiedFilter, userCoords, listingType, nearMeActive]);
 
     // The map needs every matching clinic's pin, not just the current page —
     // fetch it separately (unpaginated) whenever the filters (not the page)
@@ -161,9 +221,10 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
         setPartnerFilter(false);
         setVerifiedFilter(false);
         setListingType("all");
+        setNearMe(false);
     };
 
-    const hasActiveFilters = cityFilter !== "Karachi" || searchQuery !== "" || partnerFilter || verifiedFilter || listingType !== "all";
+    const hasActiveFilters = cityFilter !== "Karachi" || searchQuery !== "" || partnerFilter || verifiedFilter || listingType !== "all" || nearMe;
 
     return (
         <main className="min-h-screen bg-gray-100">
@@ -222,6 +283,13 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
                                             className="border rounded-xl w-full p-3 pl-9 text-sm"
                                         />
                                     </div>
+                                </div>
+
+                                {/* Near me */}
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium mb-1">Location</label>
+                                    {nearMeButton(true)}
+                                    {geoMessage && <p className="text-xs text-red-500 mt-2">{geoMessage}</p>}
                                 </div>
 
                                 {/* Type */}
@@ -334,6 +402,20 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
                     {/* Main content */}
                     <div className="w-full lg:w-3/4">
 
+                        {/* Mobile has no filter sidebar — keep Near me reachable. */}
+                        {!error && (
+                            <div className="lg:hidden mb-4">
+                                <div className="flex items-center gap-3">
+                                    {nearMeButton(false)}
+                                    {nearMeActive && <span className="text-xs text-primary">Sorted by distance</span>}
+                                </div>
+                                {geoMessage && <p className="text-xs text-red-500 mt-2">{geoMessage}</p>}
+                            </div>
+                        )}
+                        {nearMeActive && (
+                            <p className="hidden lg:block text-xs text-primary mb-3">Sorted by distance from you</p>
+                        )}
+
                         {loading && clinics.length === 0 ? (
                             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                                 {Array.from({ length: 6 }).map((_, i) => (
@@ -378,7 +460,11 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
                             </div>
                         ) : (
                             <>
-                                <ClinicGrid clinics={displayedClinics} listingType={listingType} />
+                                <ClinicGrid
+                                    clinics={displayedClinics}
+                                    listingType={listingType}
+                                    distanceFrom={nearMeActive ? userCoords : null}
+                                />
 
                                 {/* Infinite scroll — this sentinel loads the next page
                                     automatically once it scrolls into view. */}

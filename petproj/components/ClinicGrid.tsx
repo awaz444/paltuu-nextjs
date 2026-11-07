@@ -3,13 +3,25 @@
 import React from "react";
 import { Clinic } from "../app/types/clinic";
 import ClinicCard from "./ClinicCard";
+import { haversineDistanceKm } from "@/lib/geo";
 
 interface ClinicGridProps {
     clinics: Clinic[];
     listingType?: "all" | "clinic" | "home_vet";
+    /** When set, each card with coordinates shows its distance from here. */
+    distanceFrom?: { lat: number; lng: number } | null;
 }
 
-const ClinicGrid: React.FC<ClinicGridProps> = ({ clinics, listingType = "all" }) => {
+const distanceOf = (clinic: Clinic, from: { lat: number; lng: number }): number | null => {
+    // pg returns numeric columns as strings, so coerce before checking.
+    if (clinic.latitude == null || clinic.longitude == null) return null;
+    const lat = Number(clinic.latitude);
+    const lng = Number(clinic.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return haversineDistanceKm(from.lat, from.lng, lat, lng);
+};
+
+const ClinicGrid: React.FC<ClinicGridProps> = ({ clinics, listingType = "all", distanceFrom = null }) => {
     const isHomeVet = listingType === "home_vet";
 
     if (!clinics || clinics.length === 0) {
@@ -39,7 +51,11 @@ const ClinicGrid: React.FC<ClinicGridProps> = ({ clinics, listingType = "all" })
             {/* Same grid as Browse Pets */}
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                 {clinics.map((clinic) => (
-                    <ClinicCard key={clinic.clinic_id} clinic={clinic} />
+                    <ClinicCard
+                        key={clinic.clinic_id}
+                        clinic={clinic}
+                        distanceKm={distanceFrom ? distanceOf(clinic, distanceFrom) : null}
+                    />
                 ))}
             </div>
         </div>

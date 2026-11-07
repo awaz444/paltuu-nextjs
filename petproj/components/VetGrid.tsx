@@ -6,6 +6,7 @@ import { CopyOutlined, WhatsAppOutlined } from "@ant-design/icons";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import PhoneOutlined from "@ant-design/icons/PhoneOutlined";
 import { formatPhoneDisplay } from "@/utils/phone";
+import { useContactGate } from "@/hooks/useContactGate";
 
 interface VetGridProps {
     vets: Vet[];
@@ -15,6 +16,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedVet, setSelectedVet] = useState<Vet | null>(null);
     const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
+    const { requireSignIn } = useContactGate();
 
 
 
@@ -59,7 +61,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
                                 className="absolute top-2 right-2 bg-primary text-white p-2 rounded-xl w-10 h-10 flex items-center justify-center shadow-md hover:scale-105 transition-all duration-300 z-10"
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    openModal(vet);
+                                    requireSignIn(() => openModal(vet));
                                 }}
                                 title="Call Clinic">
                                 <PhoneOutlined />

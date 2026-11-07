@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { EnvironmentOutlined, PhoneOutlined } from "@ant-design/icons";
 import "./LostAndFoundGrid.css";
+import { maskPhone, useContactGate } from "@/hooks/useContactGate";
 
 interface LostAndFoundPet {
     post_id: number;
@@ -29,6 +30,7 @@ interface LostAndFoundGridProps {
 const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedPet, setSelectedPet] = useState<LostAndFoundPet | null>(null);
+    const { signedIn, requireSignIn } = useContactGate();
 
     const showModal = (pet: LostAndFoundPet) => {
         setSelectedPet(pet);
@@ -203,13 +205,26 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
                                     {selectedPet.contact_info && (
                                         <div>
                                             <label className="block text-sm font-medium text-gray-500 mb-1">Contact Info</label>
-                                            <a
-                                                href={`tel:${selectedPet.contact_info}`}
-                                                className="flex items-center gap-2 border-2 border-primary rounded-2xl p-3 text-primary font-medium hover:bg-primary/5 transition-colors"
-                                            >
-                                                <PhoneOutlined />
-                                                {selectedPet.contact_info}
-                                            </a>
+                                            {signedIn ? (
+                                                <a
+                                                    href={`tel:${selectedPet.contact_info}`}
+                                                    className="flex items-center gap-2 border-2 border-primary rounded-2xl p-3 text-primary font-medium hover:bg-primary/5 transition-colors"
+                                                >
+                                                    <PhoneOutlined />
+                                                    {selectedPet.contact_info}
+                                                </a>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => requireSignIn()}
+                                                    data-cta="lost_found_contact_sign_in"
+                                                    className="flex w-full items-center gap-2 border-2 border-primary rounded-2xl p-3 text-left text-primary font-medium hover:bg-primary/5 transition-colors"
+                                                >
+                                                    <PhoneOutlined />
+                                                    <span>{maskPhone(selectedPet.contact_info)}</span>
+                                                    <span className="ml-auto text-sm font-normal">Sign in to call</span>
+                                                </button>
+                                            )}
                                         </div>
                                     )}
                                 </div>

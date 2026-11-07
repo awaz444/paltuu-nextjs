@@ -59,6 +59,7 @@ import "./styles.css";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { authUrl, currentPath } from "@/lib/authRedirect";
+import { useContactGate } from "@/hooks/useContactGate";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -78,6 +79,7 @@ const PetDetailsClient: React.FC<{
     const { pet_id } = params;
     const router = useRouter();
     const { user, isAuthenticated, isHydrating } = useAuth();
+    const { requireSignIn } = useContactGate();
     const searchParams = useSearchParams();
     const [pet, setPet] = useState<PetWithImages | null>(initialPet ?? null);
     const [carouselImages, setCarouselImages] = useState<string[]>(
@@ -224,9 +226,10 @@ const PetDetailsClient: React.FC<{
         }
     };
 
+    // The owner's number is only shown to signed-in users.
     const handleContactClick = () => {
         if (pet?.adoption_status !== "available") return;
-        setIsModalOpen(true);
+        requireSignIn(() => setIsModalOpen(true));
     };
 
     const handleModalClose = () => setIsModalVisible(false);

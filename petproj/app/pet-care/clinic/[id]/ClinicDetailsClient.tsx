@@ -25,6 +25,7 @@ import VetGrid from "../../../../components/VetGrid";
 import { formatPhoneDisplay } from "@/utils/phone";
 import LoginModal from "../../../../components/LoginModal";
 import { useAuth } from "@/context/AuthContext";
+import { maskPhone, useContactGate } from "@/hooks/useContactGate";
 import { ClinicDetails } from "./data";
 import Link from "next/link";
 import { VET_CITIES } from "@/lib/vetCities";
@@ -66,6 +67,7 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
     const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
     const { isAuthenticated, user } = useAuth();
     const [showLoginModal, setShowLoginModal] = useState(false);
+    const { signedIn, requireSignIn } = useContactGate();
     const [form] = Form.useForm();
     const [activeGuideTab, setActiveGuideTab] = useState<"prep" | "emergency" | "schedule">("prep");
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
@@ -107,19 +109,20 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
         setShowLoginModal(false);
     };
 
-    const handleWhatsApp = (phone: string) => {
+    // Calling, messaging or copying the clinic's number needs an account.
+    const handleWhatsApp = (phone: string) => requireSignIn(() => {
         const digits = formatPhoneDisplay(phone).digits;
         if (!digits) {
             message.error("Invalid phone number format.");
             return;
         }
         window.open(`https://wa.me/${digits}`, "_blank");
-    };
+    });
 
-    const handleCopy = (text: string) => {
+    const handleCopy = (text: string) => requireSignIn(() => {
         navigator.clipboard.writeText(text);
         message.success("Copied to clipboard!");
-    };
+    });
 
     const handlePhotoChange = async (file: File) => {
         if (!clinic) return;
@@ -398,6 +401,16 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                             {/* Contact Information */}
                             <div className="bg-white rounded-3xl p-6 shadow-sm">
                                 <h2 className="text-lg font-bold text-gray-900 mb-4">Contact</h2>
+                                {!signedIn && (
+                                    <button
+                                        type="button"
+                                        onClick={() => requireSignIn()}
+                                        data-cta="contact_sign_in"
+                                        className="-mt-2 mb-4 block text-left text-sm text-primary hover:underline"
+                                    >
+                                        Sign in to call or message
+                                    </button>
+                                )}
                                 <div className="space-y-4">
                                     {/* Phone Number */}
                                     {clinic.contact_number && (
@@ -409,7 +422,7 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                                                 <div className="flex-1 min-w-0">
                                                     <div className="text-xs text-gray-500 mb-1">Phone Number</div>
                                                     <div className="text-sm font-medium text-gray-900 truncate">
-                                                        {clinic.contact_number}
+                                                        {signedIn ? clinic.contact_number : maskPhone(clinic.contact_number)}
                                                     </div>
                                                 </div>
                                             </div>
@@ -794,7 +807,13 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                     <div className="mx-auto flex max-w-xl items-center gap-2">
                         {telHref && (
                             <a
-                                href={telHref}
+                                href={signedIn ? telHref : "#"}
+                                onClick={(e) => {
+                                    if (!signedIn) {
+                                        e.preventDefault();
+                                        requireSignIn();
+                                    }
+                                }}
                                 data-cta="clinic_call_sticky"
                                 className="flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-[15px] font-semibold text-white"
                             >

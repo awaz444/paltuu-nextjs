@@ -44,11 +44,13 @@ export async function GET(req: NextRequest) {
                 ORDER BY vr.review_date DESC
             `;
         } else {
+            // body is also returned as `comment`, the field name this route used
+            // before it pointed at bazaar_product_reviews (PALTU-67).
             query = `
-                SELECT pr.*, u.name as reviewer_name, u.profile_image_url as reviewer_image
-                FROM bazaar_reviews pr
+                SELECT pr.*, pr.body AS comment, u.name as reviewer_name, u.profile_image_url as reviewer_image
+                FROM bazaar_product_reviews pr
                 JOIN users u ON pr.user_id = u.user_id
-                WHERE pr.product_id = $1 AND pr.is_approved = true
+                WHERE pr.product_id = $1 AND pr.status = 'approved'
                 ORDER BY pr.created_at DESC
             `;
         }
@@ -67,7 +69,7 @@ export async function POST(req: NextRequest) {
         if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const body = await req.json();
-        const { target_id, type, rating, comment } = body;
+        const { target_id, type, rating, comment, title } = body;
 
         const validation = validate({ target_id, type, rating }, {
             target_id: { required: true },
@@ -78,15 +80,18 @@ export async function POST(req: NextRequest) {
         if (!validation.success) return NextResponse.json({ errors: validation.errors }, { status: 400 });
 
         let query;
+        const params: unknown[] = [target_id, userId, rating, body.body ?? comment];
         if (type === 'vet') {
             query = `INSERT INTO vet_reviews (vet_id, user_id, rating, review_content, review_date, is_approved) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, false) RETURNING *`;
         } else if (type === 'clinic') {
             query = `INSERT INTO vet_reviews (clinic_id, user_id, rating, review_content, review_date, is_approved) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, false) RETURNING *`;
         } else {
-            query = `INSERT INTO bazaar_reviews (product_id, user_id, rating, comment, is_approved, created_at) VALUES ($1, $2, $3, $4, false, CURRENT_TIMESTAMP) RETURNING *`;
+            // Accepts `body` or the older `comment`; new reviews wait for approval.
+            query = `INSERT INTO bazaar_product_reviews (product_id, user_id, rating, body, title, status) VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING *`;
+            params.push(title ?? null);
         }
 
-        const result = await db.query(query, [target_id, userId, rating, comment]);
+        const result = await db.query(query, params);
         const review = result.rows[0];
 
         return NextResponse.json({ message: "Review submitted", review }, { status: 201 });

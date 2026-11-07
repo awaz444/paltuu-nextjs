@@ -29,10 +29,13 @@ export async function GET(req: NextRequest) {
                 SELECT vr.*, u.name as reviewer_name, u.profile_image_url as reviewer_image
                 FROM vet_reviews vr
                 JOIN users u ON vr.user_id = u.user_id
-                WHERE vr.vet_id = $1
+                WHERE vr.vet_id = $1 AND vr.is_approved = true
                 ORDER BY vr.review_date DESC
             `;
         } else if (type === 'clinic') {
+            // Not filtered by is_approved yet: clinic-only reviews have no
+            // approval path (the vet panel approves by vet_id), so filtering
+            // would hide every clinic review. See PALTU-66.
             query = `
                 SELECT vr.*, u.name as reviewer_name, u.profile_image_url as reviewer_image
                 FROM vet_reviews vr
@@ -76,9 +79,9 @@ export async function POST(req: NextRequest) {
 
         let query;
         if (type === 'vet') {
-            query = `INSERT INTO vet_reviews (vet_id, user_id, rating, review_content, review_date) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) RETURNING *`;
+            query = `INSERT INTO vet_reviews (vet_id, user_id, rating, review_content, review_date, is_approved) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, false) RETURNING *`;
         } else if (type === 'clinic') {
-            query = `INSERT INTO vet_reviews (clinic_id, user_id, rating, review_content, review_date) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) RETURNING *`;
+            query = `INSERT INTO vet_reviews (clinic_id, user_id, rating, review_content, review_date, is_approved) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, false) RETURNING *`;
         } else {
             query = `INSERT INTO bazaar_reviews (product_id, user_id, rating, comment, is_approved, created_at) VALUES ($1, $2, $3, $4, false, CURRENT_TIMESTAMP) RETURNING *`;
         }

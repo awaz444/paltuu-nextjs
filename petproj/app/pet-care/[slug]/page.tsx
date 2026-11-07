@@ -177,7 +177,7 @@ async function getVet(vetId: string) {
                 u.name              AS review_maker_name
             FROM vet_reviews vr
             JOIN users u ON vr.user_id = u.user_id
-            WHERE vr.vet_id = $1
+            WHERE vr.vet_id = $1 AND vr.is_approved = true
             ORDER BY vr.review_date DESC`,
             [vetId]
         );

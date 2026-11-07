@@ -1177,6 +1177,8 @@ model vet_reviews {
   review_content String?
   review_date    DateTime? @default(now()) @db.Timestamp(6)
   clinic_id      BigInt?
+  /// Set by the vet panel. Public reads only return approved reviews (PALTU-66).
+  is_approved    Boolean?  @default(false)
   clinics        clinics?  @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade, onUpdate: NoAction)
   users          users?    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   vets           vets?     @relation(fields: [vet_id], references: [vet_id], onDelete: Cascade)

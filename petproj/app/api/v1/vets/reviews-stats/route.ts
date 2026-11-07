@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
                 COALESCE(AVG(rating), 0) as average_rating,
                 COUNT(*) as reviews_count
             FROM vet_reviews
-            WHERE vet_id = $1
+            WHERE vet_id = $1 AND is_approved = true
         `, [vetId]);
 
         return NextResponse.json({

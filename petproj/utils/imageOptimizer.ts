@@ -2,12 +2,9 @@
  * imageOptimizer.ts
  * Transforms raw image URLs into optimized, sized variants.
  * - Cloudinary: injects w_, h_, c_fill, q_auto, f_auto transformations
- * - S3 (paltuu-main): routes through CloudFront CDN (djw7hbeqkm7bf.cloudfront.net)
- * - All others: returns the original URL unchanged
+ * - Supabase storage: adds width/height/resize query params
+ * - All others (incl. S3 paltuu-main): returns the original URL unchanged
  */
-
-const CLOUDFRONT_DOMAIN = "djw7hbeqkm7bf.cloudfront.net";
-const S3_DOMAIN = "paltuu-main.s3.ap-south-1.amazonaws.com";
 
 /**
  * Returns an optimized URL for the given image.
@@ -32,12 +29,12 @@ export function getOptimizedImageUrl(
     );
   }
 
-  // ── S3 → CloudFront CDN ───────────────────────────────────────────────────
-  // Route through CloudFront for CDN edge-caching. No resize (Lambda@Edge
-  // would be needed for that), but hits are served from the nearest PoP.
-  if (url.includes(S3_DOMAIN)) {
-    return url.replace(S3_DOMAIN, CLOUDFRONT_DOMAIN);
-  }
+  // ── S3 (paltuu-main) ──────────────────────────────────────────────────────
+  // Returned unchanged. paltuu-main has no CloudFront distribution: the
+  // djw7hbeqkm7bf.cloudfront.net domain fronts the *social* bucket, so
+  // rewriting main-bucket URLs to it 403s every image (PALTU-93). If a CDN is
+  // ever put in front of paltuu-main, set AWS_CLOUDFRONT_DOMAIN_MAIN and let
+  // lib/s3.ts emit CDN URLs at upload time instead.
 
   // ── Supabase storage ──────────────────────────────────────────────────────
   // Supabase supports image transformation via query params on storage URLs.

@@ -100,8 +100,8 @@ export default function Footer() {
           <h3 className="text-lg font-semibold mb-4">Explore Paltuu</h3>
           <ul className="space-y-2 text-sm">
             <li><Link href="/browse-pets" className="hover:text-gray-300">Adopt a Pet</Link></li>
-            <li><Link href="/pet-care" className="hover:text-gray-300">Vets Near Me</Link></li>
-            <li><Link href="/blogs" className="hover:text-gray-300">Pet Care Blog</Link></li>
+            <li className="pk-only"><Link href="/pet-care" className="hover:text-gray-300">Vets Near Me</Link></li>
+            <li className="pk-only"><Link href="/blogs" className="hover:text-gray-300">Pet Care Blog</Link></li>
           </ul>
         </div>
 
@@ -127,8 +127,8 @@ export default function Footer() {
           {/* Cities with actual clinic coverage only (Karachi, Lahore,
               Islamabad — see lib/vetCities.ts). Rawalpindi, Faisalabad and
               Multan were listed here with zero clinics behind them. */}
-          <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Vets by City</h3>
-          <ul className="space-y-2 text-sm">
+          <h3 className="pk-only text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Vets by City</h3>
+          <ul className="pk-only space-y-2 text-sm">
             {VET_CITIES.map((city) => (
               <li key={city}>
                 <Link href={`/pet-care/${city.toLowerCase()}`} className="hover:text-gray-300">

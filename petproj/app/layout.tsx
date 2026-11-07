@@ -8,6 +8,7 @@ import AppClientWrapper from "@/context/AppClientWrapper";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
+import { ORG_HOST_PATTERN } from "@/lib/site";
 import NavbarWrapper from "@/components/NavbarWrapper";
 import ThemeInitializer from "./ThemeInitializer";
 import ApplyThemeColor from "@/components/ApplyThemeColor";
@@ -53,6 +54,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Before first paint, so .org never flashes Pakistan-only links. See lib/site.ts. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if(new RegExp(${JSON.stringify(ORG_HOST_PATTERN)}).test(location.hostname))document.documentElement.dataset.site="org";`,
+          }}
+        />
         <link rel="icon" href="/favicon.png" type="image/png" id="favicon" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 

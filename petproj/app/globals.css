@@ -5,6 +5,11 @@
 @tailwind utilities;
 @tailwind apply;
 
+/* paltuu.org shows only Home and Adopt: see lib/site.ts. */
+html[data-site="org"] .pk-only {
+  display: none !important;
+}
+
 /* Default theme variables */
 :root {
   --primary-color: #A03048; /* Default for guest or regular users */

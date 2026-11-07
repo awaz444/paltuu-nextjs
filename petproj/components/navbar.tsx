@@ -19,6 +19,20 @@ import {
 import MobileCartModal from "./MobileCartModal";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { authUrl } from "@/lib/authRedirect";
+import { PK_ONLY } from "@/lib/site";
+import { VETS_AT_HOME } from "@/lib/homeContent";
+
+type NavLink = { name: string; href: string; pkOnly?: boolean; appOnly?: boolean };
+
+/** Small "App" tag on a nav link for a feature that lives in the Paltuu app. */
+function AppBadge() {
+  return (
+    <span className="ml-1.5 inline-block -translate-y-px rounded-full bg-white px-1.5 py-px align-middle text-[10px] font-bold uppercase tracking-wide text-primary">
+      App
+    </span>
+  );
+}
+
 interface OverrideLink {
   name: string;
   href: string;
@@ -325,14 +339,17 @@ const Navbar = ({
   }, [user, isAuthenticated]); // Logs when these values update
 
   // Navigation Links
-  const defaultLinks = [
+  // pkOnly links are hidden on paltuu.org (lib/site.ts). appOnly marks a
+  // feature that lives in the app; the website only teases it.
+  const defaultLinks: NavLink[] = [
     { name: "Home", href: "home" },
     { name: "Adopt", href: "browse-pets" },
     // { name: "Bazaar", href: "bazaar" }, // Phase 1: Bazaar paused
-    { name: "Pet Care", href: "pet-care" },
+    { name: "Pet Care", href: "pet-care", pkOnly: true },
+    { name: "Vets at Home", href: VETS_AT_HOME.deepLink.slice(1), pkOnly: true, appOnly: true },
     //{ name: "Paltuu AI", href: "llm" },
   ];
-  const links = linksOverride || defaultLinks;
+  const links: NavLink[] = linksOverride || defaultLinks;
 
 
   const activeLink = useMemo(() => {
@@ -524,6 +541,7 @@ const Navbar = ({
                     <Link
                       key={link.href}
                       href={`/${link.href}`}
+                      className={link.pkOnly ? PK_ONLY : undefined}
                       onClick={() => {
                         setIsMenuOpen(false);
                         setMobileView("navlinks");
@@ -531,6 +549,7 @@ const Navbar = ({
                     >
                       <span className="py-3 block text-white text-lg flex items-center justify-center gap-3">
                         {link.name}
+                        {link.appOnly && <AppBadge />}
                       </span>
                     </Link>
                   ))}
@@ -589,13 +608,14 @@ const Navbar = ({
         {/* Desktop navigation links */}
         <div className="navLinks hidden lg:flex items-center gap-5">
           {links.map((link) => (
-            <Link key={link.href} href={`/${link.href}`}>
+            <Link key={link.href} href={`/${link.href}`} className={link.pkOnly ? PK_ONLY : undefined}>
               <span
                 className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${activeLink === link.href ? "after:w-full" : "after:w-0"
                   }`}
                 style={{ cursor: "pointer" }}
               >
                 {link.name}
+                {link.appOnly && <AppBadge />}
               </span>
             </Link>
           ))}

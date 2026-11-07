@@ -9,3 +9,18 @@
  * point at a redirect cost a crawl hop on every request.
  */
 export const SITE_URL = 'https://www.paltuu.pk';
+
+/**
+ * One codebase, two sites. paltuu.pk is the full Pakistan experience;
+ * paltuu.org is the international one, which shows only Home and Adopt.
+ *
+ * The pages are static, so the site is told apart in the browser: a tiny
+ * inline script in app/layout.tsx sets <html data-site="org"> before first
+ * paint, and globals.css hides anything marked `pk-only`. Pages that make no
+ * sense outside Pakistan are redirected away on the .org host in
+ * next.config.mjs.
+ */
+export const ORG_HOST_PATTERN = "(^|\\.)paltuu\\.org$";
+
+/** Mark links and sections that only paltuu.pk shows. */
+export const PK_ONLY = "pk-only";

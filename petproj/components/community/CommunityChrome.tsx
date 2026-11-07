@@ -1,6 +1,6 @@
 import Link from "next/link";
 import AppStoreBadges from "@/components/home/AppStoreBadges";
-import { COMMUNITY_CITIES, COMMUNITY_SPECIES, type BreedCommunity, type CommunityPost } from "@/lib/community";
+import { COMMUNITY_CITIES, COMMUNITY_SPECIES, COMMUNITY_TOPICS, type BreedCommunity, type CommunityPost } from "@/lib/community";
 import { VETS_AT_HOME } from "@/lib/homeContent";
 import FeedPost from "./FeedPost";
 import MobileActions from "./MobileActions";
@@ -72,13 +72,14 @@ type NavProps = {
     activeSpecies?: string;
     activeBreed?: string;
     activeCity?: string;
+    activeTopic?: string;
     /** A page outside the forums, such as a profile: no item is highlighted, not even Home. */
     outsideForums?: boolean;
     breeds?: BreedCommunity[];
 };
 
 /** Mobile: scrolling chips above the posts. */
-function ForumChips({ activeSpecies, activeBreed, activeCity, outsideForums, breeds = [] }: NavProps) {
+function ForumChips({ activeSpecies, activeBreed, activeCity, activeTopic, outsideForums, breeds = [] }: NavProps) {
     const chip = (active: boolean) =>
         `shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium ${
             active ? "border-primary bg-primary text-white" : "border-gray-200 bg-white text-gray-700"
@@ -93,10 +94,16 @@ function ForumChips({ activeSpecies, activeBreed, activeCity, outsideForums, bre
             {c.name}
         </Link>
     ));
+    const topicChips = COMMUNITY_TOPICS.map((t) => (
+        <Link key={t.slug} href={`/${t.slug}`} className={chip(t.slug === activeTopic)}>
+            {t.name}
+        </Link>
+    ));
     return (
         <div className="min-w-0 space-y-2 lg:hidden">
             <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-                <Link href="/home" className={chip(!activeSpecies && !activeCity && !outsideForums)}>Home</Link>
+                <Link href="/home" className={chip(!activeSpecies && !activeCity && !activeTopic && !outsideForums)}>Home</Link>
+                {topicChips}
                 {/* The row scrolls, so a city page leads with the cities to keep its own chip on screen. */}
                 {activeCity ? cityChips : speciesChips}
                 {activeCity ? speciesChips : cityChips}
@@ -115,12 +122,12 @@ function ForumChips({ activeSpecies, activeBreed, activeCity, outsideForums, bre
 }
 
 /** Desktop left column: the forums, with breeds nested under the open species. */
-function ForumList({ activeSpecies, activeBreed, activeCity, outsideForums, breeds = [] }: NavProps) {
+function ForumList({ activeSpecies, activeBreed, activeCity, activeTopic, outsideForums, breeds = [] }: NavProps) {
     const item = (active: boolean) =>
         `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
             active ? "bg-gray-200 font-semibold text-gray-900" : "text-gray-700 hover:bg-gray-100"
         }`;
-    const homeActive = !activeSpecies && !activeCity && !outsideForums;
+    const homeActive = !activeSpecies && !activeCity && !activeTopic && !outsideForums;
     return (
         <nav aria-label="Forums" className="sticky top-4 max-h-[calc(100vh-2rem)] space-y-1 overflow-y-auto pb-4">
             <Link href="/home" className={item(homeActive)}>
@@ -131,6 +138,14 @@ function ForumList({ activeSpecies, activeBreed, activeCity, outsideForums, bree
                 </span>
                 Home
             </Link>
+            {COMMUNITY_TOPICS.map((t) => (
+                <Link key={t.slug} href={`/${t.slug}`} className={item(t.slug === activeTopic)}>
+                    <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full text-base">
+                        <ForumIcon speciesSlug={t.slug} size={24} />
+                    </span>
+                    {t.name}
+                </Link>
+            ))}
             <p className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-gray-400">Pets</p>
             {COMMUNITY_SPECIES.map((s) => (
                 <div key={s.slug}>

@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 COUNT(*) FILTER (WHERE is_approved = true) as total_approved_reviews,
                 COUNT(*) FILTER (WHERE is_approved = false) as total_pending_reviews,
                 COALESCE(AVG(rating) FILTER (WHERE is_approved = true), 0)::text as average_rating,
-                MAX(created_at) FILTER (WHERE is_approved = true) as most_recent_review_date
+                MAX(review_date) FILTER (WHERE is_approved = true) as most_recent_review_date
             FROM vet_reviews
             WHERE vet_id = $1
         `, [vetId]);

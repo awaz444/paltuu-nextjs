@@ -24,12 +24,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 u.name as user_name,
                 u.profile_image_url as user_image_url,
                 vr.rating,
-                vr.comment as review_content,
-                vr.created_at as review_date
+                vr.review_content,
+                vr.review_date
             FROM vet_reviews vr
             JOIN users u ON vr.user_id = u.user_id
             WHERE vr.vet_id = $1 AND vr.is_approved = false
-            ORDER BY vr.created_at DESC
+            ORDER BY vr.review_date DESC
         `, [vetId]);
 
         return NextResponse.json(result.rows);

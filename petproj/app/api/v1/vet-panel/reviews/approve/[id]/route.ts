@@ -25,7 +25,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             WHERE vr.review_id = $1
         `, [reviewId]);
 
-        if (ownershipCheck.rowCount === 0 || ownershipCheck.rows[0].user_id !== userId) {
+        if (ownershipCheck.rowCount === 0 || String(ownershipCheck.rows[0].user_id) !== String(userId)) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 

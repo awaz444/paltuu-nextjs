@@ -106,7 +106,7 @@ export default function VetDetailsClient({
     // Fetch vet details
     const fetchVetDetails = async () => {
         try {
-            const response = await fetch(`/api/vets/${slug}`);
+            const response = await fetch(`/api/v1/vets/${slug}`);
             if (!response.ok) {
                 throw new Error("Failed to fetch vet details");
             }

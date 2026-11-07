@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { useAuth } from "@/context/AuthContext";
 import type { CommunityComment } from "@/lib/community";
@@ -18,15 +18,98 @@ function formatCommentTime(iso: string): string {
     return format(new Date(iso), "d MMM yyyy");
 }
 
+const MAX_CHARS = 2000;
+
+function CommentEditor({
+    initial,
+    onSave,
+    onCancel,
+}: {
+    initial: string;
+    onSave: (text: string) => Promise<boolean>;
+    onCancel: () => void;
+}) {
+    const [text, setText] = useState(initial);
+    const [saving, setSaving] = useState(false);
+    const box = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        const el = box.current;
+        if (!el) return;
+        el.focus();
+        el.setSelectionRange(el.value.length, el.value.length);
+    }, []);
+
+    useEffect(() => {
+        const el = box.current;
+        if (!el) return;
+        el.style.height = "auto";
+        el.style.height = `${Math.min(el.scrollHeight, 240)}px`;
+    }, [text]);
+
+    const trimmed = text.trim();
+    const canSave = trimmed.length > 0 && text.length <= MAX_CHARS && trimmed !== initial.trim() && !saving;
+
+    const save = async () => {
+        if (!canSave) return;
+        setSaving(true);
+        const ok = await onSave(trimmed);
+        setSaving(false);
+        if (ok) onCancel();
+    };
+
+    return (
+        <div className="mt-1">
+            <textarea
+                ref={box}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === "Escape") onCancel();
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) save();
+                }}
+                rows={2}
+                aria-label="Edit your reply"
+                className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-[15px] text-gray-800 focus:border-primary focus:outline-none"
+            />
+            <div className="mt-1 flex items-center justify-end gap-2">
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="rounded-full px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="button"
+                    onClick={save}
+                    disabled={!canSave}
+                    className="rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                    {saving ? "Saving…" : "Save"}
+                </button>
+            </div>
+        </div>
+    );
+}
+
 function CommentItem({
     c,
     isReply = false,
     onReply,
+    viewerId,
+    onEdit,
 }: {
     c: CommunityComment;
     isReply?: boolean;
     onReply: (comment: CommunityComment) => void;
+    viewerId: number | null;
+    onEdit: (commentId: number, content: string) => Promise<boolean>;
 }) {
+    const [editing, setEditing] = useState(false);
+    // Negative ids are replies still being posted; they can be edited once saved.
+    const canEdit = viewerId !== null && c.author.id === viewerId && c.id > 0;
+
     return (
         <li className={isReply ? "" : "px-4 py-3"}>
             <div className={`flex gap-3 ${isReply ? "mt-3" : ""}`}>
@@ -40,6 +123,14 @@ function CommentItem({
                             {formatCommentTime(c.createdAt)}
                         </time>
                     </p>
+                    {editing ? (
+                        <CommentEditor
+                            initial={c.content}
+                            onSave={(text) => onEdit(c.id, text)}
+                            onCancel={() => setEditing(false)}
+                        />
+                    ) : (
+                    <>
                     <p className="mt-0.5 whitespace-pre-line break-words text-[15px] text-gray-800">
                         <LinkifiedText text={c.content} />
                     </p>
@@ -58,13 +149,24 @@ function CommentItem({
                         >
                             Reply
                         </button>
+                        {canEdit && (
+                            <button
+                                type="button"
+                                onClick={() => setEditing(true)}
+                                className="font-medium text-gray-500 hover:text-primary hover:underline"
+                            >
+                                Edit
+                            </button>
+                        )}
                     </div>
+                    </>
+                    )}
                 </div>
             </div>
             {c.replies && c.replies.length > 0 && (
                 <ul className="ml-[18px] border-l-2 border-gray-100 pl-5">
                     {c.replies.map((r) => (
-                        <CommentItem key={r.id} c={r} isReply onReply={onReply} />
+                        <CommentItem key={r.id} c={r} isReply onReply={onReply} viewerId={viewerId} onEdit={onEdit} />
                     ))}
                 </ul>
             )}
@@ -74,12 +176,13 @@ function CommentItem({
 
 export default function PostComments() {
     const thread = usePostThread();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
     const [loginModalOpen, setLoginModalOpen] = useState(false);
 
     if (!thread) return null;
 
-    const { comments, openReplyModal, path } = thread;
+    const { comments, openReplyModal, path, editComment } = thread;
+    const viewerId = isAuthenticated ? Number(user?.id ?? user?.user_id) || null : null;
 
     const handleReplyToComment = (c: CommunityComment) => {
         if (!isAuthenticated) {
@@ -111,7 +214,7 @@ export default function PostComments() {
             {comments.length > 0 ? (
                 <ul className="divide-y divide-gray-100 pb-2">
                     {comments.map((c) => (
-                        <CommentItem key={c.id} c={c} onReply={handleReplyToComment} />
+                        <CommentItem key={c.id} c={c} onReply={handleReplyToComment} viewerId={viewerId} onEdit={editComment} />
                     ))}
                 </ul>
             ) : (

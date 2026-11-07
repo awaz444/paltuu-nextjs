@@ -24,6 +24,7 @@ interface PostThreadContextType {
     openReplyModal: (targetInput?: ReplyTargetInput) => void;
     closeReplyModal: () => void;
     addComment: (content: string, target: ReplyTarget) => Promise<void>;
+    editComment: (commentId: number, content: string) => Promise<boolean>;
 }
 
 const PostThreadContext = createContext<PostThreadContextType | null>(null);
@@ -162,6 +163,7 @@ export function PostThreadProvider({
                 likeCount: 0,
                 createdAt: new Date().toISOString(),
                 author: {
+                    id: Number(user?.id ?? user?.user_id) || undefined,
                     name: user?.name || "You",
                     username: (user as any)?.social_username || (user as any)?.username || null,
                     avatar: user?.profile_image_url || null,
@@ -248,6 +250,50 @@ export function PostThreadProvider({
         [postId, path, user, rollbackOptimistic, reconcileOptimistic]
     );
 
+    const editComment = useCallback(
+        async (commentId: number, content: string): Promise<boolean> => {
+            try {
+                const res = await fetch(`/api/v1/social/comments/${commentId}`, {
+                    method: "PATCH",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ content }),
+                });
+                if (res.status === 401) {
+                    window.location.href = `/auth?callbackUrl=${encodeURIComponent(path)}`;
+                    return false;
+                }
+                const body = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    toast.error(body.error || "Couldn't save your edit. Please try again.");
+                    return false;
+                }
+
+                const newContent = renderMentions(body.content) || content;
+                const apply = (c: CommunityComment): CommunityComment =>
+                    c.id === commentId
+                        ? { ...c, content: newContent }
+                        : { ...c, replies: (c.replies || []).map(apply) };
+                setComments((prev) => prev.map(apply));
+
+                if (body.moderation_state === "redacted") {
+                    toast("Some words were hidden according to Community Guidelines.", { icon: "⚠️" });
+                }
+                fetch("/api/v1/community/refresh-post", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ postId }),
+                }).catch(() => {});
+                return true;
+            } catch {
+                toast.error("Couldn't save your edit. Check your connection and try again.");
+                return false;
+            }
+        },
+        [postId, path]
+    );
+
     return (
         <PostThreadContext.Provider
             value={{
@@ -258,6 +304,7 @@ export function PostThreadProvider({
                 openReplyModal,
                 closeReplyModal,
                 addComment,
+                editComment,
             }}
         >
             {children}

@@ -7,6 +7,11 @@ import { notifyNewListing } from "@/lib/whatsappNotify";
 
 export const dynamic = "force-dynamic";
 
+// Pet profile species whose name differs from the pet_category row they list under.
+const SPECIES_TO_CATEGORY: Record<string, string> = {
+    reptile: "Turtle",
+};
+
 /**
  * POST /api/v1/pet-profiles/:pet_id/list-for-adoption
  * Convert a personal pet profile into an adoption listing.
@@ -97,9 +102,19 @@ export async function POST(
         }
 
         // ── Resolve species → pet_category.category_id ────────────────────────
+        // Pet profile species (ALLOWED_SPECIES) and pet_category don't share a
+        // list yet (PALTU-68 merges them). pet_category has no Reptile row, so
+        // Reptile maps to Turtle, the closest category we have and the most
+        // common pet reptile here. Anything else unmatched falls back to Other
+        // rather than blocking the listing (PALTU-69).
+        const species = String(profile.species || "").trim();
+        const categoryName = SPECIES_TO_CATEGORY[species.toLowerCase()] ?? species;
         const catRes = await db.query(
-            "SELECT category_id FROM pet_category WHERE LOWER(category_name) = LOWER($1) LIMIT 1",
-            [profile.species]
+            `SELECT category_id FROM pet_category
+             WHERE LOWER(category_name) IN (LOWER($1), 'other')
+             ORDER BY (LOWER(category_name) = LOWER($1)) DESC
+             LIMIT 1`,
+            [categoryName]
         );
         if (catRes.rowCount === 0) {
             return NextResponse.json(

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
  * @swagger
  * /api/v1/vets:
  *   get:
- *     summary: Get all approved vets (V1)
+ *     summary: Get all active vets (V1)
  *     tags: [v1 Professional]
  */
 
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
                 u.profile_image_url
             FROM vets v
             JOIN users u ON v.user_id = u.user_id
-            WHERE v.profile_verified = true
+            WHERE v.is_active IS NOT FALSE
             ORDER BY v.created_at DESC
         `);
         return NextResponse.json(result.rows);

@@ -41,6 +41,7 @@ import './styles.css'
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
 import { formatPhoneDisplay } from "@/utils/phone";
+import { maskPhone, useContactGate } from "@/hooks/useContactGate";
 
 interface VetDetails {
     vet_id: string;
@@ -92,6 +93,7 @@ export default function VetDetailsClient({
     const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
     const { isAuthenticated, user } = useAuth();
     const [showLoginModal, setShowLoginModal] = useState(false);
+    const { signedIn, requireSignIn } = useContactGate();
     const [form] = Form.useForm();
     const router = useRouter();
 
@@ -161,21 +163,20 @@ export default function VetDetailsClient({
         fetchReviewStats();
     }, [slug, router]);
 
-    // Handle copy to clipboard
-    const handleCopy = (text: string) => {
+    // Copying or messaging the vet's contact details needs an account.
+    const handleCopy = (text: string) => requireSignIn(() => {
         navigator.clipboard.writeText(text);
         message.success("Copied to clipboard!");
-    };
+    });
 
-    // Handle WhatsApp click
-    const handleWhatsApp = (phone: string) => {
+    const handleWhatsApp = (phone: string) => requireSignIn(() => {
         const digits = formatPhoneDisplay(phone).digits;
         if (!digits) {
             message.error("Invalid phone number format.");
             return;
         }
         window.open(`https://wa.me/${digits}`, "_blank");
-    };
+    });
 
     // Handle review button click
     const handleReviewClick = () => {
@@ -368,6 +369,16 @@ export default function VetDetailsClient({
                                 {/* Contact Information - Sidebar on desktop */}
                                 <div className="bg-white rounded-3xl p-6 shadow-sm">
                                     <h2 className="text-lg font-bold text-gray-900 mb-4">Contact</h2>
+                                    {!signedIn && (
+                                        <button
+                                            type="button"
+                                            onClick={() => requireSignIn()}
+                                            data-cta="contact_sign_in"
+                                            className="-mt-2 mb-4 block text-left text-sm text-primary hover:underline"
+                                        >
+                                            Sign in to call or message
+                                        </button>
+                                    )}
                                     <div className="space-y-4">
                                         {vetDetails.contact_details && (
                                             <div className="space-y-2">
@@ -378,7 +389,7 @@ export default function VetDetailsClient({
                                                     <div className="flex-1 min-w-0">
                                                         <div className="text-xs text-gray-500 mb-1">Personal Number</div>
                                                         <div className="text-sm font-medium text-gray-900 truncate">
-                                                            {vetDetails.contact_details}
+                                                            {signedIn ? vetDetails.contact_details : maskPhone(vetDetails.contact_details)}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -412,7 +423,7 @@ export default function VetDetailsClient({
                                                     <div className="flex-1 min-w-0">
                                                         <div className="text-xs text-gray-500 mb-1">Email</div>
                                                         <div className="text-sm font-medium text-gray-900 truncate">
-                                                            {vetDetails.email}
+                                                            {signedIn ? vetDetails.email : "Sign in to view"}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -435,7 +446,7 @@ export default function VetDetailsClient({
                                                     <div className="flex-1 min-w-0">
                                                         <div className="text-xs text-gray-500 mb-1">Clinic Number</div>
                                                         <div className="text-sm font-medium text-gray-900 truncate">
-                                                            {vetDetails.clinic_whatsapp}
+                                                            {signedIn ? vetDetails.clinic_whatsapp : maskPhone(vetDetails.clinic_whatsapp)}
                                                         </div>
                                                     </div>
                                                 </div>

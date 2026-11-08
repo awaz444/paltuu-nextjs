@@ -53,6 +53,10 @@ export const LIMITS = {
     // a handful of saves; a burst is the Save button being spammed or a retry loop.
     // Well clear of any legitimate editing.
     EXPRESS_VET_PROVIDER_UPDATE: [20, 60],  // 20 provider edits per minute
+    // Vets at Home coupon check (PALTU-131). Codes are 5 characters, so this is what keeps
+    // the 100 printed codes from being guessed. A real user types one code, maybe
+    // mistypes it a couple of times.
+    EXPRESS_VET_COUPON_CHECK: [10, 600],  // 10 coupon checks per 10 minutes
     // Traffic tracking beacons (/api/v1/track). The client batches up to 20 events
     // per request, so a real visitor sends a few per minute; this only stops a
     // script from flooding page_events and skewing the traffic dashboard.

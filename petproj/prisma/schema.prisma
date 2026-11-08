@@ -1047,6 +1047,7 @@ model users {
   express_vet_providers_linked_user                 express_vet_providers[]        @relation("express_vet_providers_linked_user")
   express_vet_reviews                               express_vet_reviews[]
   express_vet_dispatcher_status                     express_vet_dispatcher_status?
+  express_vet_coupons_used                          express_vet_coupons[]
 }
 
 model save_collections {
@@ -1238,6 +1239,8 @@ model express_vet_requests {
   starting_price_pkr Int // snapshotted from the rate card at submit — for grooming, the sum of every selected cart item's price
   final_price_pkr    Int? // pre-visit agreed price, set on assignment — not a transaction record
   scheduled_at        DateTime? @db.Timestamptz(6) // visit date/time, set by the dispatcher at assignment (required — see assign route)
+  coupon_id           BigInt? // Vets at Home coupon redeemed at booking (PALTU-131)
+  discount_pkr        Int       @default(0) // snapshotted from the coupon; amount payable = max(price - discount_pkr, 0)
 
   dispatcher_notes String? // free-text, e.g. "taken to clinic instead of home visit" for rare exceptions
 
@@ -1260,11 +1263,29 @@ model express_vet_requests {
   provider    express_vet_providers? @relation(fields: [assigned_provider_id], references: [provider_id])
   claims      express_vet_claims[]
   review      express_vet_reviews?
+  coupon      express_vet_coupons?   @relation("express_vet_requests_coupon", fields: [coupon_id], references: [coupon_id])
+  coupons_used express_vet_coupons[] @relation("express_vet_coupons_request")
 
   @@index([status, city_id, category], map: "idx_express_vet_requests_dispatch_queue")
   @@index([client_user_id, status], map: "idx_express_vet_requests_client")
   @@index([claimed_by_dispatcher_id, status], map: "idx_express_vet_requests_dispatcher")
   @@index([assigned_provider_id, status], map: "idx_express_vet_requests_provider_active")
+}
+
+// Printed single-use Vets at Home coupons (PALTU-131) — see migrations/add_express_vet_coupons.sql.
+model express_vet_coupons {
+  coupon_id       BigInt    @id @default(autoincrement())
+  code            String    @unique @db.VarChar(16) // stored uppercase
+  discount_pkr    Int       @default(500)
+  is_used         Boolean   @default(false)
+  used_by_user_id Int?
+  request_id      BigInt?
+  used_at         DateTime? @db.Timestamptz(6)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+
+  used_by  users?                 @relation(fields: [used_by_user_id], references: [user_id], onDelete: SetNull)
+  request  express_vet_requests?  @relation("express_vet_coupons_request", fields: [request_id], references: [request_id], onDelete: SetNull)
+  requests express_vet_requests[] @relation("express_vet_requests_coupon")
 }
 
 model express_vet_claims {

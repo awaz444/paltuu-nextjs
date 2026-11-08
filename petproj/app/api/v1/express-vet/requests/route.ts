@@ -15,6 +15,7 @@ import { notifyTeam } from "@/lib/whatsappNotify";
 import { emitExpressVetNewRequest } from "@/utils/realtimeEmitter";
 import { sendDispatcherCallAlert } from "@/lib/expressVet/dispatcherCallPush";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
+import { normalizeCouponCode, redeemCoupon, linkCouponToRequest, COUPON_INVALID_ERROR } from "@/lib/expressVet/coupons";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,15 @@ export async function POST(req: NextRequest) {
       longitude,
       contact_phone,
       maps_link,
+      coupon_code,
     } = body;
+
+    // Optional printed coupon (PALTU-131). Blank means no coupon; anything else must be a
+    // well-formed code, checked for real (and redeemed) in the insert transaction below.
+    const hasCoupon = typeof coupon_code === "string" && coupon_code.trim() !== "";
+    if (hasCoupon && !normalizeCouponCode(coupon_code)) {
+      return NextResponse.json({ error: COUPON_INVALID_ERROR, field: "coupon_code" }, { status: 400 });
+    }
 
     const validation = validate(
       { category, species, city_id, address_line, contact_phone },
@@ -158,37 +167,68 @@ export async function POST(req: NextRequest) {
     ]);
     const questionnaireVersion: string = questionnaireSettingRes.rows[0]?.setting_value?.version ?? "unknown";
 
-    const result = await db.query(
-      `INSERT INTO express_vet_requests (
-         client_user_id, category, species, sub_service, city_id, status,
-         questionnaire_version, questionnaire_answers,
-         address_line, address_landmark, latitude, longitude, maps_link,
-         contact_phone, starting_price_pkr
-       ) VALUES (
-         $1, $2, $3, $4, $5, 'pending_dispatch',
-         $6, $7::jsonb,
-         $8, $9, $10, $11, $12,
-         $13, $14
-       ) RETURNING *`,
-      [
-        userId,
-        category,
-        species,
-        sub_service ?? null,
-        city_id,
-        questionnaireVersion,
-        JSON.stringify(questionnaire_answers ?? {}),
-        address_line,
-        address_landmark ?? null,
-        latitude ?? null,
-        longitude ?? null,
-        maps_link ?? null,
-        contact_phone,
-        startingPricePkr,
-      ]
-    );
+    // Coupon redemption and the request insert commit together: a code is never marked
+    // used without a booking to show for it, and a booking never claims a discount whose
+    // code someone else just took.
+    const client = await db.connect();
+    let request: any;
+    try {
+      await client.query("BEGIN");
 
-    const request = result.rows[0];
+      let couponId: string | null = null;
+      let discountPkr = 0;
+      if (hasCoupon) {
+        const coupon = await redeemCoupon(client, coupon_code, Number(userId));
+        if (!coupon.valid) {
+          await client.query("ROLLBACK");
+          return NextResponse.json({ error: coupon.error, field: "coupon_code" }, { status: 400 });
+        }
+        couponId = coupon.coupon_id;
+        discountPkr = coupon.discount_pkr;
+      }
+
+      const result = await client.query(
+        `INSERT INTO express_vet_requests (
+           client_user_id, category, species, sub_service, city_id, status,
+           questionnaire_version, questionnaire_answers,
+           address_line, address_landmark, latitude, longitude, maps_link,
+           contact_phone, starting_price_pkr, coupon_id, discount_pkr
+         ) VALUES (
+           $1, $2, $3, $4, $5, 'pending_dispatch',
+           $6, $7::jsonb,
+           $8, $9, $10, $11, $12,
+           $13, $14, $15, $16
+         ) RETURNING *`,
+        [
+          userId,
+          category,
+          species,
+          sub_service ?? null,
+          city_id,
+          questionnaireVersion,
+          JSON.stringify(questionnaire_answers ?? {}),
+          address_line,
+          address_landmark ?? null,
+          latitude ?? null,
+          longitude ?? null,
+          maps_link ?? null,
+          contact_phone,
+          startingPricePkr,
+          couponId,
+          discountPkr,
+        ]
+      );
+      request = result.rows[0];
+      if (couponId) await linkCouponToRequest(client, couponId, request.request_id);
+
+      await client.query("COMMIT");
+    } catch (txErr) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw txErr;
+    } finally {
+      client.release();
+    }
+
 
     // WhatsApp the team (dispatch role and admins). Separate from the in-app
     // alerts below because those only ring 10am-10pm and only for dispatchers.

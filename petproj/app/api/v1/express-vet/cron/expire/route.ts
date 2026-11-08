@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { EXPRESS_VET_CATEGORY_LABELS } from "@/lib/expressVet/catalog";
 import { ExpressVetNotifications } from "@/lib/notifications";
 import { notifyVetRequestUpdate } from "@/lib/whatsappNotify";
+import { releaseCouponForRequest } from "@/lib/expressVet/coupons";
 
 export const dynamic = "force-dynamic";
 
@@ -37,8 +38,15 @@ export async function POST(req: NextRequest) {
          WHERE status = 'pending_dispatch'
            AND category = $1
            AND created_at < now() - ($2 || ' hours')::interval
-         RETURNING request_id, client_user_id`,
+         RETURNING request_id, client_user_id, coupon_id`,
         [category, hours]
+      );
+
+      // Expired without ever being dispatched — give any printed coupon back (PALTU-131).
+      await Promise.allSettled(
+        result.rows
+          .filter((row: { coupon_id: string | null }) => row.coupon_id)
+          .map((row: { request_id: string }) => releaseCouponForRequest(row.request_id))
       );
 
       const categoryLabel = EXPRESS_VET_CATEGORY_LABELS[category] ?? category;

@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { notifyVetRequestUpdate } from "@/lib/whatsappNotify";
+import { releaseCouponForRequest } from "@/lib/expressVet/coupons";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,8 @@ export async function POST(req: NextRequest, context: any) {
       );
     }
 
+    // Cancelled before the visit — give the printed coupon back (PALTU-131).
+    if (result.rows[0].coupon_id) await releaseCouponForRequest(id);
     await notifyVetRequestUpdate(result.rows[0], "cancelled");
 
     return NextResponse.json({ request: result.rows[0] });

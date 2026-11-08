@@ -3,12 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Modal } from "antd";
 import { toast } from "react-hot-toast";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+
+// A username is for the community. Someone who signed up to contact a pet's
+// owner or a vet, list a pet or apply shouldn't be stopped by a blocking
+// "pick a username" box on that page; they get it when they reach the community.
+const NO_GATE = /^\/(?:$|browse-pets|adopt|pet-care|auth|app|open|create-listing|listing-created|my-listings|my-applications|checkout|forgot-password|reset-password)(?:\/|$|\?)/;
 
 type UsernameStatus = "idle" | "checking" | "available" | "taken" | "invalid";
 
 export default function UsernameGateModal() {
-    const { needsUsername, updateSocialUsername } = useAuth();
+    const { needsUsername: needsUsernameAnywhere, updateSocialUsername } = useAuth();
+    const pathname = usePathname() ?? "";
+    const needsUsername = needsUsernameAnywhere && !NO_GATE.test(pathname);
     const [value, setValue] = useState("");
     const [status, setStatus] = useState<UsernameStatus>("idle");
     const [error, setError] = useState("");

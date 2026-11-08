@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { authUrl, currentPath } from "@/lib/authRedirect";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -44,7 +45,7 @@ export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
                 const { id, name, email, role } = response.data.user;
                 const userDetails = { id, name, email, role };
 
-                await login(userDetails);
+                await login(userDetails, { stay: true });
                 toast.success("Login successful!");
                 onSuccess();
             }
@@ -59,7 +60,8 @@ export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
     const handleGoogleLogin = async () => {
         try {
             setGoogleLoading(true);
-            await signIn("google");
+            // Come back to this page, not /auth's default landing.
+            await signIn("google", { callbackUrl: window.location.pathname + window.location.search });
             onSuccess();
         } catch (error) {
             console.error("Google login failed:", error);
@@ -173,7 +175,7 @@ export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
                         <button
                             type="button"
                             className="text-primary font-semibold hover:underline focus:outline-none"
-                            onClick={() => router.push("/sign-up")}>
+                            onClick={() => router.push(authUrl(currentPath(), "signup"))}>
                             Create an account
                         </button>
                     </p>

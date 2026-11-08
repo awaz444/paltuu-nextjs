@@ -16,6 +16,7 @@ import { toast } from "react-hot-toast";
 import OTPInput from "react-otp-input";
 import PartnerModal from "./PartnerModal";
 import PhoneNumberInput from "../PhoneNumberInput";
+import { useAuth } from "@/context/AuthContext";
 
 /** The page that sent them to log in, if any (see lib/authRedirect). */
 const returnUrl = () =>
@@ -26,6 +27,7 @@ interface SignupFormProps {
 }
 
 export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
+    const { login } = useAuth();
     const dispatch = useDispatch<AppDispatch>();
     const { cities } = useSelector((state: RootState) => state.cities);
     const { error: userError } = useSelector((state: RootState) => state.user);
@@ -114,9 +116,9 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             </p>
             <ul className="list-disc pl-5 space-y-1">
                 <li
-                    className={`flex items-center ${password.length >= 6 ? "text-green-500" : "text-red-500"
+                    className={`flex items-center ${password.length >= 8 ? "text-green-500" : "text-red-500"
                         }`}>
-                    {password.length >= 6 ? "✓" : "✗"} Minimum 6 characters
+                    {password.length >= 8 ? "✓" : "✗"} Minimum 8 characters
                 </li>
                 <li
                     className={`flex items-center ${/[A-Za-z]/.test(password)
@@ -181,7 +183,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             setFormErrors((prev) => ({
                 ...prev,
                 password:
-                    "Password must be at least 6 characters long and contain at least one letter",
+                    "Password must be at least 8 characters long and contain at least one letter",
             }));
             setIsLoading(false);
             return;
@@ -212,11 +214,17 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                     message?: string;
                     errorCode?: string;
                     error?: string;
+                    errors?: Record<string, string>;
                 };
-                if (errorPayload?.errorCode === "EMAIL_EXISTS") {
+                const fieldErrors = errorPayload?.errors;
+                if (errorPayload?.errorCode === "EMAIL_EXISTS" || errorPayload?.message === "User already exists") {
                     setEmailExistsError("This email is already registered");
                     setIsEmailVerified(false);
                     setShowOtpModal(false);
+                } else if (fieldErrors && Object.keys(fieldErrors).length > 0) {
+                    // Show the server's reason next to the field instead of a bare "Validation failed".
+                    setFormErrors((prev) => ({ ...prev, ...fieldErrors }));
+                    setGeneralError(Object.values(fieldErrors)[0]);
                 } else if (errorPayload?.error) {
                     setGeneralError(errorPayload.error);
                 } else {
@@ -228,7 +236,23 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                 return;
             }
 
-            router.push(returnUrl() ?? "/home");
+            // The server has set the login cookie; tell the page too, or the
+            // visitor lands back where they were still looking signed out.
+            // login() sends them on to callbackUrl (or /home).
+            const created = result.payload as any;
+            if (created?.user) {
+                login({
+                    id: String(created.user.id ?? created.user.user_id),
+                    name: created.user.name,
+                    email: created.user.email,
+                    role: created.user.role,
+                    profile_image_url: created.user.profile_image_url,
+                    social_username: created.user.social_username ?? null,
+                });
+                toast.success("Welcome to Paltuu!");
+            } else {
+                window.location.href = returnUrl() ?? "/home";
+            }
         } catch (error) {
             setGeneralError("An unexpected error occurred. Please try again.");
         } finally {
@@ -302,7 +326,8 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
     };
 
     const validatePassword = (password: string) => {
-        const passwordRegex = /^(?=.*[A-Za-z]).{6,}$/;
+        // Same rule as /api/v1/auth/register (min 8), or the last step fails.
+        const passwordRegex = /^(?=.*[A-Za-z]).{8,}$/;
         return passwordRegex.test(password);
     };
 
@@ -483,6 +508,14 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                 {(formErrors.email || emailExistsError) && (
                     <p className="text-red-500 text-sm mt-1">
                         {formErrors.email || emailExistsError}
+                        {emailExistsError && !formErrors.email && (
+                            <>
+                                {" "}
+                                <button type="button" onClick={onSwitchToLogin} className="font-semibold text-primary hover:underline">
+                                    Log in instead
+                                </button>
+                            </>
+                        )}
                     </p>
                 )}
             </div>
@@ -533,7 +566,7 @@ export default function SignupForm({ onSwitchToLogin }: SignupFormProps) {
                         }
                         className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
                         required
-                        pattern="^(?=.*[A-Za-z]).{6,}$"
+                        pattern="^(?=.*[A-Za-z]).{8,}$"
                     />
                     <span
                         onClick={() => setShowPassword(!showPassword)}

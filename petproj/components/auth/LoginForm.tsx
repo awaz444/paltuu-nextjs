@@ -245,7 +245,10 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         <button
           type="button"
           className="text-primary hover:underline text-sm focus:outline-none"
-          onClick={() => router.push("/forgot-password")}
+          onClick={() => {
+            const next = returnUrl();
+            router.push(next ? `/forgot-password?callbackUrl=${encodeURIComponent(next)}` : "/forgot-password");
+          }}
         >
           Forgot Password?
         </button>

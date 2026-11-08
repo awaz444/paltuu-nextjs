@@ -7,6 +7,7 @@ import { validate } from "@/utils/validation";
 import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 import { captureServerEvent } from "@/lib/analytics/serverEvents";
 import { notifySignup } from "@/lib/whatsappNotify";
+import { normalizePhone, isValidPhone } from "@/utils/phone";
 
 /**
  * @swagger
@@ -23,6 +24,10 @@ export async function POST(req: Request) {
     const password = body?.password?.toString();
     const name = body?.name?.toString().trim();
     const otp = body?.otp;
+    // The web signup form asks for these; both optional (the app's form doesn't send them).
+    const cityId = Number.isInteger(Number(body?.city_id)) && Number(body?.city_id) > 0 ? Number(body.city_id) : null;
+    const phoneRaw = body?.phone_number?.toString().trim() || null;
+    const phone = phoneRaw && isValidPhone(phoneRaw) ? normalizePhone(phoneRaw) : null;
 
     // Schema Validation
     const validation = validate({ email, password, name, otp }, {
@@ -85,10 +90,11 @@ export async function POST(req: Request) {
     // via the RN app's own username step, or the webapp's UsernameGateModal)
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUserResult = await db.query(
-      `INSERT INTO users (name, email, password, role, signup_source, app_platform, last_app_seen_at) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) 
+      `INSERT INTO users (name, email, password, role, signup_source, app_platform, last_app_seen_at, city_id, phone_number)
+       VALUES ($1, $2, $3, $4, $5, $6, $7,
+               (SELECT city_id FROM cities WHERE city_id = $8), $9)
        RETURNING user_id, name, email, role, social_username`,
-      [name, email, hashedPassword, 'regular user', signupSource, platform, isApp ? new Date() : null]
+      [name, email, hashedPassword, 'regular user', signupSource, platform, isApp ? new Date() : null, cityId, phone]
     );
     const user = newUserResult.rows[0];
 

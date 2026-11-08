@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
+import { authUrl, safeCallbackUrl } from "@/lib/authRedirect";
+
+/** Where they were before logging in, carried through the reset (see lib/authRedirect). */
+const returnUrl = () =>
+    typeof window === "undefined" ? null : safeCallbackUrl(new URLSearchParams(window.location.search).get("callbackUrl"));
 
 type Step = "email" | "otp" | "newPassword";
 
@@ -35,7 +40,7 @@ export default function ForgotPassword() {
     // Redirect if authenticated
     useEffect(() => {
         if (isAuthenticated) {
-            router.push("/browse-pets");
+            router.push(returnUrl() ?? "/browse-pets");
         }
     }, [isAuthenticated, router]);
 
@@ -175,7 +180,7 @@ export default function ForgotPassword() {
                 });
             }, 1500);
             setTimeout(() => {
-                router.push("/auth");
+                router.push(authUrl(returnUrl()));
             }, 3500);
         } catch (error: any) {
             const msg = error.response?.data?.error || "Error resetting password.";
@@ -223,7 +228,7 @@ export default function ForgotPassword() {
                     onClick={() => {
                         if (step === "otp") setStep("email");
                         else if (step === "newPassword") setStep("otp");
-                        else router.push("/auth");
+                        else router.push(authUrl(returnUrl()));
                     }}
                     className="absolute top-4 left-4 text-white hover:text-gray-200 flex items-center transition-colors"
                     title="Go Back"

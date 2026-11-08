@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
+import { safeCallbackUrl } from "@/lib/authRedirect";
 
 function AuthPageClient() {
   const router = useRouter();
@@ -13,8 +14,10 @@ function AuthPageClient() {
     initialMode === "signup" ? "signup" : "login"
   );
 
+  // Sent here from a page (e.g. a pet's contact): back goes there, not home.
+  const returnTo = safeCallbackUrl(searchParams.get("callbackUrl"));
   const handleBackToHome = () => {
-    router.push("/");
+    router.push(returnTo ?? "/");
   };
 
   const switchToSignup = () => setAuthMode("signup");
@@ -26,7 +29,8 @@ function AuthPageClient() {
         <button
           onClick={handleBackToHome}
           className="absolute top-4 left-4 text-white hover:text-gray-200 flex items-center transition-colors"
-          title="Back to Home"
+          title={returnTo ? "Back" : "Back to Home"}
+          aria-label={returnTo ? "Back" : "Back to Home"}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -51,6 +55,11 @@ function AuthPageClient() {
 
       <div className="w-full lg:w-1/2 lg:ml-[50%] flex items-center justify-center p-6 sm:p-12 bg-gray-100 lg:min-h-screen py-10">
         <div className="w-full max-w-md">
+          {returnTo && (
+            <p className="mb-4 rounded-xl bg-white px-4 py-3 text-center text-sm text-gray-700 shadow-sm">
+              {authMode === "login" ? "Log in" : "Create a free account"} to continue. We&apos;ll take you right back.
+            </p>
+          )}
           {authMode === "login" ? (
             <LoginForm onSwitchToSignup={switchToSignup} />
           ) : (

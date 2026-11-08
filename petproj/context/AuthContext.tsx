@@ -73,7 +73,7 @@ interface AuthContextProps {
     role: string;
     profile_image_url?: string;
     social_username?: string | null;
-  }) => void;
+  }, options?: { stay?: boolean }) => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
   updateSocialUsername: (handle: string) => void;
@@ -312,13 +312,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error('Error clearing guest session on login:', e);
           }
 
-        // Redirect shop/shelter to panels after login - check for callback URL first
+        // Only the login page moves people on. Google/Apple send them straight
+        // back to the page they started from (signIn's callbackUrl); this
+        // effect runs again there, and redirecting from it bounced them to /home.
+        if (window.location.pathname !== '/auth') return;
         try {
-          const urlParams = new URLSearchParams(window.location.search);
-          const callbackUrl = urlParams.get('callbackUrl');
+          const callbackUrl = safeCallbackUrl(new URLSearchParams(window.location.search).get('callbackUrl'));
 
-          if (callbackUrl && callbackUrl !== '/auth' && callbackUrl !== '/login') {
-            router.replace(decodeURIComponent(callbackUrl));
+          if (callbackUrl) {
+            router.replace(callbackUrl);
           } else {
             const role = finalUser.role;
             if (role === "shop admin") router.replace("/shop-panel");
@@ -349,7 +351,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     role: string;
     profile_image_url?: string;
     social_username?: string | null;
-  }) => {
+  }, options: { stay?: boolean } = {}) => {
     const userWithMethod: User = {
       id: userData.id,
       name: userData.name,
@@ -369,6 +371,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (e) {
       console.error('Error clearing guest session on login:', e);
     }
+
+    // A login pop-up on a page (e.g. "Login to review") keeps them where they are.
+    if (options.stay) return;
 
     try {
       const urlParams = new URLSearchParams(window.location.search);

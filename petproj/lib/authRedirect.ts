@@ -19,11 +19,15 @@ export function safeCallbackUrl(raw: string | null | undefined): string | null {
     return path;
 }
 
-/** Link to the login page that returns to `next` afterwards. */
-export function authUrl(next?: string | null): string {
+/** Link to the login page (or its signup tab) that returns to `next` afterwards. */
+export function authUrl(next?: string | null, mode?: "signup"): string {
     const path = safeCallbackUrl(next);
+    const params = new URLSearchParams();
+    if (mode) params.set("mode", mode);
     // From the homepage, let /auth pick the usual landing page for their role.
-    return path && path !== "/" ? `/auth?callbackUrl=${encodeURIComponent(path)}` : "/auth";
+    if (path && path !== "/") params.set("callbackUrl", path);
+    const query = params.toString();
+    return query ? `/auth?${query}` : "/auth";
 }
 
 /** The current page, for sending people back to it after login. */

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { safeCallbackUrl } from '@/lib/authRedirect';
 
 type CustomTokenPayload = {
   role?: string;
@@ -159,15 +160,11 @@ export async function middleware(request: NextRequest) {
   };
 
   if (pathname === '/auth' && isAuthenticated) {
-    if (token?.role) {
-      return NextResponse.redirect(new URL(getRoleRedirect(token.role), request.url));
-    }
-
-    if (customAuthPayload) {
-      return NextResponse.redirect(new URL(getRoleRedirect(customAuthPayload.role), request.url));
-    }
-
-    return NextResponse.redirect(new URL('/home', request.url));
+    // Already signed in: go where they were headed (lib/authRedirect), else
+    // their role's landing page.
+    const next = safeCallbackUrl(request.nextUrl.searchParams.get('callbackUrl'));
+    const role = token?.role ?? customAuthPayload?.role;
+    return NextResponse.redirect(new URL(next ?? getRoleRedirect(role as string | undefined), request.url));
   }
 
   if (isAdminPath) {

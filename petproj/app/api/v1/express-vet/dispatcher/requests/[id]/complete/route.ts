@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkDispatcher } from "@/lib/expressVet/dispatcherAuth";
 import { ExpressVetNotifications } from "@/lib/notifications";
 import { notifyVetRequestUpdate } from "@/lib/whatsappNotify";
+import { sendExpressVetBillEmail } from "@/lib/expressVet/emails";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,8 @@ export async function POST(req: NextRequest, context: any) {
     const request = result.rows[0];
     await ExpressVetNotifications.onCompleted(request.client_user_id, id);
     await notifyVetRequestUpdate(request, "completed");
+    // Final bill email to the pet owner, with the coupon line if one was applied (PALTU-132). Never throws.
+    await sendExpressVetBillEmail(request);
 
     return NextResponse.json({ request });
   } catch (error) {

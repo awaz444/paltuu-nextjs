@@ -16,6 +16,7 @@ import { emitExpressVetNewRequest } from "@/utils/realtimeEmitter";
 import { sendDispatcherCallAlert } from "@/lib/expressVet/dispatcherCallPush";
 import { rateLimit, LIMITS } from "@/lib/rateLimit";
 import { normalizeCouponCode, redeemCoupon, linkCouponToRequest, COUPON_INVALID_ERROR } from "@/lib/expressVet/coupons";
+import { sendExpressVetBookingEmail } from "@/lib/expressVet/emails";
 
 export const dynamic = "force-dynamic";
 
@@ -305,6 +306,10 @@ export async function POST(req: NextRequest) {
     } catch (notifyError) {
       console.error("express-vet requests POST — dispatcher alert failed:", notifyError);
     }
+
+    // Estimate email to the pet owner, with the coupon line if one was applied (PALTU-132).
+    // Never throws — a mail failure is logged and the booking still succeeds.
+    await sendExpressVetBookingEmail(request);
 
     return NextResponse.json({ request }, { status: 201 });
   } catch (error) {

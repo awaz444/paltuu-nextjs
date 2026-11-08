@@ -34,7 +34,7 @@ const nextConfig = {
     const pkOnlyPaths = [
       '/', '/pet-care', '/pet-care/:path*', '/blogs', '/blogs/:path*', '/llm',
       '/bazaar', '/bazaar/:path*', '/marketplace', '/marketplace/:path*', '/shops', '/shops/:path*',
-      '/karachi', '/lahore', '/islamabad',
+      '/karachi', '/lahore', '/islamabad', '/lost-found',
     ];
     return [
       ...pkOnlyPaths.map((source) => ({ source, has: org, destination: '/home', permanent: false })),

@@ -96,7 +96,7 @@ function ForumChips({ activeSpecies, activeBreed, activeCity, activeTopic, outsi
         </Link>
     ));
     const topicChips = COMMUNITY_TOPICS.map((t) => (
-        <Link key={t.slug} href={`/${t.slug}`} className={chip(t.slug === activeTopic)}>
+        <Link key={t.slug} href={`/${t.slug}`} className={`${t.pkOnly ? PK_ONLY : ""} ${chip(t.slug === activeTopic)}`}>
             {t.name}
         </Link>
     ));
@@ -140,7 +140,7 @@ function ForumList({ activeSpecies, activeBreed, activeCity, activeTopic, outsid
                 Home
             </Link>
             {COMMUNITY_TOPICS.map((t) => (
-                <Link key={t.slug} href={`/${t.slug}`} className={item(t.slug === activeTopic)}>
+                <Link key={t.slug} href={`/${t.slug}`} className={`${t.pkOnly ? PK_ONLY : ""} ${item(t.slug === activeTopic)}`}>
                     <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full text-base">
                         <ForumIcon speciesSlug={t.slug} size={24} />
                     </span>

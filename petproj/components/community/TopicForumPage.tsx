@@ -14,7 +14,7 @@ import {
     type Crumb,
 } from "./CommunityChrome";
 
-// The listing pages (/adopt, /lost-and-found) are where pets are actually listed; the forum links to them.
+// The listing pages are where pets are actually listed; the forum links to them.
 const LINKS: Record<string, { label: string; href: string }[]> = {
     adoption: [
         { label: "Pets for adoption", href: "/adopt" },
@@ -22,10 +22,9 @@ const LINKS: Record<string, { label: string; href: string }[]> = {
         { label: "Dogs for adoption", href: "/adopt/dogs" },
         { label: "List a pet", href: "/create-listing" },
     ],
-    "lost-found": [
-        { label: "Lost & found listings", href: "/lost-and-found" },
-        { label: "Report a lost or found pet", href: "/lost-and-found-create-listing" },
-    ],
+    // The lost & found listing pages are hidden for now (PALTU-110), so this
+    // forum has no listing links until they come back.
+    "lost-found": [],
 };
 
 const EMPTY: Record<string, { title: string; body: string }> = {
@@ -83,6 +82,7 @@ export default async function TopicForumPage({ slug }: { slug: string }) {
                     </>
                 }
             >
+                {links.length > 0 && (
                 <div className="mb-4 flex flex-wrap gap-2">
                     {links.map((n) => (
                         <Link
@@ -94,6 +94,7 @@ export default async function TopicForumPage({ slug }: { slug: string }) {
                         </Link>
                     ))}
                 </div>
+                )}
                 <Feed posts={posts} empty={EMPTY[topic.slug]} />
             </CommunityLayout>
         </main>

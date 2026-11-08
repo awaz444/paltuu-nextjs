@@ -5,6 +5,8 @@ const EMOJI: Record<string, string> = {
     rabbits: "🐰",
     fish: "🐟",
     reptiles: "🐢",
+    adoption: "❤️",
+    "lost-found": "🔍",
 };
 
 /** The icon shown next to a forum's name. */
@@ -19,9 +21,12 @@ const ART: Record<string, string> = {
     rabbits: "/icons/species/rabbit.jpg",
     fish: "/icons/species/fish.jpg",
     reptiles: "/icons/species/turtle.jpg",
-    karachi: "/icons/cities/karachi.jpg",
-    lahore: "/icons/cities/lahore.jpg",
-    islamabad: "/icons/cities/islamabad.jpg",
+    // Each city is drawn as its landmark.
+    karachi: "/icons/landmarks/quaid-mausoleum.jpg",
+    lahore: "/icons/landmarks/minar-e-pakistan.jpg",
+    islamabad: "/icons/landmarks/faisal-mosque.jpg",
+    adoption: "/icons/objects/heart.jpg",
+    "lost-found": "/icons/objects/magnifying-glass.jpg",
 };
 
 /** Hand-drawn forum artwork in public/icons (not under /community, which redirects); null where there is none yet. */

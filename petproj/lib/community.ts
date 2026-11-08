@@ -18,6 +18,10 @@ import { breedGuide, speciesGuide, type CommunityGuide } from "@/lib/breedGuides
  * location, so a post lands in a city through its author's profile city
  * (users.city_id).
  *
+ * Topic communities (Adopt, Lost & Found) are placed by the app's topic
+ * content tag, or by wording in the post itself, because most posts are not
+ * tagged: see COMMUNITY_TOPICS.
+ *
  * Only public content is ever shown: see PUBLIC_POST and PUBLIC_COMMENT.
  */
 
@@ -68,6 +72,52 @@ export const COMMUNITY_CITIES: CommunityCity[] = [
         topics: ["Finding a good vet", "Walks and outdoor time", "Winter care", "Adoption and rehoming"],
     },
 ];
+
+export type CommunityTopic = {
+    /** URL slug. Not /adopt or /lost-and-found: those are the listing pages. */
+    slug: string;
+    /** content_tags.slug of the app's topic tag. */
+    tag: string;
+    name: string;
+    title: string;
+    intro: string;
+    topics: string[];
+    /** Postgres regex (case-insensitive) for posts that say it without the tag. */
+    pattern: string;
+};
+
+export const COMMUNITY_TOPICS: CommunityTopic[] = [
+    {
+        slug: "adoption",
+        tag: "adoption",
+        name: "Adopt",
+        title: "Pet Adoption",
+        intro: "Pets that need a home, people looking to adopt, and adoption stories from owners across Pakistan.",
+        topics: ["Pets needing a home", "Looking to adopt", "Fostering", "Adoption stories"],
+        pattern: String.raw`\m(adopt\w*|rehom\w*|foster\w*)\M|forever home`,
+    },
+    {
+        slug: "lost-found",
+        tag: "lost-found",
+        name: "Lost & Found",
+        title: "Lost & Found Pets",
+        intro: "Lost pets, found pets and reunions. Share where and when, with a clear photo, so owners nearby can help.",
+        topics: ["Lost pets", "Found pets", "Sightings", "Reunions"],
+        pattern: String.raw`\m(lost|missing)\M|\mfound (him|her|my|this|a)\M|\mkho (gaya|gayi|gai|gay)\M|\mgum (ho|gaya|gayi)\M`,
+    },
+];
+
+export function findTopic(slug: string): CommunityTopic | undefined {
+    return COMMUNITY_TOPICS.find((t) => t.slug === slug.toLowerCase());
+}
+
+/** SQL condition placing sp in a topic, with its tag and pattern as parameters $tag and $pattern. */
+function topicCondition(tagParam: string, patternParam: string): string {
+    return `(EXISTS (SELECT 1 FROM post_content_tags pct
+                       JOIN content_tags ct ON ct.tag_id = pct.tag_id AND ct.category = 'topic'
+                      WHERE pct.post_id = sp.post_id AND ct.slug = ${tagParam})
+             OR sp.content ~* ${patternParam})`;
+}
 
 export function findCity(slug: string): CommunityCity | undefined {
     return COMMUNITY_CITIES.find((c) => c.slug === slug.toLowerCase());
@@ -237,7 +287,7 @@ function toPost(r: any): CommunityPost {
 
 // ─── Feeds ───────────────────────────────────────────────────────────────────
 
-type FeedFilter = { species?: string; breedId?: number; authorId?: number; city?: string; excludePostId?: number; limit?: number; requireMedia?: boolean };
+type FeedFilter = { species?: string; breedId?: number; authorId?: number; city?: string; topic?: string; excludePostId?: number; limit?: number; requireMedia?: boolean };
 
 /**
  * Latest public posts, optionally limited to one community. Listing pages are
@@ -258,6 +308,12 @@ export async function listCommunityPosts(filter: FeedFilter = {}): Promise<Commu
     if (filter.city) {
         vals.push(filter.city);
         conds.push(`u.city_id IN (SELECT ci.city_id FROM cities ci WHERE LOWER(ci.city_name) = $${vals.length})`);
+    }
+    if (filter.topic) {
+        const topic = findTopic(filter.topic);
+        if (!topic) return [];
+        vals.push(topic.tag, topic.pattern);
+        conds.push(topicCondition(`$${vals.length - 1}`, `$${vals.length}`));
     }
     if (filter.authorId) {
         vals.push(filter.authorId);
@@ -373,6 +429,28 @@ export async function getCityCounts(): Promise<Record<string, number>> {
         return Object.fromEntries(res.rows.map((r) => [r.city, r.n]));
     } catch (e) {
         console.error("community: getCityCounts failed", e);
+        return {};
+    }
+}
+
+/** Public post counts per topic slug. */
+export async function getTopicCounts(): Promise<Record<string, number>> {
+    try {
+        const counts = await Promise.all(
+            COMMUNITY_TOPICS.map(async (t) => {
+                const res = await db.query(
+                    `SELECT COUNT(*)::int AS n
+                       FROM social_posts sp
+                       JOIN users u ON u.user_id = sp.user_id
+                      WHERE ${PUBLIC_POST} AND ${topicCondition("$1", "$2")}`,
+                    [t.tag, t.pattern]
+                );
+                return [t.slug, res.rows[0]?.n ?? 0] as const;
+            })
+        );
+        return Object.fromEntries(counts);
+    } catch (e) {
+        console.error("community: getTopicCounts failed", e);
         return {};
     }
 }
@@ -682,6 +760,13 @@ export async function getCommunitySitemapEntries(): Promise<CommunitySitemapEntr
     for (const city of COMMUNITY_CITIES) {
         if ((cityCounts[city.slug] ?? 0) >= MIN_POSTS_TO_INDEX) {
             entries.push({ path: `/${city.slug}`, lastModified: new Date() });
+        }
+    }
+
+    const topicCounts = await getTopicCounts();
+    for (const topic of COMMUNITY_TOPICS) {
+        if ((topicCounts[topic.slug] ?? 0) >= MIN_POSTS_TO_INDEX) {
+            entries.push({ path: `/${topic.slug}`, lastModified: new Date() });
         }
     }
 

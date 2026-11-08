@@ -6,6 +6,7 @@ import { validate } from "@/utils/validation";
 import { normalizePhone, isValidPhone } from "@/utils/phone";
 import { notifyTeam, userName } from "@/lib/whatsappNotify";
 import { getPetDetails } from "@/lib/petDetails";
+import { db as contactDb } from "@/db/index";
 
 /**
  * @swagger
@@ -30,7 +31,23 @@ export async function GET(req: NextRequest) {
         const pet = await getPetDetails(id);
         if (!pet) return NextResponse.json({ error: "Pet not found" }, { status: 404 });
 
-        return NextResponse.json(pet);
+        // Contact details are for signed-in users only (lib/contacts.ts). The
+        // listing's own number goes to anyone signed in; the owner's account
+        // email and phone only to admins and the owner (admin-pet-approval).
+        const viewer = await getUserFromRequest(req);
+        if (!viewer) return NextResponse.json(pet);
+        const viewerId = Number((viewer as any).id ?? (viewer as any).user_id ?? (viewer as any).sub);
+        const { rows } = await contactDb.query(
+            `SELECT pets.contact_number, users.email AS owner_email, users.phone_number AS owner_phone
+               FROM pets JOIN users ON users.user_id = pets.owner_id WHERE pets.pet_id = $1`,
+            [id]
+        );
+        const isAdminOrOwner = (viewer as any).role === "admin" || viewerId === Number(pet.owner_id);
+        return NextResponse.json({
+            ...pet,
+            contact_number: rows[0]?.contact_number ?? null,
+            ...(isAdminOrOwner ? { owner_email: rows[0]?.owner_email ?? null, owner_phone: rows[0]?.owner_phone ?? null } : {}),
+        });
 
     } catch (error) {
         console.error("V1 Pet Details error:", error);

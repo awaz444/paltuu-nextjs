@@ -1,5 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
+import { getUserIdFromRequest } from "@/utils/authServer";
+import { stripClinicContact } from "@/lib/contacts";
 
 export async function GET(
     req: NextRequest,
@@ -61,11 +63,9 @@ export async function GET(
             ORDER BY vr.review_date DESC
         `, [clinic.clinic_id]);
 
-        return NextResponse.json({
-            ...clinic,
-            vets: vetsResult.rows || [],
-            reviews: reviewsResult.rows || []
-        });
+        const body = { ...clinic, vets: vetsResult.rows || [], reviews: reviewsResult.rows || [] };
+        // Phone numbers and emails are for signed-in users only (lib/contacts.ts).
+        return NextResponse.json((await getUserIdFromRequest(req)) ? body : stripClinicContact(body));
 
     } catch (error) {
         console.error("Error fetching clinic detail:", error);

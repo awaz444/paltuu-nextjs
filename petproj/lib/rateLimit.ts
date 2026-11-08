@@ -42,6 +42,9 @@ export const LIMITS = {
     FEED:                 [120, 60],    // 120 feed loads per minute (generous)
     NOTIFICATION_READ:    [30,  60],    // 30 mark-reads per minute
     MENTION_SUGGEST:      [120, 60],    // 120 suggestion fetches per minute (debounced keystrokes)
+    // Revealing a pet owner's, clinic's or vet's contact. Someone browsing opens a
+    // few dozen an hour at most; more is an account harvesting numbers.
+    CONTACT_REVEAL:       [60,  3600],  // 60 contacts per hour
     // Vets at Home request creation. A real pet owner books a home visit a handful of
     // times a year, never in bursts — a burst is either a stuck retry loop or someone
     // manufacturing jobs to self-assign (see lib/expressVet/selfDealGuard.ts). Tight on

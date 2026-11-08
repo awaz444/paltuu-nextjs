@@ -8,6 +8,7 @@ import { hasSevereIdentityMatch } from "@/lib/moderation/badWords";
 import { normalizePhone, isValidPhone } from "@/utils/phone";
 import { captureServerEvent } from "@/lib/analytics/serverEvents";
 import { notifyNewListing } from "@/lib/whatsappNotify";
+import { stripPetContact } from "@/lib/contacts";
 
 /**
  * @swagger
@@ -113,9 +114,12 @@ export async function GET(req: NextRequest) {
         `;
 
         const result = await db.query(dataQuery, [...values, limit, offset]);
+        // Owners' numbers are for signed-in users only (lib/contacts.ts).
+        const signedIn = Boolean(await getUserIdFromRequest(req));
+        const rows = signedIn ? result.rows : result.rows.map(stripPetContact);
 
         return NextResponse.json({
-            data: result.rows,
+            data: rows,
             meta: {
                 total,
                 page,

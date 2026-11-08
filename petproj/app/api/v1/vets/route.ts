@@ -1,5 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
+import { getUserIdFromRequest } from "@/utils/authServer";
+import { stripVetContact } from "@/lib/contacts";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +24,9 @@ export async function GET(req: NextRequest) {
             WHERE v.is_active IS NOT FALSE
             ORDER BY v.created_at DESC
         `);
-        return NextResponse.json(result.rows);
+        // Vets' numbers are for signed-in users only (lib/contacts.ts).
+        const signedIn = Boolean(await getUserIdFromRequest(req));
+        return NextResponse.json(signedIn ? result.rows : result.rows.map(stripVetContact));
     } catch (error) {
         console.error("V1 Vets Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { Card, Divider, Button, message, Form, Input, Rate, Modal } from "antd";
 import { EnvironmentOutlined, PhoneOutlined, ClockCircleOutlined, WhatsAppOutlined, CopyOutlined } from "@ant-design/icons";
@@ -25,7 +25,8 @@ import VetGrid from "../../../../components/VetGrid";
 import { formatPhoneDisplay } from "@/utils/phone";
 import LoginModal from "../../../../components/LoginModal";
 import { useAuth } from "@/context/AuthContext";
-import { maskPhone, useContactGate } from "@/hooks/useContactGate";
+import { useContactGate, useRevealOnReturn } from "@/hooks/useContactGate";
+import { useContact } from "@/hooks/useContact";
 import { ClinicDetails } from "./data";
 import Link from "next/link";
 import { VET_CITIES } from "@/lib/vetCities";
@@ -68,6 +69,16 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
     const { isAuthenticated, user } = useAuth();
     const [showLoginModal, setShowLoginModal] = useState(false);
     const { signedIn, requireSignIn } = useContactGate();
+    // The page doesn't carry phone numbers (lib/contacts.ts); signed-in users
+    // load them. has_contact / has_whatsapp say whether there is one to offer.
+    const { contact } = useContact("clinic", initialClinic.slug || initialClinic.clinic_id, signedIn);
+    const clinicContact = contact?.kind === "clinic" ? contact : null;
+    const clinicPhone = clinicContact?.phone ?? null;
+    const clinicWhatsapp = clinicContact?.whatsapp ?? null;
+    const hasPhone = Boolean(clinicPhone || (initialClinic as any).has_contact);
+    const hasWhatsapp = Boolean(clinicWhatsapp || (initialClinic as any).has_whatsapp);
+    // Numbers show inline once signed in, so coming back from login needs nothing extra.
+    useRevealOnReturn(useCallback(() => {}, []));
     const [form] = Form.useForm();
     const [activeGuideTab, setActiveGuideTab] = useState<"prep" | "emergency" | "schedule">("prep");
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
@@ -235,8 +246,8 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
 
     // Phone visitors want to call or get directions. A tel: link dials
     // straight away; the in-page Copy button is a desktop habit.
-    const telHref = clinic.contact_number ? `tel:${clinic.contact_number.replace(/[^\d+]/g, "")}` : undefined;
-    const showActionBar = Boolean(telHref || googleMapsLink || clinic.whatsapp_number);
+    const telHref = clinicPhone ? `tel:${clinicPhone.replace(/[^\d+]/g, "")}` : hasPhone ? "#" : undefined;
+    const showActionBar = Boolean(telHref || googleMapsLink || hasWhatsapp);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -413,7 +424,7 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                                 )}
                                 <div className="space-y-4">
                                     {/* Phone Number */}
-                                    {clinic.contact_number && (
+                                    {hasPhone && (
                                         <div className="space-y-2">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -422,22 +433,22 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                                                 <div className="flex-1 min-w-0">
                                                     <div className="text-xs text-gray-500 mb-1">Phone Number</div>
                                                     <div className="text-sm font-medium text-gray-900 truncate">
-                                                        {signedIn ? clinic.contact_number : maskPhone(clinic.contact_number)}
+                                                        {signedIn && clinicPhone ? clinicPhone : signedIn ? "Loading…" : "•••• •••••••"}
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="flex gap-2 ml-13">
                                                 <button
-                                                    onClick={() => handleCopy(clinic.contact_number || '')}
+                                                    onClick={() => handleCopy(clinicPhone || '')}
                                                     data-cta="clinic_copy_phone"
                                                     className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm"
                                                 >
                                                     <FaCopy className="text-gray-600 text-xs" />
                                                     <span className="text-gray-700">Copy</span>
                                                 </button>
-                                                {clinic.whatsapp_number && (
+                                                {hasWhatsapp && (
                                                     <button
-                                                        onClick={() => handleWhatsApp(clinic.whatsapp_number || '')}
+                                                        onClick={() => handleWhatsApp(clinicWhatsapp || '')}
                                                         data-cta="clinic_whatsapp"
                                                         className="flex-1 py-2 px-3 rounded-lg bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center gap-2 text-sm"
                                                     >
@@ -549,6 +560,9 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                             {clinic.vets && clinic.vets.length > 0 ? (
                                 <VetGrid vets={clinic.vets.map(v => ({
                                     ...v,
+                                    // Loaded for signed-in users only (see useContact above).
+                                    contact_details: clinicContact?.vets[String(v.vet_id)]?.phone ?? "",
+                                    email: clinicContact?.vets[String(v.vet_id)]?.email ?? "",
                                     city_id: 0,
                                     city_name: '',
                                     qualifications: [],
@@ -833,10 +847,10 @@ export default function ClinicDetailsClient({ initialClinic, initialReviewStats 
                                 Directions
                             </a>
                         )}
-                        {clinic.whatsapp_number && (
+                        {hasWhatsapp && (
                             <button
                                 type="button"
-                                onClick={() => handleWhatsApp(clinic.whatsapp_number || "")}
+                                onClick={() => handleWhatsApp(clinicWhatsapp || "")}
                                 data-cta="clinic_whatsapp"
                                 aria-label="Chat on WhatsApp"
                                 className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-green-500 text-white"

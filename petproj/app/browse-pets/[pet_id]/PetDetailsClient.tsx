@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
 import AdoptionFormModal from "../../../components/AdoptionFormModal";
@@ -59,7 +59,8 @@ import "./styles.css";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { authUrl, currentPath } from "@/lib/authRedirect";
-import { useContactGate } from "@/hooks/useContactGate";
+import { useContactGate, useRevealOnReturn } from "@/hooks/useContactGate";
+import { useContact } from "@/hooks/useContact";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -79,7 +80,10 @@ const PetDetailsClient: React.FC<{
     const { pet_id } = params;
     const router = useRouter();
     const { user, isAuthenticated, isHydrating } = useAuth();
-    const { requireSignIn } = useContactGate();
+    const { requireSignIn, signedIn } = useContactGate();
+    // The page doesn't carry the owner's number; signed-in users load it.
+    const { contact, loading: contactLoading } = useContact("pet", pet_id, signedIn);
+    const ownerPhone = contact?.kind === "pet" ? contact.phone : null;
     const searchParams = useSearchParams();
     const [pet, setPet] = useState<PetWithImages | null>(initialPet ?? null);
     const [carouselImages, setCarouselImages] = useState<string[]>(
@@ -232,6 +236,12 @@ const PetDetailsClient: React.FC<{
         requireSignIn(() => setIsModalOpen(true));
     };
 
+    // Back from signing in via the contact button: open the contact straight away.
+    const revealContact = useCallback(() => {
+        if (initialPet?.adoption_status === "available") setIsModalOpen(true);
+    }, [initialPet?.adoption_status]);
+    useRevealOnReturn(revealContact);
+
     const handleModalClose = () => setIsModalVisible(false);
     const handleFormSubmit = (formData: any) => {};
 
@@ -369,7 +379,7 @@ const PetDetailsClient: React.FC<{
 
     const listingTypeInfo = getListingTypeInfo();
     const isAvailable = pet.adoption_status === "available";
-    const phoneDisplay = formatPhoneDisplay(pet.contact_number);
+    const phoneDisplay = formatPhoneDisplay(ownerPhone);
     const isForSale = pet.listing_type === "sell" || pet.listing_type === "shop";
     const priceText =
         isForSale && hasValue(pet.price) && !isNaN(Number(pet.price))
@@ -431,7 +441,7 @@ const PetDetailsClient: React.FC<{
                             </span>
                             <div>
                                 <p className="font-medium text-gray-800">
-                                    {phoneDisplay.pretty}
+                                    {ownerPhone ? phoneDisplay.pretty : contactLoading ? "Loading…" : "No number listed"}
                                 </p>
                                 <p className="text-xs text-gray-500">
                                     {phoneDisplay.countryName
@@ -443,7 +453,7 @@ const PetDetailsClient: React.FC<{
                         <Button
                             icon={<CopyOutlined className="text-primary" />}
                             size="small"
-                            onClick={() => pet.contact_number && handleCopy(pet.contact_number)}
+                            onClick={() => ownerPhone && handleCopy(ownerPhone)}
                             data-cta="pet_copy_phone"
                             className="border-none shadow-none"
                         />
@@ -452,7 +462,7 @@ const PetDetailsClient: React.FC<{
                     <button
                         type="button"
                         className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-green-500 text-[15px] font-semibold text-white transition-colors hover:bg-green-600"
-                        onClick={() => pet.contact_number && handleWhatsApp(pet.contact_number)}
+                        onClick={() => ownerPhone && handleWhatsApp(ownerPhone)}
                         data-cta="pet_whatsapp_owner">
                         <WhatsAppOutlined />
                         Message via WhatsApp

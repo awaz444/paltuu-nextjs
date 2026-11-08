@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryClinics } from "@/lib/clinicsQuery";
+import { getUserIdFromRequest } from "@/utils/authServer";
 
 export const dynamic = "force-dynamic";
 
@@ -81,6 +82,7 @@ export async function GET(req: NextRequest) {
         const limitRaw = parseInt(searchParams.get("limit") ?? "", 10);
 
         const result = await queryClinics({
+            includeContact: Boolean(await getUserIdFromRequest(req)),
             city: searchParams.get("city"),
             category: searchParams.get("category"),
             search: searchParams.get("search"),

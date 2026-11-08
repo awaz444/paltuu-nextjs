@@ -162,6 +162,10 @@ export function trafficChannelSql(ref = "referrer_host", utm = "utm_source", med
  * page_events — rename a label freely, never a key (it would split history).
  */
 export const CTA_LABELS: Record<string, string> = {
+    card_download_app: "Business card: download the app",
+    card_continue: "Business card: continue to website",
+    card_linkedin: "Business card: LinkedIn",
+    card_github: "Business card: GitHub",
     pet_adopt: "Adopt this pet",
     pet_contact: "Contact owner",
     pet_contact_sticky: "Contact owner (mobile bar)",

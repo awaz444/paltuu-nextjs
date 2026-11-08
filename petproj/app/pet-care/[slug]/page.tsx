@@ -4,6 +4,7 @@ import Link from "next/link";
 import ClinicCard from "@/components/ClinicCard";
 import VetDetailsClient from "./VetDetailsClient";
 import { VET_CITIES } from "@/lib/vetCities";
+import { stripClinicContact, stripVetContact } from "@/lib/contacts";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -182,7 +183,8 @@ async function getVet(vetId: string) {
             [vetId]
         );
 
-        return { ...vet, reviews: reviewsResult.rows };
+        // Public page: no phone or email (lib/contacts.ts).
+        return { ...stripVetContact(vet), reviews: reviewsResult.rows } as any;
     } catch (e) {
         console.error("Vet SSR fetch error:", e);
         return null;
@@ -220,7 +222,7 @@ export default async function SlugPage({
                  ORDER BY c.rating DESC NULLS LAST, c.created_at DESC`,
                 [cityName]
             );
-            clinics = result.rows;
+            clinics = result.rows.map(stripClinicContact);
         } catch {
             clinics = [];
         }

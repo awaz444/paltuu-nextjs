@@ -1,10 +1,13 @@
 import { db } from "@/db/index";
 import { ensureClinicListingColumns } from "@/lib/clinicListing";
+import { stripClinicContact } from "@/lib/contacts";
 
 const DEFAULT_LIMIT = 15;
 const MAX_LIMIT = 50;
 
 export interface ClinicsQueryInput {
+    /** Keep phone numbers in the rows: only for a signed-in caller. */
+    includeContact?: boolean;
     city?: string | null;
     category?: string | null;
     search?: string | null;
@@ -173,7 +176,8 @@ export async function queryClinics(input: ClinicsQueryInput): Promise<ClinicsQue
     `, params);
 
     const total = result.rows[0]?.total_count ?? 0;
-    const data = result.rows.map(({ total_count, ...row }) => row);
+    // Clinic numbers are for signed-in users only (lib/contacts.ts).
+    const data = result.rows.map(({ total_count, ...row }) => (input.includeContact ? row : stripClinicContact(row)));
 
     const citiesResult = await db.query(`
         SELECT DISTINCT city

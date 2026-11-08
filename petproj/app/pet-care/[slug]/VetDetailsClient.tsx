@@ -41,7 +41,8 @@ import './styles.css'
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
 import { formatPhoneDisplay } from "@/utils/phone";
-import { maskPhone, useContactGate } from "@/hooks/useContactGate";
+import { useContactGate } from "@/hooks/useContactGate";
+import { useContact } from "@/hooks/useContact";
 
 interface VetDetails {
     vet_id: string;
@@ -94,6 +95,14 @@ export default function VetDetailsClient({
     const { isAuthenticated, user } = useAuth();
     const [showLoginModal, setShowLoginModal] = useState(false);
     const { signedIn, requireSignIn } = useContactGate();
+    // The page doesn't carry the vet's phone, email or clinic WhatsApp
+    // (lib/contacts.ts); signed-in users load them. has_* flags say what exists.
+    const { contact } = useContact("vet", initialVet?.vet_id, signedIn);
+    const vetContact = contact?.kind === "vet" ? contact : null;
+    const vetPhone = vetContact?.phone ?? "";
+    const vetEmail = vetContact?.email ?? "";
+    const clinicWhatsapp = vetContact?.clinicWhatsapp ?? "";
+    const gated = (value: string) => (signedIn ? value || "Loading…" : "•••• •••••••");
     const [form] = Form.useForm();
     const router = useRouter();
 
@@ -380,7 +389,7 @@ export default function VetDetailsClient({
                                         </button>
                                     )}
                                     <div className="space-y-4">
-                                        {vetDetails.contact_details && (
+                                        {(vetPhone || (vetDetails as any).has_contact) && (
                                             <div className="space-y-2">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -389,13 +398,13 @@ export default function VetDetailsClient({
                                                     <div className="flex-1 min-w-0">
                                                         <div className="text-xs text-gray-500 mb-1">Personal Number</div>
                                                         <div className="text-sm font-medium text-gray-900 truncate">
-                                                            {signedIn ? vetDetails.contact_details : maskPhone(vetDetails.contact_details)}
+                                                            {gated(vetPhone)}
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-2 ml-13">
                                                     <button
-                                                        onClick={() => handleCopy(vetDetails.contact_details)}
+                                                        onClick={() => handleCopy(vetPhone)}
                                                         data-cta="vet_copy_phone"
                                                         className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm"
                                                     >
@@ -403,7 +412,7 @@ export default function VetDetailsClient({
                                                         <span className="text-gray-700">Copy</span>
                                                     </button>
                                                     <button
-                                                        onClick={() => handleWhatsApp(vetDetails.contact_details)}
+                                                        onClick={() => handleWhatsApp(vetPhone)}
                                                         data-cta="vet_whatsapp"
                                                         className="flex-1 py-2 px-3 rounded-lg bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center gap-2 text-sm"
                                                     >
@@ -414,7 +423,7 @@ export default function VetDetailsClient({
                                             </div>
                                         )}
 
-                                        {vetDetails.email && (
+                                        {(vetEmail || (vetDetails as any).has_email) && (
                                             <div className="space-y-2 pt-4 border-t border-gray-100">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -423,12 +432,12 @@ export default function VetDetailsClient({
                                                     <div className="flex-1 min-w-0">
                                                         <div className="text-xs text-gray-500 mb-1">Email</div>
                                                         <div className="text-sm font-medium text-gray-900 truncate">
-                                                            {signedIn ? vetDetails.email : "Sign in to view"}
+                                                            {signedIn ? vetEmail || "Loading…" : "Sign in to view"}
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <button
-                                                    onClick={() => handleCopy(vetDetails.email)}
+                                                    onClick={() => handleCopy(vetEmail)}
                                                     className="w-full ml-13 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm"
                                                 >
                                                     <FaCopy className="text-gray-600 text-xs" />
@@ -437,7 +446,7 @@ export default function VetDetailsClient({
                                             </div>
                                         )}
 
-                                        {vetDetails.clinic_whatsapp && (
+                                        {(clinicWhatsapp || (vetDetails as any).has_clinic_whatsapp) && (
                                             <div className="space-y-2 pt-4 border-t border-gray-100">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -446,13 +455,13 @@ export default function VetDetailsClient({
                                                     <div className="flex-1 min-w-0">
                                                         <div className="text-xs text-gray-500 mb-1">Clinic Number</div>
                                                         <div className="text-sm font-medium text-gray-900 truncate">
-                                                            {signedIn ? vetDetails.clinic_whatsapp : maskPhone(vetDetails.clinic_whatsapp)}
+                                                            {gated(clinicWhatsapp)}
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-2 ml-13">
                                                     <button
-                                                        onClick={() => handleCopy(vetDetails.clinic_whatsapp)}
+                                                        onClick={() => handleCopy(clinicWhatsapp)}
                                                         data-cta="vet_clinic_copy_phone"
                                                         className="flex-1 py-2 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm"
                                                     >
@@ -460,7 +469,7 @@ export default function VetDetailsClient({
                                                         <span className="text-gray-700">Copy</span>
                                                     </button>
                                                     <button
-                                                        onClick={() => handleWhatsApp(vetDetails.clinic_whatsapp)}
+                                                        onClick={() => handleWhatsApp(clinicWhatsapp)}
                                                         data-cta="vet_clinic_whatsapp"
                                                         className="flex-1 py-2 px-3 rounded-lg bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center gap-2 text-sm"
                                                     >

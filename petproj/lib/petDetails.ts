@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { db } from "@/db/index";
+import { stripPetContact } from "@/lib/contacts";
 
 /**
  * One listing with its owner, photos and tags: the body of GET /api/v1/pets/[id].
@@ -8,16 +9,15 @@ import { db } from "@/db/index";
  * which cost a second serverless round trip (twice, metadata and page) before
  * anything rendered. `cache` makes the metadata and the page share one read.
  *
- * Returns null when there is no such listing; database errors throw.
+ * Returns null when there is no such listing; database errors throw. The
+ * owner's phone and email are left out (lib/contacts.ts): the page is public.
  */
-export const getPetDetails = cache(async (id: number) => {
+export const getPetDetails = cache(async (id: number): Promise<Record<string, any> | null> => {
     const result = await db.query(`
         SELECT
             pets.*,
             cities.city_name AS city,
             users.name as owner_name,
-            users.email as owner_email,
-            users.phone_number as owner_phone,
             users.profile_image_url as owner_image
         FROM pets
         JOIN users ON pets.owner_id = users.user_id
@@ -32,5 +32,5 @@ export const getPetDetails = cache(async (id: number) => {
         db.query('SELECT t.tag_id, t.tag_name, t.tag_category FROM pet_tag_assignments pta JOIN pet_tags t ON pta.tag_id = t.tag_id WHERE pta.pet_id = $1', [id]),
     ]);
 
-    return { ...result.rows[0], images: images.rows, tags: tags.rows };
+    return { ...stripPetContact(result.rows[0]), images: images.rows, tags: tags.rows };
 });

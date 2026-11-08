@@ -173,7 +173,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
                         <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                             <div>
                                 <p className="font-medium text-gray-700">
-                                    {selectedVet.contact_details}
+                                    {selectedVet.contact_details || "Not listed"}
                                 </p>
                                 <p className="text-sm text-gray-500">
                                     Phone Number
@@ -192,7 +192,7 @@ const VetGrid: React.FC<VetGridProps> = ({ vets }) => {
                         <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                             <div>
                                 <p className="font-medium text-gray-700">
-                                    {selectedVet.email}
+                                    {selectedVet.email || "Not listed"}
                                 </p>
                                 <p className="text-sm text-gray-500">
                                     Email Address

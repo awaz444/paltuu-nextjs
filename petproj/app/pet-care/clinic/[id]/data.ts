@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { db } from "@/db/index";
+import { stripClinicContact } from "@/lib/contacts";
 import { Clinic } from "../../../types/clinic";
 import { Vet } from "../../../types/vet";
 
@@ -59,11 +60,12 @@ export const getClinicDetail = cache(async (id: string): Promise<ClinicDetails |
             [clinic.clinic_id]
         );
 
-        return {
+        // Public page: no clinic or vet phone numbers or emails (lib/contacts.ts).
+        return stripClinicContact({
             ...clinic,
             vets: vetsResult.rows || [],
             reviews: reviewsResult.rows || [],
-        };
+        }) as ClinicDetails;
     } catch (err) {
         console.error("getClinicDetail error:", err);
         return null;

@@ -45,8 +45,9 @@ export default function CardScanModal() {
                     height={112}
                     className="mx-auto h-28 w-28 rounded-full border-4 border-primary/15 bg-white object-cover"
                 />
-                <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-primary">You scanned</p>
-                <h2 className="mt-1 text-xl font-extrabold text-gray-900">{card.firstName}&apos;s card</h2>
+                <h2 className="mt-4 text-xl font-extrabold text-gray-900">
+                    You scanned <span className="text-primary">{card.firstName}&apos;s</span> card
+                </h2>
                 <p className="text-sm text-gray-500">
                     {card.name} · {card.role}
                 </p>

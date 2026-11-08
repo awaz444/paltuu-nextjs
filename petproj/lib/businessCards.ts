@@ -26,10 +26,9 @@ export const BUSINESS_CARDS: Record<string, BusinessCard> = {
         firstName: "Aawaiz",
         role: "Co-founder & CEO",
         image: "/cards/aawaiz.jpg",
-        message:
-            "Thanks for scanning! Paltuu brings everything for your pet into one place, from adoption and the community to a vet at your door. Have a look around, and say hi anytime.",
-        linkedin: null,
-        github: null,
+        message: "lun te wajo",
+        linkedin: "https://www.linkedin.com/in/aawaiz/",
+        github: "https://github.com/awaz444",
     },
     shuja: {
         name: "Shuja Ur Rahman",

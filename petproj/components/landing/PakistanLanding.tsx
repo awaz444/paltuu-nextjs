@@ -12,6 +12,7 @@ import AdoptionFlow from "./AdoptionFlow";
 import VetsNearYou from "./VetsNearYou";
 import Reviews from "./Reviews";
 import Guides from "./Guides";
+import PeekingStickers from "./PeekingStickers";
 
 /**
  * paltuu.pk's "/". Two versions of one page, picked in middleware.ts from the
@@ -36,8 +37,9 @@ export default async function PakistanLanding({ karachi = false }: { karachi?: b
     const cityCount = vetCounts.find((c) => c.city === city)?.count ?? 0;
 
     return (
-        <main className="overflow-hidden bg-white">
+        <main className="relative overflow-hidden bg-white">
             <HomeJsonLd />
+            <PeekingStickers />
 
             <LandingHero
                 eyebrow="Adopt · Rehome · Vets · Community"

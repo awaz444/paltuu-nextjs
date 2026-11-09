@@ -8,6 +8,7 @@ import GlobalAim from "@/components/landing/GlobalAim";
 import OrgFAQ from "@/components/landing/OrgFAQ";
 import { getLandingPets } from "@/lib/landingData";
 import { ORG_URL } from "@/lib/site";
+import PeekingStickers from "@/components/landing/PeekingStickers";
 
 /**
  * paltuu.org's homepage (PALTU-124). middleware.ts rewrites "/" on the .org
@@ -36,7 +37,8 @@ export default async function InternationalHomePage() {
     const pets = await getLandingPets(3);
 
     return (
-        <main className="overflow-hidden bg-white">
+        <main className="relative overflow-hidden bg-white">
+            <PeekingStickers />
             <LandingHero
                 eyebrow="The pet super app"
                 title={

@@ -153,22 +153,22 @@ const HomepageFAQ = () => {
     };
 
     return (
-        <section className="bg-primary px-6 lg:px-12 py-14 md:py-20">
+        <section aria-labelledby="faq-heading" className="bg-white px-5 pt-12 pb-4 md:pt-20">
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
             />
             <div className="max-w-3xl mx-auto">
-                <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-8 text-center">
+                <h2 id="faq-heading" className="mb-5 text-xl font-semibold text-gray-900 md:text-[28px]">
                     Frequently Asked Questions
                 </h2>
-                <div className="space-y-3">
+                <div className="space-y-2">
                     {FAQS.map(({ q, a }) => (
                         <details
                             key={q}
-                            className="group bg-white rounded-xl border border-white/10 p-5"
+                            className="group rounded-2xl border border-gray-200 bg-white px-4 py-3.5"
                         >
-                            <summary className="flex items-center justify-between cursor-pointer list-none font-bold text-gray-900 text-base">
+                            <summary className="flex cursor-pointer list-none items-center justify-between font-semibold text-gray-900">
                                 {q}
                                 <span className="ml-4 shrink-0 text-primary transition-transform group-open:rotate-45 text-2xl leading-none">
                                     +

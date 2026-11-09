@@ -13,6 +13,17 @@ export const cheeseMilky = localFont({
   fallback: ["Montserrat", "system-ui", "sans-serif"],
 });
 
+// The mobile app's pixel face (paltuu-reactnative/assets/pixel/Pixeled.ttf).
+// The app sets Vets at Home in it, so the website does too, and nowhere else.
+// Only the homepage sections use it, so it isn't preloaded on every page.
+export const pixeled = localFont({
+  src: "./fonts/Pixeled.ttf",
+  variable: "--font-pixel",
+  display: "swap",
+  preload: false,
+  fallback: ["ui-monospace", "monospace"],
+});
+
 export const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "700"],

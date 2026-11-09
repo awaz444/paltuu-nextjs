@@ -19,7 +19,7 @@ import AnalyticsTracker from "@/components/analytics/AnalyticsTracker";
 import PostHogTracker from "@/components/analytics/PostHogTracker";
 import CardScanModal from "@/components/cards/CardScanModal";
 import { SITE_URL } from "@/lib/site";
-import { cheeseMilky, dmSans } from "./fonts";
+import { cheeseMilky, dmSans, pixeled } from "./fonts";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -164,7 +164,7 @@ export default function RootLayout({
           src="https://news.google.com/swg/js/v1/publisher.js"
         />
       </head>
-      <body className={`${montserrat.className} ${cheeseMilky.variable} ${dmSans.variable} flex flex-col min-h-screen`}>
+      <body className={`${montserrat.className} ${cheeseMilky.variable} ${dmSans.variable} ${pixeled.variable} flex flex-col min-h-screen`}>
         <AppClientWrapper>
           <ClientProvider>
             <CartSyncProvider>

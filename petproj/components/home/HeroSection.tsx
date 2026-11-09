@@ -49,8 +49,8 @@ export default function HeroSection() {
                     {/* Kept short on purpose. The SEO weight sits in the h1, the
                         title/meta and the section headings below, not in hero body
                         copy, and every claim past this point is made again further
-                        down the page. The brand spellings have to survive here
-                        because they appear nowhere else.
+                        down the page. The brand spellings (Paltu, Paaltu) live in
+                        the FAQ and the Organization alternateName, not here.
 
                         This sells rather than disclaims: "from the family or
                         shelter rehoming them" carries the platform model without
@@ -59,12 +59,8 @@ export default function HeroSection() {
                         pillar card and in the first FAQ, where a defensive tone
                         is appropriate and expected. */}
                     <p className="text-base text-gray-600 leading-relaxed mb-6 max-w-lg">
-                        <span className="font-semibold text-gray-900">Paltuu.pk</span> (also
-                        searched as Paltu or Paaltuu) is Pakistan&apos;s pet adoption
-                        platform. Find a pet from the family or shelter rehoming them, or{" "}
-                        <span className="font-semibold text-gray-900">
-                            list your own and choose the home they go to
-                        </span>
+                        Find a pet from a family or shelter rehoming them, or{" "}
+                        <span className="font-semibold text-gray-900">list your own and choose their new home</span>
                         . Free, either way.
                     </p>
 

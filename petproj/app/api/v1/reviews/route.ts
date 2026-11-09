@@ -33,14 +33,12 @@ export async function GET(req: NextRequest) {
                 ORDER BY vr.review_date DESC
             `;
         } else if (type === 'clinic') {
-            // Not filtered by is_approved yet: clinic-only reviews have no
-            // approval path (the vet panel approves by vet_id), so filtering
-            // would hide every clinic review. See PALTU-66.
+            // Admins approve clinic reviews in /admin-panel/reviews (PALTU-117).
             query = `
                 SELECT vr.*, u.name as reviewer_name, u.profile_image_url as reviewer_image
                 FROM vet_reviews vr
                 JOIN users u ON vr.user_id = u.user_id
-                WHERE vr.clinic_id = $1
+                WHERE vr.clinic_id = $1 AND vr.is_approved = true
                 ORDER BY vr.review_date DESC
             `;
         } else {

@@ -59,7 +59,7 @@ export async function GET(
                 u.name AS review_maker_name
             FROM vet_reviews vr
             JOIN users u ON vr.user_id = u.user_id
-            WHERE vr.clinic_id = $1
+            WHERE vr.clinic_id = $1 AND vr.is_approved = true
             ORDER BY vr.review_date DESC
         `, [clinic.clinic_id]);
 

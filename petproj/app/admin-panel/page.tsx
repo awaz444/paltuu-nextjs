@@ -65,6 +65,7 @@ const AdminPanel = () => {
     const [data, setData] = useState<UserProfileData | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [socialCounts, setSocialCounts] = useState<{ untagged: number; reports: number; personaInbox: number }>({ untagged: 0, reports: 0, personaInbox: 0 });
+    const [pendingReviews, setPendingReviews] = useState(0);
 
     const fetchedRef = React.useRef(false);
 
@@ -125,6 +126,12 @@ const AdminPanel = () => {
                 personaInbox: Array.isArray(inboxData) ? inboxData.length : 0,
             });
         });
+
+        // Vet & clinic reviews waiting for approval (PALTU-117)
+        fetch("/api/v1/admin/reviews?state=pending")
+            .then(r => r.json())
+            .then(d => setPendingReviews(d?.counts?.pending ?? 0))
+            .catch(() => {});
     }, [user, isHydrating]);
 
     // PIN gate — asked for on every visit to this page, independent of the admin role check
@@ -211,6 +218,7 @@ const AdminPanel = () => {
                 { href: "/admin-pet", title: "Pets", desc: "Manage all pet listings" },
                 { href: "/admin-pet-approval", title: "Listing Approvals", desc: "Review pending pet listings" },
                 { href: "/manage-clinics", title: "Clinics & Vets", desc: "Add/edit clinics, create vets, link vets to clinics" },
+                { href: "/admin-panel/reviews", title: "Vet & Clinic Reviews", desc: "Approve new reviews before they go public", badge: pendingReviews },
             ],
         },
         {

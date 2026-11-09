@@ -348,7 +348,7 @@ export async function GET(req: NextRequest) {
             let query = `
                 SELECT * FROM (
                     SELECT 'vet' AS entity_type, c.clinic_id AS provider_id, c.name, c.address AS location, c.logo_url AS image_url, c.created_at,
-                           COALESCE((SELECT AVG(rating) FROM vet_reviews WHERE clinic_id = c.clinic_id), 0) AS rating,
+                           COALESCE((SELECT AVG(rating) FROM vet_reviews WHERE clinic_id = c.clinic_id AND is_approved = true), 0) AS rating,
                            GREATEST(
                                similarity(c.name, $1),
                                word_similarity($1, c.name || ' ' || coalesce(c.address, '')),

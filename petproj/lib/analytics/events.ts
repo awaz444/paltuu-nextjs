@@ -38,7 +38,6 @@ const EXCLUDED_PREFIXES = [
     "/rescue-panel",
     "/shop-panel",
     "/vendor-panel",
-    "/vet-panel",
     "/pwa-debug",
     "/api-docs",
 ];

@@ -10,8 +10,6 @@ export const dynamic = "force-dynamic";
 
 function getRoleRedirect(role?: string | null) {
   switch (role) {
-    case "vet":
-      return "/vet-panel";
     case "shop admin":
       return "/shop-panel";
     case "shelter admin":

@@ -13,14 +13,12 @@ export default function robots(): MetadataRoute.Robots {
                     '/admin-panel/',
                     '/admin-pet',
                     '/admin-user',
-                    '/admin-approve-vets',
                     '/admin-clinics-vets',
                     '/admin/',
                     '/bazaar-admin',
                     '/rescue-panel',
                     '/shop-panel',
                     '/vendor-panel',
-                    '/vet-panel',
 
                     // Vet onboarding flows (not public pages)
                     '/vet-register',
@@ -30,7 +28,6 @@ export default function robots(): MetadataRoute.Robots {
                     '/vet-qualifications',
                     '/vet-specialization',
                     '/vet-schedule',
-                    '/vet-reviews-summary',
                     '/vet-process-complete',
 
                     // Auth & account pages

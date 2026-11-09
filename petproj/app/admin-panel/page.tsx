@@ -210,7 +210,6 @@ const AdminPanel = () => {
             tiles: [
                 { href: "/admin-pet", title: "Pets", desc: "Manage all pet listings" },
                 { href: "/admin-pet-approval", title: "Listing Approvals", desc: "Review pending pet listings" },
-                { href: "/admin-approve-vets", title: "Vet Verifications", desc: "Approve vet verification applications" },
                 { href: "/manage-clinics", title: "Clinics & Vets", desc: "Add/edit clinics, create vets, link vets to clinics" },
             ],
         },

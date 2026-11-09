@@ -165,7 +165,6 @@ export async function middleware(request: NextRequest) {
   // Define admin-only paths
   const adminOnlyPaths = [
     '/admin-panel',
-    '/admin-approve-vets',
     '/admin-pet',
     '/admin-pet-approval',
     '/admin-user',
@@ -190,8 +189,6 @@ export async function middleware(request: NextRequest) {
 
   const getRoleRedirect = (role?: string | null) => {
     switch (role) {
-      case 'vet':
-        return '/vet-panel';
       case 'shop admin':
         return '/shop-panel';
       case 'shelter admin':
@@ -248,7 +245,6 @@ export const config = {
     '/my-listings',
     '/my-applications',
     '/admin-panel',
-    '/admin-approve-vets',
     '/admin-pet',
     '/admin-pet-approval',
     '/admin-user',

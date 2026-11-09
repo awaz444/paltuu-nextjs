@@ -148,9 +148,7 @@ const Navbar = ({
   const defaultDropdownItems = [
     {
       href:
-        userRole === "vet"
-          ? "/vet-panel"
-          : userRole === "admin"
+        userRole === "admin"
             ? "/admin-panel"
             : userRole === "shop admin"
               ? "/shop-panel"
@@ -158,9 +156,7 @@ const Navbar = ({
                 ? "/rescue-panel"
                 : "/my-profile",
       label:
-        userRole === "vet"
-          ? "Vet Panel"
-          : userRole === "admin"
+        userRole === "admin"
             ? "Admin Panel"
             : userRole === "shop admin"
               ? "Shop Panel"
@@ -1000,9 +996,7 @@ const Navbar = ({
                         {/* Profile / Panel */}
                         <Link
                           href={
-                            userRole === "vet"
-                              ? "/vet-panel"
-                              : userRole === "regular user"
+                            userRole === "regular user" || userRole === "vet"
                                 ? "/my-profile"
                                 : userRole === "admin"
                                   ? "/admin-panel"

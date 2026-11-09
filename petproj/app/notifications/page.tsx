@@ -118,10 +118,6 @@ function hrefFor(n: Notification): string | null {
             return "/admin-pet-approval";
         case "application_type":
             return "/my-listings";
-        case "review_type":
-            return "/vet-reviews-summary";
-        case "verification_type":
-            return "/admin-approve-vets";
         default:
             return sitePathFromDeepLink(n.deep_link);
     }

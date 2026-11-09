@@ -33,7 +33,7 @@ interface Pet {
     city_id: number;
     area: string;
     age_months: number;
-    contact_number: string | null;
+    contact_number?: string | null; // signed-out visitors don't get it (lib/contacts.ts)
     description: string;
     adoption_status: string;
     price: string;

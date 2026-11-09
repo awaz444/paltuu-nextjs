@@ -1,5 +1,6 @@
 import { db } from "@/db/index";
 import { adoptionFeedOrderBy } from "@/lib/adoptionFeed";
+import { stripPetContact } from "@/lib/contacts";
 import BrowsePetsClient from "../BrowsePetsClient";
 import CommunityStrip from "@/components/community/CommunityStrip";
 
@@ -27,8 +28,9 @@ async function getInitialPets() {
             LIMIT 11 OFFSET 0
         `);
 
+        // The grid shows no phone numbers, and this HTML is public (lib/contacts.ts).
         return {
-            pets: result.rows,
+            pets: result.rows.map(stripPetContact) as typeof result.rows,
             meta: { total, page: 1, limit: 11, totalPages: Math.ceil(total / 11) },
         };
     } catch {

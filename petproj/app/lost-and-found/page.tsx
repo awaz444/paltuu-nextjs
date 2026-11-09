@@ -14,7 +14,9 @@ interface LostAndFoundPet {
     pet_description: string;
     city_id: number;
     location: string;
-    contact_info: string;
+    /** Only for signed-in visitors; signed-out ones get has_contact. */
+    contact_info?: string | null;
+    has_contact?: boolean;
     post_date: string;
     status: string;
     category_id: number;
@@ -55,7 +57,8 @@ export default function LostFound() {
                 pet_description: pet.pet_description,
                 city_id: pet.city_id,
                 location: pet.location,
-                contact_info: pet.contact_info,
+                contact_info: pet.contact_info ?? null,
+                has_contact: Boolean(pet.contact_info || pet.has_contact),
                 post_date: pet.post_date,
                 status: pet.status,
                 category_id: pet.category_id,

@@ -2,6 +2,9 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { notifyTeam } from "@/lib/whatsappNotify";
+import { stripLostFoundContact } from "@/lib/contacts";
+
+export const dynamic = "force-dynamic";
 
 /**
  * @swagger
@@ -30,7 +33,6 @@ export async function GET(req: NextRequest) {
                 p.*, 
                 c.city_name AS city,
                 cat.category_name AS category,
-                u.phone_number AS user_phone_number,
                 u.name AS user_name,
                 u.profile_image_url AS user_profile_image,
                 img.image_url AS image
@@ -49,7 +51,9 @@ export async function GET(req: NextRequest) {
         query += ` ORDER BY p.date DESC, p.post_id DESC;`;
 
         const result = await db.query(query, values);
-        return NextResponse.json(result.rows);
+        // Reporters' numbers are for signed-in users only (lib/contacts.ts).
+        const signedIn = Boolean(await getUserIdFromRequest(req));
+        return NextResponse.json(signedIn ? result.rows : result.rows.map(stripLostFoundContact));
     } catch (error) {
         console.error("V1 Lost and Found GET Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

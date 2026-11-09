@@ -11,7 +11,9 @@ interface LostAndFoundPet {
     pet_description: string;
     city_id: number;
     location: string;
-    contact_info: string;
+    /** Only for signed-in visitors; signed-out ones get has_contact. */
+    contact_info?: string | null;
+    has_contact?: boolean;
     post_date: string;
     status: string;
     category_id: number;
@@ -202,10 +204,11 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
                                     </div>
 
                                     {/* Contact */}
-                                    {selectedPet.contact_info && (
+                                    {/* Signed-out visitors get has_contact, not the number (lib/contacts.ts). */}
+                                    {(selectedPet.contact_info || selectedPet.has_contact) && (
                                         <div>
                                             <label className="block text-sm font-medium text-gray-500 mb-1">Contact Info</label>
-                                            {signedIn ? (
+                                            {signedIn && selectedPet.contact_info ? (
                                                 <a
                                                     href={`tel:${selectedPet.contact_info}`}
                                                     className="flex items-center gap-2 border-2 border-primary rounded-2xl p-3 text-primary font-medium hover:bg-primary/5 transition-colors"
@@ -216,13 +219,14 @@ const LostAndFoundGrid: React.FC<LostAndFoundGridProps> = ({ pets }) => {
                                             ) : (
                                                 <button
                                                     type="button"
-                                                    onClick={() => requireSignIn()}
+                                                    // Signed in but the list was loaded signed out: reload to fetch the number.
+                                                    onClick={() => requireSignIn(() => window.location.reload())}
                                                     data-cta="lost_found_contact_sign_in"
                                                     className="flex w-full items-center gap-2 border-2 border-primary rounded-2xl p-3 text-left text-primary font-medium hover:bg-primary/5 transition-colors"
                                                 >
                                                     <PhoneOutlined />
-                                                    <span>{maskPhone(selectedPet.contact_info)}</span>
-                                                    <span className="ml-auto text-sm font-normal">Sign in to call</span>
+                                                    <span>{selectedPet.contact_info ? maskPhone(selectedPet.contact_info) : "Number hidden"}</span>
+                                                    <span className="ml-auto text-sm font-normal">{signedIn ? "Show number" : "Sign in to call"}</span>
                                                 </button>
                                             )}
                                         </div>

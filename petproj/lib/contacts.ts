@@ -68,6 +68,25 @@ export function stripPetContact<T extends Record<string, any>>(pet: T): Omit<T, 
     return { ...rest, has_contact: Boolean(contact_number) } as any;
 }
 
+/**
+ * A rescue listing as anyone may see it: no listing number, and no phone for
+ * the shelter's account holder (rescue/pets/[id] returns it as shelter.contactInfo).
+ */
+export function stripRescuePetContact<T extends Record<string, any>>(pet: T): Omit<T, "contact_number" | "owner_email" | "owner_phone"> {
+    const rest: any = stripPetContact(pet);
+    if (rest.shelter && typeof rest.shelter === "object") {
+        const { contactInfo, ...shelter } = rest.shelter;
+        rest.shelter = shelter;
+    }
+    return rest;
+}
+
+/** A lost & found report as anyone may see it: no reporter phone. */
+export function stripLostFoundContact<T extends Record<string, any>>(post: T): Omit<T, "contact_info"> {
+    const { contact_info, ...rest } = post;
+    return { ...rest, has_contact: Boolean(contact_info) } as any;
+}
+
 /** A vet as anyone may see them. */
 export function stripVetContact<T extends Record<string, any>>(vet: T): Omit<T, "contact_details" | "email" | "clinic_whatsapp"> {
     const { contact_details, email, clinic_whatsapp, ...rest } = vet;

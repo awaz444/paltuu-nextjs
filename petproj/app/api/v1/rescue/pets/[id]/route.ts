@@ -1,5 +1,9 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
+import { getUserIdFromRequest } from "@/utils/authServer";
+import { stripRescuePetContact } from "@/lib/contacts";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
     try {
@@ -33,7 +37,9 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Rescue pet not found" }, { status: 404 });
         }
 
-        return NextResponse.json(result.rows[0]);
+        // Listing and shelter numbers are for signed-in users only (lib/contacts.ts).
+        const signedIn = Boolean(await getUserIdFromRequest(req));
+        return NextResponse.json(signedIn ? result.rows[0] : stripRescuePetContact(result.rows[0]));
 
     } catch (error) {
         console.error("V1 Rescue Pet Detail GET error:", error);

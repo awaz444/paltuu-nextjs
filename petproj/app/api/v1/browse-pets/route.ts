@@ -1,6 +1,8 @@
 import { db } from "@/db/index";
 import { adoptionFeedOrderBy } from "@/lib/adoptionFeed";
 import { NextRequest, NextResponse } from "next/server";
+import { getUserIdFromRequest } from "@/utils/authServer";
+import { stripPetContact } from "@/lib/contacts";
 
 export const dynamic = "force-dynamic";
 
@@ -62,9 +64,11 @@ export async function GET(req: NextRequest) {
         `;
 
         const result = await db.query(dataQuery, [...values, limit, offset]);
+        // Owners' numbers are for signed-in users only (lib/contacts.ts).
+        const signedIn = Boolean(await getUserIdFromRequest(req));
 
         return NextResponse.json({
-            data: result.rows,
+            data: signedIn ? result.rows : result.rows.map(stripPetContact),
             meta: {
                 total,
                 page,

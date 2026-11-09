@@ -14,11 +14,11 @@ import type { CSSProperties } from "react";
  */
 
 const STICKERS = [
-    { src: "/landing/stickers/duck.svg", w: 240, h: 240, side: "left", top: "13%", rot: -12, delay: 0, say: "Quack!" },
+    { src: "/landing/stickers/pigeon-toast.svg", w: 240, h: 240, side: "left", top: "13%", rot: -12, delay: 0, say: "Coo!" },
     { src: "/landing/stickers/strawberry.svg", w: 240, h: 240, side: "right", top: "27%", rot: 10, delay: 3.5, say: "Hi!" },
     { src: "/landing/stickers/screaming-cat.svg", w: 200, h: 240, side: "left", top: "43%", rot: 8, delay: 7, say: "AAAA!" },
     { src: "/landing/stickers/frog-dog.svg", w: 200, h: 250, side: "right", top: "58%", rot: -8, delay: 1.8, say: "Ribbit?" },
-    { src: "/landing/stickers/pigeon-toast.svg", w: 240, h: 240, side: "left", top: "74%", rot: 6, delay: 5.2, say: "Coo!" },
+    { src: "/landing/stickers/duck.svg", w: 240, h: 240, side: "left", top: "74%", rot: 6, delay: 5.2, say: "Quack!" },
 ] as const;
 
 export default function PeekingStickers() {

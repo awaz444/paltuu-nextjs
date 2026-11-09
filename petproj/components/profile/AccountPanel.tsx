@@ -436,7 +436,7 @@ function PasswordCard() {
 
 const LINKS = [
     { href: "/my-listings", label: "My adoption listings" },
-    { href: "/adoption-applicants", label: "Adoption requests" },
+    { href: "/my-listings", label: "Adoption requests" },
     { href: "/my-applications", label: "My applications" },
     { href: "/support", label: "Help" },
     { href: "/about", label: "About Paltuu" },

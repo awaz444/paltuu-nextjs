@@ -61,34 +61,51 @@ input[type="range"]::-moz-range-thumb {
   background: #94a3b8;
 }
 
-/* Ant Design Upload Overrides */
+/* Ant Design upload (picture-card) on /create-listing: plain rounded-lg
+   square tiles in a grid that fits the dashed drop area. */
+.listing-uploader .ant-upload-list.ant-upload-list-picture-card {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+@media (min-width: 640px) {
+    .listing-uploader .ant-upload-list.ant-upload-list-picture-card {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+.listing-uploader .ant-upload-list-picture-card .ant-upload-list-item-container,
+.listing-uploader .ant-upload-list-picture-card .ant-upload.ant-upload-select {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1;
+    margin: 0 !important;
+}
+
 .listing-uploader .ant-upload.ant-upload-select {
-    width: 120px !important;
-    height: 120px !important;
-    border-radius: 24px !important;
-    border: 2px dashed #e2e8f0 !important;
-    background: #f8fafc !important;
-    transition: all 0.3s ease !important;
+    border-radius: 0.5rem !important;
+    border: 1px solid #d1d5db !important; /* gray-300 */
+    background: #ffffff !important;
+    transition: border-color 0.15s ease !important;
 }
 
 .listing-uploader .ant-upload.ant-upload-select:hover {
     border-color: var(--primary-color) !important;
-    background: #f1f5f9 !important;
 }
 
 .listing-uploader .ant-upload-list-item {
-    border-radius: 20px !important;
-    overflow: hidden !important;
-    border: none !important;
+    border-radius: 0.5rem !important;
+    border-color: #e5e7eb !important; /* gray-200 */
+    background: #ffffff;
+    padding: 4px !important;
 }
 
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+.listing-uploader .ant-upload-list-item-thumbnail img {
+    object-fit: cover !important;
+    border-radius: 0.375rem;
 }
 
-form > div {
-    animation: fadeIn 0.4s ease-out forwards;
+.listing-uploader .ant-upload-list-item::before {
+    border-radius: 0.375rem;
 }
-  

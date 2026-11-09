@@ -2,7 +2,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { PetWithImages } from "../../types/petWithImages";
 import Navbar from "../../../components/navbar";
-import AdoptionFormModal from "../../../components/AdoptionFormModal";
+import AdoptionFormModal, { type AdoptionFormInitialValues } from "../../../components/AdoptionFormModal";
+import { Modal as SheetModal, btn } from "@/components/account/ui";
+import { Copy, Phone } from "lucide-react";
 import RescueDetails from "../../../components/RescueDetails";
 import PetGallery from "./PetGallery";
 import { formatDistanceToNow } from "date-fns";
@@ -19,7 +21,6 @@ import {
     Card,
     Divider,
     Button,
-    Modal,
     message,
     Carousel,
     Tag,
@@ -92,6 +93,8 @@ const PetDetailsClient: React.FC<{
     const [loading, setLoading] = useState(!initialPet);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [IsModalOpen, setIsModalOpen] = useState(false);
+    // Name, phone and city from the adopter's profile, to prefill the application.
+    const [adoptPrefill, setAdoptPrefill] = useState<AdoptionFormInitialValues | undefined>(undefined);
     const [error, setError] = useState<string | null>(null);
     const [primaryColor, setPrimaryColor] = useState("#000000");
     const [llmSummary, setLlmSummary] = useState<string | null>(null);
@@ -222,6 +225,11 @@ const PetDetailsClient: React.FC<{
             if (!res.ok) throw new Error("Failed to fetch profile");
 
             const profileData = await res.json();
+            setAdoptPrefill({
+                adopter_name: profileData?.name ?? undefined,
+                contact_number: profileData?.phone_number ?? undefined,
+                city_id: profileData?.city_id ?? undefined,
+            });
 
             setIsModalVisible(true);
         } catch (error) {
@@ -242,7 +250,8 @@ const PetDetailsClient: React.FC<{
     }, [initialPet?.adoption_status]);
     useRevealOnReturn(revealContact);
 
-    const handleModalClose = () => setIsModalVisible(false);
+    const handleModalClose = useCallback(() => setIsModalVisible(false), []);
+    const closeContact = useCallback(() => setIsModalOpen(false), []);
     const handleFormSubmit = (formData: any) => {};
 
     const getListingTypeInfo = () => {
@@ -425,53 +434,71 @@ const PetDetailsClient: React.FC<{
 
     return (
         <>
-            <Modal
-                title="Contact Information"
+            <SheetModal
                 open={IsModalOpen}
-                onCancel={() => setIsModalOpen(false)}
-                footer={null}>
+                onClose={closeContact}
+                size="sm"
+                title="Contact the owner"
+                subtitle={pet.owner_name || undefined}>
                 <div className="space-y-3">
-                    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
-                        <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                        <div className="flex min-w-0 items-center gap-3">
                             <span
                                 className="text-2xl leading-none"
                                 title={phoneDisplay.countryName ?? "Unknown country"}
                             >
                                 {phoneDisplay.flag}
                             </span>
-                            <div>
-                                <p className="font-medium text-gray-800">
+                            <div className="min-w-0">
+                                <p className="truncate font-medium text-gray-900 tabular-nums">
                                     {ownerPhone ? phoneDisplay.pretty : contactLoading ? "Loading…" : "No number listed"}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                    {phoneDisplay.countryName
-                                        ? `Phone Number · ${phoneDisplay.countryName}`
-                                        : "Phone Number"}
+                                    {phoneDisplay.countryName ? `Phone · ${phoneDisplay.countryName}` : "Phone"}
                                 </p>
                             </div>
                         </div>
-                        <Button
-                            icon={<CopyOutlined className="text-primary" />}
-                            size="small"
+                        <button
+                            type="button"
+                            aria-label="Copy phone number"
                             onClick={() => ownerPhone && handleCopy(ownerPhone)}
+                            disabled={!ownerPhone}
                             data-cta="pet_copy_phone"
-                            className="border-none shadow-none"
-                        />
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary-tint disabled:cursor-not-allowed disabled:opacity-40">
+                            <Copy size={16} />
+                        </button>
                     </div>
 
-                    <button
-                        type="button"
-                        className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-green-500 text-[15px] font-semibold text-white transition-colors hover:bg-green-600"
-                        onClick={() => ownerPhone && handleWhatsApp(ownerPhone)}
-                        data-cta="pet_whatsapp_owner">
-                        <WhatsAppOutlined />
-                        Message via WhatsApp
-                    </button>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <button
+                            type="button"
+                            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-green-600 text-[15px] font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            onClick={() => ownerPhone && handleWhatsApp(ownerPhone)}
+                            disabled={!ownerPhone}
+                            data-cta="pet_whatsapp_owner">
+                            <WhatsAppOutlined />
+                            WhatsApp
+                        </button>
+                        {ownerPhone ? (
+                            <a
+                                href={`tel:${phoneDisplay.e164}`}
+                                className={`${btn.secondary} h-12 w-full text-[15px]`}
+                                data-cta="pet_call_owner">
+                                <Phone size={16} />
+                                Call
+                            </a>
+                        ) : (
+                            <button type="button" disabled className={`${btn.secondary} h-12 w-full text-[15px]`}>
+                                <Phone size={16} />
+                                Call
+                            </button>
+                        )}
+                    </div>
 
                     <div className="border-t border-gray-100 pt-3">
                         <button
                             type="button"
-                            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-gray-300 text-[15px] font-semibold text-gray-800 transition-colors hover:border-primary hover:text-primary"
+                            className={`${btn.secondary} h-12 w-full text-[15px]`}
                             onClick={handleAskPaltuu}
                             data-cta="pet_ask_paltuu">
                             <WhatsAppOutlined />
@@ -482,7 +509,7 @@ const PetDetailsClient: React.FC<{
                         </p>
                     </div>
                 </div>
-            </Modal>
+            </SheetModal>
 
             <div className={`pet-details min-h-screen bg-gray-50 px-4 py-4 md:px-8 md:py-6 ${isAvailable ? "pb-24 lg:pb-6" : ""}`}>
                 <div className="mx-auto max-w-6xl">
@@ -801,6 +828,8 @@ const PetDetailsClient: React.FC<{
                         visible={isModalVisible}
                         onClose={handleModalClose}
                         onSubmit={handleFormSubmit}
+                        petName={pet.pet_name}
+                        initialValues={adoptPrefill}
                     />
                 </div>
             </div>

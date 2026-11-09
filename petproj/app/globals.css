@@ -125,3 +125,21 @@ select:-webkit-autofill {
   -webkit-text-fill-color: #1f2937 !important; /* gray-800 */
   transition: background-color 5000s ease-in-out 0s;
 }
+
+/* Light tints of the theme colour (PALTU-141). Tailwind can't apply opacity to
+   --primary-color (a plain hex variable), so `bg-primary/10` renders nothing.
+   color-mix follows the role colour; older browsers get the default maroon tint. */
+@layer utilities {
+  .bg-primary-tint { background-color: #f5e8eb; }
+  .bg-primary-soft { background-color: #faf3f5; }
+  .bg-primary-faint { background-color: #fdf9fa; }
+  .border-primary-tint { border-color: #e7c6ce; }
+  .ring-primary-tint { --tw-ring-color: #ecd2d8; }
+  @supports (color: color-mix(in srgb, red 10%, white)) {
+    .bg-primary-tint { background-color: color-mix(in srgb, var(--primary-color) 10%, white); }
+    .bg-primary-soft { background-color: color-mix(in srgb, var(--primary-color) 5%, white); }
+    .bg-primary-faint { background-color: color-mix(in srgb, var(--primary-color) 3%, white); }
+    .border-primary-tint { border-color: color-mix(in srgb, var(--primary-color) 25%, white); }
+    .ring-primary-tint { --tw-ring-color: color-mix(in srgb, var(--primary-color) 18%, transparent); }
+  }
+}

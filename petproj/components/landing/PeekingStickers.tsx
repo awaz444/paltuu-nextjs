@@ -17,13 +17,14 @@ import type { CSSProperties } from "react";
  * stops under prefers-reduced-motion.
  */
 
-// Alternating right, left, right, left down the page, pigeon first and duck
-// last (founder, 2026-11-09).
+// Alternating right, left, right, left, right down the page: pigeon first,
+// strawberry last (founder, 2026-11-09).
 const STICKERS = [
-    { src: "/landing/stickers/pigeon-toast.svg", w: 240, h: 240, side: "right", top: "12%", rot: -12, delay: 0, say: "Coo!" },
-    { src: "/landing/stickers/screaming-cat.svg", w: 200, h: 240, side: "left", top: "34%", rot: 8, delay: 4.2, say: "AAAA!" },
-    { src: "/landing/stickers/frog-dog.svg", w: 200, h: 250, side: "right", top: "56%", rot: -8, delay: 1.8, say: "Ribbit?" },
-    { src: "/landing/stickers/duck.svg", w: 240, h: 240, side: "left", top: "78%", rot: 6, delay: 6.5, say: "Quack!" },
+    { src: "/landing/stickers/pigeon-toast.svg", w: 240, h: 240, side: "right", top: "10%", rot: -12, delay: 0, say: "Coo!" },
+    { src: "/landing/stickers/screaming-cat.svg", w: 200, h: 240, side: "left", top: "28%", rot: 8, delay: 4.2, say: "AAAA!" },
+    { src: "/landing/stickers/frog-dog.svg", w: 200, h: 250, side: "right", top: "46%", rot: -8, delay: 1.8, say: "Ribbit?" },
+    { src: "/landing/stickers/duck.svg", w: 240, h: 240, side: "left", top: "64%", rot: 6, delay: 6.5, say: "Quack!" },
+    { src: "/landing/stickers/strawberry.svg", w: 240, h: 240, side: "right", top: "82%", rot: 10, delay: 3.1, say: "Hi!" },
 ] as const;
 
 export default function PeekingStickers() {

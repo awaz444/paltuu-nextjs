@@ -176,7 +176,7 @@ function ListingsTab() {
                 <div className="mb-3 flex flex-wrap gap-2">
                     <Link href="/create-listing" className="rounded-full bg-primary px-3.5 py-1.5 text-sm font-semibold text-white">List a pet</Link>
                     <Link href="/my-listings" className="rounded-full border border-gray-300 bg-white px-3.5 py-1.5 text-sm font-semibold text-gray-700">Manage listings</Link>
-                    <Link href="/adoption-applicants" className="rounded-full border border-gray-300 bg-white px-3.5 py-1.5 text-sm font-semibold text-gray-700">Adoption requests</Link>
+                    <Link href="/my-listings" className="rounded-full border border-gray-300 bg-white px-3.5 py-1.5 text-sm font-semibold text-gray-700">Adoption requests</Link>
                 </div>
             )}
             {!loading && !error && shown.length === 0 ? (

@@ -104,6 +104,21 @@ const FAQS = [
         ),
     },
     {
+        // People search "paltu" (the Urdu word for a pet) and "paaltu" and find
+        // us there; naming both keeps that match without crowding the hero.
+        q: "Is it Paltu or Paltuu?",
+        a: (
+            <>
+                Paltuu. People also write it Paltu or Paaltu, from the Urdu word for a
+                pet. It is the same platform, at{" "}
+                <Link href="/" className="text-primary underline decoration-primary/40 hover:decoration-primary font-medium">
+                    paltuu.pk
+                </Link>
+                .
+            </>
+        ),
+    },
+    {
         q: "Is there a Paltuu mobile app?",
         a: (
             <>

@@ -609,7 +609,7 @@ export async function sendAdoptionApplicationEmails(applicationData: {
             </div>
 
             <div style="text-align:center;margin:30px 0;">
-              <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.paltuu.pk'}/adoption-applicants?pet_id=${applicationData.pet_id}"
+              <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.paltuu.pk'}/my-listings?pet=${applicationData.pet_id}"
                  style="display:inline-block;background-color:#8B1538;color:#ffffff;text-decoration:none;padding:12px 30px;border-radius:5px;font-weight:600;">
                 View Application
               </a>
@@ -654,7 +654,7 @@ export async function sendAdoptionApplicationEmails(applicationData: {
               <p style="color:#666;line-height:1.6;">Please review the application details and respond promptly.</p>
 
               <div style="text-align:center;margin:30px 0;">
-                <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.paltuu.pk'}/adoption-applicants?pet_id=${applicationData.pet_id}"
+                <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.paltuu.pk'}/my-listings?pet=${applicationData.pet_id}"
                    style="display:inline-block;background-color:#8B1538;color:#ffffff;text-decoration:none;padding:12px 30px;border-radius:5px;font-weight:600;">
                   Review Application
                 </a>

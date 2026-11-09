@@ -6,12 +6,10 @@ import { fetchCities } from "../store/slices/citiesSlice";
 import { fetchPetCategories } from "../store/slices/petCategoriesSlice";
 import { postPet } from "../store/slices/petSlice";
 import { useRouter } from "next/navigation";
-import Navbar from "../../components/navbar";
 import "./styles.css";
 import { PlusOutlined } from "@ant-design/icons";
-import { Image, Upload, message, Collapse } from "antd";
+import { Image, Upload, message } from "antd";
 import type { UploadFile, UploadProps } from "antd";
-import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { useSession } from "next-auth/react";
@@ -19,14 +17,24 @@ import { motion, AnimatePresence } from "framer-motion";
 import PhoneNumberInput from "../../components/PhoneNumberInput";
 import { isValidPhone } from "@/utils/phone";
 import { compressImageFiles } from "@/utils/imageCompression";
+import { formatAge } from "@/utils/formatAge";
+import { ArrowLeft, ArrowRight, ImageIcon, ImagePlus, MapPin } from "lucide-react";
+import { Field, inputClass, inputErrorClass, Segmented, Chip, StepBar, btn, cardClass, Spinner } from "@/components/account/ui";
 import { authUrl } from "@/lib/authRedirect";
 
-const { Panel } = Collapse;
 
 // Only allow letters (Latin + Urdu range), digits, spaces and basic punctuation
 const TITLE_RE = /^[a-zA-Z0-9؀-ۿ\s\-,.'&()]+$/;
 
 type Breed = { breed_id: number; category_id: number; name: string };
+
+const STEP_LABELS = ["Basics", "About the pet", "Photos and story"];
+const TAG_GROUPS = [
+    { key: "personality", label: "Personality" },
+    { key: "lifestyle", label: "Lifestyle" },
+    { key: "compatibility", label: "Compatibility" },
+    { key: "health", label: "Health" },
+];
 
 export default function CreatePetListing() {
 
@@ -39,6 +47,10 @@ export default function CreatePetListing() {
     const { status } = useSession();
 
     const [currentStep, setCurrentStep] = useState(1);
+    // Each step starts at the top; on phones Next sits below the fold.
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }, [currentStep]);
     const [title, setTitle] = useState("");
     const [petType, setPetType] = useState("");
     const [cityId, setCityId] = useState("");
@@ -124,7 +136,7 @@ export default function CreatePetListing() {
 
     const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const v = e.target.value;
-        if (v.length <= 1000) setDescription(v);
+        if (v.length <= 2500) setDescription(v);
     };
 
 
@@ -363,394 +375,365 @@ export default function CreatePetListing() {
 
     const prevStep = () => setCurrentStep((prev) => prev - 1);
 
-    if (status === "loading") {
+    // Cover photo for the live preview card.
+    const coverFile = fileList[0]?.originFileObj as File | undefined;
+    const [coverUrl, setCoverUrl] = useState<string | null>(null);
+    useEffect(() => {
+        if (!coverFile) {
+            setCoverUrl(null);
+            return;
+        }
+        const url = URL.createObjectURL(coverFile);
+        setCoverUrl(url);
+        return () => URL.revokeObjectURL(url);
+    }, [coverFile]);
+
+    if (status === "loading" || !isAuthenticated || !user) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <div className="text-lg">Loading...</div>
-            </div>
+            <main className="min-h-screen bg-gray-50">
+                <Spinner label={status === "loading" ? "Loading" : "Redirecting to sign in"} />
+            </main>
         );
     }
-    if (!isAuthenticated || !user) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <div className="text-lg">Redirecting to login...</div>
-            </div>
-        );
-    }
+
+    const fieldClass = (hasError: boolean, extra = "h-11") => `${inputClass} ${extra} ${hasError ? inputErrorClass : ""}`;
+    const selectedBreedName = breedOptions.find((b) => String(b.breed_id) === breedId)?.name;
+    const selectedCityName = cities.find((c) => String(c.city_id) === cityId)?.city_name;
+    const hasAge = !((age === null || age === 0) && (months === null || months === 0));
+
+    const stepHeading = (heading: string, subline: string) => (
+        <div className="mb-5">
+            <h2 className="text-base font-semibold text-gray-900">{heading}</h2>
+            <p className="mt-0.5 text-sm text-gray-600">{subline}</p>
+        </div>
+    );
 
     return (
-        <>
-            <div
-                className="fullBody min-h-screen py-12 px-4 sm:px-6"
-                style={{ maxWidth: "1200px", margin: "0 auto" }}>
+        <main className="min-h-screen bg-gray-50">
+            <div className="mx-auto max-w-3xl px-4 py-6 md:py-10 lg:max-w-5xl">
+                <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-8">
+                    <div className="min-w-0">
+                        <header className="mb-6">
+                            <h1 className="text-2xl font-semibold leading-tight text-gray-900 md:text-[28px]">List a pet for adoption</h1>
+                            <p className="mt-1.5 text-sm text-gray-600">
+                                Free to list. The Paltuu team checks every listing before it goes live.
+                            </p>
+                        </header>
 
-                {/* Progress Header */}
-                <div className="max-w-xl mx-auto mb-12">
-                    <div className="flex justify-between items-center relative">
-                        {[1, 2, 3].map((step) => (
-                            <div key={step} className="flex flex-col items-center relative z-10">
-                                <motion.div
-                                    initial={false}
-                                    animate={{
-                                        scale: currentStep === step ? 1.2 : 1,
-                                        backgroundColor: currentStep >= step ? "var(--primary-color)" : "#e2e8f0",
-                                    }}
-                                    className={`w-12 h-12 rounded-2xl flex items-center justify-center font-semibold text-white transition-all shadow-lg ${currentStep >= step ? "shadow-primary/20" : ""}`}>
-                                    {step}
-                                </motion.div>
-                                <span className={`text-[10px] uppercase tracking-widest mt-3 font-semibold ${currentStep >= step ? "text-primary" : "text-gray-400"}`}>
-                                    {step === 1 ? "Essentials" : step === 2 ? "Attributes" : "Gallery"}
-                                </span>
-                            </div>
-                        ))}
-                        <div className="absolute top-6 left-10 right-10 h-[2px] bg-gray-100 -z-0">
-                            <motion.div
-                                className="h-full bg-primary"
-                                initial={{ width: "0%" }}
-                                animate={{ width: `${((currentStep - 1) / 2) * 100}%` }}
-                                transition={{ duration: 0.5, ease: "easeInOut" }}
-                            />
+                        <div className="mb-4">
+                            <StepBar step={currentStep} total={STEP_LABELS.length} label={STEP_LABELS[currentStep - 1]} />
                         </div>
-                    </div>
-                </div>
 
-                <motion.div
-                    layout
-                    className="bg-white p-8 sm:p-12 rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] w-full max-w-2xl mx-auto overflow-hidden relative border border-gray-50">
-
-                    <form onSubmit={handleSubmit}>
-                        <AnimatePresence mode="wait">
-                            {currentStep === 1 && (
+                        <form onSubmit={handleSubmit} noValidate>
+                            <AnimatePresence mode="wait" initial={false}>
                                 <motion.div
-                                    key="step1"
-                                    initial={{ opacity: 0, x: 20 }}
+                                    key={currentStep}
+                                    initial={{ opacity: 0, x: 8 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    className="space-y-8">
+                                    exit={{ opacity: 0, x: -8 }}
+                                    transition={{ duration: 0.15 }}>
+                                    {currentStep === 1 && (
+                                        <section className={`${cardClass} p-5 md:p-6`}>
+                                            {stepHeading("Basics", "What you're listing, where the pet is and how adopters reach you.")}
+                                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                                <div className="sm:col-span-2">
+                                                    <Field
+                                                        label="Listing title"
+                                                        required
+                                                        htmlFor="cl-title"
+                                                        error={formErrors.title}
+                                                        hint={`${title.length}/80. Usually the pet's name, or a short description.`}>
+                                                        <input
+                                                            id="cl-title"
+                                                            type="text"
+                                                            className={fieldClass(!!formErrors.title)}
+                                                            placeholder="e.g. Bruno, a playful Labrador mix"
+                                                            value={title}
+                                                            onChange={handleTitleChange}
+                                                        />
+                                                    </Field>
+                                                </div>
 
-                                    <div className="text-center mb-10">
-                                        <h2 className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">The Essentials</h2>
-                                        <p className="text-gray-500 font-normal">Start with the fundamental details</p>
-                                    </div>
+                                                <Field label="Pet type" required htmlFor="cl-type" error={formErrors.petType}>
+                                                    <select
+                                                        id="cl-type"
+                                                        className={fieldClass(!!formErrors.petType)}
+                                                        value={petType}
+                                                        onChange={(e) => {
+                                                            setPetType(e.target.value);
+                                                            setBreedId("");
+                                                        }}>
+                                                        <option value="">Select type</option>
+                                                        {listableCategories.map((category) => (
+                                                            <option key={category.category_id} value={category.category_id}>
+                                                                {category.category_name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </Field>
 
-                                    <div className="space-y-6">
-                                        {/* Title */}
-                                        <div>
-                                            <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">
-                                                Listing Title * <span className="normal-case tracking-normal font-normal text-gray-300">({title.length}/80)</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                required
-                                                className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 focus:bg-white text-base font-normal"
-                                                placeholder="e.g. Energetic Husky Mix for Adoption"
-                                                value={title}
-                                                onChange={handleTitleChange}
-                                            />
-                                            {formErrors.title && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.title}</p>}
-                                        </div>
+                                                <Field label="Sex" required>
+                                                    <Segmented
+                                                        label="Sex"
+                                                        value={sex}
+                                                        onChange={setSex}
+                                                        options={[
+                                                            { value: "male", label: "Male" },
+                                                            { value: "female", label: "Female" },
+                                                        ]}
+                                                    />
+                                                </Field>
 
-                                        <div className="grid grid-cols-2 gap-6">
-                                            {/* Pet Type */}
-                                            <div>
-                                                <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Pet Type *</label>
-                                                <select
-                                                    className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 font-normal appearance-none"
-                                                    value={petType}
-                                                    required
-                                                    onChange={(e) => {
-                                                        setPetType(e.target.value);
-                                                        setBreedId("");
-                                                    }}>
-                                                    <option value="">Select Category</option>
-                                                    {listableCategories.map((category) => (
-                                                        <option key={category.category_id} value={category.category_id}>
-                                                            {category.category_name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                {formErrors.petType && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.petType}</p>}
-                                            </div>
-                                            {/* Sex */}
-                                            <div>
-                                                <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Sex *</label>
-                                                <div className="flex gap-2">
-                                                    {["male", "female"].map((s) => (
-                                                        <button
-                                                            key={s}
-                                                            type="button"
-                                                            onClick={() => setSex(s)}
-                                                            className={`flex-1 py-4 rounded-3xl text-sm font-medium capitalize border transition-all ${sex === s
-                                                                ? "border-primary bg-primary/5 text-primary"
-                                                                : "border-gray-100 bg-gray-50 text-gray-400"
-                                                                }`}>
-                                                            {s}
-                                                        </button>
-                                                    ))}
+                                                <Field label="City" required htmlFor="cl-city" error={formErrors.cityId}>
+                                                    <select
+                                                        id="cl-city"
+                                                        className={fieldClass(!!formErrors.cityId)}
+                                                        value={cityId}
+                                                        onChange={(e) => setCityId(e.target.value)}>
+                                                        <option value="">Select city</option>
+                                                        {cities.map((city) => (
+                                                            <option key={city.city_id} value={city.city_id}>
+                                                                {city.city_name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </Field>
+
+                                                <Field label="Area or neighbourhood" htmlFor="cl-area">
+                                                    <input
+                                                        id="cl-area"
+                                                        type="text"
+                                                        className={fieldClass(false)}
+                                                        placeholder="e.g. DHA, Gulberg"
+                                                        value={area}
+                                                        onChange={handleAreaChange}
+                                                    />
+                                                </Field>
+
+                                                <div className="sm:col-span-2">
+                                                    <Field
+                                                        label="Contact phone"
+                                                        required
+                                                        htmlFor="cl-phone"
+                                                        error={formErrors.contactNumber}
+                                                        hint="Pick your country, then enter the number without the leading zero.">
+                                                        <PhoneNumberInput
+                                                            id="cl-phone"
+                                                            value={contactNumber}
+                                                            onChange={setContactNumber}
+                                                            hasError={!!formErrors.contactNumber}
+                                                            className={`${inputClass} flex h-11 items-center focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-tint ${
+                                                                formErrors.contactNumber ? inputErrorClass : ""
+                                                            }`}
+                                                            inputClassName="!font-normal"
+                                                        />
+                                                    </Field>
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-6">
-                                            {/* City */}
-                                            <div>
-                                                <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">City *</label>
-                                                <select
-                                                    className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 font-normal"
-                                                    value={cityId}
-                                                    required
-                                                    onChange={(e) => setCityId(e.target.value)}>
-                                                    <option value="">Choose City</option>
-                                                    {cities.map((city) => (
-                                                        <option key={city.city_id} value={city.city_id}>
-                                                            {city.city_name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                {formErrors.cityId && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.cityId}</p>}
-                                            </div>
-                                            {/* Area */}
-                                            <div>
-                                                <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Area/Neighborhood</label>
-                                                <input
-                                                    type="text"
-                                                    className="p-5 w-full border rounded-3xl input-field bg-gray-50/50 font-normal"
-                                                    placeholder="DHA, Gulberg, etc."
-                                                    value={area}
-                                                    onChange={handleAreaChange}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Phone */}
-                                        <div>
-                                            <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Contact Phone *</label>
-                                            <PhoneNumberInput
-                                                value={contactNumber}
-                                                onChange={setContactNumber}
-                                                hasError={!!formErrors.contactNumber}
-                                                className={`p-5 w-full border rounded-3xl input-field bg-gray-50/50 focus-within:bg-white ${formErrors.contactNumber ? "border-red-300" : "focus-within:border-primary"}`}
-                                                inputClassName="text-base font-normal"
-                                            />
-                                            {formErrors.contactNumber
-                                                ? <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.contactNumber}</p>
-                                                : <p className="text-gray-400 text-xs mt-1 ml-1">Pick your country, then enter the number without the leading zero</p>
-                                            }
-                                        </div>
-                                    </div>
-
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        type="button"
-                                        onClick={nextStep}
-                                        className="mt-12 p-6 bg-primary text-white rounded-[2rem] w-full font-semibold text-base shadow-2xl shadow-primary/30 active:shadow-none transition-shadow">
-                                        Next
-                                    </motion.button>
-                                </motion.div>
-                            )}
-
-                            {currentStep === 2 && (
-                                <motion.div
-                                    key="step2"
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    className="space-y-10">
-
-                                    <div className="text-center mb-8">
-                                        <h2 className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">Traits & Behavior</h2>
-                                        <p className="text-gray-500 font-normal">Describe their unique personality</p>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-8 p-8 bg-gray-50/50 rounded-[3rem] border border-gray-100">
-                                        <div className="space-y-6">
-                                            <div>
-                                                <label className="block text-[10px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Years</label>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    max="30"
-                                                    className="p-5 w-full border rounded-3xl input-field bg-white font-normal"
-                                                    placeholder="0"
-                                                    value={age ?? ""}
-                                                    onChange={handleAgeChange}
-                                                />
-                                                {ageError && <p className="text-red-500 text-xs mt-1 ml-1">{ageError}</p>}
-                                            </div>
-                                            <div>
-                                                <label className="block text-[10px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Months (0–11)</label>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    max="11"
-                                                    className="p-5 w-full border rounded-3xl input-field bg-white font-normal"
-                                                    placeholder="0"
-                                                    value={months ?? ""}
-                                                    onChange={handleMonthsChange}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-6">
-                                            <div>
-                                                <label className="block text-[10px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Breed</label>
-                                                <select
-                                                    className="p-5 w-full border rounded-3xl input-field bg-white font-normal appearance-none"
-                                                    value={breedId}
-                                                    onChange={(e) => setBreedId(e.target.value)}>
-                                                    <option value="">Select breed</option>
-                                                    {breedOptions.map((b) => (
-                                                        <option key={b.breed_id} value={b.breed_id}>{b.name}</option>
-                                                    ))}
-                                                </select>
-                                                {formErrors.breed && <p className="text-red-500 text-xs mt-1 ml-1">{formErrors.breed}</p>}
-                                            </div>
-                                            <div>
-                                                <label className="block text-[10px] uppercase tracking-widest font-medium text-gray-400 mb-2 ml-1">Health Issues</label>
-                                                <input
-                                                    type="text"
-                                                    className="p-5 w-full border rounded-3xl input-field bg-white font-normal"
-                                                    placeholder="None / Minor"
-                                                    value={healthIssues}
-                                                    onChange={handleHealthChange}
-                                                    maxLength={200}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-8">
-                                        <h3 className="text-sm font-medium text-gray-300 uppercase tracking-[0.2em] text-center">Select all that apply</h3>
-                                        <div className="space-y-10">
-                                            {["personality", "lifestyle", "compatibility", "health"].map((cat) => (
-                                                <div key={cat} className="space-y-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="text-[10px] uppercase tracking-[0.3em] font-medium text-primary/40 leading-none">{cat}</span>
-                                                        <div className="h-[1px] flex-1 bg-gray-100"></div>
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {petTags
-                                                            .filter((t) => t.tag_category === cat)
-                                                            .map((tag) => (
-                                                                <motion.button
-                                                                    whileHover={{ y: -2 }}
-                                                                    whileTap={{ scale: 0.95 }}
-                                                                    key={tag.tag_id}
-                                                                    type="button"
-                                                                    onClick={() => handleTagToggle(tag.tag_id)}
-                                                                    className={`px-6 py-3 rounded-2xl text-xs font-medium transition-all border-2 ${selectedTags.includes(tag.tag_id)
-                                                                        ? "bg-primary border-primary text-white shadow-xl shadow-primary/20"
-                                                                        : "bg-white border-gray-100 text-gray-500 hover:border-gray-200"
-                                                                        }`}>
-                                                                    {tag.tag_name}
-                                                                </motion.button>
-                                                            ))}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-4 pt-4">
-                                        <button
-                                            type="button"
-                                            onClick={prevStep}
-                                            className="p-6 bg-gray-50 text-gray-400 rounded-[2rem] w-1/3 font-medium hover:bg-gray-100 transition-all">
-                                            Back
-                                        </button>
-                                        <motion.button
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            type="button"
-                                            onClick={nextStep}
-                                            className="p-6 bg-primary text-white rounded-[2rem] flex-1 font-semibold shadow-xl shadow-primary/10">
-                                            Almost Done
-                                        </motion.button>
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            {currentStep === 3 && (
-                                <motion.div
-                                    key="step3"
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    className="space-y-10">
-
-                                    <div className="text-center">
-                                        <h2 className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">Final Details</h2>
-                                        <p className="text-gray-500 font-normal">Add photos and a short description</p>
-                                    </div>
-
-                                    <div className="space-y-6">
-                                        <div>
-                                            <label className="block text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-3 ml-1">
-                                                The Story <span className="normal-case tracking-normal font-normal text-gray-300">({description.length}/2500)</span>
-                                            </label>
-                                            <textarea
-                                                className="p-6 w-full border rounded-[2.5rem] input-field bg-gray-50/50 min-h-[180px] text-gray-700 leading-relaxed font-normal"
-                                                placeholder="Tell us about their habits, favorite toys, or how you found them..."
-                                                value={description}
-                                                onChange={handleDescriptionChange}
-                                                maxLength={2500}
-                                            />
-                                        </div>
-
-                                        <div className="p-10 bg-gray-50/30 rounded-[3rem] border-2 border-dashed border-gray-100 flex flex-col items-center">
-                                            <label className="text-[11px] uppercase tracking-widest font-medium text-gray-400 mb-8">Photos Gallery (Max 5)</label>
-                                            <Upload
-                                                className="listing-uploader scale-110"
-                                                listType="picture-card"
-                                                fileList={fileList}
-                                                onPreview={handlePreview}
-                                                onChange={handleChange}
-                                                beforeUpload={beforeUpload}
-                                                maxCount={5}>
-                                                {fileList.length >= 5 ? null : (
-                                                    <div className="flex flex-col items-center opacity-40 hover:opacity-100 transition-opacity">
-                                                        <PlusOutlined style={{ fontSize: "32px", color: "var(--primary-color)" }} />
-                                                        <div className="mt-2 text-[10px] font-medium uppercase tracking-tighter">Add</div>
-                                                    </div>
-                                                )}
-                                            </Upload>
-                                        </div>
-                                    </div>
-
-                                    {previewImage && (
-                                        <Image
-                                            wrapperStyle={{ display: "none" }}
-                                            preview={{
-                                                visible: previewOpen,
-                                                onVisibleChange: (visible) => setPreviewOpen(visible),
-                                                afterOpenChange: (visible) => !visible && setPreviewImage(""),
-                                            }}
-                                            src={previewImage}
-                                        />
+                                        </section>
                                     )}
 
-                                    <div className="flex gap-4 pt-4">
-                                        <button
-                                            type="button"
-                                            onClick={prevStep}
-                                            className="p-6 bg-gray-50 text-gray-400 rounded-[2rem] w-1/3 font-medium hover:bg-gray-100 transition-all">
-                                            Back
-                                        </button>
-                                        <motion.button
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            type="submit"
-                                            className="p-6 bg-primary text-white rounded-[2rem] flex-1 font-semibold shadow-2xl shadow-primary/20 disabled:bg-gray-200 transition-all"
-                                            disabled={isSubmitting}>
-                                            {isSubmitting ? "Submitting..." : "Publish Listing"}
-                                        </motion.button>
-                                    </div>
+                                    {currentStep === 2 && (
+                                        <section className={`${cardClass} p-5 md:p-6`}>
+                                            {stepHeading("About the pet", "Age, breed and a few words about their character.")}
+                                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <Field label="Age in years" required htmlFor="cl-years" error={ageError}>
+                                                        <input
+                                                            id="cl-years"
+                                                            type="number"
+                                                            inputMode="numeric"
+                                                            min="0"
+                                                            max="30"
+                                                            className={fieldClass(!!ageError)}
+                                                            placeholder="0"
+                                                            value={age ?? ""}
+                                                            onChange={handleAgeChange}
+                                                        />
+                                                    </Field>
+                                                    <Field label="And months" htmlFor="cl-months" hint="0 to 11">
+                                                        <input
+                                                            id="cl-months"
+                                                            type="number"
+                                                            inputMode="numeric"
+                                                            min="0"
+                                                            max="11"
+                                                            className={fieldClass(!!monthsError)}
+                                                            placeholder="0"
+                                                            value={months ?? ""}
+                                                            onChange={handleMonthsChange}
+                                                        />
+                                                    </Field>
+                                                </div>
+
+                                                <Field
+                                                    label="Breed"
+                                                    required
+                                                    htmlFor="cl-breed"
+                                                    error={formErrors.breed}
+                                                    hint={petType ? undefined : "Choose the pet type first."}>
+                                                    <select
+                                                        id="cl-breed"
+                                                        className={fieldClass(!!formErrors.breed)}
+                                                        value={breedId}
+                                                        onChange={(e) => setBreedId(e.target.value)}>
+                                                        <option value="">Select breed</option>
+                                                        {breedOptions.map((b) => (
+                                                            <option key={b.breed_id} value={b.breed_id}>
+                                                                {b.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </Field>
+
+                                                <div className="sm:col-span-2">
+                                                    <Field label="Health issues" htmlFor="cl-health" hint="Leave empty if there are none.">
+                                                        <input
+                                                            id="cl-health"
+                                                            type="text"
+                                                            className={fieldClass(false)}
+                                                            placeholder="e.g. Recovering from a leg injury"
+                                                            value={healthIssues}
+                                                            onChange={handleHealthChange}
+                                                            maxLength={200}
+                                                        />
+                                                    </Field>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-6 border-t border-gray-100 pt-5">
+                                                <h3 className="text-sm font-semibold text-gray-900">What are they like?</h3>
+                                                <p className="mt-0.5 text-sm text-gray-600">Pick any that fit. They show as tags on the listing.</p>
+                                                <div className="mt-4 space-y-4">
+                                                    {TAG_GROUPS.map((group) => (
+                                                        <div key={group.key}>
+                                                            <p className="mb-2 text-xs font-medium text-gray-600">{group.label}</p>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {petTags
+                                                                    .filter((t) => t.tag_category === group.key)
+                                                                    .map((tag) => (
+                                                                        <Chip
+                                                                            key={tag.tag_id}
+                                                                            selected={selectedTags.includes(tag.tag_id)}
+                                                                            onClick={() => handleTagToggle(tag.tag_id)}>
+                                                                            {tag.tag_name}
+                                                                        </Chip>
+                                                                    ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    {currentStep === 3 && (
+                                        <section className={`${cardClass} p-5 md:p-6`}>
+                                            {stepHeading("Photos and story", "Clear photos and an honest story get pets adopted faster.")}
+                                            <div className="space-y-5">
+                                                <Field label="Photos" required hint="Up to 5 photos. The first one is the cover.">
+                                                    <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
+                                                        <Upload
+                                                            className="listing-uploader"
+                                                            listType="picture-card"
+                                                            fileList={fileList}
+                                                            onPreview={handlePreview}
+                                                            onChange={handleChange}
+                                                            beforeUpload={beforeUpload}
+                                                            maxCount={5}>
+                                                            {fileList.length >= 5 ? null : (
+                                                                <div className="flex flex-col items-center gap-1 text-gray-500">
+                                                                    <ImagePlus size={20} className="text-primary" />
+                                                                    <span className="text-xs font-medium">Add photo</span>
+                                                                </div>
+                                                            )}
+                                                        </Upload>
+                                                    </div>
+                                                </Field>
+
+                                                <Field
+                                                    label="Description"
+                                                    htmlFor="cl-description"
+                                                    error={formErrors.description}
+                                                    hint={`${description.length}/2500`}>
+                                                    <textarea
+                                                        id="cl-description"
+                                                        rows={6}
+                                                        className={`${fieldClass(!!formErrors.description, "py-2.5")} min-h-[160px] leading-relaxed`}
+                                                        placeholder="Their habits, favourite toys, how you found them, and why you're rehoming them."
+                                                        value={description}
+                                                        onChange={handleDescriptionChange}
+                                                        maxLength={2500}
+                                                    />
+                                                </Field>
+                                            </div>
+
+                                            {previewImage && (
+                                                <Image
+                                                    wrapperStyle={{ display: "none" }}
+                                                    preview={{
+                                                        visible: previewOpen,
+                                                        onVisibleChange: (visible) => setPreviewOpen(visible),
+                                                        afterOpenChange: (visible) => !visible && setPreviewImage(""),
+                                                    }}
+                                                    src={previewImage}
+                                                />
+                                            )}
+                                        </section>
+                                    )}
                                 </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </form>
-                </motion.div>
+                            </AnimatePresence>
+
+                            <div className="mt-4 flex gap-2 sm:justify-end">
+                                {currentStep > 1 && (
+                                    <button type="button" onClick={prevStep} disabled={isSubmitting} className={`${btn.secondary} flex-1 sm:flex-none`}>
+                                        <ArrowLeft size={16} />
+                                        Back
+                                    </button>
+                                )}
+                                {currentStep < 3 ? (
+                                    <button type="button" onClick={nextStep} className={`${btn.primary} flex-1 sm:flex-none`}>
+                                        Next
+                                        <ArrowRight size={16} />
+                                    </button>
+                                ) : (
+                                    <button type="submit" disabled={isSubmitting} className={`${btn.primary} flex-1 sm:flex-none`}>
+                                        {isSubmitting ? "Publishing…" : "Publish listing"}
+                                    </button>
+                                )}
+                            </div>
+                        </form>
+                    </div>
+
+                    {/* Live preview, the same card adopters see on Browse Pets. */}
+                    <aside className="hidden lg:block" aria-label="Listing preview">
+                        <div className="sticky top-24">
+                            <p className="mb-2 text-xs font-medium text-gray-600">Preview on Browse Pets</p>
+                            <div className="overflow-hidden rounded-3xl bg-white px-4 pt-4 shadow-sm">
+                                <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-gray-100">
+                                    {coverUrl ? (
+                                        <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+                                    ) : (
+                                        <ImageIcon size={32} className="text-gray-300" aria-hidden="true" />
+                                    )}
+                                </div>
+                                <div className="py-4">
+                                    <h3 className="mb-1 truncate font-bold text-gray-900">{title.trim() || "Pet's name"}</h3>
+                                    <p className="mb-1 truncate text-gray-600">
+                                        {[selectedBreedName, hasAge ? formatAge((age || 0) * 12 + (months || 0)) : null]
+                                            .filter(Boolean)
+                                            .join(" · ") || "Breed and age"}
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <MapPin size={14} className="shrink-0 text-primary" />
+                                        <p className="truncate text-gray-600">{selectedCityName || "City"}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
             </div>
-        </>
+        </main>
     );
 }

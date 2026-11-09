@@ -358,6 +358,25 @@ const Navbar = ({
     return HOME_SEGMENTS.includes(segment) ? "home" : segment;
   }, [pathname]);
 
+  // The query string, read after mount and on each route change. Only links
+  // whose href carries one need it (Vets at Home is /open?path=express-vet).
+  // Not useSearchParams: the navbar sits in the root layout outside any
+  // Suspense, so that hook would make it render client-only on static pages.
+  const [search, setSearch] = useState("");
+  useEffect(() => {
+    setSearch(window.location.search);
+  }, [pathname]);
+
+  const isActiveLink = (href: string) => {
+    const [path, query] = href.split("?");
+    if (path !== activeLink) return false;
+    if (!query) return true;
+    // Every param in the link must match the URL: /open is also where shared
+    // posts, profiles and pets land, and those must not underline Vets at Home.
+    const current = new URLSearchParams(search);
+    return Array.from(new URLSearchParams(query)).every(([key, value]) => current.get(key) === value);
+  };
+
   const dropdownWidth = `${Math.max(
     displayName.length,
     ...dropdownItems.map((item) => item.label.length)
@@ -610,7 +629,7 @@ const Navbar = ({
           {links.map((link) => (
             <Link key={link.href} href={`/${link.href}`} className={link.pkOnly ? PK_ONLY : undefined}>
               <span
-                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${activeLink === link.href ? "after:w-full" : "after:w-0"
+                className={`relative after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-[#ffffff] after:transition-all after:duration-300 hover:after:w-full ${isActiveLink(link.href) ? "after:w-full" : "after:w-0"
                   }`}
                 style={{ cursor: "pointer" }}
               >

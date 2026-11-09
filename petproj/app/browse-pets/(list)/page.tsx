@@ -1,5 +1,6 @@
 import { db } from "@/db/index";
 import { adoptionFeedOrderBy } from "@/lib/adoptionFeed";
+import { stripPetContact } from "@/lib/contacts";
 import BrowsePetsClient from "../BrowsePetsClient";
 import CommunityStrip from "@/components/community/CommunityStrip";
 
@@ -28,7 +29,8 @@ async function getInitialPets() {
         `);
 
         return {
-            pets: result.rows,
+            // These rows go into the page's HTML, so the owner's phone and email must not.
+            pets: result.rows.map(stripPetContact) as any[],
             meta: { total, page: 1, limit: 11, totalPages: Math.ceil(total / 11) },
         };
     } catch {

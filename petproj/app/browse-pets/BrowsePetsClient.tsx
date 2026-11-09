@@ -33,7 +33,9 @@ interface Pet {
     city_id: number;
     area: string;
     age_months: number;
-    contact_number: string | null;
+    /** Never sent to the browser (PALTU-134); has_contact says whether there is one. */
+    contact_number?: string | null;
+    has_contact?: boolean;
     description: string;
     adoption_status: string;
     price: string;

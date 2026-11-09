@@ -18,6 +18,8 @@ export async function GET(req: NextRequest) {
             SELECT
                 'adoption' AS type,
                 aa.adoption_id,
+                aa.user_id,
+                u.profile_image_url AS adopter_image,
                 aa.status,
                 aa.created_at,
                 aa.adopter_name,
@@ -30,6 +32,8 @@ export async function GET(req: NextRequest) {
                 aa.pet_sleep_location,
                 aa.pet_left_alone,
                 aa.additional_details AS pet_description,
+                aa.additional_details,
+                aa.agree_to_terms,
                 c.city_name,
                 p.pet_name,
                 p.pet_id,
@@ -37,6 +41,7 @@ export async function GET(req: NextRequest) {
             FROM adoption_applications aa
             JOIN pets p ON aa.pet_id = p.pet_id
             LEFT JOIN cities c ON aa.city_id = c.city_id
+            LEFT JOIN users u ON u.user_id = aa.user_id
             WHERE p.owner_id = $1
             ORDER BY aa.created_at DESC;
         `, [userId]);

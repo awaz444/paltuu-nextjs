@@ -1,25 +1,22 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
+import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import PhoneNumberInput from "./PhoneNumberInput";
-import { isValidPhone } from "@/utils/phone";
-import {
-    XMarkIcon, 
-    ChevronRightIcon, 
-    ChevronLeftIcon,
-    CheckCircleIcon,
-    HeartIcon,
-    InformationCircleIcon,
-    HomeIcon,
-    UserIcon,
-    PhoneIcon,
-    MapPinIcon
-} from "@heroicons/react/24/outline";
+import { isValidPhone, normalizePhone } from "@/utils/phone";
+import { Modal, Field, inputClass, inputErrorClass, CheckRow, StepBar, btn } from "./account/ui";
 
 interface City {
     city_id: number;
     city_name: string;
+}
+
+export interface AdoptionFormInitialValues {
+    adopter_name?: string;
+    contact_number?: string;
+    city_id?: number | string;
 }
 
 interface AdoptionFormProps {
@@ -28,7 +25,28 @@ interface AdoptionFormProps {
     visible: boolean;
     onClose: () => void;
     onSubmit: (formData: any) => void;
+    /** Shown in the title: "Apply to adopt Bruno". */
+    petName?: string;
+    /** Filled in from the adopter's profile when the modal opens, without overwriting typed answers. */
+    initialValues?: AdoptionFormInitialValues;
 }
+
+const EMPTY_FORM = {
+    adopter_name: "",
+    city_id: "",
+    contact_number: "",
+    adopter_address: "",
+    age_of_youngest_child: "",
+    other_pets_details: "",
+    other_pets_neutered: false,
+    has_secure_outdoor_area: false,
+    pet_sleep_location: "",
+    pet_left_alone: "",
+    additional_details: "",
+    agree_to_terms: false,
+};
+
+const STEPS = ["About you", "Your home", "Last details"];
 
 const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
     petId,
@@ -36,26 +54,16 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
     visible,
     onClose,
     onSubmit,
+    petName,
+    initialValues,
 }) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [cities, setCities] = useState<City[]>([]);
-    
+    const [submitted, setSubmitted] = useState(false);
+
     // Form state
-    const [formData, setFormData] = useState({
-        adopter_name: "",
-        city_id: "",
-        contact_number: "",
-        adopter_address: "",
-        age_of_youngest_child: "",
-        other_pets_details: "",
-        other_pets_neutered: false,
-        has_secure_outdoor_area: false,
-        pet_sleep_location: "",
-        pet_left_alone: "",
-        additional_details: "",
-        agree_to_terms: false,
-    });
+    const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -74,20 +82,45 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
         if (visible) fetchCities();
     }, [visible]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+    // Prefill from the profile once per opening, only into fields still empty.
+    const prefilledRef = useRef(false);
+    useEffect(() => {
+        if (!visible) {
+            prefilledRef.current = false;
+            setSubmitted(false);
+            return;
+        }
+        if (prefilledRef.current || !initialValues) return;
+        prefilledRef.current = true;
+        const phone = initialValues.contact_number ? normalizePhone(initialValues.contact_number) ?? "" : "";
+        const city = initialValues.city_id != null && initialValues.city_id !== "" ? String(initialValues.city_id) : "";
+        setFormData((prev) => ({
+            ...prev,
+            adopter_name: prev.adopter_name || (initialValues.adopter_name ?? "").trim(),
+            contact_number: prev.contact_number || phone,
+            city_id: prev.city_id || city,
+        }));
+    }, [visible, initialValues]);
+
+    const clearError = (name: string) => {
         if (formErrors[name]) {
-            setFormErrors(prev => {
-                const newErrors = { ...prev };
-                delete newErrors[name];
-                return newErrors;
+            setFormErrors((prev) => {
+                const next = { ...prev };
+                delete next[name];
+                return next;
             });
         }
     };
 
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+        clearError(name);
+    };
+
     const handleCheckboxChange = (name: string, checked: boolean) => {
-        setFormData(prev => ({ ...prev, [name]: checked }));
+        setFormData((prev) => ({ ...prev, [name]: checked }));
+        clearError(name);
     };
 
     const validateStep = (step: number) => {
@@ -110,12 +143,12 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
 
     const handleNext = () => {
         if (validateStep(currentStep)) {
-            setCurrentStep(prev => prev + 1);
+            setCurrentStep((prev) => prev + 1);
         }
     };
 
     const handleBack = () => {
-        setCurrentStep(prev => prev - 1);
+        setCurrentStep((prev) => prev - 1);
     };
 
     const handleFormSubmit = async () => {
@@ -128,374 +161,264 @@ const AdoptionFormModal: React.FC<AdoptionFormProps> = ({
                 pet_id: petId,
                 ...formData,
                 city_id: parseInt(formData.city_id),
-                contact_number: formData.contact_number
+                contact_number: formData.contact_number,
             };
 
-            const response = await fetch('/api/v1/applications/adoption', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const response = await fetch("/api/v1/applications/adoption", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             });
 
             if (response.ok) {
                 const result = await response.json();
-                toast.success('Adoption form submitted successfully!');
                 onSubmit(result);
                 setCurrentStep(1);
-                setFormData({
-                    adopter_name: "",
-                    city_id: "",
-                    contact_number: "",
-                    adopter_address: "",
-                    age_of_youngest_child: "",
-                    other_pets_details: "",
-                    other_pets_neutered: false,
-                    has_secure_outdoor_area: false,
-                    pet_sleep_location: "",
-                    pet_left_alone: "",
-                    additional_details: "",
-                    agree_to_terms: false,
-                });
-                onClose();
+                setFormData({ ...EMPTY_FORM });
+                setSubmitted(true);
             } else {
                 const error = await response.json();
-                toast.error(error.error || 'Failed to submit form');
+                toast.error(error.error || "Failed to submit form");
             }
         } catch (err) {
             console.error("Submission error:", err);
-            toast.error('An error occurred. Please try again.');
+            toast.error("An error occurred. Please try again.");
         } finally {
             setLoading(false);
         }
     };
 
-    if (!visible) return null;
+    const fieldClass = (name: string, extra = "h-11") =>
+        `${inputClass} ${extra} ${formErrors[name] ? inputErrorClass : ""}`;
+
+    const footer = submitted ? (
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button type="button" onClick={onClose} className={`${btn.secondary} w-full sm:w-auto`}>
+                Done
+            </button>
+            <Link href="/my-applications" onClick={onClose} className={`${btn.primary} w-full sm:w-auto`}>
+                See my applications
+            </Link>
+        </div>
+    ) : (
+        <div className="flex gap-2 sm:justify-end">
+            {currentStep > 1 && (
+                <button type="button" onClick={handleBack} disabled={loading} className={`${btn.secondary} flex-1 sm:flex-none`}>
+                    <ArrowLeft size={16} />
+                    Back
+                </button>
+            )}
+            {currentStep < STEPS.length ? (
+                <button type="button" onClick={handleNext} className={`${btn.primary} flex-1 sm:flex-none`}>
+                    Next
+                    <ArrowRight size={16} />
+                </button>
+            ) : (
+                <button type="button" onClick={handleFormSubmit} disabled={loading} className={`${btn.primary} flex-1 sm:flex-none`}>
+                    {loading ? "Sending…" : "Submit application"}
+                </button>
+            )}
+        </div>
+    );
 
     return (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={onClose}
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            />
-            
-            <motion.div
-                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="relative bg-white w-full max-w-2xl rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col max-h-[90vh] border border-gray-50"
-            >
-                {/* Header */}
-                <div className="p-8 pb-4 flex justify-between items-center bg-white z-10">
-                    <div className="flex flex-col">
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="h-2 w-8 bg-primary rounded-full" />
-                            <span className="text-[10px] uppercase tracking-widest font-black text-primary">Adoption Application</span>
-                        </div>
-                        <h2 className="text-3xl font-black text-gray-900 leading-none">Complete Your Profile</h2>
+        <Modal
+            open={visible}
+            onClose={onClose}
+            size="lg"
+            scrollKey={submitted ? "done" : currentStep}
+            closeDisabled={loading}
+            title={petName ? `Apply to adopt ${petName}` : "Apply to adopt"}
+            subtitle={submitted ? undefined : "The owner reads this before replying. It takes about two minutes."}
+            footer={footer}>
+            {submitted ? (
+                <div className="flex flex-col items-center py-6 text-center">
+                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600">
+                        <CheckCircle2 size={24} />
                     </div>
-                    <button 
-                        onClick={onClose}
-                        className="p-3 hover:bg-gray-100 rounded-2xl transition-colors text-gray-400 hover:text-gray-900"
-                    >
-                        <XMarkIcon className="w-6 h-6" />
-                    </button>
+                    <h3 className="text-base font-semibold text-gray-900">Application sent</h3>
+                    <p className="mt-1 max-w-sm text-sm text-gray-600">
+                        We&apos;ve sent your answers to the owner. You&apos;ll get a notification when they reply.
+                    </p>
                 </div>
+            ) : (
+                <>
+                    <StepBar step={currentStep} total={STEPS.length} label={STEPS[currentStep - 1]} />
 
-                {/* Progress Bar */}
-                <div className="px-10 mb-4">
-                    <div className="flex justify-between items-center relative">
-                        {[1, 2, 3].map((step) => (
-                            <div key={step} className="flex flex-col items-center relative z-10">
-                                <motion.div
-                                    animate={{
-                                        scale: currentStep === step ? 1.1 : 1,
-                                        backgroundColor: currentStep >= step ? "var(--primary-color, #a03048)" : "#f1f5f9",
-                                        color: currentStep >= step ? "#ffffff" : "#94a3b8"
-                                    }}
-                                    className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold shadow-sm transition-all`}
-                                >
-                                    {currentStep > step ? <CheckCircleIcon className="w-6 h-6" /> : step}
-                                </motion.div>
-                            </div>
-                        ))}
-                        <div className="absolute top-5 left-8 right-8 h-[2px] bg-slate-100 -z-0">
-                            <motion.div
-                                className="h-full bg-primary"
-                                initial={{ width: "0%" }}
-                                animate={{ width: `${((currentStep - 1) / 2) * 100}%` }}
-                            />
-                        </div>
-                    </div>
-                </div>
+                    <AnimatePresence mode="wait" initial={false}>
+                        <motion.div
+                            key={currentStep}
+                            initial={{ opacity: 0, x: 8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -8 }}
+                            transition={{ duration: 0.15 }}
+                            className="mt-5 space-y-4">
+                            {currentStep === 1 && (
+                                <>
+                                    <Field label="Full name" required error={formErrors.adopter_name} htmlFor="adopt-name">
+                                        <input
+                                            id="adopt-name"
+                                            type="text"
+                                            name="adopter_name"
+                                            autoComplete="name"
+                                            className={fieldClass("adopter_name")}
+                                            placeholder="Your full name"
+                                            value={formData.adopter_name}
+                                            onChange={handleChange}
+                                        />
+                                    </Field>
 
-                {/* Form Content */}
-                <div className="flex-1 overflow-y-auto p-10 pt-4 custom-scrollbar">
-                    <AnimatePresence mode="wait">
-                        {currentStep === 1 && (
-                            <motion.div
-                                key="step1"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                className="space-y-6"
-                            >
-                                <div className="text-center mb-8">
-                                    <h3 className="text-xl font-black text-gray-800">Essential Information</h3>
-                                    <p className="text-gray-500 font-medium">Let us know who you are</p>
-                                </div>
-
-                                <div className="space-y-6">
-                                    <div className="group">
-                                        <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Full Name *</label>
-                                        <div className="flex items-center p-4 bg-gray-50/50 rounded-2xl border border-gray-100 focus-within:bg-white focus-within:border-primary transition-all">
-                                            <UserIcon className="w-5 h-5 text-gray-400 mr-3" />
-                                            <input
-                                                type="text"
-                                                name="adopter_name"
-                                                className="bg-transparent border-none outline-none w-full font-bold text-gray-900"
-                                                placeholder="Enter your full name"
-                                                value={formData.adopter_name}
-                                                onChange={handleChange}
-                                            />
-                                        </div>
-                                        {formErrors.adopter_name && <span className="text-red-500 text-xs ml-1 mt-1 font-bold">{formErrors.adopter_name}</span>}
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">City *</label>
-                                            <div className="flex items-center p-4 bg-gray-50/50 rounded-2xl border border-gray-100 focus-within:bg-white focus-within:border-primary transition-all">
-                                                <MapPinIcon className="w-5 h-5 text-gray-400 mr-3" />
-                                                <select
-                                                    name="city_id"
-                                                    className="bg-transparent border-none outline-none w-full font-bold text-gray-900 appearance-none"
-                                                    value={formData.city_id}
-                                                    onChange={handleChange}
-                                                >
-                                                    <option value="">Select City</option>
-                                                    {cities.map(city => (
-                                                        <option key={city.city_id} value={city.city_id}>{city.city_name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            {formErrors.city_id && <span className="text-red-500 text-xs ml-1 mt-1 font-bold">{formErrors.city_id}</span>}
-                                        </div>
-                                        <div>
-                                            <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Phone Number *</label>
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                        <Field label="City" required error={formErrors.city_id} htmlFor="adopt-city">
+                                            <select
+                                                id="adopt-city"
+                                                name="city_id"
+                                                className={fieldClass("city_id")}
+                                                value={formData.city_id}
+                                                onChange={handleChange}>
+                                                <option value="">Select city</option>
+                                                {cities.map((city) => (
+                                                    <option key={city.city_id} value={city.city_id}>
+                                                        {city.city_name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </Field>
+                                        <Field label="Phone number" required error={formErrors.contact_number} htmlFor="adopt-phone">
                                             <PhoneNumberInput
+                                                id="adopt-phone"
                                                 value={formData.contact_number}
                                                 onChange={(e164) => {
-                                                    setFormData(prev => ({ ...prev, contact_number: e164 }));
-                                                    if (formErrors.contact_number) {
-                                                        setFormErrors(prev => {
-                                                            const next = { ...prev };
-                                                            delete next.contact_number;
-                                                            return next;
-                                                        });
-                                                    }
+                                                    setFormData((prev) => ({ ...prev, contact_number: e164 }));
+                                                    clearError("contact_number");
                                                 }}
                                                 hasError={!!formErrors.contact_number}
-                                                className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100 focus-within:bg-white focus-within:border-primary"
+                                                className={`${inputClass} flex h-11 items-center focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-tint ${
+                                                    formErrors.contact_number ? inputErrorClass : ""
+                                                }`}
+                                                inputClassName="!font-normal"
                                             />
-                                            {formErrors.contact_number && <span className="text-red-500 text-xs ml-1 mt-1 font-bold">{formErrors.contact_number}</span>}
-                                        </div>
+                                        </Field>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Area / Address *</label>
-                                        <div className="flex items-start p-4 bg-gray-50/50 rounded-2xl border border-gray-100 focus-within:bg-white focus-within:border-primary transition-all">
-                                            <HomeIcon className="w-5 h-5 text-gray-400 mr-3 mt-1" />
-                                            <textarea
-                                                name="adopter_address"
-                                                rows={2}
-                                                className="bg-transparent border-none outline-none w-full font-bold text-gray-900 resize-none"
-                                                placeholder="Enter your general area or neighborhood"
-                                                value={formData.adopter_address}
-                                                onChange={handleChange}
-                                            />
-                                        </div>
-                                        {formErrors.adopter_address && <span className="text-red-500 text-xs ml-1 mt-1 font-bold">{formErrors.adopter_address}</span>}
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
+                                    <Field
+                                        label="Area or address"
+                                        required
+                                        hint="Your neighbourhood is enough."
+                                        error={formErrors.adopter_address}
+                                        htmlFor="adopt-address">
+                                        <textarea
+                                            id="adopt-address"
+                                            name="adopter_address"
+                                            rows={2}
+                                            className={`${fieldClass("adopter_address", "py-2.5")} resize-none`}
+                                            placeholder="e.g. DHA Phase 5"
+                                            value={formData.adopter_address}
+                                            onChange={handleChange}
+                                        />
+                                    </Field>
+                                </>
+                            )}
 
-                        {currentStep === 2 && (
-                            <motion.div
-                                key="step2"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                className="space-y-6"
-                            >
-                                <div className="text-center mb-8">
-                                    <h3 className="text-xl font-black text-gray-800">Household Details</h3>
-                                    <p className="text-gray-500 font-medium">Help us understand the environment</p>
-                                </div>
-
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Youngest Child Age</label>
+                            {currentStep === 2 && (
+                                <>
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                        <Field label="Age of your youngest child" hint="Leave empty if there are no children." htmlFor="adopt-child">
                                             <input
+                                                id="adopt-child"
                                                 type="number"
+                                                min={0}
                                                 name="age_of_youngest_child"
-                                                className="p-4 w-full bg-gray-50/50 rounded-2xl border border-gray-100 font-bold text-gray-900"
-                                                placeholder="Enter age (if any)"
+                                                className={fieldClass("age_of_youngest_child")}
+                                                placeholder="Age in years"
                                                 value={formData.age_of_youngest_child}
                                                 onChange={handleChange}
                                             />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Where will pet sleep?</label>
+                                        </Field>
+                                        <Field label="Where will the pet sleep?" htmlFor="adopt-sleep">
                                             <input
+                                                id="adopt-sleep"
                                                 type="text"
                                                 name="pet_sleep_location"
-                                                className="p-4 w-full bg-gray-50/50 rounded-2xl border border-gray-100 font-bold text-gray-900"
-                                                placeholder="e.g. Indoors, Living room"
+                                                className={fieldClass("pet_sleep_location")}
+                                                placeholder="e.g. Indoors, in the living room"
                                                 value={formData.pet_sleep_location}
                                                 onChange={handleChange}
                                             />
-                                        </div>
+                                        </Field>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Other Pets Details</label>
+                                    <Field label="Other pets at home" htmlFor="adopt-pets">
                                         <textarea
+                                            id="adopt-pets"
                                             name="other_pets_details"
                                             rows={2}
-                                            className="p-4 w-full bg-gray-50/50 rounded-2xl border border-gray-100 font-bold text-gray-900 resize-none"
-                                            placeholder="Provide details about other pets at home"
+                                            className={`${fieldClass("other_pets_details", "py-2.5")} resize-none`}
+                                            placeholder="e.g. One 3-year-old cat"
                                             value={formData.other_pets_details}
                                             onChange={handleChange}
                                         />
+                                    </Field>
+
+                                    <div className="space-y-2">
+                                        <CheckRow
+                                            checked={formData.other_pets_neutered}
+                                            onChange={(v) => handleCheckboxChange("other_pets_neutered", v)}
+                                            label="Your other pets are neutered or spayed"
+                                        />
+                                        <CheckRow
+                                            checked={formData.has_secure_outdoor_area}
+                                            onChange={(v) => handleCheckboxChange("has_secure_outdoor_area", v)}
+                                            label="You have a secure outdoor area"
+                                        />
                                     </div>
+                                </>
+                            )}
 
-                                    <div className="flex flex-wrap gap-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleCheckboxChange("other_pets_neutered", !formData.other_pets_neutered)}
-                                            className={`px-6 py-4 rounded-[1.5rem] text-sm font-black transition-all border-2 flex items-center gap-2 ${formData.other_pets_neutered ? "bg-primary border-primary text-white" : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"}`}
-                                        >
-                                            <CheckCircleIcon className={`w-5 h-5 ${formData.other_pets_neutered ? "text-white" : "text-gray-100"}`} />
-                                            Other Pets Neutered?
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleCheckboxChange("has_secure_outdoor_area", !formData.has_secure_outdoor_area)}
-                                            className={`px-6 py-4 rounded-[1.5rem] text-sm font-black transition-all border-2 flex items-center gap-2 ${formData.has_secure_outdoor_area ? "bg-primary border-primary text-white" : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"}`}
-                                        >
-                                            <CheckCircleIcon className={`w-5 h-5 ${formData.has_secure_outdoor_area ? "text-white" : "text-gray-100"}`} />
-                                            Secure Outdoor Area?
-                                        </button>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {currentStep === 3 && (
-                            <motion.div
-                                key="step3"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                className="space-y-6"
-                            >
-                                <div className="text-center mb-8">
-                                    <h3 className="text-xl font-black text-gray-800">Final Details</h3>
-                                    <p className="text-gray-500 font-medium">Just a few more things</p>
-                                </div>
-
-                                <div className="space-y-6">
-                                    <div>
-                                        <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Time Left Alone</label>
+                            {currentStep === 3 && (
+                                <>
+                                    <Field label="How long would the pet be alone each day?" htmlFor="adopt-alone">
                                         <input
+                                            id="adopt-alone"
                                             type="text"
                                             name="pet_left_alone"
-                                            className="p-4 w-full bg-gray-50/50 rounded-2xl border border-gray-100 font-bold text-gray-900"
-                                            placeholder="e.g. 2-4 hours, with sitter"
+                                            className={fieldClass("pet_left_alone")}
+                                            placeholder="e.g. 2 to 4 hours, someone is usually home"
                                             value={formData.pet_left_alone}
                                             onChange={handleChange}
                                         />
-                                    </div>
+                                    </Field>
 
-                                    <div>
-                                        <label className="block text-[11px] uppercase tracking-widest font-black text-gray-400 mb-2 ml-1">Additional Details</label>
+                                    <Field label="Anything else the owner should know?" htmlFor="adopt-more">
                                         <textarea
+                                            id="adopt-more"
                                             name="additional_details"
-                                            rows={2}
-                                            className="p-4 w-full bg-gray-50/50 rounded-2xl border border-gray-100 font-bold text-gray-900 resize-none"
-                                            placeholder="Anything else we should know?"
+                                            rows={3}
+                                            className={`${fieldClass("additional_details", "py-2.5")} resize-none`}
+                                            placeholder="Your experience with pets, your routine, questions for the owner"
                                             value={formData.additional_details}
                                             onChange={handleChange}
                                         />
-                                    </div>
+                                    </Field>
 
-                                    <div className="bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100">
-                                        <div className="flex items-start gap-3">
-                                            <div 
-                                                onClick={() => handleCheckboxChange("agree_to_terms", !formData.agree_to_terms)}
-                                                className={`mt-1 flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer ${formData.agree_to_terms ? "bg-primary border-primary" : "bg-white border-gray-200"}`}
-                                            >
-                                                {formData.agree_to_terms && <CheckCircleIcon className="w-5 h-5 text-white" />}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-black text-gray-800 mb-4 leading-tight">I agree to provide a safe and loving environment, cover veterinary costs, and never abandon the pet.</p>
-                                                <div className="space-y-2">
-                                                    <div className="flex items-start gap-2">
-                                                        <HeartIcon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                                                        <span className="text-xs text-gray-500 font-medium">Safe & loving home environment</span>
-                                                    </div>
-                                                    <div className="flex items-start gap-2">
-                                                        <InformationCircleIcon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                                                        <span className="text-xs text-gray-500 font-medium">Allow follow-up visits if required</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {formErrors.agree_to_terms && <p className="text-red-500 text-xs font-bold mt-3 text-center">{formErrors.agree_to_terms}</p>}
+                                    <div>
+                                        <CheckRow
+                                            checked={formData.agree_to_terms}
+                                            onChange={(v) => handleCheckboxChange("agree_to_terms", v)}
+                                            label="I agree to give this pet a safe and loving home, cover its vet costs and never abandon it."
+                                            description="A safe, loving home environment. Follow-up visits if the owner asks for them."
+                                        />
+                                        {formErrors.agree_to_terms && (
+                                            <p className="mt-1 text-xs text-red-600">{formErrors.agree_to_terms}</p>
+                                        )}
                                     </div>
-                                </div>
-                            </motion.div>
-                        )}
+                                </>
+                            )}
+                        </motion.div>
                     </AnimatePresence>
-                </div>
-
-                {/* Footer Controls */}
-                <div className="p-10 pt-4 flex gap-4 bg-white z-10">
-                    {currentStep > 1 && (
-                        <button
-                            onClick={handleBack}
-                            className="p-6 bg-gray-50 text-gray-400 rounded-[2rem] w-1/3 font-black flex items-center justify-center transition-all hover:bg-gray-100"
-                        >
-                            <ChevronLeftIcon className="w-6 h-6" />
-                        </button>
-                    )}
-                    
-                    {currentStep < 3 ? (
-                        <button
-                            onClick={handleNext}
-                            className="p-6 bg-primary text-white rounded-[2rem] flex-1 font-black flex items-center justify-center gap-2 shadow-2xl shadow-primary/30 active:shadow-none transition-all hover:scale-[1.02]"
-                        >
-                            Next Step
-                            <ChevronRightIcon className="w-6 h-6" />
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleFormSubmit}
-                            disabled={loading}
-                            className="p-6 bg-[#1a1a1a] text-white rounded-[2rem] flex-1 font-black flex items-center justify-center gap-2 shadow-2xl shadow-black/20 disabled:bg-gray-200 transition-all hover:scale-[1.02]"
-                        >
-                            {loading ? "Submitting..." : "Submit Application"}
-                            <CheckCircleIcon className="w-6 h-6" />
-                        </button>
-                    )}
-                </div>
-            </motion.div>
-        </div>
+                </>
+            )}
+        </Modal>
     );
 };
 

@@ -88,7 +88,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
                 value={country.iso2}
                 onChange={handleCountryChange}
                 disabled={disabled}
-                className="bg-transparent border-none outline-none font-bold text-gray-700 pr-1 cursor-pointer disabled:cursor-not-allowed"
+                className="bg-transparent border-none outline-none font-medium text-gray-700 pr-1 cursor-pointer disabled:cursor-not-allowed"
             >
                 {COUNTRY_DIALS.map((c) => (
                     <option key={c.iso2} value={c.iso2} title={c.name}>
@@ -107,7 +107,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
                 placeholder={country.example}
                 value={national}
                 onChange={(e) => emit(country, e.target.value)}
-                className={`bg-transparent border-none outline-none w-full font-bold text-gray-900 placeholder:text-gray-300 placeholder:font-normal disabled:cursor-not-allowed ${inputClassName}`}
+                className={`bg-transparent border-none outline-none w-full font-medium text-gray-900 placeholder:text-gray-300 placeholder:font-normal disabled:cursor-not-allowed ${inputClassName}`}
             />
         </div>
     );

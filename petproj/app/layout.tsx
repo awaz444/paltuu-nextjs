@@ -8,6 +8,7 @@ import AppClientWrapper from "@/context/AppClientWrapper";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
+import { ORG_HOST_PATTERN } from "@/lib/site";
 import NavbarWrapper from "@/components/NavbarWrapper";
 import ThemeInitializer from "./ThemeInitializer";
 import ApplyThemeColor from "@/components/ApplyThemeColor";
@@ -18,7 +19,7 @@ import AnalyticsTracker from "@/components/analytics/AnalyticsTracker";
 import PostHogTracker from "@/components/analytics/PostHogTracker";
 import CardScanModal from "@/components/cards/CardScanModal";
 import { SITE_URL } from "@/lib/site";
-import { cheeseMilky, dmSans } from "./fonts";
+import { cheeseMilky, dmSans, pixeled } from "./fonts";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -53,6 +54,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Before first paint, so .org never flashes Pakistan-only links. See lib/site.ts. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if(new RegExp(${JSON.stringify(ORG_HOST_PATTERN)}).test(location.hostname))document.documentElement.dataset.site="org";`,
+          }}
+        />
         <link rel="icon" href="/favicon.png" type="image/png" id="favicon" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
@@ -157,7 +164,7 @@ export default function RootLayout({
           src="https://news.google.com/swg/js/v1/publisher.js"
         />
       </head>
-      <body className={`${montserrat.className} ${cheeseMilky.variable} ${dmSans.variable} flex flex-col min-h-screen`}>
+      <body className={`${montserrat.className} ${cheeseMilky.variable} ${dmSans.variable} ${pixeled.variable} flex flex-col min-h-screen`}>
         <AppClientWrapper>
           <ClientProvider>
             <CartSyncProvider>

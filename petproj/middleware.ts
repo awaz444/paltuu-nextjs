@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { safeCallbackUrl } from '@/lib/authRedirect';
+import { ORG_HOST_PATTERN } from '@/lib/site';
 
 type CustomTokenPayload = {
   role?: string;
@@ -71,22 +72,67 @@ async function verifyCustomToken(token: string): Promise<CustomTokenPayload | nu
   }
 }
 
+const ORG_HOST = new RegExp(ORG_HOST_PATTERN);
+
+/**
+ * Which landing page "/" serves to a signed-out visitor. All three are static
+ * pages; picking one here, before the CDN, keeps them static with no flicker
+ * and no location prompt.
+ * - paltuu.org → app/lp/international
+ * - paltuu.pk, visitor in Karachi (Vercel's IP city) → app/lp/karachi, which
+ *   leads with Vets at Home (Karachi only for now; see VETS_AT_HOME.city)
+ * - everyone else → app/page.tsx
+ * The city is a hint from the visitor's IP and is wrong behind a VPN: never use
+ * it for anything but this choice. Locally there's no Vercel header or .org
+ * host, so try /?city=Karachi (or DEV_GEO_CITY=Karachi) and /?site=org.
+ */
+function landingPage(request: NextRequest) {
+  const dev = process.env.NODE_ENV !== 'production';
+  const host = (request.headers.get('host') ?? '').split(':')[0];
+  if (ORG_HOST.test(host) || (dev && request.nextUrl.searchParams.get('site') === 'org')) {
+    return NextResponse.rewrite(new URL('/lp/international', request.url));
+  }
+
+  let city = request.headers.get('x-vercel-ip-city');
+  if (city) {
+    try {
+      city = decodeURIComponent(city);
+    } catch {
+      /* keep the raw value */
+    }
+  } else if (dev) {
+    city = request.nextUrl.searchParams.get('city') ?? process.env.DEV_GEO_CITY ?? null;
+  }
+
+  if (city?.trim().toLowerCase() === 'karachi') {
+    return NextResponse.rewrite(new URL('/lp/karachi', request.url));
+  }
+  return NextResponse.next();
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Signed-in visitors see the feed at "/"; everyone else gets the (static) home page.
+  // Signed-in visitors see the feed at "/"; everyone else gets a (static) landing page.
   // Visitors with no auth cookie at all skip the token checks entirely.
   if (pathname === '/') {
     const hasAuthCookie =
       request.cookies.has('token') ||
       request.cookies.has('next-auth.session-token') ||
       request.cookies.has('__Secure-next-auth.session-token');
-    if (!hasAuthCookie) return NextResponse.next();
+    if (hasAuthCookie) {
+      const sessionToken = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+      const custom = request.cookies.get('token')?.value;
+      const signedIn = !!sessionToken || (custom ? !!(await verifyCustomToken(custom)) : false);
+      if (signedIn) return NextResponse.rewrite(new URL('/home', request.url));
+    }
+    return landingPage(request);
+  }
 
-    const sessionToken = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    const custom = request.cookies.get('token')?.value;
-    const signedIn = !!sessionToken || (custom ? !!(await verifyCustomToken(custom)) : false);
-    return signedIn ? NextResponse.rewrite(new URL('/home', request.url)) : NextResponse.next();
+  // The landing variants have no public URL of their own: they are only ever
+  // served at "/" (rewrites don't re-run middleware, so this never loops).
+  if (pathname === '/lp' || pathname.startsWith('/lp/')) {
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   // Define public paths that don't require authentication
@@ -195,6 +241,8 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/',
+    '/lp',
+    '/lp/:path*',
     '/auth',
     '/profile',
     '/my-listings',

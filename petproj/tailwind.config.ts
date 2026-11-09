@@ -15,6 +15,10 @@ const config: Config = {
                     light: "var(--light-color)",
                 },
             },
+            fontFamily: {
+                // Vets at Home only, to match the app (app/fonts.ts).
+                pixel: ["var(--font-pixel)", "ui-monospace", "monospace"],
+            },
             backgroundImage: {
                 "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
                 "gradient-conic":

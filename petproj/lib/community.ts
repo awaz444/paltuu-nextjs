@@ -84,6 +84,8 @@ export type CommunityTopic = {
     topics: string[];
     /** Postgres regex (case-insensitive) for posts that say it without the tag. */
     pattern: string;
+    /** Only paltuu.pk shows it (lib/site.ts); paltuu.org redirects it in next.config.mjs. */
+    pkOnly?: boolean;
 };
 
 export const COMMUNITY_TOPICS: CommunityTopic[] = [
@@ -103,6 +105,7 @@ export const COMMUNITY_TOPICS: CommunityTopic[] = [
         title: "Lost & Found Pets",
         intro: "Lost pets, found pets and reunions. Share where and when, with a clear photo, so owners nearby can help.",
         topics: ["Lost pets", "Found pets", "Sightings", "Reunions"],
+        pkOnly: true,
         pattern: String.raw`\m(lost|missing)\M|\mfound (him|her|my|this|a)\M|\mkho (gaya|gayi|gai|gay)\M|\mgum (ho|gaya|gayi)\M`,
     },
 ];

@@ -27,7 +27,18 @@ const nextConfig = {
   },
 
   async redirects() {
+    // paltuu.org is the international site: only Home and Adopt (lib/site.ts).
+    // Everything Pakistan-only sends .org visitors to /home. Temporary, so pages
+    // can open up there one at a time. "/" is not here: it serves the
+    // international landing page (middleware.ts → app/lp/international).
+    const org = [{ type: 'host', value: '(?:www\\.)?paltuu\\.org' }];
+    const pkOnlyPaths = [
+      '/pet-care', '/pet-care/:path*', '/blogs', '/blogs/:path*', '/llm',
+      '/bazaar', '/bazaar/:path*', '/marketplace', '/marketplace/:path*', '/shops', '/shops/:path*',
+      '/karachi', '/lahore', '/islamabad', '/lost-found',
+    ];
     return [
+      ...pkOnlyPaths.map((source) => ({ source, has: org, destination: '/home', permanent: false })),
       // Community launched under /community, then moved to the top level the same day.
       // Lost & Found is hidden for now (PALTU-110). Temporary, so it can come back.
       { source: '/lost-and-found', destination: '/browse-pets', permanent: false },

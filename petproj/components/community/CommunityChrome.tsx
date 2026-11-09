@@ -2,6 +2,7 @@ import Link from "next/link";
 import AppStoreBadges from "@/components/home/AppStoreBadges";
 import { COMMUNITY_CITIES, COMMUNITY_SPECIES, COMMUNITY_TOPICS, type BreedCommunity, type CommunityPost } from "@/lib/community";
 import { VETS_AT_HOME } from "@/lib/homeContent";
+import { PK_ONLY } from "@/lib/site";
 import FeedPost from "./FeedPost";
 import MobileActions from "./MobileActions";
 import ForumIcon from "./ForumIcon";
@@ -90,12 +91,12 @@ function ForumChips({ activeSpecies, activeBreed, activeCity, activeTopic, outsi
         </Link>
     ));
     const cityChips = COMMUNITY_CITIES.map((c) => (
-        <Link key={c.slug} href={`/${c.slug}`} className={chip(c.slug === activeCity)}>
+        <Link key={c.slug} href={`/${c.slug}`} className={`${PK_ONLY} ${chip(c.slug === activeCity)}`}>
             {c.name}
         </Link>
     ));
     const topicChips = COMMUNITY_TOPICS.map((t) => (
-        <Link key={t.slug} href={`/${t.slug}`} className={chip(t.slug === activeTopic)}>
+        <Link key={t.slug} href={`/${t.slug}`} className={`${t.pkOnly ? PK_ONLY : ""} ${chip(t.slug === activeTopic)}`}>
             {t.name}
         </Link>
     ));
@@ -139,7 +140,7 @@ function ForumList({ activeSpecies, activeBreed, activeCity, activeTopic, outsid
                 Home
             </Link>
             {COMMUNITY_TOPICS.map((t) => (
-                <Link key={t.slug} href={`/${t.slug}`} className={item(t.slug === activeTopic)}>
+                <Link key={t.slug} href={`/${t.slug}`} className={`${t.pkOnly ? PK_ONLY : ""} ${item(t.slug === activeTopic)}`}>
                     <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full text-base">
                         <ForumIcon speciesSlug={t.slug} size={24} />
                     </span>
@@ -166,9 +167,9 @@ function ForumList({ activeSpecies, activeBreed, activeCity, activeTopic, outsid
                     )}
                 </div>
             ))}
-            <p className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-gray-400">Cities</p>
+            <p className={`${PK_ONLY} px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-gray-400`}>Cities</p>
             {COMMUNITY_CITIES.map((c) => (
-                <Link key={c.slug} href={`/${c.slug}`} className={item(c.slug === activeCity)}>
+                <Link key={c.slug} href={`/${c.slug}`} className={`${PK_ONLY} ${item(c.slug === activeCity)}`}>
                     <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full text-base">
                         <ForumIcon speciesSlug={c.slug} size={24} />
                     </span>
@@ -243,11 +244,12 @@ export function AboutCard({ title, intro, topics = [], children }: { title: stri
     );
 }
 
+// pkOnly cards are hidden on paltuu.org (lib/site.ts).
 const FEATURES = [
-    { art: "/icons/features/adopt.jpg", title: "Adopt a pet", body: "Dogs, cats and more, listed by owners and shelters across Pakistan.", href: "/browse-pets" },
-    { art: "/icons/features/vet.jpg", title: "Find a vet", body: "Vets and clinics near you in Karachi, Lahore, Islamabad and more.", href: "/pet-care" },
-    { art: "/icons/features/vets-at-home.jpg", title: "Vets at Home", body: `A vet at your door in ${VETS_AT_HOME.city}. Book in the Paltuu app.`, href: VETS_AT_HOME.deepLink },
-    { art: "/icons/features/guides.jpg", title: "Pet care guides", body: "Food, health and care advice written for Pakistan.", href: "/blogs" },
+    { art: "/icons/features/adopt.jpg", title: "Adopt a pet", body: "Dogs, cats and more, listed by owners and shelters across Pakistan.", href: "/browse-pets", pkOnly: false },
+    { art: "/icons/features/vet.jpg", title: "Find a vet", body: "Vets and clinics near you in Karachi, Lahore, Islamabad and more.", href: "/pet-care", pkOnly: true },
+    { art: "/icons/features/vets-at-home.jpg", title: "Vets at Home", body: `A vet at your door in ${VETS_AT_HOME.city}. Book in the Paltuu app.`, href: VETS_AT_HOME.deepLink, pkOnly: true },
+    { art: "/icons/features/guides.jpg", title: "Pet care guides", body: "Food, health and care advice written for Pakistan.", href: "/blogs", pkOnly: true },
 ];
 
 /** The right column: everything else Paltuu does, as link cards. */
@@ -258,7 +260,7 @@ export function FeatureCards() {
                 <Link
                     key={f.title}
                     href={f.href}
-                    className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-3.5 transition-colors hover:border-primary"
+                    className={`${f.pkOnly ? PK_ONLY : ""} flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-3.5 transition-colors hover:border-primary`}
                 >
                     {/* Hand-drawn art on white, so the tile is white too. */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}

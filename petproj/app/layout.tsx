@@ -64,7 +64,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Organization",
               "name": "Paltuu",
-              "alternateName": ["Paltuu.pk", "Paltu", "Paaltuu"],
+              "alternateName": ["Paltuu.pk", "Paltu", "Paaltu"],
               "url": "https://www.paltuu.pk",
               "logo": {
                 "@type": "ImageObject",

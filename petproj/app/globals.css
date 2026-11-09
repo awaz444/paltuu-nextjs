@@ -175,7 +175,6 @@ select:-webkit-autofill {
   width: 100%;
   height: auto;
   image-rendering: pixelated;
-  filter: drop-shadow(0 6px 10px rgba(17, 24, 39, 0.18));
   user-select: none;
 }
 .peek-sticker:hover img { animation: sticker-wiggle 0.5s ease-in-out 0.2s 2; }

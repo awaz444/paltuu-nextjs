@@ -22,5 +22,8 @@ export const SITE_URL = 'https://www.paltuu.pk';
  */
 export const ORG_HOST_PATTERN = "(^|\\.)paltuu\\.org$";
 
+/** Canonical origin of the international site (its landing page's canonical). */
+export const ORG_URL = 'https://www.paltuu.org';
+
 /** Mark links and sections that only paltuu.pk shows. */
 export const PK_ONLY = "pk-only";

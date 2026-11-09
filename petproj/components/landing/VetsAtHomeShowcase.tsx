@@ -18,9 +18,17 @@ export default function VetsAtHomeShowcase() {
         <section aria-labelledby="vah-heading" className="bg-white px-5 pb-14 pt-2 md:pb-20">
             <div className="mx-auto max-w-6xl">
                 {/* "Paltuu presents" divider, as in the app */}
-                <div className="mb-2 flex items-center gap-3.5" aria-hidden="true">
+                <div className="mb-3 flex items-center gap-4" aria-hidden="true">
                     <span className="h-px flex-1 bg-gray-200" />
-                    <Image src="/maroonLogo.png" alt="" width={225} height={109} className="h-7 w-auto" />
+                    {/* The vector logo the app uses here (paltuu_bilkul_tight.svg), so it stays sharp at this size. */}
+                    <Image
+                        src="/paltuu%20bilkul%20tight.svg"
+                        alt=""
+                        width={2210}
+                        height={1173}
+                        unoptimized
+                        className="h-12 w-auto md:h-16"
+                    />
                     <span className="h-px flex-1 bg-gray-200" />
                 </div>
                 <h2 id="vah-heading" className="text-center font-pixel text-xl leading-normal text-gray-900 md:text-[32px]">

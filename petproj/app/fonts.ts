@@ -1,5 +1,4 @@
 import localFont from "next/font/local";
-import { DM_Sans } from "next/font/google";
 
 // Fonts used by the Pet Identity Card, matched to the mobile app's PetIdCard
 // (paltuu-reactnative/src/components/pets/PetIdCard.tsx): Cheese Milky for the
@@ -24,9 +23,17 @@ export const pixeled = localFont({
   fallback: ["ui-monospace", "monospace"],
 });
 
-export const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
+// Self-hosted (the same files the mobile app ships) rather than next/font/google:
+// a bad Google Fonts response at build time fails the whole Vercel deploy
+// ("An error occurred in next/font", PR #58), and this font only serves the
+// Pet Identity Card.
+export const dmSans = localFont({
+  src: [
+    { path: "./fonts/DMSans-Regular.ttf", weight: "400", style: "normal" },
+    { path: "./fonts/DMSans-Medium.ttf", weight: "500", style: "normal" },
+    { path: "./fonts/DMSans-Bold.ttf", weight: "700", style: "normal" },
+  ],
   variable: "--font-dm-sans",
   display: "swap",
+  preload: false,
 });

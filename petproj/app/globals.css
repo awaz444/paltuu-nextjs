@@ -151,19 +151,21 @@ select:-webkit-autofill {
 
 /* Landing pages: pixel stickers peeking in from the page edges
    (components/landing/PeekingStickers.tsx). The outer element does the slow
-   peek; hovering (or tapping, on a phone) pauses it and the inner element pops
-   the sticker out.
+   peek; popping pauses it and the inner element brings the sticker out.
+   A mouse pops one by hovering; a touch screen by tapping (StickerTaps adds
+   .is-popped, then removes it, so nothing stays stuck out the way :hover does).
    --hide / --peek: how much of the sticker is tucked behind the edge, resting
-   and at the peak of a peek. --pop: how far a hover brings it out.
-   Phones and narrow laptops have only the 20 px page gutter to spare, so the
-   sticker is small and never shows more than 18 px of itself on its own. */
+   and at the peak of a peek. --pop: how far popping brings it out.
+   Below xl the page only has its 20 px gutter to spare, so the sticker is
+   small and never shows more than 18 px of itself on its own. */
 .peek-sticker {
   --hide: 85%;
   --peek: 70%;
   --pop: 55%;
   position: absolute;
   width: 60px;
-  cursor: pointer; /* lets iOS treat a tap as hover */
+  cursor: pointer; /* lets iOS deliver taps to it */
+  -webkit-tap-highlight-color: transparent;
   pointer-events: auto;
   animation: peek-left 11s ease-in-out var(--delay, 0s) infinite both;
 }
@@ -178,15 +180,12 @@ select:-webkit-autofill {
 }
 .peek-sticker[data-side="left"] { left: 0; }
 .peek-sticker[data-side="right"] { right: 0; animation-name: peek-right; }
-.peek-sticker:hover { animation-play-state: paused; }
 
 .peek-sticker-inner {
   position: relative;
   transform: rotate(var(--rot, 0deg));
   transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.peek-sticker[data-side="left"]:hover .peek-sticker-inner { transform: translateX(var(--pop)) rotate(0deg) scale(1.15); }
-.peek-sticker[data-side="right"]:hover .peek-sticker-inner { transform: translateX(calc(-1 * var(--pop))) rotate(0deg) scale(1.15); }
 
 .peek-sticker img {
   display: block;
@@ -197,7 +196,6 @@ select:-webkit-autofill {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
-.peek-sticker:hover img { animation: sticker-wiggle 0.5s ease-in-out 0.2s 2; }
 
 .peek-sticker-bubble {
   position: absolute;
@@ -220,7 +218,39 @@ select:-webkit-autofill {
 }
 .peek-sticker[data-side="left"] .peek-sticker-bubble { left: 55%; }
 .peek-sticker[data-side="right"] .peek-sticker-bubble { right: 55%; }
-.peek-sticker:hover .peek-sticker-bubble { opacity: 1; transform: none; transition-delay: 0.15s; }
+
+/* Popped: by tap (any device) ... */
+.peek-sticker.is-popped { animation-play-state: paused; }
+.peek-sticker[data-side="left"].is-popped .peek-sticker-inner { transform: translateX(var(--pop)) rotate(0deg) scale(1.15); }
+.peek-sticker[data-side="right"].is-popped .peek-sticker-inner { transform: translateX(calc(-1 * var(--pop))) rotate(0deg) scale(1.15); }
+.peek-sticker.is-popped img { animation: sticker-wiggle 0.5s ease-in-out 0.2s 2; }
+.peek-sticker.is-popped .peek-sticker-bubble { opacity: 1; transform: none; transition-delay: 0.15s; }
+
+/* ... or by hover, only where there is a real hover (mouse, trackpad). */
+@media (hover: hover) {
+  .peek-sticker:hover { animation-play-state: paused; }
+  .peek-sticker[data-side="left"]:hover .peek-sticker-inner { transform: translateX(var(--pop)) rotate(0deg) scale(1.15); }
+  .peek-sticker[data-side="right"]:hover .peek-sticker-inner { transform: translateX(calc(-1 * var(--pop))) rotate(0deg) scale(1.15); }
+  .peek-sticker:hover img { animation: sticker-wiggle 0.5s ease-in-out 0.2s 2; }
+  .peek-sticker:hover .peek-sticker-bubble { opacity: 1; transform: none; transition-delay: 0.15s; }
+}
+
+/* Touch tap strip (StickerTaps): the full 20 px page gutter, as tall as the
+   sticker. Never wider than the gutter, so it can't block taps on content. */
+.peek-sticker-hit {
+  display: none;
+  position: absolute;
+  width: 20px;
+  height: 76px;
+  pointer-events: auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.peek-sticker-hit[data-side="left"] { left: 0; }
+.peek-sticker-hit[data-side="right"] { right: 0; }
+@media (hover: none) and (max-width: 1279px) {
+  .peek-sticker-hit { display: block; }
+}
 
 /* Mostly hidden; a short peek about once a cycle. */
 @keyframes peek-left {
@@ -241,6 +271,7 @@ select:-webkit-autofill {
   .peek-sticker { animation: none; }
   .peek-sticker[data-side="left"] { transform: translateX(calc(-1 * var(--hide))); }
   .peek-sticker[data-side="right"] { transform: translateX(var(--hide)); }
-  .peek-sticker:hover img { animation: none; }
+  .peek-sticker:hover img,
+  .peek-sticker.is-popped img { animation: none; }
 }
 

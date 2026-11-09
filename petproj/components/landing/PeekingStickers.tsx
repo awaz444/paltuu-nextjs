@@ -1,17 +1,19 @@
 import type { CSSProperties } from "react";
+import StickerTaps from "./StickerTaps";
 
 /**
  * The app's pixel stickers (flat SVGs, transparent, no shadow), tucked behind
  * the left and right edges of the page and slowly peeking in on their own
- * timers. Hovering one (tapping, on a phone) pops it out with a wiggle and a
- * speech bubble in the pixel face.
+ * timers. Hovering one, or tapping it on a touch screen (StickerTaps), pops it
+ * out with a wiggle and a speech bubble in the pixel face.
  *
  * Every screen size. On wide screens (xl) they use the empty margin beside the
  * max-w-6xl content; below that they shrink and stay within the 20 px page
  * gutter, so a peek is very subtle and never covers content (sizes in
  * .peek-sticker, globals.css).
  *
- * Pure CSS, so the page stays a server component and static. Decorative only:
+ * The motion is CSS; the only script is StickerTaps for touch. The page stays
+ * a server component and static. Decorative only:
  * aria-hidden, no links, not focusable. The parent <main> must be `relative
  * overflow-hidden`, which clips the hidden part at the screen edge. Peeking
  * stops under prefers-reduced-motion.
@@ -30,11 +32,12 @@ const STICKERS = [
 export default function PeekingStickers() {
     return (
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10">
-            {STICKERS.map((s) => (
+            {STICKERS.map((s, i) => (
                 <div
                     key={s.src}
                     className="peek-sticker"
                     data-side={s.side}
+                    data-sticker={i}
                     style={{ top: s.top, "--rot": `${s.rot}deg`, "--delay": `${s.delay}s` } as CSSProperties}
                 >
                     <div className="peek-sticker-inner">
@@ -44,6 +47,12 @@ export default function PeekingStickers() {
                     </div>
                 </div>
             ))}
+            {/* Touch screens only: a tap strip along the edge, the width of the page
+                gutter, so the sticker is easy to hit without covering content. */}
+            {STICKERS.map((s, i) => (
+                <span key={`hit-${s.src}`} className="peek-sticker-hit" data-side={s.side} data-sticker={i} style={{ top: s.top }} />
+            ))}
+            <StickerTaps />
         </div>
     );
 }

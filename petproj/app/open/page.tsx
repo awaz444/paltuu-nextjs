@@ -22,7 +22,10 @@ export async function generateMetadata({
   let imageUrl = "https://www.paltuu.pk/favicon.png"; // Fallback brand image
 
   try {
-    if (cleanPath.startsWith("post/")) {
+    if (cleanPath.startsWith("express-vet")) {
+      title = "Vets at Home by Paltuu";
+      description = "Certified vets and caretakers at your doorstep in Karachi. Book a home visit, grooming, neutering or vaccination in the Paltuu app.";
+    } else if (cleanPath.startsWith("post/")) {
       const postId = parseInt(cleanPath.split("/")[1] || "", 10);
       if (!isNaN(postId)) {
         const res = await db.query(
@@ -161,11 +164,7 @@ export async function generateMetadata({
 
 export default function OpenPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#a03048] flex items-center justify-center text-white">
-        <div className="animate-pulse">Loading...</div>
-      </div>
-    }>
+    <Suspense fallback={<div className="min-h-[60vh] bg-white" />}>
       <OpenClient />
     </Suspense>
   );

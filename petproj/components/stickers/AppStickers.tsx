@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { usePathname } from "next/navigation";
 
 /**
@@ -10,9 +10,9 @@ import { usePathname } from "next/navigation";
  * Unlike the landing page, where five stickers are spread down one long page,
  * here two stickers are fixed to the screen edges (one left, one right) and
  * travel with the scroll, so they work the same on a short form and on an
- * endless pet list. Which two, and where, comes from the page's address: every
- * page has its own pair, the same on every visit and on the server, so nothing
- * flickers in after load.
+ * endless pet list. Which two, which side and how high is random, picked again
+ * every time a page opens. They're picked in the browser after load (the server
+ * renders none), which nobody notices since they start tucked behind the edge.
  *
  * Mostly tucked behind the edge (a few px show). On desktop they peek in on
  * their own timers (CSS); on phones one peeks out only now and then, at random
@@ -57,16 +57,9 @@ const PEEK_MS = 2400;
 // Same breakpoint as the phone rules for .app-stickers in globals.css.
 const PHONE = "(max-width: 1023px)";
 
-/** Small stable hash (djb2), so the pick is the same on the server and client. */
-function hash(s: string) {
-    let h = 5381;
-    for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
-    return h;
-}
-
-/** Two different stickers for this page: one on each side, at different heights. */
-function pick(pathname: string) {
-    const h = hash(pathname);
+/** Two different random stickers: one on each side, at different heights. */
+function pick() {
+    const h = Math.floor(Math.random() * 2 ** 32);
     const first = h % ART.length;
     const second = (first + 1 + ((h >>> 4) % (ART.length - 1))) % ART.length;
     const leftFirst = ((h >>> 8) & 1) === 0;
@@ -83,11 +76,17 @@ export default function AppStickers() {
     const pathname = usePathname() ?? "/";
     const layer = useRef<HTMLDivElement>(null);
     const hidden = HIDE_ON.some((p) => pathname.startsWith(p));
+    const [stickers, setStickers] = useState<ReturnType<typeof pick> | null>(null);
+
+    // A new random pair on every page.
+    useEffect(() => {
+        setStickers(hidden ? null : pick());
+    }, [pathname, hidden]);
 
     // Taps on touch screens: pop the sticker out, tuck it back after a moment.
     // Listeners go on the elements themselves (iOS Safari won't deliver a tap on
     // a non-interactive element to a listener further up), and are re-attached
-    // on every page change, since the layout and this layer stay mounted.
+    // whenever a new pair is picked, since the layout and this layer stay mounted.
     useEffect(() => {
         const root = layer.current;
         if (!root) return;
@@ -106,7 +105,7 @@ export default function AppStickers() {
             targets.forEach((el) => el.removeEventListener("click", onTap));
             timers.forEach((t) => window.clearTimeout(t));
         };
-    }, [pathname, hidden]);
+    }, [stickers]);
 
     // Phones: no peeking on a loop (that's for desktop, in CSS). Instead, now
     // and then, one of the two stickers peeks out for a moment: the first time
@@ -118,8 +117,8 @@ export default function AppStickers() {
         let timer = 0;
         const between = (min: number, max: number) => (min + Math.random() * (max - min)) * 1000;
         const peek = () => {
-            const stickers = root.querySelectorAll(".peek-sticker");
-            const sticker = stickers[Math.floor(Math.random() * stickers.length)];
+            const els = root.querySelectorAll(".peek-sticker");
+            const sticker = els[Math.floor(Math.random() * els.length)];
             sticker?.classList.add("is-peeking");
             timer = window.setTimeout(() => {
                 sticker?.classList.remove("is-peeking");
@@ -128,16 +127,15 @@ export default function AppStickers() {
         };
         timer = window.setTimeout(peek, between(8, 20));
         return () => window.clearTimeout(timer);
-    }, [pathname, hidden]);
+    }, [stickers]);
 
-    if (hidden) return null;
-    const stickers = pick(pathname);
+    if (hidden || !stickers) return null;
 
     return (
         <div ref={layer} aria-hidden="true" className="app-stickers">
             {stickers.map((s, i) => (
                 <div
-                    key={`${pathname}-${i}`}
+                    key={`${s.src}-${i}`}
                     className="peek-sticker"
                     data-side={s.side}
                     data-app-sticker={i}
@@ -152,7 +150,7 @@ export default function AppStickers() {
             ))}
             {stickers.map((s, i) => (
                 <span
-                    key={`hit-${pathname}-${i}`}
+                    key={`hit-${s.src}-${i}`}
                     className="peek-sticker-hit"
                     data-side={s.side}
                     data-app-sticker={i}

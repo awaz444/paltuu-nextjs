@@ -14,8 +14,9 @@ import { usePathname } from "next/navigation";
  * page has its own pair, the same on every visit and on the server, so nothing
  * flickers in after load.
  *
- * Mostly tucked behind the edge (a few px show), they peek in on their own
- * timers; hover or tap pops one out with a wiggle and a speech bubble. Same
+ * Mostly tucked behind the edge (a few px show). On desktop they peek in on
+ * their own timers (CSS); on phones one peeks out only now and then, at random
+ * (below). Hover or tap pops one out with a wiggle and a speech bubble. Same
  * styles as the landing (.peek-sticker in globals.css), sized for app pages by
  * .app-stickers. Decorative only: aria-hidden, not focusable. No motion under
  * prefers-reduced-motion.
@@ -52,6 +53,9 @@ const ART = [
 ] as const;
 
 const POP_MS = 2200;
+const PEEK_MS = 2400;
+// Same breakpoint as the phone rules for .app-stickers in globals.css.
+const PHONE = "(max-width: 1023px)";
 
 /** Small stable hash (djb2), so the pick is the same on the server and client. */
 function hash(s: string) {
@@ -102,6 +106,28 @@ export default function AppStickers() {
             targets.forEach((el) => el.removeEventListener("click", onTap));
             timers.forEach((t) => window.clearTimeout(t));
         };
+    }, [pathname, hidden]);
+
+    // Phones: no peeking on a loop (that's for desktop, in CSS). Instead, now
+    // and then, one of the two stickers peeks out for a moment: the first time
+    // 8 to 20 s after the page opens, then every 30 to 60 s. Nothing under
+    // prefers-reduced-motion.
+    useEffect(() => {
+        const root = layer.current;
+        if (!root || !window.matchMedia(PHONE).matches || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        let timer = 0;
+        const between = (min: number, max: number) => (min + Math.random() * (max - min)) * 1000;
+        const peek = () => {
+            const stickers = root.querySelectorAll(".peek-sticker");
+            const sticker = stickers[Math.floor(Math.random() * stickers.length)];
+            sticker?.classList.add("is-peeking");
+            timer = window.setTimeout(() => {
+                sticker?.classList.remove("is-peeking");
+                timer = window.setTimeout(peek, between(30, 60));
+            }, PEEK_MS);
+        };
+        timer = window.setTimeout(peek, between(8, 20));
+        return () => window.clearTimeout(timer);
     }, [pathname, hidden]);
 
     if (hidden) return null;

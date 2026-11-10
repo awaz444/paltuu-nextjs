@@ -91,6 +91,20 @@ export const BREED_SEED: Record<string, BreedSeed[]> = {
         { slug: "not-sure", name: "Not sure", kind: "not_sure", aliases: ["unsure", "not sure", "dont know", "don t know", "idk", "unknown", "no idea"] },
         { slug: "other", name: "Other", kind: "other", aliases: ["macaw", "blue and gold macaw", "cockatoo", "finch", "canary", "conure", "sun conure", "parrot"] },
     ],
+    // PALTU-156. Short on purpose, local horses first; Friesian is here because
+    // the first real horse listing (918) was one.
+    Horse: [
+        { slug: "local-horse", name: "Local horse", kind: "breed", aliases: ["desi", "desi horse", "desi ghora", "ghora", "ghoda", "local", "pakistani horse", "tonga horse"] },
+        { slug: "arabian", name: "Arabian", kind: "breed", aliases: ["arabian horse", "arab", "arab horse", "arabi", "arabi ghora"] },
+        { slug: "thoroughbred", name: "Thoroughbred", kind: "breed", aliases: ["thorough bred", "throughbred", "race horse", "racehorse"] },
+        { slug: "baluchi", name: "Baluchi", kind: "breed", aliases: ["balochi", "baluchi horse", "balochi horse"] },
+        { slug: "hirzai", name: "Hirzai", kind: "breed", aliases: ["hirzai horse"] },
+        { slug: "kathiawari", name: "Kathiawari", kind: "breed", aliases: ["kathiawadi", "kathiawari horse", "kathiawadi horse"] },
+        { slug: "friesian", name: "Friesian", kind: "breed", aliases: ["friesian horse", "frisian", "fresian"] },
+        { slug: "pony", name: "Pony", kind: "breed", aliases: ["ponies", "pony horse", "shetland pony"] },
+        { slug: "not-sure", name: "Not sure", kind: "not_sure", aliases: ["unsure", "not sure", "dont know", "don t know", "idk", "unknown", "no idea"] },
+        { slug: "other", name: "Other", kind: "other", aliases: ["marwari", "mustang", "appaloosa", "quarter horse", "warmblood", "andalusian"] },
+    ],
 };
 
 /** A breed row as the matcher needs it (from the DB or straight from BREED_SEED). */

@@ -31,7 +31,7 @@ const STICKERS = [
 
 export default function PeekingStickers() {
     return (
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10">
+        <div aria-hidden="true" data-landing-stickers className="pointer-events-none absolute inset-0 z-10">
             {STICKERS.map((s, i) => (
                 <div
                     key={s.src}

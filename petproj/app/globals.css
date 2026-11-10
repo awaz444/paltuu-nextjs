@@ -267,6 +267,49 @@ select:-webkit-autofill {
   75% { rotate: 9deg; }
 }
 
+/* The rest of the web app (components/stickers/AppStickers.tsx): two
+   stickers fixed to the screen edges. App pages use their gutters and wider
+   content, so the stickers stay small and mostly tucked away on every screen:
+   a few px show at rest, about a third at the peak of a peek. Under the navbar
+   menu, modals, the cookie bar and toasts (all z-40 and up). */
+.app-stickers {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  overflow: hidden; /* clips the tucked-away part at the screen edge */
+  pointer-events: none;
+}
+.app-stickers .peek-sticker {
+  --hide: 85%;
+  --peek: 66%;
+  --pop: 55%;
+  width: 56px;
+}
+@media (min-width: 1024px) {
+  .app-stickers .peek-sticker {
+    --hide: 84%;
+    --peek: 64%;
+    --pop: 58%;
+    width: 88px;
+  }
+}
+/* Phones and tablets: no peeking on a loop. AppStickers adds .is-peeking to
+   one sticker now and then (every 30 to 60 s) and it slides out a little. */
+@media (max-width: 1023px) {
+  .app-stickers .peek-sticker {
+    --peek: 58%;
+    animation: none;
+    transform: translateX(calc(-1 * var(--hide)));
+    transition: transform 0.6s cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+  .app-stickers .peek-sticker[data-side="right"] { transform: translateX(var(--hide)); }
+  .app-stickers .peek-sticker[data-side="left"].is-peeking { transform: translateX(calc(-1 * var(--peek))); }
+  .app-stickers .peek-sticker[data-side="right"].is-peeking { transform: translateX(var(--peek)); }
+}
+.app-stickers .peek-sticker-hit { width: 16px; }
+/* Pages with the landing stickers keep only those. */
+body:has([data-landing-stickers]) .app-stickers { display: none; }
+
 @media (prefers-reduced-motion: reduce) {
   .peek-sticker { animation: none; }
   .peek-sticker[data-side="left"] { transform: translateX(calc(-1 * var(--hide))); }

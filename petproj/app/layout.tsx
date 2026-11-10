@@ -18,6 +18,7 @@ import CookieConsent from "@/components/CookieConsent";
 import AnalyticsTracker from "@/components/analytics/AnalyticsTracker";
 import PostHogTracker from "@/components/analytics/PostHogTracker";
 import CardScanModal from "@/components/cards/CardScanModal";
+import AppStickers from "@/components/stickers/AppStickers";
 import { SITE_URL } from "@/lib/site";
 import { cheeseMilky, dmSans, pixeled } from "./fonts";
 
@@ -177,6 +178,9 @@ export default function RootLayout({
                   {children}
                 </PageTransition>
               </main>
+
+              {/* Peeking pixel stickers on most pages; the list of pages without them is in AppStickers. */}
+              <AppStickers />
 
               {/* Hidden from frontend — re-enable by uncommenting
               <div className="fixed right-2 z-[998] bottom-20 sm:bottom-4">

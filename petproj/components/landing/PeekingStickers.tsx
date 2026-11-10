@@ -20,8 +20,9 @@ import StickerTaps from "./StickerTaps";
  */
 
 // Alternating right, left, right, left, right down the page: pigeon first,
-// strawberry last (founder, 2026-11-09).
-const STICKERS = [
+// strawberry last (founder, 2026-11-09). Each sticker's side and tilt also
+// hold everywhere else on the site (components/stickers/AppStickers).
+export const STICKERS = [
     { src: "/landing/stickers/pigeon-toast.svg", w: 240, h: 240, side: "right", top: "10%", rot: -12, delay: 0, say: "Coo!" },
     { src: "/landing/stickers/screaming-cat.svg", w: 200, h: 240, side: "left", top: "28%", rot: 8, delay: 4.2, say: "AAAA!" },
     { src: "/landing/stickers/frog-dog.svg", w: 200, h: 250, side: "right", top: "46%", rot: -8, delay: 1.8, say: "Ribbit?" },

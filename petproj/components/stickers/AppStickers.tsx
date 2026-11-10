@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { usePathname } from "next/navigation";
+import { STICKERS } from "@/components/landing/PeekingStickers";
 
 /**
  * The landing page's pixel stickers (components/landing/PeekingStickers),
@@ -10,7 +11,8 @@ import { usePathname } from "next/navigation";
  * Unlike the landing page, where five stickers are spread down one long page,
  * here two stickers are fixed to the screen edges (one left, one right) and
  * travel with the scroll, so they work the same on a short form and on an
- * endless pet list. Which two, which side and how high is random, picked again
+ * endless pet list. Which two and how high is random (each keeps its landing
+ * page side, so it's one left sticker and one right one), picked again
  * every time a page opens. They're picked in the browser after load (the server
  * renders none), which nobody notices since they start tucked behind the edge.
  *
@@ -44,31 +46,31 @@ const HIDE_ON = [
     "/child-safety", "/delete-account", "/api-docs", "/pwa-debug", "/open",
 ];
 
-const ART = [
-    { src: "/landing/stickers/pigeon-toast.svg", w: 240, h: 240, say: "Coo!" },
-    { src: "/landing/stickers/screaming-cat.svg", w: 200, h: 240, say: "AAAA!" },
-    { src: "/landing/stickers/frog-dog.svg", w: 200, h: 250, say: "Ribbit?" },
-    { src: "/landing/stickers/duck.svg", w: 240, h: 240, say: "Quack!" },
-    { src: "/landing/stickers/strawberry.svg", w: 240, h: 240, say: "Hi!" },
-] as const;
+// Every sticker keeps the side and tilt it has on the landing page (founder,
+// 2026-11-11): the screaming cat and the duck always on the left; the pigeon,
+// the frog dog and the strawberry always on the right.
+const LEFT = STICKERS.filter((s) => s.side === "left");
+const RIGHT = STICKERS.filter((s) => s.side === "right");
 
 const POP_MS = 2200;
 const PEEK_MS = 2400;
 // Same breakpoint as the phone rules for .app-stickers in globals.css.
 const PHONE = "(max-width: 1023px)";
 
-/** Two different random stickers: one on each side, at different heights. */
+const random = (n: number) => Math.floor(Math.random() * n);
+
+/** A random left sticker and a random right one, one higher than the other. */
 function pick() {
-    const h = Math.floor(Math.random() * 2 ** 32);
-    const first = h % ART.length;
-    const second = (first + 1 + ((h >>> 4) % (ART.length - 1))) % ART.length;
-    const leftFirst = ((h >>> 8) & 1) === 0;
-    const tilt = 6 + ((h >>> 9) % 7); // 6 to 12 degrees
+    const left = LEFT[random(LEFT.length)];
+    const right = RIGHT[random(RIGHT.length)];
+    const leftHigher = random(2) === 0;
     // Kept between 30% and 72% of the screen: clear of the navbar at the top,
     // and of the cookie bar, toasts and bottom buttons at the bottom.
+    const high = 30 + random(18);
+    const low = 54 + random(18);
     return [
-        { ...ART[first], side: leftFirst ? "left" : "right", top: 30 + ((h >>> 12) % 18), rot: leftFirst ? tilt : -tilt, delay: 1.5 },
-        { ...ART[second], side: leftFirst ? "right" : "left", top: 54 + ((h >>> 17) % 18), rot: leftFirst ? -tilt : tilt, delay: 7 },
+        { ...left, top: leftHigher ? high : low, delay: leftHigher ? 1.5 : 7 },
+        { ...right, top: leftHigher ? low : high, delay: leftHigher ? 7 : 1.5 },
     ];
 }
 

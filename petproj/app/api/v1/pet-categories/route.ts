@@ -1,6 +1,11 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 
+// Without this Next serves a copy built at deploy time, so new breeds or
+// categories never reach create-listing (web and app) until a redeploy.
+// The in-memory cache below still keeps DB reads to one per hour.
+export const dynamic = "force-dynamic";
+
 /**
  * @swagger
  * /api/v1/pet-categories:

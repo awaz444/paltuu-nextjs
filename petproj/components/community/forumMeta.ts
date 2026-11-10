@@ -5,6 +5,7 @@ const EMOJI: Record<string, string> = {
     rabbits: "🐰",
     fish: "🐟",
     reptiles: "🐢",
+    horses: "🐴",
     adoption: "❤️",
     "lost-found": "🔍",
 };
@@ -21,6 +22,7 @@ const ART: Record<string, string> = {
     rabbits: "/icons/species/rabbit.jpg",
     fish: "/icons/species/fish.jpg",
     reptiles: "/icons/species/turtle.jpg",
+    horses: "/icons/species/horse.jpg",
     // Each city is drawn as its landmark.
     karachi: "/icons/landmarks/quaid-mausoleum.jpg",
     lahore: "/icons/landmarks/minar-e-pakistan.jpg",

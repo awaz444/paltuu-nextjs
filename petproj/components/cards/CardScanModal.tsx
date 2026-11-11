@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Github, Linkedin } from "lucide-react";
+import { Github, Linkedin, Mail, MessageCircle, Phone } from "lucide-react";
 import Modal from "@/components/community/Modal";
 import { cardFromSearch, type BusinessCard } from "@/lib/businessCards";
 
 const SEEN_KEY = "card_scan_seen";
+const PILL =
+    "inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-700 hover:border-gray-400";
 
 /**
  * Greets someone who scanned a founder's business card: the QR lands on
@@ -57,15 +59,15 @@ export default function CardScanModal() {
                     <footer className="mt-1.5 text-sm font-semibold text-gray-900">{card.firstName}</footer>
                 </blockquote>
 
-                {(card.linkedin || card.github) && (
-                    <div className="mt-4 flex justify-center gap-2">
+                {(card.linkedin || card.github || card.phone || card.emails?.length) && (
+                    <div className="mt-4 flex flex-wrap justify-center gap-2">
                         {card.linkedin && (
                             <a
                                 href={card.linkedin}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 data-cta="card_linkedin"
-                                className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-700 hover:border-gray-400"
+                                className={PILL}
                             >
                                 <Linkedin size={16} aria-hidden /> LinkedIn
                             </a>
@@ -76,11 +78,32 @@ export default function CardScanModal() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 data-cta="card_github"
-                                className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-700 hover:border-gray-400"
+                                className={PILL}
                             >
                                 <Github size={16} aria-hidden /> GitHub
                             </a>
                         )}
+                        {card.phone && (
+                            <>
+                                <a
+                                    href={`https://wa.me/${card.phone.replace(/\D/g, "")}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    data-cta="card_whatsapp"
+                                    className={PILL}
+                                >
+                                    <MessageCircle size={16} aria-hidden /> WhatsApp
+                                </a>
+                                <a href={`tel:${card.phone}`} data-cta="card_call" className={PILL}>
+                                    <Phone size={16} aria-hidden /> Call
+                                </a>
+                            </>
+                        )}
+                        {card.emails?.map((email) => (
+                            <a key={email} href={`mailto:${email}`} data-cta="card_email" className={PILL}>
+                                <Mail size={16} aria-hidden /> {email}
+                            </a>
+                        ))}
                     </div>
                 )}
 

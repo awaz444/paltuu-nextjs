@@ -18,6 +18,10 @@ export type BusinessCard = {
     message: string;
     linkedin: string | null;
     github: string | null;
+    /** E.164, e.g. "+923001234567". Shown as WhatsApp and Call buttons. */
+    phone?: string;
+    /** Shown as email buttons, in this order. */
+    emails?: string[];
 };
 
 export const BUSINESS_CARDS: Record<string, BusinessCard> = {
@@ -26,9 +30,11 @@ export const BUSINESS_CARDS: Record<string, BusinessCard> = {
         firstName: "Aawaiz",
         role: "Co-founder & CEO",
         image: "/cards/aawaiz.jpg",
-        message: "lun te wajo",
+        message: "hey how ya doing",
         linkedin: "https://www.linkedin.com/in/aawaiz/",
         github: "https://github.com/awaz444",
+        phone: "+923153738555",
+        emails: ["aawaiz@paltuu.pk", "aawaizali8@gmail.com"],
     },
     shuja: {
         name: "Shuja Ur Rahman",
@@ -38,6 +44,7 @@ export const BUSINESS_CARDS: Record<string, BusinessCard> = {
         message: "Hey! I build the tech behind Paltuu. If something looks broken, it's probably already fixed. Have a look around.",
         linkedin: null,
         github: null,
+        emails: ["contact@paltuu.pk"],
     },
     // Shuja's second card design, the sleepy turtle. Same person, its own QR.
     "shuja-turtle": {
@@ -48,6 +55,7 @@ export const BUSINESS_CARDS: Record<string, BusinessCard> = {
         message: "Hey! I build the tech behind Paltuu. If something looks broken, it's probably already fixed. Have a look around.",
         linkedin: null,
         github: null,
+        emails: ["contact@paltuu.pk"],
     },
     umer: {
         name: "Umer Noor",
@@ -57,6 +65,7 @@ export const BUSINESS_CARDS: Record<string, BusinessCard> = {
         message: "You found us! I'm the one telling everyone about Paltuu. Get the app, share your pet, and come say hi on Instagram.",
         linkedin: null,
         github: null,
+        emails: ["contact@paltuu.pk"],
     },
     hamza: {
         name: "Hamza Siddiqui",
@@ -66,6 +75,7 @@ export const BUSINESS_CARDS: Record<string, BusinessCard> = {
         message: "Glad you're here. I make sure everything at Paltuu runs smoothly, so you and your pet don't have to worry about a thing.",
         linkedin: null,
         github: null,
+        emails: ["contact@paltuu.pk"],
     },
 };
 

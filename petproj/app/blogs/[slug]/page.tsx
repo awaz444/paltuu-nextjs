@@ -4,16 +4,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBlogBySlug, getAllBlogSlugs, getRelatedBlogs, formatDate } from "@/lib/mdx";
 import styles from "./blog.module.css";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-    faCalendarAlt,
-    faClock,
-    faUser,
-    faChevronRight,
-    faHome,
-} from "@fortawesome/free-solid-svg-icons";
 import { Metadata } from "next";
 import ShareButtons from "@/components/blog/ShareButtons";
+import BlogCard from "@/components/blog/BlogCard";
+import AppStoreBadges from "@/components/home/AppStoreBadges";
 
 // Generate static params for all blog posts
 export async function generateStaticParams() {
@@ -153,6 +147,8 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         })),
     } : null;
 
+    const categoryHref = `/blogs?category=${encodeURIComponent(metadata.category)}`;
+
     return (
         <>
             <script
@@ -166,271 +162,166 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                 />
             )}
 
-            <main className="bg-gray-50 min-h-screen font-montserrat">
-                {/* Hero Section with Breadcrumb */}
-                <header className="relative w-full h-[500px] md:h-[600px] lg:h-[650px]">
-                    {/* Background Image with Overlay */}
-                    <Image
-                        src={metadata.featuredImage}
-                        alt={metadata.title}
-                        fill
-                        className="object-cover"
-                        priority
-                        sizes="100vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
+            {/*
+              Landing page style (components/landing): white · primary · gray-100 · white.
+              First and last are white because the navbar and footer are maroon
+              with rounded edges. Never hardcode the maroon: use bg-primary.
+            */}
+            <main className="bg-white">
+                <article>
+                    {/* HEADER */}
+                    <header className="bg-white px-5 pt-8 md:pt-12">
+                        <div className="mx-auto max-w-3xl">
+                            <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-2 overflow-hidden text-[13px] text-gray-500">
+                                <Link href="/" className="shrink-0 hover:text-primary">Home</Link>
+                                <span aria-hidden="true">/</span>
+                                <Link href="/blogs" className="shrink-0 hover:text-primary">Guides</Link>
+                                <span aria-hidden="true">/</span>
+                                <span className="truncate text-gray-400">{metadata.title}</span>
+                            </nav>
 
-                    {/* Content Container */}
-                    <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        {/* Breadcrumb - Top */}
-                        <nav className="absolute top-8 left-4 right-4 sm:left-6 sm:right-6 lg:left-8 lg:right-8 flex items-center text-sm text-white/90 overflow-x-auto">
-                            <Link href="/" className="hover:text-white transition-colors flex items-center gap-2 group">
-                                <FontAwesomeIcon icon={faHome} className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                                <span>Home</span>
-                            </Link>
-                            <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 mx-3 text-white/40" />
-                            <Link href="/blogs" className="hover:text-white transition-colors">
-                                Blogs
-                            </Link>
-                            <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 mx-3 text-white/40" />
-                            <Link href={`/blogs?category=${metadata.category}`} className="hover:text-white transition-colors">
+                            <Link
+                                href={categoryHref}
+                                className="mb-4 inline-flex rounded-full bg-gray-100 px-3.5 py-1.5 text-[13px] font-semibold text-gray-700 transition-colors hover:bg-primary-tint hover:text-primary"
+                            >
                                 {metadata.category}
                             </Link>
-                            <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 mx-3 text-white/40" />
-                            <span className="text-white/60 truncate max-w-[250px]">{metadata.title}</span>
-                        </nav>
 
-                        {/* Title and Meta - Centered */}
-                        <div className="h-full flex items-center">
-                            <div className="text-white">
-                                <Link
-                                    href={`/blogs?category=${metadata.category}`}
-                                    className="inline-flex items-center gap-2 bg-primary hover:bg-white hover:text-primary transition-all duration-300 text-white text-xs font-bold px-5 py-2 rounded-full uppercase tracking-wider mb-6 shadow-lg"
-                                >
-                                    <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                    {metadata.category}
-                                </Link>
+                            <h1 className="mb-4 text-[32px] font-bold leading-[1.1] tracking-tight text-gray-900 sm:text-[40px] lg:text-[52px]">
+                                {metadata.title}
+                            </h1>
 
-                                <h1 className="text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.1] mb-8 drop-shadow-2xl max-w-5xl">
-                                    {metadata.title}
-                                </h1>
+                            <p className="mb-6 text-[17px] leading-relaxed text-gray-600 md:text-lg">{metadata.description}</p>
 
-                                <div className="flex flex-wrap items-center gap-6 text-sm md:text-base font-medium">
-                                    <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/20">
-                                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white overflow-hidden">
-                                            <FontAwesomeIcon icon={faUser} className="w-4 h-4" />
-                                        </div>
-                                        <span className="font-semibold">{metadata.author}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2.5">
-                                        <FontAwesomeIcon icon={faCalendarAlt} className="w-4 h-4 text-primary" />
-                                        <time dateTime={metadata.date} className="font-medium">{formatDate(metadata.date)}</time>
-                                    </div>
-                                    <div className="flex items-center gap-2.5">
-                                        <FontAwesomeIcon icon={faClock} className="w-4 h-4 text-primary" />
-                                        <span className="font-medium">{metadata.readTime}</span>
-                                    </div>
+                            <div className="flex items-center gap-2.5 border-t border-gray-100 pt-5">
+                                <span aria-hidden="true" className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-primary-tint text-sm font-bold text-primary">
+                                    {metadata.author.charAt(0)}
+                                </span>
+                                <span className="flex flex-col">
+                                    <span className="text-sm font-bold text-gray-900">{metadata.author}</span>
+                                    <span className="text-xs text-gray-600">
+                                        <time dateTime={metadata.date}>{formatDate(metadata.date)}</time>
+                                        {metadata.readTime && <> · {metadata.readTime}</>}
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="mx-auto mt-8 max-w-5xl">
+                            <div className="relative aspect-[1200/630] w-full overflow-hidden rounded-3xl bg-gray-100">
+                                <Image
+                                    src={metadata.featuredImage}
+                                    alt={metadata.title}
+                                    fill
+                                    className="object-cover"
+                                    priority
+                                    sizes="(min-width: 1024px) 1024px, 100vw"
+                                />
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* BODY */}
+                    <div className="bg-white px-5 pb-12 pt-10 md:pb-20 md:pt-14">
+                        <div className="mx-auto max-w-3xl">
+                            <div className={styles.content}>{content}</div>
+
+                            {/* Tags and share */}
+                            <div className="mt-10 flex flex-col gap-5 rounded-3xl bg-gray-100 p-5 md:flex-row md:items-center md:justify-between">
+                                <div className="flex flex-wrap gap-2">
+                                    <Link
+                                        href={categoryHref}
+                                        className="rounded-full border border-primary bg-white px-3.5 py-2 text-[13px] font-medium text-primary transition-colors hover:bg-primary-soft"
+                                    >
+                                        {metadata.category}
+                                    </Link>
+                                    {metadata.tags.slice(0, 3).map((tag) => (
+                                        <Link
+                                            key={tag}
+                                            href={`/blogs?tag=${encodeURIComponent(tag)}`}
+                                            className="rounded-full border border-gray-200 bg-white px-3.5 py-2 text-[13px] font-medium text-gray-700 transition-colors hover:border-primary hover:text-primary"
+                                        >
+                                            {tag}
+                                        </Link>
+                                    ))}
+                                </div>
+                                <div className="flex shrink-0 items-center gap-3">
+                                    <span className="text-[13px] font-semibold text-gray-700">Share</span>
+                                    <ShareButtons
+                                        url={`https://www.paltuu.pk/blogs/${metadata.slug}`}
+                                        title={metadata.title}
+                                    />
                                 </div>
                             </div>
                         </div>
                     </div>
-                </header>
+                </article>
 
-                {/* Main Content Area */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                        {/* Main Article */}
-                        <article className="lg:col-span-8">
-                            {/* Content Card */}
-                            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-                                {/* Article Content */}
-                                <div className="p-8 md:p-12 lg:p-16">
-                                    {/* Excerpt/Lead */}
-                                    <p className="text-xl md:text-2xl text-gray-600 leading-relaxed mb-10 font-medium border-l-4 border-primary pl-6 italic">
-                                        {metadata.description}
-                                    </p>
-
-                                    {/* Main MDX Content */}
-                                    <div
-                                        className={`${styles.content} prose prose-xl prose-slate max-w-none 
-                                        prose-headings:font-bold prose-headings:text-gray-900 prose-headings:mb-6 prose-headings:mt-10
-                                        prose-h2:text-3xl prose-h3:text-2xl prose-h4:text-xl
-                                        prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6
-                                        prose-a:text-primary prose-a:font-semibold prose-a:no-underline hover:prose-a:text-primary/80 hover:prose-a:underline
-                                        prose-strong:text-gray-900 prose-strong:font-bold
-                                        prose-ul:my-6 prose-ol:my-6 prose-li:text-gray-700 prose-li:my-2
-                                        prose-img:rounded-2xl prose-img:shadow-xl prose-img:my-10
-                                        prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-r-xl prose-blockquote:not-italic
-                                        prose-code:text-primary prose-code:bg-primary/10 prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:font-medium`}
-                                    >
-                                        {content}
-                                    </div>
-                                </div>
-
-                                {/* Article Footer */}
-                                <div className="bg-gray-50 px-8 md:px-12 lg:px-16 py-8 border-t border-gray-100">
-                                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-                                        {/* Tags */}
-                                        <div className="flex items-center gap-3 flex-wrap">
-                                            <span className="text-gray-500 font-bold text-sm uppercase tracking-wide">Tagged:</span>
-                                            <div className="flex flex-wrap gap-2">
-                                                <Link
-                                                    href={`/blogs?category=${metadata.category}`}
-                                                    className="inline-flex items-center gap-1.5 text-primary bg-primary/10 hover:bg-primary hover:text-white px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 hover:shadow-md"
-                                                >
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                                    {metadata.category}
-                                                </Link>
-                                                {metadata.tags.slice(0, 3).map((tag) => (
-                                                    <Link
-                                                        key={tag}
-                                                        href={`/blogs?tag=${tag}`}
-                                                        className="text-gray-700 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-full text-sm font-semibold transition-colors"
-                                                    >
-                                                        {tag}
-                                                    </Link>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* Share Buttons */}
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-gray-500 font-bold text-sm uppercase tracking-wide">Share:</span>
-                                            <ShareButtons
-                                                url={`https://www.paltuu.pk/blogs/${metadata.slug}`}
-                                                title={metadata.title}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* CTA Section */}
-                            <div className="mt-10 bg-[#a03048] rounded-3xl p-8 md:p-12 text-white shadow-2xl relative overflow-hidden">
-                                {/* Decorative Elements */}
-                                <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                                <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-
-                                <div className="relative z-10 text-center">
-                                    <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-2xl mb-6">
-                                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-3xl md:text-4xl font-bold mb-4">
-                                        Need Expert Pet Care?
-                                    </h3>
-                                    <p className="text-white/90 mb-8 max-w-2xl mx-auto text-lg leading-relaxed">
-                                        Connect with certified veterinarians and access premium pet care services tailored to your furry friend's unique needs.
-                                    </p>
-                                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                        <Link
-                                            href="/pet-care"
-                                            data-cta="blog_find_vet"
-                                            className="inline-flex items-center justify-center gap-2 bg-white text-primary font-bold py-4 px-8 rounded-xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                            </svg>
-                                            Find a Vet Near You
-                                        </Link>
-                                        <Link
-                                            href="/marketplace"
-                                            data-cta="blog_shop_supplies"
-                                            className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white font-bold py-4 px-8 rounded-xl border-2 border-white/30 hover:bg-white/20 hover:border-white/50 transition-all duration-300"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                            </svg>
-                                            Shop Pet Supplies
-                                        </Link>
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
-
-                        {/* Sidebar */}
-                        <aside className="lg:col-span-4 space-y-6">
-                            <div className="sticky top-24 space-y-6">
-                                {/* Author Card */}
-                                <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-                                    <div className="flex items-center gap-4 mb-4">
-                                        <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-xl font-bold">
-                                            {metadata.author.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-1">Written by</p>
-                                            <h4 className="text-lg font-bold text-gray-900">{metadata.author}</h4>
-                                        </div>
-                                    </div>
-                                    <p className="text-gray-600 text-sm leading-relaxed">
-                                        Pet care expert passionate about sharing knowledge to help pet owners provide the best for their furry companions.
-                                    </p>
-                                </div>
-
-                                {/* Related Posts Widget */}
-                                {relatedPosts.length > 0 && (
-                                    <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-                                        <h4 className="text-lg font-bold text-gray-900 mb-6 pb-3 border-b border-gray-100">
-                                            Related Articles
-                                        </h4>
-                                        <div className="space-y-5">
-                                            {relatedPosts.map((relatedPost) => (
-                                                <Link
-                                                    key={relatedPost.slug}
-                                                    href={`/blogs/${relatedPost.slug}`}
-                                                    data-cta="blog_related_post"
-                                                    className="flex gap-4 group items-start"
-                                                >
-                                                    <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100 border border-gray-200">
-                                                        <Image
-                                                            src={relatedPost.featuredImage}
-                                                            alt={relatedPost.title}
-                                                            fill
-                                                            className="object-cover group-hover:scale-110 transition-transform duration-500"
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h5 className="font-bold text-gray-800 text-sm line-clamp-2 group-hover:text-primary transition-colors mb-2 leading-snug">
-                                                            {relatedPost.title}
-                                                        </h5>
-                                                        <div className="flex items-center text-xs text-gray-400 gap-2">
-                                                            <FontAwesomeIcon icon={faCalendarAlt} className="w-3 h-3" />
-                                                            <span>{formatDate(relatedPost.date)}</span>
-                                                        </div>
-                                                    </div>
-                                                </Link>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Newsletter Widget */}
-                                <div className="bg-[#a03048]/10 rounded-2xl p-6 border border-primary/20">
-                                    <div className="text-center">
-                                        <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/20 rounded-2xl mb-4">
-                                            <svg className="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                            </svg>
-                                        </div>
-                                        <h4 className="text-lg font-bold text-gray-900 mb-2">Stay Updated</h4>
-                                        <p className="text-gray-600 text-sm mb-5">Get weekly pet care tips delivered to your inbox</p>
-                                        <div className="space-y-3">
-                                            <input
-                                                type="email"
-                                                placeholder="Your email address"
-                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
-                                            />
-                                            <button data-cta="blog_newsletter_subscribe" className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/90 hover:shadow-lg transition-all duration-300">
-                                                Subscribe Now
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </aside>
+                {/* CTA */}
+                <section aria-labelledby="blog-cta-heading" className="bg-primary px-5 py-12 md:py-20">
+                    <div className="mx-auto max-w-3xl text-center">
+                        <h2 id="blog-cta-heading" className="text-xl font-semibold text-white md:text-[28px]">
+                            Need a vet for your pet?
+                        </h2>
+                        <p className="mx-auto mb-6 mt-1.5 max-w-xl text-sm leading-relaxed text-white/85 md:text-base">
+                            Verified clinics and animal hospitals across Pakistan. Direct contact, no booking fees.
+                        </p>
+                        <div className="mx-auto flex max-w-md flex-col gap-3">
+                            <Link
+                                href="/pet-care"
+                                data-cta="blog_find_vet"
+                                className="flex min-h-[58px] items-center justify-center gap-2.5 rounded-2xl bg-white text-[17px] font-semibold text-primary transition-opacity hover:opacity-90"
+                            >
+                                Find a vet near you
+                                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M5 12h14M13 6l6 6-6 6" />
+                                </svg>
+                            </Link>
+                            <Link
+                                href="/marketplace"
+                                data-cta="blog_shop_supplies"
+                                className="flex min-h-[54px] items-center justify-center rounded-2xl border-[1.5px] border-white/60 text-base font-semibold text-white transition-colors hover:bg-white/10"
+                            >
+                                Shop pet supplies
+                            </Link>
+                        </div>
                     </div>
-                </div>
+                </section>
+
+                {/* RELATED */}
+                {relatedPosts.length > 0 && (
+                    <section aria-labelledby="related-heading" className="bg-gray-100 px-5 py-12 md:py-20">
+                        <div className="mx-auto max-w-6xl">
+                            <div className="mb-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+                                <div>
+                                    <h2 id="related-heading" className="text-xl font-semibold text-gray-900 md:text-[28px]">
+                                        Keep reading
+                                    </h2>
+                                    <p className="mt-1.5 text-sm text-gray-600">More guides like this one.</p>
+                                </div>
+                                <Link href="/blogs" className="text-sm font-semibold text-primary hover:underline">
+                                    All guides →
+                                </Link>
+                            </div>
+                            <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
+                                {relatedPosts.map((relatedPost) => (
+                                    <BlogCard key={relatedPost.slug} post={relatedPost} cta="blog_related_post" />
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+                )}
+
+                {/* White last: the footer below is maroon with a rounded top edge. */}
+                <section className="bg-white px-5 py-12 text-center md:py-16">
+                    <div className="mx-auto max-w-xl">
+                        <p className="mb-1.5 text-[17px] font-bold text-gray-900">The whole community lives in the Paltuu app.</p>
+                        <p className="mb-4 text-sm leading-relaxed text-gray-600">
+                            Adopt, rehome, find vets and ask other pet parents.
+                        </p>
+                        <AppStoreBadges className="justify-center" />
+                    </div>
+                </section>
             </main>
         </>
     );

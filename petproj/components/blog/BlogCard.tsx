@@ -2,75 +2,58 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { BlogMetadata } from "@/lib/mdx-types";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faClock, faUser } from "@fortawesome/free-solid-svg-icons";
+
+/**
+ * A blog post card in the landing page style (components/landing): white
+ * rounded-3xl card with a rounded-2xl photo inset, no shadow, maroon border on
+ * hover. Made for a gray-100 section; pass onWhite on a white one so the card
+ * keeps an edge.
+ */
 
 interface BlogCardProps {
     post: BlogMetadata;
+    /** data-cta name for analytics, e.g. "blog_related_post". */
+    cta?: string;
+    /** On a white background: a gray-200 border instead of none. */
+    onWhite?: boolean;
 }
 
-// Format date for display (client-safe version)
+// Client-safe: the same output on server and browser.
 function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
     });
 }
 
-const BlogCard: React.FC<BlogCardProps> = ({ post }) => {
+const BlogCard: React.FC<BlogCardProps> = ({ post, cta, onWhite = false }) => {
     return (
-        <Link href={`/blogs/${post.slug}`} className="group h-full">
-            <div className="h-full flex flex-col bg-white rounded-2xl shadow-sm border-2 border-gray-100 hover:border-primary/20 hover:shadow-lg transition-all duration-300 overflow-hidden relative group-hover:-translate-y-1">
-                {/* Image Section */}
-                <div className="relative h-48 w-full overflow-hidden">
-                    <Image
-                        src={post.featuredImage}
-                        alt={post.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute top-4 left-4">
-                        <span className="bg-white/90 backdrop-blur-sm text-primary text-xs font-bold px-3 py-1 rounded-full shadow-sm uppercase tracking-wide">
-                            {post.category}
-                        </span>
-                    </div>
-                </div>
+        <Link
+            href={`/blogs/${post.slug}`}
+            data-cta={cta}
+            className={`group flex h-full flex-col rounded-3xl border-2 bg-white p-3 transition-colors hover:border-primary ${
+                onWhite ? "border-gray-200" : "border-transparent"
+            }`}
+        >
+            <div className="relative mb-3 aspect-[16/10] w-full overflow-hidden rounded-2xl bg-gray-200">
+                <Image
+                    src={post.featuredImage}
+                    alt={post.title}
+                    fill
+                    sizes="(min-width: 768px) 360px, 92vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+            </div>
 
-                {/* Content Section */}
-                <div className="flex flex-col flex-grow p-6">
-                    {/* Meta Info */}
-                    <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
-                        <span className="flex items-center gap-1">
-                            <FontAwesomeIcon icon={faUser} className="w-3 h-3" />
-                            {post.author}
-                        </span>
-                        <span>•</span>
-                        <span>{formatDate(post.date)}</span>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-primary transition-colors">
-                        {post.title}
-                    </h3>
-
-                    {/* Excerpt */}
-                    <p className="text-gray-600 text-sm line-clamp-3 mb-4 flex-grow">
-                        {post.description}
-                    </p>
-
-                    {/* Footer */}
-                    <div className="pt-4 border-t border-gray-100 flex items-center justify-between mt-auto">
-                        <span className="text-xs text-gray-500 flex items-center gap-1">
-                            <FontAwesomeIcon icon={faClock} className="w-3 h-3" />
-                            {post.readTime}
-                        </span>
-                        <span className="text-sm font-semibold text-primary group-hover:underline">
-                            Read More →
-                        </span>
-                    </div>
-                </div>
+            <div className="flex flex-grow flex-col px-1.5 pb-1.5">
+                {post.category && <span className="mb-1 text-xs font-semibold text-primary">{post.category}</span>}
+                <h3 className="mb-1.5 line-clamp-2 font-bold leading-snug text-gray-900">{post.title}</h3>
+                <p className="mb-3 line-clamp-2 flex-grow text-sm leading-relaxed text-gray-600">{post.description}</p>
+                <p className="text-xs text-gray-500">
+                    <time dateTime={post.date}>{formatDate(post.date)}</time>
+                    {post.readTime && <> · {post.readTime}</>}
+                </p>
             </div>
         </Link>
     );

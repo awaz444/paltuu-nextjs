@@ -1,8 +1,8 @@
 /**
- * "Still looking · 3 wks" style label for adoption cards (PALTU-102, copy
- * reworked in PALTU-113). Based on the original created_at — renewing a
- * listing moves it up the feed but doesn't reset how long the pet has been
- * waiting. Units are abbreviated so the chip fits on narrow mobile cards.
+ * "Still looking · 3 weeks" style label for adoption cards (PALTU-102, copy
+ * reworked in PALTU-113, units spelled out in PALTU-157). Based on the
+ * original created_at — renewing a listing moves it up the feed but doesn't
+ * reset how long the pet has been waiting.
  *
  * Returns null for listings under two weeks old (no badge).
  */
@@ -18,14 +18,14 @@ export const getWaitingLabel = (createdAt: string | Date | null | undefined, now
 
   let duration: string;
   if (days < 60) {
-    duration = `${Math.floor(days / 7)} wks`;
+    duration = `${Math.floor(days / 7)} weeks`;
   } else {
     const months = Math.floor(days / 30);
     if (months < 12) {
-      duration = `${months} mos`;
+      duration = `${months} months`;
     } else {
       const years = Math.floor(months / 12);
-      duration = `${years} yr${years > 1 ? "s" : ""}+`;
+      duration = `${years}+ year${years > 1 ? "s" : ""}`;
     }
   }
   return `Still looking · ${duration}`;

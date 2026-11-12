@@ -1,7 +1,8 @@
 /**
  * Founder business cards (PALTU-125, PALTU-128).
  *
- * Every card's QR opens https://www.paltuu.pk/?utm_source=card-<id>. The
+ * Every card's QR opens https://www.paltuu.pk/?utm_source=card-<id> (the
+ * international card: www.paltuu.org). The
  * landing page stays the same; components/cards/CardScanModal.tsx sees the
  * utm_source and greets the visitor with the person on that card. The id is
  * also what shows up per card in our traffic stats, so never rename one that
@@ -73,6 +74,18 @@ export const BUSINESS_CARDS: Record<string, BusinessCard> = {
         role: "Chief Operating Officer",
         image: "/cards/hamza.jpg",
         message: "Glad you're here. I make sure everything at Paltuu runs smoothly, so you and your pet don't have to worry about a thing.",
+        linkedin: null,
+        github: null,
+        emails: ["contact@paltuu.pk"],
+    },
+    // The international card (paltuu-prints business-cards/international.js,
+    // PALTU-137). No name on it: its QR opens www.paltuu.org/?utm_source=card-community.
+    community: {
+        name: "Paltuu",
+        firstName: "Paltuu",
+        role: "The Pet Super App",
+        image: "/cards/community.jpg",
+        message: "Thanks for scanning! Adopt a pet, find your pet a loving home and meet other pet parents. Questions? Email us anytime.",
         linkedin: null,
         github: null,
         emails: ["contact@paltuu.pk"],

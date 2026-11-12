@@ -211,11 +211,14 @@ const PLACEMENT_CTES = `
            AND ppt.post_id NOT IN (SELECT post_id FROM admin_placed)
     )`;
 
+// Media w/h are read through to_jsonb(m) so these pages still render if the
+// width/height migration (PALTU-159) hasn't been run: a missing key is null.
 const POST_COLUMNS = `
     sp.post_id, sp.user_id AS author_id, sp.content, sp.post_type, sp.like_count, sp.comment_count, sp.repost_count, sp.created_at, sp.updated_at,
     u.name AS author_name, u.social_username AS author_username,
     u.profile_image_url AS author_avatar, COALESCE(u.verified, false) AS author_verified,
-    (SELECT json_agg(json_build_object('type', m.media_type, 'url', m.url, 'thumb', m.thumbnail_url)
+    (SELECT json_agg(json_build_object('type', m.media_type, 'url', m.url, 'thumb', m.thumbnail_url,
+                                       'w', (to_jsonb(m)->>'width')::int, 'h', (to_jsonb(m)->>'height')::int)
                      ORDER BY m.ordering)
        FROM social_post_media m WHERE m.post_id = sp.post_id AND m.url IS NOT NULL) AS media,
     (SELECT json_agg(DISTINCT ps.species) FROM post_species ps WHERE ps.post_id = sp.post_id) AS species,
@@ -224,7 +227,8 @@ const POST_COLUMNS = `
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type PostMedia = { type: string; url: string; thumb: string | null };
+/** `w`/`h`: pixel size, null until measured (PALTU-159). */
+export type PostMedia = { type: string; url: string; thumb: string | null; w?: number | null; h?: number | null };
 export type PostPlace = { species: string; breedSlug?: string; breedName?: string };
 
 export type CommunityPost = {

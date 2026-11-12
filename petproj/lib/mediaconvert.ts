@@ -18,6 +18,7 @@ import {
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
+import type { MediaDims } from "@/lib/mediaDimensions";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const REGION               = process.env.AWS_S3_REGION              || "ap-south-1";
@@ -170,9 +171,17 @@ export async function getVideoUploadPresignedUrl(ext: string = "mp4"): Promise<{
  *   - hls/hls_1080p*.ts     ← 1080p 5Mbps segments
  *   - thumbs/{prefix}_thumb.0000001.jpg  ← first thumbnail
  *
+ * Every output keeps the source's shape (PALTU-159). Each rendition is sized
+ * by one side only and MediaConvert scales the other evenly; setting both
+ * forced a 16:9 frame that MediaConvert's default "fit with padding" filled
+ * with black bars around portrait phone clips. "360p/720p/1080p" is the short
+ * side: pass the source's display size (`source`) and a portrait clip is
+ * sized by width (720×1280); without it every rung is sized by height, which
+ * is safe for any shape, just smaller for portrait (405×720).
+ *
  * Returns the MediaConvert job ID so you can store it in the DB.
  */
-export async function createMediaConvertJob(videoKey: string): Promise<string> {
+export async function createMediaConvertJob(videoKey: string, source?: MediaDims | null): Promise<string> {
     if (!MEDIACONVERT_ROLE) {
         throw new Error("AWS_MEDIACONVERT_ROLE_ARN must be set in .env");
     }
@@ -183,6 +192,9 @@ export async function createMediaConvertJob(videoKey: string): Promise<string> {
         .replace(/^uploads\//, "")
         .replace(/\.[^.]+$/, "");
 
+    const portrait = !!source && source.height > source.width;
+    const rung = (shortSide: number) => (portrait ? { Width: shortSide } : { Height: shortSide });
+
     const input: CreateJobCommandInput = {
         Role: MEDIACONVERT_ROLE,
         ...(MEDIACONVERT_QUEUE ? { Queue: MEDIACONVERT_QUEUE } : {}),
@@ -192,7 +204,10 @@ export async function createMediaConvertJob(videoKey: string): Promise<string> {
                 {
                     FileInput: `s3://${RAW_BUCKET}/${videoKey}`,
                     AudioSelectors: { "Audio Selector 1": { DefaultSelection: "DEFAULT" } },
-                    VideoSelector: {},
+                    // Phones store most portrait video as landscape pixels plus
+                    // a rotation flag, and MediaConvert ignores that flag
+                    // unless told to apply it.
+                    VideoSelector: { Rotate: "AUTO" },
                     TimecodeSource: "ZEROBASED",
                 },
             ],
@@ -215,8 +230,7 @@ export async function createMediaConvertJob(videoKey: string): Promise<string> {
                         {
                             NameModifier: "_360p",
                             VideoDescription: {
-                                Width: 640,
-                                Height: 360,
+                                ...rung(360),
                                 CodecSettings: {
                                     Codec: "H_264",
                                     H264Settings: {
@@ -244,8 +258,7 @@ export async function createMediaConvertJob(videoKey: string): Promise<string> {
                         {
                             NameModifier: "_720p",
                             VideoDescription: {
-                                Width: 1280,
-                                Height: 720,
+                                ...rung(720),
                                 CodecSettings: {
                                     Codec: "H_264",
                                     H264Settings: {
@@ -273,8 +286,7 @@ export async function createMediaConvertJob(videoKey: string): Promise<string> {
                         {
                             NameModifier: "_1080p",
                             VideoDescription: {
-                                Width: 1920,
-                                Height: 1080,
+                                ...rung(1080),
                                 CodecSettings: {
                                     Codec: "H_264",
                                     H264Settings: {
@@ -316,8 +328,8 @@ export async function createMediaConvertJob(videoKey: string): Promise<string> {
                         {
                             NameModifier: "_thumb",
                             VideoDescription: {
+                                // Width only: the still keeps the clip's shape.
                                 Width: 720,
-                                Height: 404,
                                 CodecSettings: {
                                     Codec: "FRAME_CAPTURE",
                                     FrameCaptureSettings: {

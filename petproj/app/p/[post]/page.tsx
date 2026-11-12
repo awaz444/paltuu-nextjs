@@ -160,6 +160,8 @@ export default async function PostPage({ params }: { params: { post: string } })
                                     <div className="mt-3 space-y-2">
                                         {post.media.map((m, i) =>
                                             m.type === "video" ? (
+                                                // Sized by the video itself (poster, then the clip), like
+                                                // the photos below, not a full-width black box (PALTU-159).
                                                 <video
                                                     key={m.url}
                                                     controls
@@ -167,7 +169,7 @@ export default async function PostPage({ params }: { params: { post: string } })
                                                     preload="metadata"
                                                     poster={m.thumb ?? undefined}
                                                     src={m.url}
-                                                    className="max-h-[75vh] w-full rounded-xl border border-gray-200 bg-black"
+                                                    className="block h-auto max-h-[75vh] w-auto max-w-full rounded-xl border border-gray-200 bg-black"
                                                 />
                                             ) : (
                                                 // eslint-disable-next-line @next/next/no-img-element

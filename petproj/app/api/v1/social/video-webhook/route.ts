@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";
 import { buildHlsUrl, buildThumbnailUrl } from "@/lib/mediaconvert";
+import { saveMediaDimensions, toDims, type MediaDims } from "@/lib/mediaDimensions";
 import { SocialNotifications } from "@/lib/notifications/notificationTriggers";
+
+/**
+ * The biggest rendition a COMPLETE event reports. Its size is what viewers
+ * actually see, so it's what the feed frames the video to (PALTU-159).
+ */
+function largestOutputDims(detail: any): MediaDims | null {
+    let best: MediaDims | null = null;
+    for (const group of detail?.outputGroupDetails ?? []) {
+        for (const output of group?.outputDetails ?? []) {
+            const dims = toDims(output?.videoDetails?.widthInPx, output?.videoDetails?.heightInPx);
+            if (dims && (!best || dims.width * dims.height > best.width * best.height)) best = dims;
+        }
+    }
+    return best;
+}
 
 
 export const dynamic = "force-dynamic";
@@ -94,6 +110,8 @@ export async function POST(req: NextRequest) {
                 console.warn(`[video-webhook] No media row found for jobId: ${jobId}`);
             } else {
                 console.log(`[video-webhook] ✅ Job ${jobId} COMPLETE → ${hlsUrl}`);
+                const outputDims = largestOutputDims(detail);
+                await saveMediaDimensions(db, result.rows.map((r: any) => ({ mediaId: r.media_id, dims: outputDims })));
                 const row = result.rows[0];
                 const authorId = Number(row.user_id);
                 const postId   = Number(row.post_id);

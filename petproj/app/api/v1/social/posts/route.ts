@@ -24,6 +24,7 @@ import {
     personalizedAffinityCtes,
 } from "@/lib/tagInference";
 import { validateSocialMediaPayload } from "@/lib/giphyMedia";
+import { saveMediaDimensions, toDims } from "@/lib/mediaDimensions";
 import { inferForum, resolveForum, setPostForum, type ForumPlacement } from "@/lib/forumPlacement";
 import { findTopic } from "@/lib/community";
 import { revalidatePath } from "next/cache";
@@ -778,6 +779,17 @@ export async function POST(req: NextRequest) {
 
             await client.query('COMMIT');
 
+            // Each item's pixel size, so feed cards can frame it in its own
+            // shape (PALTU-159). The app already sends the size /social/upload
+            // measured for photos and Klipy's for GIFs; videos get theirs at
+            // the confirm step. Best effort, after commit, never fails a post.
+            // Saved before the revalidate below so the rebuilt pages have it.
+            const mediaDims = insertedMedia.map((row, i) => ({
+                mediaId: row.media_id,
+                dims: toDims(media[i]?.width, media[i]?.height),
+            }));
+            await saveMediaDimensions(db, mediaDims);
+
             // The web home feed and community pages are cached (ISR): rebuild
             // them so a new post shows straight away instead of minutes later.
             try {
@@ -843,7 +855,14 @@ export async function POST(req: NextRequest) {
             // MediaConvert confirm step (confirmVideoUpload needs media_id).
             // Censored in place when redacted, and carries moderation_state so
             // the composer can warn the author their wording was covered.
-            const responsePost = { ...post, media: insertedMedia };
+            const responsePost = {
+                ...post,
+                media: insertedMedia.map((row, i) => ({
+                    ...row,
+                    width: mediaDims[i].dims?.width ?? null,
+                    height: mediaDims[i].dims?.height ?? null,
+                })),
+            };
             redactModerationFields(responsePost);
             return NextResponse.json(responsePost, { status: 201 });
 

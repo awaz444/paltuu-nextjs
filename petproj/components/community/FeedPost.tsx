@@ -12,11 +12,17 @@ import {
     primaryPlace,
     type CommunityPost,
 } from "@/lib/community";
+import { feedFrameRatio } from "@/lib/mediaFrame";
 import ForumIcon from "./ForumIcon";
 import { forumArtKey } from "./forumMeta";
 import Avatar from "./Avatar";
 import LinkifiedText from "./LinkifiedText";
 import PostActions from "./PostActions";
+
+// Tallest a media frame gets. On phones the width runs out first; on wider
+// screens a tall frame narrows instead of growing past this (kept in step
+// with the 520px in the unknown-size classes below).
+const FRAME_MAX_H = 520;
 
 /** "4m", "3h", "2d", "5w", "3mo", "1y". */
 function shortAge(iso: string): string {
@@ -42,6 +48,7 @@ function shortAge(iso: string): string {
 export default function FeedPost({ post, showForum = true }: { post: CommunityPost; showForum?: boolean }) {
     const first = post.media[0];
     const cover = first ? (first.type === "video" ? first.thumb : first.url) : null;
+    const ratio = first ? feedFrameRatio(first.w, first.h) : null;
     const place = showForum ? primaryPlace(post) : null;
     const title = postTitle(post);
     const body = postBody(post);
@@ -105,10 +112,27 @@ export default function FeedPost({ post, showForum = true }: { post: CommunityPo
                         </p>
                     )}
 
+                    {/* The frame takes the media's own shape, 4:5 to 16:9, and the
+                        media fills it: no letterbox bars (PALTU-159). Size known:
+                        the frame is drawn before the image loads. Not known yet:
+                        the image sets its own height, clamped to the same range
+                        against the frame's width (cqw). */}
                     {cover && (
-                        <div className="relative mt-2.5 overflow-hidden rounded-xl border border-gray-200 bg-gray-900">
+                        <div
+                            className={`relative mt-2.5 overflow-hidden rounded-xl border border-gray-200 bg-gray-100 ${ratio ? "" : "[container-type:inline-size]"}`}
+                            style={ratio ? { aspectRatio: String(ratio), maxWidth: Math.round(FRAME_MAX_H * ratio) } : undefined}
+                        >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={cover} alt={title} className="mx-auto block max-h-[520px] w-full object-contain" loading="lazy" />
+                            <img
+                                src={cover}
+                                alt={title}
+                                className={
+                                    ratio
+                                        ? "absolute inset-0 h-full w-full object-cover"
+                                        : "block h-auto max-h-[min(125cqw,520px)] min-h-[56.25cqw] w-full object-cover"
+                                }
+                                loading="lazy"
+                            />
                             {first?.type === "video" && (
                                 <span className="absolute inset-0 flex items-center justify-center">
                                     <span className="rounded-full bg-black/60 p-4 text-white">

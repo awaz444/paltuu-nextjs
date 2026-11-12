@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { getVideoUploadPresignedUrl, createMediaConvertJob } from "@/lib/mediaconvert";
 import { db } from "@/db/index";
+import { probeImageDimensions, saveMediaDimensions, toDims } from "@/lib/mediaDimensions";
 
 export const dynamic = "force-dynamic";
 
@@ -83,8 +84,11 @@ export async function POST(req: NextRequest) {
         }
 
         // Verify ownership: the media row must belong to a post by this user
+        // width/height via to_jsonb so this works before
+        // migrations/add_dimensions_to_social_post_media.sql is run.
         const ownerCheck = await db.query(
-            `SELECT m.media_id
+            `SELECT m.media_id, m.thumbnail_url,
+                    to_jsonb(m)->>'width' AS width, to_jsonb(m)->>'height' AS height
              FROM social_post_media m
              JOIN social_posts p ON p.post_id = m.post_id
              WHERE m.media_id = $1 AND p.user_id = $2`,
@@ -94,9 +98,19 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Media not found or unauthorized" }, { status: 403 });
         }
 
+        // The clip's display size decides portrait vs landscape renditions and
+        // frames it in the feed (PALTU-159). Newer app builds send it with the
+        // post; older ones only upload a poster frame, so measure that.
+        const mediaRow = ownerCheck.rows[0];
+        let source = toDims(mediaRow.width, mediaRow.height);
+        if (!source) {
+            source = await probeImageDimensions(mediaRow.thumbnail_url);
+            await saveMediaDimensions(db, [{ mediaId: media_id, dims: source }]);
+        }
+
         // Submit MediaConvert job
-        console.log(`[video-upload-url] Submitting MediaConvert job for key: ${video_key}, media_id: ${media_id}`);
-        const jobId = await createMediaConvertJob(video_key);
+        console.log(`[video-upload-url] Submitting MediaConvert job for key: ${video_key}, media_id: ${media_id}, source: ${source ? `${source.width}x${source.height}` : "unknown"}`);
+        const jobId = await createMediaConvertJob(video_key, source);
         console.log(`[video-upload-url] MediaConvert job submitted: ${jobId}`);
 
         // Update DB: mark as processing, store job ID and video key

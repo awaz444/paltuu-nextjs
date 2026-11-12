@@ -9,6 +9,7 @@ import { hasPetSaleMatch } from "@/lib/moderation/petSaleDetection";
 import { recordEngagementEvent } from "@/lib/interestScoring";
 import { resolveRepostTarget } from "@/lib/reposts";
 import { validateSocialMediaPayload } from "@/lib/giphyMedia";
+import { saveMediaDimensions, toDims } from "@/lib/mediaDimensions";
 import { invalidateViewerPostCache, fanOutPostToFollowers, removePostFromCaches } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
@@ -208,6 +209,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
             await client.query('COMMIT');
 
+            // Pixel size of the quote's own media, same as create-post
+            // (PALTU-159). Best effort, after commit.
+            const mediaDims = insertedMedia.map((row, i) => ({
+                mediaId: row.media_id,
+                dims: toDims(media[i]?.width, media[i]?.height),
+            }));
+            await saveMediaDimensions(db, mediaDims);
+
             if (autoPetSale) {
                 // Same review trail the create path leaves — the detector is a
                 // first-pass heuristic, so a human still confirms.
@@ -250,7 +259,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             }
 
             return NextResponse.json(
-                { reposted: true, post: { ...repostEntry.rows[0], media: insertedMedia } },
+                {
+                    reposted: true,
+                    post: {
+                        ...repostEntry.rows[0],
+                        media: insertedMedia.map((row, i) => ({
+                            ...row,
+                            width: mediaDims[i].dims?.width ?? null,
+                            height: mediaDims[i].dims?.height ?? null,
+                        })),
+                    },
+                },
                 { status: 201 }
             );
 

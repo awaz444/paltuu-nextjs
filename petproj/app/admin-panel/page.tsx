@@ -19,8 +19,6 @@ interface UserProfileData {
     created_at: string;
 }
 
-const ADMIN_PANEL_PIN = "1212";
-
 interface TileDef {
     href: string;
     title: string;
@@ -56,10 +54,6 @@ const Tile = ({ href, title, desc, badge }: TileDef) => (
 const AdminPanel = () => {
     const { user, isHydrating } = useAuth();
     const router = useRouter();
-
-    const [pinVerified, setPinVerified] = useState(false);
-    const [pinInput, setPinInput] = useState("");
-    const [pinError, setPinError] = useState("");
 
     const [userId, setUserId] = useState<string | null>(null);
     const [data, setData] = useState<UserProfileData | null>(null);
@@ -133,53 +127,6 @@ const AdminPanel = () => {
             .then(d => setPendingReviews(d?.counts?.pending ?? 0))
             .catch(() => {});
     }, [user, isHydrating]);
-
-    // PIN gate — asked for on every visit to this page, independent of the admin role check
-    const handlePinSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (pinInput === ADMIN_PANEL_PIN) {
-            setPinVerified(true);
-            setPinError("");
-        } else {
-            setPinError("Incorrect PIN");
-            setPinInput("");
-        }
-    };
-
-    if (!pinVerified) {
-        return (
-            <div className="flex justify-center items-center h-screen bg-gray-100 px-4">
-                <form
-                    onSubmit={handlePinSubmit}
-                    className="bg-white shadow-lg rounded-lg p-8 w-full max-w-xs text-center border border-gray-200"
-                >
-                    <h3 className="text-lg font-bold text-primary mb-2">Admin Panel Locked</h3>
-                    <p className="text-sm text-gray-500 mb-4">Enter the 4-digit PIN to continue</p>
-                    <input
-                        type="password"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength={4}
-                        value={pinInput}
-                        onChange={(e) => {
-                            setPinError("");
-                            setPinInput(e.target.value.replace(/\D/g, "").slice(0, 4));
-                        }}
-                        className="w-full text-center tracking-[0.6em] text-2xl font-bold border border-gray-300 rounded-lg py-3 mb-3 focus:border-primary outline-none"
-                        autoFocus
-                    />
-                    {pinError && <p className="text-red-600 text-sm mb-3">{pinError}</p>}
-                    <button
-                        type="submit"
-                        disabled={pinInput.length !== 4}
-                        className="w-full bg-primary text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                        Unlock
-                    </button>
-                </form>
-            </div>
-        );
-    }
 
     if (loading || isHydrating) {
         return (

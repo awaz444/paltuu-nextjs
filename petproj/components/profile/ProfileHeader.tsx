@@ -155,8 +155,8 @@ export default function ProfileHeader() {
 
     return (
         <header className="border-b border-gray-200 bg-white">
-            {/* Starts 1rem up on desktop, behind the navbar's rounded corners, like the forum banner. */}
-            <div className="relative h-28 w-full overflow-hidden bg-primary md:-mt-4 md:h-44">
+            {/* Starts 1rem up, behind the navbar's rounded corners, so no white shows at its edges (PALTU-161). */}
+            <div className="relative -mt-4 h-32 w-full overflow-hidden bg-primary md:h-44">
                 {profile.cover && !profile.suspended && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={profile.cover} alt="" className="h-full w-full object-cover" />

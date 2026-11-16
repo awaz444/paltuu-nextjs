@@ -1,5 +1,6 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
+import { approvedReviewsOnly } from "@/lib/reviewApproval";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { rateLimit } from "@/utils/rateLimit";
 import { LOST_AND_FOUND_ENABLED } from "@/lib/features";
@@ -345,10 +346,11 @@ export async function GET(req: NextRequest) {
 
         // Vets — full-text match OR trigram fuzzy match (typo-tolerant), ranked by relevance
         async function searchVets(lim: number, cur: any) {
+            const approved = await approvedReviewsOnly("");
             let query = `
                 SELECT * FROM (
                     SELECT 'vet' AS entity_type, c.clinic_id AS provider_id, c.name, c.address AS location, c.logo_url AS image_url, c.created_at,
-                           COALESCE((SELECT AVG(rating) FROM vet_reviews WHERE clinic_id = c.clinic_id AND is_approved = true), 0) AS rating,
+                           COALESCE((SELECT AVG(rating) FROM vet_reviews WHERE clinic_id = c.clinic_id${approved}), 0) AS rating,
                            GREATEST(
                                similarity(c.name, $1),
                                word_similarity($1, c.name || ' ' || coalesce(c.address, '')),

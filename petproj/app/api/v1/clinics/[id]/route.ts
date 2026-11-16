@@ -2,6 +2,7 @@ import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { stripClinicContact } from "@/lib/contacts";
+import { approvedReviewsOnly } from "@/lib/reviewApproval";
 
 export async function GET(
     req: NextRequest,
@@ -49,6 +50,7 @@ export async function GET(
 
         console.log(`[API] Found clinic ${clinic.clinic_id} and ${vetsResult.rowCount} vets via clinic_vets`);
 
+        const approved = await approvedReviewsOnly("vr");
         const reviewsResult = await db.query(`
             SELECT
                 vr.review_id,
@@ -59,7 +61,7 @@ export async function GET(
                 u.name AS review_maker_name
             FROM vet_reviews vr
             JOIN users u ON vr.user_id = u.user_id
-            WHERE vr.clinic_id = $1 AND vr.is_approved = true
+            WHERE vr.clinic_id = $1${approved}
             ORDER BY vr.review_date DESC
         `, [clinic.clinic_id]);
 

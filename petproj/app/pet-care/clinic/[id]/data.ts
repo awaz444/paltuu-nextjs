@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { db } from "@/db/index";
 import { stripClinicContact } from "@/lib/contacts";
+import { approvedReviewsOnly } from "@/lib/reviewApproval";
 import { Clinic } from "../../../types/clinic";
 import { Vet } from "../../../types/vet";
 
@@ -45,6 +46,7 @@ export const getClinicDetail = cache(async (id: string): Promise<ClinicDetails |
             [clinic.clinic_id]
         );
 
+        const approved = await approvedReviewsOnly("vr");
         const reviewsResult = await db.query(
             `SELECT
                 vr.review_id,
@@ -55,7 +57,7 @@ export const getClinicDetail = cache(async (id: string): Promise<ClinicDetails |
                 u.name AS review_maker_name
             FROM vet_reviews vr
             JOIN users u ON vr.user_id = u.user_id
-            WHERE vr.clinic_id = $1 AND vr.is_approved = true
+            WHERE vr.clinic_id = $1${approved}
             ORDER BY vr.review_date DESC`,
             [clinic.clinic_id]
         );

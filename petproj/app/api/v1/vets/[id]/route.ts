@@ -1,5 +1,6 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
+import { approvedReviewsOnly } from "@/lib/reviewApproval";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +58,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         }
         const vet = vetResult.rows[0];
 
+        const approved = await approvedReviewsOnly("vr");
         const reviewsResult = await db.query(
             `SELECT
                 vr.review_id,
@@ -67,7 +69,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 u.name              AS review_maker_name
             FROM vet_reviews vr
             JOIN users u ON vr.user_id = u.user_id
-            WHERE vr.vet_id = $1 AND vr.is_approved = true
+            WHERE vr.vet_id = $1${approved}
             ORDER BY vr.review_date DESC`,
             [vetId]
         );

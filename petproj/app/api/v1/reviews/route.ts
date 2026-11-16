@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserIdFromRequest } from "@/utils/authServer";
 import { validate } from "@/utils/validation";
 import { PetCareNotifications } from "@/lib/notifications";
+import { approvedReviewsOnly, hasReviewApproval } from "@/lib/reviewApproval";
 
 /**
  * @swagger
@@ -23,13 +24,14 @@ export async function GET(req: NextRequest) {
 
         if (!targetId || !type) return NextResponse.json({ error: "Missing target_id or type" }, { status: 400 });
 
+        const approved = await approvedReviewsOnly("vr");
         let query;
         if (type === 'vet') {
             query = `
                 SELECT vr.*, u.name as reviewer_name, u.profile_image_url as reviewer_image
                 FROM vet_reviews vr
                 JOIN users u ON vr.user_id = u.user_id
-                WHERE vr.vet_id = $1 AND vr.is_approved = true
+                WHERE vr.vet_id = $1${approved}
                 ORDER BY vr.review_date DESC
             `;
         } else if (type === 'clinic') {
@@ -38,7 +40,7 @@ export async function GET(req: NextRequest) {
                 SELECT vr.*, u.name as reviewer_name, u.profile_image_url as reviewer_image
                 FROM vet_reviews vr
                 JOIN users u ON vr.user_id = u.user_id
-                WHERE vr.clinic_id = $1 AND vr.is_approved = true
+                WHERE vr.clinic_id = $1${approved}
                 ORDER BY vr.review_date DESC
             `;
         } else {
@@ -79,10 +81,13 @@ export async function POST(req: NextRequest) {
 
         let query;
         const params: unknown[] = [target_id, userId, rating, body.body ?? comment];
+        // New vet and clinic reviews wait for approval, once the column exists (lib/reviewApproval.ts).
+        const pending = await hasReviewApproval();
+        const [approvalColumn, approvalValue] = pending ? [", is_approved", ", false"] : ["", ""];
         if (type === 'vet') {
-            query = `INSERT INTO vet_reviews (vet_id, user_id, rating, review_content, review_date, is_approved) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, false) RETURNING *`;
+            query = `INSERT INTO vet_reviews (vet_id, user_id, rating, review_content, review_date${approvalColumn}) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP${approvalValue}) RETURNING *`;
         } else if (type === 'clinic') {
-            query = `INSERT INTO vet_reviews (clinic_id, user_id, rating, review_content, review_date, is_approved) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, false) RETURNING *`;
+            query = `INSERT INTO vet_reviews (clinic_id, user_id, rating, review_content, review_date${approvalColumn}) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP${approvalValue}) RETURNING *`;
         } else {
             // Accepts `body` or the older `comment`; new reviews wait for approval.
             query = `INSERT INTO bazaar_product_reviews (product_id, user_id, rating, body, title, status) VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING *`;

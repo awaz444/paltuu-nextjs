@@ -5,6 +5,7 @@ import ClinicCard from "@/components/ClinicCard";
 import VetDetailsClient from "./VetDetailsClient";
 import { VET_CITIES } from "@/lib/vetCities";
 import { stripClinicContact, stripVetContact } from "@/lib/contacts";
+import { approvedReviewsOnly } from "@/lib/reviewApproval";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -168,6 +169,7 @@ async function getVet(vetId: string) {
         if (vetResult.rowCount === 0) return null;
         const vet = vetResult.rows[0];
 
+        const approved = await approvedReviewsOnly("vr");
         const reviewsResult = await db.query(
             `SELECT
                 vr.review_id,
@@ -178,7 +180,7 @@ async function getVet(vetId: string) {
                 u.name              AS review_maker_name
             FROM vet_reviews vr
             JOIN users u ON vr.user_id = u.user_id
-            WHERE vr.vet_id = $1 AND vr.is_approved = true
+            WHERE vr.vet_id = $1${approved}
             ORDER BY vr.review_date DESC`,
             [vetId]
         );

@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { checkAdmin } from "../../adminAuth";
+import { hasReviewApproval } from "@/lib/reviewApproval";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const { action } = await req.json().catch(() => ({}));
     if (action !== "approve" && action !== "unapprove") {
         return NextResponse.json({ error: "action must be approve or unapprove" }, { status: 400 });
+    }
+
+    if (!(await hasReviewApproval())) {
+        return NextResponse.json(
+            { error: "Review approval isn't set up yet: run migrations/add_is_approved_to_vet_reviews.sql. Until then every review is already public." },
+            { status: 409 }
+        );
     }
 
     try {

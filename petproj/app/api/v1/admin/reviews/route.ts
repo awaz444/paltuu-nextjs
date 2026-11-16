@@ -1,6 +1,7 @@
 import { db } from "@/db/index";
 import { NextRequest, NextResponse } from "next/server";
 import { checkAdmin } from "../adminAuth";
+import { hasReviewApproval } from "@/lib/reviewApproval";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,12 @@ export async function GET(req: NextRequest) {
     const state = req.nextUrl.searchParams.get("state") === "approved" ? "approved" : "pending";
 
     try {
+        // Without the column (migration not run yet) every review is already public:
+        // nothing waits, and the Published tab lists them all (lib/reviewApproval.ts).
+        const canApprove = await hasReviewApproval();
+        const where = canApprove
+            ? state === "approved" ? "vr.is_approved = true" : "vr.is_approved IS NOT TRUE"
+            : state === "approved" ? "TRUE" : "FALSE";
         const [reviews, counts] = await Promise.all([
             db.query(
                 `SELECT vr.review_id, vr.rating, vr.review_content, vr.review_date,
@@ -31,18 +38,20 @@ export async function GET(req: NextRequest) {
                    LEFT JOIN vets v ON v.vet_id = vr.vet_id
                    LEFT JOIN users vu ON vu.user_id = v.user_id
                    LEFT JOIN clinics c ON c.clinic_id = vr.clinic_id
-                  WHERE ${state === "approved" ? "vr.is_approved = true" : "vr.is_approved IS NOT TRUE"}
+                  WHERE ${where}
                   ORDER BY vr.review_date DESC NULLS LAST, vr.review_id DESC
                   LIMIT 200`
             ),
             db.query(
-                `SELECT COUNT(*) FILTER (WHERE is_approved IS NOT TRUE)::int AS pending,
-                        COUNT(*) FILTER (WHERE is_approved = true)::int AS approved
-                   FROM vet_reviews`
+                canApprove
+                    ? `SELECT COUNT(*) FILTER (WHERE is_approved IS NOT TRUE)::int AS pending,
+                              COUNT(*) FILTER (WHERE is_approved = true)::int AS approved
+                         FROM vet_reviews`
+                    : `SELECT 0 AS pending, COUNT(*)::int AS approved FROM vet_reviews`
             ),
         ]);
 
-        return NextResponse.json({ reviews: reviews.rows, counts: counts.rows[0] });
+        return NextResponse.json({ reviews: reviews.rows, counts: counts.rows[0], approvalEnabled: canApprove });
     } catch (error) {
         console.error("V1 Admin reviews GET error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

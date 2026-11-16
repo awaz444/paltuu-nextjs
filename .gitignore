@@ -25,6 +25,9 @@ credentials.json
 # Confidential internal documents — NEVER commit
 # Blog posts are .mdx and stay tracked; everything doc-shaped below is local-only.
 *.md
+# Agent rules for the whole team (PALTU-165): tracked on purpose.
+!/CLAUDE.md
+!/AGENTS.md
 docs/
 *.pdf
 *.doc

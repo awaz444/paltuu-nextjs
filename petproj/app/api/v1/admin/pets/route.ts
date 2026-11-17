@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/utils/authServer";
 import { normalizePhone, isValidPhone } from "@/utils/phone";
 import { notifyTeam, userName } from "@/lib/whatsappNotify";
+import { archiveListing } from "@/lib/listingArchive";
 
 /**
  * @swagger
@@ -174,6 +175,8 @@ export async function DELETE(req: NextRequest) {
         const client = await db.connect();
         try {
             await client.query('BEGIN');
+            // Keep a copy (contact number, photos, applications) before anything goes (PALTU-166).
+            await archiveListing(client, Number(pet_id), Number(user.user_id ?? user.id), "admin");
             await client.query('DELETE FROM rescue_images WHERE pet_id = $1', [pet_id]);
             await client.query('DELETE FROM rescue_medical_conditions WHERE pet_id = $1', [pet_id]);
             await client.query('DELETE FROM rescue_special_needs WHERE pet_id = $1', [pet_id]);

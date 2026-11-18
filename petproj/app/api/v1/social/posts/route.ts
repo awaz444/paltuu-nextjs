@@ -25,6 +25,8 @@ import {
 } from "@/lib/tagInference";
 import { validateSocialMediaPayload } from "@/lib/giphyMedia";
 import { inferForum, resolveForum, setPostForum, type ForumPlacement } from "@/lib/forumPlacement";
+import { findTopic } from "@/lib/community";
+import { revalidatePath } from "next/cache";
 import { hasSevereMatch, redactSevereWords } from "@/lib/moderation/badWords";
 import { hasPetSaleMatch } from "@/lib/moderation/petSaleDetection";
 import {
@@ -592,8 +594,11 @@ export async function POST(req: NextRequest) {
 
         // Posted from inside a forum: `forum` is "cats/siamese", "cats", or
         // { species, breed }. It places the post there (PALTU-97).
+        // It can also be a topic community, "adoption" or "lost-found", which
+        // is stored as the author's topic content tag (PALTU-167).
         let authorForum: ForumPlacement | null = null;
-        if (forum != null && forum !== "") {
+        const authorTopic = typeof forum === "string" ? findTopic(forum) ?? null : null;
+        if (forum != null && forum !== "" && !authorTopic) {
             const [species, breed] = typeof forum === "string" ? forum.split("/") : [forum.species, forum.breed];
             authorForum = await resolveForum(db, { species, breed });
             if (!authorForum) {
@@ -728,8 +733,27 @@ export async function POST(req: NextRequest) {
             if (authorForum) {
                 await setPostForum(client, post.post_id, authorForum, "author", userId);
             }
+            if (authorTopic) {
+                await client.query(
+                    `INSERT INTO post_content_tags (post_id, tag_id, role, tagged_by, source)
+                     SELECT $1, tag_id, 'primary', $2, 'author'
+                       FROM content_tags WHERE category = 'topic' AND slug = $3
+                     ON CONFLICT (post_id, tag_id) DO NOTHING`,
+                    [post.post_id, userId, authorTopic.tag]
+                );
+            }
 
             await client.query('COMMIT');
+
+            // The web home feed and community pages are cached (ISR): rebuild
+            // them so a new post shows straight away instead of minutes later.
+            try {
+                revalidatePath("/home");
+                if (authorTopic) revalidatePath(`/${authorTopic.slug}`);
+                if (typeof forum === "string" && forum && !authorTopic) revalidatePath(`/${forum}`);
+            } catch (e) {
+                console.error("[posts] revalidate failed", e);
+            }
 
             // Not posted in a forum: place it by the breed its text names, if
             // exactly one. Best effort, after commit, so it never fails a post.

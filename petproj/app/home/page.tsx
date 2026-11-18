@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
-import { listCommunityPosts } from "@/lib/community";
+import { db } from "@/db/index";
+import { COMMUNITY_TOPICS, listCommunityPosts } from "@/lib/community";
+import { listForumOptions } from "@/lib/forumPlacement";
+import CreatePostBox from "@/components/community/CreatePostBox";
 import { breadcrumbJsonLd, collectionJsonLd, listingMetadata } from "@/lib/communitySeo";
 import {
     AppCta,
@@ -38,7 +41,9 @@ export const metadata: Metadata = listingMetadata({
  * still get the marketing landing page.
  */
 export default async function HomeFeedPage() {
-    const posts = await listCommunityPosts();
+    const [posts, forums] = await Promise.all([listCommunityPosts(), listForumOptions(db).catch(() => [])]);
+    const topics = COMMUNITY_TOPICS.map((t) => ({ slug: t.slug, name: t.name, pkOnly: t.pkOnly }));
+    const species = forums.map((f) => ({ species: f.species, speciesName: f.speciesName, breeds: f.breeds }));
     const crumbs: Crumb[] = [{ name: "Home" }];
 
     return (
@@ -56,6 +61,7 @@ export default async function HomeFeedPage() {
                     </>
                 }
             >
+                <CreatePostBox topics={topics} species={species} />
                 <Feed posts={posts} empty={{ title: "No posts yet", body: "Posts from the Paltuu app will show up here." }} />
             </CommunityLayout>
         </main>

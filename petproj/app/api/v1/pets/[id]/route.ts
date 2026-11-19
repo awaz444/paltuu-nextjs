@@ -6,6 +6,7 @@ import { validate } from "@/utils/validation";
 import { normalizePhone, isValidPhone } from "@/utils/phone";
 import { notifyTeam, userName } from "@/lib/whatsappNotify";
 import { getPetDetails } from "@/lib/petDetails";
+import { archiveListing } from "@/lib/listingArchive";
 import { db as contactDb } from "@/db/index";
 
 /**
@@ -285,6 +286,8 @@ export async function DELETE(req: NextRequest) {
         const client = await db.connect();
         try {
             await client.query('BEGIN');
+            // Keep a copy (contact number, photos, applications) before anything goes (PALTU-166).
+            await archiveListing(client, id, Number(currentUserId), isOwner ? "owner" : "admin");
             // Clean up dependent tables without ON DELETE CASCADE
             await client.query('DELETE FROM rescue_images WHERE pet_id = $1', [id]);
             await client.query('DELETE FROM rescue_medical_conditions WHERE pet_id = $1', [id]);

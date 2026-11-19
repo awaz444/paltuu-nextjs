@@ -34,7 +34,8 @@ Vet profile pages and reviews broke on 8 Nov 2026, and every clinic page showed
 "page not found" from 10 Nov (PALTU-163, PALTU-164).
 
 **Before every merge, Shuja checks whether the PR needs a database change. If it
-does, he runs it on the production database before the PR is merged.**
+does, he runs it on the production database before the PR is merged.** Aawaiz's
+own PRs are the exception: see below.
 
 A PR needs a migration when it:
 
@@ -53,12 +54,22 @@ When a PR needs a migration, Shuja runs it and then comments on the PR:
 `Migrations ran on production: <file names>`. Until that comment is there,
 nobody merges the PR: not a person, and not an agent told `AAWAIZ merge`.
 
+**Aawaiz's own PRs don't wait for Shuja.** Shuja's check is for work done by
+the rest of the team. A PR is Aawaiz's own when Aawaiz did the work himself, or
+an agent did it at his request (its Coral9 ticket is assigned to Aawaiz Ali).
+The migration still has to run on production before the PR is merged, but
+Aawaiz runs it, or an agent runs it when he asks. Whoever ran it comments on the
+PR: `Migrations ran on production: <file names>`, saying who ran it and when.
+No review or comment from Shuja is needed.
+
 **What an agent does when told `AAWAIZ merge`:**
 
 1. Check the PR's changed files and description against the list above.
-2. If the PR needs a migration, look for Shuja's `Migrations ran on production`
-   comment on the PR, naming those files. If it's missing, don't merge. Tell the
-   person which migration still has to run.
+2. If the PR needs a migration, look for the `Migrations ran on production`
+   comment on the PR, naming those files. On Aawaiz's own PRs it can come from
+   Aawaiz or from the agent that ran the migration for him; on everyone else's
+   it must come from Shuja. If it's missing, don't merge. Tell the person which
+   migration still has to run.
 3. If the PR needs none and its description says `Migrations: none`, merge it.
 
 ## Code that depends on a new column

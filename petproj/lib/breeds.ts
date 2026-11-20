@@ -88,6 +88,15 @@ export const BREED_SEED: Record<string, BreedSeed[]> = {
         { slug: "alexandrine", name: "Alexandrine", kind: "breed", aliases: ["alexandrine parakeet", "alexandrine parrot", "raw parrot", "raw tota"] },
         { slug: "african-grey", name: "African Grey", kind: "breed", aliases: ["african gray", "grey parrot", "gray parrot"] },
         { slug: "pigeon", name: "Pigeon", kind: "breed", aliases: ["pigeons", "kabootar", "kabutar"] },
+        // PALTU-169: the first duck listing (953) had nowhere to go but Other.
+        {
+            slug: "duck", name: "Duck", kind: "breed",
+            aliases: [
+                "ducks", "duckling", "ducklings", "batakh", "battakh", "batak", "badak", "pekin", "pekin duck", "peking",
+                "peking duck", "pecking duck", "mallard", "khaki campbell", "campbell", "call duck", "muscovy", "runner duck",
+                "indian runner",
+            ],
+        },
         { slug: "not-sure", name: "Not sure", kind: "not_sure", aliases: ["unsure", "not sure", "dont know", "don t know", "idk", "unknown", "no idea"] },
         { slug: "other", name: "Other", kind: "other", aliases: ["macaw", "blue and gold macaw", "cockatoo", "finch", "canary", "conure", "sun conure", "parrot"] },
     ],

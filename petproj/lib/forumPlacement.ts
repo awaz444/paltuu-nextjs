@@ -62,7 +62,11 @@ const normalize = (s: string) => ` ${s.toLowerCase().replace(/[^a-z0-9]+/g, " ")
  * him", "golden hour", cats yelling at pigeons). Fine in breed pickers, too
  * loose for reading free text.
  */
-const NOT_A_BREED_IN_TEXT = new Set(["bully", "golden", "pigeon", "pigeons", "kabutar"]);
+const NOT_A_BREED_IN_TEXT = new Set([
+    "bully", "golden", "pigeon", "pigeons", "kabutar",
+    // Duck aliases that are names or food in ordinary text (PALTU-169).
+    "campbell", "peking", "peking duck", "batak", "badak",
+]);
 
 /**
  * The forum a post's text is clearly about: exactly one named breed, by name

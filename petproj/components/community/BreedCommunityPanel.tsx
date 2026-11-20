@@ -31,7 +31,7 @@ export default function BreedCommunityPanel({ community }: { community: PetCommu
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
                     <span aria-hidden className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-gray-200">
-                        <ForumIcon speciesSlug={community.species.slug} size={48} />
+                        <ForumIcon speciesSlug={community.breed ? community.breed.href.slice(1) : community.species.slug} size={48} />
                     </span>
                 <div className="min-w-0">
                     <h2 id="breed-community-heading" className="text-lg font-bold text-gray-900">
@@ -55,7 +55,7 @@ export default function BreedCommunityPanel({ community }: { community: PetCommu
             <div className="mt-4 flex flex-wrap gap-2">
                 <ForumChip speciesSlug={community.species.slug} name={community.species.name} href={community.species.href} />
                 {community.breed && (
-                    <ForumChip speciesSlug={community.species.slug} name={community.breed.name} href={community.breed.href} />
+                    <ForumChip speciesSlug={community.breed.href.slice(1)} name={community.breed.name} href={community.breed.href} />
                 )}
             </div>
 

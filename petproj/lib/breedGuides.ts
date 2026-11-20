@@ -169,6 +169,11 @@ export const BREED_GUIDES: Record<string, Record<string, CommunityGuide>> = {
             intro: "Keeping pigeons, or kabootar, has a long tradition in Pakistan. Keepers share their birds, lofts and breeds here.",
             topics: ["Lofts and setup", "Breeds", "Flying and training", "Feed"],
         },
+        duck: {
+            communityName: "Ducks (Batakh)",
+            intro: "Ducks, or batakh, make friendly pets when they have space to roam and water to splash in. Keepers share their ducks, setups and care tips here.",
+            topics: ["Space and water", "Feed", "Companions", "Health"],
+        },
     },
 };
 

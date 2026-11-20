@@ -10,6 +10,7 @@ import {
     listCommunityPosts,
 } from "@/lib/community";
 import { breedGuide } from "@/lib/breedGuides";
+import { forumArtKey } from "@/components/community/forumMeta";
 import { breadcrumbJsonLd, collectionJsonLd, listingMetadata } from "@/lib/communitySeo";
 import {
     AboutCard,
@@ -93,7 +94,7 @@ export default async function BreedForumPage({ params }: { params: Params }) {
             <JsonLd data={breadcrumbJsonLd(crumbs, path)} />
 
             <ForumHeader
-                speciesSlug={species.slug}
+                speciesSlug={forumArtKey(species.slug, community.slug) ?? species.slug}
                 name={name}
                 parent={{ name: species.name, href: `/${species.slug}` }}
                 intro={guide.intro}

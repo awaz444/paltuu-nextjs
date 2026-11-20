@@ -73,7 +73,7 @@ function CommunityPicker({
         .map((s) => {
             const head: Community = { value: s.species, label: s.speciesName, icon: s.species };
             const breeds: Community[] = s.breeds
-                .map((b) => ({ value: `${s.species}/${b.slug}`, label: `${s.speciesName} › ${b.name}`, icon: s.species }))
+                .map((b) => ({ value: `${s.species}/${b.slug}`, label: `${s.speciesName} › ${b.name}`, icon: `${s.species}/${b.slug}` }))
                 .filter((c) => matches(c.label));
             return { head, breeds, show: matches(head.label) || breeds.length > 0 };
         })

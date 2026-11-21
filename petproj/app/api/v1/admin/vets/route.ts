@@ -48,7 +48,8 @@ export async function GET(req: NextRequest) {
  * photo live on their users row. (PALTU-121: this used to write clinic_name and
  * profile_verified, which the vets table doesn't have, so every save 500'd.)
  */
-const VET_FIELDS = ["minimum_fee", "contact_details", "license_number", "specialization", "qualifications", "bio", "is_active"] as const;
+// schedule: the "Working Time" text on the vet's public page. Vet signups fill it (PALTU-146).
+const VET_FIELDS = ["minimum_fee", "contact_details", "license_number", "specialization", "qualifications", "bio", "schedule", "is_active"] as const;
 
 function vetValue(field: (typeof VET_FIELDS)[number], value: unknown) {
     if (field === "is_active") return value === null ? true : Boolean(value);

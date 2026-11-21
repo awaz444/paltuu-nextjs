@@ -8,8 +8,9 @@ const ListingCreated = () => {
                 <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
                     <h1 className="text-3xl font-semibold text-primary mb-4">Application Submitted Successfully!</h1>
                     <p className="text-lg text-gray-700 mb-6">
-                        Your application as a vet has been completed. Our admins will review your application and verify your profile. 
-                        In the meantime, you can explore our website as a <b>normal user</b> after <b>logging in</b>. You will receive an email once your application has been processed.
+                        Thank you for applying. Our team will review your details and may call you to confirm them.
+                        Once you're approved, your profile will appear in the Paltuu vet directory.
+                        In the meantime, you can <b>log in</b> with your email and password and use Paltuu as a <b>normal user</b>.
                     </p>
                     <div className="flex justify-center gap-4">
                         <button

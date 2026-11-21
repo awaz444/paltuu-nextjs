@@ -11,7 +11,7 @@ import {
     LinkOutlined, DisconnectOutlined, ReloadOutlined,
     EnvironmentOutlined, PhoneOutlined, StarOutlined,
     GlobalOutlined, ClockCircleOutlined, UserOutlined,
-    MedicineBoxOutlined, CopyOutlined, QrcodeOutlined,
+    MedicineBoxOutlined, CopyOutlined, QrcodeOutlined, CheckOutlined,
 } from "@ant-design/icons";
 import QRCode from "qrcode";
 import type { UploadFile } from "antd/es/upload/interface";
@@ -59,6 +59,7 @@ interface VetRow {
     is_active: boolean;
     minimum_fee?: number;
     contact_details?: string;
+    schedule?: string;
     created_at: string;
 }
 
@@ -698,6 +699,7 @@ export default function ManageClinicsPage() {
             specialization:  vet.specialization,
             qualifications:  vet.qualifications,
             bio:             vet.bio,
+            schedule:        vet.schedule,
             is_active:       vet.is_active,
         });
         setVetFileList(
@@ -765,6 +767,25 @@ export default function ManageClinicsPage() {
             if (!err?.errorFields) message.error(err.message || "An error occurred");
         } finally {
             setSavingVet(false);
+        }
+    };
+
+    // ── Approve vet ───────────────────────────────────────────────────────
+    // Vets who sign up at /vet-register start inactive (PALTU-146); this makes them public.
+
+    const handleApproveVet = async (vetId: number) => {
+        const res = await fetch("/api/v1/admin/vets", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ vet_id: vetId, is_active: true }),
+        });
+        if (res.ok) {
+            message.success("Vet approved: their profile is now public");
+            fetchVets(vetsPage);
+            fetchAllVetsForSelect();
+        } else {
+            const d = await res.json().catch(() => ({}));
+            message.error(d.error || "Failed to approve vet");
         }
     };
 
@@ -960,9 +981,20 @@ export default function ManageClinicsPage() {
         },
         {
             title: "Actions",
-            width: 110,
+            width: 140,
             render: (_: any, r: VetRow) => (
                 <Space>
+                    {!r.is_active && (
+                        <Popconfirm
+                            title="Approve this vet?"
+                            description="Their profile will appear in the public vet directory."
+                            okText="Approve"
+                            onConfirm={() => handleApproveVet(r.vet_id)}>
+                            <Tooltip title="Approve">
+                                <Button size="small" icon={<CheckOutlined />} style={{ background: "#16a34a", borderColor: "#16a34a", color: "#fff" }} />
+                            </Tooltip>
+                        </Popconfirm>
+                    )}
                     <Tooltip title="Edit vet">
                         <Button type="primary" size="small" icon={<EditOutlined />} style={{ background: PC, borderColor: PC }} onClick={() => openEditVet(r)} />
                     </Tooltip>
@@ -1109,10 +1141,13 @@ export default function ManageClinicsPage() {
                     <Input placeholder="Cats, Dogs, Exotic Birds" className="rounded-xl" />
                 </Form.Item>
                 <Form.Item name="qualifications" label="Qualifications" className="col-span-2">
-                    <Input placeholder="DVM, M.Phil…" className="rounded-xl" />
+                    <Input.TextArea rows={2} placeholder="DVM, M.Phil…" className="rounded-xl" />
                 </Form.Item>
                 <Form.Item name="bio" label="Biography" className="col-span-2">
                     <Input.TextArea rows={3} placeholder="About the vet…" className="rounded-xl" />
+                </Form.Item>
+                <Form.Item name="schedule" label="Working Time (shown on the vet's page)" className="col-span-2">
+                    <Input.TextArea rows={3} placeholder={"At City Pet Clinic, DHA, Karachi\nMonday: 5 PM – 9 PM"} className="rounded-xl" />
                 </Form.Item>
                 <Form.Item name="is_active" label="Active?" valuePropName="checked" initialValue={true}>
                     <Switch checkedChildren="Active" unCheckedChildren="Inactive" defaultChecked />

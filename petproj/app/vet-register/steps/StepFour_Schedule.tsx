@@ -256,10 +256,10 @@ const StepFour_Schedule: React.FC<StepFourProps> = ({ formData, setFormData, bac
           {isSubmitting ? (
             <span className="flex items-center justify-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              <span>Completing Registration...</span>
+              <span>Sending code...</span>
             </span>
           ) : (
-            "Complete Registration"
+            "Verify Email & Submit"
           )}
         </button>
       </div>

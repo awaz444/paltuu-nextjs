@@ -55,6 +55,13 @@ const VetRegisterContent = () => {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [primaryColor, setPrimaryColor] = useState("#000000");
+  // After the last step we email a 6-digit code and the vet enters it here,
+  // as the normal signup does. Sent at the end, not after step 1, because the
+  // code expires in 10 minutes.
+  const [verifying, setVerifying] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpError, setOtpError] = useState("");
 
   const [formData, setFormData] = useState<FormData>({
     email: "",
@@ -87,22 +94,50 @@ const VetRegisterContent = () => {
   const next = () => setStep((prev) => Math.min(prev + 1, 4));
   const back = () => setStep((prev) => Math.max(prev - 1, 0));
 
+  const email = formData.email.trim().toLowerCase();
+
+  const sendCode = async () => {
+    setSendingCode(true);
+    setOtpError("");
+    try {
+      const response = await fetch("/api/v1/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "We couldn't send the code. Please try again.");
+      }
+      setOtp("");
+      setVerifying(true);
+      toast.success(`We sent a 6-digit code to ${email}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "We couldn't send the code. Please try again.");
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
   const handleCompleteRegistration = async () => {
+    if (!/^\d{6}$/.test(otp)) {
+      setOtpError("Enter the 6-digit code from your email.");
+      return;
+    }
+    setOtpError("");
     setIsSubmitting(true);
     try {
-      console.log("Submitting vet registration with data:", formData);
-
-      // Call the combined registration API
       const response = await fetch("/api/v1/vet-register-complete", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          otp,
           // Step 0: Account data
           firstName: formData.firstName,
           lastName: formData.lastName,
-          email: formData.email,
+          email,
           password: formData.password,
           phoneNumber: formData.phoneNumber,
           city: formData.city,
@@ -128,14 +163,19 @@ const VetRegisterContent = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.error === "INVALID_CODE" || errorData.error === "CODE_EXPIRED") {
+          setOtpError(errorData.message);
+          return;
+        }
+        if (errorData.error === "EMAIL_EXISTS") {
+          setVerifying(false);
+          setStep(0);
+        }
         throw new Error(errorData.message || "Failed to complete registration");
       }
 
-      const result = await response.json();
-      console.log("Registration successful:", result);
-
-      toast.success("Registration completed successfully!");
+      toast.success("Application submitted!");
       router.push("/vet-process-complete");
     } catch (error) {
       console.error("Registration error:", error);
@@ -149,7 +189,48 @@ const VetRegisterContent = () => {
     }
   };
 
+  const renderCodeEntry = () => (
+    <div className="w-full max-w-md bg-white shadow-lg rounded-3xl p-6 space-y-4">
+      <h2 className="text-2xl font-semibold text-center">Verify Your Email</h2>
+      <p className="text-gray-600 text-center">
+        Enter the 6-digit code we sent to <b className="break-all">{email}</b>. It expires in 10 minutes.
+      </p>
+      <input
+        type="text"
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        value={otp}
+        onChange={(e) => {
+          setOtp(e.target.value.replace(/\D/g, "").slice(0, 6));
+          setOtpError("");
+        }}
+        placeholder="000000"
+        aria-label="6-digit code"
+        className="w-full border border-gray-300 rounded-xl px-3 py-3 text-center text-2xl tracking-[0.5em] focus:ring-2 focus:ring-primary focus:outline-none"
+      />
+      {otpError && <p className="text-red-500 text-xs text-center">{otpError}</p>}
+      <button
+        onClick={handleCompleteRegistration}
+        className="w-full bg-primary text-white py-3 px-4 rounded-xl font-semibold hover:bg-primary-dark transition-colors">
+        Submit Application
+      </button>
+      <div className="flex justify-between text-sm">
+        <button type="button" onClick={() => setVerifying(false)} className="text-gray-600 hover:underline">
+          Back
+        </button>
+        <button
+          type="button"
+          onClick={sendCode}
+          disabled={sendingCode}
+          className="text-primary font-semibold hover:underline disabled:opacity-50">
+          {sendingCode ? "Sending..." : "Resend code"}
+        </button>
+      </div>
+    </div>
+  );
+
   const renderStep = () => {
+    if (verifying) return renderCodeEntry();
     switch (step) {
       case 0:
         return (
@@ -192,8 +273,8 @@ const VetRegisterContent = () => {
             formData={formData}
             setFormData={setFormData}
             back={back}
-            onComplete={handleCompleteRegistration}
-            isSubmitting={isSubmitting}
+            onComplete={sendCode}
+            isSubmitting={sendingCode}
           />
         );
       default:

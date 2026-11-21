@@ -1,7 +1,5 @@
-import { db } from "@/db/index";
-import { NextRequest, NextResponse } from "next/server";
-
-export const dynamic = "force-dynamic";
+import { NextResponse } from "next/server";
+import { VET_QUALIFICATIONS } from "@/lib/vetQualifications";
 
 /**
  * @swagger
@@ -11,12 +9,7 @@ export const dynamic = "force-dynamic";
  *     tags: [v1 Professional]
  */
 
-export async function GET(req: NextRequest) {
-    try {
-        const result = await db.query('SELECT * FROM qualifications ORDER BY qualification_name ASC');
-        return NextResponse.json(result.rows);
-    } catch (error) {
-        console.error("V1 Qualifications Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-    }
+// Served from code: production has no qualifications table (see lib/vetQualifications.ts).
+export async function GET() {
+    return NextResponse.json(VET_QUALIFICATIONS);
 }

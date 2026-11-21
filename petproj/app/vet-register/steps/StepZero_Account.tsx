@@ -5,6 +5,7 @@ import { RootState, AppDispatch } from "../../store/store";
 import { fetchCities } from "../../store/slices/citiesSlice";
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import PhoneNumberInput from "@/components/PhoneNumberInput";
+import { isValidPhone } from "@/utils/phone";
 
 interface StepZeroProps {
   formData: {
@@ -37,7 +38,7 @@ const StepZero_Account: React.FC<StepZeroProps> = ({ formData, setFormData, next
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email is invalid";
 
     if (!formData.password) newErrors.password = "Password is required";
-    else if (formData.password.length < 6) newErrors.password = "Password must be at least 6 characters";
+    else if (formData.password.length < 8) newErrors.password = "Password must be at least 8 characters";
 
     if (!formData.confirmPassword) newErrors.confirmPassword = "Please confirm your password";
     else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
@@ -45,16 +46,34 @@ const StepZero_Account: React.FC<StepZeroProps> = ({ formData, setFormData, next
     if (!formData.firstName) newErrors.firstName = "First name is required";
     if (!formData.lastName) newErrors.lastName = "Last name is required";
     if (!formData.phoneNumber) newErrors.phoneNumber = "Phone number is required";
+    else if (!isValidPhone(formData.phoneNumber)) newErrors.phoneNumber = "Please enter a valid phone number";
     if (!formData.city) newErrors.city = "City is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
-    if (validateForm()) {
-      next();
+  // Catch an email that already has an account now, not after all five steps.
+  // The final submit checks again, so a failed lookup just moves on.
+  const handleNext = async () => {
+    if (!validateForm()) return;
+    setIsLoading(true);
+    try {
+      const email = formData.email.trim().toLowerCase();
+      const res = await fetch(`/api/v1/auth/check-email?email=${encodeURIComponent(email)}`);
+      const data = res.ok ? await res.json() : null;
+      if (data?.registered) {
+        setErrors({
+          email: "This email already has a Paltuu account. Use a different email, or contact us at contact@paltuu.pk.",
+        });
+        return;
+      }
+    } catch {
+      // ignore: the final submit checks the email too
+    } finally {
+      setIsLoading(false);
     }
+    next();
   };
 
   return (
@@ -196,7 +215,7 @@ const StepZero_Account: React.FC<StepZeroProps> = ({ formData, setFormData, next
         {isLoading ? (
           <span className="flex items-center justify-center space-x-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            <span>Creating Account...</span>
+            <span>Checking...</span>
           </span>
         ) : (
           "Next"

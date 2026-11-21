@@ -1,6 +1,15 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { FaEnvelope, FaWhatsapp } from "react-icons/fa";
+
+// Vets don't sign themselves up (PALTU-146): they contact the team, and an
+// admin adds them in /manage-clinics. Same number and inbox as PartnerModal
+// and the "Own a Veterinary Clinic?" section on /pet-care.
+const VET_WHATSAPP_URL = `https://wa.me/923394022468?text=${encodeURIComponent(
+    "Hi Paltuu, I'm a vet and I'd like my clinic or practice listed on Paltuu."
+)}`;
+const VET_EMAIL_URL = `mailto:contact@paltuu.pk?subject=${encodeURIComponent("List my vet practice on Paltuu")}`;
 
 const PartnerSignup = () => {
     const router = useRouter();
@@ -17,9 +26,7 @@ const PartnerSignup = () => {
 
     const handleRoleSelect = (role: string) => {
         setSelectedRole(role);
-        if (role === "vet") {
-            router.push("/vet-register");
-        } else if (role === "shelter") {
+        if (role === "shelter") {
             router.push("/rescue-register");
         } else if (role === "shop") {
             router.push("/shop-register");
@@ -83,11 +90,8 @@ const PartnerSignup = () => {
                         Choose your partner type to get started
                     </p>
 
-                    {/* Veterinarian Option */}
-                    <div
-                        className={`p-6 rounded-xl border-2 transition-all cursor-pointer ${selectedRole === "vet" ? "border-[#480777] bg-[#f5f0ff]" : "border-gray-200 hover:border-[#480777] hover:bg-[#f5f0ff]"}`}
-                        onClick={() => handleRoleSelect("vet")}
-                    >
+                    {/* Veterinarian Option: contact the team, no self-signup */}
+                    <div className="p-6 rounded-xl border-2 border-gray-200 transition-all hover:border-[#480777] hover:bg-[#f5f0ff]">
                         <div className="flex items-center mb-4">
                             <div className="w-12 h-12 bg-[#d8ccff] rounded-full flex items-center justify-center mr-4">
                                 {/* Stethoscope Icon */}
@@ -95,16 +99,31 @@ const PartnerSignup = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-semibold text-[#480777]">Veterinarian</h3>
+                            <h3 className="text-xl font-semibold text-[#480777]">Veterinarian or Clinic</h3>
                         </div>
                         <p className="text-gray-600 mb-4">
-                            Join our network of veterinary professionals. You'll need to verify your qualifications and credentials.
+                            Get your clinic or practice listed in our vet directory. Message us and our team will set up your listing for you.
                         </p>
                         <ul className="text-sm text-gray-500 space-y-1">
-                            <li>✓ Verify your professional qualifications</li>
-                            <li>✓ Get listed in our veterinarian directory</li>
+                            <li>✓ Free listing in our vet directory</li>
                             <li>✓ Connect with pet owners in your area</li>
                         </ul>
+                        <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                            <a
+                                href={VET_WHATSAPP_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#480777] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#3a0660] transition-colors">
+                                <FaWhatsapp className="text-base" />
+                                WhatsApp us
+                            </a>
+                            <a
+                                href={VET_EMAIL_URL}
+                                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#480777] px-4 py-2.5 text-sm font-semibold text-[#480777] hover:bg-white transition-colors">
+                                <FaEnvelope className="text-sm" />
+                                Email us
+                            </a>
+                        </div>
                     </div>
 
                     {/* Rescue Shelter Option */}

@@ -53,13 +53,6 @@ const nextConfig = {
       { source: '/rescue-pets', destination: '/adopt', permanent: false },
       { source: '/rescue-pets/:path*', destination: '/adopt', permanent: false },
       { source: '/rescue-profile/:path*', destination: '/adopt', permanent: false },
-      // The vet self-signup flow called APIs that never existed (PALTU-146). Vets now
-      // contact the team from /partner-signup and an admin adds them in /manage-clinics.
-      // Temporary, so the paths stay free if a real signup is built later.
-      ...[
-        '/vet-register', '/vet-step-zero', '/vet-get-verified-1', '/vet-get-verified-2',
-        '/vet-qualifications', '/vet-specialization', '/vet-schedule', '/vet-process-complete',
-      ].map((source) => ({ source, destination: '/partner-signup', permanent: false })),
       { source: '/community', destination: '/home', permanent: true },
       { source: '/feed', destination: '/home', permanent: true },
       { source: '/community/p/:post', destination: '/p/:post', permanent: true },

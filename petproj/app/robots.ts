@@ -20,6 +20,16 @@ export default function robots(): MetadataRoute.Robots {
                     '/shop-panel',
                     '/vendor-panel',
 
+                    // Vet onboarding flows (not public pages)
+                    '/vet-register',
+                    '/vet-step-zero',
+                    '/vet-get-verified-1',
+                    '/vet-get-verified-2',
+                    '/vet-qualifications',
+                    '/vet-specialization',
+                    '/vet-schedule',
+                    '/vet-process-complete',
+
                     // Auth & account pages
                     '/auth',
                     '/sign-up',

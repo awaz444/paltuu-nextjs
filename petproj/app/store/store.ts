@@ -8,9 +8,6 @@ import vetSlice from './slices/vetSlice';
 import fosterPetsReducer from './slices/fosterPetsSlice';
 import adoptionPetsReducer from './slices/adoptionPetsSlice';
 import userSlice from './slices/userSlice';
-import vetQualificationsSlice from '../store/slices/vetQualificationsSlice';
-import vetSpecializationSlice from '../store/slices/vetSpecializationSlice';
-import vetScheduleSlice from './slices/vetScheduleSlice';
 import cartReducer from './slices/cartSlice';
 import marketplaceReducer from "./slices/marketplaceSlice";
 import bazaarProductsReducer from './slices/bazaarProductsSlice';
@@ -29,9 +26,6 @@ export const store = configureStore({
     qualifications: qualificationsReducer,
     favoriteThings: favoriteThingsReducer,
     user: userSlice,
-    vetQualifications: vetQualificationsSlice,
-    vetSpecialization: vetSpecializationSlice,
-    vetSchedule: vetScheduleSlice,
     cart: cartReducer,
     marketplace: marketplaceReducer,
     bazaarProducts: bazaarProductsReducer,

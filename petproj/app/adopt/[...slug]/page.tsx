@@ -246,10 +246,17 @@ export default async function AdoptPage({ params }: { params: { slug?: string[] 
         ],
     };
 
+    const pet = sp ? sp.name.toLowerCase() : "pet";
+    const inPlace = city ? ` in ${place}` : " in Pakistan";
+    // First sentence of each answer is the answer: assistants and snippets quote it.
     const faqs = [
         {
-            q: `How do I adopt a ${sp ? sp.name.toLowerCase() : "pet"}${city ? ` in ${place}` : " in Pakistan"}?`,
-            a: `Browse the listings on this page, open the one you're interested in, and message the shelter, rescue or owner directly through Paltuu. You can arrange to meet the ${sp ? sp.name.toLowerCase() : "pet"} before deciding.`,
+            q: `Where can I adopt a ${pet}${inPlace}?`,
+            a: `Right here on Paltuu: the ${noun.toLowerCase()} on this page are looking for a home${city ? ` in ${place}` : " across Pakistan"}, listed by owners, rescuers and shelters. Open a listing and apply for free, and the owner or shelter arranges a meeting with the person they choose.`,
+        },
+        {
+            q: `How do I adopt a ${pet}${inPlace}?`,
+            a: `Open a listing on this page and send an adoption application through Paltuu. The owner, shelter or rescue reviews applications and arranges a meeting, so you can meet the ${pet} before deciding.`,
         },
         {
             q: `Is ${sp ? sp.name.toLowerCase() : "pet"} adoption free on Paltuu?`,
@@ -264,6 +271,11 @@ export default async function AdoptPage({ params }: { params: { slug?: string[] 
             q: `Are these ${noun.toLowerCase()} located in ${place}?`,
             a: `Yes. Every listing on this page is from an owner, shelter or rescue partner based in ${place}, so you can meet the ${sp ? sp.name.toLowerCase() : "pet"} in person before adopting.`,
         }] : []),
+        // Roman Urdu: how a lot of people in Pakistan type the same question.
+        {
+            q: `${city ? `${place} mein` : "Pakistan mein"} ${pet} adopt kahan se kar sakte hain?`,
+            a: `Isi page se. Yeh ${noun.toLowerCase()} ${city ? `${place} mein` : "Pakistan bhar mein"} naye ghar ka intezar kar rahe hain. Listing kholein aur Paltuu par muft apply karein; owner ya shelter milne ka waqt tay karta hai.`,
+        },
     ];
 
     const jsonLdFaq = {

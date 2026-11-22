@@ -94,12 +94,23 @@ const FAQS = [
         // clinics that happen to make house calls. Karachi-only and early (soft launch), so
         // this stays to a single honest, low-key mention rather than a dedicated landing page
         // until there's real volume behind it.
-        q: "Does Paltuu offer at-home vet visits?",
+        q: "Is there a service that sends a vet to my home in Karachi?",
         a: (
             <>
-                Yes. Paltuu's own <strong>Vets at Home</strong> service brings vet visits,
-                vaccinations, and grooming to your doorstep, currently in Karachi with more cities
-                planned. Book a visit through the Paltuu app.
+                Yes. Paltuu&apos;s own <strong>Vets at Home</strong> service sends a vet to your
+                home in Karachi for check-ups, vaccinations, neutering and spaying, and grooming.
+                It is available in Karachi only for now. Book a visit through the Paltuu app.
+            </>
+        ),
+    },
+    {
+        // Roman Urdu version of the same question; Karachi only, no prices.
+        q: "Karachi mein ghar par vet kaise bulayein?",
+        a: (
+            <>
+                Paltuu ki <strong>Vets at Home</strong> service Karachi mein vet ko aap ke ghar
+                bhejti hai: check-up, vaccination, neutering aur grooming. Yeh service abhi sirf
+                Karachi mein hai. Booking Paltuu app se hoti hai.
             </>
         ),
     },

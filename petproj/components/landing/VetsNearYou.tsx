@@ -31,7 +31,7 @@ export default function VetsNearYou({
             {clinics.map((c) => (
                 <li key={c.clinic_id}>
                     <Link
-                        href={`/pet-care/clinic/${c.clinic_id}`}
+                        href={`/pet-care/clinic/${c.slug || c.clinic_id}`}
                         className="flex h-full items-start gap-3 rounded-2xl border border-gray-200 bg-white p-3.5 transition-colors hover:border-primary"
                     >
                         <Image src="/icons/features/vet.jpg" alt="" width={44} height={44} className="h-11 w-11 shrink-0 object-contain" />

@@ -14,6 +14,7 @@ import type { BlogMetadata } from "@/lib/mdx-types";
 
 export interface LandingClinic {
     clinic_id: number;
+    slug: string | null;
     name: string;
     area: string;
     open24h: boolean;
@@ -58,6 +59,7 @@ export async function getTopClinics(city: string, limit = 3): Promise<LandingCli
         const { data } = await queryClinics({ city, limit, listingType: "clinic" });
         return data.map((row) => ({
             clinic_id: row.clinic_id,
+            slug: row.slug ?? null,
             name: row.name,
             area: shortArea(row.address, city),
             open24h: isOpen24h(row),

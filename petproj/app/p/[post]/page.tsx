@@ -153,7 +153,7 @@ export default async function PostPage({ params }: { params: { post: string } })
                                     <h1 className="sr-only">{title}</h1>
                                 )}
                                 {body && (
-                                    <p className="mt-1 whitespace-pre-line break-words text-[15px] leading-relaxed text-gray-800"><LinkifiedText text={body} /></p>
+                                    <p className="mt-1 whitespace-pre-line break-words text-[15px] leading-relaxed text-gray-800"><LinkifiedText text={body} mentions={post.mentions} /></p>
                                 )}
 
                                 {post.media.length > 0 && (

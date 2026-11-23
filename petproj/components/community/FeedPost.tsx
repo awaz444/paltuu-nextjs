@@ -101,7 +101,7 @@ export default function FeedPost({ post, showForum = true }: { post: CommunityPo
                     {titleFromText && <h3 className="mt-1 text-[15px] font-semibold leading-snug text-gray-900 sm:mt-1.5 sm:text-lg">{title}</h3>}
                     {(titleFromText ? body : post.content) && (
                         <p className="mt-1 line-clamp-3 whitespace-pre-line break-words text-sm leading-relaxed text-gray-700">
-                            <LinkifiedText text={titleFromText ? body : post.content} linkClassName="relative z-10" />
+                            <LinkifiedText text={titleFromText ? body : post.content} linkClassName="relative z-10" mentions={post.mentions} />
                         </p>
                     )}
 

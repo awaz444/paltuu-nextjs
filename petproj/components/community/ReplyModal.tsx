@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Modal from "./Modal";
+import { useMentionPicker } from "./useMentionPicker";
 
 const MAX_CHARS = 2000;
 
@@ -54,6 +55,7 @@ export default function ReplyModal({
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const box = useRef<HTMLTextAreaElement>(null);
+    const mentions = useMentionPicker(box, text, setText);
 
     useEffect(() => {
         if (open) setTimeout(() => box.current?.focus(), 0);
@@ -76,10 +78,12 @@ export default function ReplyModal({
         if (!canSend) return;
         setSending(true);
         setError(null);
+        const content = mentions.encode(trimmed);
         try {
             if (onSubmitComment) {
-                await onSubmitComment(trimmed, target);
+                await onSubmitComment(content, target);
                 setText("");
+                mentions.reset();
                 onPosted();
                 onClose();
                 return;
@@ -90,7 +94,7 @@ export default function ReplyModal({
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    content: trimmed,
+                    content,
                     ...(target.parentCommentId ? { parent_comment_id: target.parentCommentId } : {}),
                 }),
             });
@@ -111,6 +115,7 @@ export default function ReplyModal({
                 body: JSON.stringify({ postId: target.postId }),
             }).catch(() => {});
             setText("");
+            mentions.reset();
             onPosted();
             onClose();
             if (window.location.pathname === target.path) router.refresh();
@@ -163,13 +168,21 @@ export default function ReplyModal({
                     <textarea
                         ref={box}
                         value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        onKeyDown={(e) => (e.metaKey || e.ctrlKey) && e.key === "Enter" && send()}
+                        onChange={(e) => {
+                            setText(e.target.value);
+                            mentions.check();
+                        }}
+                        onSelect={mentions.check}
+                        onKeyDown={(e) => {
+                            if (mentions.onKeyDown(e)) return;
+                            if ((e.metaKey || e.ctrlKey) && e.key === "Enter") send();
+                        }}
                         placeholder="Post your reply"
                         rows={3}
                         className="min-h-[96px] w-full resize-none border-0 bg-transparent pt-2 text-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0"
                     />
                 </div>
+                {mentions.menu && <div className="ml-[52px]">{mentions.menu}</div>}
                 {error && <p className="ml-[52px] mt-1 text-sm text-red-600">{error}</p>}
             </div>
 

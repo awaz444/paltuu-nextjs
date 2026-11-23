@@ -26,7 +26,8 @@ export default function Modal({
 
     useEffect(() => {
         if (!open) return;
-        const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+        // A text box that used Escape itself (closing its @mention list) marks it handled.
+        const onKey = (e: KeyboardEvent) => e.key === "Escape" && !e.defaultPrevented && onClose();
         const overflow = document.body.style.overflow;
         document.body.style.overflow = "hidden";
         document.addEventListener("keydown", onKey);

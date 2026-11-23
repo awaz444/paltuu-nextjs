@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import type { CommunityComment } from "@/lib/community";
+import { extractMentions } from "@/lib/mentionText";
 import ReplyModal, { type ReplyTarget } from "./ReplyModal";
 
 function renderMentions(text: string | null | undefined): string {
@@ -103,6 +104,7 @@ export function PostThreadProvider({
         const parentId = created.parent_comment_id ? Number(created.parent_comment_id) : null;
         const rootId = created.root_comment_id ? Number(created.root_comment_id) : null;
         const newContent = renderMentions(created.content);
+        const newMentions = extractMentions(created.content);
         const createdAt = created.created_at || new Date().toISOString();
 
         setComments((prev) => {
@@ -124,6 +126,7 @@ export function PostThreadProvider({
                         parentId,
                         rootId,
                         content: newContent || root.content,
+                        mentions: newContent ? newMentions : root.mentions,
                         createdAt,
                     };
                 }
@@ -138,6 +141,7 @@ export function PostThreadProvider({
                                     parentId,
                                     rootId,
                                     content: newContent || rep.content,
+                                    mentions: newContent ? newMentions : rep.mentions,
                                     createdAt,
                                 };
                             }
@@ -160,6 +164,7 @@ export function PostThreadProvider({
                 parentId: parentCommentId,
                 rootId: null,
                 content: renderMentions(content),
+                mentions: extractMentions(content),
                 likeCount: 0,
                 createdAt: new Date().toISOString(),
                 author: {
@@ -269,10 +274,12 @@ export function PostThreadProvider({
                     return false;
                 }
 
-                const newContent = renderMentions(body.content) || content;
+                const saved = body.content || content;
+                const newContent = renderMentions(saved);
+                const newMentions = extractMentions(saved);
                 const apply = (c: CommunityComment): CommunityComment =>
                     c.id === commentId
-                        ? { ...c, content: newContent }
+                        ? { ...c, content: newContent, mentions: newMentions }
                         : { ...c, replies: (c.replies || []).map(apply) };
                 setComments((prev) => prev.map(apply));
 

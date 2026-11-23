@@ -9,6 +9,7 @@ import { compressImageFiles } from "@/utils/imageCompression";
 import { PK_ONLY } from "@/lib/site";
 import ForumIcon from "./ForumIcon";
 import Modal from "./Modal";
+import { useMentionPicker } from "./useMentionPicker";
 
 const MAX_CHARS = 2000;
 const MAX_PHOTOS = 4;
@@ -209,6 +210,7 @@ export default function CreatePostBox({ topics, species }: { topics: ComposerTop
     const [posted, setPosted] = useState(false);
     const box = useRef<HTMLTextAreaElement>(null);
     const fileInput = useRef<HTMLInputElement>(null);
+    const mentions = useMentionPicker(box, text, setText);
 
     const previews = useMemo(() => photos.map((f) => URL.createObjectURL(f)), [photos]);
     useEffect(() => () => previews.forEach((u) => URL.revokeObjectURL(u)), [previews]);
@@ -271,7 +273,7 @@ export default function CreatePostBox({ topics, species }: { topics: ComposerTop
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     post_type: media.length ? "image" : "text",
-                    content: trimmed,
+                    content: mentions.encode(trimmed),
                     media,
                     ...(community ? { forum: community.value } : {}),
                 }),
@@ -283,6 +285,7 @@ export default function CreatePostBox({ topics, species }: { topics: ComposerTop
                 return;
             }
             setText("");
+            mentions.reset();
             setPhotos([]);
             setCommunity(null);
             setTipHidden(false);
@@ -305,14 +308,22 @@ export default function CreatePostBox({ topics, species }: { topics: ComposerTop
                     <textarea
                         ref={box}
                         value={text}
-                        onChange={(e) => setText(e.target.value)}
+                        onChange={(e) => {
+                            setText(e.target.value);
+                            mentions.check();
+                        }}
+                        onSelect={mentions.check}
                         onFocus={() => signedOut && goSignIn()}
-                        onKeyDown={(e) => (e.metaKey || e.ctrlKey) && e.key === "Enter" && send()}
+                        onKeyDown={(e) => {
+                            if (mentions.onKeyDown(e)) return;
+                            if ((e.metaKey || e.ctrlKey) && e.key === "Enter") send();
+                        }}
                         placeholder="What's your pet up to?"
                         aria-label="Write a post"
                         rows={2}
                         className="block min-h-[48px] w-full resize-none border-0 bg-transparent p-0 pt-2 text-lg text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-0"
                     />
+                    {mentions.menu}
 
                     {previews.length > 0 && (
                         <div className={`mt-2 grid gap-2 ${previews.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>

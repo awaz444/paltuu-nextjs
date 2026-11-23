@@ -9,6 +9,8 @@ import AuthorLink from "./AuthorLink";
 import LinkifiedText from "./LinkifiedText";
 import GetAppModal from "./GetAppModal";
 import { usePostThread } from "./PostThreadContext";
+import { useMentionPicker } from "./useMentionPicker";
+import type { MentionRef } from "@/lib/mentionText";
 
 function formatCommentTime(iso: string): string {
     const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
@@ -22,16 +24,19 @@ const MAX_CHARS = 2000;
 
 function CommentEditor({
     initial,
+    initialMentions,
     onSave,
     onCancel,
 }: {
     initial: string;
+    initialMentions?: MentionRef[];
     onSave: (text: string) => Promise<boolean>;
     onCancel: () => void;
 }) {
     const [text, setText] = useState(initial);
     const [saving, setSaving] = useState(false);
     const box = useRef<HTMLTextAreaElement>(null);
+    const mentions = useMentionPicker(box, text, setText, initialMentions);
 
     useEffect(() => {
         const el = box.current;
@@ -53,7 +58,7 @@ function CommentEditor({
     const save = async () => {
         if (!canSave) return;
         setSaving(true);
-        const ok = await onSave(trimmed);
+        const ok = await onSave(mentions.encode(trimmed));
         setSaving(false);
         if (ok) onCancel();
     };
@@ -63,8 +68,13 @@ function CommentEditor({
             <textarea
                 ref={box}
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={(e) => {
+                    setText(e.target.value);
+                    mentions.check();
+                }}
+                onSelect={mentions.check}
                 onKeyDown={(e) => {
+                    if (mentions.onKeyDown(e)) return;
                     if (e.key === "Escape") onCancel();
                     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) save();
                 }}
@@ -72,6 +82,7 @@ function CommentEditor({
                 aria-label="Edit your reply"
                 className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-[15px] text-gray-800 focus:border-primary focus:outline-none"
             />
+            {mentions.menu}
             <div className="mt-1 flex items-center justify-end gap-2">
                 <button
                     type="button"
@@ -126,13 +137,14 @@ function CommentItem({
                     {editing ? (
                         <CommentEditor
                             initial={c.content}
+                            initialMentions={c.mentions}
                             onSave={(text) => onEdit(c.id, text)}
                             onCancel={() => setEditing(false)}
                         />
                     ) : (
                     <>
                     <p className="mt-0.5 whitespace-pre-line break-words text-[15px] text-gray-800">
-                        <LinkifiedText text={c.content} />
+                        <LinkifiedText text={c.content} mentions={c.mentions} />
                     </p>
                     <div className="mt-1 flex items-center gap-3 text-xs text-gray-500">
                         {c.likeCount > 0 && (

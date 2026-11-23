@@ -1,5 +1,6 @@
 import { db } from "@/db/index";
 import { breedGuide, speciesGuide, type CommunityGuide } from "@/lib/breedGuides";
+import { extractMentions, type MentionRef } from "@/lib/mentionText";
 
 /**
  * Web communities (PALTU-71, scope PALTU-68).
@@ -239,6 +240,8 @@ export type CommunityPost = {
     media: PostMedia[];
     species: string[];
     breeds: { slug: string; name: string; species: string }[];
+    /** People and pets @mentioned in `content`, which shows each as "@name". */
+    mentions?: MentionRef[];
 };
 
 export type CommunityComment = {
@@ -250,6 +253,8 @@ export type CommunityComment = {
     createdAt: string;
     author: { id?: number; name: string; username: string | null; avatar: string | null; verified: boolean };
     replies: CommunityComment[];
+    /** People and pets @mentioned in `content`, which shows each as "@name". */
+    mentions?: MentionRef[];
 };
 
 export type BreedCommunity = {
@@ -269,6 +274,7 @@ function toPost(r: any): CommunityPost {
     return {
         id: Number(r.post_id),
         content: renderMentions(r.content),
+        mentions: extractMentions(r.content),
         postType: r.post_type,
         likeCount: r.like_count ?? 0,
         commentCount: r.comment_count ?? 0,
@@ -573,6 +579,7 @@ export async function getCommunityComments(postId: number): Promise<CommunityCom
         parentId: r.parent_comment_id ? Number(r.parent_comment_id) : null,
         rootId: r.root_comment_id ? Number(r.root_comment_id) : null,
         content: renderMentions(r.content),
+        mentions: extractMentions(r.content),
         likeCount: r.like_count ?? 0,
         createdAt: new Date(r.created_at).toISOString(),
         author: {

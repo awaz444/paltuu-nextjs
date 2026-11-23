@@ -64,7 +64,7 @@ export default function PostCard({ post, showPlace = true }: { post: CommunityPo
                     </Link>
                 </h3>
                 {body && (
-                    <p className="line-clamp-3 whitespace-pre-line text-sm leading-relaxed text-gray-600"><LinkifiedText text={body} linkClassName="relative z-10" /></p>
+                    <p className="line-clamp-3 whitespace-pre-line text-sm leading-relaxed text-gray-600"><LinkifiedText text={body} linkClassName="relative z-10" mentions={post.mentions} /></p>
                 )}
 
                 <div className="mt-auto flex items-center gap-4 pt-4 text-xs text-gray-500">

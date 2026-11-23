@@ -67,7 +67,9 @@ export async function PUT(req: NextRequest) {
             const rejectResult = await db.query(`
                 UPDATE ${tableName} SET status = 'rejected'
                 WHERE pet_id = $1 AND ${idCol} != $2
-                RETURNING user_id
+                  -- Already declined ones stay as they are, so they aren't told twice.
+                  AND status IS DISTINCT FROM 'rejected'
+                RETURNING user_id, ${idCol} AS application_id
             `, [application.pet_id, application_id]);
 
             // Notifications - using new trigger system
@@ -77,11 +79,12 @@ export async function PUT(req: NextRequest) {
                 application.pet_name
             ).catch(() => {});
 
-            // Reject others
+            // Reject others. Each gets their own application's id (not the
+            // approved one's): the app opens it from the notification.
             for (const row of rejectResult.rows) {
                 AdoptionNotifications.onApplicationRejected(
                     row.user_id,
-                    application_id,
+                    row.application_id,
                     application.pet_name
                 ).catch(() => {});
             }

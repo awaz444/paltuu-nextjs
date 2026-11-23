@@ -100,6 +100,84 @@ export function originalPostVisibilityFilter(viewerParam: string = '$1'): string
 }
 
 /**
+ * The post a feed row stands for. A plain repost (`is_repost` with NULL
+ * content: no text or media of its own) stands for the post it points at.
+ * Everything else, a quote included, stands for itself. Requires `p` in scope.
+ */
+export const FEED_ROOT_POST_ID_EXPR =
+    `(CASE WHEN p.is_repost AND p.content IS NULL THEN p.original_post_id ELSE p.post_id END)`;
+
+/**
+ * One card per post in a feed (PALTU-178). A post and its plain reposts are
+ * separate rows, so without this a feed shows the same post twice, often
+ * back to back when someone reposts it soon after it went up. This drops a
+ * row when a NEWER plain repost of the same post is also in the viewer's
+ * feed, so the post appears once, at its latest repost ("Ali reposted"), or
+ * at its own time if nobody reposted it. Quotes are their own posts and are
+ * never dropped in favour of anything.
+ *
+ * The newer repost only counts if the viewer could see it in this same feed:
+ * otherwise the post would vanish (its older row dropped for a newer row that
+ * is filtered out too). So the conditions below mirror, for the repost row
+ * `nr`, every filter the feed queries apply to `p`: deleted, hidden,
+ * shadow-hidden, blocks with either author, author privacy, access to the
+ * original (originalPostVisibilityFilter, with its reposter carve-out),
+ * hidden_posts, plus the per-mode quarantine and following-only filters.
+ * Keep them in sync when a feed filter changes.
+ *
+ * Requires `p` in scope. `viewerParam` is the viewer id placeholder.
+ */
+export function supersededByNewerRepostFilter(
+    viewerParam: string,
+    opts: { excludeQuarantined: boolean; followingOnly: boolean }
+): string {
+    const v = viewerParam;
+    const follows = (userCol: string) => `EXISTS (
+                SELECT 1 FROM social_follows f
+                WHERE f.follower_id = ${v} AND f.following_id = ${userCol} AND f.status = 'accepted'
+            )`;
+    return `AND NOT EXISTS (
+        SELECT 1
+          FROM social_posts nr
+          JOIN users nu ON nu.user_id = nr.user_id
+          JOIN social_posts rp ON rp.post_id = nr.original_post_id
+          JOIN users ru ON ru.user_id = rp.user_id
+         WHERE nr.is_repost = true AND nr.content IS NULL
+           AND nr.original_post_id = ${FEED_ROOT_POST_ID_EXPR}
+           AND (nr.created_at, nr.post_id) > (p.created_at, p.post_id)
+           AND nr.is_deleted = false
+           AND (nr.is_hidden = false OR nr.user_id = ${v})
+           AND (nr.is_shadow_hidden = false OR nr.user_id = ${v})
+           AND NOT EXISTS (
+               SELECT 1 FROM user_blocks b
+               WHERE (b.blocker_id = ${v} AND b.blocked_id IN (nr.user_id, rp.user_id))
+                  OR (b.blocked_id = ${v} AND b.blocker_id IN (nr.user_id, rp.user_id))
+           )
+           AND (nr.user_id = ${v} OR nu.is_private = false OR ${follows('nr.user_id')})
+           AND (
+               nr.user_id = ${v}
+               OR rp.user_id = ${v}
+               OR (rp.is_shadow_hidden = false AND (ru.is_private = false OR ${follows('rp.user_id')}))
+           )
+           AND NOT EXISTS (
+               SELECT 1 FROM hidden_posts hp WHERE hp.user_id = ${v} AND hp.post_id = nr.post_id
+           )
+           ${opts.excludeQuarantined ? `AND (nr.moderation_state IS NULL OR nr.moderation_state <> 'quarantined')` : ``}
+           ${opts.followingOnly ? `AND (nr.user_id = ${v} OR ${follows('nr.user_id')})` : ``}
+    )`;
+}
+
+/**
+ * Key for collapsing feed rows in JS: the same post a row stands for as
+ * FEED_ROOT_POST_ID_EXPR. Returns null for rows that aren't posts.
+ */
+export function feedRootPostId(row: any): string | null {
+    if (row?.post_id == null) return null;
+    const isPlainRepost = row.is_repost && (row.content === null || row.content === undefined);
+    return String(isPlainRepost && row.original_post_id != null ? row.original_post_id : row.post_id);
+}
+
+/**
  * Strips the original-post fields from rows kept only via the reposting-user
  * carve-out above (original_available = false) — the reposting user can see
  * that they reposted something, but not the now-inaccessible content itself.

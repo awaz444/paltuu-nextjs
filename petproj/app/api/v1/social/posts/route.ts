@@ -37,6 +37,8 @@ import {
     originalPostVisibilityFilter,
     shadowHiddenFilter,
     redactUnavailableOriginals,
+    supersededByNewerRepostFilter,
+    feedRootPostId,
 } from "@/lib/feedQueryFragments";
 import { redactModerationFields } from "@/lib/moderationRedaction";
 import { getReportSettings } from "@/lib/reportScoring";
@@ -80,6 +82,21 @@ async function maybeInjectSurfacedComment(
 }
 
 /**
+ * True when two rows stand for the same post: a post and its plain repost,
+ * or two plain reposts of one post (PALTU-178).
+ */
+function hasRepeatedPost(rows: any[]): boolean {
+    const seen = new Set<string>();
+    for (const row of rows) {
+        const key = feedRootPostId(row);
+        if (key == null) continue;
+        if (seen.has(key)) return true;
+        seen.add(key);
+    }
+    return false;
+}
+
+/**
  * GET /api/v1/social/posts
  * Fetch social feed
  * Modes:
@@ -90,6 +107,9 @@ async function maybeInjectSurfacedComment(
  *   ?mode=chronological — pure newest-first (no ranking)
  *
  * global + personalized exclude quarantined posts; following keeps them visible.
+ *
+ * Every mode shows a post once: a post and its plain reposts collapse into
+ * one card at the newest of them (see supersededByNewerRepostFilter).
  *
  * Cursor-based pagination using the relevance score.
  *
@@ -142,6 +162,13 @@ export async function GET(req: NextRequest) {
         const quarantineFilter = (isGlobal || isPersonalized)
             ? `AND (p.moderation_state IS NULL OR p.moderation_state <> 'quarantined')`
             : ``;
+
+        // One card per post (PALTU-178) for the chronological and algorithmic
+        // queries below; the personalized query passes its own options.
+        const oneCardPerPostFilter = supersededByNewerRepostFilter('$1', {
+            excludeQuarantined: isGlobal || isPersonalized,
+            followingOnly: !isGlobal && !!userId,
+        });
 
         // ── Personalized "For You" feed (plan §11) — A/B experiment surface ────────
         // Resolve the viewer's experiment arm; control ranks on base_score only,
@@ -263,6 +290,7 @@ export async function GET(req: NextRequest) {
                     AND NOT EXISTS (
                         SELECT 1 FROM hidden_posts hp WHERE hp.user_id = $1 AND hp.post_id = p.post_id
                     )
+                    ${supersededByNewerRepostFilter('$1', { excludeQuarantined: true, followingOnly: false })}
                 )
                 SELECT *,
                     ($4 * base_score + $5 * score_affinity) AS relevance_score
@@ -337,7 +365,10 @@ export async function GET(req: NextRequest) {
             const cachedIds = await getCachedFeedIds(viewerIdNum, null, limit);
             if (cachedIds && cachedIds.length > 0) {
                 const hydrated = await hydratePostsByIds(cachedIds, viewerIdNum);
-                if (hydrated.length === cachedIds.length) {
+                // The cache holds a post and its reposts as separate entries.
+                // If this page has both, use Postgres, which keeps only the
+                // newest row per post, so cursor offsets keep matching it.
+                if (hydrated.length === cachedIds.length && !hasRepeatedPost(hydrated)) {
                     const hydratedWithInjections = await interleaveFeedInjections(hydrated, viewerIdNum, offset, coords);
                     const hydratedWithSurfaced = await maybeInjectSurfacedComment(viewerIdNum, offset, hydratedWithInjections);
                     return NextResponse.json({
@@ -348,7 +379,7 @@ export async function GET(req: NextRequest) {
                         source: "cache",
                     });
                 }
-                // Partial hydration failure — fall through to the Postgres query.
+                // Partial hydration failure or a repeated post — fall through to the Postgres query.
             }
         }
 
@@ -433,6 +464,7 @@ export async function GET(req: NextRequest) {
                     p.user_id = $1
                     OR p.user_id IN (SELECT following_id FROM social_follows WHERE follower_id = $1 AND status = 'accepted')
                 )` : ""}
+                ${oneCardPerPostFilter}
                 ORDER BY p.created_at DESC
                 LIMIT $2 OFFSET $3
             `;
@@ -533,6 +565,7 @@ export async function GET(req: NextRequest) {
                         p.user_id = $1
                         OR fs.following_id IS NOT NULL
                     )` : ""}
+                    ${oneCardPerPostFilter}
                 )
                 SELECT * FROM scored
                 ORDER BY relevance_score DESC, created_at DESC

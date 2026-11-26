@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Table, Tag, Button, Spin, Alert } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {

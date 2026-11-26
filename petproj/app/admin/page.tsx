@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import Link from "@/components/Link";
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({

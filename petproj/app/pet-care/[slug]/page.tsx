@@ -1,6 +1,6 @@
 import { db } from "@/db/index";
 import { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import ClinicCard from "@/components/ClinicCard";
 import VetDetailsClient from "./VetDetailsClient";
 import { VET_CITIES } from "@/lib/vetCities";

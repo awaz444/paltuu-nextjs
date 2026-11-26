@@ -1,7 +1,7 @@
 import { db } from "@/db/index";
 import { adoptionFeedOrderBy } from "@/lib/adoptionFeed";
 import { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { notFound } from "next/navigation";
 import { formatAge } from "@/utils/formatAge";
 import { SITE_URL } from "@/lib/site";

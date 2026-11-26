@@ -12,7 +12,7 @@
 // through the /adoption-applicants redirect).
 
 import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { toast } from "react-hot-toast";

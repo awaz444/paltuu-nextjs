@@ -1,5 +1,5 @@
 import { cache } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { format } from "date-fns";

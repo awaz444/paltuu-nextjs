@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";

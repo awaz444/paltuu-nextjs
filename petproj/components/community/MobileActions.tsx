@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 
 /** Floating mobile button style, shared with the browse pets page so both look the same. */
 export const MOBILE_BUTTON =

@@ -57,7 +57,7 @@ import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { MoonLoader } from "react-spinners";
 import "./styles.css";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { useSearchParams } from "next/navigation";
 import { authUrl, currentPath } from "@/lib/authRedirect";
 import { useContactGate, useRevealOnReturn } from "@/hooks/useContactGate";

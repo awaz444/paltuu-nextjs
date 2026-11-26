@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import AppStoreBadges from "@/components/home/AppStoreBadges";
 import { COMMUNITY_CITIES, COMMUNITY_SPECIES, COMMUNITY_TOPICS, type BreedCommunity, type CommunityPost } from "@/lib/community";
 import { VETS_AT_HOME } from "@/lib/homeContent";

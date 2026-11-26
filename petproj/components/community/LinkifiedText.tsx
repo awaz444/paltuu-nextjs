@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { mentionPattern, type MentionRef } from "@/lib/mentionText";
 
 // http(s) URLs, bare www. hosts, and bare paltuu.pk links.

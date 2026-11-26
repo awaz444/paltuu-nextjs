@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import ProductGrid from "@/components/ProductGrid";
 
 export default function CategoryProductsClient({

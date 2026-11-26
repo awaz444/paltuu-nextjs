@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { VET_CITIES } from "@/lib/vetCities";
 
 /**

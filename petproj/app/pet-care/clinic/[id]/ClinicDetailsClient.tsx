@@ -28,7 +28,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useContactGate, useRevealOnReturn } from "@/hooks/useContactGate";
 import { useContact } from "@/hooks/useContact";
 import { ClinicDetails } from "./data";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { VET_CITIES } from "@/lib/vetCities";
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/Link";
 
 /**
  * How adoption works, shown with real phone screens of the flow (PR #56):

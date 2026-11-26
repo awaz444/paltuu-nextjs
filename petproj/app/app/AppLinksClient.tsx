@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/Link";
 
 const IOS_URL = "https://apps.apple.com/pk/app/paltuu/id6789732258";
 const ANDROID_URL =

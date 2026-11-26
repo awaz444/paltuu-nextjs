@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Github, Linkedin, Mail, MessageCircle, Phone } from "lucide-react";
 import Modal from "@/components/community/Modal";
 import { cardFromSearch, type BusinessCard } from "@/lib/businessCards";

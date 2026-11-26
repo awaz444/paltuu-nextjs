@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import Link from "next/link"; // Import Link from next/link
+import Link from "@/components/Link";
 import { useRouter } from "next/navigation";
 import { ClockCircleOutlined, EnvironmentOutlined, ShoppingOutlined } from "@ant-design/icons"; // Import EnvironmentOutlined from ant-design/icons
 

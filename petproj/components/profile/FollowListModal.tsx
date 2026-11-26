@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { useCallback, useEffect, useState } from "react";
 import { BadgeCheck } from "lucide-react";
 import toast from "react-hot-toast";

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Bookmark, Heart, Lock, MessageCircle, PawPrint } from "lucide-react";

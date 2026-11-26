@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { MoonLoader } from "react-spinners";

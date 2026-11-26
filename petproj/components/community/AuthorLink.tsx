@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import type { ReactNode } from "react";
 
 /** A post or comment author's name or photo, linked to their profile. Comments still being sent have no id yet. */

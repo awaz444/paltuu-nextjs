@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Camera, ChevronRight, ImagePlus } from "lucide-react";
 import toast from "react-hot-toast";

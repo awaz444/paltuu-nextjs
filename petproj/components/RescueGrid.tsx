@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { useSetPrimaryColor } from "@/app/hooks/useSetPrimaryColor";
 import { Modal } from "antd";
 import {

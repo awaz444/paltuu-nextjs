@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { EnvironmentOutlined, PhoneOutlined } from "@ant-design/icons";
 import "./LostAndFoundGrid.css";
 import { maskPhone, useContactGate } from "@/hooks/useContactGate";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import AuthorLink from "./AuthorLink";
 import { Play } from "lucide-react";
 import {

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import type { Metadata } from "next";
 import { db } from "@/db/index";
 import { SITE_URL } from "@/lib/site";

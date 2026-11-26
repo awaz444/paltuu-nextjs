@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/app/store/store";
 import { useRouter } from "next/navigation";
 import "./petGrid.css";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { fetchAdoptionPets } from "@/app/store/slices/adoptionPetsSlice";
 import { fetchFosterPets } from "@/app/store/slices/fosterPetsSlice";
 import { formatAge } from "@/utils/formatAge";

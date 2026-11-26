@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { postPath, postTitle, type PetCommunity } from "@/lib/community";
 import Avatar from "./Avatar";
 import ForumIcon from "./ForumIcon";

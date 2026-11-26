@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Clinic } from "../app/types/clinic";
 import { FaHome, FaClinicMedical, FaLocationArrow } from "react-icons/fa";
 import { formatDistanceKm } from "@/lib/geo";

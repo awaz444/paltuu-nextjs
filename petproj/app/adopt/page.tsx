@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { SITE_URL } from "@/lib/site";
 import { getTaxonomy } from "@/lib/adoptTaxonomy";
 

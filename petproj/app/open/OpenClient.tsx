@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/Link";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import AppStoreBadges from "@/components/home/AppStoreBadges";

@@ -10,7 +10,10 @@ const ENDPOINT = "/api/v1/track";
 const CONSENT_KEY = "paltuu_cookie_consent";
 const VISITOR_KEY = "paltuu_vid";
 const SESSION_KEY = "paltuu_sid";
-const FLUSH_DELAY_MS = 2000;
+// Each flush is a billed Vercel request. AnalyticsTracker already flushes on
+// visibilitychange/pagehide, so a long delay only batches more events per POST
+// without losing any (PALTU-183).
+const FLUSH_DELAY_MS = 15000;
 const MAX_BATCH = 20;
 
 let queue: TrackEvent[] = [];

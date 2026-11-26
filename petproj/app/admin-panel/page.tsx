@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/navbar";
 import { useSetPrimaryColor } from "../hooks/useSetPrimaryColor";
-import Link from "next/link";
+import Link from "@/components/Link";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 // removed useSession import

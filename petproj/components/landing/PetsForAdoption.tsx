@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { formatAge } from "@/utils/formatAge";
 import type { RecentPet } from "@/lib/recentPets";
 

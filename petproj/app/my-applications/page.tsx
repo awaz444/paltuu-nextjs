@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { toast } from "react-hot-toast";
 import { format } from "date-fns";
 import { CheckCircle2, ChevronDown, Clock, Heart, Info, Search } from "lucide-react";

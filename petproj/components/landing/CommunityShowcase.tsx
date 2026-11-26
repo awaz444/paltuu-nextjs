@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { APP_SCREENS } from "@/lib/homeContent";
 import { COMMUNITY_SPECIES } from "@/lib/community";
 

@@ -2,7 +2,7 @@
 
 import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
-import Link from 'next/link';
+import Link from "@/components/Link";
 
 
 export default function ApiDocs() {

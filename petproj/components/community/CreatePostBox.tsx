@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ImagePlus, Search, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";

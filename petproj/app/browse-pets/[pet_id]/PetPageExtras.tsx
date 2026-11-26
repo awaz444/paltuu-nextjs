@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/Link";
 import BlogCard from "@/components/blog/BlogCard";
 import AppStoreBadges from "@/components/home/AppStoreBadges";
 import { APP_SCREENS } from "@/lib/homeContent";

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Modal } from "antd";
-import Link from "next/link";
+import Link from "@/components/Link";
 import EidBazaarListing from "./EidBazarListing";
 import axios from "axios";
 import { message } from "antd";

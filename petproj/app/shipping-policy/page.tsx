@@ -2,7 +2,7 @@
 
 import React from "react";
 import Head from "next/head";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { FileText, ChevronRight, Home, Printer } from "lucide-react";
 
 export default function ShippingPolicyPage(): JSX.Element {

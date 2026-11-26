@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import "./navbar.css";
 import Image from "next/image";
 import { LoadingOutlined } from "@ant-design/icons"; // you already use Ant icons
@@ -307,14 +307,23 @@ const Navbar = ({
       }
     };
 
+    if (user?.role !== 'shelter admin') return;
+
     fetchNotifications();
-    // Refresh notifications every 30 seconds
-    const interval = setInterval(() => {
+    // Refresh every 2 minutes, only while the tab is visible. Every poll is a
+    // billed Vercel request, so a background tab must not keep polling (PALTU-183).
+    const refresh = () => {
+      if (document.visibilityState !== 'visible') return;
       // Allow periodic refresh even if already fetched
       lastFetchedNotificationUserId.current = null;
       fetchNotifications();
-    }, 30000);
-    return () => clearInterval(interval);
+    };
+    const interval = setInterval(refresh, 120000);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refresh);
+    };
   }, [user?.id, user?.user_id, user?.role]);
 
   // Cart dropdown mouse handlers

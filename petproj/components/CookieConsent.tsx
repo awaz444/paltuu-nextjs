@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Cookie, X } from "lucide-react";
 
 const CONSENT_KEY = "paltuu_cookie_consent";

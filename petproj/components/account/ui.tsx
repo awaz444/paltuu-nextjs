@@ -9,7 +9,7 @@
 // No heavy black type, no hardcoded maroon (ApplyThemeColor recolours primary).
 
 import React, { useEffect, useRef } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 

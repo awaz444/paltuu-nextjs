@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { notFound } from "next/navigation";
 import { getBlogBySlug, getAllBlogSlugs, getRelatedBlogs, formatDate } from "@/lib/mdx";
 import styles from "./blog.module.css";

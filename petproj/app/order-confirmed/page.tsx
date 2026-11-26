@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
-import Link from "next/link";
+import Link from "@/components/Link";
 
 const OrderConfirmedContent = () => {
   const { isAuthenticated, user } = useAuth();

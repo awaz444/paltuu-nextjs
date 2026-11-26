@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { X } from "lucide-react";
 import { APP_LINKS, VETS_AT_HOME } from "@/lib/homeContent";
 

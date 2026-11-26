@@ -23,7 +23,7 @@ import { getOrCreateGuestSessionId } from "@/utils/guest";
 import { FaUniversity } from "react-icons/fa";
 import { useCartProtection } from "@/hooks/useCartProtection";
 import { useAuth } from "@/context/AuthContext";
-import Link from "next/link";
+import Link from "@/components/Link";
 import PhoneNumberInput from "@/components/PhoneNumberInput";
 import { isValidPhone } from "@/utils/phone";
 import { authUrl } from "@/lib/authRedirect";

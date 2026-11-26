@@ -6,7 +6,7 @@ import { AppDispatch, RootState } from "@/app/store/store";
 import { fetchProducts } from "@/app/store/slices/marketplaceSlice";
 import ProductGrid from "@/components/ProductGrid";
 import { Store, ArrowLeft, CheckCircle, Truck, ShieldCheck } from "lucide-react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import Script from "next/script"; // Required for Schema
 
 // Local Product interface to match ProductGrid's expected structure

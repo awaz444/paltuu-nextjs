@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/Link";
 import type { ReactNode } from "react";
 import type { LandingClinic, VetCityCount } from "@/lib/landingData";
 import NearestClinics from "./NearestClinics";

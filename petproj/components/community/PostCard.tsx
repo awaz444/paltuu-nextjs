@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { formatDistanceToNow } from "date-fns";
 import { Heart, MessageCircle, Play } from "lucide-react";
 import {

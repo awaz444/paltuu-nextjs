@@ -13,7 +13,7 @@ import {
     type Crumb,
 } from "@/components/community/CommunityChrome";
 
-export const revalidate = 600;
+export const revalidate = 1800; // new posts revalidate /home on demand (PALTU-186)
 
 const TITLE = "Pet Owners in Pakistan — Photos, Questions and Advice";
 const DESCRIPTION =

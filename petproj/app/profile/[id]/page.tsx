@@ -9,7 +9,7 @@ import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 
 // Cached for everyone. Who is looking (following, own profile, blocked) is filled in on the client.
-export const revalidate = 300;
+export const revalidate = 1800; // profiles change rarely (PALTU-186)
 
 function parseId(param: string): number | null {
     if (!/^\d{1,18}$/.test(param)) return null;

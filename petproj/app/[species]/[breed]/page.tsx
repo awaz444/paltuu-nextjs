@@ -23,7 +23,7 @@ import {
     type Crumb,
 } from "@/components/community/CommunityChrome";
 
-export const revalidate = 600;
+export const revalidate = 3600; // breed guide + posts; new posts show within the hour (PALTU-186)
 // Breeds come from the database, so a breed added later still resolves on first visit.
 export const dynamicParams = true;
 

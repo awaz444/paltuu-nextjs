@@ -32,7 +32,7 @@ import MobileActions from "@/components/community/MobileActions";
 import { PostThreadProvider } from "@/components/community/PostThreadContext";
 import PostComments from "@/components/community/PostComments";
 
-export const revalidate = 600;
+export const revalidate = 1800; // web replies refresh the post on demand; app replies wait this out (PALTU-186)
 export const dynamicParams = true;
 
 // No posts are prebuilt; each is rendered on first visit and then cached for `revalidate`.

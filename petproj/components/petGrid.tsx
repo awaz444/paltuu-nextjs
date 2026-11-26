@@ -134,9 +134,9 @@ const PetGrid: React.FC<PetGridProps> = ({ pets }) => {
                                 const waiting = getWaitingLabel(pet.created_at);
                                 return waiting ? (
                                     // Bottom-left so it never collides with the Rescue/Shop badge top-right.
-                                    <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/55 px-1.5 py-0.5 text-[10px] sm:text-xs font-medium text-white backdrop-blur-sm">
-                                        <ClockCircleOutlined className="text-[9px] sm:text-[11px] opacity-80" />
-                                        {waiting}
+                                    <div className="absolute bottom-2 left-2 flex max-w-[calc(100%-1rem)] items-center gap-1 rounded-md bg-black/55 px-1.5 py-0.5 text-[10px] sm:text-xs font-medium text-white backdrop-blur-sm">
+                                        <ClockCircleOutlined className="shrink-0 text-[9px] sm:text-[11px] opacity-80" />
+                                        <span className="truncate">{waiting}</span>
                                     </div>
                                 ) : null;
                             })()}

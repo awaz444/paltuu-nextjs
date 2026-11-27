@@ -218,7 +218,8 @@ const POST_COLUMNS = `
     u.name AS author_name, u.social_username AS author_username,
     u.profile_image_url AS author_avatar, COALESCE(u.verified, false) AS author_verified,
     (SELECT json_agg(json_build_object('type', m.media_type, 'url', m.url, 'thumb', m.thumbnail_url,
-                                       'w', (to_jsonb(m)->>'width')::int, 'h', (to_jsonb(m)->>'height')::int)
+                                       'w', (to_jsonb(m)->>'width')::int, 'h', (to_jsonb(m)->>'height')::int,
+                                       'hls', CASE WHEN to_jsonb(m)->>'video_status' = 'ready' THEN to_jsonb(m)->>'hls_url' END)
                      ORDER BY m.ordering)
        FROM social_post_media m WHERE m.post_id = sp.post_id AND m.url IS NOT NULL) AS media,
     (SELECT json_agg(DISTINCT ps.species) FROM post_species ps WHERE ps.post_id = sp.post_id) AS species,
@@ -227,8 +228,12 @@ const POST_COLUMNS = `
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-/** `w`/`h`: pixel size, null until measured (PALTU-159). */
-export type PostMedia = { type: string; url: string; thumb: string | null; w?: number | null; h?: number | null };
+/**
+ * `w`/`h`: pixel size, null until measured (PALTU-159). `hls`: the H.264 HLS
+ * copy MediaConvert makes of a video, once it's ready. `url` is the raw upload,
+ * often HEVC from iPhones, which most non-Apple browsers can't play (PALTU-188).
+ */
+export type PostMedia = { type: string; url: string; thumb: string | null; w?: number | null; h?: number | null; hls?: string | null };
 export type PostPlace = { species: string; breedSlug?: string; breedName?: string };
 
 export type CommunityPost = {

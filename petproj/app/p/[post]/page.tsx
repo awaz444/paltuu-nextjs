@@ -31,6 +31,7 @@ import PostActions from "@/components/community/PostActions";
 import MobileActions from "@/components/community/MobileActions";
 import { PostThreadProvider } from "@/components/community/PostThreadContext";
 import PostComments from "@/components/community/PostComments";
+import PostVideo from "@/components/community/PostVideo";
 
 export const revalidate = 1800; // web replies refresh the post on demand; app replies wait this out (PALTU-186)
 export const dynamicParams = true;
@@ -162,13 +163,10 @@ export default async function PostPage({ params }: { params: { post: string } })
                                             m.type === "video" ? (
                                                 // Sized by the video itself (poster, then the clip), like
                                                 // the photos below, not a full-width black box (PALTU-159).
-                                                <video
+                                                // HLS when ready, raw upload until then (PALTU-188).
+                                                <PostVideo
                                                     key={m.url}
-                                                    controls
-                                                    playsInline
-                                                    preload="metadata"
-                                                    poster={m.thumb ?? undefined}
-                                                    src={m.url}
+                                                    media={m}
                                                     className="block h-auto max-h-[75vh] w-auto max-w-full rounded-xl border border-gray-200 bg-black"
                                                 />
                                             ) : (

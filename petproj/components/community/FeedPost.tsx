@@ -1,6 +1,5 @@
 import Link from "@/components/Link";
 import AuthorLink from "./AuthorLink";
-import { Play } from "lucide-react";
 import {
     renderMentions,
     findSpecies,
@@ -18,6 +17,7 @@ import { forumArtKey } from "./forumMeta";
 import Avatar from "./Avatar";
 import LinkifiedText from "./LinkifiedText";
 import PostActions from "./PostActions";
+import PostVideo from "./PostVideo";
 
 // Tallest a media frame gets. On phones the width runs out first; on wider
 // screens a tall frame narrows instead of growing past this (kept in step
@@ -80,32 +80,29 @@ export default function FeedPost({ post, showForum = true }: { post: CommunityPo
                         <time dateTime={post.createdAt} className="ml-auto shrink-0 pl-2 text-xs text-gray-400">{shortAge(post.createdAt)}</time>
                     </div>
 
-                    {/* Larger screens: Reddit-style forum line. */}
+                    {/* Larger screens: author first, then the forum the post
+                        landed in, same order as phones (PALTU-187). */}
                     <div className="hidden min-w-0 items-center gap-2 text-xs text-gray-500 sm:flex">
-                        {place ? (
+                        <AuthorLink id={post.author.id} className="relative z-10 shrink-0">
+                            <Avatar src={post.author.avatar} name={post.author.name} size={24} />
+                        </AuthorLink>
+                        <AuthorLink id={post.author.id} className="relative z-10 truncate font-semibold text-gray-900 hover:underline">{post.author.name}</AuthorLink>
+                        {place && (
                             <>
-                                <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-sm">
-                                    <ForumIcon speciesSlug={forumArtKey(findSpecies(place.species)?.slug, place.breedSlug)} size={24} />
+                                <span className="text-gray-300" aria-hidden>›</span>
+                                <span aria-hidden className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
+                                    <ForumIcon speciesSlug={forumArtKey(findSpecies(place.species)?.slug, place.breedSlug)} size={20} />
                                 </span>
-                                <Link href={placeHref(place)} className="relative z-10 truncate font-semibold text-gray-900 hover:underline">
+                                <Link href={placeHref(place)} className="relative z-10 truncate hover:underline">
                                     {placeLabel(place)}
                                 </Link>
-                                <span aria-hidden>•</span>
-                                <AuthorLink id={post.author.id} className="relative z-10 truncate hover:underline">{post.author.name}</AuthorLink>
-                            </>
-                        ) : (
-                            <>
-                                <AuthorLink id={post.author.id} className="relative z-10 shrink-0">
-                                    <Avatar src={post.author.avatar} name={post.author.name} size={24} />
-                                </AuthorLink>
-                                <AuthorLink id={post.author.id} className="relative z-10 truncate font-semibold text-gray-900 hover:underline">{post.author.name}</AuthorLink>
                             </>
                         )}
                         <span aria-hidden>•</span>
                         <time dateTime={post.createdAt} className="shrink-0">{shortAge(post.createdAt)}</time>
                     </div>
 
-                    {titleFromText && <h3 className="mt-1 text-[15px] font-semibold leading-snug text-gray-900 sm:mt-1.5 sm:text-lg">{title}</h3>}
+                    {titleFromText && <h3 className="mt-1 text-[15px] font-normal leading-snug text-gray-900 sm:mt-1.5 sm:text-base">{title}</h3>}
                     {(titleFromText ? body : post.content) && (
                         <p className="mt-1 line-clamp-3 whitespace-pre-line break-words text-sm leading-relaxed text-gray-700">
                             <LinkifiedText text={titleFromText ? body : post.content} linkClassName="relative z-10" mentions={post.mentions} />
@@ -117,7 +114,24 @@ export default function FeedPost({ post, showForum = true }: { post: CommunityPo
                         the frame is drawn before the image loads. Not known yet:
                         the image sets its own height, clamped to the same range
                         against the frame's width (cqw). */}
-                    {cover && (
+                    {first?.type === "video" ? (
+                        // A real player, above the row's link so pressing
+                        // play doesn't open the post (PALTU-188).
+                        <div
+                            className="relative z-10 mt-2.5 overflow-hidden rounded-xl border border-gray-200 bg-black"
+                            style={ratio ? { aspectRatio: String(ratio), maxWidth: Math.round(FRAME_MAX_H * ratio) } : { maxWidth: FRAME_MAX_H }}
+                        >
+                            <PostVideo
+                                media={first}
+                                className={ratio ? "absolute inset-0 h-full w-full object-cover" : "block h-auto max-h-[520px] w-full"}
+                            />
+                            {post.media.length > 1 && (
+                                <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">
+                                    1/{post.media.length}
+                                </span>
+                            )}
+                        </div>
+                    ) : cover && (
                         <div
                             className={`relative mt-2.5 overflow-hidden rounded-xl border border-gray-200 bg-gray-100 ${ratio ? "" : "[container-type:inline-size]"}`}
                             style={ratio ? { aspectRatio: String(ratio), maxWidth: Math.round(FRAME_MAX_H * ratio) } : undefined}
@@ -133,13 +147,6 @@ export default function FeedPost({ post, showForum = true }: { post: CommunityPo
                                 }
                                 loading="lazy"
                             />
-                            {first?.type === "video" && (
-                                <span className="absolute inset-0 flex items-center justify-center">
-                                    <span className="rounded-full bg-black/60 p-4 text-white">
-                                        <Play size={22} fill="currentColor" />
-                                    </span>
-                                </span>
-                            )}
                             {post.media.length > 1 && (
                                 <span className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">
                                     1/{post.media.length}

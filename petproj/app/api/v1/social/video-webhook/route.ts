@@ -1,24 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";
-import { buildHlsUrl, buildThumbnailUrl } from "@/lib/mediaconvert";
-import { saveMediaDimensions, toDims, type MediaDims } from "@/lib/mediaDimensions";
-import { SocialNotifications } from "@/lib/notifications/notificationTriggers";
-
-/**
- * The biggest rendition a COMPLETE event reports. Its size is what viewers
- * actually see, so it's what the feed frames the video to (PALTU-159).
- */
-function largestOutputDims(detail: any): MediaDims | null {
-    let best: MediaDims | null = null;
-    for (const group of detail?.outputGroupDetails ?? []) {
-        for (const output of group?.outputDetails ?? []) {
-            const dims = toDims(output?.videoDetails?.widthInPx, output?.videoDetails?.heightInPx);
-            if (dims && (!best || dims.width * dims.height > best.width * best.height)) best = dims;
-        }
-    }
-    return best;
-}
-
+import { largestDimsFromEvent, markVideoJobComplete, markVideoJobFailed } from "@/lib/videoPipeline";
 
 export const dynamic = "force-dynamic";
 
@@ -91,45 +73,19 @@ export async function POST(req: NextRequest) {
         }
 
         if (status === "COMPLETE" && outputPrefix) {
-            const hlsUrl       = buildHlsUrl(outputPrefix);
-            const thumbnailUrl = buildThumbnailUrl(outputPrefix);
-
-            const result = await db.query(
-                `UPDATE social_post_media m
-                 SET video_status  = 'ready',
-                     hls_url       = $1,
-                     thumbnail_url = $2
-                 FROM social_posts p
-                 WHERE m.post_id = p.post_id AND m.mediaconvert_job_id = $3
-                 RETURNING m.media_id, m.post_id, p.user_id`,
-                [hlsUrl, thumbnailUrl, jobId]
-            );
-
-            if (result.rowCount === 0) {
-                // Job not found in DB — could be a retry or a job from another system
-                console.warn(`[video-webhook] No media row found for jobId: ${jobId}`);
+            // Shared with the reconcile pass (PALTU-189). Sizes from the
+            // biggest rendition, which is what viewers see (PALTU-159).
+            const updated = await markVideoJobComplete(db, jobId, outputPrefix, largestDimsFromEvent(detail));
+            if (updated === 0) {
+                // Unknown job, or already marked ready by the reconcile pass.
+                console.warn(`[video-webhook] No waiting media row for jobId: ${jobId}`);
             } else {
-                console.log(`[video-webhook] ✅ Job ${jobId} COMPLETE → ${hlsUrl}`);
-                const outputDims = largestOutputDims(detail);
-                await saveMediaDimensions(db, result.rows.map((r: any) => ({ mediaId: r.media_id, dims: outputDims })));
-                const row = result.rows[0];
-                const authorId = Number(row.user_id);
-                const postId   = Number(row.post_id);
-
-                SocialNotifications.onVideoReady(authorId, postId, hlsUrl, thumbnailUrl)
-                    .then(() => console.log(`[video-webhook] Video ready notification sent to user ${authorId}`))
-                    .catch((err) => console.error("[video-webhook] Failed to send notification:", err));
+                console.log(`[video-webhook] ✅ Job ${jobId} COMPLETE`);
             }
-
 
         } else if (status === "ERROR") {
             const errorMessage = detail.errorMessage ?? detail.errorCode ?? "Unknown error";
-            await db.query(
-                `UPDATE social_post_media
-                 SET video_status = 'failed'
-                 WHERE mediaconvert_job_id = $1`,
-                [jobId]
-            );
+            await markVideoJobFailed(db, jobId);
             console.error(`[video-webhook] ❌ Job ${jobId} FAILED:`, errorMessage);
 
         } else {

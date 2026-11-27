@@ -5,7 +5,6 @@ import "./globals.css";
 import Footer from "@/components/footer";
 // import ChatBot from "@/components/ChatBot"; // hidden from frontend
 import AppClientWrapper from "@/context/AppClientWrapper";
-import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
 import { ORG_HOST_PATTERN } from "@/lib/site";
@@ -187,7 +186,6 @@ export default function RootLayout({
                 <ChatBot />
               </div>
               */}
-              <Analytics />
               <AnalyticsTracker />
               <PostHogTracker />
             </CartSyncProvider>

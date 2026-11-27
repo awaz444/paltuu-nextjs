@@ -10,7 +10,7 @@ import { homeMetadata } from "@/lib/homeMetadata";
  * statically renderable: nothing in this tree may call headers() or cookies().
  * Per-visitor choices happen in middleware (before the CDN) or client-side.
  */
-export const revalidate = 900;
+export const revalidate = 3600; // landing page (PALTU-186)
 
 export const metadata = homeMetadata;
 

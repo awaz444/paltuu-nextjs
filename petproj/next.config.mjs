@@ -24,6 +24,11 @@ const nextConfig = {
     // Serve smaller srcset steps for thumbnail grids (128px, 200px, 400px)
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 200, 256, 384, 400],
+    // Keep optimized images for 30 days instead of the 60s default, so Vercel
+    // re-optimizes and re-fetches far less (PALTU-186). Safe because uploads
+    // get a fresh uuid filename (lib/s3.ts), so an image URL never changes
+    // content.
+    minimumCacheTTL: 2592000,
   },
 
   async redirects() {

@@ -22,7 +22,7 @@ import {
     type Crumb,
 } from "@/components/community/CommunityChrome";
 
-export const revalidate = 600;
+export const revalidate = 3600; // new posts revalidate their topic on demand (PALTU-186)
 export const dynamicParams = false;
 
 export function generateStaticParams() {

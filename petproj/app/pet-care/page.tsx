@@ -1,7 +1,7 @@
 import { queryClinics } from "@/lib/clinicsQuery";
 import PetCareClient from "./PetCareClient";
 
-export const revalidate = 300;
+export const revalidate = 3600; // clinic listings change rarely (PALTU-186)
 
 // Matches PetCareClient's default filter state (city: "Karachi", listing_type:
 // "all", page 1) so the server-rendered first paint and the client's own

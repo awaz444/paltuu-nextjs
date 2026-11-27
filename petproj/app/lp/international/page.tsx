@@ -19,7 +19,7 @@ import PeekingStickers from "@/components/landing/PeekingStickers";
  * plan to go worldwide. Its message follows the international business card:
  * "Adopt your new best friend."
  */
-export const revalidate = 900;
+export const revalidate = 3600; // landing page (PALTU-186)
 
 const TITLE = "Paltuu — Adopt a Pet and Meet Other Pet Parents";
 const DESCRIPTION =

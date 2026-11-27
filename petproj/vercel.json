@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/v1/cron/reconcile-videos", "schedule": "0 3 * * *" }
+  ]
+}

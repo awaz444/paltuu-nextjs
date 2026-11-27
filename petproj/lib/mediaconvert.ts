@@ -13,9 +13,11 @@ import {
     MediaConvertClient,
     CreateJobCommand,
     DescribeEndpointsCommand,
+    GetJobCommand,
+    type Job,
     type CreateJobCommandInput,
 } from "@aws-sdk/client-mediaconvert";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
 import type { MediaDims } from "@/lib/mediaDimensions";
@@ -357,6 +359,44 @@ export async function createMediaConvertJob(videoKey: string, source?: MediaDims
 
     console.log(`[MediaConvert] Job submitted: ${jobId} for key: ${videoKey}`);
     return jobId;
+}
+
+/**
+ * Look up a MediaConvert job (PALTU-189). Lets the server learn a job's
+ * outcome itself instead of relying only on the EventBridge webhook.
+ */
+export async function getMediaConvertJob(jobId: string): Promise<Job | null> {
+    const mc = await getMC();
+    const res = await mc.send(new GetJobCommand({ Id: jobId }));
+    return res.Job ?? null;
+}
+
+/** Whether the HLS master playlist for `outputPrefix` is in the HLS bucket. */
+export async function hlsOutputExists(outputPrefix: string): Promise<boolean> {
+    try {
+        await getRawS3().send(new HeadObjectCommand({ Bucket: HLS_BUCKET, Key: `${outputPrefix}/hls/hls.m3u8` }));
+        return true;
+    } catch (e: any) {
+        if (e?.name === "NotFound" || e?.$metadata?.httpStatusCode === 404) return false;
+        throw e;
+    }
+}
+
+/**
+ * The thumbnail URL for a finished job: the frame at 5s (0000001) when the
+ * clip is long enough to have one, else the first frame (0000000). Clips
+ * under 5 seconds only get the first (PALTU-189).
+ */
+export async function resolveThumbnailUrl(outputPrefix: string): Promise<string> {
+    const preferred = buildThumbnailUrl(outputPrefix);
+    const key = (n: string) => `${outputPrefix}/thumbs/${outputPrefix}_thumb.${n}.jpg`;
+    try {
+        await getRawS3().send(new HeadObjectCommand({ Bucket: HLS_BUCKET, Key: key("0000001") }));
+        return preferred;
+    } catch (e: any) {
+        if (!(e?.name === "NotFound" || e?.$metadata?.httpStatusCode === 404)) return preferred;
+        return preferred.replace("_thumb.0000001.jpg", "_thumb.0000000.jpg");
+    }
 }
 
 // ── URL helpers ───────────────────────────────────────────────────────────────

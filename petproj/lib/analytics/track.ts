@@ -109,3 +109,17 @@ export function trackEvent(
         flushTimer = setTimeout(flush, FLUSH_DELAY_MS);
     }
 }
+
+/**
+ * The visitor shared their browser location (e.g. "Use my location"): tell the
+ * server so the admin dashboard can count Karachi areas. The server keeps only
+ * the area name, never the coordinates, and ignores points outside Karachi.
+ * Called after the visitor has already granted location for another purpose;
+ * never ask for location just for this (PALTU-192).
+ */
+export function reportArea(lat: number, lng: number) {
+    if (typeof window === "undefined" || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    const body = JSON.stringify({ lat, lng, visitor_id: getVisitorId(), session_id: getSessionId() });
+    fetch("/api/v1/track/area", { method: "POST", body, keepalive: true, headers: { "Content-Type": "application/json" } })
+        .catch(() => {});
+}

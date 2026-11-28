@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { VET_CITIES } from "@/lib/vetCities";
+import { reportArea } from "@/lib/analytics/track";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../store/store";
 import { fetchClinics, fetchClinicsForMap } from "../store/slices/clinicSlice";
@@ -82,6 +83,7 @@ export default function PetCareClient({ initialClinics, initialPagination, initi
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    reportArea(coords.lat, coords.lng);
                     setUserCoords(coords);
                     setGeoStatus("granted");
                     resolve(coords);

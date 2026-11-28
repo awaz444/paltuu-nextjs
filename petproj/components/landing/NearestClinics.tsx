@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "@/components/Link";
 import { useState, type ReactNode } from "react";
+import { reportArea } from "@/lib/analytics/track";
 
 /**
  * "Use my location" for the landing pages' vets section. Asks for the browser's
@@ -46,6 +47,7 @@ export default function NearestClinics({ initial, label = "Use my location" }: {
         setState({ kind: "locating" });
         navigator.geolocation.getCurrentPosition(
             async ({ coords }) => {
+                reportArea(coords.latitude, coords.longitude);
                 try {
                     const params = new URLSearchParams({
                         sort: "distance",

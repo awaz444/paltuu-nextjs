@@ -110,16 +110,29 @@ export function trackEvent(
     }
 }
 
+export type LocationSource = "arrival" | "clinics" | "pet_care";
+const LOCATION_SENT_KEY = "paltuu_loc_sent";
+
 /**
- * The visitor shared their browser location (e.g. "Use my location"): tell the
- * server so the admin dashboard can count Karachi areas. The server keeps only
- * the area name, never the coordinates, and ignores points outside Karachi.
- * Called after the visitor has already granted location for another purpose;
- * never ask for location just for this (PALTU-192).
+ * The visitor shared their browser location: tell the server, which works out
+ * their city, province and Karachi area and keeps only those names, never the
+ * coordinates (PALTU-192). Sent at most once per browser session.
  */
-export function reportArea(lat: number, lng: number) {
+export function locationSentThisSession(): boolean {
+    try {
+        return !!sessionStorage.getItem(LOCATION_SENT_KEY);
+    } catch {
+        return false;
+    }
+}
+
+export function reportLocation(lat: number, lng: number, source: LocationSource) {
     if (typeof window === "undefined" || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
-    const body = JSON.stringify({ lat, lng, visitor_id: getVisitorId(), session_id: getSessionId() });
-    fetch("/api/v1/track/area", { method: "POST", body, keepalive: true, headers: { "Content-Type": "application/json" } })
+    try {
+        if (sessionStorage.getItem(LOCATION_SENT_KEY)) return;
+        sessionStorage.setItem(LOCATION_SENT_KEY, "1");
+    } catch { /* storage blocked: the server still keeps one row per session */ }
+    const body = JSON.stringify({ lat, lng, source, visitor_id: getVisitorId(), session_id: getSessionId() });
+    fetch("/api/v1/track/location", { method: "POST", body, keepalive: true, headers: { "Content-Type": "application/json" } })
         .catch(() => {});
 }

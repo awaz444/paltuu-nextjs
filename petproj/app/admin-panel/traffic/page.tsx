@@ -81,9 +81,9 @@ interface TrafficData {
     ads: AdRow[];
     channels: { channel: string; sessions: number; pet_sessions: number; pet_pct: number | null; contact_sessions: number }[];
     referrers: { source: string; page_views: number }[];
-    cities: { city: string; page_views: number; visitors: number }[];
-    provinces: { province: string; page_views: number; visitors: number }[];
-    countries: { country: string; page_views: number; visitors: number }[];
+    locations: { visitors: number; arrival: number; tapped: number } | null;
+    provinces: { province: string; visitors: number }[];
+    cities: { city: string; province: string; visitors: number }[];
     karachi_districts: { district: string; visitors: number }[];
     karachi_areas: { area: string; district: string; visitors: number }[];
     page_types: PageTypeRow[];
@@ -94,14 +94,6 @@ type Preset = keyof typeof PRESETS | "Custom";
 const SECTION_FILTERS = ["all", "adopt", "care", "content", "marketplace", "other"] as const;
 
 const fmt = (n: number) => n.toLocaleString("en-US");
-const countryNames = typeof Intl.DisplayNames === "function" ? new Intl.DisplayNames(["en"], { type: "region" }) : null;
-const countryName = (code: string) => {
-    try {
-        return countryNames?.of(code) ?? code;
-    } catch {
-        return code;
-    }
-};
 const pct = (num: number, den: number) => (den > 0 ? `${((num / den) * 100).toFixed(1)}%` : "—");
 const pctVal = (v: number | null) => (v == null ? "—" : `${v}%`);
 const seconds = (s: number | null) => {
@@ -350,6 +342,8 @@ export default function TrafficDashboard() {
 
     const s = data?.summary;
     const p = data?.previous;
+    const shared = data?.locations?.visitors ?? 0;
+    const shareRate = s && s.visitors ? ` (${fmt(shared)} of ${fmt(s.visitors)} visitors, ${pct(shared, s.visitors)})` : "";
     const signedInShare = s && s.page_views ? (s.signed_in_views / s.page_views) * 100 : 0;
     const prevSignedInShare = p && p.page_views ? (p.signed_in_views / p.page_views) * 100 : 0;
     const compareLabel = data
@@ -587,49 +581,39 @@ export default function TrafficDashboard() {
                             ]}
                         />
                     </Section>
-                    <Section title="Cities" desc="From the visitor's IP address, approximate.">
-                        <Table
-                            size="small"
-                            rowKey="city"
-                            loading={loading}
-                            pagination={false}
-                            dataSource={data?.cities ?? []}
-                            columns={[
-                                { title: "City", dataIndex: "city" },
-                                { title: "Views", dataIndex: "page_views", align: "right", render: fmt },
-                                { title: "Visitors", dataIndex: "visitors", align: "right", render: fmt },
-                            ]}
-                        />
-                    </Section>
-                    <Section title="Provinces" desc="Pakistan only. From the visitor's IP address, approximate. Recorded from 28 Nov 2026.">
+                    <Section
+                        title="Provinces"
+                        desc={`From visitors who shared their location${shareRate}. Asked once on their first visit, or when they tap Use my location / Near me.`}
+                    >
                         <Table
                             size="small"
                             rowKey="province"
                             loading={loading}
                             pagination={false}
                             dataSource={data?.provinces ?? []}
+                            locale={{ emptyText: "No one shared their location in this range." }}
                             columns={[
                                 { title: "Province", dataIndex: "province" },
-                                { title: "Views", dataIndex: "page_views", align: "right", render: fmt },
                                 { title: "Visitors", dataIndex: "visitors", align: "right", render: fmt },
                             ]}
                         />
                     </Section>
-                    <Section title="Countries" desc="From the visitor's IP address. Recorded from 28 Nov 2026.">
+                    <Section title="Cities" desc="Nearest city to the shared location, in Pakistan.">
                         <Table
                             size="small"
-                            rowKey="country"
+                            rowKey="city"
                             loading={loading}
                             pagination={false}
-                            dataSource={data?.countries ?? []}
+                            dataSource={data?.cities ?? []}
+                            locale={{ emptyText: "No one shared their location in this range." }}
                             columns={[
-                                { title: "Country", dataIndex: "country", render: countryName },
-                                { title: "Views", dataIndex: "page_views", align: "right", render: fmt },
+                                { title: "City", dataIndex: "city" },
+                                { title: "Province", dataIndex: "province" },
                                 { title: "Visitors", dataIndex: "visitors", align: "right", render: fmt },
                             ]}
                         />
                     </Section>
-                    <Section title="Karachi districts" desc="Visitors who shared their location (Use my location, Near me).">
+                    <Section title="Karachi districts" desc="Visitors in Karachi who shared their location.">
                         <Table
                             size="small"
                             rowKey="district"

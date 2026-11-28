@@ -149,7 +149,7 @@ const summary = (source: string) => `
            COUNT(*) FILTER (WHERE event_type = 'ad_click')::int AS ad_clicks
     FROM ${source}`;
 
-const areasBetween = `
+const locationsBetween = `
         WHERE created_at >= ($1::date::timestamp AT TIME ZONE '${TZ}')
           AND created_at < (($2::date + 1)::timestamp AT TIME ZONE '${TZ}')`;
 
@@ -177,31 +177,31 @@ const BREAKDOWNS = {
         SELECT COALESCE(referrer_host, 'Direct / internal') AS source, COUNT(*)::int AS page_views
         FROM ev WHERE event_type = 'page_view'
         GROUP BY 1 ORDER BY page_views DESC LIMIT 15`,
-    cities: `
-        SELECT COALESCE(city, 'Unknown') AS city, COUNT(*)::int AS page_views,
-               COUNT(DISTINCT visitor_id)::int AS visitors
-        FROM ev WHERE event_type = 'page_view'
-        GROUP BY 1 ORDER BY page_views DESC LIMIT 15`,
-    // PALTU-192: province (Pakistan only) and country, from the same IP lookup as city.
+    // PALTU-192: where visitors are, from the browser location they shared
+    // (visitor_locations, one row per session). A visitor without an id
+    // (cookies rejected) counts once per row.
+    locations: `
+        SELECT COUNT(DISTINCT COALESCE(visitor_id::text, id::text))::int AS visitors,
+               COUNT(*) FILTER (WHERE source = 'arrival')::int AS arrival,
+               COUNT(*) FILTER (WHERE source <> 'arrival')::int AS tapped
+        FROM visitor_locations ${locationsBetween}`,
     provinces: `
-        SELECT COALESCE(region, 'Unknown') AS province, COUNT(*)::int AS page_views,
-               COUNT(DISTINCT visitor_id)::int AS visitors
-        FROM ev WHERE event_type = 'page_view' AND country = 'PK'
-        GROUP BY 1 ORDER BY page_views DESC`,
-    countries: `
-        SELECT country, COUNT(*)::int AS page_views,
-               COUNT(DISTINCT visitor_id)::int AS visitors
-        FROM ev WHERE event_type = 'page_view' AND country IS NOT NULL
-        GROUP BY 1 ORDER BY page_views DESC LIMIT 10`,
-    // Karachi areas come from visitors who shared their location (visitor_areas),
-    // one row per session. A visitor without an id (cookies rejected) counts once per row.
+        SELECT COALESCE(province, 'Outside Pakistan') AS province,
+               COUNT(DISTINCT COALESCE(visitor_id::text, id::text))::int AS visitors
+        FROM visitor_locations ${locationsBetween}
+        GROUP BY 1 ORDER BY visitors DESC`,
+    cities: `
+        SELECT COALESCE(city, 'Elsewhere in ' || province) AS city, province,
+               COUNT(DISTINCT COALESCE(visitor_id::text, id::text))::int AS visitors
+        FROM visitor_locations ${locationsBetween} AND country = 'Pakistan'
+        GROUP BY 1, 2 ORDER BY visitors DESC LIMIT 25`,
     karachi_districts: `
         SELECT district, COUNT(DISTINCT COALESCE(visitor_id::text, id::text))::int AS visitors
-        FROM visitor_areas ${areasBetween}
+        FROM visitor_locations ${locationsBetween} AND city = 'Karachi' AND district IS NOT NULL
         GROUP BY 1 ORDER BY visitors DESC`,
     karachi_areas: `
         SELECT area, district, COUNT(DISTINCT COALESCE(visitor_id::text, id::text))::int AS visitors
-        FROM visitor_areas ${areasBetween}
+        FROM visitor_locations ${locationsBetween} AND city = 'Karachi' AND area IS NOT NULL
         GROUP BY 1, 2 ORDER BY visitors DESC`,
     page_types: `
         SELECT pv.page_type,
@@ -232,9 +232,9 @@ const DASHBOARD = `${EVENTS_CTE}, ev_prev AS (${eventsBetween("$3", "$4")})
            ${list(QUERIES.ads)} AS ads,
            ${list(BREAKDOWNS.channels)} AS channels,
            ${list(BREAKDOWNS.referrers)} AS referrers,
-           ${list(BREAKDOWNS.cities)} AS cities,
+           (SELECT row_to_json(x) FROM (${BREAKDOWNS.locations}) x) AS locations,
            ${list(BREAKDOWNS.provinces)} AS provinces,
-           ${list(BREAKDOWNS.countries)} AS countries,
+           ${list(BREAKDOWNS.cities)} AS cities,
            ${list(BREAKDOWNS.karachi_districts)} AS karachi_districts,
            ${list(BREAKDOWNS.karachi_areas)} AS karachi_areas,
            ${list(BREAKDOWNS.page_types)} AS page_types`;

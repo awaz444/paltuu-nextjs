@@ -9,7 +9,6 @@ import {
     sanitizeTarget,
     type TrackEvent,
 } from "@/lib/analytics/events";
-import { regionName } from "@/lib/analytics/geography";
 import { signedInUserId } from "@/lib/analytics/requestUser";
 
 /**
@@ -51,37 +50,10 @@ function referrerHost(referrer: unknown, ownHost: string | null): string | null 
     }
 }
 
-// Vercel's edge sets this from the visitor's IP; absent locally and on other hosts.
-function cityFor(req: NextRequest): string | null {
-    const raw = req.headers.get("x-vercel-ip-city");
-    if (!raw) return null;
-    try {
-        return decodeURIComponent(raw).slice(0, 100);
-    } catch {
-        return null;
-    }
-}
-
-// Country and province from the same IP lookup (PALTU-192).
-function countryFor(req: NextRequest): string | null {
-    const raw = req.headers.get("x-vercel-ip-country");
-    return raw && /^[A-Z]{2}$/i.test(raw) ? raw.toUpperCase() : null;
-}
-
-function regionFor(req: NextRequest, country: string | null): string | null {
-    const raw = req.headers.get("x-vercel-ip-country-region");
-    if (!raw) return null;
-    try {
-        return regionName(country, decodeURIComponent(raw));
-    } catch {
-        return null;
-    }
-}
-
 const COLUMNS = [
     "event_type", "path", "page_type", "view_id", "cta", "ad_slot", "target", "referrer_host",
     "utm_source", "utm_medium", "utm_campaign", "scroll_depth", "duration_ms",
-    "visitor_id", "session_id", "user_id", "city", "device", "country", "region",
+    "visitor_id", "session_id", "user_id", "device",
 ];
 
 export async function POST(req: NextRequest) {
@@ -101,9 +73,6 @@ export async function POST(req: NextRequest) {
 
         const ownHost = (req.headers.get("host") ?? "").replace(/^www\./, "").split(":")[0] || null;
         const device = deviceFor(ua);
-        const city = cityFor(req);
-        const country = countryFor(req);
-        const region = regionFor(req, country);
         const userId = await signedInUserId(req);
 
         const rows: unknown[][] = [];
@@ -138,10 +107,7 @@ export async function POST(req: NextRequest) {
                 uuid(e.visitor_id),
                 uuid(e.session_id),
                 userId,
-                city,
                 device,
-                country,
-                region,
             ]);
         }
         if (rows.length === 0) return done;

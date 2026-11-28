@@ -82,6 +82,10 @@ interface TrafficData {
     channels: { channel: string; sessions: number; pet_sessions: number; pet_pct: number | null; contact_sessions: number }[];
     referrers: { source: string; page_views: number }[];
     cities: { city: string; page_views: number; visitors: number }[];
+    provinces: { province: string; page_views: number; visitors: number }[];
+    countries: { country: string; page_views: number; visitors: number }[];
+    karachi_districts: { district: string; visitors: number }[];
+    karachi_areas: { area: string; district: string; visitors: number }[];
     page_types: PageTypeRow[];
 }
 
@@ -90,6 +94,14 @@ type Preset = keyof typeof PRESETS | "Custom";
 const SECTION_FILTERS = ["all", "adopt", "care", "content", "marketplace", "other"] as const;
 
 const fmt = (n: number) => n.toLocaleString("en-US");
+const countryNames = typeof Intl.DisplayNames === "function" ? new Intl.DisplayNames(["en"], { type: "region" }) : null;
+const countryName = (code: string) => {
+    try {
+        return countryNames?.of(code) ?? code;
+    } catch {
+        return code;
+    }
+};
 const pct = (num: number, den: number) => (den > 0 ? `${((num / den) * 100).toFixed(1)}%` : "—");
 const pctVal = (v: number | null) => (v == null ? "—" : `${v}%`);
 const seconds = (s: number | null) => {
@@ -585,6 +597,63 @@ export default function TrafficDashboard() {
                             columns={[
                                 { title: "City", dataIndex: "city" },
                                 { title: "Views", dataIndex: "page_views", align: "right", render: fmt },
+                                { title: "Visitors", dataIndex: "visitors", align: "right", render: fmt },
+                            ]}
+                        />
+                    </Section>
+                    <Section title="Provinces" desc="Pakistan only. From the visitor's IP address, approximate. Recorded from 28 Nov 2026.">
+                        <Table
+                            size="small"
+                            rowKey="province"
+                            loading={loading}
+                            pagination={false}
+                            dataSource={data?.provinces ?? []}
+                            columns={[
+                                { title: "Province", dataIndex: "province" },
+                                { title: "Views", dataIndex: "page_views", align: "right", render: fmt },
+                                { title: "Visitors", dataIndex: "visitors", align: "right", render: fmt },
+                            ]}
+                        />
+                    </Section>
+                    <Section title="Countries" desc="From the visitor's IP address. Recorded from 28 Nov 2026.">
+                        <Table
+                            size="small"
+                            rowKey="country"
+                            loading={loading}
+                            pagination={false}
+                            dataSource={data?.countries ?? []}
+                            columns={[
+                                { title: "Country", dataIndex: "country", render: countryName },
+                                { title: "Views", dataIndex: "page_views", align: "right", render: fmt },
+                                { title: "Visitors", dataIndex: "visitors", align: "right", render: fmt },
+                            ]}
+                        />
+                    </Section>
+                    <Section title="Karachi districts" desc="Visitors who shared their location (Use my location, Near me).">
+                        <Table
+                            size="small"
+                            rowKey="district"
+                            loading={loading}
+                            pagination={false}
+                            dataSource={data?.karachi_districts ?? []}
+                            locale={{ emptyText: "No one in Karachi has shared their location in this range." }}
+                            columns={[
+                                { title: "District", dataIndex: "district" },
+                                { title: "Visitors", dataIndex: "visitors", align: "right", render: fmt },
+                            ]}
+                        />
+                    </Section>
+                    <Section title="Karachi areas" desc="Nearest neighbourhood to the shared location, approximate.">
+                        <Table
+                            size="small"
+                            rowKey="area"
+                            loading={loading}
+                            pagination={false}
+                            dataSource={data?.karachi_areas ?? []}
+                            locale={{ emptyText: "No one in Karachi has shared their location in this range." }}
+                            columns={[
+                                { title: "Area", dataIndex: "area" },
+                                { title: "District", dataIndex: "district" },
                                 { title: "Visitors", dataIndex: "visitors", align: "right", render: fmt },
                             ]}
                         />

@@ -149,6 +149,10 @@ const summary = (source: string) => `
            COUNT(*) FILTER (WHERE event_type = 'ad_click')::int AS ad_clicks
     FROM ${source}`;
 
+const areasBetween = `
+        WHERE created_at >= ($1::date::timestamp AT TIME ZONE '${TZ}')
+          AND created_at < (($2::date + 1)::timestamp AT TIME ZONE '${TZ}')`;
+
 const BREAKDOWNS = {
     // One row per channel, judged by each visit's first page view. "Reached a
     // pet" and "clicked Contact/Apply" show which channels bring adopters.
@@ -178,6 +182,27 @@ const BREAKDOWNS = {
                COUNT(DISTINCT visitor_id)::int AS visitors
         FROM ev WHERE event_type = 'page_view'
         GROUP BY 1 ORDER BY page_views DESC LIMIT 15`,
+    // PALTU-192: province (Pakistan only) and country, from the same IP lookup as city.
+    provinces: `
+        SELECT COALESCE(region, 'Unknown') AS province, COUNT(*)::int AS page_views,
+               COUNT(DISTINCT visitor_id)::int AS visitors
+        FROM ev WHERE event_type = 'page_view' AND country = 'PK'
+        GROUP BY 1 ORDER BY page_views DESC`,
+    countries: `
+        SELECT country, COUNT(*)::int AS page_views,
+               COUNT(DISTINCT visitor_id)::int AS visitors
+        FROM ev WHERE event_type = 'page_view' AND country IS NOT NULL
+        GROUP BY 1 ORDER BY page_views DESC LIMIT 10`,
+    // Karachi areas come from visitors who shared their location (visitor_areas),
+    // one row per session. A visitor without an id (cookies rejected) counts once per row.
+    karachi_districts: `
+        SELECT district, COUNT(DISTINCT COALESCE(visitor_id::text, id::text))::int AS visitors
+        FROM visitor_areas ${areasBetween}
+        GROUP BY 1 ORDER BY visitors DESC`,
+    karachi_areas: `
+        SELECT area, district, COUNT(DISTINCT COALESCE(visitor_id::text, id::text))::int AS visitors
+        FROM visitor_areas ${areasBetween}
+        GROUP BY 1, 2 ORDER BY visitors DESC`,
     page_types: `
         SELECT pv.page_type,
                ${sectionSql("pv.page_type")} AS section,
@@ -208,6 +233,10 @@ const DASHBOARD = `${EVENTS_CTE}, ev_prev AS (${eventsBetween("$3", "$4")})
            ${list(BREAKDOWNS.channels)} AS channels,
            ${list(BREAKDOWNS.referrers)} AS referrers,
            ${list(BREAKDOWNS.cities)} AS cities,
+           ${list(BREAKDOWNS.provinces)} AS provinces,
+           ${list(BREAKDOWNS.countries)} AS countries,
+           ${list(BREAKDOWNS.karachi_districts)} AS karachi_districts,
+           ${list(BREAKDOWNS.karachi_areas)} AS karachi_areas,
            ${list(BREAKDOWNS.page_types)} AS page_types`;
 
 // Per-instance cache: the dashboard is admin-only and a minute of staleness is fine (PALTU-32).

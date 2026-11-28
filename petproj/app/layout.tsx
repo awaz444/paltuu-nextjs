@@ -16,6 +16,7 @@ import CartSyncProvider from "@/components/CartSyncProvider";
 import CookieConsent from "@/components/CookieConsent";
 import AnalyticsTracker from "@/components/analytics/AnalyticsTracker";
 import PostHogTracker from "@/components/analytics/PostHogTracker";
+import ArrivalLocation from "@/components/analytics/ArrivalLocation";
 import CardScanModal from "@/components/cards/CardScanModal";
 import AppStickers from "@/components/stickers/AppStickers";
 import { SITE_URL } from "@/lib/site";
@@ -188,6 +189,7 @@ export default function RootLayout({
               */}
               <AnalyticsTracker />
               <PostHogTracker />
+              <ArrivalLocation />
             </CartSyncProvider>
           </ClientProvider>
         </AppClientWrapper>
